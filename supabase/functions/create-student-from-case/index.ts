@@ -19,11 +19,17 @@ function normalisePhone(input: string | null | undefined): string | null {
 function jsonResponse(payload: Record<string, unknown>, status: number, corsHeaders: Record<string, string>) {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+    },
   });
 }
 
-/** Readable temp password for the "manual" mode. Suffix guarantees complexity. */
+/**
+ * Generates a readable temporary password for the "manual" creation mode.
+ * The suffix guarantees Supabase's complexity requirements are always met.
+ */
 function generateTempPassword(): string {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
   return (
@@ -35,16 +41,21 @@ function generateTempPassword(): string {
 
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
     const authHeader = req.headers.get("Authorization");
+
     if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Unauthorized", code: "UNAUTHORIZED" }, 401, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
     if (!supabaseUrl || !serviceRoleKey) {
       console.error("create-student-from-case: missing Supabase environment variables");
       return jsonResponse(
@@ -59,9 +70,11 @@ serve(async (req) => {
     // ── Validate caller ────────────────────────────────────────────────
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+
     if (userError || !userData?.user) {
       return jsonResponse({ error: "Invalid token", code: "INVALID_TOKEN" }, 401, corsHeaders);
     }
+
     const callerId = userData.user.id;
 
     const { data: roles, error: rolesError } = await supabaseAdmin
@@ -69,21 +82,31 @@ serve(async (req) => {
       .select("role")
       .eq("user_id", callerId)
       .in("role", ["admin", "team_member"]);
+
     if (rolesError) {
-      console.error("create-student-from-case: failed to resolve caller role", { callerId, error: rolesError });
+      console.error("create-student-from-case: failed to resolve caller role", {
+        callerId,
+        error: rolesError,
+      });
       return jsonResponse(
         { error: "Unable to verify team member access", code: "ROLE_LOOKUP_FAILED" },
         500,
         corsHeaders,
       );
     }
+
     if (!roles?.length) {
       console.warn("create-student-from-case: caller has no staff role", { callerId });
       return jsonResponse({ error: "Team member access required", code: "FORBIDDEN" }, 403, corsHeaders);
     }
+
     const isAdmin = roles.some((role: { role: string }) => role.role === "admin");
 
     // ── Parse request ──────────────────────────────────────────────────
+    // case_id is optional: a student can be invited with a case attached
+    // (the common path, which pre-fills the account from the case data) or
+    // on its own — the account is simply not linked to any case yet.
+    //
     // mode "invite" → email a branded activation link (no password returned).
     // mode "manual" → mint a one-time temp password returned to staff.
     const parsed = await parseBody(
@@ -97,6 +120,7 @@ serve(async (req) => {
         mode: z.enum(["invite", "manual"]).optional().default("invite"),
       }),
     );
+
     if (!parsed.ok) {
       console.warn("create-student-from-case: invalid body", parsed.error);
       return jsonResponse({ error: parsed.error, code: "INVALID_INPUT" }, 400, corsHeaders);
@@ -116,6 +140,7 @@ serve(async (req) => {
         corsHeaders,
       );
     }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student_email)) {
       return jsonResponse({ error: "Invalid email format", code: "INVALID_EMAIL" }, 400, corsHeaders);
     }
@@ -148,14 +173,18 @@ serve(async (req) => {
           `id, student_user_id, full_name, phone_number, city,  
            education_level, passport_type, degree_interest,  
            intake_notes, bagrut_score, english_units, math_units,  
-           english_level, source, partner_id, assigned_to, created_at`,
+           english_level, source, partner_id, assigned_to,  
+           created_at`,
         )
         .eq("id", case_id)
         .single();
+
       if (caseErr || !fetchedCase) {
         console.error("create-student-from-case: case lookup failed", { case_id, error: caseErr });
         return jsonResponse({ error: "Case not found", code: "CASE_NOT_FOUND" }, 404, corsHeaders);
       }
+
+      // ── Ownership check ─────────────────────────────────────────────
       if (!isAdmin && fetchedCase.assigned_to !== callerId) {
         console.warn("create-student-from-case: case not assigned to caller", {
           callerId,
@@ -164,16 +193,17 @@ serve(async (req) => {
         });
         return jsonResponse({ error: "This case is not assigned to you", code: "NOT_ASSIGNED" }, 403, corsHeaders);
       }
+
       caseData = fetchedCase;
     }
 
-    // ── Durable activation invitation ───────────────────────────────────
-    // Captures the most recent activation link so the API can return it to
-    // staff (used by the "copy activation link" success card in the UI).
+    // ── Captured activation link (invite mode) + temp password (manual) ──
     let capturedActivationUrl: string | null = null;
+    let tempPassword: string | null = null;
 
+    // ── Durable activation invitation ────────────────────────────────────
     async function createActivationLink(email: string) {
-      return await createInvitation(supabaseAdmin, {
+      const url = await createInvitation(supabaseAdmin, {
         invitedEmail: email,
         invitationType: "student",
         intendedRole: "student",
@@ -181,6 +211,8 @@ serve(async (req) => {
         inviterId: callerId,
         caseId: case_id ?? undefined,
       });
+      capturedActivationUrl = url;
+      return url;
     }
 
     // ── Rate-limit duplicate activation mails ────────────────────────────
@@ -217,7 +249,6 @@ serve(async (req) => {
         }
 
         const activationUrl = await createActivationLink(email);
-        capturedActivationUrl = activationUrl;
 
         let caseReference: string | null = null;
         if (case_id) {
@@ -238,7 +269,12 @@ serve(async (req) => {
           body: JSON.stringify({
             templateName: "student-invite",
             recipientEmail: email,
-            templateData: { studentName: name, email, caseReference, activationUrl },
+            templateData: {
+              studentName: name,
+              email,
+              caseReference,
+              activationUrl,
+            },
           }),
         });
 
@@ -256,6 +292,21 @@ serve(async (req) => {
         console.error("create-student-from-case: invitation error", error);
         return false;
       }
+    }
+
+    // ── Resets an existing account's password for the manual path ────────
+    async function resetManualPassword(userId: string) {
+      const pwd = generateTempPassword();
+      const { error: pwErr } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        password: pwd,
+      });
+      if (pwErr) {
+        console.error("create-student-from-case: manual password reset failed", pwErr);
+        return null;
+      }
+      // Force a password change at first sign-in.
+      await supabaseAdmin.from("profiles").upsert({ id: userId, must_change_password: true });
+      return pwd;
     }
 
     // ── Existing linked account (case already has a student) ────────────
@@ -289,32 +340,26 @@ serve(async (req) => {
         );
       }
 
-      // Manual mode: reset the existing student's password and return it.
+      // Manual path: reset the linked account's password and return it.
       if (mode === "manual") {
-        const tempPassword = generateTempPassword();
-        const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(caseData.student_user_id, {
-          password: tempPassword,
-        });
-        if (pwError) {
-          console.error("create-student-from-case: password reset failed", pwError);
+        tempPassword = await resetManualPassword(caseData.student_user_id);
+        if (!tempPassword) {
           return jsonResponse(
-            { error: "Unable to set temporary password", code: "PASSWORD_RESET_FAILED" },
+            { error: "Unable to set a temporary password", code: "PASSWORD_RESET_FAILED" },
             500,
             corsHeaders,
           );
         }
-        await supabaseAdmin.from("profiles").update({ must_change_password: true }).eq("id", caseData.student_user_id);
-
         return jsonResponse(
           {
             success: true,
             user_id: caseData.student_user_id,
             email: linkedEmail,
             mode: "manual",
-            temp_password: tempPassword,
             account_created: false,
             case_linked: true,
-            message: "Student account linked and a temporary password was generated",
+            temp_password: tempPassword,
+            message: "Student account linked. Share the temporary password with the student.",
           },
           200,
           corsHeaders,
@@ -348,7 +393,6 @@ serve(async (req) => {
     // ── Fetch case submission (only when a case is attached) ────────────
     let intakeMonth: string | null = null;
     let universityName: string | null = null;
-    let submissionRef: { program_start_date?: string | null } | null = null;
 
     if (case_id) {
       const { data: submission } = await supabaseAdmin
@@ -373,7 +417,7 @@ serve(async (req) => {
         universityName = programme?.school_name ?? programme?.name ?? null;
       }
 
-      submissionRef = submission;
+      var submissionRef = submission;
     }
 
     // ── Resolve identity ──────────────────────────────────────────────────
@@ -395,10 +439,9 @@ serve(async (req) => {
 
     const existingUser = identity.exists && identity.userId ? { id: identity.userId } : null;
 
-    // ── Existing or new student account ──────────────────────────────────
+    // ── Existing student account ─────────────────────────────────────────
     let studentId: string;
     let accountCreated = false;
-    let manualTempPassword: string | null = null;
 
     if (existingUser) {
       if (case_id) {
@@ -426,31 +469,22 @@ serve(async (req) => {
 
       studentId = existingUser.id;
 
-      // Manual mode: reset the existing student's password and return it.
+      // Manual path: reset the existing account's password and return it.
       if (mode === "manual") {
-        manualTempPassword = generateTempPassword();
-        const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(studentId, {
-          password: manualTempPassword,
-        });
-        if (pwError) {
-          console.error("create-student-from-case: password reset failed", pwError);
+        tempPassword = await resetManualPassword(studentId);
+        if (!tempPassword) {
           return jsonResponse(
-            { error: "Unable to set temporary password", code: "PASSWORD_RESET_FAILED" },
+            { error: "Unable to set a temporary password", code: "PASSWORD_RESET_FAILED" },
             500,
             corsHeaders,
           );
         }
       }
     } else {
-      // Invite mode: bootstrap credential is never returned/emailed — the
-      // student chooses their password through the activation link.
-      // Manual mode: the generated password IS returned to staff.
-      const password =
-        mode === "manual"
-          ? generateTempPassword()
-          : Array.from(crypto.getRandomValues(new Uint8Array(9)))
-              .map((byte) => "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789"[byte % 54])
-              .join("") + "Aa1!";
+      // Manual path returns the password to staff; invite path discards a
+      // bootstrap credential (the student chooses their own via the link).
+      const password = mode === "manual" ? generateTempPassword() : generateTempPassword();
+      if (mode === "manual") tempPassword = password;
 
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: student_email,
@@ -473,7 +507,6 @@ serve(async (req) => {
 
       studentId = newUser.user.id;
       accountCreated = true;
-      if (mode === "manual") manualTempPassword = password;
     }
 
     // ── Assign student role ────────────────────────────────────────────────
@@ -502,7 +535,11 @@ serve(async (req) => {
     if (caseData?.city) profileUpsert.city = caseData.city;
     if (intakeMonth) profileUpsert.intake_month = intakeMonth;
     if (universityName) profileUpsert.university_name = universityName;
-    if (submissionRef?.program_start_date) profileUpsert.arrival_date = submissionRef.program_start_date;
+    // deno-lint-ignore no-explicit-any
+    if ((submissionRef as any)?.program_start_date) {
+      // deno-lint-ignore no-explicit-any
+      profileUpsert.arrival_date = (submissionRef as any).program_start_date;
+    }
     if (caseData?.passport_type) profileUpsert.nationality = caseData.passport_type;
 
     const noteParts: string[] = [];
@@ -560,7 +597,8 @@ serve(async (req) => {
             city: !!caseData?.city,
             intake_month: !!intakeMonth,
             university: !!universityName,
-            arrival_date: !!submissionRef?.program_start_date,
+            // deno-lint-ignore no-explicit-any
+            arrival_date: !!(submissionRef as any)?.program_start_date,
             phone: !!phone,
           },
         },
@@ -569,7 +607,7 @@ serve(async (req) => {
       console.warn("create-student-from-case: audit log failed", error);
     }
 
-    // ── Manual mode: return the temporary password (no email sent) ─────────
+    // ── Manual mode: return the temp password, no email ─────────────────
     if (mode === "manual") {
       return jsonResponse(
         {
@@ -577,19 +615,19 @@ serve(async (req) => {
           user_id: studentId,
           email: student_email,
           mode: "manual",
-          temp_password: manualTempPassword,
           account_created: accountCreated,
           case_linked: !!case_id,
+          temp_password: tempPassword,
           message: accountCreated
-            ? "Student account created with a temporary password"
-            : "Existing student account updated with a temporary password",
+            ? "Student account created. Share the temporary password with the student."
+            : "Student account updated. Share the temporary password with the student.",
         },
         200,
         corsHeaders,
       );
     }
 
-    // ── Invite mode: send the activation email ─────────────────────────────
+    // ── Invite mode: send the activation email ──────────────────────────
     const emailSent = await sendInvite(student_email, student_full_name);
 
     // IMPORTANT: the student account/case link has already succeeded.
@@ -603,9 +641,9 @@ serve(async (req) => {
       invited: emailSent === true,
       already_invited: emailSent === "already_sent",
       invitation_failed: emailSent === false,
-      activation_url: capturedActivationUrl,
       account_created: accountCreated,
       case_linked: !!case_id,
+      activation_url: capturedActivationUrl,
       message:
         emailSent === "already_sent"
           ? "An activation link was already sent recently — ask the student to check their inbox"
