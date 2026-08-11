@@ -2751,6 +2751,10 @@
       }
     },
     "profile": {
+      "educationLevel": "Education level",
+      "passportType": "Passport type",
+      "programWeeks": "Program weeks",
+      "accommodationWeeks": "Accommodation weeks",
       "sections": {
         "student": "Student information",
         "contact": "Contact details",
