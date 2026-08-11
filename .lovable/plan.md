@@ -1,106 +1,68 @@
-# Audit — Recent Code Editor Changes (Team Students + student account creation)
+# Branded Student Invoice Email — Step 1 Audit + Implementation Plan
 
-Audit only. No code was changed.
+## Audit: where the money actually lives
 
-## 1. What actually changed
+Traced chain (all verified in DB + code this turn):
 
-Commits from today (all "Code edited in Lovable Code Editor"). Two change sets:
+```text
+cases (case_reference, full_name, email, assigned_to, student_user_id)
+  -> case_submissions (student_email, program/accommodation/insurance + EUR prices)
+  -> case_services      (frozen snapshot: description, category, quantity,
+                         unit_price, discount, currency, catalog_version)
+  -> case_payments      (payment_type='agency_service', currency ILS,
+                         status pending/submitted/confirmed/rejected)
+  -> get_case_financials(case_id)   <-- THE source of truth (SECURITY DEFINER)
+  -> issue_case_invoice(case_id)    <-- freezes that jsonb into case_invoices.totals
+  -> case_invoices (invoice_number DRB-INV-YYYY-NNNNNN, public_token, student_email,
+                    email_status/email_error/email_sent_at)
+  -> /invoice/:token page + invoicePdf  (both via selectInvoiceTotals)
+  -> send-transactional-email -> template 'case-invoice'
+```
 
-Set A — Team "Students" page + student account creation (14:44 → 15:19)
-- `src/pages/team/TeamStudentsPage.tsx` (+591 lines): invite/manual mode toggle, email-driven "linked cases" lookup, pending-invitation list with resend, success view with activation link / temp password + copy buttons, transfer confirmation.
-- `supabase/functions/create-student-from-case/index.ts`: new `mode: "invite" | "manual"` parameter, temp-password generation and reset, `activation_url` now returned to the caller.
-- `public/locales/{en,ar}/dashboard.json`: new `team.students.*` keys.
+Source of truth confirmed:
+- Prices: `case_services` snapshots (`unit_price`, `discount`, `catalog_version`) — the catalog is never re-read at invoice time, so requirement 10 (price-snapshot immutability) is already satisfied by the existing architecture.
+- Totals: `get_case_financials` computes `service_total`, `total_confirmed` (confirmed ILS agency payments only), `total_pending_review`, `remaining = max(total-confirmed,0)`. No frontend re-adds money.
+- Currency split: ILS = DARB agency services; EUR = school/accommodation/insurance, returned separately as `school_costs` with `estimate: true`. The invoice deliberately excludes EUR from the ILS total.
+- Recipient: `case_submissions.student_email` falling back to `cases.email`, frozen on `case_invoices.student_email`.
+- Auth: `get_case_financials` allows admin / assigned team / the student. `issue_case_invoice` allows admin / assigned team. `send-transactional-email` requires an admin or team_member JWT.
 
-Set B — earlier today (12:58 → 14:07): `CaseFinance.tsx`, `CaseProfileForm.tsx`, `CaseProfilePanel.tsx`, `CaseAttentionPanel.tsx`, `caseTasks.ts(+test)`, `CaseDetailPage.tsx`, locale files.
+Data check: 47 `case_services` rows, 3 agency payments, 0 rows with a discount, 0 invoices issued so far.
 
-Chain traced: dialog form → `submitCreate()` → `supabase.functions.invoke("create-student-from-case")` → service-role client → `auth.admin.createUser` / `updateUserById` → `profiles`, `cases`, `user_invitations`, `admin_audit_log` → JSON response → `newCreds` state → success view.
+## Gaps found (what's actually wrong today)
 
-## 2. Overall result
+1. **The email shows almost nothing.** `sendInvoiceEmail` sends only `serviceTotal` — the `case-invoice` template already accepts `totalConfirmed`/`remaining` but they are never passed, and there is no per-service line-item table at all. The user's requested layout (services, subtotal, discount, total, paid, remaining) does not exist in the email.
+2. **Security hole:** `CaseFinance.tsx` lets staff type any address into the send box and overrides `invoice.student_email` client-side, so a student's financial data can be mailed anywhere. Server never validates the recipient against the case.
+3. **Stale numbers on re-send.** `case_invoices.totals` is frozen at issue time; the "Send invoice" buttons in `CaseFinance` / `CaseInvoiceBlock` re-send the old snapshot after new payments are confirmed, so Paid/Remaining can be wrong (requirement 11).
+4. **No guard rails:** an invoice with zero services or a missing student email can still be issued and sent.
 
-**FAIL** — one critical production defect (broken English translation file) plus one critical security regression (staff-triggered password reset of any existing student account), and several feature paths that silently return nothing under real Team RLS.
+## Plan (incremental, matching your Steps 2–5)
 
-| Area | Result |
-| --- | --- |
-| A. Overall | FAIL |
-| B. UI/UX | PASS WITH WARNINGS |
-| C. Frontend logic | FAIL |
-| D. Data fetching | FAIL |
-| E. Supabase | FAIL |
-| F. Edge functions | FAIL |
-| G. SQL / RPC | PASS (no new SQL) |
-| H. RLS / Security | FAIL |
-| I. Data integrity | PASS WITH WARNINGS |
+### Step 2 — Data layer (no new pricing system)
+- Extend `src/utils/invoiceTotals.ts` `selectInvoiceTotals` to also expose `subtotal` (sum of `unit_price*quantity`), `discount_total` (sum of `discount`), plus the existing `service_total`, `total_confirmed`, `remaining`, and an optional `school_costs` (EUR) list. One function, reused by the invoice page, the PDF, and the email payload — no duplicated math.
+- Add a small `buildInvoiceEmailData(invoice)` in `CaseInvoiceService.ts` that maps a `CaseInvoice` into the email props (line items with formatted en-US amounts, subtotal, discount, total, paid, remaining, EUR block only when non-empty). Fields that don't exist (no discount, no payments) are omitted, never fabricated.
+- Migration: make `issue_case_invoice` refuse to issue when there are no `case_services` rows or no resolvable student email, so an incomplete invoice can never be created.
+- Unit tests in `src/utils/invoiceTotals.test.ts` for subtotal/discount/paid/remaining, legacy snapshots, and the snapshot-vs-catalog case.
 
-## 3. Findings
+### Step 3 — Branded email template
+- Rewrite `supabase/functions/_shared/transactional-email-templates/case-invoice.tsx` as a real invoice document using the existing `email-ui` kit (logo, gold rule, footer) so branding matches the other 10 templates: header + invoice no./date, student name + case reference block, a table-based services list (description × qty, amount), subtotal / discount / total, then Paid and Remaining highlighted, an optional clearly-labelled EUR "paid directly in Germany — estimate" section, then the CTA to the public invoice page.
+- Email-safe only: nested tables, inline styles, no flex/grid, RTL by default with LTR-forced numerals; preview text and `previewData` for the preview function.
 
-### 🔴 C1 — `public/locales/en/dashboard.json` is invalid JSON
-Line 3552 contains `},   ,` followed by a duplicated `tabs`/`invoice` block that is never closed before `"messagesInbox"`. Introduced at 14:05 today.
-- Problem: the whole English `dashboard` namespace fails to parse, so **every English dashboard screen** (admin, team, partner, student) falls back to inline defaults or raw key strings.
-- Correct approach: delete the stray comma and the duplicated `tabs`/`invoice` block (it already exists inside `finance`), then re-validate both locale files.
-- Files: `public/locales/en/dashboard.json`.
+### Step 4 — Sending, server-side authorization
+- Server-side recipient lock: `sendInvoiceEmail` stops accepting an arbitrary address. The edge function path resolves the recipient from `case_invoices.student_email` for `templateName === 'case-invoice'` and rejects a mismatch, so requirement 8 holds even if the client is tampered with.
+- Fresh numbers on every send: the send path re-issues via `issue_case_invoice` (idempotent, keeps the same invoice number and token) before rendering, so Paid/Remaining always reflect current confirmed payments.
+- Remove the free-text recipient input in `CaseFinance.tsx` (show the locked student email read-only instead); keep `CaseInvoiceBlock` behaviour otherwise unchanged.
+- Error paths: no email / no services / financials unreadable / provider failure → no send, `email_status='failed'` with the reason, clear toast. Deploy the affected functions.
 
-### 🔴 C2 — "manual" mode lets any team member reset any existing student's password
-In `create-student-from-case`, when `mode: "manual"` and the email already belongs to a student, `resetManualPassword()` calls `auth.admin.updateUserById(..., { password })` and returns the new password to the caller.
-- Problem: a team member only has to type a known student email to receive working credentials for that account — silent account takeover, no case-ownership check, no rate limit, and the student is locked out of their own password.
-- Correct approach: restrict password reset on an *existing* account to admins (or require the case to be assigned to the caller), log it to `admin_audit_log` as a security event, and keep `mode: "manual"` for freshly created accounts only.
-- Files: `supabase/functions/create-student-from-case/index.ts`, `src/pages/team/TeamStudentsPage.tsx`.
+### Step 5 — End-to-end verification with real data
+- Use a real case that has `case_services` rows, issue the invoice, and produce the field-by-field comparison table (name, email, each service + price, subtotal, discount, total, paid, remaining, currency) sourced from SQL vs the rendered email.
+- Price-change test: bump the catalog for a service, re-issue, confirm the invoice still shows the snapshot price.
+- Payment-change test: confirm an additional payment, re-issue, confirm Paid/Remaining move correctly with no duplicate payment rows.
+- Render check of the HTML at desktop and mobile widths via the preview function.
 
-### 🟠 H1 — `activation_url` is now returned to the browser
-The one-time activation link is returned in the response and rendered with a "Open" button.
-- Problem: staff can open the link and set the student's password themselves, i.e. impersonate the student; the link is also copied into clipboards/logs. This is exactly what the durable-invitation flow was built to avoid.
-- Correct approach: return the link only when the email send failed (`invitation_failed`), gate it to admins, and drop the "Open" button.
+## Risks
+- Re-issuing on send updates `issued_at`; acceptable (invoice number and public token stay stable), but it means the PDF date reflects the last issue. Flag if you'd rather freeze `issued_at` at first issue — that is a one-line change.
+- Tightening `issue_case_invoice` could block a case that legitimately has zero services; current data shows every case in play has services.
+- Template changes require redeploying the email functions; no data migration needed.
 
-### 🟠 H2 — Pending invitations list is always empty for team members
-`fetchInvitations()` selects from `user_invitations`, whose only SELECT policy is `has_role(auth.uid(),'admin')`.
-- Problem: on this **team** page the query returns `[]` with no error surfaced (the `error` field is discarded), so the "Pending invites" section and its Resend buttons never appear. Verified against `pg_policies`.
-- Correct approach: add a team-scoped SELECT policy (student invitations created by the caller) or fetch via a security-definer RPC; surface query errors instead of swallowing them.
-
-### 🟠 H3 — Linked-case lookup queries a column that does not exist
-`lookupCasesForEmail()` selects `school_name, name` from `master_services`. That table has only `service_name` (no `school_name`, no `name`), and `case_submissions.program_id` has no FK to it.
-- Problem: PostgREST returns 400, the error is discarded, `programNames` stays empty, so the case "Program" label is always blank. The same wrong query exists inside the edge function (`universityName`), pre-existing, so the student profile's university is always null.
-- Correct approach: resolve the programme from the real programs table and use its actual column names; assert with a query before shipping.
-
-### 🟠 H4 — Case lookup is invisible to the team member who needs it
-`case_submissions` and `cases` are readable by a team member only for cases where `assigned_to = auth.uid()`. So the email lookup shows no case for any case not assigned to the caller, while the edge function will happily link *any* `case_id` it is given (no ownership check).
-- Problem: inconsistent authority — UI under-shows, backend over-permits, including `confirm_transfer` case moves by non-admins.
-- Correct approach: enforce case ownership (or admin) inside the edge function for `case_id` and `confirm_transfer`.
-
-### 🟡 M1 — Errors swallowed in three new data paths
-`fetchInvitations`, `lookupCasesForEmail`, and the program sub-query all destructure only `data` (or `console.error` only). No error state, no retry, no empty-vs-failed distinction.
-
-### 🟡 M2 — Stale state on the success view
-`newCreds` is not cleared when the dialog reopens via the trigger button (only on close and on Done). `copied` is a single shared flag for two different copy buttons. `mode` resets to `invite` on close but `linkedCases` from a previous email can persist while the debounce is in flight (no request-sequence guard → last-write-wins race on fast typing).
-
-### 🟡 M3 — Dead/confusing code
-`const password = mode === "manual" ? generateTempPassword() : generateTempPassword();` — both branches identical; in invite mode a "temp" password is created and discarded. `var submissionRef = submission;` (function-scoped `var`) is unused legacy.
-
-### 🟡 M4 — 15 new Arabic keys missing
-`team.students.linkedCases`, `checkingCases`, `confirmTransfer`, `activationLink`, `copyInviteLink`, `copyPassword`, `openLink`, `pendingInvites`, `resendInvite`, `invitationSent`, `inviteExpires`, `invited`, `caseProgram`, `caseStatus`, `enterEmailForCases` are absent from `ar/dashboard.json` (Arabic is the primary audience), and 5 of them are also absent from the English file. They render English inline fallbacks.
-
-### 🔵 L1 — Minor
-`navigator.clipboard.writeText` unguarded (fails on non-secure contexts, unhandled rejection). Resend always posts with `mode: "invite"` and no `case_id`, so a resend for a case-linked student drops the case context.
-
-### Data integrity note
-Creation remains idempotent-ish: existing identity is reused, `ALREADY_LINKED` blocks silent case transfer, invite emails are rate-limited. No duplicate-student risk found. The one integrity risk is C2 overwriting a live student's password.
-
-## 4. End-to-end testing performed
-
-- Git history and full diffs of both change sets (read).
-- `pg_policies` for `user_invitations`, `case_submissions`, `cases`, `master_services`, `profiles` → confirms H2, H4.
-- `information_schema.columns` for `master_services` / `case_submissions` → confirms H3.
-- `restrict_profiles_write` definition → confirms the service-role `must_change_password` upsert is allowed (not a defect).
-- JSON parse of both dashboard locale files → confirms C1 (en fails, ar parses).
-- Key-by-key comparison of the 38 `team.students.*` keys used by the page → confirms M4.
-- Browser click-through of the Team Students dialog was **not** run (needs a team-member session); flagged rather than claimed.
-
-## 5. Proposed fix order (one at a time, awaiting approval each)
-
-1. C1 — repair `en/dashboard.json` (unblocks everything English).
-2. C2 — restrict manual password reset of existing accounts.
-3. H1 — stop returning the activation link by default.
-4. H4 — enforce case ownership in the edge function.
-5. H2 — make pending invitations actually load for team members.
-6. H3 — fix the programme lookup (page + edge function).
-7. M1/M2/M3/M4/L1 — error surfacing, state hygiene, dead code, translations.
-
-No fix will be applied until you approve it, and each will be verified frontend + backend + database before moving to the next.
+## Not touching
+Finance tab layout, pricing rules, commission logic, payment recording, and the existing `get_case_financials` math all stay as they are.
