@@ -3532,7 +3532,26 @@
       "confirmAction": "Confirm payment",
       "rejectAction": "Reject proof"
     }
-  },
+  },   ,  
+    "tabs": {  
+      "summary": "Summary",  
+      "invoice": "Invoice"  
+    },  
+    "invoice": {  
+      "title": "Invoice breakdown",  
+      "number": "Invoice number",  
+      "view": "View invoice",  
+      "emailLabel": "Student email",  
+      "send": "Send invoice",  
+      "sent": "Invoice sent",  
+      "failed": "Could not send the invoice",  
+      "notIssued": "The invoice is issued when the case is submitted to Admin.",  
+      "email": {  
+        "sent": "Sent",  
+        "failed": "Failed",  
+        "pending": "Pending"  
+      }  
+    }
   "messagesInbox": {
     "title": "Case messages",
     "subtitle": "All conversations across your cases, newest first.",
