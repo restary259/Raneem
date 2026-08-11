@@ -1,3 +1,8 @@
+Here's the complete edited file. Replace the entire contents of `src/components/cases/CaseProfileForm.tsx` with this.
+
+## File: `src/components/cases/CaseProfileForm.tsx`
+
+```tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -84,7 +89,7 @@ const TextField = React.memo(function TextField({
 
       <Input
         name={name}
-        className={cn("mt-1", invalid && "border-destructive")}
+        className={cn("mt-0.5 h-9", invalid && "border-destructive")}
         type={type}
         value={value}
         placeholder={placeholder}
@@ -98,12 +103,21 @@ const TextField = React.memo(function TextField({
 });
 
 /** Same step pill/progress bar used on the Submit New Student wizard. */
-const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
-  <div className="flex items-center gap-1 mb-6">
+const StepBar = ({
+  step,
+  t,
+  remaining,
+}: {
+  step: StepNum;
+  t: TFunction;
+  remaining?: Record<number, number>;
+}) => (
+  <div className="flex items-center gap-1 mb-4">
     {STEP_KEYS.map((key, i) => {
       const n = (i + 1) as StepNum;
       const done = n < step;
       const current = n === step;
+      const left = remaining?.[n] ?? 0;
 
       return (
         <React.Fragment key={n}>
@@ -120,6 +134,19 @@ const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
             {done ? <Check className="h-3 w-3" /> : <span className="w-3 text-center">{n}</span>}
 
             <span className="hidden sm:inline">{t(`lawyer.submitStudent.${key}`)}</span>
+
+            {left > 0 && (
+              <span
+                className={cn(
+                  "ms-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold",
+                  current
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-destructive text-destructive-foreground",
+                )}
+              >
+                {left}
+              </span>
+            )}
           </div>
 
           {i < STEP_KEYS.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />}
@@ -881,20 +908,26 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
         })
       : "";
 
+  const remainingByStep: Record<number, number> = {
+    1: validateStep(1).length,
+    2: validateStep(2).length,
+    3: validateStep(3).length,
+  };
+
   return (
-    <div className="space-y-6">
-      <StepBar step={step} t={t} />
+    <div className="space-y-4">
+      <StepBar step={step} t={t} remaining={remainingByStep} />
 
       {/* ══ STEP 1: Student Info ══ */}
 
       {step === 1 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="text-base">{ss("studentInfo")}</CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4">
+          <CardContent className="space-y-3">
+            <div className="grid md:grid-cols-3 gap-x-4 gap-y-3">
               {field("first_name", `${ss("firstName")} *`)}
 
               {field("middle_name", ss("middleName"))}
@@ -902,74 +935,74 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               {field("last_name", `${ss("lastName")} *`)}
             </div>
 
-            <div data-field="date_of_birth">
-              <Label className={invalid("date_of_birth") ? "text-destructive" : ""}>{ss("dateOfBirth")}</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+              <div data-field="date_of_birth">
+                <Label className={invalid("date_of_birth") ? "text-destructive" : ""}>{ss("dateOfBirth")}</Label>
 
-              <div className="grid grid-cols-3 gap-2 mt-1">
-                <Select value={dobYear} onValueChange={(v) => setDob("year", v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={ss("year")} />
-                  </SelectTrigger>
+                <div className="grid grid-cols-3 gap-2 mt-0.5">
+                  <Select value={dobYear} onValueChange={(v) => setDob("year", v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={ss("year")} />
+                    </SelectTrigger>
 
-                  <SelectContent className="max-h-48">
-                    {DOB_YEARS.map((y) => (
-                      <SelectItem key={y} value={String(y)}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectContent className="max-h-48">
+                      {DOB_YEARS.map((y) => (
+                        <SelectItem key={y} value={String(y)}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                <Select value={dobMonth} onValueChange={(v) => setDob("month", v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={ss("month")} />
-                  </SelectTrigger>
+                  <Select value={dobMonth} onValueChange={(v) => setDob("month", v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={ss("month")} />
+                    </SelectTrigger>
 
-                  <SelectContent>
-                    {DOB_MONTHS.map((m) => (
-                      <SelectItem key={m.v} value={m.v}>
-                        {m.l}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectContent>
+                      {DOB_MONTHS.map((m) => (
+                        <SelectItem key={m.v} value={m.v}>
+                          {m.l}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                <Select value={dobDay} onValueChange={(v) => setDob("day", v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={ss("day")} />
-                  </SelectTrigger>
+                  <Select value={dobDay} onValueChange={(v) => setDob("day", v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={ss("day")} />
+                    </SelectTrigger>
 
-                  <SelectContent className="max-h-48">
-                    {dobDays.map((d) => (
-                      <SelectItem key={d} value={d}>
-                        {d}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectContent className="max-h-48">
+                      {dobDays.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {dobAge !== null && !isNaN(dobAge) && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {ss("ageYears")
+                      ? t("lawyer.submitStudent.ageYears", {
+                          age: dobAge,
+                        })
+                      : `${dobAge}`}
+                  </p>
+                )}
+
+                {(dobError || invalid("date_of_birth")) && (
+                  <p className="mt-0.5 text-xs text-destructive">{dobError ?? errText("date_of_birth")}</p>
+                )}
               </div>
 
-              {dobAge !== null && !isNaN(dobAge) && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {ss("ageYears")
-                    ? t("lawyer.submitStudent.ageYears", {
-                        age: dobAge,
-                      })
-                    : `${dobAge}`}
-                </p>
-              )}
-
-              {(dobError || invalid("date_of_birth")) && (
-                <p className="mt-1 text-xs text-destructive">{dobError ?? errText("date_of_birth")}</p>
-              )}
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>{t("case.fields.gender")}</Label>
 
                 <Select value={values.gender} onValueChange={(v) => handleChange("gender", v)}>
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-0.5 h-9">
                     <SelectValue placeholder={ss("genderSelect")} />
                   </SelectTrigger>
 
@@ -989,12 +1022,12 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             {/* Education + passport are canonical case fields and are also
                 preserved inside extra_data for the shared profile model. */}
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-x-4 gap-y-3">
               <div>
                 <Label>{ss("educationLevel")}</Label>
 
                 <Select value={values.education_level} onValueChange={(v) => handleChange("education_level", v)}>
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-0.5 h-9">
                     <SelectValue placeholder={ss("educationLevelSelect")} />
                   </SelectTrigger>
 
@@ -1012,7 +1045,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 <Label>{ss("passportType")}</Label>
 
                 <Select value={values.passport_type} onValueChange={(v) => handleChange("passport_type", v)}>
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-0.5 h-9">
                     <SelectValue placeholder={ss("passportTypeSelect")} />
                   </SelectTrigger>
 
@@ -1027,7 +1060,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex items-center justify-between gap-3 pt-1">
               <p className="text-xs text-muted-foreground">{draftStatus}</p>
 
               <Button onClick={goNext}>
@@ -1043,18 +1076,16 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
       {step === 2 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="text-base">{ss("stepContactDetails")}</CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
               {field("student_email", `${ss("email")} *`, "email", "student@email.com")}
 
               {field("student_phone", `${ss("phone")} *`, "text", "+972...")}
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
               {field("emergency_contact_name", ss("emergencyName"))}
 
               {field("emergency_contact_phone", ss("emergencyPhone"), "text", "+972...")}
@@ -1063,35 +1094,38 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             <div>
               <Label>{ss("address")}</Label>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 mt-0.5">
                 <Input
+                  className="h-9"
                   placeholder={ss("street")}
                   value={values.street}
                   onChange={(e) => handleChange("street", e.target.value)}
                 />
 
                 <Input
+                  className="h-9"
                   placeholder={ss("houseNo")}
                   value={values.house_no}
                   onChange={(e) => handleChange("house_no", e.target.value)}
                 />
 
                 <Input
+                  className="h-9"
                   placeholder={ss("postcode")}
                   value={values.postcode}
                   onChange={(e) => handleChange("postcode", e.target.value)}
                 />
-              </div>
 
-              <Input
-                className="mt-2"
-                placeholder={ss("city")}
-                value={values.city}
-                onChange={(e) => handleChange("city", e.target.value)}
-              />
+                <Input
+                  className="h-9"
+                  placeholder={ss("city")}
+                  value={values.city}
+                  onChange={(e) => handleChange("city", e.target.value)}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex items-center justify-between gap-3 pt-1">
               <Button variant="outline" onClick={goBack}>
                 <ChevronLeft className="h-4 w-4 me-1" />
                 {ss("back")}
@@ -1112,59 +1146,59 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
       {step === 3 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="text-base">{ss("stepProgram")}</CardTitle>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div data-field="school_id">
-              <Label className={invalid("school_id") ? "text-destructive" : ""}>{`${ss("school")} *`}</Label>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
+              <div data-field="school_id">
+                <Label className={invalid("school_id") ? "text-destructive" : ""}>{`${ss("school")} *`}</Label>
 
-              <Select
-                value={values.school_id}
-                onValueChange={(v) => {
-                  dirty.current = true;
+                <Select
+                  value={values.school_id}
+                  onValueChange={(v) => {
+                    dirty.current = true;
 
-                  setErrors((e) => e.filter((f) => f !== "school_id"));
+                    setErrors((e) => e.filter((f) => f !== "school_id"));
 
-                  setValues((prev) => ({
-                    ...prev,
+                    setValues((prev) => ({
+                      ...prev,
 
-                    school_id: v,
+                      school_id: v,
 
-                    program_id: "",
+                      program_id: "",
 
-                    program_weeks: "",
+                      program_weeks: "",
 
-                    accommodation_id: "",
+                      accommodation_id: "",
 
-                    accommodation_weeks: "",
+                      accommodation_weeks: "",
 
-                    start_month: "",
+                      start_month: "",
 
-                    course_start: "",
+                      course_start: "",
 
-                    course_end: "",
-                  }));
-                }}
-              >
-                <SelectTrigger className={cn("mt-1", invalid("school_id") && "border-destructive")}>
-                  <SelectValue placeholder={ss("selectSchool")} />
-                </SelectTrigger>
+                      course_end: "",
+                    }));
+                  }}
+                >
+                  <SelectTrigger className={cn("mt-0.5 h-9", invalid("school_id") && "border-destructive")}>
+                    <SelectValue placeholder={ss("selectSchool")} />
+                  </SelectTrigger>
 
-                <SelectContent>
-                  {schools.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {label(s)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectContent>
+                    {schools.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {label(s)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              {invalid("school_id") && <p className="mt-1 text-xs text-destructive">{errText("school_id")}</p>}
-            </div>
+                {invalid("school_id") && <p className="mt-0.5 text-xs text-destructive">{errText("school_id")}</p>}
+              </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
               <div data-field="program_id">
                 <Label className={invalid("program_id") ? "text-destructive" : ""}>{`${ss("program")} *`}</Label>
 
@@ -1173,7 +1207,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   disabled={!values.school_id}
                   onValueChange={(v) => handleChange("program_id", v)}
                 >
-                  <SelectTrigger className={cn("mt-1", invalid("program_id") && "border-destructive")}>
+                  <SelectTrigger className={cn("mt-0.5 h-9", invalid("program_id") && "border-destructive")}>
                     <SelectValue
                       placeholder={
                         !values.school_id
@@ -1194,14 +1228,14 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   </SelectContent>
                 </Select>
 
-                {invalid("program_id") && <p className="mt-1 text-xs text-destructive">{errText("program_id")}</p>}
+                {invalid("program_id") && <p className="mt-0.5 text-xs text-destructive">{errText("program_id")}</p>}
               </div>
 
               <div data-field="program_weeks">
                 <Label className={invalid("program_weeks") ? "text-destructive" : ""}>{ss("programWeeks")}</Label>
 
                 <Input
-                  className={cn("mt-1", invalid("program_weeks") && "border-destructive")}
+                  className={cn("mt-0.5 h-9", invalid("program_weeks") && "border-destructive")}
                   type="number"
                   min="1"
                   max="104"
@@ -1212,53 +1246,50 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 />
 
                 {invalid("program_weeks") && (
-                  <p className="mt-1 text-xs text-destructive">{errText("program_weeks")}</p>
+                  <p className="mt-0.5 text-xs text-destructive">{errText("program_weeks")}</p>
                 )}
               </div>
             </div>
 
             {selectedProgram && programCost.weeklyRate !== null && (
-              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm space-y-1">
-                <ReviewRow
-                  label={ss("weeklyPrice")}
-                  value={formatMoney(programCost.weeklyRate, programCost.currency)}
-                />
-
-                <ReviewRow label={ss("weeks")} value={programCost.weeks || "—"} />
-
-                <ReviewRow
-                  label={ss("programTotal")}
-                  value={formatMoney(programCost.total, programCost.currency)}
-                  strong
-                />
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+                <span className="text-muted-foreground">
+                  {ss("weeklyPrice")}: {formatMoney(programCost.weeklyRate, programCost.currency)}
+                </span>
+                <span className="text-muted-foreground">
+                  {ss("weeks")}: {programCost.weeks || "—"}
+                </span>
+                <span className="font-semibold ms-auto">
+                  {ss("programTotal")}: {formatMoney(programCost.total, programCost.currency)}
+                </span>
               </div>
             )}
 
-            <div>
-              <Label>{ss("intakeMonth")}</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
+              <div>
+                <Label>{ss("intakeMonth")}</Label>
 
-              <Select value={values.start_month} onValueChange={(v) => handleChange("start_month", v)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={ss("selectIntakeMonth")} />
-                </SelectTrigger>
+                <Select value={values.start_month} onValueChange={(v) => handleChange("start_month", v)}>
+                  <SelectTrigger className="mt-0.5 h-9">
+                    <SelectValue placeholder={ss("selectIntakeMonth")} />
+                  </SelectTrigger>
 
-                <SelectContent className="max-h-56">
-                  {monthOptions.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                  <SelectContent className="max-h-56">
+                    {monthOptions.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <Label>{ss("arrivalDate")}</Label>
 
                 <Input
                   type="date"
-                  className="mt-1"
+                  className="mt-0.5 h-9"
                   value={values.arrival_date}
                   onChange={(e) => handleChange("arrival_date", e.target.value)}
                 />
@@ -1269,12 +1300,14 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
                 <Input
                   type="date"
-                  className={cn("mt-1", invalid("course_start") && "border-destructive")}
+                  className={cn("mt-0.5 h-9", invalid("course_start") && "border-destructive")}
                   value={values.course_start}
                   onChange={(e) => handleChange("course_start", e.target.value)}
                 />
 
-                {invalid("course_start") && <p className="mt-1 text-xs text-destructive">{errText("course_start")}</p>}
+                {invalid("course_start") && (
+                  <p className="mt-0.5 text-xs text-destructive">{errText("course_start")}</p>
+                )}
               </div>
 
               <div>
@@ -1282,7 +1315,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
                 <div
                   className={cn(
-                    "mt-1 flex items-center h-10 px-3 rounded-md border text-sm bg-muted/30",
+                    "mt-0.5 flex items-center h-9 px-3 rounded-md border text-sm bg-muted/30",
                     values.course_end ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
@@ -1291,7 +1324,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
               <div data-field="accommodation_id">
                 <Label className={invalid("accommodation_id") ? "text-destructive" : ""}>
                   {`${t("case.detail.accommodation")} *`}{" "}
@@ -1305,7 +1338,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                   disabled={!values.school_id}
                   onValueChange={(v) => handleChange("accommodation_id", v)}
                 >
-                  <SelectTrigger className={cn("mt-1", invalid("accommodation_id") && "border-destructive")}>
+                  <SelectTrigger className={cn("mt-0.5 h-9", invalid("accommodation_id") && "border-destructive")}>
                     <SelectValue
                       placeholder={
                         filteredAccoms.length === 0
@@ -1327,7 +1360,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 </Select>
 
                 {invalid("accommodation_id") && (
-                  <p className="mt-1 text-xs text-destructive">{errText("accommodation_id")}</p>
+                  <p className="mt-0.5 text-xs text-destructive">{errText("accommodation_id")}</p>
                 )}
               </div>
 
@@ -1337,7 +1370,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 </Label>
 
                 <Input
-                  className={cn("mt-1", invalid("accommodation_weeks") && "border-destructive")}
+                  className={cn("mt-0.5 h-9", invalid("accommodation_weeks") && "border-destructive")}
                   type="number"
                   min="1"
                   max="104"
@@ -1348,84 +1381,16 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                 />
 
                 {invalid("accommodation_weeks") && (
-                  <p className="mt-1 text-xs text-destructive">{errText("accommodation_weeks")}</p>
+                  <p className="mt-0.5 text-xs text-destructive">{errText("accommodation_weeks")}</p>
                 )}
               </div>
-            </div>
 
-            {selectedAccom && accomCost.weeklyRate !== null && (
-              <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm space-y-1">
-                <ReviewRow label={ss("weeklyPrice")} value={formatMoney(accomCost.weeklyRate, accomCost.currency)} />
+              <div data-field="insurance_id">
+                <Label className={invalid("insurance_id") ? "text-destructive" : ""}>
+                  {`${t("case.detail.insurance")} *`}
+                </Label>
 
-                <ReviewRow label={ss("weeks")} value={accomCost.weeks || "—"} />
-
-                <ReviewRow
-                  label={ss("accommodationTotal")}
-                  value={formatMoney(accomCost.total, accomCost.currency)}
-                  strong
-                />
-              </div>
-            )}
-
-            <div data-field="insurance_id">
-              <Label className={invalid("insurance_id") ? "text-destructive" : ""}>
-                {`${t("case.detail.insurance")} *`}
-              </Label>
-
-              <Select value={values.insurance_id} onValueChange={(v) => handleChange("insurance_id", v)}>
-                <SelectTrigger className={cn("mt-1", invalid("insurance_id") && "border-destructive")}>
-                  <SelectValue placeholder={ss("selectInsurance")} />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {insurances.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name}
-                      {i.provider ? ` — ${i.provider}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {invalid("insurance_id") && <p className="mt-1 text-xs text-destructive">{errText("insurance_id")}</p>}
-
-              {selectedInsurance && insuranceCost.total !== null && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatMoney(insuranceCost.total, selectedInsurance.currency ?? "EUR")}
-
-                  {insuranceCost.months
-                    ? ` · ${insuranceCost.months} × ${formatMoney(
-                        insuranceCost.monthly ?? 0,
-                        selectedInsurance.currency ?? "EUR",
-                      )}`
-                    : ""}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t mt-2">
-              <Button variant="outline" onClick={goBack} className="w-full sm:w-auto">
-                <ChevronLeft className="h-4 w-4 me-1" />
-                {ss("back")}
-              </Button>
-
-              <p className="text-xs text-muted-foreground text-center sm:text-start">{draftStatus}</p>
-
-              <Button onClick={handleSave} disabled={saving} className="gap-1.5 w-full sm:w-auto">
-                {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : errors.length === 0 && !autosaving ? (
-                  <Save className="h-4 w-4" />
-                ) : (
-                  <Check className="h-4 w-4" />
-                )}
-
-                {t("case.profile.save")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
+                <Select value={values.insurance_id} onValueChange={(v) => handleChange("insurance_id", v)}>
+                  <SelectTrigger className={cn("mt-0.5 h-9", invalid("insurance_id") && "border-destructive")}>
+                    <SelectValue placeholder={ss("selectInsurance")} />
+                  </SelectTrigger>
