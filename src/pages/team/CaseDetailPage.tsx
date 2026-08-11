@@ -10,8 +10,15 @@ import { statusColorClasses } from "@/lib/caseStatus";
 import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, CalendarPlus, MessageCircle, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { advanceCaseStage } from "@/services/CaseStageService";
 import { submitCaseForReview, sendInvoiceEmail } from "@/services/CaseInvoiceService";
@@ -20,16 +27,23 @@ import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
 import CaseOverviewPanel from "@/components/cases/CaseOverviewPanel";
 import CaseStageBlock, { type AppointmentRow } from "@/components/cases/CaseStageBlock";
-import CaseFinance from "@/components/cases/CaseFinance";
+import CaseProfilePanel from "@/components/cases/CaseProfilePanel";
+import CaseFinance, { type CaseFinanceHandle, type CaseFinanceReadiness } from "@/components/cases/CaseFinance";
 import CaseProgramTab from "@/components/cases/CaseProgramTab";
 import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
-import { readStudentProfile } from "@/lib/studentProfileFields";
+import {
+  missingProfileFields,
+  PROFILE_FIELD_LABEL_KEYS,
+  readStudentProfile,
+  type StudentProfileValues,
+} from "@/lib/studentProfileFields";
 import { readFunctionErrorBody } from "@/lib/functionError";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { submitBlockedMessage } from "@/lib/submitError";
 import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerModal";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 interface CaseRow {
   id: string;
@@ -44,11 +58,11 @@ interface CaseRow {
   [key: string]: unknown;
 }
 
-/** Stages where the money side of the case is relevant. */
-const FINANCE_STAGES = ["profile_completion", "payment_confirmed", "submitted", "enrollment_paid"];
-
 /** Stages where scheduling another appointment still makes sense. */
 const SCHEDULE_STAGES = ["contacted", "appointment_scheduled"];
+
+/** Active view inside the tabbed profile-completion layout. */
+type WorkflowView = "overview" | "profile" | "finance";
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -74,6 +88,12 @@ export default function CaseDetailPage() {
   const [pendingStage, setPendingStage] = useState<string | null>(null);
   const [advancing, setAdvancing] = useState(false);
 
+  /** Tabbed layout (profile_completion / payment_confirmed) active view. */
+  const [activeView, setActiveView] = useState<WorkflowView>("overview");
+  /** Latest readiness snapshot pushed up by the Finance tab. */
+  const [financeReadiness, setFinanceReadiness] = useState<CaseFinanceReadiness | null>(null);
+  const financeApiRef = useRef<CaseFinanceHandle>(null);
+
   /** Scrolls the Finance section into view (the single place to confirm the
       DARB payment now that the duplicate confirmation modal is gone). */
   const financeRef = useRef<HTMLElement>(null);
@@ -84,6 +104,35 @@ export default function CaseDetailPage() {
     el.classList.add("ring-2", "ring-primary/40");
     window.setTimeout(() => el.classList.remove("ring-2", "ring-primary/40"), 1800);
   };
+
+  /** Switch to the Finance tab and bring it into view (tabbed layout). */
+  const gotoFinance = () => {
+    setActiveView("finance");
+    window.setTimeout(focusFinance, 80);
+  };
+
+  /** Stable so CaseFinance's readiness effect never re-fires on re-renders. */
+  const handleReadinessChange = useCallback((readiness: CaseFinanceReadiness) => {
+    setFinanceReadiness((prev) => {
+      if (
+        prev &&
+        prev.servicesSelected === readiness.servicesSelected &&
+        prev.serviceTotal === readiness.serviceTotal &&
+        prev.agencyConfirmed === readiness.agencyConfirmed &&
+        prev.agencyAck === readiness.agencyAck &&
+        prev.confirming === readiness.confirming
+      ) {
+        return prev;
+      }
+      return readiness;
+    });
+  }, []);
+
+  /** Default to the view where the actual work happens for each stage. */
+  useEffect(() => {
+    if (caseData?.status === "profile_completion") setActiveView("profile");
+    else if (caseData?.status === "payment_confirmed") setActiveView("finance");
+  }, [caseData?.status]);
 
   const canManage = role === "admin" || role === "team_member";
 
@@ -149,7 +198,7 @@ export default function CaseDetailPage() {
   const handleTask = (task: CaseTask) => {
     switch (task.action) {
       case "confirm_payment":
-        focusFinance();
+        gotoFinance();
         break;
       case "schedule_appointment":
         setSchedulerOpen(true);
@@ -269,6 +318,16 @@ export default function CaseDetailPage() {
     }
   };
 
+  /** Top-bar "Confirm & Save": drives the Finance tab's single action, then
+      refetches so the case status flips to payment_confirmed. */
+  const handleConfirmAndSave = async () => {
+    try {
+      await financeApiRef.current?.confirmAndSave();
+    } finally {
+      await fetchData();
+    }
+  };
+
   // Only the first load blanks the page. Later refetches keep the tree mounted so
   // an in-progress student profile draft is never wiped by a background refresh.
   if (loading && !caseData) {
@@ -283,8 +342,26 @@ export default function CaseDetailPage() {
 
   const statusMeta = statuses.find((s) => s.key === caseData.status);
   const Back = isRtl ? ArrowRight : ArrowLeft;
-  const showFinance = FINANCE_STAGES.includes(caseData.status);
   const showTerminalTabs = caseData.status === "submitted" || caseData.status === "enrollment_paid";
+  const showTabbedWorkflow = caseData.status === "profile_completion" || caseData.status === "payment_confirmed";
+
+  /** Profile completeness used to drive the top action button. */
+  const profileValues = useMemo(
+    () => (submission ? readStudentProfile(caseData, submission) : null),
+    [caseData, submission],
+  );
+  const missingFields = profileValues ? missingProfileFields(profileValues) : [];
+  const fieldName = (f: keyof StudentProfileValues) => t(PROFILE_FIELD_LABEL_KEYS[f]);
+  const savedComplete = !!submission?.profile_completed_at && missingFields.length === 0;
+  const reopenedResend = submission?.review_status === "changes_requested" && !!submission?.payment_confirmed;
+
+  /** Finance is ready to confirm once services are chosen and (if still unpaid)
+      the receipt checkbox has been ticked in the Finance tab. */
+  const financeReadyToConfirm =
+    !!financeReadiness &&
+    financeReadiness.servicesSelected &&
+    financeReadiness.serviceTotal > 0 &&
+    (financeReadiness.agencyConfirmed || financeReadiness.agencyAck);
   const waHref = whatsappUrl(caseData.phone_number);
   const phoneUsable = isLinkablePhone(caseData.phone_number);
   const contactHref = isMobile ? `tel:+${normalizePhone(caseData.phone_number)}` : (waHref ?? "#");
@@ -421,6 +498,148 @@ export default function CaseDetailPage() {
           </TabsContent>
 
         </Tabs>
+      ) : showTabbedWorkflow ? (
+        <>
+          {/* Sticky action bar: view switcher + the single context-aware action. */}
+          <div className="sticky top-0 z-20 flex flex-col gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div className="hidden sm:block">
+                <Tabs value={activeView} onValueChange={(v) => setActiveView(v as WorkflowView)}>
+                  <TabsList className="grid h-auto w-full grid-cols-3">
+                    <TabsTrigger value="overview">{t("case.switcher.overview")}</TabsTrigger>
+                    <TabsTrigger value="profile">{t("case.switcher.profile")}</TabsTrigger>
+                    <TabsTrigger value="finance">{t("case.switcher.finance")}</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <Select value={activeView} onValueChange={(v) => setActiveView(v as WorkflowView)}>
+                <SelectTrigger className="sm:hidden flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="overview">{t("case.switcher.overview")}</SelectItem>
+                  <SelectItem value="profile">{t("case.switcher.profile")}</SelectItem>
+                  <SelectItem value="finance">{t("case.switcher.finance")}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="hidden flex-1 sm:block" />
+
+              {canManage &&
+                (() => {
+                  if (caseData.status === "profile_completion" && reopenedResend) {
+                    return (
+                      <Button className="gap-1.5" disabled={submitting} onClick={() => void handleResubmit()}>
+                        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        {t("case.submit.resend")}
+                      </Button>
+                    );
+                  }
+                  if (!savedComplete) {
+                    return (
+                      <Button className="gap-1.5" onClick={() => setActiveView("profile")}>
+                        {t("case.action.completeProfile", { defaultValue: "Complete student profile" })}
+                      </Button>
+                    );
+                  }
+                  if (caseData.status === "payment_confirmed") {
+                    return (
+                      <Button className="gap-1.5" disabled={submitting} onClick={() => void handleSubmitToAdmin()}>
+                        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        {t("finance.invite.action")}
+                      </Button>
+                    );
+                  }
+                  return (
+                    <Button
+                      className="gap-1.5"
+                      disabled={financeReadiness?.confirming}
+                      onClick={() => {
+                        if (financeReadyToConfirm) void handleConfirmAndSave();
+                        else gotoFinance();
+                      }}
+                    >
+                      {financeReadiness?.confirming ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Wallet className="h-4 w-4" />
+                      )}
+                      {t("finance.confirmAndSave.action")}
+                    </Button>
+                  );
+                })()}
+            </div>
+
+            {canManage &&
+              (() => {
+                if (caseData.status === "profile_completion" && reopenedResend) {
+                  return t("case.actionHint.resend", {
+                    defaultValue: "Save the requested change, then send the file back to admin.",
+                  });
+                }
+                if (!savedComplete) {
+                  return missingFields.length > 0
+                    ? `${t("case.actionHint.missingProfile", {
+                        defaultValue: "Complete the missing profile fields to continue:",
+                      })} ${missingFields.map(fieldName).join(" · ")}`
+                    : t("case.actionHint.missingProfile", {
+                        defaultValue: "Complete the missing profile fields to continue.",
+                      });
+                }
+                if (caseData.status === "profile_completion") {
+                  return financeReadyToConfirm
+                    ? t("case.actionHint.confirmReady", {
+                        defaultValue: "Confirms the DARB service payment and moves the case to payment confirmed.",
+                      })
+                    : t("case.actionHint.financeNotReady", {
+                        defaultValue:
+                          "Open Finance, select the DARB services and tick the receipt confirmation, then Confirm & Save.",
+                      });
+                }
+                return t("case.actionHint.submitReady", {
+                  defaultValue: "Submits to Admin: issues the DARB invoice and sends the student dashboard invite.",
+                });
+              })()}
+          </div>
+
+          {/* Panels stay mounted (hidden via CSS) so in-progress state — a draft
+              profile or a ticked receipt checkbox — survives tab switching. */}
+          <div className={cn("space-y-3", activeView !== "overview" && "hidden")}>
+            <CaseOverviewPanel caseData={caseData} />
+          </div>
+
+          <div className={cn("space-y-3", activeView !== "profile" && "hidden")}>
+            <CaseProfilePanel
+              status={caseData.status}
+              caseData={caseData}
+              submission={submission}
+              canManage={canManage}
+              onRefresh={fetchData}
+            />
+          </div>
+
+          <div className={cn("space-y-3", activeView !== "finance" && "hidden")}>
+            <div ref={financeRef} className="rounded-xl transition-shadow">
+              <CaseFinance
+                ref={financeApiRef}
+                caseId={caseData.id}
+                canManage={role === "admin" || role === "team_member"}
+                canConfirm={role === "admin"}
+                showGermany={role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"}
+                caseStatus={caseData.status}
+                studentEmail={studentInvite.email}
+                studentFullName={studentInvite.fullName}
+                studentPhone={studentInvite.phone}
+                studentUserId={caseData.student_user_id ?? null}
+                onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
+                submitting={submitting}
+                delegateActionsToTopBar
+                onReadinessChange={handleReadinessChange}
+              />
+            </div>
+          </div>
+        </>
       ) : (
         <>
           <CaseOverviewPanel caseData={caseData} />
@@ -432,30 +651,12 @@ export default function CaseDetailPage() {
             onSchedule={() => setSchedulerOpen(true)}
             onRecordOutcome={(apptId) => setOutcomeApptId(apptId)}
             onAdvance={(to) => setPendingStage(to)}
-            onConfirmPayment={focusFinance}
+            onConfirmPayment={gotoFinance}
             onRefresh={fetchData}
             onSubmitToAdmin={handleSubmitToAdmin}
             onResubmit={handleResubmit}
             submitting={submitting}
           />
-          {showFinance && (
-            <div ref={financeRef} className="rounded-xl transition-shadow">
-            <CaseFinance
-              caseId={caseData.id}
-              canManage={role === "admin" || role === "team_member"}
-              canConfirm={role === "admin"}
-              showGermany={role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"}
-              caseStatus={caseData.status}
-              studentEmail={studentInvite.email}
-              studentFullName={studentInvite.fullName}
-              studentPhone={studentInvite.phone}
-              studentUserId={caseData.student_user_id ?? null}
-              onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
-              submitting={submitting}
-            />
-            </div>
-          )}
-
         </>
       )}
 
@@ -489,10 +690,10 @@ export default function CaseDetailPage() {
       )}
 
       {/*
-        The DARB payment is now confirmed in the Finance section's single
-        "Confirm & Save" action. The duplicate confirmation modal has been
-        removed; the attention-panel / stage-block "confirm payment" buttons
-        scroll to the Finance section instead.
+        The DARB payment is confirmed from the top action bar's single
+        "Confirm & Save" button, which drives the Finance tab's one action.
+        The attention-panel / stage-block "confirm payment" buttons switch to
+        the Finance tab instead.
       */}
 
       <Dialog open={!!pendingStage} onOpenChange={(open) => !open && setPendingStage(null)}>

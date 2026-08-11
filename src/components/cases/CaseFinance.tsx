@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -44,6 +44,31 @@ interface Props {
    */
   onSubmitToAdmin?: () => void;
   submitting?: boolean;
+
+  /**
+   * When the page's top action bar drives the single confirm/submit action
+   * (profile_completion + payment_confirmed in the tabbed layout), hide the
+   * duplicate in-tab confirm button and invite/submit block.
+   */
+  delegateActionsToTopBar?: boolean;
+  /** Live readiness snapshot pushed to the page so the top button stays in sync. */
+  onReadinessChange?: (readiness: CaseFinanceReadiness) => void;
+}
+
+
+/** What the top "Confirm & Save" button needs to know about the Finance tab. */
+export interface CaseFinanceReadiness {
+  servicesSelected: boolean;
+  serviceTotal: number;
+  agencyConfirmed: boolean;
+  agencyAck: boolean;
+  confirming: boolean;
+}
+
+export interface CaseFinanceHandle {
+  /** Persist services and, when the receipt checkbox is ticked, confirm the DARB fee. */
+  confirmAndSave: () => Promise<void>;
+  getReadiness: () => CaseFinanceReadiness;
 }
 
 
@@ -64,19 +89,24 @@ const schoolPaymentTypes = ["school_course", "school_accommodation", "school_ins
 
 type SchoolPaymentType = (typeof schoolPaymentTypes)[number];
 
-const CaseFinance: React.FC<Props> = ({
-  caseId,
-  canManage = false,
-  canConfirm = false,
-  showGermany = true,
-  caseStatus,
-  studentEmail,
-  studentFullName,
-  studentPhone,
-  studentUserId,
-  onSubmitToAdmin,
-  submitting = false,
-}) => {
+const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
+  {
+    caseId,
+    canManage = false,
+    canConfirm = false,
+    showGermany = true,
+    caseStatus,
+    studentEmail,
+    studentFullName,
+    studentPhone,
+    studentUserId,
+    onSubmitToAdmin,
+    submitting = false,
+    delegateActionsToTopBar = false,
+    onReadinessChange,
+  },
+  ref,
+) {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
   const isArabic = i18n.language?.startsWith("ar");
@@ -282,6 +312,29 @@ const CaseFinance: React.FC<Props> = ({
   const financeComplete = agencyConfirmed && serviceTotal > 0;
   const canConfirmNow = canManage && serviceTotal > 0 && (!agencyConfirmed ? agencyAck : true);
   const buttonDisabled = confirmingAgency || !servicesSelected || !canConfirmNow;
+
+  /** Live readiness snapshot for the page's top action bar. */
+  const readiness = useMemo<CaseFinanceReadiness>(
+    () => ({
+      servicesSelected,
+      serviceTotal,
+      agencyConfirmed,
+      agencyAck,
+      confirming: confirmingAgency,
+    }),
+    [servicesSelected, serviceTotal, agencyConfirmed, agencyAck, confirmingAgency],
+  );
+
+  useEffect(() => {
+    onReadinessChange?.(readiness);
+  }, [readiness, onReadinessChange]);
+
+  useImperativeHandle(ref, () => ({
+    confirmAndSave: async () => {
+      await handleConfirmAndSave();
+    },
+    getReadiness: () => readiness,
+  }));
 
   return (
     <Card className="overflow-hidden">
@@ -641,7 +694,7 @@ const CaseFinance: React.FC<Props> = ({
             case, issues + emails the DARB invoice, and sends the student their
             dashboard activation invite. It is not shown before payment is
             confirmed, and it disappears once the case is already submitted. */}
-        {canManage && agencyConfirmed && caseStatus === "payment_confirmed" && onSubmitToAdmin && (
+        {canManage && !delegateActionsToTopBar && agencyConfirmed && caseStatus === "payment_confirmed" && onSubmitToAdmin && (
           <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-primary" />
@@ -688,8 +741,9 @@ const CaseFinance: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Single confirmation action. */}
-        {canManage && (
+        {/* Single confirmation action — delegated to the page's top bar in the
+            tabbed layout (profile_completion / payment_confirmed). */}
+        {canManage && !delegateActionsToTopBar && (
           <div className="space-y-2">
             {financeComplete ? (
               <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50/50 p-3 text-sm font-medium text-emerald-700">
@@ -765,6 +819,6 @@ const CaseFinance: React.FC<Props> = ({
       </Dialog>
     </Card>
   );
-};
+});
 
 export default CaseFinance;

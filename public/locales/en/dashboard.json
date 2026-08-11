@@ -58,7 +58,7 @@
     "upload": "Upload Document",
     "uploadNew": "Upload New Document",
     "file": "File",
-    "fileHint": "PDF, DOC, DOCX, JPG, PNG (max 10 MB)",
+    "fileHint": "PDF, DOC, DOCX, JPG, JPEG, PNG, WEBP, HEIC",
     "category": "Category",
     "expiryDate": "Expiry Date (optional)",
     "notes": "Notes",
@@ -2654,6 +2654,21 @@
       "profile": "Student profile",
       "finance": "Finance summary",
       "notProvided": "Not provided"
+    },
+    "switcher": {
+      "overview": "Overview",
+      "profile": "Profile completion",
+      "finance": "Finance"
+    },
+    "action": {
+      "completeProfile": "Complete student profile"
+    },
+    "actionHint": {
+      "missingProfile": "Complete the missing profile fields to continue:",
+      "financeNotReady": "Open Finance, select the DARB services and tick the receipt confirmation, then Confirm & Save.",
+      "confirmReady": "Confirms the DARB service payment and moves the case to payment confirmed.",
+      "resend": "Save the requested change, then send the file back to admin.",
+      "submitReady": "Submits to Admin: issues the DARB invoice and sends the student dashboard invite."
     },
     "program": {
       "program": "Program",
