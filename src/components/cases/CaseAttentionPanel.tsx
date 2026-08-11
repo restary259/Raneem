@@ -1,14 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  AlertTriangle,
-  CalendarOff,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  FileX,
-  PhoneOff,
-} from "lucide-react";
+import { CalendarOff, ChevronLeft, ChevronRight, ClipboardList, FileX, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CaseTask } from "./caseTasks";
 
@@ -18,7 +10,6 @@ interface Props {
 }
 
 const ICONS: Record<CaseTask["action"], React.ElementType> = {
-  confirm_payment: AlertTriangle,
   upload_document: FileX,
   schedule_appointment: CalendarOff,
   record_outcome: ClipboardList,
@@ -26,7 +17,6 @@ const ICONS: Record<CaseTask["action"], React.ElementType> = {
 };
 
 const ACTION_LABEL: Record<CaseTask["action"], string> = {
-  confirm_payment: "case.tasks.action.confirmPayment",
   upload_document: "case.tasks.action.uploadDocument",
   schedule_appointment: "case.tasks.action.schedule",
   record_outcome: "case.tasks.action.recordOutcome",
