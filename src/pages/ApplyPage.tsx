@@ -13,6 +13,11 @@ import FieldGroup from "@/components/common/FieldGroup";
 import ConsentBlock from "@/components/common/ConsentBlock";
 import { recordConsent } from "@/lib/consent";
 
+// Applicant data is PII — never print it to a production browser console.
+const isDev = Boolean(import.meta.env.DEV);
+const debug = (...args: unknown[]) => { if (isDev) console.log(...args); };
+const debugError = (...args: unknown[]) => { if (isDev) console.error(...args); };
+
 
 const PASSPORT_TYPES = [
   { value: "israeli_blue", label: "جواز أزرق (إسرائيلي)", labelEn: "Israeli Blue Passport" },
