@@ -1,8 +1,4 @@
-Here's the complete edited file. Replace the entire contents of `src/components/cases/CaseProfileForm.tsx` with this.
 
-## File: `src/components/cases/CaseProfileForm.tsx`
-
-```tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
