@@ -8,35 +8,6 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-const missingEnvVars: string[] = [];
-if (!SUPABASE_URL) missingEnvVars.push('VITE_SUPABASE_URL');
-if (!SUPABASE_PUBLISHABLE_KEY) missingEnvVars.push('VITE_SUPABASE_PUBLISHABLE_KEY');
-
-if (missingEnvVars.length > 0) {
-  const message =
-    `[Darb] Supabase client could not be initialized: missing build-time env ` +
-    `var(s): ${missingEnvVars.join(', ')}. The app cannot connect to the ` +
-    `backend. Ensure these are configured as Vercel/Lovable build environment ` +
-    `variables (they are read from import.meta.env at build time; .env is ` +
-    `git-ignored and never deployed).`;
-  console.error(message);
-  // Surface a visible error instead of a silent white screen.
-  if (typeof document !== 'undefined') {
-    const root = document.getElementById('root');
-    if (root && !root.innerHTML.trim()) {
-      root.innerHTML =
-        `<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;direction:ltr;padding:2rem;max-width:640px;margin:2rem auto;">` +
-        `<h1 style="color:#b91c1c;">Configuration error</h1>` +
-        `<p>The site cannot start because required configuration is missing.</p>` +
-        `<pre style="background:#f3f4f6;padding:1rem;overflow:auto;border-radius:.5rem;">${message}</pre>` +
-        `</div>`;
-    }
-  }
-  // Still throw so the ErrorBoundary (and any error tracking) captures it with
-  // a human-readable message rather than the cryptic SDK "supabaseUrl is required."
-  throw new Error(message);
-}
-
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
