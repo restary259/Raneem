@@ -238,7 +238,7 @@ export default function TeamWorkPage() {
             {returned.map((r) => (
               <div
                 key={r.id}
-                className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 rounded-lg border border-border bg-background p-3"
+                className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border bg-background p-3"
               >
                 <div className="min-w-0">
                   <div className="font-medium truncate">{r.case?.full_name ?? "—"}</div>
@@ -272,7 +272,7 @@ export default function TeamWorkPage() {
             {overdueAppts.map((a) => (
               <div
                 key={a.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-lg border border-border bg-background p-3"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border bg-background p-3"
               >
                 <div className="min-w-0">
                   <div className="font-medium truncate">{a.case?.full_name ?? "—"}</div>
@@ -290,7 +290,7 @@ export default function TeamWorkPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-primary" />
@@ -311,7 +311,7 @@ export default function TeamWorkPage() {
                 {todayAppts.map((a) => (
                   <div
                     key={a.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-lg border border-border p-3"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border p-3"
                   >
                     <div className="min-w-0">
                       <div className="font-medium truncate">{a.case?.full_name ?? "—"}</div>
@@ -350,7 +350,7 @@ export default function TeamWorkPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Clock className="h-4 w-4 text-amber-600" />
@@ -375,7 +375,7 @@ export default function TeamWorkPage() {
                   return (
                     <div
                       key={c.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border p-3"
                     >
                       <div className="min-w-0">
                         <div className="font-medium truncate">{c.full_name}</div>

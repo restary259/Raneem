@@ -307,7 +307,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
           </header>
 
           {/* Page content */}
-          <main className={cn("flex-1 overflow-auto md:pb-0", chatFullscreen ? "pb-0" : "pb-16")}>
+          <main className={cn("flex-1 min-w-0 overflow-y-auto overflow-x-hidden md:pb-0", chatFullscreen ? "pb-0" : "pb-16")}>
             <TabErrorBoundary>
               <Outlet />
             </TabErrorBoundary>
