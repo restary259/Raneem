@@ -63,13 +63,17 @@ export async function loadProgrammeCosts({
 
   const pick = (r: any) => (isArabic ? r?.name_ar || r?.name_en : r?.name_en || r?.name_ar) ?? "";
 
-  // `*_price` on the submission is the TOTAL (weekly rate × weeks). Only when
-  // it is missing do we fall back to deriving it from the catalogue tiers.
-  const programTotal =
-    submission.program_price != null
-      ? Number(submission.program_price)
-      : computeWeeklyCost(progRes?.data, submission.program_weeks).total;
-  if (progRes?.data && programTotal) {
+  /*
+   * `*_price` on the submission is the TOTAL agreed with the student
+   * (weekly rate × weeks), frozen when the file was saved. It is the only
+   * figure we quote. A missing snapshot means the file was never priced —
+   * we show zero rather than silently inventing a live catalogue price that
+   * nobody agreed to.
+   */
+  const snapshot = (value: unknown) => (value == null ? 0 : Number(value));
+
+  const programTotal = snapshot(submission.program_price);
+  if (progRes?.data) {
     lines.push({
       label: `${labels.program} — ${pick(progRes.data)}`,
       amount: programTotal,
@@ -77,11 +81,8 @@ export async function loadProgrammeCosts({
     });
   }
 
-  const accomTotal =
-    submission.accommodation_price != null
-      ? Number(submission.accommodation_price)
-      : computeWeeklyCost(accomRes?.data, submission.accommodation_weeks).total;
-  if (accomRes?.data && accomTotal) {
+  const accomTotal = snapshot(submission.accommodation_price);
+  if (accomRes?.data) {
     lines.push({
       label: `${labels.accommodation} — ${pick(accomRes.data)}`,
       amount: accomTotal,
@@ -89,23 +90,24 @@ export async function loadProgrammeCosts({
     });
   }
 
-
   if (insRes?.data) {
+    /*
+     * Insurance is priced from age and course dates, so recomputing is safe
+     * and matches what the form displayed; the snapshot is the fallback.
+     */
     const cost = computeInsuranceCost(
       insRes.data,
       ageFromDob(dateOfBirth ?? null),
       submission.program_start_date,
       submission.program_end_date,
     );
-    const total = cost.total ?? (submission.insurance_price ? Number(submission.insurance_price) : null);
-    if (total) {
-      lines.push({
-        label: `${labels.insurance} — ${insRes.data.name}`,
-        amount: total,
-        currency: insRes.data.currency ?? "EUR",
-      });
-    }
+    lines.push({
+      label: `${labels.insurance} — ${insRes.data.name}`,
+      amount: cost.total ?? snapshot(submission.insurance_price),
+      currency: insRes.data.currency ?? "EUR",
+    });
   }
+
 
   return lines;
 }

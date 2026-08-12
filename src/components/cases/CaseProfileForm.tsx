@@ -425,7 +425,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
       return payload.draft_updated_at as string;
     },
-    [caseData.id, submission, selectedProgram, selectedAccom],
+    [caseData.id, submission, selectedProgram, selectedAccom, selectedInsurance],
   );
 
   /*
