@@ -19,7 +19,18 @@ const APP_URL = "https://darb.agency";
 
 type Admin = ReturnType<typeof createClient>;
 
-/** Queue a branded email through Lovable Emails (send-transactional-email). */
+/**
+ * Queue a branded email through Lovable Emails (send-transactional-email).
+ *
+ * Uses raw fetch() rather than admin.functions.invoke() because the
+ * Supabase JS FunctionsClient can strip/override the Authorization header
+ * on nested function-to-function calls (it injects the user session token,
+ * and a service-role client has none). A raw fetch with an explicit
+ * Authorization: Bearer <service-role-key> header guarantees the internal
+ * call passes requireAuth's `token === serviceKey` fast-path in
+ * send-transactional-email. This mirrors the working pattern in
+ * approve-partner-recruit and send-event-email.
+ */
 async function sendTemplate(
   admin: Admin,
   templateName: string,
@@ -27,21 +38,38 @@ async function sendTemplate(
   templateData: Record<string, unknown>,
   idempotencyKey: string,
 ): Promise<{ ok: boolean; detail?: string }> {
-  const { data, error } = await admin.functions.invoke("send-transactional-email", {
-    body: { templateName, recipientEmail, idempotencyKey, templateData },
-    headers: {
-      Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-    },
-  });
-  if (error) {
-    const detail =
-      // deno-lint-ignore no-explicit-any
-      (await (error as any)?.context?.text?.().catch(() => null)) ?? error.message;
-    console.error(`[chat-email failed] to=${recipientEmail} template=${templateName}`, detail);
-    return { ok: false, detail: String(detail) };
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) {
+    console.error("[chat-email] missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    return { ok: false, detail: "Server configuration error" };
+  }
+  let resp: Response;
+  try {
+    resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({ templateName, recipientEmail, idempotencyKey, templateData }),
+    });
+  } catch (err) {
+    console.error(`[chat-email fetch failed] to=${recipientEmail} template=${templateName}`, err);
+    return { ok: false, detail: String((err as Error)?.message ?? err) };
+  }
+  const text = await resp.text().catch(() => "");
+  if (!resp.ok) {
+    console.error(`[chat-email failed] to=${recipientEmail} template=${templateName} status=${resp.status}`, text);
+    return { ok: false, detail: text || `HTTP ${resp.status}` };
   }
   // deno-lint-ignore no-explicit-any
-  const body = data as any;
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    /* non-JSON success body is fine */
+  }
   if (body && body.success === false) {
     console.warn(`[chat-email not sent] to=${recipientEmail} reason=${body.reason}`);
     return { ok: false, detail: String(body.reason ?? "not_sent") };

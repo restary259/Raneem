@@ -96,25 +96,36 @@ serve(async (req) => {
 
       if (profile?.email) {
         try {
-          await admin.functions.invoke("send-transactional-email", {
-            headers: {
-              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
-            },
-            body: {
-              templateName: "appointment-reminder",
-              recipientEmail: profile.email,
-              idempotencyKey: `appt-reminder-${reminder.id}`,
-              templateData: {
-                recipientName: profile.full_name ?? "",
-                studentName,
-                caseReference,
-                whenText,
-                windowLabel: isOneHour ? "1h" : "24h",
-                notes: appt.notes ?? "",
-                link: "https://darb.agency/team/appointments",
+          // Use raw fetch() with an explicit Authorization header. The Supabase
+          // JS FunctionsClient can strip the Authorization header on nested
+          // function-to-function invokes (no user session on a service-role
+          // client), which makes send-transactional-email's requireAuth reject
+          // with 401 Unauthorized. Mirrors notify-new-message / approve-partner-recruit.
+          const supabaseUrl = Deno.env.get("SUPABASE_URL");
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+          if (supabaseUrl && serviceKey) {
+            await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${serviceKey}`,
               },
-            },
-          });
+              body: JSON.stringify({
+                templateName: "appointment-reminder",
+                recipientEmail: profile.email,
+                idempotencyKey: `appt-reminder-${reminder.id}`,
+                templateData: {
+                  recipientName: profile.full_name ?? "",
+                  studentName,
+                  caseReference,
+                  whenText,
+                  windowLabel: isOneHour ? "1h" : "24h",
+                  notes: appt.notes ?? "",
+                  link: "https://darb.agency/team/appointments",
+                },
+              }),
+            });
+          }
         } catch (e) {
           console.warn("reminder email failed", e);
         }
