@@ -74,6 +74,8 @@ serve(async (req) => {
       const label = studentName || caseReference || whenText;
 
       // In-app notification; the notifications trigger fans this out to push.
+      // Idempotent via _dedupe_key, so a retry that only needs the email will
+      // not create a duplicate in-app notification.
       await admin.rpc("emit_notification", {
         _user_id: reminder.recipient_id,
         _actor_id: null,
@@ -87,24 +89,30 @@ serve(async (req) => {
         _dedupe_key: `appt-reminder-${reminder.id}`,
       });
 
-      // Best-effort email; never blocks the in-app/push reminder.
+      // Best-effort email; never blocks the in-app/push reminder. The reminder
+      // is only marked sent_at once the email path succeeds (or there was no
+      // email to send), so a downstream 401/500 leaves sent_at NULL and the cron
+      // retries on the next run. fetch() does NOT throw on a non-2xx response,
+      // so we must inspect resp.ok explicitly — the old try/catch silently
+      // swallowed HTTP failures and stamped sent_at regardless.
       const { data: profile } = await admin
         .from("profiles")
         .select("email, full_name")
         .eq("id", reminder.recipient_id)
         .maybeSingle();
 
+      let emailOk = true; // no email to send => treat as success
       if (profile?.email) {
-        try {
-          // Use raw fetch() with an explicit Authorization header. The Supabase
-          // JS FunctionsClient can strip the Authorization header on nested
-          // function-to-function invokes (no user session on a service-role
-          // client), which makes send-transactional-email's requireAuth reject
-          // with 401 Unauthorized. Mirrors notify-new-message / approve-partner-recruit.
-          const supabaseUrl = Deno.env.get("SUPABASE_URL");
-          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-          if (supabaseUrl && serviceKey) {
-            await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+        emailOk = false;
+        const supabaseUrl = Deno.env.get("SUPABASE_URL");
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (!supabaseUrl || !serviceKey) {
+          console.error("[appt-reminder] missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", {
+            service_key_present: false,
+          });
+        } else {
+          try {
+            const resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -125,17 +133,39 @@ serve(async (req) => {
                 },
               }),
             });
+            if (!resp.ok) {
+              const body = await resp.text().catch(() => "");
+              console.error("[appt-reminder] email failed", {
+                downstream: "send-transactional-email",
+                status: resp.status,
+                auth_mode: "service_role",
+                service_key_present: true,
+                body,
+              });
+            } else {
+              emailOk = true;
+              console.log("[appt-reminder] email queued", {
+                downstream: "send-transactional-email",
+                status: 200,
+                auth_mode: "service_role",
+                service_key_present: true,
+              });
+            }
+          } catch (e) {
+            console.error("[appt-reminder] email fetch threw", e);
           }
-        } catch (e) {
-          console.warn("reminder email failed", e);
         }
       }
 
-      await admin
-        .from("appointment_reminders")
-        .update({ sent_at: new Date().toISOString() })
-        .eq("id", reminder.id);
-      sent++;
+      // Only stamp sent_at when the email succeeded (or was not needed).
+      // On failure, leave sent_at NULL so the cron retries the next run.
+      if (emailOk) {
+        await admin
+          .from("appointment_reminders")
+          .update({ sent_at: new Date().toISOString() })
+          .eq("id", reminder.id);
+        sent++;
+      }
     }
 
     return json({ ok: true, sent });

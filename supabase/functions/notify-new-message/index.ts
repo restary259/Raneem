@@ -60,7 +60,13 @@ async function sendTemplate(
   }
   const text = await resp.text().catch(() => "");
   if (!resp.ok) {
-    console.error(`[chat-email failed] to=${recipientEmail} template=${templateName} status=${resp.status}`, text);
+    console.error(`[chat-email failed] to=${recipientEmail} template=${templateName} status=${resp.status}`, {
+      downstream: "send-transactional-email",
+      status: resp.status,
+      auth_mode: "service_role",
+      service_key_present: !!serviceKey,
+      body: text,
+    });
     return { ok: false, detail: text || `HTTP ${resp.status}` };
   }
   // deno-lint-ignore no-explicit-any
@@ -74,7 +80,12 @@ async function sendTemplate(
     console.warn(`[chat-email not sent] to=${recipientEmail} reason=${body.reason}`);
     return { ok: false, detail: String(body.reason ?? "not_sent") };
   }
-  console.log(`[chat-email queued] to=${recipientEmail} template=${templateName}`);
+  console.log(`[chat-email queued] to=${recipientEmail} template=${templateName}`, {
+    downstream: "send-transactional-email",
+    status: 200,
+    auth_mode: "service_role",
+    service_key_present: !!serviceKey,
+  });
   return { ok: true };
 }
 
