@@ -274,7 +274,7 @@ export default function TeamAppointmentsPage() {
       fetchAppts();
     } catch (err: any) {
       console.error("confirmMove error:", err);
-      toast({ variant: "destructive", description: t("common.error") });
+      toast({ variant: "destructive", description: apptErrorMessage(err) });
     } finally {
       setConfirmingMove(false);
     }
