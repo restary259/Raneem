@@ -1953,6 +1953,7 @@
       "errNoCase": "Please select a case or enter a student name",
       "errNoName": "Please enter a student name",
       "errWorkHours": "Appointments must be between 8 am and 8 pm.",
+      "errConflict": "This time overlaps another appointment you already have. Pick a different slot.",
       "errDropWorkHours": "Appointments can only be scheduled between 8 am and 8 pm.",
       "dayAbbrevSun": "Sun",
       "dayAbbrevMon": "Mon",
