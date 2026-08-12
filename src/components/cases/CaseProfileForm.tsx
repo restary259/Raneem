@@ -356,14 +356,35 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
       const accCost = computeWeeklyCost(selectedAccom as any, accomWeeks);
 
+      /*
+       * The euro figures are snapshotted here so the finance panel, the
+       * summary and any later export all quote the same numbers the team
+       * agreed with the student, even if the catalogue price changes later.
+       */
+      const insCost = computeInsuranceCost(
+        selectedInsurance as any,
+        ageFromDob(vals.date_of_birth),
+        vals.course_start || null,
+        vals.course_end || null,
+      );
+
       const payload: Record<string, unknown> = {
         case_id: caseData.id,
+
+        /*
+         * The school is a first-class field on the submission: the readiness
+         * checklist and the admin review both read it directly, so it must be
+         * written and never inferred at read time.
+         */
+        school_id: vals.school_id || selectedProgram?.school_id || selectedAccom?.school_id || null,
 
         program_id: vals.program_id || null,
 
         accommodation_id: vals.accommodation_id || null,
 
         insurance_id: vals.insurance_id || null,
+
+        insurance_price: vals.insurance_id ? (insCost.total ?? 0) : 0,
 
         program_start_date: vals.course_start || null,
 
