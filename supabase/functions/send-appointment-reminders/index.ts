@@ -97,6 +97,9 @@ serve(async (req) => {
       if (profile?.email) {
         try {
           await admin.functions.invoke("send-transactional-email", {
+            headers: {
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+            },
             body: {
               templateName: "appointment-reminder",
               recipientEmail: profile.email,
