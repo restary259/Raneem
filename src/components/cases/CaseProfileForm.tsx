@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateIntakeMonths } from "@/utils/intakeMonths";
 import { DOB_MONTHS, DOB_YEARS, daysInMonth, normalizeDate } from "@/utils/dateUtils";
 import { differenceInYears } from "date-fns";
+import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 import {
   fullNameOf,
   missingProfileFields,
@@ -196,6 +197,14 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
   const [saving, setSaving] = useState(false);
 
   const [errors, setErrors] = useState<string[]>([]);
+
+  // student_email already belongs to an existing account (caught before submit
+  // so we never send a dead activation link that accept-invitation will reject).
+  const [emailTaken, setEmailTaken] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const emailCheckSeq = useRef(0);
+  // The student's own existing email — never flag it as taken while editing.
+  const ownEmail = (normalizeEmail(readStudentProfile(caseData, submission).student_email) || "").toLowerCase();
 
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>((submission?.draft_updated_at as string) ?? null);
 
@@ -527,6 +536,36 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
   const fieldName = (f: string) => t(PROFILE_FIELD_LABEL_KEYS[f as keyof StudentProfileValues] ?? f);
 
+  /* ── Email availability (debounced) ─────────────────────────────────── */
+  useEffect(() => {
+    const value = (values.student_email ?? "").trim();
+    if (!value || !value.includes("@")) {
+      setEmailTaken(false);
+      setCheckingEmail(false);
+      return;
+    }
+    if (value.toLowerCase() === ownEmail) {
+      setEmailTaken(false);
+      setCheckingEmail(false);
+      return;
+    }
+    setCheckingEmail(true);
+    const seq = ++emailCheckSeq.current;
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await checkEmailAvailability(value);
+        if (seq !== emailCheckSeq.current) return;
+        setEmailTaken(!res.available);
+      } catch {
+        if (seq !== emailCheckSeq.current) return;
+        setEmailTaken(false);
+      } finally {
+        if (seq === emailCheckSeq.current) setCheckingEmail(false);
+      }
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [values.student_email, ownEmail]);
+
   /*
    * ----------------------------------------------------------------------
    * VALIDATION
@@ -554,6 +593,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       const allMissing = missingProfileFields(values);
 
       if (allMissing.includes("student_email")) {
+        missing.push("student_email");
+      } else if (emailTaken || checkingEmail) {
+        // A taken email (or one still being checked) blocks advancing.
         missing.push("student_email");
       }
 
@@ -647,6 +689,12 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
   const handleSave = async () => {
     const missing = missingProfileFields(values) as string[];
+
+    // A taken (or still-being-checked) email blocks saving even though it isn't
+    // "missing" — surface it as a step-2 error so the team sees why it refused.
+    if (!missing.includes("student_email") && (emailTaken || checkingEmail)) {
+      missing.push("student_email");
+    }
 
     if (missing.length > 0) {
       setErrors(missing);
@@ -821,10 +869,17 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
   const invalid = (f: keyof StudentProfileValues) => errors.includes(f as string);
 
-  const errText = (_f: keyof StudentProfileValues) =>
-    t("case.profile.fieldRequired", {
-      defaultValue: "This field is required",
-    });
+  const errText = (f: keyof StudentProfileValues) => {
+    if (f === "student_email" && emailTaken) {
+      return t("case.profile.errEmailTaken", {
+        defaultValue: "This email already has an account — choose another one",
+      });
+    }
+    if (f === "student_email" && checkingEmail) {
+      return t("case.profile.fieldRequired", { defaultValue: "This field is required" });
+    }
+    return t("case.profile.fieldRequired", { defaultValue: "This field is required" });
+  };
 
   const field = (name: keyof StudentProfileValues, labelText: string, type?: string, placeholder?: string) => (
     <TextField
@@ -1444,10 +1499,10 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
               <Button
                 onClick={handleSave}
-                disabled={saving || missingProfileFields(values).length > 0}
+                disabled={saving || missingProfileFields(values).length > 0 || emailTaken || checkingEmail}
                 className="gap-1.5 w-full sm:w-auto"
               >
-                {saving ? (
+                {(saving || checkingEmail) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : errors.length === 0 && !autosaving ? (
                   <Save className="h-4 w-4" />

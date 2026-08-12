@@ -394,29 +394,21 @@ serve(async (req) => {
         );
       }
 
-      const resent = await sendInvite(linkedEmail, student_full_name);
-
-      // H1: the one-time activation link is returned to staff only when the
-      // email failed (so it can be passed on manually) and only to admins.
-      const linkedActivationUrl =
-        resent === false && isAdmin ? capturedActivationUrl : null;
-
+      // The linked student already has an activated auth account, so an
+      // activation invite would be a dead link: accept-invitation rejects any
+      // email that already belongs to an account. Do not email one; the case
+      // is already linked, so just confirm that.
       return jsonResponse(
         {
           success: true,
           user_id: caseData.student_user_id,
           email: linkedEmail,
           mode: "invite",
-          invited: resent === true,
-          already_invited: resent === "already_sent",
-          invitation_failed: resent === false,
-          activation_url: linkedActivationUrl,
-          message:
-            resent === "already_sent"
-              ? "An activation link was already sent recently — ask the student to check their inbox"
-              : resent === true
-                ? "Student account linked and activation link sent"
-                : "Student account linked, but the activation email could not be sent. The invitation can be retried.",
+          account_created: false,
+          case_linked: true,
+          invited: false,
+          already_activated: true,
+          message: "This student already has an activated account; no activation email was sent.",
         },
         200,
         corsHeaders,
@@ -479,7 +471,7 @@ serve(async (req) => {
     const existingUser = identity.exists && identity.userId ? { id: identity.userId } : null;
 
     // ── Existing student account ─────────────────────────────────────────
-    let studentId: string;
+    let studentId: string | null = null;
     let accountCreated = false;
 
     if (existingUser) {
@@ -549,35 +541,104 @@ serve(async (req) => {
             corsHeaders,
           );
         }
-      }
-    } else {
-      // A bootstrap credential is always minted for auth; in invite mode it is
-      // discarded (the student picks their own via the activation link), while
-      // manual mode hands it to staff. M3: was `mode === "manual" ? X : X`.
-      const password = generateTempPassword();
-      if (mode === "manual") tempPassword = password;
-
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: student_email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: student_full_name,
-          phone_number: student_phone ?? caseData?.phone_number ?? "",
-        },
-      });
-
-      if (createError || !newUser?.user) {
-        console.error("create-student-from-case: account creation failed", createError);
+      } else {
+        // Invite mode + an existing STUDENT account that is already activated:
+        // accept-invitation would reject the email, so a fresh activation link is
+        // dead. Link the case now and return without emailing.
+        if (case_id) {
+          await supabaseAdmin
+            .from("cases")
+            .update({ student_user_id: studentId })
+            .eq("id", case_id);
+        }
         return jsonResponse(
-          { error: createError?.message ?? "Unable to create student account", code: "ACCOUNT_CREATION_FAILED" },
-          400,
+          {
+            success: true,
+            user_id: studentId,
+            email: student_email,
+            mode: "invite",
+            account_created: false,
+            case_linked: !!case_id,
+            invited: false,
+            already_activated: true,
+            message: "This student already has an activated account; no activation email was sent.",
+          },
+          200,
           corsHeaders,
         );
       }
+    } else {
+      // Brand-new email. Manual mode must still create the auth account and
+      // return a temp password. Invite mode no longer pre-creates the auth
+      // account: the durable invitation (createInvitation) + activation email
+      // are enough, and accept-invitation creates the account, assigns the
+      // student role, upserts the profile, and links the case at activation.
+      // Pre-creating here would let a resend race produce an "email already
+      // belongs to an account" rejection from accept-invitation.
+      if (mode === "manual") {
+        const password = generateTempPassword();
+        tempPassword = password;
 
-      studentId = newUser.user.id;
-      accountCreated = true;
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: student_email,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: student_full_name,
+            phone_number: student_phone ?? caseData?.phone_number ?? "",
+          },
+        });
+
+        if (createError || !newUser?.user) {
+          console.error("create-student-from-case: account creation failed", createError);
+          return jsonResponse(
+            { error: createError?.message ?? "Unable to create student account", code: "ACCOUNT_CREATION_FAILED" },
+            400,
+            corsHeaders,
+          );
+        }
+
+        studentId = newUser.user.id;
+        accountCreated = true;
+      } else {
+        // Invite mode: no auth account is created yet. sendInvite (below) mints
+        // the durable invitation via createInvitation — which carries case_id,
+        // intended_role = "student" and invited_name so activation can rebuild
+        // the account. The role/profile/case-link steps below are skipped (they
+        // require a studentId) and happen at activation time instead.
+      }
+    }
+
+    // Role assignment, profile seeding and case linking only run when an auth
+    // account exists (manual mode, or an already-activated existing student
+    // handled above). In invite-new mode there is no user_id yet, so skip.
+    if (!studentId) {
+      // Invite mode for a brand-new email: send the activation email and
+      // return. No account was created, so account_created is false.
+      const emailSent = await sendInvite(student_email, student_full_name);
+      const inviteActivationUrl = emailSent === false && isAdmin ? capturedActivationUrl : null;
+      return jsonResponse(
+        {
+          success: true,
+          user_id: null,
+          email: student_email,
+          mode: "invite",
+          invited: emailSent === true,
+          already_invited: emailSent === "already_sent",
+          invitation_failed: emailSent === false,
+          account_created: false,
+          case_linked: !!case_id,
+          activation_url: inviteActivationUrl,
+          message:
+            emailSent === "already_sent"
+              ? "An activation link was already sent recently — ask the student to check their inbox"
+              : emailSent === true
+                ? "Activation link sent"
+                : "The activation email could not be sent. The invitation can be retried.",
+        },
+        200,
+        corsHeaders,
+      );
     }
 
     // ── Assign student role ────────────────────────────────────────────────
@@ -695,39 +756,22 @@ serve(async (req) => {
     }
 
     // ── Invite mode: send the activation email ──────────────────────────
-    const emailSent = await sendInvite(student_email, student_full_name);
-
-    // IMPORTANT: the student account/case link has already succeeded.
-    // A failed invitation email must NOT turn the whole operation into a
-    // failed student creation.
-    //
-    // H1: the one-time activation link is returned to staff only when the
-    // email failed (so it can be passed on manually) and only to admins.
-    const inviteActivationUrl = emailSent === false && isAdmin ? capturedActivationUrl : null;
-    const responsePayload: Record<string, unknown> = {
-      success: true,
-      user_id: studentId,
-      email: student_email,
-      mode: "invite",
-      invited: emailSent === true,
-      already_invited: emailSent === "already_sent",
-      invitation_failed: emailSent === false,
-      account_created: accountCreated,
-      case_linked: !!case_id,
-      activation_url: inviteActivationUrl,
-      message:
-        emailSent === "already_sent"
-          ? "An activation link was already sent recently — ask the student to check their inbox"
-          : emailSent === true
-            ? accountCreated
-              ? "Student account created and activation link sent"
-              : "Existing student account linked and activation link sent"
-            : accountCreated
-              ? "Student account created successfully, but the activation email could not be sent. The invitation can be retried."
-              : "Student account linked successfully, but the activation email could not be sent. The invitation can be retried.",
-    };
-
-    return jsonResponse(responsePayload, 200, corsHeaders);
+    // All invite paths return above (linked account, existing student, new
+    // email). This is a defensive fallback for any manual-mode path that did
+    // not return — it never executes in practice.
+    return jsonResponse(
+      {
+        success: true,
+        user_id: studentId,
+        email: student_email,
+        mode: "invite",
+        account_created: false,
+        case_linked: !!case_id,
+        message: "Activation link sent",
+      },
+      200,
+      corsHeaders,
+    );
   } catch (error) {
     console.error("create-student-from-case: unhandled error", error);
     return serverErrorResponse(error, corsHeaders, "Failed to create student account");

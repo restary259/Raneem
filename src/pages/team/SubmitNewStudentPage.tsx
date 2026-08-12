@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { readFunctionError, readFunctionErrorBody } from "@/lib/functionError";
 import { identityConflictMessage } from "@/lib/identityConflict";
+import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -268,6 +269,11 @@ export default function SubmitNewStudentPage() {
 
   // Step 2 — Contact
   const [email, setEmail] = useState("");
+  // Email already belongs to an existing account (caught before submit so we
+  // never send a dead activation link that accept-invitation will reject).
+  const [emailTaken, setEmailTaken] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const emailCheckSeq = useRef(0);
   const [phone, setPhone] = useState("");
   const [emergencyName, setEmergencyName] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
@@ -496,6 +502,31 @@ export default function SubmitNewStudentPage() {
     };
   }, [schoolId, toast]);
 
+  /* ── Email availability (debounced) ─────────────────────────────────── */
+  useEffect(() => {
+    const value = email.trim();
+    if (!value || !value.includes("@")) {
+      setEmailTaken(false);
+      setCheckingEmail(false);
+      return;
+    }
+    setCheckingEmail(true);
+    const seq = ++emailCheckSeq.current;
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await checkEmailAvailability(value);
+        if (seq !== emailCheckSeq.current) return;
+        setEmailTaken(!res.available);
+      } catch {
+        if (seq !== emailCheckSeq.current) return;
+        setEmailTaken(false);
+      } finally {
+        if (seq === emailCheckSeq.current) setCheckingEmail(false);
+      }
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [email]);
+
   /* ── Validation ─────────────────────────────────────────────────────── */
   const validate = (s: StepNum): Record<string, string> => {
     const e: Record<string, string> = {};
@@ -505,6 +536,8 @@ export default function SubmitNewStudentPage() {
     }
     if (s === 2) {
       if (!email.trim() || !email.includes("@")) e.email = ss("errorEmail");
+      else if (emailTaken) e.email = ss("errEmailTaken");
+      else if (checkingEmail) e.email = ss("errorEmail");
       if (!phone.trim() || !isLinkablePhone(phone)) e.phone = ss("errorPhone");
     }
     if (s === 3) {
@@ -908,7 +941,8 @@ export default function SubmitNewStudentPage() {
               <Button variant="outline" onClick={goBack}>
                 <ChevronLeft className="h-4 w-4 me-1" /> {ss("back")}
               </Button>
-              <Button onClick={goNext}>
+              <Button onClick={goNext} disabled={checkingEmail}>
+                {checkingEmail ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
                 {ss("next")} <ChevronRight className="h-4 w-4 ms-1" />
               </Button>
             </div>

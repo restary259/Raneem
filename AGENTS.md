@@ -73,6 +73,35 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   locked so the single Confirm & Save button never hits the locked
   `set_case_services` RPC.
 
+## Student account creation / invite (no dead activation links)
+
+- `create-student-from-case` (edge function) has three invite-mode branches and
+  must never send an activation link to an email that `accept-invitation` would
+  reject:
+  1. **Email already linked to a `case_submissions` student** (existing linked
+     account): link the case, return `invited: false` — no email (the student
+     already has an activated account).
+  2. **Existing activated STUDENT account** (not this case): in invite mode,
+     link the case and return `invited: false, already_activated: true` — no
+     email. In manual mode, reset the password (admin-only) and return it.
+  3. **Brand-new email**: in invite mode, do **not** pre-create the auth account
+     (`admin.createUser`); `sendInvite` mints a durable `user_invitations` row
+     (with `case_id`, `intended_role = "student"`, `invited_name`) and
+     `accept-invitation` creates the account, assigns the role, upserts the
+     profile, and links the case at activation. Manual mode still creates the
+     account and returns a temp password. Pre-creating in invite mode caused
+     resend races to hit "email already belongs to an account" at activation.
+- `check-email-availability` (edge function, admin/team_member only): returns
+  `{ available, existing_role, deactivated }` for an email. A *pending*
+  invitation with no account is NOT "taken" (so resends to never-activated
+  invitees still work). The frontend debounces this via
+  `src/lib/checkEmailAvailability.ts` in three forms:
+  `ProfileCompletionForm`, `SubmitNewStudentPage`, and `CaseProfileForm` block
+  advancing/saving when the email is taken (or still being checked), with the
+  `errEmailTaken` / `case.profile.errEmailTaken` / `case.profileForm.errEmailTaken`
+  locale keys (en + ar). Editing an existing case skips its own email
+  (`ownEmail`) so re-saving a profile doesn't flag itself.
+
 ## Authoritative data flow (never trust the client for money)
 - Totals come from the `get_case_financials` RPC (server-side). The frontend never
   re-adds prices.

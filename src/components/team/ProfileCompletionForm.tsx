@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth, ageFromISO, parseISODate } from "@/utils/dateUtils";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = supabase as unknown as any;
@@ -243,6 +244,11 @@ export default function ProfileCompletionForm({
   // Contact
   const [email, setEmail] = useState(readEmail);
   const [phone, setPhone] = useState(readPhone);
+  // Email already belongs to an existing account (caught before submit so we
+  // never send a dead activation link that accept-invitation will reject).
+  const [emailTaken, setEmailTaken] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const emailCheckSeq = useRef(0);
   const [emergencyName, setEmergencyName] = useState((ex.emergency_contact_name as string) ?? "");
   const [emergencyPhone, setEmergencyPhone] = useState((ex.emergency_contact_phone as string) ?? "");
   const [street, setStreet] = useState((ex.street as string) ?? "");
@@ -341,6 +347,40 @@ export default function ProfileCompletionForm({
     })();
   }, []);
 
+  /* ── Email availability (debounced) ─────────────────────────────────── */
+  // Skip when editing an existing case whose email is the student's own — only
+  // flag emails that belong to a *different* account.
+  const ownEmail = (ex.student_email ?? ex.email ?? "").toString().trim().toLowerCase();
+  useEffect(() => {
+    const value = email.trim();
+    if (!value || !value.includes("@")) {
+      setEmailTaken(false);
+      setCheckingEmail(false);
+      return;
+    }
+    if (value.toLowerCase() === ownEmail) {
+      setEmailTaken(false);
+      setCheckingEmail(false);
+      return;
+    }
+    setCheckingEmail(true);
+    const seq = ++emailCheckSeq.current;
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await checkEmailAvailability(value);
+        if (seq !== emailCheckSeq.current) return;
+        setEmailTaken(!res.available);
+      } catch {
+        if (seq !== emailCheckSeq.current) return;
+        // Permissive on error: don't block entry on a transient failure.
+        setEmailTaken(false);
+      } finally {
+        if (seq === emailCheckSeq.current) setCheckingEmail(false);
+      }
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [email, ownEmail]);
+
   /* ── Validation ─────────────────────────────────────────────────────── */
   const validate = (s: StepKey): Record<string, string> => {
     const e: Record<string, string> = {};
@@ -350,6 +390,8 @@ export default function ProfileCompletionForm({
     }
     if (s === "contact") {
       if (!email.trim() || !email.includes("@")) e.email = t("case.profileForm.errEmail");
+      else if (emailTaken) e.email = t("case.profileForm.errEmailTaken");
+      else if (checkingEmail) e.email = t("case.profileForm.errEmail");
       if (!phone.trim()) e.phone = t("case.profileForm.errPhone");
     }
     return e;
@@ -910,12 +952,13 @@ export default function ProfileCompletionForm({
           <ChevronLeft className="h-4 w-4 me-1" /> {t("case.profileForm.back")}
         </Button>
         {isLastStep ? (
-          <Button onClick={handleSave} disabled={saving}>
-            {saving && <Loader2 className="h-4 w-4 animate-spin me-1" />}
+          <Button onClick={handleSave} disabled={saving || checkingEmail}>
+            {(saving || checkingEmail) && <Loader2 className="h-4 w-4 animate-spin me-1" />}
             {t("case.profileForm.save")}
           </Button>
         ) : (
-          <Button onClick={goNext}>
+          <Button onClick={goNext} disabled={checkingEmail}>
+            {checkingEmail ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
             {t("case.profileForm.next")} <ChevronRight className="h-4 w-4 ms-1" />
           </Button>
         )}
