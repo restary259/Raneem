@@ -238,7 +238,7 @@ export default function TeamWorkPage() {
             {returned.map((r) => (
               <div
                 key={r.id}
-                className="flex items-start justify-between gap-3 rounded-lg border border-border bg-background p-3"
+                className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 rounded-lg border border-border bg-background p-3"
               >
                 <div className="min-w-0">
                   <div className="font-medium truncate">{r.case?.full_name ?? "—"}</div>
@@ -272,7 +272,7 @@ export default function TeamWorkPage() {
             {overdueAppts.map((a) => (
               <div
                 key={a.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background p-3"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-lg border border-border bg-background p-3"
               >
                 <div className="min-w-0">
                   <div className="font-medium truncate">{a.case?.full_name ?? "—"}</div>
@@ -311,7 +311,7 @@ export default function TeamWorkPage() {
                 {todayAppts.map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-lg border border-border p-3"
                   >
                     <div className="min-w-0">
                       <div className="font-medium truncate">{a.case?.full_name ?? "—"}</div>
@@ -319,7 +319,7 @@ export default function TeamWorkPage() {
                         {timeFmt(a.scheduled_at)} · {a.duration_minutes}m
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                       {a.outcome ? (
                         <Badge variant="secondary">
                           {t(`team.outcome.${a.outcome}`, a.outcome)}

@@ -94,7 +94,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 start-0 end-0 z-50 h-16 bg-background border-t border-border flex items-center safe-area-pb">
+    <nav className="md:hidden fixed bottom-0 start-0 end-0 z-50 min-h-16 bg-background border-t border-border flex items-center pb-safe">
       {items.map((item) => {
         const isActive =
           location.pathname === item.href ||
@@ -108,7 +108,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
             key={item.key}
             to={item.href}
             className={cn(
-              'flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors',
+              'flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors relative',
               isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             )}
           >
@@ -117,7 +117,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
               {shortLabel[item.key] ?? t(item.key, item.key)}
             </span>
             {isActive && (
-              <span className="absolute top-0 w-8 h-0.5 rounded-full bg-primary" />
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
             )}
           </Link>
         );
