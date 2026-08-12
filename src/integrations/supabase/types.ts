@@ -719,7 +719,15 @@ export type Database = {
           submitted_at?: string | null
           submitted_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "case_payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       case_service_snapshots: {
         Row: {
@@ -768,6 +776,13 @@ export type Database = {
           team_commission_value?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "case_service_snapshots_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "case_service_snapshots_master_service_id_fkey"
             columns: ["master_service_id"]
