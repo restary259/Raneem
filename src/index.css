@@ -119,11 +119,13 @@
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
-/* Mobile safe area */
+/* Mobile safe area + prevent sideways page scroll */
 body {
   padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: hidden;
 }
 
 /* Utility classes */

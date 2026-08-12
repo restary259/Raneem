@@ -74,14 +74,14 @@ export default function AppointmentOutcomeModal({ open, onClose, appointmentId, 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" dir={isRtl ? 'rtl' : 'ltr'}>
+      <DialogContent className="max-w-md p-4 sm:p-6" dir={isRtl ? 'rtl' : 'ltr'}>
         <DialogHeader>
           <DialogTitle>{t('team.outcome.title')}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <RadioGroup value={outcome} onValueChange={v => setOutcome(v as Outcome)}>
             {OUTCOMES.map(o => (
-              <div key={o.value} className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
+              <div key={o.value} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer">
                 <RadioGroupItem value={o.value} id={o.value} className="mt-0.5" />
                 <Label htmlFor={o.value} className="cursor-pointer">
                   <span className="font-medium">{t(o.labelKey)}</span>

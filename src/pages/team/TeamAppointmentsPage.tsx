@@ -134,7 +134,12 @@ export default function TeamAppointmentsPage() {
 
   /* ── Calendar ── */
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<CalendarView>("week");
+  const [view, setView] = useState<CalendarView>(() =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 767px)").matches
+      ? "day"
+      : "week",
+  );
 
   /* ── New / Edit modal ── */
   const [showModal, setShowModal] = useState(false);
@@ -610,8 +615,8 @@ export default function TeamAppointmentsPage() {
 
       {/* ══ DAY VIEW ══ */}
       {!loading && view === "day" && (
-        <div className="flex-1 overflow-auto">
-          <div className="min-w-[400px]">
+        <div className="flex-1 overflow-auto max-w-full">
+          <div className="min-w-0">
             <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-2.5">
               <div
                 className={cn(
@@ -666,7 +671,7 @@ export default function TeamAppointmentsPage() {
 
       {/* ══ WEEK VIEW ══ */}
       {!loading && view === "week" && (
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto max-w-full">
           <div className="min-w-[700px]">
             {/* Day headers */}
             <div

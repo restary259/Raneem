@@ -113,7 +113,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
             )}
           >
             <item.icon className={cn('h-5 w-5', isActive && 'text-primary')} />
-            <span className="truncate max-w-[48px] text-center leading-tight">
+            <span className="truncate max-w-[64px] sm:max-w-[72px] text-center leading-tight">
               {shortLabel[item.key] ?? t(item.key, item.key)}
             </span>
             {isActive && (

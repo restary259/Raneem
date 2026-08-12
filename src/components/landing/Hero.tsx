@@ -66,10 +66,10 @@ const Hero = () => {
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-shadow-lg animate-fade-in">
           {t('hero.title')}
         </h1>
-        <p className="mt-8 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">
+        <p className="mt-4 sm:mt-8 text-lg md:text-xl max-w-3xl mx-auto text-shadow-lg">
           {t('hero.subtitle')}
         </p>
-        <div className="mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
+        <div className="mt-4 sm:mt-8 flex flex-col sm:flex-row-reverse justify-center gap-4">
           <Button size="lg" asChild className="w-full sm:w-auto bg-brand-strong text-brand-foreground hover:bg-brand-strong/90 transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
@@ -78,7 +78,7 @@ const Hero = () => {
           </Button>
         </div>
 
-        <div className="absolute bottom-10 left-0 right-0">
+        <div className="absolute bottom-6 sm:bottom-10 left-0 right-0">
           <div className="container mx-auto grid grid-cols-3 gap-3 sm:gap-8 text-white animate-fade-in animation-delay-500">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
