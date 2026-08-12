@@ -17,6 +17,8 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = false
   [functions.create-case-from-apply]
     verify_jwt = false
+  [functions.check-email-availability]
+    verify_jwt = true
   [functions.create-influencer]
     verify_jwt = true
   [functions.create-student-account]
