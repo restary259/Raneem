@@ -398,8 +398,29 @@ export default function TeamAppointmentsPage() {
     if (!deletingAppt) return;
     setConfirmingDelete(true);
     try {
+      const caseId = deletingAppt.case_id;
       const { error } = await supabase.from("appointments").delete().eq("id", deletingAppt.id);
       if (error) throw error;
+
+      /*
+       * A case only sits at "appointment scheduled" because an appointment
+       * exists. Removing the last one would otherwise strand the case in a
+       * stage with nothing behind it, so it falls back to "contacted".
+       */
+      if (caseId) {
+        const { count } = await supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("case_id", caseId);
+        if (!count) {
+          await supabase
+            .from("cases")
+            .update({ status: "contacted" })
+            .eq("id", caseId)
+            .eq("status", "appointment_scheduled");
+        }
+      }
+
       toast({ title: t("team.appointments.toastDeleted") });
       setDeletingAppt(null);
       setSelectedAppt(null);

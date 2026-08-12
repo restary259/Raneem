@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
-import { computeWeeklyCost } from "@/lib/programPricing";
+
 
 /**
  * Costing for a case.
