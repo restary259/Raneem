@@ -28,6 +28,7 @@ import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
 import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
 import CaseFinance from "@/components/cases/CaseFinance";
+import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 import { identityConflictMessage } from "@/lib/identityConflict";
 
 interface SubmittedCase {
@@ -93,7 +94,8 @@ const AdminSubmissionsPage = () => {
   const [marking, setMarking] = useState(false);
 
   const [programNames, setProgramNames] = useState<Record<string, string>>({});
-  const [accommodationNames, setAccommodationNames] = useState<Record<string, string>>();
+  const [accommodationNames, setAccommodationNames] = useState<Record<string, string>>({});
+  const [financialsMap, setFinancialsMap] = useState<Record<string, { service_total: number }>>({});
 
   // Split panel state
   const [showSplitPanel, setShowSplitPanel] = useState(false);
@@ -176,6 +178,21 @@ const AdminSubmissionsPage = () => {
       const accommodationIds = [
         ...new Set(allEnriched.map((c) => c.submission?.accommodation_id).filter(Boolean) as string[]),
       ];
+      const allCaseIds = allEnriched.map((c) => c.id);
+
+      // Fetch financials for all cases to get authoritative service_total
+      if (allCaseIds.length > 0) {
+        const financialsPromises = allCaseIds.map(async (caseId) => {
+          const { data } = await (supabase as any).rpc("get_case_financials", { p_case_id: caseId });
+          return { caseId, service_total: Number(data?.service_total ?? 0) };
+        });
+        const financialsResults = await Promise.all(financialsPromises);
+        const finMap: Record<string, { service_total: number }> = {};
+        financialsResults.forEach(({ caseId, service_total }) => {
+          finMap[caseId] = { service_total };
+        });
+        setFinancialsMap(finMap);
+      }
 
       if (programIds.length > 0) {
         const { data: progData } = await (supabase as any)
@@ -401,7 +418,7 @@ const AdminSubmissionsPage = () => {
     }
   };
 
-  const totalFee = (s: SubmittedCase) => (s.submission?.service_fee || 0).toLocaleString("en-US");
+  const totalFee = (s: SubmittedCase) => (financialsMap[s.id]?.service_total ?? s.submission?.service_fee ?? 0).toLocaleString("en-US");
 
   return (
     <div className="p-4 sm:p-6 space-y-6 w-full max-w-[1600px] mx-auto">
