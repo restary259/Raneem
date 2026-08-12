@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones, Link2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
 import { captureReferralCode, getReferralCode, verifyReferralCode } from "@/lib/referral";
@@ -197,6 +197,18 @@ const ApplyPage: React.FC = () => {
 
     setLoading(true);
 
+    // Non-blocking warning when the referral token is missing/unverified — the
+    // case is still created (apply_page source), but without partner attribution.
+    if (!refCode) {
+      toast({
+        title: isAr ? "لا يوجد رابط إحالة" : "No referral link",
+        description: isAr
+          ? "لم يُعثر على رمز إحالة صالح؛ سيُسجّل الطلب دون نسبة إلى شريك."
+          : "No valid referral code found; your application will be recorded without partner attribution.",
+        variant: "default",
+      });
+    }
+
     void recordConsent({
       sourceForm: "apply_page",
       subjectName: fullName,
@@ -253,6 +265,8 @@ const ApplyPage: React.FC = () => {
 
 
       // ── COMPANIONS ──────────────────────────────────────────────
+      let companionsCreated = 0;
+      let companionsFailed = 0;
       if (hasCompanions) {
         for (const c of companions) {
           if (!c.name.trim() || !c.phone.trim()) continue;
@@ -280,18 +294,33 @@ const ApplyPage: React.FC = () => {
             const compCaseResult = await compCaseResp.json();
             if (compCaseResp.status === 409) {
               debug("[ApplyPage] Companion duplicate — case exists:", c.phone.trim());
+              companionsCreated++; // duplicate counts as an existing record, not a failure
             } else if (!compCaseResp.ok) {
               debugError("[ApplyPage] Companion case failed:", compCaseResult.error);
+              companionsFailed++;
             } else {
               debug("[ApplyPage] Companion case created:", compCaseResult.case_id);
+              companionsCreated++;
             }
           } catch (compCaseErr: any) {
             debugError("[ApplyPage] Companion case error:", compCaseErr.message);
+            companionsFailed++;
           }
 
           // The lead row is created by the same server call as the case.
 
         }
+      }
+
+      // Surface companion outcomes so silent failures are never invisible.
+      if (hasCompanions && companionsFailed > 0) {
+        toast({
+          title: isAr ? "تعذّر إنشاء بعض الرفاق" : "Some companions could not be added",
+          description: isAr
+            ? `تم إنشاء ${companionsCreated} رفيق، وفشل ${companionsFailed}.`
+            : `${companionsCreated} companion(s) created, ${companionsFailed} failed.`,
+          variant: "destructive",
+        });
       }
 
       setSubmitted(true);
@@ -428,6 +457,28 @@ const ApplyPage: React.FC = () => {
             </div>
 
             <div className="p-5 space-y-5">
+              {/* Referral attribution indicator */}
+              {refOwner && (
+                <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
+                  <Link2 className="h-4 w-4 shrink-0" />
+                  <span>
+                    {isAr
+                      ? `تم إحالتك من قبل ${refOwner} — فريق درب يرافقك`
+                      : `You were referred by ${refOwner} — the Darb team is with you`}
+                  </span>
+                </div>
+              )}
+              {refBroken && (
+                <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>
+                    {isAr
+                      ? "تعذّر التحقق من رابط الإحالة — سيتم تسجيل طلبك دون نسبة إلى شريك."
+                      : "Your referral link could not be verified — your application will be recorded without partner attribution."}
+                  </span>
+                </div>
+              )}
+
               {/* Step 1 — Identity */}
               {step === 1 && (
                 <div className="space-y-4 animate-fade-in">

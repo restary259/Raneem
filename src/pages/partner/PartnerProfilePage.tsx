@@ -21,6 +21,7 @@ interface PartnerProfile {
   phone_number: string | null;
   city: string | null;
   referral_code: string | null;
+  referral_code_enabled: boolean | null;
   is_master_partner: boolean | null;
 }
 
@@ -46,7 +47,7 @@ export default function PartnerProfilePage() {
     if (!user) return;
     const { data } = await (supabase as any)
       .from("profiles")
-      .select("id, full_name, email, phone_number, city, referral_code, is_master_partner")
+      .select("id, full_name, email, phone_number, city, referral_code, referral_code_enabled, is_master_partner")
       .eq("id", user.id)
       .maybeSingle();
     if (data) {
@@ -105,7 +106,12 @@ export default function PartnerProfilePage() {
 
   if (loading) return <DashboardLoading />;
 
-  const referralUrl = profile?.referral_code
+  // Hide the link when the partner's referral code is disabled — a disabled code
+  // cannot be resolved server-side (resolve_referral_code / check_referral_code
+  // both gate on referral_code_enabled), so handing the partner a link that
+  // silently fails to attribute would mislead them.
+  const referralEnabled = profile?.referral_code_enabled !== false;
+  const referralUrl = profile?.referral_code && referralEnabled
     ? buildReferralUrl(profile.referral_code)
     : null;
 
@@ -180,6 +186,27 @@ export default function PartnerProfilePage() {
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? t("partner.profile.copied") : t("partner.profile.copy")}
             </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* A disabled referral code is surfaced explicitly so the partner can see
+          why their link is missing instead of wondering where it went. */}
+      {!referralUrl && profile?.referral_code && !referralEnabled && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-muted-foreground" />
+              {t("partner.profile.referralLink")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "partner.profile.referralDisabled",
+                "Your referral link is currently disabled. Please contact the Darb team to reactivate it."
+              )}
+            </p>
           </CardContent>
         </Card>
       )}

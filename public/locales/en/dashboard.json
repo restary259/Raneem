@@ -2940,7 +2940,8 @@
       "passwordChanged": "Password changed successfully",
       "passwordMismatch": "Passwords do not match",
       "weakPassword": "Password is too weak",
-      "masterBadge": "Master partner"
+      "masterBadge": "Master partner",
+      "referralDisabled": "Your referral link is currently disabled. Please contact the Darb team to reactivate it."
     }
   },
   "visa": {
