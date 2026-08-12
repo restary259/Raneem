@@ -17,7 +17,23 @@ const lastSent = new Map<string, number>();
 
 const APP_URL = "https://darb.agency";
 
-type Admin = ReturnType<typeof createClient>;
+/**
+ * Non-secret fingerprint (first 8 hex chars of SHA-256) of the service-role
+ * key, for comparing secrets across functions. Never expose the key itself.
+ */
+async function serviceKeyFingerprint(): Promise<string | undefined> {
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!key) return undefined;
+  try {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key));
+    const hex = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return hex.slice(0, 8);
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Queue a branded email through Lovable Emails (send-transactional-email).
@@ -32,7 +48,6 @@ type Admin = ReturnType<typeof createClient>;
  * approve-partner-recruit and send-event-email.
  */
 async function sendTemplate(
-  admin: Admin,
   templateName: string,
   recipientEmail: string,
   templateData: Record<string, unknown>,
@@ -41,12 +56,14 @@ async function sendTemplate(
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceKey) {
-    console.error("[chat-email] missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    console.error("[chat-email] missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", {
+      service_key_present: !!serviceKey,
+    });
     return { ok: false, detail: "Server configuration error" };
   }
-  let resp: Response;
+  let response: Response;
   try {
-    resp = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+    response = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,26 +75,29 @@ async function sendTemplate(
     console.error(`[chat-email fetch failed] to=${recipientEmail} template=${templateName}`, err);
     return { ok: false, detail: String((err as Error)?.message ?? err) };
   }
-  const text = await resp.text().catch(() => "");
-  if (!resp.ok) {
-    console.error(`[chat-email failed] to=${recipientEmail} template=${templateName} status=${resp.status}`, {
-      downstream: "send-transactional-email",
-      status: resp.status,
-      auth_mode: "service_role",
-      service_key_present: !!serviceKey,
-      body: text,
-    });
-    return { ok: false, detail: text || `HTTP ${resp.status}` };
+  const text = await response.text().catch(() => "");
+  if (!response.ok) {
+    console.error(
+      `[chat-email failed] to=${recipientEmail} template=${templateName} status=${response.status}`,
+      JSON.stringify({
+        downstream: "send-transactional-email",
+        status: response.status,
+        auth_mode: "service_role",
+        service_key_present: !!serviceKey,
+        service_key_fingerprint: await serviceKeyFingerprint(),
+        detail: text,
+      }),
+    );
+    return { ok: false, detail: text || `HTTP ${response.status}` };
   }
-  // deno-lint-ignore no-explicit-any
-  let body: any = null;
+  let body: Record<string, unknown> | null = null;
   try {
     body = text ? JSON.parse(text) : null;
   } catch {
-    /* non-JSON success body is fine */
+    // non-JSON success body is fine
   }
   if (body && body.success === false) {
-    console.warn(`[chat-email not sent] to=${recipientEmail} reason=${body.reason}`);
+    console.warn(`[chat-email not sent] to=${recipientEmail} reason=${String(body.reason)}`);
     return { ok: false, detail: String(body.reason ?? "not_sent") };
   }
   console.log(`[chat-email queued] to=${recipientEmail} template=${templateName}`, {
@@ -124,7 +144,6 @@ Deno.serve(async (req) => {
         });
       }
       const result = await sendTemplate(
-        admin,
         "email-test",
         me.email,
         { recipientName: me.full_name ?? "", sentAt: new Date().toISOString().slice(0, 16).replace("T", " ") },
@@ -234,7 +253,6 @@ Deno.serve(async (req) => {
       if (now - previousSend < DEBOUNCE_MS) continue;
       lastSent.set(key, now);
       const result = await sendTemplate(
-        admin,
         "new-message",
         p.email,
         {
