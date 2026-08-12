@@ -182,6 +182,18 @@ export default function TeamAppointmentsPage() {
     }
   }, [user, toast]);
 
+  /*
+   * The database blocks double-booking a team member. Translate that specific
+   * failure into a message the user can act on instead of a generic error.
+   */
+  const apptErrorMessage = useCallback(
+    (err: any) =>
+      String(err?.message ?? "").includes("APPT_BLOCKED")
+        ? t("team.appointments.errConflict")
+        : t("common.error"),
+    [t],
+  );
+
   const fetchMyCases = useCallback(async () => {
     if (!user) return;
     try {
