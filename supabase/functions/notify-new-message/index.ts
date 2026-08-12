@@ -29,6 +29,9 @@ async function sendTemplate(
 ): Promise<{ ok: boolean; detail?: string }> {
   const { data, error } = await admin.functions.invoke("send-transactional-email", {
     body: { templateName, recipientEmail, idempotencyKey, templateData },
+    headers: {
+      Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+    },
   });
   if (error) {
     const detail =
@@ -69,19 +72,12 @@ Deno.serve(async (req) => {
   const { thread_type, thread_id, preview, test } = parsed.data;
   const senderId = auth.userId;
 
-  const admin = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   try {
     // --- Delivery test: send only to the caller, no debounce, report errors ---
     if (test) {
-      const { data: me } = await admin
-        .from("profiles")
-        .select("email, full_name")
-        .eq("id", senderId)
-        .maybeSingle();
+      const { data: me } = await admin.from("profiles").select("email, full_name").eq("id", senderId).maybeSingle();
       if (!me?.email) {
         return new Response(JSON.stringify({ error: "No email on your profile" }), {
           status: 400,
@@ -136,7 +132,6 @@ Deno.serve(async (req) => {
       }
     }
 
-
     // Recipients
     let recipientIds: string[] = [];
     let threadTitle = "";
@@ -175,11 +170,7 @@ Deno.serve(async (req) => {
     }
 
     // Sender display name
-    const { data: sender } = await admin
-      .from("profiles")
-      .select("full_name")
-      .eq("id", senderId)
-      .maybeSingle();
+    const { data: sender } = await admin.from("profiles").select("full_name").eq("id", senderId).maybeSingle();
 
     // Muted threads
     const { data: mutes } = await admin
