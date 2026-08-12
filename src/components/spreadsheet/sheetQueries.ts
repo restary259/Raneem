@@ -15,6 +15,40 @@ const staffNameMap = async (): Promise<Record<string, { name: string; role: stri
   return map;
 };
 
+/**
+ * Fallback name resolver for user IDs that get_staff_directory excludes. That RPC is
+ * visibility-restricted (admins/managers only) and only returns team_member/admin/
+ * social_media_partner roles — so a non-manager team member calling it gets back an
+ * empty/limited set and their own name (and ambassador/referrer names) render as "—".
+ * resolve_profile_names is a SECURITY DEFINER RPC returning (id, full_name) for any
+ * non-deleted profile, granted to authenticated. We only resolve IDs missing from the
+ * staff map to keep the extra round-trip small.
+ */
+const resolveProfileNames = async (ids: string[]): Promise<Record<string, string>> => {
+  if (ids.length === 0) return {};
+  const { data } = await (supabase as any).rpc('resolve_profile_names', { p_ids: ids });
+  const map: Record<string, string> = {};
+  (data || []).forEach((p: any) => {
+    map[p.id] = p.full_name;
+  });
+  return map;
+};
+
+/** Resolve the display name for any user ID, falling back to resolve_profile_names. */
+const resolveNames = async (
+  ids: string[],
+  staff: Record<string, { name: string; role: string }>,
+): Promise<Record<string, string>> => {
+  const missing = ids.filter((id) => id && !staff[id]);
+  const resolved = await resolveProfileNames(missing);
+  const out: Record<string, string> = {};
+  for (const id of ids) {
+    if (!id) continue;
+    out[id] = staff[id]?.name ?? resolved[id] ?? null;
+  }
+  return out;
+};
+
 const throwIf = (error: any) => {
   if (error) throw error;
 };
@@ -75,6 +109,12 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
   const fees = await serviceFeeByCase(
     Array.from(new Set(rows.map((s: any) => s.case?.id).filter(Boolean))) as string[],
   );
+  const names = await resolveNames(
+    Array.from(new Set(
+      rows.map((s: any) => [s.case?.assigned_to, s.case?.partner_id]).flat().filter(Boolean),
+    )) as string[],
+    staff,
+  );
 
   return rows.map((s: any) => {
     const extra = s.extra_data ?? {};
@@ -95,8 +135,8 @@ export const fetchStudentsSheet = async ({ scope, userId }: SheetScope) => {
       city: s.case?.city ?? extra.city ?? null,
       status: s.case?.status ?? null,
 
-      team_member: staff[s.case?.assigned_to]?.name ?? null,
-      partner: staff[s.case?.partner_id]?.name ?? null,
+      team_member: names[s.case?.assigned_to] ?? null,
+      partner: names[s.case?.partner_id] ?? null,
       // Real relationship — never a free-text fallback.
       school_id: s.school_id ?? s.school?.id ?? null,
       school_name: s.school?.name_en ?? s.school?.name_ar ?? null,
@@ -148,6 +188,10 @@ export const fetchPaymentsSheet = async () => {
     .in('case.id', caseIds)
     .is('deleted_at', null);
   const subByCase = new Map<string, any>((subs || []).map((s: any) => [s.case?.id, s]));
+  const names = await resolveNames(
+    Array.from(new Set(payments.map((p: any) => p.confirmed_by).filter(Boolean))) as string[],
+    staff,
+  );
 
   return (payments || []).map((p: any) => {
     const s: any = subByCase.get(p.case_id);
@@ -164,7 +208,7 @@ export const fetchPaymentsSheet = async () => {
       insurance_price: s?.insurance_price ?? 0,
       total_paid: paid,
       remaining_balance: Math.max(fee - paid, 0),
-      confirmed_by: staff[p.confirmed_by]?.name ?? null,
+      confirmed_by: names[p.confirmed_by] ?? null,
       status: s?.case?.status ?? null,
     };
   });
@@ -180,12 +224,17 @@ export const fetchPayoutsSheet = async () => {
     .order('requested_at', { ascending: false });
   throwIf(error);
 
+  const names = await resolveNames(
+    Array.from(new Set((data || []).map((p: any) => p.requestor_id).filter(Boolean))) as string[],
+    staff,
+  );
+
   return (data || []).map((p: any) => ({
     id: p.id,
     payout_reference: p.payout_reference ?? null,
     requested_at: p.requested_at,
     paid_at: p.paid_at,
-    person: staff[p.requestor_id]?.name ?? '—',
+    person: names[p.requestor_id] ?? '—',
     role: p.requestor_role,
     students: (p.linked_student_names || []).join(', '),
     amount: p.amount ?? 0,
@@ -212,6 +261,11 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
   const { data, error } = await query;
   throwIf(error);
 
+  const names = await resolveNames(
+    Array.from(new Set((data || []).map((r: any) => r.user_id).filter(Boolean))) as string[],
+    staff,
+  );
+
   return (data || []).map((r: any) => {
     const notes: string = r.admin_notes ?? '';
     // reward_type is the authoritative classification; notes are free text.
@@ -227,7 +281,7 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
     return {
       id: r.id,
       created_at: r.created_at,
-      person: staff[r.user_id]?.name ?? '—',
+      person: names[r.user_id] ?? '—',
       kind,
       source: notes || '—',
       amount: r.amount ?? 0,
@@ -371,6 +425,8 @@ export const fetchPerformanceSheet = async ({ scope, userId }: SheetScope) => {
     ]),
   ) as string[];
 
+  const names = await resolveNames(ids, staff);
+
   return ids.map(id => {
     const mine = cases.filter((c: any) => c.assigned_to === id);
     const enrolled = mine.filter((c: any) => c.status === ENROLLED).length;
@@ -378,7 +434,7 @@ export const fetchPerformanceSheet = async ({ scope, userId }: SheetScope) => {
     const myRewards = rewards.filter((r: any) => r.user_id === id);
     return {
       id,
-      person: staff[id]?.name ?? '—',
+      person: names[id] ?? '—',
       assigned: mine.length,
       contacted,
       enrolled,
