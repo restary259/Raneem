@@ -25,10 +25,12 @@ export default function CaseOverviewPanel({ caseData }: Props) {
   useEffect(() => {
     const ids = [caseData.partner_id, caseData.referred_by].filter(Boolean) as string[];
     if (ids.length === 0) return;
+    // Team-member RLS on profiles only allows reading self / own students / admin-all,
+    // so a direct .in("id", ids) silently misses partner_id / referred_by rows and
+    // falls back to "Not set yet." Resolve via a SECURITY DEFINER RPC that returns
+    // only (id, full_name) for non-deleted profiles, granted to authenticated.
     (supabase as any)
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", ids)
+      .rpc("resolve_profile_names", { p_ids: ids })
       .then(({ data }: any) => {
         const find = (id?: string | null) =>
           id ? (data ?? []).find((p: any) => p.id === id)?.full_name ?? null : null;
@@ -49,7 +51,6 @@ export default function CaseOverviewPanel({ caseData }: Props) {
     },
     { label: t("case.overview.passportType"), value: caseData.passport_type ?? null },
     { label: t("case.overview.degreeInterest"), value: caseData.degree_interest ?? null },
-    { label: t("case.overview.bagrut"), value: caseData.bagrut_score ? String(caseData.bagrut_score) : null },
     {
       label: t("case.overview.englishUnits"),
       value: caseData.english_units ? String(caseData.english_units) : null,
