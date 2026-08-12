@@ -108,12 +108,12 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
             key={item.key}
             to={item.href}
             className={cn(
-              'flex-1 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors relative',
+              'flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors relative',
               isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <item.icon className={cn('h-5 w-5', isActive && 'text-primary')} />
-            <span className="truncate max-w-[64px] sm:max-w-[72px] text-center leading-tight">
+            <span className="w-full truncate max-w-[64px] sm:max-w-[72px] text-center leading-tight">
               {shortLabel[item.key] ?? t(item.key, item.key)}
             </span>
             {isActive && (
