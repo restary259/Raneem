@@ -479,6 +479,34 @@ Deno.serve(async (req) => {
 
     /*
      * ------------------------------------------------------------
+     * NOTIFY EVERYONE ON THE CASE
+     * ------------------------------------------------------------
+     *
+     * Enrollment is the milestone the student, the partner and the team
+     * all wait for. Writing the case event is what fans the bell + push
+     * notifications out, so it must happen on this path too — the plain
+     * status update alone only produces a generic "status changed".
+     */
+
+    try {
+      const { error: eventError } = await supabaseAdmin.from("case_events").insert({
+        case_id,
+        event_type: "enrollment_paid",
+        actor_id: user.id,
+        actor_role: "admin",
+        payload: { marked_at: now },
+        is_internal: false,
+      });
+
+      if (eventError) {
+        console.error("Enrollment case event failed:", eventError);
+      }
+    } catch (eventError) {
+      console.error("Enrollment case event exception:", eventError);
+    }
+
+    /*
+     * ------------------------------------------------------------
      * SUCCESS
      * ------------------------------------------------------------
      */
