@@ -72,6 +72,7 @@ export default function TeamWorkPage() {
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date();
       dayEnd.setHours(23, 59, 59, 999);
+      const nowIso = new Date().toISOString();
       const staleBefore = new Date(Date.now() - STALE_DAYS * DAY_MS).toISOString();
 
       const [todayRes, overdueRes, overdueCountRes, casesRes, staleRes] = await Promise.all([
@@ -90,12 +91,16 @@ export default function TeamWorkPage() {
           .is("outcome", null)
           .order("scheduled_at", { ascending: false })
           .limit(10),
-        // Accurate count for the KPI — the display list above is capped at 10.
+        // Accurate count for the KPI — counts every null-outcome appointment before
+        // now (prior-day overdue + today's already-passed slots), matching the total
+        // number of visible "Record outcome" actions across both the overdue card and
+        // Today's schedule. The display lists above/below are capped/segmented; this is
+        // a single head-count that never double-counts.
         supabase
           .from("appointments")
           .select("id", { count: "exact", head: true })
           .eq("team_member_id", user.id)
-          .lt("scheduled_at", dayStart.toISOString())
+          .lt("scheduled_at", nowIso)
           .is("outcome", null),
         supabase
           .from("cases")
