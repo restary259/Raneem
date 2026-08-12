@@ -41,6 +41,12 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = true  
   [functions.push-notify]  
     verify_jwt = true  
+  [functions.push-dispatch]
+    # Drained by pg_cron with the vault-stored service_role key.
+    # On sb_secret_... (non-JWT) key projects, verify_jwt=true rejects
+    # the cron call at the gateway before requireAuth runs. requireAuth
+    # inside still enforces isServiceRole (anon -> 403), so auth is not weakened.
+    verify_jwt = false
   [functions.record-appointment-outcome]  
     verify_jwt = true  
   [functions.reset-student-password]  
