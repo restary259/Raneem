@@ -49,8 +49,8 @@ ALTER TABLE public.important_contacts ADD CONSTRAINT important_contacts_universa
     OR (scope <> 'universal' AND is_universal = false)
   );
 
-CREATE INDEX IF NOT EXISTS idx_important_contacts_school_id
-  ON public.schools (id);
+CREATE INDEX IF NOT EXISTS idx_important_contacts_language_school_id
+  ON public.important_contacts (language_school_id);
 CREATE INDEX IF NOT EXISTS idx_important_contacts_scope_active
   ON public.important_contacts (scope, is_active, display_order);
 
@@ -145,14 +145,27 @@ GRANT EXECUTE ON FUNCTION public.get_student_important_contacts() TO authenticat
 -- Students must NOT be able to SELECT the whole table to bypass targeting.
 -- They reach applicable contacts only through the resolver above. Admins keep
 -- full management access.
-DROP POLICY IF EXISTS "Roled users read active contacts" ON public.important_contacts;
+-- Note: the legacy read policy was renamed once before (20260806063237), so
+-- both historical names are dropped to be safe against either DB state.
 DROP POLICY IF EXISTS "Authenticated users read active contacts" ON public.important_contacts;
+DROP POLICY IF EXISTS "Roled users read active contacts" ON public.important_contacts;
 
--- Admin management (already existed; restate to be safe and explicit).
+-- Admin management. The original policy was named "Admins manage contacts"
+-- (20260305005304); drop both names so the restate replaces it cleanly
+-- regardless of which name the live DB currently holds.
+DROP POLICY IF EXISTS "Admins manage contacts" ON public.important_contacts;
 DROP POLICY IF EXISTS "Admins manage important contacts" ON public.important_contacts;
 CREATE POLICY "Admins manage important contacts"
   ON public.important_contacts FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+-- ── 4. Align category CHECK with the admin form ─────────────────────────
+-- The admin form offers 'medical' and 'legal' (and 'support'/'embassy' are no
+-- longer in the picker), but the live CHECK constraint only allows the old
+-- set. Re-align so creating/editing a contact never hits a CHECK violation.
+ALTER TABLE public.important_contacts DROP CONSTRAINT IF EXISTS important_contacts_category_check;
+ALTER TABLE public.important_contacts ADD CONSTRAINT important_contacts_category_check
+  CHECK (category IN ('emergency', 'medical', 'legal', 'team', 'language_school', 'city_office', 'immigration', 'support', 'embassy', 'other'));
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.important_contacts TO authenticated;
