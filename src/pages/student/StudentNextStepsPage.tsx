@@ -10,6 +10,7 @@ import { CalendarDays, CheckCircle2, CreditCard, FileText, Globe, ListChecks, Me
 import CaseMessages from '@/components/cases/CaseMessages';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import PaymentDisclosureCard from '@/components/student/PaymentDisclosureCard';
+import StudentOverviewSection from '@/components/student/StudentOverviewSection';
 import { useDirection } from '@/hooks/useDirection';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { formatDateTime } from '@/utils/dateUtils';
@@ -186,6 +187,8 @@ export default function StudentNextStepsPage() {
           {t('student.next.subtitle', 'Everything that needs your attention right now.')}
         </p>
       </div>
+
+      <StudentOverviewSection />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
