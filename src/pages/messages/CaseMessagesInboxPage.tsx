@@ -124,12 +124,8 @@ export default function CaseMessagesInboxPage() {
       setThreads(caseRows);
       setDirectThreads(directRows);
       setMuted(new Set(muteRows.map((m) => `${m.thread_type}:${m.thread_id}`)));
-      setSelected((current) => {
-        if (current) return current;
-        if (caseRows[0]) return { type: "case", id: caseRows[0].caseId };
-        if (directRows[0]) return { type: "direct", id: directRows[0].threadId };
-        return null;
-      });
+      // Do NOT auto-select the first thread on load — the inbox opens on the
+      // conversation list and the user explicitly picks one to open it.
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {

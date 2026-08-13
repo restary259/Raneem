@@ -37,7 +37,8 @@ export default function PartnerMessagesPage() {
     try {
       const rows = await listMyDirectThreads(user.id);
       setThreads(rows);
-      setSelected((current) => current ?? rows[0]?.threadId ?? null);
+      // Do NOT auto-select the first thread on load — the inbox opens on the
+      // conversation list and the user explicitly picks one to open it.
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -162,7 +163,7 @@ export default function PartnerMessagesPage() {
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center p-8">
-              <p className="text-sm text-muted-foreground">{t("messagesInbox.empty")}</p>
+              <p className="text-sm text-muted-foreground">{t("messagesInbox.selectThread")}</p>
             </div>
           )}
         </Card>
