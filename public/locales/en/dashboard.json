@@ -1867,6 +1867,8 @@
     }
   },
   "team": {
+    "currencyDesc": "Live FX rates to quote fees in your student's currency.",
+    "cvBuilderDesc": "Draft a German CV (Lebenslauf). Drafts are saved to this device only.",
     "outcome": {
       "title": "Record Appointment Outcome",
       "completed": "Completed",
@@ -2316,6 +2318,8 @@
     "contacts": "Contacts",
     "spreadsheet": "Spreadsheet",
     "bagrut": "Bagrut Tool",
+    "cvBuilder": "CV builder",
+    "currency": "Currency converter",
     "mainSite": "Main Site",
     "backToMainSite": "Back to Main Website",
     "inbox": "Applications",
@@ -2330,7 +2334,8 @@
       "studyFile": "Study File",
       "communication": "Communication",
       "account": "My Account",
-      "referral": "Referral"
+      "referral": "Referral",
+      "tools": "Tools"
     },
     "nextSteps": "Next Steps",
     "network": "My network",

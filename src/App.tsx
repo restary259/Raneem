@@ -87,6 +87,8 @@ const TeamStudentProfilePage = lazy(() => import("./pages/team/TeamStudentProfil
 const TeamAnalyticsPage = lazy(() => import("./pages/team/TeamAnalyticsPage"));
 const TeamSpreadsheetPage = lazy(() => import("./pages/team/TeamSpreadsheetPage"));
 const TeamBagrutConverter = lazy(() => import("./pages/team/BagrutConverter"));
+const TeamCurrencyPage = lazy(() => import("./pages/team/TeamCurrencyPage"));
+const TeamCvBuilderPage = lazy(() => import("./pages/team/TeamCvBuilderPage"));
 
 // Partner pages (Phase 5)
 const PartnerOverviewPage = lazy(() => import("./pages/partner/PartnerOverviewPage"));
@@ -302,6 +304,8 @@ const App = () => {
               <Route path="analytics" element={<TeamAnalyticsPage />} />
               <Route path="spreadsheet" element={<TeamSpreadsheetPage />} />
               <Route path="bagrut" element={<TeamBagrutConverter />} />
+              <Route path="tools/currency" element={<TeamCurrencyPage />} />
+              <Route path="tools/cv" element={<TeamCvBuilderPage />} />
             </Route>
 
             {/* ── Partner + Ambassador Dashboard (/partner/*) ── */}

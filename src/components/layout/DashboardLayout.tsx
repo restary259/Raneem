@@ -61,6 +61,7 @@ import {
   Crown,
   ShieldCheck,
   Receipt,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
@@ -106,9 +107,19 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.submitNew", icon: UserPlus, href: "/team/submit", group: "nav.group.work" },
     { key: "nav.students", icon: GraduationCap, href: "/team/students", group: "nav.group.work" },
 
-    { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut", group: "nav.group.setup" },
     { key: "nav.analytics", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
     { key: "nav.spreadsheet", icon: Table, href: "/team/spreadsheet", group: "nav.group.setup" },
+
+    {
+      key: "nav.group.tools",
+      icon: Wrench,
+      href: "",
+      children: [
+        { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
+        { key: "nav.cvBuilder", icon: FileText, href: "/team/tools/cv" },
+        { key: "nav.currency", icon: DollarSign, href: "/team/tools/currency" },
+      ],
+    },
   ],
 
   social_media_partner: [
