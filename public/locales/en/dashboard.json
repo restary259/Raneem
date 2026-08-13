@@ -4166,5 +4166,27 @@
     "originalTotal": "Original total",
     "referralDiscount": "Referral discount",
     "netTotal": "Net total"
+  },
+  "studentOverview": {
+    "nextAction": "Next action",
+    "financialSnapshot": "Financial snapshot",
+    "recentActivity": "Recent activity",
+    "viewAll": "View all",
+    "openCase": "Open case",
+    "openFinance": "Open finance",
+    "noLinkedCase": "No linked case",
+    "profileComplete": "Profile complete",
+    "profileIncomplete": "Profile incomplete",
+    "goToProfile": "Go to profile",
+    "goToPayment": "Go to payment",
+    "visa": "Visa",
+    "personal": "Personal",
+    "education": "Education",
+    "contact": "Contact",
+    "documents": "Documents",
+    "studentInformation": "Student information",
+    "schoolCosts": "School costs (€)",
+    "referralDiscount": "Referral discount",
+    "serviceTotal": "Service total"
   }
 }

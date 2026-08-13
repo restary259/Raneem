@@ -4184,5 +4184,27 @@
     "originalTotal": "الإجمالي قبل الخصم",
     "referralDiscount": "خصم الإحالة",
     "netTotal": "الإجمالي الصافي"
+  },
+  "studentOverview": {
+    "nextAction": "الإجراء التالي",
+    "financialSnapshot": "ملخص مالي",
+    "recentActivity": "النشاط الأخير",
+    "viewAll": "عرض الكل",
+    "openCase": "فتح الملف",
+    "openFinance": "فتح المالية",
+    "noLinkedCase": "لا يوجد ملف مرتبط",
+    "profileComplete": "الملف مكتمل",
+    "profileIncomplete": "الملف غير مكتمل",
+    "goToProfile": "الذهاب للملف الشخصي",
+    "goToPayment": "الذهاب للدفع",
+    "visa": "التأشيرة",
+    "personal": "شخصي",
+    "education": "التعليم",
+    "contact": "تواصل",
+    "documents": "المستندات",
+    "studentInformation": "معلومات الطالب",
+    "schoolCosts": "تكاليف المدرسة (€)",
+    "referralDiscount": "خصم الإحالة",
+    "serviceTotal": "إجمالي الخدمات"
   }
 }

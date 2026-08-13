@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, User, Phone, Mail, FileText } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import StudentOverview from '@/components/students/StudentOverview';
 
 export default function TeamStudentProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -55,50 +54,22 @@ export default function TeamStudentProfilePage() {
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
   if (!profile) return <div className="p-6 text-muted-foreground">Not found</div>;
 
-  const caseId = caseData?.id as string | undefined;
-
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate('/team/students')}><ArrowLeft className="h-4 w-4" /></Button>
-          <h1 className="text-xl sm:text-2xl font-bold truncate min-w-0 flex-1">{profile.full_name as string || '—'}</h1>
-        </div>
-        <div className="ps-1">
-          {caseData ? (
-            <Badge className={caseData.status === 'enrollment_paid' ? 'bg-green-100 text-green-800' : 'bg-teal-100 text-teal-800'}>
-              {(caseData.status as string).replace(/_/g, ' ')}
-            </Badge>
-          ) : (
-            <Badge variant="secondary">No linked case</Badge>
-          )}
-        </div>
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" className="shrink-0 gap-1" onClick={() => navigate('/team/students')}>
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+        </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4" /> Contact</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex items-center gap-2"><Mail className="h-3 w-3 text-muted-foreground" />{profile.email as string || '—'}</div>
-            <div className="flex items-center gap-2"><Phone className="h-3 w-3 text-muted-foreground" />{(caseData?.phone_number ?? profile.phone_number) as string || '—'}</div>
-          </CardContent>
-        </Card>
-
-        {submission && (
-          <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Submission</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {(submission.service_fee as number) > 0 && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Service Fee</span><span className="font-medium">{(submission.service_fee as number).toLocaleString('en-US')} ILS</span></div>
-              )}
-              {submission.program_start_date && <div className="flex justify-between"><span className="text-muted-foreground">Start</span><span>{submission.program_start_date as string}</span></div>}
-              {submission.program_end_date && <div className="flex justify-between"><span className="text-muted-foreground">End</span><span>{submission.program_end_date as string}</span></div>}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {caseId && <Button variant="outline" onClick={() => navigate(`/team/cases/${caseId}`)}>View Full Case</Button>}
+      <StudentOverview
+        profile={profile}
+        caseData={caseData}
+        submission={submission}
+        variant="page"
+        caseHref={(cid) => `/team/cases/${cid}`}
+        financeHref={(cid) => `/team/cases/${cid}`}
+      />
     </div>
   );
 }

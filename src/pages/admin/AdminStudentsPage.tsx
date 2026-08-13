@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
+import StudentOverview from "@/components/students/StudentOverview";
 
 import {
   RefreshCw,
@@ -876,6 +877,195 @@ export default function AdminStudentsPage() {
                 )}
               </div>
 
+              {/* ── Command-center overview (header, progress, next action,
+                  financial snapshot, visa + documents tabs, recent activity) ── */}
+              <StudentOverview
+                profile={selected as unknown as Record<string, unknown>}
+                caseData={(() => {
+                  const c = caseOf(selected);
+                  return c
+                    ? { id: c.id, case_reference: c.reference, status: c.status, phone_number: selected.phone_number }
+                    : null;
+                })()}
+                submission={null}
+                variant="sheet"
+                caseHref={(cid) => `/admin/cases/${cid}`}
+                financeHref={(cid) => `/admin/cases/${cid}`}
+                tabs={["visa", "documents"]}
+                renderVisaTab={() =>
+                  visaFields.length > 0 ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {t("admin.students.visaInfo")}
+                        </p>
+                        {!editingVisa ? (
+                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
+                            onClick={() => { setVisaDraft({ ...visaValues }); setEditingVisa(true); }}>
+                            <Edit3 className="h-3 w-3" /> {t("admin.students.edit")}
+                          </Button>
+                        ) : (
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setEditingVisa(false)} disabled={savingVisa}>
+                              <X className="h-3 w-3" /> {t("admin.students.cancel")}
+                            </Button>
+                            <Button size="sm" className="h-7 text-xs gap-1" onClick={saveVisaValues} disabled={savingVisa}>
+                              {savingVisa ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                              {t("admin.students.save")}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {visaFields.map((f) => {
+                          const label = isRtl ? f.label_ar : f.label_en;
+                          const val = editingVisa ? (visaDraft[f.id] ?? "") : (visaValues[f.id] ?? "");
+                          const onChange = (v: string) => setVisaDraft((d) => ({ ...d, [f.id]: v }));
+
+                          if (f.field_type === "boolean") {
+                            return (
+                              <div key={f.id} className="flex items-center justify-between py-1 text-xs">
+                                <span className="text-muted-foreground">{label}</span>
+                                <input type="checkbox" checked={val === "true"} onChange={(e) => onChange(e.target.checked ? "true" : "false")} disabled={!editingVisa} className="h-4 w-4 rounded" />
+                              </div>
+                            );
+                          }
+
+                          if (f.field_type === "select" && Array.isArray(f.options_json) && f.options_json.length > 0) {
+                            return (
+                              <div key={f.id} className="flex items-center gap-2 text-xs">
+                                <span className="text-muted-foreground w-28 shrink-0">{label}</span>
+                                {editingVisa ? (
+                                  <select value={val} onChange={(e) => onChange(e.target.value)} className="flex-1 h-7 rounded-md border border-input bg-background px-2 text-xs">
+                                    <option value="">{isRtl ? "اختر..." : "Select..."}</option>
+                                    {f.options_json.map((opt: any) => (
+                                      <option key={opt.value ?? opt} value={opt.value ?? opt}>{opt.label ?? opt.value ?? opt}</option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <span className="font-medium">{val || "—"}</span>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          if (f.field_type === "date") {
+                            return (
+                              <div key={f.id} className="flex items-center gap-2 text-xs">
+                                <span className="text-muted-foreground w-28 shrink-0">{label}</span>
+                                {editingVisa ? (
+                                  <Input type="date" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs flex-1" />
+                                ) : (
+                                  <span className="font-medium">
+                                    {val ? (() => { try { return format(new Date(val), "PPP"); } catch { return val; } })() : "—"}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={f.id} className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-28 shrink-0">{label}</span>
+                              {editingVisa ? (
+                                <Input value={val} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs flex-1" />
+                              ) : (
+                                <span className="font-medium">{val || "—"}</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">{t("visa.noData", "No visa information on file yet.")}</p>
+                  )
+                }
+                renderDocumentsTab={() => (
+                  <div className="space-y-4">
+                    {/* Upload */}
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                        {t("admin.students.uploadNewDocument")}
+                      </p>
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs">{t("admin.students.docCategory")}</Label>
+                          <select
+                            value={uploadCategory}
+                            onChange={(e) => setUploadCategory(e.target.value)}
+                            className="mt-1 w-full h-9 rounded-xl border border-input bg-background px-3 text-sm"
+                          >
+                            {DOC_CATEGORIES.map((c) => (
+                              <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {uploadCategory === "other" && (
+                          <div>
+                            <Label className="text-xs">{t("admin.students.docName")}</Label>
+                            <Input value={customDocName} onChange={(e) => setCustomDocName(e.target.value)} placeholder={t("admin.students.docNamePlaceholder")} className="mt-1 h-9 text-sm" />
+                          </div>
+                        )}
+                        <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx" onChange={handleUpload} className="hidden" />
+                        <Button variant="outline" size="sm" className="gap-2 w-full" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+                          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                          {uploading ? t("admin.students.uploading") : t("admin.students.chooseFile")}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* List */}
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                        {isRtl ? "المستندات" : "Documents"} ({docs.length})
+                      </p>
+                      {docsLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : docs.length === 0 ? (
+                        <p className="text-xs text-muted-foreground py-2">{isRtl ? "لا توجد مستندات بعد" : "No documents yet"}</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {docs.map((doc) => (
+                            <div key={doc.id} className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted text-xs border border-border/50">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <div className="min-w-0 space-y-0.5">
+                                  <p className="truncate font-medium text-sm">{doc.file_name}</p>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge variant="outline" className="text-xs capitalize px-1 py-0">{doc.category.replace(/_/g, " ")}</Badge>
+                                    {doc.file_size && <span className="text-muted-foreground">{formatBytes(doc.file_size)}</span>}
+                                  </div>
+                                  <div className="flex items-center gap-3 text-muted-foreground mt-0.5">
+                                    <span>{format(new Date(doc.created_at), "dd MMM yyyy, HH:mm")}</span>
+                                    {doc.uploader_name && (
+                                      <span className="flex items-center gap-1">
+                                        <User className="h-3 w-3" />
+                                        {doc.uploader_name}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownloadDoc(doc)} title={isRtl ? "تحميل" : "Download"} aria-label={isRtl ? "تحميل" : "Download"}>
+                                  <Download className="h-3.5 w-3.5 text-primary" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDoc(doc)} title={isRtl ? "حذف" : "Delete"} aria-label={isRtl ? "حذف" : "Delete"}>
+                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              />
+
               <div className="mt-5 space-y-5">
 
                 {/* Profile Info / Edit */}
@@ -1095,131 +1285,6 @@ export default function AdminStudentsPage() {
                   </div>
                 </div>
 
-                <Separator />
-
-                {/* Document Upload */}
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {t("admin.students.uploadNewDocument")}
-                  </p>
-                  <div className="space-y-2">
-                    <div>
-                      <Label className="text-xs">{t("admin.students.docCategory")}</Label>
-                      <select
-                        value={uploadCategory}
-                        onChange={(e) => setUploadCategory(e.target.value)}
-                        className="mt-1 w-full h-9 rounded-xl border border-input bg-background px-3 text-sm"
-                      >
-                        {DOC_CATEGORIES.map((c) => (
-                          <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {uploadCategory === "other" && (
-                      <div>
-                        <Label className="text-xs">{t("admin.students.docName")}</Label>
-                        <Input value={customDocName} onChange={(e) => setCustomDocName(e.target.value)} placeholder={t("admin.students.docNamePlaceholder")} className="mt-1 h-9 text-sm" />
-                      </div>
-                    )}
-                    <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx" onChange={handleUpload} className="hidden" />
-                    <Button variant="outline" size="sm" className="gap-2 w-full" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-                      {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      {uploading ? t("admin.students.uploading") : t("admin.students.chooseFile")}
-                    </Button>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* ── FIX 3: Visa Fields — handle select, date, boolean, text ── */}
-                {visaFields.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        {t("admin.students.visaInfo")}
-                      </p>
-                      {!editingVisa ? (
-                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
-                          onClick={() => { setVisaDraft({ ...visaValues }); setEditingVisa(true); }}>
-                          <Edit3 className="h-3 w-3" /> {t("admin.students.edit")}
-                        </Button>
-                      ) : (
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setEditingVisa(false)} disabled={savingVisa}>
-                            <X className="h-3 w-3" /> {t("admin.students.cancel")}
-                          </Button>
-                          <Button size="sm" className="h-7 text-xs gap-1" onClick={saveVisaValues} disabled={savingVisa}>
-                            {savingVisa ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                            {t("admin.students.save")}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      {visaFields.map((f) => {
-                        const label = isRtl ? f.label_ar : f.label_en;
-                        const val = editingVisa ? (visaDraft[f.id] ?? "") : (visaValues[f.id] ?? "");
-                        const onChange = (v: string) => setVisaDraft((d) => ({ ...d, [f.id]: v }));
-
-                        if (f.field_type === "boolean") {
-                          return (
-                            <div key={f.id} className="flex items-center justify-between py-1 text-xs">
-                              <span className="text-muted-foreground">{label}</span>
-                              <input type="checkbox" checked={val === "true"} onChange={(e) => onChange(e.target.checked ? "true" : "false")} disabled={!editingVisa} className="h-4 w-4 rounded" />
-                            </div>
-                          );
-                        }
-
-                        if (f.field_type === "select" && Array.isArray(f.options_json) && f.options_json.length > 0) {
-                          return (
-                            <div key={f.id} className="flex items-center gap-2 text-xs">
-                              <span className="text-muted-foreground w-28 shrink-0">{label}</span>
-                              {editingVisa ? (
-                                <select value={val} onChange={(e) => onChange(e.target.value)} className="flex-1 h-7 rounded-md border border-input bg-background px-2 text-xs">
-                                  <option value="">{isRtl ? "اختر..." : "Select..."}</option>
-                                  {f.options_json.map((opt: any) => (
-                                    <option key={opt.value ?? opt} value={opt.value ?? opt}>{opt.label ?? opt.value ?? opt}</option>
-                                  ))}
-                                </select>
-                              ) : (
-                                <span className="font-medium">{val || "—"}</span>
-                              )}
-                            </div>
-                          );
-                        }
-
-                        if (f.field_type === "date") {
-                          return (
-                            <div key={f.id} className="flex items-center gap-2 text-xs">
-                              <span className="text-muted-foreground w-28 shrink-0">{label}</span>
-                              {editingVisa ? (
-                                <Input type="date" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs flex-1" />
-                              ) : (
-                                <span className="font-medium">
-                                  {val ? (() => { try { return format(new Date(val), "PPP"); } catch { return val; } })() : "—"}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div key={f.id} className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground w-28 shrink-0">{label}</span>
-                            {editingVisa ? (
-                              <Input value={val} onChange={(e) => onChange(e.target.value)} className="h-7 text-xs flex-1" />
-                            ) : (
-                              <span className="font-medium">{val || "—"}</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {visaFields.length > 0 && <Separator />}
-
                 {/* Referral count */}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
@@ -1228,55 +1293,6 @@ export default function AdminStudentsPage() {
                   <span className="font-bold">{referralCount}</span>
                 </div>
 
-                <Separator />
-
-                {/* Documents List */}
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                    {isRtl ? "المستندات" : "Documents"} ({docs.length})
-                  </p>
-                  {docsLoading ? (
-                    <div className="flex items-center justify-center py-6">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : docs.length === 0 ? (
-                    <p className="text-xs text-muted-foreground py-2">{isRtl ? "لا توجد مستندات بعد" : "No documents yet"}</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {docs.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted text-xs border border-border/50">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <div className="min-w-0 space-y-0.5">
-                              <p className="truncate font-medium text-sm">{doc.file_name}</p>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="outline" className="text-xs capitalize px-1 py-0">{doc.category.replace(/_/g, " ")}</Badge>
-                                {doc.file_size && <span className="text-muted-foreground">{formatBytes(doc.file_size)}</span>}
-                              </div>
-                              <div className="flex items-center gap-3 text-muted-foreground mt-0.5">
-                                <span>{format(new Date(doc.created_at), "dd MMM yyyy, HH:mm")}</span>
-                                {doc.uploader_name && (
-                                  <span className="flex items-center gap-1">
-                                    <User className="h-3 w-3" />
-                                    {doc.uploader_name}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownloadDoc(doc)} title={isRtl ? "تحميل" : "Download"} aria-label={isRtl ? "تحميل" : "Download"}>
-                              <Download className="h-3.5 w-3.5 text-primary" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteDoc(doc)} title={isRtl ? "حذف" : "Delete"} aria-label={isRtl ? "حذف" : "Delete"}>
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </div>
             </>
           )}
