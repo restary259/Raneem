@@ -91,6 +91,44 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
      profile, and links the case at activation. Manual mode still creates the
      account and returns a temp password. Pre-creating in invite mode caused
      resend races to hit "email already belongs to an account" at activation.
+- **Invitation reconciliation (2026-08-13)**: a pending `user_invitations` row
+  is closed (status → accepted) whenever the corresponding student account
+  becomes active by ANY creation path, not only via `accept-invitation`. Manual
+  accounts are delivered as a temp password and the student signs in directly
+  (never calling `accept-invitation`), so the one row that used to flip
+  pending→accepted never ran — leaving a stale pending invitation that kept
+  rendering under "Pending invitations" while the account was already active.
+  Three layers now close it:
+  1. `reconcilePendingInvitations(admin, { email, userId, invitationType })` in
+     `supabase/functions/_shared/invitations.ts` — idempotent UPDATE
+     (already-accepted → no-op), logs a structured `student_invitation_reconciled`
+     event (never logs tokens/passwords), non-fatal on error. Called after
+     account creation/case-linking in: `create-student-from-case` (manual main
+     path + the already-activated invite branch + the linked-account early
+     returns, both manual & invite) and `create-student-standalone` (after
+     role/profile/case-link).
+  2. DB trigger `trg_reconcile_student_invitations` (migration
+     `20260813150000_reconcile_student_invitations.sql`) — SECURITY DEFINER
+     `AFTER INSERT ON user_roles` where role='student', joins
+     `profiles.email` → `user_invitations.invited_email` (lower-cased),
+     type='student', status='pending' → accepted. Idempotent, no recursion
+     (updates a different table), no RLS weakening. Covers ANY path that
+     provisions a student role without going through the edge functions.
+  3. Same migration runs a one-time idempotent data cleanup closing existing
+     stale pending student invitations whose email already belongs to an active
+     (non-deactivated) student account (correlation from
+     `supabase/diagnostics/account_lifecycle_audit.sql` query 7). pending→accepted
+     only, never DELETE. A verification SELECT is kept in a comment.
+- **Frontend safeguard** (`src/lib/studentInvitations.ts`): pure
+  `filterActiveInvitations(invitations, students)` hides any pending invitation
+  whose email (trim+lowercase) matches an active student — defense-in-depth if
+  DB reconciliation hasn't run yet (replication lag). `TeamStudentsPage` derives
+  `visibleInvitations` via `useMemo` and renders that. The active-students query
+  DROPPED `.is("case_id", null)` so a manually-created student linked to a case
+  appears under active accounts (was previously hidden → vanished from both
+  sections); `.not("created_by", "is", null)` stays to scope to staff-created
+  accounts. The page refetches both lists on window `focus` (post-activation
+  navigation) and after `submitCreate` (already did `Promise.all`).
 - `check-email-availability` (edge function, admin/team_member only): returns
   `{ available, existing_role, deactivated }` for an email. A *pending*
   invitation with no account is NOT "taken" (so resends to never-activated

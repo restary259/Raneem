@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { User, RefreshCw, UserPlus, Loader2, Mail, Search, Copy, CheckCheck, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { readFunctionErrorBody, readFunctionError } from "@/lib/functionError";
+import { filterActiveInvitations } from "@/lib/studentInvitations";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface StudentRecord {
@@ -149,12 +150,16 @@ export default function TeamStudentsPage() {
         return;
       }
 
+      // Staff-created student accounts (created_by IS NOT NULL). The case_id
+      // filter was removed: a manually-created student linked to a case must
+      // still appear under active accounts, otherwise it vanishes from both
+      // this list and the pending-invitations list. Self-registered students
+      // (created_by IS NULL) are excluded — they are not team-managed here.
       const { data, error } = await (supabase as any)
         .from("profiles")
         .select("id, full_name, email, created_at")
         .in("id", ids)
         .not("created_by", "is", null)
-        .is("case_id", null)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -194,6 +199,29 @@ export default function TeamStudentsPage() {
     fetchStudents();
     fetchInvitations();
   }, [fetchStudents, fetchInvitations]);
+
+  // Refetch both lists when the team member returns to the tab. A student may
+  // have activated their invitation (via link) or been provisioned manually on
+  // another device since the page was last focused, and the invitation/account
+  // state should reflect that without a manual refresh.
+  useEffect(() => {
+    const onFocus = () => {
+      fetchStudents();
+      fetchInvitations();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [fetchStudents, fetchInvitations]);
+
+  // Defensive safeguard: hide any pending invitation whose email already
+  // belongs to an active student, even if the DB reconciliation has not yet
+  // closed the row. The DB trigger + edge-function helper are the source of
+  // truth; this prevents the contradictory "active account + pending invite"
+  // from ever rendering.
+  const visibleInvitations = useMemo(
+    () => filterActiveInvitations(invitations, students),
+    [invitations, students],
+  );
 
   /* ── Find the case(s) already associated with this email ─────────── */
   const [casesError, setCasesError] = useState<string | null>(null);
@@ -806,14 +834,14 @@ export default function TeamStudentsPage() {
           {t("team.students.invitesLoadFailed", "Could not load pending invitations.")} {invitesError}
         </p>
       )}
-      {invitations.length > 0 && (
+      {visibleInvitations.length > 0 && (
         <Card>
           <CardContent className="p-0">
             <div className="border-b px-4 py-3 text-sm font-medium text-foreground">
               {t("team.students.pendingInvites", "Pending invitations")}
             </div>
             <div className="divide-y divide-border">
-              {invitations.map((inv) => (
+              {visibleInvitations.map((inv) => (
                 <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">

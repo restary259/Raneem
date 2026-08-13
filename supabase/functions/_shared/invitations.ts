@@ -113,3 +113,71 @@ export async function createInvitation(
 
   return `${APP_URL}/activate?token=${encodeURIComponent(token)}`;
 }
+
+export interface ReconcilePendingInvitationsInput {
+  email: string;
+  userId: string;
+  invitationType: InvitationType;
+}
+
+/**
+ * Idempotently closes every pending invitation for this email + type now that
+ * the corresponding account is active.
+ *
+ * An invitation is no longer "pending" once an active (non-deactivated) account
+ * exists for that email holding the invitation's intended_role. Several account
+ * creation paths (manual create-student-from-case, create-student-standalone,
+ * the already-activated invite branch) never went through accept-invitation, so
+ * the one row that used to flip status='pending' → 'accepted' never ran. The
+ * stale pending invitation then kept rendering under "Pending invitations" while
+ * the account was already active — a contradictory state.
+ *
+ * This helper is the single reconciliation point every account-creation path
+ * calls. It is a no-op-safe UPDATE (already accepted → nothing updated), never
+ * creates a second role/profile/case link, and logs a structured
+ * `student_invitation_reconciled` event. It never logs tokens or passwords.
+ */
+export async function reconcilePendingInvitations(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  input: ReconcilePendingInvitationsInput,
+): Promise<number> {
+  const email = input.email.trim().toLowerCase();
+  const userId = input.userId;
+
+  const { data, error } = await admin
+    .from("user_invitations")
+    .update({
+      status: "accepted",
+      accepted_at: new Date().toISOString(),
+      accepted_user_id: userId,
+    })
+    .eq("status", "pending")
+    .ilike("invited_email", email)
+    .eq("invitation_type", input.invitationType)
+    .select("id");
+
+  if (error) {
+    // Non-fatal: reconciliation is defense-in-depth. The DB trigger covers the
+    // same transition, so a failed helper update must never break account
+    // creation. Surface the error in logs (no secrets) for diagnosis.
+    console.warn("reconcilePendingInvitations: update failed", {
+      email,
+      invitation_type: input.invitationType,
+      user_id: userId,
+      error,
+    });
+    return 0;
+  }
+
+  const closed = data?.length ?? 0;
+  if (closed > 0) {
+    console.info("student_invitation_reconciled", {
+      email,
+      invitation_type: input.invitationType,
+      user_id: userId,
+      closed,
+    });
+  }
+  return closed;
+}

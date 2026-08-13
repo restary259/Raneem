@@ -4,7 +4,7 @@ import { buildCorsHeaders } from "../_shared/cors.ts";
 import { serverErrorResponse } from "../_shared/errors.ts";
 import { resolveIdentity } from "../_shared/identity.ts";
 import { z, parseBody, email as emailField, uuid } from "../_shared/validate.ts";
-import { createInvitation } from "../_shared/invitations.ts";
+import { createInvitation, reconcilePendingInvitations } from "../_shared/invitations.ts";
 
 /**
  * Digits, spaces, dashes and parentheses are stripped before validation so
@@ -379,6 +379,13 @@ serve(async (req) => {
             corsHeaders,
           );
         }
+        // The account is already active; a pending invitation for this email
+        // would be stale. Close it (idempotent, non-fatal).
+        await reconcilePendingInvitations(supabaseAdmin, {
+          email: linkedEmail,
+          userId: caseData.student_user_id,
+          invitationType: "student",
+        });
         return jsonResponse(
           {
             success: true,
@@ -399,6 +406,11 @@ serve(async (req) => {
       // activation invite would be a dead link: accept-invitation rejects any
       // email that already belongs to an account. Do not email one; the case
       // is already linked, so just confirm that.
+      await reconcilePendingInvitations(supabaseAdmin, {
+        email: linkedEmail,
+        userId: caseData.student_user_id,
+        invitationType: "student",
+      });
       return jsonResponse(
         {
           success: true,
@@ -552,6 +564,14 @@ serve(async (req) => {
             .update({ student_user_id: studentId })
             .eq("id", case_id);
         }
+        // The account is already active, so any pending student invitation for
+        // this email is stale (accept-invitation will never run for it). Close
+        // it now so it stops rendering under "Pending invitations".
+        await reconcilePendingInvitations(supabaseAdmin, {
+          email: student_email,
+          userId: studentId,
+          invitationType: "student",
+        });
         return jsonResponse(
           {
             success: true,
@@ -702,6 +722,18 @@ serve(async (req) => {
         return jsonResponse({ error: "Unable to link student to case", code: "CASE_LINK_FAILED" }, 500, corsHeaders);
       }
     }
+
+    // ── Reconcile pending invitations ────────────────────────────────────
+    // The account is now active (manual create, or an existing student whose
+    // password was reset). Any pending student invitation for this email is
+    // stale because the student will sign in with the temp password and never
+    // call accept-invitation. Close it so it stops rendering under "Pending
+    // invitations". Idempotent + non-fatal (the DB trigger also covers this).
+    await reconcilePendingInvitations(supabaseAdmin, {
+      email: student_email,
+      userId: studentId,
+      invitationType: "student",
+    });
 
     // ── Audit log (non-fatal) ─────────────────────────────────────────────
     const { data: callerProfile } = await supabaseAdmin

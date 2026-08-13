@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { identityConflict, resolveIdentity } from "../_shared/identity.ts";
 import { z, parseBody, email as emailField, personName, uuid } from "../_shared/validate.ts";
+import { reconcilePendingInvitations } from "../_shared/invitations.ts";
 
 
 serve(async (req) => {
@@ -149,6 +150,16 @@ serve(async (req) => {
         .update({ student_user_id: userId })
         .eq("id", case_id);
     }
+
+    // The account is now active, so any pending student invitation for this
+    // email is stale (the student signs in with the temp password, never via
+    // accept-invitation). Close it so it stops rendering under "Pending
+    // invitations". Idempotent + non-fatal (the DB trigger also covers this).
+    await reconcilePendingInvitations(supabaseAdmin, {
+      email: cleanEmail,
+      userId,
+      invitationType: "student",
+    });
 
     // Audit log
     await supabaseAdmin.from("admin_audit_log").insert({
