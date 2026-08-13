@@ -4670,6 +4670,13 @@ export type Database = {
           target_path: string
         }[]
       }
+      resolve_profile_names: {
+        Args: { p_ids: string[] }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       resolve_recruit_code: {
         Args: { p_code: string }
         Returns: {
