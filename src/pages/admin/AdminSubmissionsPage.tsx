@@ -329,6 +329,34 @@ const AdminSubmissionsPage = () => {
     if (!selected) return;
     setMarking(true);
     try {
+      // Fail fast: an email that already belongs to a partner/admin/team account
+      // can never become a student account (one identity = one role). Catch it
+      // BEFORE the case is marked paid so the admin can correct the address.
+      if (!selected.student_user_id && approveEmail.trim()) {
+        try {
+          const availability = await checkEmailAvailability(approveEmail.trim());
+          if (!availability.available && availability.existing_role !== "student") {
+            toast({
+              variant: "destructive",
+              description:
+                identityConflictMessage(
+                  {
+                    code: "identity_conflict",
+                    existing_role: availability.existing_role ?? undefined,
+                    deactivated: availability.deactivated,
+                  },
+                  t,
+                ) ?? t("common.actionFailed"),
+            });
+            setMarking(false);
+            return;
+          }
+        } catch {
+          // Availability check unavailable — fall through; the edge function
+          // still enforces the rule server-side.
+        }
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
