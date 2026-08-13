@@ -9,6 +9,9 @@ export interface Profile {
   phone_number?: string;
   country?: string;
   city?: string;
+  street?: string;
+  house_number?: string;
+  residential_city?: string;
   intake_month?: string;
   university_name?: string;
   visa_status?: VisaStatus;

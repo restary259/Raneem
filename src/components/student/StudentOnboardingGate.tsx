@@ -53,6 +53,9 @@ interface ProfileShape {
   nationality: string | null;
   city: string | null;
   country: string | null;
+  street: string | null;
+  house_number: string | null;
+  residential_city: string | null;
   university_name: string | null;
   language_school_id: string | null;
   intake_month: string | null;
@@ -68,14 +71,20 @@ interface ProfileShape {
   emergency_contacts: EmergencyContact[] | null;
 }
 
+// Default nationality for new students. The field stays editable in the wizard.
+const DEFAULT_NATIONALITY = "Israel";
+
 const EMPTY_PROFILE: ProfileShape = {
   full_name: null,
   phone_number: null,
   date_of_birth: null,
   gender: null,
-  nationality: null,
+  nationality: DEFAULT_NATIONALITY,
   city: null,
   country: null,
+  street: null,
+  house_number: null,
+  residential_city: null,
   university_name: null,
   language_school_id: null,
   intake_month: null,
@@ -94,15 +103,29 @@ const EMPTY_PROFILE: ProfileShape = {
 // Single select of every column the wizard reads or writes — loaded once on
 // mount, never re-fetched per keystroke.
 const SELECT_COLUMNS =
-  "full_name, phone_number, date_of_birth, gender, nationality, city, country, university_name, language_school_id, intake_month, arrival_date, passport_expiry, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country, emergency_contacts, emergency_contact_name, emergency_contact_phone";
+  "full_name, phone_number, date_of_birth, gender, nationality, city, country, street, house_number, residential_city, university_name, language_school_id, intake_month, arrival_date, passport_expiry, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country, emergency_contacts, emergency_contact_name, emergency_contact_phone";
 
 const EYE_COLORS = ["brown", "blue", "green", "hazel", "gray", "other"] as const;
+
+/** Year list for the arrival-date picker: current year through +6 (the wizard
+ *  reuses the segmented BirthdayPicker style, but with future years). */
+const ARRIVAL_YEARS = (() => {
+  const now = new Date().getFullYear();
+  return Array.from({ length: 7 }, (_, i) => String(now + i));
+})();
 
 const emptyContact = (): EmergencyContact => ({ name: "", relationship: "", phone: "" });
 
 const filled = (v?: string | null) => !!v && v.trim().length >= 1;
 
 const bool = (v: unknown) => v === true;
+
+/** Structured home address is complete (street + house number + city). Legacy
+ *  profiles that only filled the old single `country` text field are treated
+ *  as complete too so they are not re-gated by the wizard. */
+const hasAddress = (p: Partial<ProfileShape>) =>
+  (filled(p.street) && filled(p.house_number) && filled(p.residential_city)) ||
+  filled(p.country);
 
 /** A profile is complete once every required sidebar field and two contacts are on file. */
 export const isProfileComplete = (p: Partial<ProfileShape> | null | undefined) => {
@@ -116,7 +139,7 @@ export const isProfileComplete = (p: Partial<ProfileShape> | null | undefined) =
     filled(p.gender) &&
     filled(p.nationality) &&
     filled(p.city) &&
-    filled(p.country) &&
+    hasAddress(p) &&
     filled(p.university_name) &&
     filled(p.intake_month) &&
     filled(p.arrival_date) &&
@@ -136,7 +159,7 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
       filled(p.gender) &&
       filled(p.nationality) &&
       filled(p.city) &&
-      filled(p.country)
+      hasAddress(p)
     );
   }
   if (index === 1) {
@@ -156,7 +179,7 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
  * when the step's last task is completed), so the resume-at-first-incomplete
  * behavior is preserved.
  */
-type TaskType = "text" | "tel" | "dob" | "gender" | "eye" | "date" | "switch-legal" | "contacts" | "school-select";
+type TaskType = "text" | "tel" | "dob" | "gender" | "eye" | "date" | "arrival-date" | "address" | "switch-legal" | "contacts" | "school-select";
 
 interface Task {
   step: number;
@@ -175,11 +198,11 @@ const TASKS: Task[] = [
   { step: 0, key: "gender", type: "gender" },
   { step: 0, key: "nationality", type: "text" },
   { step: 0, key: "city", type: "text" },
-  { step: 0, key: "country", type: "text" },
+  { step: 0, key: "country", type: "address" },
   // step 1 — Study & arrival
   { step: 1, key: "university_name", type: "school-select" },
   { step: 1, key: "intake_month", type: "text" },
-  { step: 1, key: "arrival_date", type: "date" },
+  { step: 1, key: "arrival_date", type: "arrival-date" },
   // step 2 — Legal & identity
   { step: 2, key: "eye_color", type: "eye" },
   { step: 2, key: "passport_expiry", type: "date" },
@@ -208,6 +231,9 @@ const labelKeyFor = (key: keyof ProfileShape): string => {
     case "nationality": return "studentOnboarding.nationality";
     case "city": return "studentOnboarding.city";
     case "country": return "studentOnboarding.country";
+    case "street": return "studentOnboarding.street";
+    case "house_number": return "studentOnboarding.houseNumber";
+    case "residential_city": return "studentOnboarding.residentialCity";
     case "has_changed_legal_name": return "studentOnboarding.hasChangedLegalName";
     case "previous_legal_name": return "studentOnboarding.previousLegalName";
     case "has_criminal_record": return "studentOnboarding.hasCriminalRecord";
@@ -229,7 +255,10 @@ const labelFallbackFor = (key: keyof ProfileShape): string => {
     case "passport_expiry": return "Passport expiry";
     case "nationality": return "Nationality";
     case "city": return "City of birth";
-    case "country": return "Address / country";
+    case "country": return "Address";
+    case "street": return "Street";
+    case "house_number": return "House number";
+    case "residential_city": return "City";
     case "has_changed_legal_name": return "Have you ever changed your legal name?";
     case "previous_legal_name": return "Previous legal name";
     case "has_criminal_record": return "Do you have a criminal record?";
@@ -258,6 +287,12 @@ const taskErrorFor = (
   if (task.type === "switch-legal") {
     // Switches are optional; always valid (the detail field is never required).
     return null;
+  }
+  if (task.type === "address") {
+    // Structured home address: street + house number + residential city.
+    return filled(p?.street) && filled(p?.house_number) && filled(p?.residential_city)
+      ? null
+      : "studentOnboarding.errRequired";
   }
   return filled(p?.[task.key] as string) ? null : "studentOnboarding.errRequired";
 };
@@ -398,6 +433,13 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   /** The DB patch written when a logical step completes (mirrors the original per-step persist). */
   const stepPatch = (step: number): Record<string, unknown> => {
     if (step === 0) {
+      // Derive the legacy combined `country` string from the structured fields so
+      // every existing reader (AdminStudentsPage "Address / Country",
+      // StudentProfile home_address) keeps working unchanged.
+      const street = profile?.street ?? "";
+      const house = profile?.house_number ?? "";
+      const resCity = profile?.residential_city ?? "";
+      const combined = [`${street} ${house}`.trim(), resCity].filter(Boolean).join(", ");
       return {
         full_name: profile?.full_name,
         phone_number: profile?.phone_number,
@@ -405,7 +447,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         gender: profile?.gender,
         nationality: profile?.nationality,
         city: profile?.city,
-        country: profile?.country,
+        street: profile?.street,
+        house_number: profile?.house_number,
+        residential_city: profile?.residential_city,
+        country: combined || null,
       };
     }
     if (step === 1) {
@@ -471,7 +516,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Auto-focus the active input/select when the task changes.
   useEffect(() => {
-    if (task.type === "dob" || task.type === "gender" || task.type === "eye" || task.type === "school-select") return;
+    if (task.type === "dob" || task.type === "arrival-date" || task.type === "gender" || task.type === "eye" || task.type === "school-select" || task.type === "address") return;
     const id = `task-${task.key}`;
     const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
     if (el) {
@@ -738,6 +783,54 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               onChange={setField(task.key)}
               className={cn("h-12 text-base", err && "border-destructive focus-visible:ring-destructive")}
             />
+            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
+          </div>
+        );
+      case "arrival-date":
+        return (
+          <BirthdayPicker
+            id={`task-${task.key}`}
+            label={t("studentOnboarding.arrivalDate", "Arrival date")}
+            value={profile?.arrival_date ?? ""}
+            onChange={iso => { setProfile(prev => ({ ...(prev as ProfileShape), arrival_date: iso })); setAttempted(false); }}
+            phYear={t("studentOnboarding.ph.year", "Year")}
+            phMonth={t("studentOnboarding.ph.month", "Month")}
+            phDay={t("studentOnboarding.ph.day", "Day")}
+            years={ARRIVAL_YEARS}
+          />
+        );
+      case "address":
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2 space-y-1.5">
+                <Label htmlFor="task-street">{t("studentOnboarding.street", "Street")}</Label>
+                <Input
+                  id="task-street"
+                  value={profile?.street ?? ""}
+                  onChange={e => { setProfile(prev => ({ ...(prev as ProfileShape), street: e.target.value })); setAttempted(false); }}
+                  className={cn("h-12 text-base", err && !filled(profile?.street) && "border-destructive focus-visible:ring-destructive")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="task-house_number">{t("studentOnboarding.houseNumber", "House number")}</Label>
+                <Input
+                  id="task-house_number"
+                  value={profile?.house_number ?? ""}
+                  onChange={e => { setProfile(prev => ({ ...(prev as ProfileShape), house_number: e.target.value })); setAttempted(false); }}
+                  className={cn("h-12 text-base", err && !filled(profile?.house_number) && "border-destructive focus-visible:ring-destructive")}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="task-residential_city">{t("studentOnboarding.residentialCity", "City")}</Label>
+              <Input
+                id="task-residential_city"
+                value={profile?.residential_city ?? ""}
+                onChange={e => { setProfile(prev => ({ ...(prev as ProfileShape), residential_city: e.target.value })); setAttempted(false); }}
+                className={cn("h-12 text-base", err && !filled(profile?.residential_city) && "border-destructive focus-visible:ring-destructive")}
+              />
+            </div>
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
         );

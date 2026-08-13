@@ -331,3 +331,33 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   transition; reduced-motion respected.
 - Build/test: `npm run build` clean; `npx vitest run` 296/296 pass (incl.
   i18n parity guard + onboarding `isProfileComplete` tests).
+
+## Onboarding wizard: arrival-date picker, nationality default, structured address (2026-08-13)
+- **Arrival date now uses the same segmented Year/Month/Day picker as the
+  birthday field.** `BirthdayPicker` gained an optional `years?: string[]`
+  prop (defaults to `DOB_YEARS`); the wizard passes `ARRIVAL_YEARS` (current
+  year → +6) for the `arrival_date` task (new task type `arrival-date`). The
+  old plain `<Input type="date">` is gone from this field; `passport_expiry`
+  (step 2) still uses the native date input.
+- **Nationality defaults to "Israel"** for new students
+  (`DEFAULT_NATIONALITY` seeded into `EMPTY_PROFILE`), but the field stays a
+  free-text input the student can edit.
+- **Home address broken into Street + House number + City.** New task type
+  `address` (key `country`, step 0) renders three inputs. New `profiles`
+  columns `street`, `house_number`, `residential_city` (nullable text,
+  migration `20260813140000_structured_address.sql`). On save, `stepPatch(0)`
+  derives the legacy combined `country` string as `"Street House, City"` so
+  every existing reader (AdminStudentsPage "Address / Country", StudentProfile
+  `home_address`) keeps working unchanged.
+- **Backward compat:** `isProfileComplete`/`stepComplete(0)` use a `hasAddress`
+  helper — complete when (street + house_number + residential_city) OR the
+  legacy `country` is filled — so existing students who only filled the old
+  single text field are NOT re-gated by the wizard.
+- `types.ts` (Row/Insert/Update) + `src/types/profile.ts` gained the 3 columns;
+  `SELECT_COLUMNS` fetches them; `labelKeyFor`/`labelFallbackFor` map them;
+  `taskErrorFor` validates the 3 fields together. New i18n keys
+  `studentOnboarding.street` / `.houseNumber` / `.residentialCity` (en+ar, 91
+  each, parity).
+- Build/test: `npm run build` clean; `npx vitest run` 299/299 pass (incl. 3 new
+  address tests: structured-only complete, incomplete structured rejected,
+  legacy country backward compat).

@@ -4030,7 +4030,10 @@
     "q.hasCriminalRecord": "هل لديك سجل جنائي؟",
     "q.hasDualCitizenship": "هل تحمل جنسية مزدوجة؟",
     "q.emergencyContacts": "مَن يجب أن نتواصل معه في حالات الطوارئ؟",
-    "q.emergencyContactsDesc": "أضف شخصين على الأقل يمكننا الوصول إليهم إذا حدث لك أمر ما أثناء وجودك في ألمانيا."
+    "q.emergencyContactsDesc": "أضف شخصين على الأقل يمكننا الوصول إليهم إذا حدث لك أمر ما أثناء وجودك في ألمانيا.",
+    "street": "الشارع",
+    "houseNumber": "رقم المنزل",
+    "residentialCity": "المدينة"
   },
   "pushSettings": {
     "title": "إشعارات الجهاز",

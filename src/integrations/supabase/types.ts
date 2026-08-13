@@ -2960,8 +2960,10 @@ export type Database = {
           push_onboarding_updated_at: string | null
           referral_code: string | null
           referral_code_enabled: boolean
+          residential_city: string | null
           second_passport_country: string | null
           student_status: string
+          street: string | null
           university_name: string | null
           updated_at: string
           updated_by_student_at: string | null
@@ -3020,8 +3022,10 @@ export type Database = {
           push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
+          residential_city?: string | null
           second_passport_country?: string | null
           student_status?: string
+          street?: string | null
           university_name?: string | null
           updated_at?: string
           updated_by_student_at?: string | null
@@ -3080,8 +3084,10 @@ export type Database = {
           push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
+          residential_city?: string | null
           second_passport_country?: string | null
           student_status?: string
+          street?: string | null
           university_name?: string | null
           updated_at?: string
           updated_by_student_at?: string | null

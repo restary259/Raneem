@@ -4012,7 +4012,10 @@
     "q.hasCriminalRecord": "Do you have a criminal record?",
     "q.hasDualCitizenship": "Do you hold dual citizenship?",
     "q.emergencyContacts": "Who should we contact in an emergency?",
-    "q.emergencyContactsDesc": "Add at least two people we can reach if something happens to you while in Germany."
+    "q.emergencyContactsDesc": "Add at least two people we can reach if something happens to you while in Germany.",
+    "street": "Street",
+    "houseNumber": "House number",
+    "residentialCity": "City"
   },
   "pushSettings": {
     "title": "Device notifications",

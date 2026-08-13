@@ -9,6 +9,9 @@ const base = {
   nationality: "Israeli",
   city: "Nazareth",
   country: "Israel",
+  street: "Olive Street",
+  house_number: "12",
+  residential_city: "Nazareth",
   university_name: "Goethe-Institut",
   intake_month: "October 2026",
   arrival_date: "2026-09-20",
@@ -86,5 +89,20 @@ describe("isProfileComplete", () => {
     // passport_number is no longer collected by the wizard.
     expect(isProfileComplete({ ...base, has_changed_legal_name: true, previous_legal_name: null })).toBe(true);
     expect(isProfileComplete({ ...base, has_criminal_record: true, criminal_record_details: null })).toBe(true);
+  });
+
+  it("accepts the structured address (street + house number + city) without the legacy country field", () => {
+    expect(isProfileComplete({ ...base, country: null })).toBe(true);
+  });
+
+  it("rejects an incomplete structured address when the legacy country is also empty", () => {
+    expect(isProfileComplete({ ...base, country: null, street: null })).toBe(false);
+    expect(isProfileComplete({ ...base, country: null, house_number: "" })).toBe(false);
+    expect(isProfileComplete({ ...base, country: null, residential_city: null })).toBe(false);
+  });
+
+  it("treats a legacy profile with only the country field as complete (backward compat)", () => {
+    const legacy = { ...base, street: null, house_number: null, residential_city: null };
+    expect(isProfileComplete(legacy)).toBe(true);
   });
 });
