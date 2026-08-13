@@ -61,6 +61,15 @@ export async function requireAuth(
     return { ok: true, userId: null, isServiceRole: true, roles: [] };
   }
 
+  // The env-bound service key can rotate (legacy JWT vs. new secret key), so a
+  // strict string match is not enough for internal function-to-function calls.
+  // Accept any token that carries the service_role claim AND actually works as
+  // a service-role credential against the admin API.
+  if (await isWorkingServiceRoleToken(token)) {
+    return { ok: true, userId: null, isServiceRole: true, roles: [] };
+  }
+
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? "",
