@@ -3943,7 +3943,18 @@
     "incomplete": "Please complete every required field before continuing.",
     "incompleteContacts": "Please add at least two emergency contacts with a name and phone number.",
     "next": "Next",
-    "back": "Back"
+    "back": "Back",
+    "ph": {
+      "year": "Year",
+      "month": "Month",
+      "day": "Day",
+      "phone": "+972…"
+    },
+    "age": "Age: {{count}} years",
+    "errRequired": "This field is required",
+    "errPhoneInvalid": "Invalid phone number (7–15 digits, e.g. +972501234567)",
+    "errContactsMin": "Add at least two contacts with a name and phone number.",
+    "taskOf": "{{current}} of {{total}}"
   },
   "pushSettings": {
     "title": "Device notifications",

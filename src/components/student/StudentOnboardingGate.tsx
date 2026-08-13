@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { isValidPhone } from "@/lib/studentProfileFields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BirthdayPicker } from "@/components/shared/BirthdayPicker";
 
 interface EmergencyContact {
   name: string;
@@ -84,7 +86,7 @@ const EYE_COLORS = ["brown", "blue", "green", "hazel", "gray", "other"] as const
 
 const emptyContact = (): EmergencyContact => ({ name: "", relationship: "", phone: "" });
 
-const filled = (v?: string | null) => !!v && v.trim().length > 1;
+const filled = (v?: string | null) => !!v && v.trim().length >= 1;
 
 const bool = (v: unknown) => v === true;
 
@@ -133,6 +135,119 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
   return contacts.filter(c => filled(c?.name) && filled(c?.phone)).length >= 2;
 };
 
+/* ─────────────────────────── task model ───────────────────────────
+ * The wizard is driven by a flat, ordered list of "tasks" — one field (or one
+ * tightly-related group) per screen. Each task belongs to a logical step
+ * (0-3); persistence still happens per logical step (the whole slice is saved
+ * when the step's last task is completed), so the resume-at-first-incomplete
+ * behavior is preserved.
+ */
+type TaskType = "text" | "tel" | "dob" | "gender" | "eye" | "date" | "switch-legal" | "contacts";
+
+interface Task {
+  step: number;
+  key: keyof ProfileShape;
+  type: TaskType;
+  /** For switch-legal tasks: the conditional detail field shown when the switch is on. */
+  detailKey?: keyof ProfileShape;
+  detailType?: "text" | "textarea";
+}
+
+const TASKS: Task[] = [
+  // step 0 — Personal
+  { step: 0, key: "full_name", type: "text" },
+  { step: 0, key: "phone_number", type: "tel" },
+  { step: 0, key: "date_of_birth", type: "dob" },
+  { step: 0, key: "gender", type: "gender" },
+  { step: 0, key: "nationality", type: "text" },
+  { step: 0, key: "city", type: "text" },
+  { step: 0, key: "country", type: "text" },
+  // step 1 — Study & arrival
+  { step: 1, key: "university_name", type: "text" },
+  { step: 1, key: "intake_month", type: "text" },
+  { step: 1, key: "arrival_date", type: "date" },
+  // step 2 — Legal & identity
+  { step: 2, key: "eye_color", type: "eye" },
+  { step: 2, key: "passport_expiry", type: "date" },
+  { step: 2, key: "has_changed_legal_name", type: "switch-legal", detailKey: "previous_legal_name", detailType: "text" },
+  { step: 2, key: "has_criminal_record", type: "switch-legal", detailKey: "criminal_record_details", detailType: "textarea" },
+  { step: 2, key: "has_dual_citizenship", type: "switch-legal", detailKey: "second_passport_country", detailType: "text" },
+  // step 3 — Emergency contacts
+  { step: 3, key: "emergency_contacts", type: "contacts" },
+];
+
+/** Index of the last task belonging to a given logical step. */
+const lastTaskIndexOfStep = (step: number): number => {
+  for (let i = TASKS.length - 1; i >= 0; i--) if (TASKS[i].step === step) return i;
+  return TASKS.length - 1;
+};
+
+/** Maps a profile field key to its studentOnboarding.* label key. */
+const labelKeyFor = (key: keyof ProfileShape): string => {
+  switch (key) {
+    case "full_name": return "studentOnboarding.fullName";
+    case "phone_number": return "studentOnboarding.phone";
+    case "university_name": return "studentOnboarding.universityName";
+    case "intake_month": return "studentOnboarding.intakeMonth";
+    case "arrival_date": return "studentOnboarding.arrivalDate";
+    case "passport_expiry": return "studentOnboarding.passportExpiry";
+    case "nationality": return "studentOnboarding.nationality";
+    case "city": return "studentOnboarding.city";
+    case "country": return "studentOnboarding.country";
+    case "has_changed_legal_name": return "studentOnboarding.hasChangedLegalName";
+    case "previous_legal_name": return "studentOnboarding.previousLegalName";
+    case "has_criminal_record": return "studentOnboarding.hasCriminalRecord";
+    case "criminal_record_details": return "studentOnboarding.criminalRecordDetails";
+    case "has_dual_citizenship": return "studentOnboarding.hasDualCitizenship";
+    case "second_passport_country": return "studentOnboarding.secondPassportCountry";
+    default: return "studentOnboarding.fullName";
+  }
+};
+
+/** English fallback for a profile field key (mirrors the existing locale strings). */
+const labelFallbackFor = (key: keyof ProfileShape): string => {
+  switch (key) {
+    case "full_name": return "Full name";
+    case "phone_number": return "Phone number";
+    case "university_name": return "Language school";
+    case "intake_month": return "Intake month";
+    case "arrival_date": return "Arrival date";
+    case "passport_expiry": return "Passport expiry";
+    case "nationality": return "Nationality";
+    case "city": return "City of birth";
+    case "country": return "Address / country";
+    case "has_changed_legal_name": return "Have you ever changed your legal name?";
+    case "previous_legal_name": return "Previous legal name";
+    case "has_criminal_record": return "Do you have a criminal record?";
+    case "criminal_record_details": return "Details";
+    case "has_dual_citizenship": return "Do you have dual citizenship?";
+    case "second_passport_country": return "Second passport country";
+    default: return "Full name";
+  }
+};
+
+/** Per-task error message (i18n key) for the current state, or null when valid. */
+const taskErrorFor = (
+  task: Task,
+  p: ProfileShape | null,
+  contactList: EmergencyContact[],
+): string | null => {
+  if (task.type === "contacts") {
+    const valid = contactList.filter(c => filled(c.name) && filled(c.phone) && isValidPhone(c.phone));
+    return valid.length >= 2 ? null : "studentOnboarding.errContactsMin";
+  }
+  if (task.type === "tel") {
+    const v = (p?.[task.key] as string) ?? "";
+    if (!filled(v)) return "studentOnboarding.errRequired";
+    return isValidPhone(v) ? null : "studentOnboarding.errPhoneInvalid";
+  }
+  if (task.type === "switch-legal") {
+    // Switches are optional; always valid (the detail field is never required).
+    return null;
+  }
+  return filled(p?.[task.key] as string) ? null : "studentOnboarding.errRequired";
+};
+
 /**
  * Blocks the student dashboard until the required profile is on file.
  * A four-step wizard: personal, study/arrival, legal/identity, emergency
@@ -145,9 +260,12 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState(0);
+  const [taskIndex, setTaskIndex] = useState(0);
   const [profile, setProfile] = useState<ProfileShape | null>(null);
   const [contacts, setContacts] = useState<EmergencyContact[]>([emptyContact(), emptyContact()]);
+  /** Inline errors are only surfaced after the student attempts to advance. */
+  const [attempted, setAttempted] = useState(false);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -169,16 +287,23 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       const seeded = [...existing.map((c: any) => ({ ...emptyContact(), ...c }))];
       while (seeded.length < 2) seeded.push(emptyContact());
       setContacts(seeded);
-      // Resume at the first incomplete step.
+      // Resume at the first incomplete step, then at the first incomplete task
+      // within that step so the student lands on exactly the field they missed.
+      let resumeStep = 0;
       for (let i = 0; i < 4; i++) {
         if (!stepComplete(merged, i)) {
-          setStep(i);
+          resumeStep = i;
           break;
         }
-        if (i === 3) setStep(3);
+        if (i === 3) resumeStep = 3;
       }
+      const firstInvalidTask = TASKS.findIndex(
+        task => task.step >= resumeStep && taskErrorFor(task, merged, seeded) !== null,
+      );
+      setTaskIndex(firstInvalidTask >= 0 ? firstInvalidTask : TASKS.length - 1);
     } else {
       setProfile({ ...EMPTY_PROFILE });
+      setTaskIndex(0);
     }
     setLoading(false);
   }, [user?.id]);
@@ -191,18 +316,22 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const setField =
     (key: keyof ProfileShape) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setProfile(prev => ({ ...(prev as ProfileShape), [key]: e.target.value }));
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setProfile(prev => ({ ...(prev as ProfileShape), [key]: e.target.value }));
+        setAttempted(false);
+      };
 
-  const setContact = (i: number, key: keyof EmergencyContact, value: string) =>
+  const setContact = (i: number, key: keyof EmergencyContact, value: string) => {
     setContacts(prev => prev.map((c, idx) => (idx === i ? { ...c, [key]: value } : c)));
+    setAttempted(false);
+  };
 
   const cleanedContacts = () =>
     contacts
       .map(c => ({ name: c.name.trim(), relationship: c.relationship.trim(), phone: c.phone.trim() }))
       .filter(c => c.name && c.phone);
 
-  /** Persists the current step's fields. Returns false when the write failed. */
+  /** Persists a step's slice. Returns false when the write failed. */
   const persist = async (patch: Record<string, unknown>) => {
     setSaving(true);
     try {
@@ -217,19 +346,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const next = async () => {
-    if (!stepComplete(profile, step)) {
-      toast({
-        variant: "destructive",
-        description:
-          step === 3
-            ? t("studentOnboarding.incompleteContacts", "Please add at least two emergency contacts with a name and phone number.")
-            : t("studentOnboarding.incomplete", "Please complete every required field before continuing."),
-      });
-      return;
-    }
+  /** The DB patch written when a logical step completes (mirrors the original per-step persist). */
+  const stepPatch = (step: number): Record<string, unknown> => {
     if (step === 0) {
-      const ok = await persist({
+      return {
         full_name: profile?.full_name,
         phone_number: profile?.phone_number,
         date_of_birth: profile?.date_of_birth,
@@ -237,52 +357,78 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         nationality: profile?.nationality,
         city: profile?.city,
         country: profile?.country,
-      });
-      if (!ok) return;
-      setStep(1);
-      return;
+      };
     }
     if (step === 1) {
-      const ok = await persist({
+      return {
         university_name: profile?.university_name,
         intake_month: profile?.intake_month,
         arrival_date: profile?.arrival_date || null,
-      });
-      if (!ok) return;
-      setStep(2);
-      return;
+      };
     }
-    if (step === 2) {
-      // Same data shape as StudentVisaPage.saveLegal — conditional fields null
-      // out when their switch is off.
-      const ok = await persist({
-        eye_color: profile?.eye_color,
-        passport_expiry: profile?.passport_expiry || null,
-        has_changed_legal_name: !!profile?.has_changed_legal_name,
-        previous_legal_name: profile?.has_changed_legal_name ? profile?.previous_legal_name : null,
-        has_criminal_record: !!profile?.has_criminal_record,
-        criminal_record_details: profile?.has_criminal_record ? profile?.criminal_record_details : null,
-        has_dual_citizenship: !!profile?.has_dual_citizenship,
-        second_passport_country: profile?.has_dual_citizenship ? profile?.second_passport_country : null,
-      });
-      if (!ok) return;
-      setStep(3);
-      return;
-    }
-    const cleaned = cleanedContacts();
-    const candidate = { ...(profile as ProfileShape), emergency_contacts: cleaned };
-    const ok = await persist({
-      emergency_contacts: cleaned,
-      emergency_contact_name: cleaned[0].name,
-      emergency_contact_phone: cleaned[0].phone,
-    });
-    if (!ok) return;
-    setProfile(candidate);
-    toast({ description: t("studentOnboarding.saved", "Your details were saved.") });
-    // Re-read the authoritative profile so the gate re-evaluates completeness
-    // against the persisted server state and closes into the dashboard.
-    await load();
+    // step 2 — conditional fields null out when their switch is off (StudentVisaPage.saveLegal shape).
+    return {
+      eye_color: profile?.eye_color,
+      passport_expiry: profile?.passport_expiry || null,
+      has_changed_legal_name: !!profile?.has_changed_legal_name,
+      previous_legal_name: profile?.has_changed_legal_name ? profile?.previous_legal_name : null,
+      has_criminal_record: !!profile?.has_criminal_record,
+      criminal_record_details: profile?.has_criminal_record ? profile?.criminal_record_details : null,
+      has_dual_citizenship: !!profile?.has_dual_citizenship,
+      second_passport_country: profile?.has_dual_citizenship ? profile?.second_passport_country : null,
+    };
   };
+
+  const task = TASKS[taskIndex];
+  const isLastTask = taskIndex === TASKS.length - 1;
+  const isLastOfStep = taskIndex === lastTaskIndexOfStep(task.step);
+
+  const next = async () => {
+    const err = taskErrorFor(task, profile, contacts);
+    if (err) {
+      setAttempted(true);
+      toast({ variant: "destructive", description: t(err, err) });
+      return;
+    }
+    // Final task → persist contacts, re-read authoritative profile, close the gate.
+    if (isLastTask) {
+      const cleaned = cleanedContacts();
+      const candidate = { ...(profile as ProfileShape), emergency_contacts: cleaned };
+      const ok = await persist({
+        emergency_contacts: cleaned,
+        emergency_contact_name: cleaned[0]?.name,
+        emergency_contact_phone: cleaned[0]?.phone,
+      });
+      if (!ok) return;
+      setProfile(candidate);
+      toast({ description: t("studentOnboarding.saved", "Your details were saved.") });
+      await load();
+      return;
+    }
+    // Leaving the last task of a logical step → persist that step's slice.
+    if (isLastOfStep) {
+      const ok = await persist(stepPatch(task.step));
+      if (!ok) return;
+    }
+    setAttempted(false);
+    setTaskIndex(i => i + 1);
+  };
+
+  const back = () => {
+    setAttempted(false);
+    setTaskIndex(i => Math.max(0, i - 1));
+  };
+
+  // Auto-focus the active input/select when the task changes.
+  useEffect(() => {
+    if (task.type === "dob" || task.type === "gender" || task.type === "eye") return;
+    const id = `task-${task.key}`;
+    const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+    if (el) {
+      inputRef.current = el;
+      el.focus();
+    }
+  }, [taskIndex, task]);
 
   if (loading) {
     return (
@@ -294,24 +440,6 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   if (complete) return <>{children}</>;
 
-  const field = (
-    key: keyof ProfileShape,
-    label: string,
-    fallback: string,
-    type: string = "text",
-  ) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={key}>{t(label, fallback)}</Label>
-      <Input
-        id={key}
-        type={type}
-        value={(profile?.[key] as string) ?? ""}
-        onChange={setField(key)}
-        required
-      />
-    </div>
-  );
-
   const steps = [
     t("studentOnboarding.step1", "Personal"),
     t("studentOnboarding.step2", "Study & arrival"),
@@ -319,233 +447,212 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     t("studentOnboarding.step4", "Emergency contacts"),
   ];
 
-  return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8">
-      <Card>
-        <CardHeader className="space-y-4">
-          <div>
-            <CardTitle>{t("studentOnboarding.title", "Complete your profile")}</CardTitle>
-            <CardDescription>
-              {t(
-                "studentOnboarding.subtitle",
-                "We need these details before your file can move forward.",
-              )}
-            </CardDescription>
+  const stepLabel = steps[task.step];
+  const progress = Math.round((taskIndex / (TASKS.length - 1)) * 100);
+  const err = attempted ? taskErrorFor(task, profile, contacts) : null;
+
+  const renderField = () => {
+    switch (task.type) {
+      case "text":
+      case "tel":
+        return (
+          <div className="space-y-2">
+            <Label htmlFor={`task-${task.key}`}>{t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}</Label>
+            <Input
+              id={`task-${task.key}`}
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type={task.type === "tel" ? "tel" : "text"}
+              inputMode={task.type === "tel" ? "tel" : undefined}
+              autoComplete={task.type === "tel" ? "tel" : task.key === "full_name" ? "name" : "off"}
+              enterKeyHint="next"
+              value={(profile?.[task.key] as string) ?? ""}
+              onChange={setField(task.key)}
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); next(); } }}
+              className={cn("h-12 text-base", err && "border-destructive focus-visible:ring-destructive")}
+              placeholder={task.type === "tel" ? t("studentOnboarding.ph.phone", "+972…") : undefined}
+            />
+            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
-          <div className="space-y-3">
-            <Progress value={((step + 1) / steps.length) * 100} className="h-2" />
-            {/* Labeled stepper — mirrors ProfileCompletionForm. Logical props so
-                it renders correctly in both Arabic (RTL) and English (LTR). */}
-            <div className="flex items-center gap-1">
-              {steps.map((label, i) => {
-                const done = i < step;
-                const current = i === step;
-                return (
-                  <React.Fragment key={label}>
-                    <button
-                      type="button"
-                      onClick={() => setStep(i)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
-                        current
-                          ? "bg-primary text-primary-foreground"
-                          : done
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80",
-                      )}
-                    >
-                      {done ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <span className="w-3 text-center">{i + 1}</span>
-                      )}
-                      <span className="hidden sm:inline">{label}</span>
-                    </button>
-                    {i < steps.length - 1 && (
-                      <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
+        );
+      case "dob":
+        return (
+          <BirthdayPicker
+            id={`task-${task.key}`}
+            label={t("studentOnboarding.dob", "Date of birth")}
+            value={profile?.date_of_birth ?? ""}
+            onChange={iso => { setProfile(prev => ({ ...(prev as ProfileShape), date_of_birth: iso })); setAttempted(false); }}
+            phYear={t("studentOnboarding.ph.year", "Year")}
+            phMonth={t("studentOnboarding.ph.month", "Month")}
+            phDay={t("studentOnboarding.ph.day", "Day")}
+            ageLabel={age => t("studentOnboarding.age", { count: age })}
+          />
+        );
+      case "gender":
+        return (
+          <div className="space-y-2">
+            <Label htmlFor="task-gender">{t("studentOnboarding.gender", "Gender")}</Label>
+            <Select
+              value={profile?.gender ?? ""}
+              onValueChange={v => { setProfile(prev => ({ ...(prev as ProfileShape), gender: v })); setAttempted(false); }}
+            >
+              <SelectTrigger id="task-gender" className="h-12 text-base">
+                <SelectValue placeholder={t("studentOnboarding.selectGender", "Select gender")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">{t("studentOnboarding.genderMale", "Male")}</SelectItem>
+                <SelectItem value="female">{t("studentOnboarding.genderFemale", "Female")}</SelectItem>
+              </SelectContent>
+            </Select>
+            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {step === 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {field("full_name", "studentOnboarding.fullName", "Full name")}
-              {field("phone_number", "studentOnboarding.phone", "Phone number", "tel")}
-              {field("date_of_birth", "studentOnboarding.dob", "Date of birth", "date")}
-              <div className="space-y-1.5">
-                <Label htmlFor="gender">{t("studentOnboarding.gender", "Gender")}</Label>
-                <Select
-                  value={profile?.gender ?? ""}
-                  onValueChange={v => setProfile(prev => ({ ...(prev as ProfileShape), gender: v }))}
-                >
-                  <SelectTrigger id="gender">
-                    <SelectValue placeholder={t("studentOnboarding.selectGender", "Select gender")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">{t("studentOnboarding.genderMale", "Male")}</SelectItem>
-                    <SelectItem value="female">{t("studentOnboarding.genderFemale", "Female")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {field("nationality", "studentOnboarding.nationality", "Nationality")}
-              {field("city", "studentOnboarding.city", "City of birth")}
-              {field("country", "studentOnboarding.country", "Address / country")}
+        );
+      case "eye":
+        return (
+          <div className="space-y-2">
+            <Label htmlFor="task-eye_color">{t("studentOnboarding.eyeColor", "Eye color")}</Label>
+            <Select
+              value={profile?.eye_color ?? ""}
+              onValueChange={v => { setProfile(prev => ({ ...(prev as ProfileShape), eye_color: v })); setAttempted(false); }}
+            >
+              <SelectTrigger id="task-eye_color" className="h-12 text-base">
+                <SelectValue placeholder={t("studentOnboarding.selectEyeColor", "Select eye color")} />
+              </SelectTrigger>
+              <SelectContent>
+                {EYE_COLORS.map(c => (
+                  <SelectItem key={c} value={c}>
+                    {t(`studentOnboarding.eyeColors.${c}`, c)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
+          </div>
+        );
+      case "date":
+        return (
+          <div className="space-y-2">
+            <Label htmlFor={`task-${task.key}`}>
+              {t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}
+            </Label>
+            <Input
+              id={`task-${task.key}`}
+              type="date"
+              value={(profile?.[task.key] as string) ?? ""}
+              onChange={setField(task.key)}
+              className={cn("h-12 text-base", err && "border-destructive focus-visible:ring-destructive")}
+            />
+            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
+          </div>
+        );
+      case "switch-legal":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-4">
+              <Label className="text-base">
+                {t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}
+              </Label>
+              <Switch
+                checked={!!(profile?.[task.key] as boolean)}
+                onCheckedChange={v => {
+                  setProfile(prev => ({ ...(prev as ProfileShape), [task.key]: v }));
+                  setAttempted(false);
+                }}
+              />
             </div>
-          )}
-
-          {step === 1 && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {field("university_name", "studentOnboarding.universityName", "Language school")}
-              {field("intake_month", "studentOnboarding.intakeMonth", "Intake month")}
-              {field("arrival_date", "studentOnboarding.arrivalDate", "Arrival date", "date")}
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="eye_color">{t("studentOnboarding.eyeColor", "Eye color")}</Label>
-                  <Select
-                    value={profile?.eye_color ?? ""}
-                    onValueChange={v => setProfile(prev => ({ ...(prev as ProfileShape), eye_color: v }))}
-                  >
-                    <SelectTrigger id="eye_color">
-                      <SelectValue placeholder={t("studentOnboarding.selectEyeColor", "Select eye color")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EYE_COLORS.map(c => (
-                        <SelectItem key={c} value={c}>
-                          {t(`studentOnboarding.eyeColors.${c}`, c)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {field("passport_expiry", "studentOnboarding.passportExpiry", "Passport expiry", "date")}
-              </div>
-
-              {/* Changed legal name */}
-              <div className="flex items-center justify-between py-1">
-                <Label className="text-sm">
-                  {t("studentOnboarding.hasChangedLegalName", "Have you ever changed your legal name?")}
+            {profile?.[task.key] && task.detailKey && (
+              <div className="space-y-2">
+                <Label htmlFor={`task-${task.detailKey}`}>
+                  {t(`studentOnboarding.${labelKeyFor(task.detailKey)}`, labelFallbackFor(task.detailKey))}
                 </Label>
-                <Switch
-                  checked={!!profile?.has_changed_legal_name}
-                  onCheckedChange={v =>
-                    setProfile(prev => ({ ...(prev as ProfileShape), has_changed_legal_name: v }))
-                  }
-                />
-              </div>
-              {profile?.has_changed_legal_name && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="previous_legal_name">
-                    {t("studentOnboarding.previousLegalName", "Previous legal name")}
-                  </Label>
-                  <Input
-                    id="previous_legal_name"
-                    value={profile?.previous_legal_name ?? ""}
-                    onChange={setField("previous_legal_name")}
-                  />
-                </div>
-              )}
-
-              {/* Criminal record */}
-              <div className="flex items-center justify-between py-1">
-                <Label className="text-sm">
-                  {t("studentOnboarding.hasCriminalRecord", "Do you have a criminal record?")}
-                </Label>
-                <Switch
-                  checked={!!profile?.has_criminal_record}
-                  onCheckedChange={v =>
-                    setProfile(prev => ({ ...(prev as ProfileShape), has_criminal_record: v }))
-                  }
-                />
-              </div>
-              {profile?.has_criminal_record && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="criminal_record_details">
-                    {t("studentOnboarding.criminalRecordDetails", "Details")}
-                  </Label>
+                {task.detailType === "textarea" ? (
                   <Textarea
-                    id="criminal_record_details"
-                    rows={2}
-                    value={profile?.criminal_record_details ?? ""}
-                    onChange={setField("criminal_record_details")}
+                    id={`task-${task.detailKey}`}
+                    ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+                    rows={3}
+                    value={(profile?.[task.detailKey] as string) ?? ""}
+                    onChange={setField(task.detailKey)}
+                    className="text-base"
                   />
-                </div>
-              )}
-
-              {/* Dual citizenship */}
-              <div className="flex items-center justify-between py-1">
-                <Label className="text-sm">
-                  {t("studentOnboarding.hasDualCitizenship", "Do you have dual citizenship?")}
-                </Label>
-                <Switch
-                  checked={!!profile?.has_dual_citizenship}
-                  onCheckedChange={v =>
-                    setProfile(prev => ({ ...(prev as ProfileShape), has_dual_citizenship: v }))
-                  }
-                />
-              </div>
-              {profile?.has_dual_citizenship && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="second_passport_country">
-                    {t("studentOnboarding.secondPassportCountry", "Second passport country")}
-                  </Label>
+                ) : (
                   <Input
-                    id="second_passport_country"
-                    value={profile?.second_passport_country ?? ""}
-                    onChange={setField("second_passport_country")}
+                    id={`task-${task.detailKey}`}
+                    ref={inputRef as React.RefObject<HTMLInputElement>}
+                    value={(profile?.[task.detailKey] as string) ?? ""}
+                    onChange={setField(task.detailKey)}
+                    enterKeyHint="next"
+                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); next(); } }}
+                    className="h-12 text-base"
                   />
-                </div>
-              )}
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">
-                  {t("studentOnboarding.emergencyContacts", "Emergency contacts (at least two)")}
-                </h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setContacts(prev => [...prev, emptyContact()])}
-                >
-                  <Plus className="me-1 h-4 w-4" />
-                  {t("studentOnboarding.addContact", "Add contact")}
-                </Button>
+                )}
               </div>
-              {contacts.map((c, i) => (
-                <div key={i} className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-3">
+            )}
+          </div>
+        );
+      case "contacts":
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">
+                {t("studentOnboarding.emergencyContacts", "Emergency contacts (at least two)")}
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setContacts(prev => [...prev, emptyContact()])}
+              >
+                <Plus className="me-1 h-4 w-4" />
+                {t("studentOnboarding.addContact", "Add contact")}
+              </Button>
+            </div>
+            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
+            {contacts.map((c, i) => {
+              const nameErr = attempted && !filled(c.name);
+              const phoneErr = attempted && filled(c.phone) && !isValidPhone(c.phone);
+              const phoneMissing = attempted && !filled(c.phone);
+              return (
+                <div key={i} className="space-y-3 rounded-lg border border-border p-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor={`ec-name-${i}`}>{t("studentOnboarding.contactName", "Name")}</Label>
-                    <Input id={`ec-name-${i}`} value={c.name} onChange={e => setContact(i, "name", e.target.value)} />
+                    <Label htmlFor={`ec-name-${i}`} className="text-destructive">
+                      {t("studentOnboarding.contactName", "Name")} *
+                    </Label>
+                    <Input
+                      id={`ec-name-${i}`}
+                      value={c.name}
+                      onChange={e => setContact(i, "name", e.target.value)}
+                      autoComplete="off"
+                      className={cn("h-11 text-base", nameErr && "border-destructive focus-visible:ring-destructive")}
+                    />
+                    {nameErr && <p className="text-xs text-destructive">{t("studentOnboarding.errRequired", "This field is required")}</p>}
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor={`ec-rel-${i}`}>{t("studentOnboarding.contactRelationship", "Relationship")}</Label>
+                    <Label htmlFor={`ec-rel-${i}`}>
+                      {t("studentOnboarding.contactRelationship", "Relationship")}
+                    </Label>
                     <Input
                       id={`ec-rel-${i}`}
                       value={c.relationship}
                       onChange={e => setContact(i, "relationship", e.target.value)}
+                      autoComplete="off"
+                      className="h-11 text-base"
                     />
                   </div>
                   <div className="flex items-end gap-2">
                     <div className="flex-1 space-y-1.5">
-                      <Label htmlFor={`ec-phone-${i}`}>{t("studentOnboarding.contactPhone", "Phone")}</Label>
+                      <Label htmlFor={`ec-phone-${i}`} className="text-destructive">
+                        {t("studentOnboarding.contactPhone", "Phone")} *
+                      </Label>
                       <Input
                         id={`ec-phone-${i}`}
                         type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
                         value={c.phone}
                         onChange={e => setContact(i, "phone", e.target.value)}
+                        className={cn("h-11 text-base", (phoneErr || phoneMissing) && "border-destructive focus-visible:ring-destructive")}
                       />
+                      {phoneMissing && <p className="text-xs text-destructive">{t("studentOnboarding.errRequired", "This field is required")}</p>}
+                      {phoneErr && <p className="text-xs text-destructive">{t("studentOnboarding.errPhoneInvalid", "Invalid phone number (7–15 digits)")}</p>}
                     </div>
                     {contacts.length > 2 && (
                       <Button
@@ -560,28 +667,56 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setStep(s => Math.max(0, s - 1))}
-              disabled={step === 0 || saving}
-            >
-              <ArrowLeft className="me-1 h-4 w-4 rtl:rotate-180" />
-              {t("studentOnboarding.back", "Back")}
-            </Button>
-            <Button onClick={next} disabled={saving} className="min-w-40">
-              {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-              {step < 3 ? t("studentOnboarding.next", "Next") : t("studentOnboarding.save", "Save and continue")}
-              {step < 3 && <ArrowRight className="ms-1 h-4 w-4 rtl:rotate-180" />}
-            </Button>
+              );
+            })}
           </div>
-        </CardContent>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-md px-4 pt-6 pb-28 sm:pb-6">
+      <Card>
+        <CardHeader className="space-y-3">
+          <div>
+            <CardTitle className="text-lg">{t("studentOnboarding.title", "Complete your profile")}</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("studentOnboarding.subtitle", "We need these details before your file can move forward.")}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Progress value={progress} className="h-2" />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{stepLabel}</span>
+              <span>{t("studentOnboarding.taskOf", { current: taskIndex + 1, total: TASKS.length })}</span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>{renderField()}</CardContent>
       </Card>
+
+      {/* Sticky bottom nav so the primary action is always thumb-reachable on mobile. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:border-0 sm:bg-transparent sm:backdrop-blur-none sm:p-0">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:py-0 sm:pb-6">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={back}
+            disabled={taskIndex === 0 || saving}
+            className="min-h-11"
+          >
+            <ArrowLeft className="me-1 h-4 w-4 rtl:rotate-180" />
+            {t("studentOnboarding.back", "Back")}
+          </Button>
+          <Button onClick={next} disabled={saving} className="min-h-11 min-w-40">
+            {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+            {isLastTask ? t("studentOnboarding.save", "Save and continue") : t("studentOnboarding.next", "Next")}
+            {!isLastTask && <ArrowRight className="ms-1 h-4 w-4 rtl:rotate-180" />}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

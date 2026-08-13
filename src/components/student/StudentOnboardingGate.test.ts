@@ -38,6 +38,42 @@ describe("isProfileComplete", () => {
     ).toBe(false);
   });
 
+  it("accepts two contacts with names + phones but relationship empty (regression)", () => {
+    expect(
+      isProfileComplete({
+        ...base,
+        emergency_contacts: [
+          { name: "Amal", relationship: "", phone: "+972501234567" },
+          { name: "Rami", relationship: "", phone: "+972507654321" },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  it("rejects two contacts with phones but empty names (regression)", () => {
+    expect(
+      isProfileComplete({
+        ...base,
+        emergency_contacts: [
+          { name: "", relationship: "Mother", phone: "+972501234567" },
+          { name: "", relationship: "Father", phone: "+972507654321" },
+        ],
+      }),
+    ).toBe(false);
+  });
+
+  it("accepts a legitimate single-character name (relaxed filled)", () => {
+    expect(
+      isProfileComplete({
+        ...base,
+        emergency_contacts: [
+          { name: "A", relationship: "Mother", phone: "+972501234567" },
+          { name: "B", relationship: "Father", phone: "+972507654321" },
+        ],
+      }),
+    ).toBe(true);
+  });
+
   it("rejects missing required fields", () => {
     expect(isProfileComplete({ ...base, nationality: "" })).toBe(false);
     expect(isProfileComplete({ ...base, gender: null })).toBe(false);
