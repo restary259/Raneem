@@ -30,6 +30,7 @@ import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
 import CaseFinance from "@/components/cases/CaseFinance";
 import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 import { identityConflictMessage } from "@/lib/identityConflict";
+import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 
 interface SubmittedCase {
   id: string;
