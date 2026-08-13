@@ -31,7 +31,7 @@ export async function checkEmailAvailability(
   } = await supabase.auth.getSession();
 
   const { data, error } = await supabase.functions.invoke("check-email-availability", {
-    body: { email: email.trim().toLowerCase() },
+    body: { email: normalized },
     headers: { Authorization: `Bearer ${session?.access_token}` },
   });
 
