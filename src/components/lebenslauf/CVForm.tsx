@@ -32,6 +32,45 @@ interface Props {
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
+/** Bullet list editor (add / remove / reorder / edit) shared by experience + projects.
+ *  Declared at module scope so its identity is stable across CVForm re-renders —
+ *  nesting it inside CVForm caused the textarea to remount and lose focus per keystroke. */
+interface BulletEditorProps {
+  items: string[];
+  onChange: (b: string[]) => void;
+}
+const BulletEditor: React.FC<BulletEditorProps> = ({ items, onChange }) => {
+  const { t } = useTranslation("resources");
+  const a = (key: string, fb?: string) => t(`lebenslaufBuilder.actions.${key}`, fb ?? key);
+  const h = (key: string, fb?: string) => t(`lebenslaufBuilder.hints.${key}`, fb ?? "");
+  const list = items.length > 0 ? items : [""];
+  const set = (i: number, v: string) => {
+    const next = [...list];
+    next[i] = v;
+    onChange(next);
+  };
+  return (
+    <div className="space-y-1.5">
+      {list.map((b, i) => (
+        <div key={i} className="flex gap-1 items-start">
+          <span className="text-xs text-muted-foreground mt-2">•</span>
+          <Textarea
+            rows={1}
+            className="flex-1 text-sm"
+            placeholder={h("bulletHint", "Responsibility or achievement…")}
+            value={b}
+            onChange={(e) => set(i, e.target.value)}
+          />
+          <Button size="icon" variant="ghost" aria-label={a("moveUp")} onClick={() => i > 0 && onChange([...list.slice(0, i), list[i + 1], list[i], ...list.slice(i + 2)])}><ArrowUp className="h-3.5 w-3.5" /></Button>
+          <Button size="icon" variant="ghost" aria-label={a("moveDown")} onClick={() => i < list.length - 1 && onChange([...list.slice(0, i), list[i + 1], list[i], ...list.slice(i + 2)])}><ArrowDown className="h-3.5 w-3.5" /></Button>
+          <Button size="icon" variant="ghost" aria-label={a("removeEntry")} onClick={() => onChange(list.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" onClick={() => onChange([...list, ""])}><Plus className="h-3.5 w-3.5 mr-1" />{a("addBullet")}</Button>
+    </div>
+  );
+};
+
 const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, updateDesign, updateSignature, errors }) => {
   const { t } = useTranslation("resources");
   const f = (key: string, fb?: string) => t(`lebenslaufBuilder.fields.${key}`, fb ?? key);
@@ -62,35 +101,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
     });
   };
 
-  /** Bullet list editor (add / remove / reorder / edit) shared by experience + projects. */
-  const BulletEditor = ({ items, onChange }: { items: string[]; onChange: (b: string[]) => void }) => {
-    const list = items.length > 0 ? items : [""];
-    const set = (i: number, v: string) => {
-      const next = [...list];
-      next[i] = v;
-      onChange(next);
-    };
-    return (
-      <div className="space-y-1.5">
-        {list.map((b, i) => (
-          <div key={i} className="flex gap-1 items-start">
-            <span className="text-xs text-muted-foreground mt-2">•</span>
-            <Textarea
-              rows={1}
-              className="flex-1 text-sm"
-              placeholder={h("bulletHint", "Responsibility or achievement…")}
-              value={b}
-              onChange={(e) => set(i, e.target.value)}
-            />
-            <Button size="icon" variant="ghost" aria-label={a("moveUp")} onClick={() => i > 0 && onChange([...list.slice(0, i), list[i + 1], list[i], ...list.slice(i + 2)])}><ArrowUp className="h-3.5 w-3.5" /></Button>
-            <Button size="icon" variant="ghost" aria-label={a("moveDown")} onClick={() => i < list.length - 1 && onChange([...list.slice(0, i), list[i + 1], list[i], ...list.slice(i + 2)])}><ArrowDown className="h-3.5 w-3.5" /></Button>
-            <Button size="icon" variant="ghost" aria-label={a("removeEntry")} onClick={() => onChange(list.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
-          </div>
-        ))}
-        <Button variant="outline" size="sm" onClick={() => onChange([...list, ""])}><Plus className="h-3.5 w-3.5 mr-1" />{a("addBullet")}</Button>
-      </div>
-    );
-  };
+  /** Bullet list editor renders via the module-level <BulletEditor /> component above. */
 
   const handlePhotoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -454,18 +465,23 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
             </Select>
             {data.signature.mode !== "none" && (
               <>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div><Label>{f("place", "Ort")}</Label><Input value={data.signature.place || ""} onChange={(e) => updateSignature({ place: e.target.value })} /></div>
                   <div><Label>{f("date")}</Label><Input type="date" value={data.signature.date || ""} onChange={(e) => updateSignature({ date: e.target.value })} /></div>
                 </div>
                 {data.signature.mode === "image" && (
                   <div>
-                    <label className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 border rounded-md cursor-pointer hover:bg-accent/10">
-                      <ImagePlus className="h-4 w-4" /> {t("lebenslaufBuilder.actions.upload", "Upload")}
-                      <input type="file" accept="image/*" className="hidden" onChange={handleSignatureUpload} />
-                    </label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 border rounded-md cursor-pointer hover:bg-accent/10">
+                        <ImagePlus className="h-4 w-4" /> {t("lebenslaufBuilder.actions.upload", "Upload")}
+                        <input type="file" accept="image/*" className="hidden" onChange={handleSignatureUpload} />
+                      </label>
+                      {data.signature.image && (
+                        <Button size="sm" variant="ghost" onClick={() => updateSignature({ image: undefined })}><X className="h-4 w-4 mr-1" />{t("lebenslaufBuilder.actions.remove", "Remove")}</Button>
+                      )}
+                    </div>
                     {data.signature.image && (
-                      <Button size="sm" variant="ghost" className="ml-2" onClick={() => updateSignature({ image: undefined })}><X className="h-4 w-4 mr-1" />{t("lebenslaufBuilder.actions.remove", "Remove")}</Button>
+                      <img src={data.signature.image} alt="" className="mt-2 max-h-24 rounded border" />
                     )}
                     <p className="text-xs text-muted-foreground mt-1">{h("signatureImgHint", "Upload a scanned handwritten signature on a transparent/white background.")}</p>
                   </div>
