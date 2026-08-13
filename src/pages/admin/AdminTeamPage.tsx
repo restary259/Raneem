@@ -204,6 +204,27 @@ const AdminTeamPage = () => {
     }
     setCreating(true);
     try {
+      // Catch identity collisions (email already holds another role) before the
+      // edge function rejects with a 409 the user can't act on.
+      try {
+        const availability = await checkEmailAvailability(form.email.trim());
+        if (!availability.available) {
+          throw new Error(
+            conflictMessage({
+              code: 'identity_conflict',
+              existing_role: availability.existing_role ?? undefined,
+              intended_role: form.role,
+              deactivated: availability.deactivated,
+            }) ?? t('admin.team.conflictActive', { role: t('admin.team.someRole', 'another') }),
+          );
+        }
+      } catch (checkErr: any) {
+        // Only surface real conflicts; a failed check falls through to the server.
+        if (checkErr instanceof Error && checkErr.message && !('status' in checkErr)) {
+          if (checkErr.message !== 'email-availability check failed') throw checkErr;
+        }
+      }
+
       if (mode === 'invite') {
         const result = await callInviteFn({
           action: 'send',
