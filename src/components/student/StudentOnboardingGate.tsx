@@ -645,11 +645,17 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                   <SelectValue placeholder={t("studentOnboarding.selectSchool", "Select your language school")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {schools.map(s => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {isAr ? s.name_ar : s.name_en}
-                    </SelectItem>
-                  ))}
+                  {schools.length === 0 ? (
+                    <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                      {t("studentOnboarding.noSchools", "No language schools are configured yet. Please contact the admin to add your school, then refresh this page.")}
+                    </div>
+                  ) : (
+                    schools.map(s => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {isAr ? s.name_ar : s.name_en}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               {err && <p className="text-xs text-destructive">{t(err, err)}</p>}

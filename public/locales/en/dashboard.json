@@ -4015,7 +4015,8 @@
     "q.emergencyContactsDesc": "Add at least two people we can reach if something happens to you while in Germany.",
     "street": "Street",
     "houseNumber": "House number",
-    "residentialCity": "City"
+    "residentialCity": "City",
+    "noSchools": "No language schools are configured yet. Please contact the admin to add your school, then refresh this page."
   },
   "pushSettings": {
     "title": "Device notifications",
