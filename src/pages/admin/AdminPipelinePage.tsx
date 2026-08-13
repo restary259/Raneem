@@ -110,6 +110,7 @@ interface Case {
   degree_interest: string | null;
   intake_notes: string | null;
   referred_by: string | null;
+  referral_discount: number;
   discount_amount: number;
 }
 
@@ -670,11 +671,16 @@ const AdminPipelinePage = () => {
                     {/* Referral info row */}
                     {selectedCase.source === "referral" && (
                       <div className="flex items-center gap-2 flex-wrap mt-1">
-                        {selectedCase.discount_amount > 0 && (
-                          <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded">
-                            {t('admin.pipeline.discount')}: ₪{selectedCase.discount_amount}
-                          </span>
-                        )}
+                        {(() => {
+                          const referralDiscount = selectedCase.referral_discount ?? 0;
+                          const legacyDiscount = selectedCase.discount_amount ?? 0;
+                          const shown = referralDiscount > 0 ? referralDiscount : legacyDiscount;
+                          return shown > 0 ? (
+                            <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded">
+                              {t('admin.pipeline.discount')}: ₪{shown}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                     )}
                   </div>

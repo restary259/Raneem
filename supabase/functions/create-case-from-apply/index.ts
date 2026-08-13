@@ -99,7 +99,6 @@ Deno.serve(async (req) => {
       // Referral fields
       referrer_user_id,
       referral_id,
-      referral_discount,
       // Extended fields
       city,
       education_level,
@@ -172,48 +171,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Duplicate phone detection — only block if the existing case comes from the same
-    // public submission flows (contact_form or apply_page). If the blocking case was
-    // created manually, by the team, or via referral, it may be a different person
-    // who happens to share the same phone number, so we let the new submission through.
-    const { data: existingCase } = await supabaseAdmin
-      .from("cases")
-      .select("id, full_name, status, source")
-      .eq("phone_number", cleanPhone)
-      .in("source", ["contact_form", "apply_page"])
-      .maybeSingle();
-
-    if (existingCase) {
-      // Update the existing case with the new education data (don't discard it)
-      await supabaseAdmin
-        .from("cases")
-        .update({
-          city: city ? stripHtml(String(city)).slice(0, 100) : undefined,
-          education_level: education_level ? String(education_level) : undefined,
-          english_units: cleanEnglishUnits ?? undefined,
-          math_units: cleanMathUnits ?? undefined,
-          english_level: english_level ? String(english_level) : undefined,
-          passport_type: passport_type ? String(passport_type) : undefined,
-          degree_interest: degree_interest ? String(degree_interest) : undefined,
-          bagrut_score: cleanBagrutScore ?? undefined,
-        })
-        .eq("id", existingCase.id);
-
-      return new Response(
-        JSON.stringify({
-          duplicate: true,
-          case_id: existingCase.id,
-          existing_name: existingCase.full_name,
-          existing_status: existingCase.status,
-          message: "A case with this phone number already exists — education data updated",
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
-
     // ── Referral attribution ──────────────────────────────────────
     // Attribution is resolved server-side: a raw `referrer_user_id` or
     // `partner_id` in the request body is never trusted on its own, because a
@@ -221,7 +178,6 @@ Deno.serve(async (req) => {
     // a commission later.
     const caller = await resolveCaller(req, supabaseAdmin);
 
-    let validatedPartnerId: string | null = null;
     // A student referral is only credited to the signed-in referrer themselves
     // (or to whoever staff names), never to an id chosen by an anonymous caller.
     let validatedReferrerId: string | null =
@@ -229,13 +185,9 @@ Deno.serve(async (req) => {
         (caller.isStaff || referrer_user_id === caller.userId)
         ? referrer_user_id
         : null;
-    let attributionMethod: string | null = null;
 
-    // A discount only exists for a validated referral, and never above the cap.
-    const requestedDiscount = Number(referral_discount ?? 0);
-    const cleanReferralDiscount = validatedReferrerId && Number.isFinite(requestedDiscount)
-      ? Math.min(Math.max(requestedDiscount, 0), MAX_REFERRAL_DISCOUNT)
-      : 0;
+    let validatedPartnerId: string | null = null;
+    let attributionMethod: string | null = null;
 
     if (ref_code && typeof ref_code === "string" && /^[a-zA-Z0-9-]{3,40}$/.test(ref_code.trim())) {
       const { data: resolvedId } = await supabaseAdmin.rpc("resolve_referral_code", {
@@ -278,6 +230,83 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Referral discount ─────────────────────────────────────────────
+    // A discount is granted ONLY when the referrer is a student (a partner
+    // referral earns the referrer a commission, never a discount for the
+    // applicant). The amount is read server-side from platform_settings —
+    // never from the client body, so an applicant can't set their own discount.
+    let cleanReferralDiscount = 0;
+    if (validatedReferrerId) {
+      const { data: settings } = await supabaseAdmin
+        .from("platform_settings")
+        .select("referral_discount_amount")
+        .maybeSingle();
+      const configuredDiscount = Number(settings?.referral_discount_amount ?? 0);
+      cleanReferralDiscount = Number.isFinite(configuredDiscount)
+        ? Math.min(Math.max(configuredDiscount, 0), MAX_REFERRAL_DISCOUNT)
+        : 0;
+    }
+
+    // Duplicate phone detection — only block if the existing case comes from the same
+    // public submission flows (contact_form or apply_page). If the blocking case was
+    // created manually, by the team, or via referral, it may be a different person
+    // who happens to share the same phone number, so we let the new submission through.
+    const { data: existingCase } = await supabaseAdmin
+      .from("cases")
+      .select("id, full_name, status, source, referral_discount")
+      .eq("phone_number", cleanPhone)
+      .in("source", ["contact_form", "apply_page"])
+      .maybeSingle();
+
+    if (existingCase) {
+      // Update the existing case with the new education data (don't discard it)
+      await supabaseAdmin
+        .from("cases")
+        .update({
+          city: city ? stripHtml(String(city)).slice(0, 100) : undefined,
+          education_level: education_level ? String(education_level) : undefined,
+          english_units: cleanEnglishUnits ?? undefined,
+          math_units: cleanMathUnits ?? undefined,
+          english_level: english_level ? String(english_level) : undefined,
+          passport_type: passport_type ? String(passport_type) : undefined,
+          degree_interest: degree_interest ? String(degree_interest) : undefined,
+          bagrut_score: cleanBagrutScore ?? undefined,
+        })
+        .eq("id", existingCase.id);
+
+      // Referral flow hitting an existing contact_form/apply_page case: never
+      // create a duplicate case — instead link the referral row to the existing
+      // case and apply the discount, but ONLY if the case has none yet (never
+      // overwrite a discount that is already on the case).
+      if (validatedReferrerId && referral_id && typeof referral_id === "string" && UUID.test(referral_id)) {
+        if ((!existingCase.referral_discount || Number(existingCase.referral_discount) === 0) && cleanReferralDiscount > 0) {
+          await supabaseAdmin
+            .from("cases")
+            .update({ referral_discount: cleanReferralDiscount })
+            .eq("id", existingCase.id);
+        }
+        await supabaseAdmin
+          .from("referrals")
+          .update({ referred_case_id: existingCase.id })
+          .eq("id", referral_id)
+          .eq("referrer_user_id", validatedReferrerId);
+      }
+
+      return new Response(
+        JSON.stringify({
+          duplicate: true,
+          case_id: existingCase.id,
+          existing_name: existingCase.full_name,
+          existing_status: existingCase.status,
+          referral_linked: !!(validatedReferrerId && referral_id && typeof referral_id === "string" && UUID.test(referral_id)),
+          message: "A case with this phone number already exists — education data updated",
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     // Insert the case with all fields
     const { data: newCase, error: caseError } = await supabaseAdmin

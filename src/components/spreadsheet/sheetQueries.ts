@@ -70,13 +70,26 @@ const priceOf = (snapshot: unknown, catalog: unknown): number => {
 const serviceFeeByCase = async (caseIds: string[]): Promise<Record<string, number>> => {
   const map: Record<string, number> = {};
   if (caseIds.length === 0) return map;
-  const { data } = await (supabase as any)
-    .from('case_services')
-    .select('case_id, unit_price, quantity, discount')
-    .in('case_id', caseIds);
-  (data || []).forEach((s: any) => {
+  const [servicesRes, casesRes] = await Promise.all([
+    (supabase as any)
+      .from('case_services')
+      .select('case_id, unit_price, quantity, discount')
+      .in('case_id', caseIds),
+    (supabase as any)
+      .from('cases')
+      .select('id, referral_discount')
+      .in('id', caseIds),
+  ]);
+  const discounts: Record<string, number> = {};
+  (casesRes.data || []).forEach((c: any) => {
+    discounts[c.id] = Number(c.referral_discount ?? 0);
+  });
+  (servicesRes.data || []).forEach((s: any) => {
     const line = Number(s.unit_price ?? 0) * Number(s.quantity ?? 1) - Number(s.discount ?? 0);
     map[s.case_id] = (map[s.case_id] ?? 0) + line;
+  });
+  caseIds.forEach((id) => {
+    if (map[id] != null) map[id] = Math.max(map[id] - (discounts[id] ?? 0), 0);
   });
   return map;
 };

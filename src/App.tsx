@@ -69,6 +69,7 @@ const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage")
 const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
+const AdminReferralsPage = lazy(() => import("./pages/admin/AdminReferralsPage"));
 const CaseMessagesInboxPage = lazy(() => import("./pages/messages/CaseMessagesInboxPage"));
 const StudentMessagesPage = lazy(() => import("./pages/messages/StudentMessagesPage"));
 const PartnerMessagesPage = lazy(() => import("./pages/messages/PartnerMessagesPage"));
@@ -275,6 +276,7 @@ const App = () => {
 
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
+              <Route path="referrals" element={<AdminReferralsPage />} />
               <Route path="spreadsheet" element={<AdminSpreadsheetPage />} />
             </Route>
 

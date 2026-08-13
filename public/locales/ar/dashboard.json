@@ -216,7 +216,7 @@
   },
   "referrals": {
     "title": "إحالة صديق أو أحد أفراد العائلة",
-    "familyLabel": "إحالة فرد من العائلة (خصم 1,000₪ للمُحال)",
+    "familyLabel": "إحالة فرد من العائلة (خصم 500₪ للمُحال)",
     "firstName": "الاسم الأول",
     "surname": "اسم العائلة",
     "emailLabel": "البريد الإلكتروني",
@@ -251,8 +251,7 @@
       "pending": "قيد الانتظار",
       "contacted": "تم التواصل",
       "enrolled": "مسجّل",
-      "paid": "مدفوع",
-      "rejected": "مرفوض"
+      "rewarded": "مُكافأ"
     },
     "namePlaceholder": "الاسم الكامل للصديق",
     "nameRequired": "الاسم مطلوب"
@@ -1094,6 +1093,7 @@
       "intakeNotes": "ملاحظات القبول"
     },
     "referralsMgmt": {
+      "title": "الإحالات",
       "agent": "الشريك",
       "student": "الطالب",
       "name": "الاسم",
@@ -1108,7 +1108,21 @@
       "noReferrals": "لا توجد إحالات",
       "statusUpdated": "تم تحديث الحالة",
       "deleted": "تم حذف الإحالة",
-      "deleteDesc": "سيؤدي هذا إلى حذف الإحالة نهائياً. لا يمكن التراجع."
+      "deleteDesc": "سيؤدي هذا إلى حذف الإحالة نهائياً. لا يمكن التراجع.",
+      "referrer": "المُحيل",
+      "referred": "الصديق المُحال",
+      "caseRef": "الملف",
+      "discount": "الخصم",
+      "actions": "إجراءات",
+      "yes": "نعم",
+      "no": "لا",
+      "deleteConfirmTitle": "حذف هذه الإحالة؟",
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "searchPlaceholder": "ابحث بالاسم أو الهاتف…",
+      "updateFailed": "تعذّر تحديث حالة الإحالة",
+      "deleteFailed": "تعذّر حذف الإحالة",
+      "loading": "جارٍ التحميل…"
     },
     "payouts": {
       "requester": "مقدم الطلب",
@@ -2323,6 +2337,7 @@
     "todayAppts": "اليوم",
     "submitNew": "جديد",
     "students": "الطلاب",
+    "referrals": "الإحالات",
     "myLink": "رابطي",
     "earnings": "الأرباح",
     "checklist": "المتطلبات",
@@ -3029,7 +3044,7 @@
   },
   "student": {
     "refer": {
-      "discount_message": "إحالة صديق أو فرد من العائلة ستمنحهم خصم 500 شيكل على تسجيلهم."
+      "discount_message": "إحالة صديق أو فرد من العائلة ستمنحهم خصم {{amount}} شيكل على تسجيلهم."
     },
     "checklist": {
       "title": "قائمة المتطلبات"

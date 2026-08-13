@@ -216,7 +216,7 @@
   },
   "referrals": {
     "title": "Refer a Friend or Family Member",
-    "familyLabel": "Refer a family member (1,000₪ discount for the referred)",
+    "familyLabel": "Refer a family member (500₪ discount for the referred)",
     "firstName": "First Name",
     "surname": "Last Name",
     "emailLabel": "Email",
@@ -251,8 +251,7 @@
       "pending": "Pending",
       "contacted": "Contacted",
       "enrolled": "Enrolled",
-      "paid": "Paid",
-      "rejected": "Rejected"
+      "rewarded": "Rewarded"
     },
     "namePlaceholder": "Friend's full name",
     "nameRequired": "Name is required"
@@ -1076,6 +1075,7 @@
       "intakeNotes": "Intake Notes"
     },
     "referralsMgmt": {
+      "title": "Referrals",
       "agent": "Partner",
       "student": "Student",
       "name": "Name",
@@ -1090,7 +1090,21 @@
       "noReferrals": "No referrals found",
       "statusUpdated": "Status updated",
       "deleted": "Referral deleted",
-      "deleteDesc": "This will permanently delete this referral. This action cannot be undone."
+      "deleteDesc": "This will permanently delete this referral. This action cannot be undone.",
+      "referrer": "Referrer",
+      "referred": "Referred friend",
+      "caseRef": "Case",
+      "discount": "Discount",
+      "actions": "Actions",
+      "yes": "Yes",
+      "no": "No",
+      "deleteConfirmTitle": "Delete this referral?",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "searchPlaceholder": "Search name or phone…",
+      "updateFailed": "Could not update the referral status",
+      "deleteFailed": "Could not delete the referral",
+      "loading": "Loading…"
     },
     "payouts": {
       "requester": "Requester",
@@ -2303,6 +2317,7 @@
     "todayAppts": "Today",
     "submitNew": "New",
     "students": "Students",
+    "referrals": "Referrals",
     "myLink": "My Link",
     "earnings": "Earnings",
     "checklist": "Checklist",
@@ -3011,7 +3026,7 @@
   },
   "student": {
     "refer": {
-      "discount_message": "Referring a friend or family member will give them a 500 shekel discount on their registration."
+      "discount_message": "Referring a friend or family member will give them a {{amount}} shekel discount on their registration."
     },
     "checklist": {
       "title": "Your Checklist"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,27 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
   const { t } = useTranslation("dashboard");
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState<number>(500);
   const [form, setForm] = useState({ referred_name: "", referred_phone: "" });
 
   const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+
+  useEffect(() => {
+    let active = true;
+    // platform_settings RLS is staff/partner only, so the amount comes from a
+    // SECURITY DEFINER RPC that exposes just this one value to students.
+    (supabase as any)
+      .rpc("get_referral_discount_amount")
+      .then(({ data }: any) => {
+        if (!active) return;
+        const amount = Number(data ?? 500);
+        if (Number.isFinite(amount) && amount > 0) setDiscountAmount(amount);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,14 +84,13 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
 
       if (refErr) throw refErr;
 
-      // 2. Create case tagged as referral with 500 shekel discount
+      // 2. Create case tagged as referral (discount amount is server-derived)
       try {
         await supabase.functions.invoke("create-case-from-apply", {
           body: {
             full_name: form.referred_name.trim(),
             phone_number: form.referred_phone.trim(),
             source: "referral",
-            referral_discount: 500,
             referrer_user_id: userId,
             referral_id: referralData?.id ?? null,
           },
@@ -100,7 +117,8 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
         <p className="text-sm text-foreground">
           {t(
             "student.refer.discount_message",
-            "Referring a friend or family member will give them a 500 shekel discount on their registration.",
+            "Referring a friend or family member will give them a {{amount}} shekel discount on their registration.",
+            { amount: discountAmount.toLocaleString("en-US") },
           )}
         </p>
       </div>

@@ -296,6 +296,34 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     }
   };
 
+  /**
+   * Admin-only direct confirmation of a Germany (EUR) school item. The proof is
+   * handled outside the website, so admins need a simple way to mark the money
+   * as received. Mirrors what approving an uploaded proof does, without the file.
+   */
+  const confirmGermanyItem = async (type: SchoolPaymentType) => {
+    if (proofBusyId) return;
+    setProofBusyId(`germany:${type}`);
+    try {
+      const { error } = await (supabase as any).rpc("confirm_german_finance_item", {
+        p_case_id: caseId,
+        p_finance_type: type,
+      });
+      if (error) throw error;
+      toast({
+        description: t("finance.proof.confirmedToast", "Germany payment confirmed."),
+      });
+      await Promise.all([loadProofs(), refetchFinancials()]);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        description: error?.message || t("finance.proof.reviewFailed", "Unable to review payment proof."),
+      });
+    } finally {
+      setProofBusyId(null);
+    }
+  };
+
   const status: "unpaid" | "partial" | "settled" =
     serviceTotal <= 0 ? "unpaid" : remaining <= 0 ? "settled" : paid > 0 ? "partial" : "unpaid";
 
@@ -705,7 +733,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 {schoolPaymentTypes.map((type) => {
                   const proof = getLatestProof(type);
                   const payment = getPaymentForType(type);
-                  const busy = proofBusyId === proof?.id;
+                  const confirmed = payment?.status === "confirmed" || proof?.status === "approved";
+                  const busy =
+                    proofBusyId !== null && (proofBusyId === proof?.id || proofBusyId === `germany:${type}`);
                   return (
                     <div key={type} className="rounded-md border p-3 space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -715,7 +745,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-xs">
-                        {payment?.status === "confirmed" || proof?.status === "approved" ? (
+                        {confirmed ? (
                           <Badge className="bg-emerald-100 text-emerald-800">
                             {t("finance.verification.confirmed", "Confirmed")}
                           </Badge>
@@ -737,37 +767,47 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                         )}
                       </div>
                       {proof?.rejection_reason && <p className="text-xs text-red-700">{proof.rejection_reason}</p>}
-                      {proof && (
-                        <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        {proof && (
                           <Button size="sm" variant="outline" className="gap-1" onClick={() => openProof(proof)}>
                             <ExternalLink className="h-3.5 w-3.5" /> {t("finance.verification.view", "View proof")}
                           </Button>
-                          {canConfirm && proof.status === "pending" && (
-                            <>
-                              <Button size="sm" disabled={busy} onClick={() => reviewProof(proof, true)}>
-                                {busy ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                )}{" "}
-                                {t("finance.verification.confirmAction", "Confirm payment")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={busy}
-                                onClick={() => {
-                                  setRejectReason("");
-                                  setRejectTarget(proof);
-                                }}
-                              >
-                                <XCircle className="h-3.5 w-3.5" />{" "}
-                                {t("finance.verification.rejectAction", "Reject proof")}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      )}
+                        )}
+                        {canConfirm && !proof && !confirmed && (
+                          <Button size="sm" disabled={busy} onClick={() => confirmGermanyItem(type)}>
+                            {busy ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            )}{" "}
+                            {t("finance.verification.confirmAction", "Confirm payment")}
+                          </Button>
+                        )}
+                        {canConfirm && proof?.status === "pending" && (
+                          <>
+                            <Button size="sm" disabled={busy} onClick={() => reviewProof(proof, true)}>
+                              {busy ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              )}{" "}
+                              {t("finance.verification.confirmAction", "Confirm payment")}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={busy}
+                              onClick={() => {
+                                setRejectReason("");
+                                setRejectTarget(proof);
+                              }}
+                            >
+                              <XCircle className="h-3.5 w-3.5" />{" "}
+                              {t("finance.verification.rejectAction", "Reject proof")}
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

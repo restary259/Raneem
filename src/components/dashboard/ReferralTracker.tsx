@@ -17,8 +17,7 @@ const ReferralTracker: React.FC<ReferralTrackerProps> = ({ userId }) => {
     pending: { variant: 'secondary' },
     contacted: { variant: 'outline' },
     enrolled: { variant: 'default' },
-    paid: { variant: 'default' },
-    rejected: { variant: 'destructive' },
+    rewarded: { variant: 'default' },
   };
 
   useEffect(() => {
@@ -51,7 +50,6 @@ const ReferralTracker: React.FC<ReferralTrackerProps> = ({ userId }) => {
                 <tr className="border-b bg-muted/50">
                   <th className="px-4 py-3 text-start font-semibold whitespace-nowrap">{t('referrals.name')}</th>
                   <th className="px-4 py-3 text-start font-semibold whitespace-nowrap">{t('referrals.status')}</th>
-                  <th className="px-4 py-3 text-start font-semibold whitespace-nowrap">{t('referrals.family')}</th>
                   <th className="px-4 py-3 text-start font-semibold whitespace-nowrap">{t('referrals.date')}</th>
                 </tr>
               </thead>
@@ -62,7 +60,6 @@ const ReferralTracker: React.FC<ReferralTrackerProps> = ({ userId }) => {
                     <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium whitespace-nowrap">{r.referred_name}</td>
                       <td className="px-4 py-3 whitespace-nowrap"><Badge variant={status.variant}>{String(t(`referrals.statuses.${r.status}`, { defaultValue: r.status }))}</Badge></td>
-                      <td className="px-4 py-3 whitespace-nowrap">{r.is_family ? t('referrals.familyYes') : '—'}</td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{new Date(r.created_at).toLocaleDateString(i18n.language === 'ar' ? 'ar' : 'en-US')}</td>
                     </tr>
                   );

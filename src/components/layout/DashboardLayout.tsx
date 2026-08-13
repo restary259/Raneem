@@ -84,6 +84,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics", group: "nav.group.money" },
     { key: "nav.team", icon: Users, href: "/admin/team", group: "nav.group.people" },
     { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
+    { key: "nav.referrals", icon: Link2, href: "/admin/referrals", group: "nav.group.people" },
     { key: "nav.programs", icon: BookOpen, href: "/admin/programs", group: "nav.group.setup" },
     { key: "nav.activity", icon: Activity, href: "/admin/activity", group: "nav.group.setup" },
     { key: "nav.settings", icon: Settings, href: "/admin/settings", group: "nav.group.setup" },

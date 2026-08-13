@@ -29,7 +29,7 @@ export const DashboardService = {
       db.from('rewards').select('amount, status, admin_notes'),
       db
         .from('cases')
-        .select('id, discount_amount, platform_revenue_ils, status')
+        .select('id, referral_discount, platform_revenue_ils, status')
         .eq('status', 'enrollment_paid'),
       // Global default commission rates (flat ILS amounts, not percentages).
       db.from('platform_settings').select('partner_commission_rate').maybeSingle(),
@@ -41,7 +41,7 @@ export const DashboardService = {
     const partnerCommissionRate = Number(settingsRes.data?.partner_commission_rate ?? 0) || 0;
 
     const enrolledCount = cases.length;
-    const referralDiscounts = cases.reduce((s, c) => s + (c.discount_amount || 0), 0);
+    const referralDiscounts = cases.reduce((s, c) => s + (c.referral_discount || 0), 0);
 
     const partnerRewards = allRewards.filter((r) =>
       r.admin_notes?.startsWith('Partner commission from case')
