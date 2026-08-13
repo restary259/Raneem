@@ -196,3 +196,25 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - `src/integrations/supabase/types.ts` (generated) KEEPS `passport_number` on purpose: it mirrors the live retained DB columns; `supabase gen types` would re-add them, so removing is non-durable and diverges from schema. No code reads those generated fields now.
 - Orphaned locale keys (`profile.passportNumber`, `admin.ready.passportNumber`, `sheets.col.passportNumber`) LEFT in en/ar for i18n parity — `src/lib/i18nKeys.test.ts` only flags missing keys, not orphans. `passportType` keys are a DIFFERENT concept (passport-type dropdown) and remain in use. `myData.identityDesc` + `student.next.completeProfileDetail` copy updated to drop "passport number".
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 278/278 pass incl. i18nKeys parity guard + onboarding test.
+
+## Student sidebar regrouped into collapsible sections (2026-08-13)
+- The student sidebar (and mobile bottom nav) was restructured from 10 flat top-level
+  items into 5 intentional destinations: **Next Steps** (top-level), **Study File**
+  (collapsible: Checklist/Documents/Visa/Fees), **Communication** (collapsible:
+  Messages/Contacts), **My Account** (collapsible: Profile/My data), **Refer**
+  (top-level). Admin/team/partner roles keep their existing flat `group`-heading
+  layout unchanged.
+- `NavItem` (in `src/components/layout/DashboardLayout.tsx`) gained an optional
+  `children?: NavItem[]`. Parents with children render as a Radix `Collapsible`
+  (`@/components/ui/collapsible`) with `SidebarMenuSub`/`SidebarMenuSubButton`
+  children; leaf items render as before. `SidebarNav` keeps `openGroups` state and
+  auto-expands ONLY the group whose child route is active on route/role change
+  (collapses the rest). In collapsed-icon mode, sub-items are hidden.
+- `NAV_CONFIG.student` group parents use `key: "nav.group.studyFile|communication|account"`
+  (i18n keys under `nav.group.*` in en/ar `dashboard.json`) with `href: ""` (ignored for
+  parents). Added `nav.group.studyFile/communication/account/referral` to both locales.
+- `MobileBottomNav` student config mirrors the 5 top-level destinations; grouped parents
+  link to their first child route and stay active while ANY child route is open (via
+  `groupChildHrefs` map).
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 286/286 pass incl.
+  i18nKeys parity guard.

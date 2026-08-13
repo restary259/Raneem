@@ -2341,7 +2341,11 @@
       "money": "المالية",
       "people": "الأشخاص",
       "setup": "الإعدادات",
-      "comms": "المراسلات"
+      "comms": "المراسلات",
+      "studyFile": "ملف الدراسة",
+      "communication": "التواصل",
+      "account": "حسابي",
+      "referral": "الإحالة"
     },
     "nextSteps": "الخطوات التالية",
     "network": "شبكتي",

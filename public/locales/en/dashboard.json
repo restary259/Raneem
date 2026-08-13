@@ -2323,7 +2323,11 @@
       "money": "Money",
       "people": "People",
       "setup": "Setup",
-      "comms": "Communication"
+      "comms": "Communication",
+      "studyFile": "Study File",
+      "communication": "Communication",
+      "account": "My Account",
+      "referral": "Referral"
     },
     "nextSteps": "Next Steps",
     "network": "My network",
