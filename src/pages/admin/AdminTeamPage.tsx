@@ -227,8 +227,14 @@ const AdminTeamPage = () => {
         },
         body: JSON.stringify({ full_name: form.fullName, email: form.email, role: form.role }),
       });
-      const result = await resp.json();
-      if (!resp.ok) throw new Error(conflictMessage(result) || 'Failed to create member');
+      const result = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(
+          conflictMessage(result) ||
+            (result as any)?.error ||
+            t('admin.team.createFailed', 'Failed to create member'),
+        );
+      }
       setNewCreds({ email: form.email, password: result.tempPassword || result.temp_password });
       setForm({ fullName: '', email: '', role: 'team_member' });
       await fetchMembers();
