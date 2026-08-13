@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -901,10 +902,11 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               const phoneErr = attempted && filled(c.phone) && !isValidPhone(c.phone);
               const phoneMissing = attempted && !filled(c.phone);
               return (
-                <div key={i} className="space-y-3 rounded-lg border border-border p-3">
+                <Card key={i}>
+                  <CardContent className="space-y-3 p-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor={`ec-name-${i}`} className="text-destructive">
-                      {t("studentOnboarding.contactName", "Name")} *
+                    <Label htmlFor={`ec-name-${i}`}>
+                      {t("studentOnboarding.contactName", "Name")} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id={`ec-name-${i}`}
@@ -929,8 +931,8 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                   </div>
                   <div className="flex items-end gap-2">
                     <div className="flex-1 space-y-1.5">
-                      <Label htmlFor={`ec-phone-${i}`} className="text-destructive">
-                        {t("studentOnboarding.contactPhone", "Phone")} *
+                      <Label htmlFor={`ec-phone-${i}`}>
+                        {t("studentOnboarding.contactPhone", "Phone")} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id={`ec-phone-${i}`}
@@ -956,7 +958,8 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                       </Button>
                     )}
                   </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
