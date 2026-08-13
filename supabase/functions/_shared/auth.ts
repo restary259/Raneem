@@ -31,6 +31,30 @@ async function logDenial(
     // Monitoring must never block the response.
   }
 }
+/**
+ * True when `token` is a genuine service-role credential for this project:
+ * it must carry the `service_role` claim (or be an opaque secret key) and be
+ * accepted by the admin API, which only the service role may call.
+ */
+async function isWorkingServiceRoleToken(token: string): Promise<boolean> {
+  const looksLikeSecret = token.startsWith("sb_secret_");
+  if (!looksLikeSecret) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1] ?? ""));
+      if (payload?.role !== "service_role") return false;
+    } catch (_) {
+      return false;
+    }
+  }
+  try {
+    const admin = createClient(Deno.env.get("SUPABASE_URL") ?? "", token);
+    const { error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
+    return !error;
+  } catch (_) {
+    return false;
+  }
+}
+
 
 /**
  * Verifies the caller of an edge function.
