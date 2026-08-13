@@ -139,4 +139,38 @@ describe("selectInvoiceTotals — invoice email fields", () => {
     expect(totals.service_total).toBe(5000);
     expect(totals.currency).toBe("ILS");
   });
+
+  it("parses referral_discount from the snapshot and clamps negatives to 0", () => {
+    const withDiscount = selectInvoiceTotals({
+      services: [line({ unit_price: 5000, quantity: 1 })],
+      service_total: 4500,
+      referral_discount: 500,
+    });
+    expect(withDiscount.referral_discount).toBe(500);
+
+    const negative = selectInvoiceTotals({
+      service_total: 4500,
+      referral_discount: -100,
+    });
+    expect(negative.referral_discount).toBe(0);
+
+    const missing = selectInvoiceTotals({ service_total: 5000 });
+    expect(missing.referral_discount).toBe(0);
+
+    const nonNumeric = selectInvoiceTotals({ service_total: 5000, referral_discount: "bad" });
+    expect(nonNumeric.referral_discount).toBe(0);
+  });
+
+  it("reconciles subtotal − per-line discount − referral_discount = service_total", () => {
+    const totals = selectInvoiceTotals({
+      services: [line({ id: "a", unit_price: 3000, quantity: 1, discount: 0, line_total: 3000 })],
+      service_total: 2500,
+      referral_discount: 500,
+    });
+    // subtotal(3000) − discount_total(0) − referral_discount(500) = 2500 = service_total
+    expect(totals.subtotal).toBe(3000);
+    expect(totals.discount_total).toBe(0);
+    expect(totals.referral_discount).toBe(500);
+    expect(totals.subtotal - totals.discount_total - totals.referral_discount).toBe(totals.service_total);
+  });
 });

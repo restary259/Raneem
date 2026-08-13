@@ -30,6 +30,7 @@ export interface CaseInvoice {
       line_total: number;
     }>;
     service_total: number;
+    referral_discount?: number;
     payment_type: "agency_service";
   };
   issued_at: string;
@@ -105,6 +106,7 @@ export function buildInvoiceEmailData(invoice: CaseInvoice) {
     })),
     subtotal: money(t.subtotal),
     discount: t.discount_total > 0 ? money(t.discount_total) : null,
+    referralDiscount: t.referral_discount > 0 ? money(t.referral_discount) : null,
     serviceTotal: money(t.service_total),
     totalConfirmed: t.total_confirmed > 0 ? money(t.total_confirmed) : null,
     remaining: money(t.remaining),

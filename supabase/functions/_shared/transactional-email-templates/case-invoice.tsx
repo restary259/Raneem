@@ -41,6 +41,7 @@ interface Props {
   services?: ServiceLine[]
   subtotal?: string
   discount?: string | null
+  referralDiscount?: string | null
   serviceTotal?: string
   totalConfirmed?: string | null
   remaining?: string
@@ -97,6 +98,7 @@ const Email = ({
   services = [],
   subtotal,
   discount,
+  referralDiscount,
   serviceTotal,
   totalConfirmed,
   remaining,
@@ -211,6 +213,9 @@ const Email = ({
           {discount ? (
             <LineRow label="الخصم" value={`−₪${discount}`} tone={color.success} />
           ) : null}
+          {referralDiscount ? (
+            <LineRow label="خصم الإحالة" value={`−₪${referralDiscount}`} tone={color.success} />
+          ) : null}
           <LineRow label="الإجمالي" value={ils(serviceTotal)} bold />
           {/* Darb does not bill in installments: paid / balance rows appear only
               when a payment has actually been confirmed. */}
@@ -286,6 +291,7 @@ export const template = {
     ],
     subtotal: '3,150.00',
     discount: '500.00',
+    referralDiscount: null,
     serviceTotal: '2,650.00',
     totalConfirmed: '1,000.00',
     remaining: '1,650.00',

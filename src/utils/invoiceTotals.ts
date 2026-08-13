@@ -39,6 +39,8 @@ export interface DarbInvoiceTotals {
   subtotal: number;
   /** Sum of the per-line discounts (ILS), never negative. */
   discount_total: number;
+  /** Referral discount applied to the case (₪), already netted out of service_total. */
+  referral_discount: number;
   service_total: number;
   /** Confirmed agency-service payments only (ILS). */
   total_confirmed: number;
@@ -91,6 +93,7 @@ export function selectInvoiceTotals(raw: unknown): DarbInvoiceTotals {
   );
 
   const service_total = toFiniteNumber(data.service_total, round2(subtotal - discount_total));
+  const referral_discount = Math.max(toFiniteNumber(data.referral_discount, 0), 0);
   const total_confirmed = toFiniteNumber(data.total_confirmed, 0);
 
   const school_costs = Array.isArray(data.school_costs)
@@ -104,6 +107,7 @@ export function selectInvoiceTotals(raw: unknown): DarbInvoiceTotals {
     services,
     subtotal,
     discount_total,
+    referral_discount,
     service_total,
     total_confirmed,
     remaining: Math.max(round2(service_total - total_confirmed), 0),

@@ -61,6 +61,8 @@ export interface CaseFinancials {
   currency: string;
   services: FinancialServiceLine[];
   service_total: number;
+  /** Referral discount applied to this case (₪), already netted out of service_total. */
+  referral_discount: number;
   school_costs: FinancialSchoolLine[];
   payments: FinancialPayment[];
   total_confirmed: number;

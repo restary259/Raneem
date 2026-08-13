@@ -29,6 +29,7 @@ export async function downloadInvoicePdf(
         amount: "المبلغ",
         agency: "خدمات دارب",
         servicesTotal: "إجمالي خدمات دارب",
+        referralDiscount: "خصم الإحالة",
         paid: "المدفوع المؤكد",
         remaining: "الرصيد المتبقي",
         student: "الطالب",
@@ -41,6 +42,7 @@ export async function downloadInvoicePdf(
         amount: "Amount",
         agency: "DARB agency services",
         servicesTotal: "DARB services total",
+        referralDiscount: "Referral discount",
         paid: "Confirmed payments",
         remaining: "Remaining balance",
         student: "Student",
@@ -62,11 +64,15 @@ export async function downloadInvoicePdf(
 
   const normalized = selectInvoiceTotals(totals);
 
-  const summaryRows: (string | number)[][] = [
+  const summaryRows: (string | number)[][] = [];
+  if (normalized.referral_discount > 0) {
+    summaryRows.push([L.referralDiscount, "", `−${money(normalized.referral_discount, normalized.currency)}`]);
+  }
+  summaryRows.push(
     [L.servicesTotal, "", money(normalized.service_total, normalized.currency)],
     [L.paid, "", money(normalized.total_confirmed, normalized.currency)],
     [L.remaining, "", money(normalized.remaining, normalized.currency)],
-  ];
+  );
 
   const header = [
     `${L.caseRef}: ${meta.caseReference ?? "-"}`,

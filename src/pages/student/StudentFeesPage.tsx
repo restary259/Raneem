@@ -46,6 +46,7 @@ interface Financials {
   case_reference: string | null;
   services: ServiceLine[];
   service_total: number;
+  referral_discount: number;
   school_costs: SchoolCost[];
   payments: PaymentLine[];
   total_confirmed: number;
@@ -207,6 +208,22 @@ const StudentFeesPage = () => {
             {stat(t("studentFees.pending", "Pending"), fin.total_pending_review)}
             {stat(t("studentFees.remaining", "Remaining"), fin.remaining)}
           </div>
+          {Number(fin.referral_discount ?? 0) > 0 && (
+            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t("studentFees.originalTotal", "Original total")}</span>
+                <span className="font-medium" dir="ltr">{formatCurrencyAmount(fin.service_total + fin.referral_discount, "ILS")}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t("studentFees.referralDiscount", "Referral discount")}</span>
+                <span className="font-medium text-emerald-600" dir="ltr">−{formatCurrencyAmount(fin.referral_discount, "ILS")}</span>
+              </div>
+              <div className="flex items-center justify-between border-t border-border pt-1 text-sm font-semibold">
+                <span>{t("studentFees.netTotal", "Net total")}</span>
+                <span dir="ltr">{formatCurrencyAmount(fin.service_total, "ILS")}</span>
+              </div>
+            </div>
+          )}
           {fin.services?.length > 0 && (
             <ul className="divide-y divide-border rounded-lg border border-border">
               {fin.services.map((s) => (

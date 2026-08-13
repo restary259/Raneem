@@ -69,6 +69,7 @@ interface SubmittedCase {
 
 interface CommissionPreview {
   serviceFee: number;
+  referralDiscount: number;
   partners: { partnerId: string; name: string; amount: number }[];
   teamCommission: number;
   platformRevenue: number;
@@ -102,6 +103,7 @@ const AdminSubmissionsPage = () => {
   const [showSplitPanel, setShowSplitPanel] = useState(false);
   const [splitPreview, setSplitPreview] = useState<CommissionPreview>({
     serviceFee: 0,
+    referralDiscount: 0,
     partners: [],
     partnerCommission: 0,
     teamCommission: 0,
@@ -234,9 +236,11 @@ const AdminSubmissionsPage = () => {
   // linked to this case (partner_id, else referred_by) can earn a commission.
   const loadSplitPreview = useCallback(async (c: SubmittedCase) => {
     let fee = 0;
+    let referralDiscount = 0;
     try {
       const { data: finance } = await (supabase as any).rpc("get_case_financials", { p_case_id: c.id });
       fee = Number(finance?.service_total ?? 0);
+      referralDiscount = Number(finance?.referral_discount ?? 0);
       const linkedPartnerId = c.partner_id || c.referred_by || null;
 
       const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
@@ -293,13 +297,14 @@ const AdminSubmissionsPage = () => {
 
       setSplitPreview({
         serviceFee: fee,
+        referralDiscount,
         partners: qualifyingPartners,
         partnerCommission: totalPartner,
         teamCommission,
         platformRevenue: Math.max(0, fee - teamCommission - totalPartner),
       });
     } catch {
-      setSplitPreview({ serviceFee: fee, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: fee });
+      setSplitPreview({ serviceFee: fee, referralDiscount, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: fee });
     }
   }, []);
 
@@ -870,6 +875,12 @@ const AdminSubmissionsPage = () => {
               )}
             </p>
             <div className="space-y-2">
+              {splitPreview.referralDiscount > 0 && (
+                <div className="flex justify-between p-3 rounded-lg border border-emerald-200 bg-emerald-50 text-sm">
+                  <span className="text-muted-foreground">{t("admin.submissions.referralDiscount", "Referral discount applied")}</span>
+                  <span className="font-medium text-emerald-600" dir="ltr">−₪{splitPreview.referralDiscount.toLocaleString("en-US")}</span>
+                </div>
+              )}
               <div className="flex justify-between p-3 rounded-lg bg-muted border border-border text-sm">
                 <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}</span>
                 <span className="font-bold text-foreground">₪{splitPreview.serviceFee.toLocaleString("en-US")}</span>

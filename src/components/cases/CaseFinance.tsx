@@ -137,6 +137,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const paid = Number(financials?.total_confirmed ?? 0);
   const pendingReview = Number(financials?.total_pending_review ?? 0);
   const serverRemaining = Number(financials?.remaining ?? 0);
+  const referralDiscount = Number(financials?.referral_discount ?? 0);
   const schoolCosts = financials?.school_costs ?? [];
   const payments = financials?.payments ?? [];
 
@@ -468,6 +469,37 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 </div>
               </div>
 
+              {referralDiscount > 0 && (
+                <div className="rounded-md border bg-muted/30 p-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t("finance.summary.originalTotal", "Original total")}</span>
+                    <span className="font-medium" dir="ltr">{formatILS(serviceTotal + referralDiscount)}</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t("finance.summary.referralDiscount", "Referral discount")}</span>
+                    <span className="font-medium text-emerald-600" dir="ltr">−{formatILS(referralDiscount)}</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between border-t pt-1 text-sm font-semibold">
+                    <span>{t("finance.summary.netTotal", "Net total")}</span>
+                    <span dir="ltr">{formatILS(serviceTotal)}</span>
+                  </div>
+                </div>
+              )}
+
+              {referralDiscount > 0 && (
+                <div className="flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 p-3">
+                  <Badge className="bg-emerald-100 text-emerald-800">
+                    {t("finance.referral.applied", "Referral discount applied")}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "finance.referral.appliedDesc",
+                      "This student receives a referral discount. It is already reflected in the final total above.",
+                    )}
+                  </p>
+                </div>
+              )}
+
               <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
                 <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">
@@ -668,10 +700,28 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
             {/* DARB services (ILS). */}
             <div className="space-y-2 rounded-md border p-4">
               <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{t("finance.summary.services", "Service total")}</span>
-                <span className="font-semibold">{formatILS(serviceTotal)}</span>
-              </div>
+              {referralDiscount > 0 && (
+                <>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t("finance.summary.originalTotal", "Original total")}</span>
+                    <span className="font-medium" dir="ltr">{formatILS(serviceTotal + referralDiscount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t("finance.summary.referralDiscount", "Referral discount")}</span>
+                    <span className="font-medium text-emerald-600" dir="ltr">−{formatILS(referralDiscount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-2 text-sm font-semibold">
+                    <span>{t("finance.summary.netTotal", "Net total")}</span>
+                    <span dir="ltr">{formatILS(serviceTotal)}</span>
+                  </div>
+                </>
+              )}
+              {referralDiscount <= 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t("finance.summary.services", "Service total")}</span>
+                  <span className="font-semibold">{formatILS(serviceTotal)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t("finance.summary.paid", "Paid")}</span>
                 <span className="font-semibold">{formatILS(paid)}</span>

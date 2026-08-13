@@ -107,6 +107,39 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   fetches linked cases; it now selects `referral_discount` on that query. Single
   source of truth = the snapshotted case column that finance actually subtracts.
 
+## Surface referral discount in the UI (2026-08-13)
+- The backend `get_case_financials` returns `referral_discount` as its own field,
+  but the frontend previously consumed only the netted `service_total` and dropped
+  `referral_discount`, so the discount was invisible to users. It is now surfaced
+  as a visible line item everywhere DARB service totals appear.
+- **Single normalizer**: `selectInvoiceTotals` (`src/utils/invoiceTotals.ts`) is
+  the one place `referral_discount` is parsed (clamped to ≥0, defaults to 0 for
+  missing/non-numeric/legacy snapshots) and exposed on `DarbInvoiceTotals`. Every
+  display surface derives from it; nothing re-parses the raw snapshot. The math
+  reconciles: `subtotal − per-line discount_total − referral_discount = service_total`.
+- **Surfaces that show the breakdown** (only when `referral_discount > 0`; no
+  change when there is no discount):
+  - `CaseFinance.tsx` Summary tab: KPI grid + an Original/Discount/Net block + an
+    emerald "Referral discount applied" badge notice; Invoice tab: Original/Discount/Net
+    rows replace the single "Service total" row.
+  - `StudentFeesPage.tsx`: Original/Discount/Net block under the agency-services KPI grid.
+  - `InvoicePage.tsx` (public invoice) + `invoicePdf.ts` (PDF): a `−₪` Referral
+    discount row above the final total.
+  - `case-invoice.tsx` email template: a separate `خصم الإحالة` LineRow after the
+    per-line discount and before the total (`referralDiscount` prop from
+    `buildInvoiceEmailData`); the existing `discount` prop still maps to the
+    per-line `discount_total` only, so the two discounts are never conflated.
+  - `AdminSubmissionsPage.tsx` Payment-Split panel: a read-only emerald line
+    above the Service Fee indicating the discount was applied (Service Fee stays
+    the net `service_total` the commission is computed on — `record_case_commission`
+    already nets referral_discount, so platformRevenue is unchanged).
+- **i18n**: keys under `finance.summary.*` (originalTotal/referralDiscount/netTotal),
+  `finance.referral.*` (applied/appliedDesc), `studentFees.*` (originalTotal/
+  referralDiscount/netTotal), `admin.submissions.referralDiscount` — added to en + ar
+  together (parity guarded by `src/lib/i18nKeys.test.ts`).
+- Build: `npm run build` (tsc+vite) clean; `npx vitest run` 317/317 pass incl. 2
+  new `invoiceTotals.test.ts` cases (parse + reconcile) + i18n parity guard.
+
 ## Student account creation / invite (no dead activation links)
 
 - `create-student-from-case` (edge function) has three invite-mode branches and

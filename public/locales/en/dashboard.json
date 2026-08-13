@@ -627,7 +627,8 @@
       "invalidEmail": "Invalid email address",
       "approveCreatesAccount": "Approving creates a student account and links it to this case.",
       "approveExistingAccount": "A student account is already linked to this case. Approving only records the review.",
-      "notCollected": "Not collected"
+      "notCollected": "Not collected",
+      "referralDiscount": "Referral discount applied"
     },
     "financials": {
       "title": "Financial Dashboard",
@@ -3458,7 +3459,10 @@
         "germanyPayment": "Germany payment — pending admin verification",
         "germanyVerified": "Germany payments verified by Admin"
       },
-      "germanyPending": "Germany payments are verified by Admin after the student uploads proof."
+      "germanyPending": "Germany payments are verified by Admin after the student uploads proof.",
+      "originalTotal": "Original total",
+      "referralDiscount": "Referral discount",
+      "netTotal": "Net total"
     },
     "services": {
       "title": "Services on this case",
@@ -3642,6 +3646,10 @@
         "failed": "Failed",
         "pending": "Pending"
       }
+    },
+    "referral": {
+      "applied": "Referral discount applied",
+      "appliedDesc": "This student receives a referral discount. It is already reflected in the final total above."
     }
   },
   "messagesInbox": {
@@ -4123,6 +4131,9 @@
       "submitted": "Pending",
       "pending": "Pending",
       "rejected": "Rejected"
-    }
+    },
+    "originalTotal": "Original total",
+    "referralDiscount": "Referral discount",
+    "netTotal": "Net total"
   }
 }
