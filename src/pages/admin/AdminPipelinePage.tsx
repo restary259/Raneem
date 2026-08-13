@@ -1080,6 +1080,21 @@ const AdminPipelinePage = () => {
                     <p className="text-xs text-muted-foreground mt-2 text-center animate-pulse">Assigning…</p>
                   )}
                 </section>
+
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    const caseId = selectedCase.id;
+                    setSelectedCase(null);
+                    setEditMode(false);
+                    setDraft(null);
+                    navigate(`/admin/cases/${caseId}`);
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {t("admin.pipeline.viewFullFile", "View Full File")}
+                </Button>
               </div>
             </>
           )}

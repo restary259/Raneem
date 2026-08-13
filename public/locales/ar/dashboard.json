@@ -315,6 +315,7 @@
     },
     "pipeline": {
       "title": "خط أنابيب الطلبات",
+      "viewFullFile": "عرض الملف الكامل",
       "searchPlaceholder": "البحث بالاسم أو الهاتف...",
       "filterTeam": "تصفية حسب عضو الفريق",
       "allTeam": "الكل",

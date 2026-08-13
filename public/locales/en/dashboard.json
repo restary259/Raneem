@@ -315,6 +315,7 @@
     },
     "pipeline": {
       "title": "Application Pipeline",
+      "viewFullFile": "View Full File",
       "searchPlaceholder": "Search by name or phone...",
       "filterTeam": "Filter by team member",
       "allTeam": "All",
