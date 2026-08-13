@@ -20,6 +20,7 @@ import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { identityConflictMessage } from '@/lib/identityConflict';
+import { checkEmailAvailability } from '@/lib/checkEmailAvailability';
 
 interface TeamMember {
   id: string;
