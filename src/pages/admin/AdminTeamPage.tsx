@@ -19,6 +19,7 @@ import DeactivateAccountDialog from '@/components/admin/DeactivateAccountDialog'
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
+import { identityConflictMessage } from '@/lib/identityConflict';
 
 interface TeamMember {
   id: string;
