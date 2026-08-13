@@ -73,6 +73,40 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   locked so the single Confirm & Save button never hits the locked
   `set_case_services` RPC.
 
+## Referral discount in the commission split (2026-08-13)
+- The referral discount must be absorbed by DARB's margin, not ignored.
+  `get_case_financials` / `get_case_darb_service_total` subtract
+  `cases.referral_discount` from the service total (Step 2), so the invoice and
+  the admin Payment-Split preview show the NET amount. `record_case_commission`
+  must use the SAME net base for `platform_revenue_ils` or the recorded value
+  disagrees with the invoice/finance summary.
+- `record_case_commission` (fixed by migration
+  `20260813160000_fix_referral_discount_in_commission.sql`) computes
+  `v_base` (gross, all `case_services` rows — NO `currency='ILS'` filter, matching
+  `get_case_darb_service_total` which sums all rows and hardcodes `currency='ILS'`),
+  then `v_net = GREATEST(v_base - referral_discount, 0)`, and
+  `platform_revenue_ils = GREATEST(0, v_net - team - pool)`. Team/partner/master
+  flat commissions are UNCHANGED (flat amounts, not a % of base) and keep using
+  gross `v_base` as `rewards.base_amount`. The `IF v_base <= 0` guard stays on
+  gross. The audit payload logs BOTH `base_amount` (gross) and
+  `net_after_discount` (net). This matches `COMMISSION_RULES.md` §4 where
+  `service_fee` is the NET discounted DARB total.
+- Worked example (₪5000 case, ₪500 discount, ₪100 team, student referrer so ₪0
+  pool): invoice/finance `service_total` = ₪4500; admin split preview platform
+  revenue = ₪4500; recorded `platform_revenue_ils` = ₪4500 (was ₪4900 before fix).
+- **Existing data caveat**: cases already at `enrollment_paid` with a
+  `referral_discount > 0` BEFORE this deploy have an overstated
+  `platform_revenue_ils`. `CREATE OR REPLACE` cannot retroactively fix them
+  (`commission_split_done` guards re-run). The migration includes a diagnostic
+  SELECT (comment) to find them; a one-time manual correction is an operator
+  decision, NOT auto-applied.
+- **Admin Referrals "Discount" column** derives from the linked case's
+  `referral_discount > 0` (`discountAppliedFromCase` in
+  `src/lib/referralDiscount.ts`), NOT the stale `referrals.discount_applied`
+  boolean (which was never flipped to true by any code path). The page already
+  fetches linked cases; it now selects `referral_discount` on that query. Single
+  source of truth = the snapshotted case column that finance actually subtracts.
+
 ## Student account creation / invite (no dead activation links)
 
 - `create-student-from-case` (edge function) has three invite-mode branches and

@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useNavigate } from 'react-router-dom';
 import { Link2, RefreshCw, Trash2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { discountAppliedFromCase } from '@/lib/referralDiscount';
 
 type ReferralStatus = 'pending' | 'contacted' | 'enrolled' | 'rewarded';
 
@@ -33,7 +34,7 @@ interface AdminReferralRow {
   status: ReferralStatus;
   created_at: string;
   referrer: { full_name: string; phone_number: string | null } | null;
-  linkedCase: { id: string; full_name: string; case_reference: string | null } | null;
+  linkedCase: { id: string; full_name: string; case_reference: string | null; referral_discount: number | null } | null;
 }
 
 const AdminReferralsPage = () => {
@@ -67,7 +68,7 @@ const AdminReferralsPage = () => {
         ? (supabase as any).from('profiles').select('id, full_name, phone_number').in('id', referrerIds)
         : Promise.resolve({ data: [] }),
       caseIds.length
-        ? (supabase as any).from('cases').select('id, full_name, case_reference').in('id', caseIds)
+        ? (supabase as any).from('cases').select('id, full_name, case_reference, referral_discount').in('id', caseIds)
         : Promise.resolve({ data: [] }),
     ]);
 
@@ -216,7 +217,7 @@ const AdminReferralsPage = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        {r.discount_applied
+                        {discountAppliedFromCase(r.linkedCase?.referral_discount)
                           ? t('admin.referralsMgmt.yes')
                           : t('admin.referralsMgmt.no')}
                       </td>
