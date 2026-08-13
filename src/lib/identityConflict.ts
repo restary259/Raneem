@@ -9,6 +9,7 @@ export interface IdentityConflictResult {
   error?: string;
   code?: string;
   existing_role?: string;
+  intended_role?: string;
   deactivated?: boolean;
 }
 
@@ -39,6 +40,18 @@ export function identityConflictMessage(
   const existing = key
     ? t(key, result.existing_role)
     : t("admin.team.someRole", "another");
+
+  if (
+    !result.deactivated &&
+    result.intended_role &&
+    result.existing_role === result.intended_role
+  ) {
+    return t("admin.team.conflictSameRole", {
+      role: existing,
+      defaultValue:
+        "This email already has an active {{role}} account. Manage the existing account instead of creating a new one, or use a different email address.",
+    });
+  }
 
   return result.deactivated
     ? t("admin.team.conflictDeactivated", {

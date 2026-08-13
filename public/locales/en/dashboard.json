@@ -431,6 +431,7 @@
       "studentRole": "student",
       "someRole": "another",
       "deactivateAccount": "Deactivate account",
+      "conflictSameRole": "This email already has an active {{role}} account. Manage the existing account instead of creating a new one, or use a different email address.",
       "conflictActive": "This email is already used by a {{role}} account. One person can hold only one role in Darb — use a different email address.",
       "conflictDeactivated": "This email belongs to a deactivated {{role}} account. Reactivate that account instead of creating a new one, or use a different email.",
       "deactivateTitle": "Deactivate {{name}}?",
