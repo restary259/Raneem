@@ -402,6 +402,8 @@
       "copyReferralLink": "Copy referral link",
       "creating": "Creating...",
       "loading": "Loading...",
+      "sessionExpired": "Your session expired. Please sign in again and retry.",
+      "createFailed": "Failed to create member",
       "allFieldsRequired": "Please fill all fields",
       "accountCreated": "Account created successfully",
       "credentialsHint": "Account created. Share credentials with the member.",
