@@ -72,7 +72,6 @@ interface StudentRecord {
   university_name: string | null;
   intake_month: string | null;
   notes: string | null;
-  passport_number: string | null;
   passport_expiry: string | null;
   updated_by_student_at: string | null;
   // Additional personal fields
@@ -321,7 +320,7 @@ export default function AdminStudentsPage() {
   const [deleteTarget, setDeleteTarget] = useState<StudentRecord | null>(null);
 
   const PROFILE_SELECT =
-    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, case_id, linked_case_id, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_number, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
+    "id, full_name, email, phone_number, created_at, city, must_change_password, created_by, case_id, linked_case_id, emergency_contact, emergency_contact_name, emergency_contact_phone, arrival_date, gender, date_of_birth, country, nationality, university_name, intake_month, notes, passport_expiry, updated_by_student_at, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country";
 
   // Every account holding the `student` role belongs here — case-linked,
   // staff-created and self-registered alike. Filtering any of them out hid
@@ -487,7 +486,6 @@ export default function AdminStudentsPage() {
       university_name: profile.university_name || "",
       intake_month: profile.intake_month || "",
       notes: profile.notes || "",
-      passport_number: profile.passport_number || "",
       passport_expiry: profile.passport_expiry || "",
       eye_color: profile.eye_color || "",
       previous_legal_name: profile.previous_legal_name || "",
@@ -589,7 +587,6 @@ export default function AdminStudentsPage() {
           university_name: editForm.university_name || null,
           intake_month: editForm.intake_month || null,
           notes: editForm.notes || null,
-          passport_number: editForm.passport_number || null,
           passport_expiry: editForm.passport_expiry || null,
           // Additional personal fields
           eye_color: editForm.eye_color || null,
@@ -915,7 +912,6 @@ export default function AdminStudentsPage() {
                         { label: isRtl ? "العنوان / الدولة" : "Address / Country", key: "country" },
                         { label: t("admin.students.fieldUniversity"), key: "university_name" },
                         { label: t("admin.students.fieldIntake"), key: "intake_month" },
-                        { label: isRtl ? "رقم جواز السفر" : "Passport Number", key: "passport_number" },
                         { label: t("admin.students.fieldEmergency"), key: "emergency_contact" },
                         { label: isRtl ? "اسم جهة الاتصال للطوارئ" : "Emergency Contact Name", key: "emergency_contact_name" },
                         { label: isRtl ? "هاتف جهة الاتصال للطوارئ" : "Emergency Contact Phone", key: "emergency_contact_phone" },
@@ -1041,8 +1037,7 @@ export default function AdminStudentsPage() {
                         { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "العنوان / الدولة" : "Address / Country", value: selected.country || "—" },
                         { icon: <Building2 className="h-3.5 w-3.5" />, label: t("admin.students.fieldUniversity"), value: selected.university_name || "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: t("admin.students.fieldIntake"), value: selected.intake_month || "—" },
-                        { icon: <FileText className="h-3.5 w-3.5" />, label: isRtl ? "رقم جواز السفر" : "Passport No.", value: selected.passport_number || "—" },
-                        { icon: <Clock className="h-3.5 w-3.5" />, label: isRtl ? "انتهاء جواز السفر" : "Passport Expiry", value: selected.passport_expiry ? format(new Date(selected.passport_expiry), "PPP") : "—" },
+                        { icon: <FileText className="h-3.5 w-3.5" />, label: isRtl ? "انتهاء جواز السفر" : "Passport Expiry", value: selected.passport_expiry ? format(new Date(selected.passport_expiry), "PPP") : "—" },
                         { icon: <Phone className="h-3.5 w-3.5" />, label: t("admin.students.fieldEmergency"), value: selected.emergency_contact || "—" },
                         { icon: <User className="h-3.5 w-3.5" />, label: isRtl ? "اسم جهة الطوارئ" : "Emergency Name", value: selected.emergency_contact_name || "—" },
                         { icon: <Phone className="h-3.5 w-3.5" />, label: isRtl ? "هاتف جهة الطوارئ" : "Emergency Phone", value: selected.emergency_contact_phone || "—" },

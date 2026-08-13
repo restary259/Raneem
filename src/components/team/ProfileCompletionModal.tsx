@@ -45,7 +45,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       student_age: profileCase.student_age || '',
       language_proficiency: profileCase.language_proficiency || '',
       intensive_course: profileCase.intensive_course || '',
-      passport_number: profileCase.passport_number || '',
       nationality: profileCase.nationality || '',
       country_of_birth: profileCase.country_of_birth || '',
       selected_city: profileCase.selected_city || profileCase.city || '',
@@ -72,7 +71,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       student_age: profileValues.student_age ? Number(profileValues.student_age) : null,
       language_proficiency: profileValues.language_proficiency || null,
       intensive_course: profileValues.intensive_course || null,
-      passport_number: profileValues.passport_number || null,
       nationality: profileValues.nationality || null,
       country_of_birth: profileValues.country_of_birth || null,
       selected_city: profileValues.selected_city || null,
@@ -84,7 +82,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
 
     const requiredProfileFields = [
       'student_full_name', 'student_email', 'student_phone', 'student_age', 'student_address',
-      'passport_number', 'nationality', 'country_of_birth', 'language_proficiency',
+      'nationality', 'country_of_birth', 'language_proficiency',
       'gender', 'selected_city', 'selected_school', 'intensive_course'
     ];
     const missingFields = requiredProfileFields.filter(f => {
@@ -99,7 +97,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
         student_phone: t('admin.ready.phone'),
         student_age: t('admin.ready.age'),
         student_address: t('admin.ready.address'),
-        passport_number: t('admin.ready.passportNumber'),
         nationality: t('admin.ready.nationality'),
         country_of_birth: t('admin.ready.countryOfBirth'),
         language_proficiency: t('admin.ready.languageProficiency'),
@@ -188,7 +185,6 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                 <div><Label>{t('admin.ready.phone')}</Label><Input value={profileValues.student_phone || ''} onChange={e => setProfileValues(v => ({ ...v, student_phone: e.target.value }))} /></div>
                 <div><Label>{t('admin.ready.age')}</Label><Input type="number" value={profileValues.student_age || ''} onChange={e => setProfileValues(v => ({ ...v, student_age: e.target.value }))} /></div>
                 <div className="md:col-span-2"><Label>{t('admin.ready.address')}</Label><Input value={profileValues.student_address || ''} onChange={e => setProfileValues(v => ({ ...v, student_address: e.target.value }))} /></div>
-                <div><Label>{t('admin.ready.passportNumber')}</Label><Input value={profileValues.passport_number || ''} onChange={e => setProfileValues(v => ({ ...v, passport_number: e.target.value }))} /></div>
                 <div><Label>{t('admin.ready.nationality')}</Label><Input value={profileValues.nationality || ''} onChange={e => setProfileValues(v => ({ ...v, nationality: e.target.value }))} /></div>
                 <div><Label>{t('admin.ready.countryOfBirth')}</Label><Input value={profileValues.country_of_birth || ''} onChange={e => setProfileValues(v => ({ ...v, country_of_birth: e.target.value }))} /></div>
                 <div><Label>{t('admin.ready.languageProficiency')}</Label><Input value={profileValues.language_proficiency || ''} onChange={e => setProfileValues(v => ({ ...v, language_proficiency: e.target.value }))} placeholder="e.g. German B1" /></div>

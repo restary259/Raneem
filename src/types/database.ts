@@ -50,7 +50,6 @@ export interface StudentCase {
   student_phone: string | null;
   student_address: string | null;
   student_age: number | null;
-  passport_number: string | null;
   nationality: string | null;
   country_of_birth: string | null;
   gender: string | null;

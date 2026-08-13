@@ -25,7 +25,6 @@ export interface Profile {
   second_passport_country?: string;
   arrival_date?: string;
   nationality?: string;
-  passport_number?: string;
   passport_expiry?: string;
   date_of_birth?: string;
   created_at?: string;

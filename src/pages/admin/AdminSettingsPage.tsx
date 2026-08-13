@@ -609,7 +609,7 @@ const AdminSettingsPage = () => {
                 <div className="space-y-3 pt-2">
                   <div className="space-y-1">
                     <Label>{isRtl ? "مفتاح الحقل (فريد)" : "Field Key (unique)"}</Label>
-                    <Input value={visaFieldForm.field_key} placeholder="e.g. passport_number"
+                    <Input value={visaFieldForm.field_key} placeholder="e.g. visa_status"
                       onChange={(e) => setVisaFieldForm(f => ({ ...f, field_key: e.target.value }))} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

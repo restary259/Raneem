@@ -165,3 +165,34 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   `PayoutsManagement` XLSX/PDF exports ALL payout requests (a complete report,
   not the filtered "Other requests" tab) — this is intentional.
 
+## pg_cron → Edge Function dispatch auth pattern
+- Edge Functions that mutate state for other users gate on `requireAuth(req, ["admin"])`
+  (`supabase/functions/_shared/auth.ts`), which rejects the anon JWT (it's public)
+  and only accepts the service-role key or an admin JWT. A pg_cron job that
+  passes the anon JWT in an `apikey` header therefore 401s on every firing and
+  logs "Missing bearer token" in `auth_failure_log`.
+- All cron-dispatched Edge Functions MUST be scheduled via a tracked
+  `SECURITY DEFINER` wrapper (`public.dispatch_<name>()`) that reads the vault
+  secret `email_queue_service_role_key` and POSTs with
+  `Authorization: Bearer <secret>`. Never inline the vault read in the cron
+  command directly (the cron role may lack vault grants; the wrapper also lets
+  us `RAISE WARNING` on a missing secret instead of silently sending a NULL
+  Authorization header). Mirror `20260813010000_schedule_appointment_reminders_cron.sql`.
+- Each such migration must idempotently `cron.unschedule` the canonical jobname
+  AND sweep `cron.job` for orphans whose `command` targets the function URL
+  (catches stale out-of-band jobs created under a different jobname), then
+  reschedule guarded against duplicates.
+- `send-appointment-reminders` (jobname `send-appointment-reminders`, `*/5 * * * *`)
+  and `admin-weekly-digest` (jobname `admin-weekly-digest`, `0 8 * * 1`) are
+  persisted this way. The appointment-reminders job is NOT self-disarming
+  (appointments become due as time advances); the push/email queue dispatchers
+  ARE self-disarming (they unschedule when the pgmq queue is empty).
+
+
+## Student onboarding wizard + passport_number removal (2026-08-13)
+- `src/components/student/StudentOnboardingGate.tsx` is a 4-step forced post-login wizard (Personal, Study & arrival, Legal & identity, Emergency contacts) collecting EVERY field the admin sidebar shows in AdminStudentsPage (PROFILE_SELECT), EXCEPT `passport_number`. Each step persists its own slice to `profiles` on Next, so a student can leave/resume; `load()` resumes at the first incomplete step via module-level `stepComplete`.
+- `isProfileComplete()` now requires: full_name, phone_number, date_of_birth, gender, nationality, city, country, university_name, intake_month, arrival_date, passport_expiry, eye_color + 2 emergency contacts. Optional legal switches (changed_legal_name/criminal_record/dual_citizenship) are NOT required; when a switch is off its detail field is nulled on save (same pattern as `StudentVisaPage.saveLegal`).
+- `passport_number` removed from ALL app read/write/display paths: StudentOnboardingGate(+test), StudentNextStepsPage, StudentProfile, AdminStudentsPage (PROFILE_SELECT/StudentRecord/editForm/handleSave/edit-form array/read-view rows), ProfileCompletionModal (cases table), sheetQueries + SpreadsheetHub (submission extra_data export column), AdminSettingsPage placeholder, src/types/profile.ts, src/types/database.ts (StudentCase). DB columns on `profiles` and `student_cases`/`cases` were LEFT IN PLACE (no drop migration) — only app usage stopped.
+- `src/integrations/supabase/types.ts` (generated) KEEPS `passport_number` on purpose: it mirrors the live retained DB columns; `supabase gen types` would re-add them, so removing is non-durable and diverges from schema. No code reads those generated fields now.
+- Orphaned locale keys (`profile.passportNumber`, `admin.ready.passportNumber`, `sheets.col.passportNumber`) LEFT in en/ar for i18n parity — `src/lib/i18nKeys.test.ts` only flags missing keys, not orphans. `passportType` keys are a DIFFERENT concept (passport-type dropdown) and remain in use. `myData.identityDesc` + `student.next.completeProfileDetail` copy updated to drop "passport number".
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 278/278 pass incl. i18nKeys parity guard + onboarding test.

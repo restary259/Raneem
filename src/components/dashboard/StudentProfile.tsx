@@ -312,12 +312,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
                     <span className="truncate">{(profile as any).nationality || "—"}</span>
                   </div>
                 </Field>
-                <Field label={t("profile.passportNumber", "Passport Number")}>
-                  <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-input bg-muted text-sm text-muted-foreground cursor-not-allowed">
-                    <Lock className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{(profile as any).passport_number || "—"}</span>
-                  </div>
-                </Field>
                 <Field label={t("profile.eyeColor", "Eye Color")}>
                   <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-input bg-muted text-sm text-muted-foreground cursor-not-allowed">
                     <Lock className="h-3 w-3 shrink-0" />

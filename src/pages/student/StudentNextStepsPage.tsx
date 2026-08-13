@@ -45,7 +45,7 @@ export default function StudentNextStepsPage() {
 
     const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
-      .select('full_name, passport_number, date_of_birth, emergency_contact_phone, case_id, linked_case_id')
+      .select('full_name, date_of_birth, emergency_contact_phone, case_id, linked_case_id')
       .eq('id', uid)
       .maybeSingle();
     if (profileError) {
@@ -70,12 +70,12 @@ export default function StudentNextStepsPage() {
     const next: StepRow[] = [];
 
     // Profile completeness
-    if (!profile?.passport_number || !profile?.date_of_birth || !profile?.emergency_contact_phone) {
+    if (!profile?.date_of_birth || !profile?.emergency_contact_phone) {
       next.push({
         id: 'profile',
         icon: User,
         title: t('student.next.completeProfile', 'Complete your profile'),
-        detail: t('student.next.completeProfileDetail', 'Passport, date of birth and emergency contact are required.'),
+        detail: t('student.next.completeProfileDetail', 'Date of birth and emergency contact are required.'),
         href: '/student/profile',
         tone: 'text-amber-600',
       });

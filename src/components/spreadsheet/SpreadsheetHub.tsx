@@ -333,7 +333,6 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'email', label: c('email') },
         { key: 'phone', label: c('phone') },
         { key: 'city', label: c('city') },
-        { key: 'passport_number', label: c('passportNumber') },
         { key: 'passport_type', label: c('passportType') },
         { key: 'education_level', label: c('educationLevel') },
         { key: 'school_name', label: c('school') },
