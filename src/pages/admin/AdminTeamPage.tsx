@@ -77,29 +77,11 @@ const AdminTeamPage = () => {
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
 
   /** Turns an identity collision into a message that explains the conflict. */
-  const conflictMessage = useCallback((result: any) => {
-    if (result?.code !== 'identity_conflict') return null;
-    const roleKeys: Record<string, string> = {
-      team_member: 'admin.team.teamMemberRole',
-      social_media_partner: 'admin.team.partnerRole',
-      ambassador: 'admin.team.ambassadorRole',
-      admin: 'admin.team.adminRole',
-      student: 'admin.team.studentRole',
-    };
-    const key = roleKeys[result.existing_role as string];
-    const existing = key ? t(key, result.existing_role) : t('admin.team.someRole', 'another');
-    return result.deactivated
-      ? t('admin.team.conflictDeactivated', {
-          role: existing,
-          defaultValue:
-            'This email belongs to a deactivated {{role}} account. Reactivate that account instead of creating a new one, or use a different email.',
-        })
-      : t('admin.team.conflictActive', {
-          role: existing,
-          defaultValue:
-            'This email is already used by a {{role}} account. One person can hold only one role in Darb — use a different email address.',
-        });
-  }, [t]);
+  const conflictMessage = useCallback(
+    (result: any) => identityConflictMessage(result, t),
+    [t],
+  );
+
 
   const callInviteFn = useCallback(async (payload: Record<string, unknown>) => {
     // A stale/expired access token makes the edge function reject with 401
