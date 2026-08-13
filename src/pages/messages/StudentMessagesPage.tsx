@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Loader2, MessageSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, MessageSquare } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,10 +17,15 @@ export default function StudentMessagesPage() {
   const { t } = useTranslation("dashboard");
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [caseId, setCaseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
   useChatFullscreen(!!isMobile && !!caseId);
+
+  // RTL-aware back arrow, mirroring the pattern used by CaseMessagesInboxPage.
+  const isRtl = document.documentElement.dir === "rtl";
+  const BackIcon = isRtl ? ArrowRight : ArrowLeft;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -47,6 +54,26 @@ export default function StudentMessagesPage() {
       </div>
 
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {/* Mobile-only back header. The full-screen overlay hides the
+            MobileBottomNav (useChatFullscreen), and unlike the team/partner
+            inbox pages this single-conversation view has no thread list to
+            return to — so the back arrow navigates to the student dashboard,
+            which unmounts the page and restores the bottom nav. Desktop keeps
+            its sidebar/header for navigation, so this bar is md:hidden. */}
+        {caseId && (
+          <div className="flex items-center gap-2 border-b p-2 md:hidden">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="shrink-0"
+              aria-label={t("chat.back")}
+              onClick={() => navigate("/student")}
+            >
+              <BackIcon className="h-4 w-4" />
+            </Button>
+            <p className="truncate font-medium">{t("messagesInbox.title")}</p>
+          </div>
+        )}
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
