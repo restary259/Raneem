@@ -2960,10 +2960,8 @@ export type Database = {
           push_onboarding_updated_at: string | null
           referral_code: string | null
           referral_code_enabled: boolean
-          residential_city: string | null
           second_passport_country: string | null
           student_status: string
-          street: string | null
           university_name: string | null
           updated_at: string
           updated_by_student_at: string | null
@@ -3022,10 +3020,8 @@ export type Database = {
           push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
-          residential_city?: string | null
           second_passport_country?: string | null
           student_status?: string
-          street?: string | null
           university_name?: string | null
           updated_at?: string
           updated_by_student_at?: string | null
@@ -3084,10 +3080,8 @@ export type Database = {
           push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
-          residential_city?: string | null
           second_passport_country?: string | null
           student_status?: string
-          street?: string | null
           university_name?: string | null
           updated_at?: string
           updated_by_student_at?: string | null
@@ -3102,6 +3096,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_language_school_id_fkey"
+            columns: ["language_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_linked_case_id_fkey"
             columns: ["linked_case_id"]
             isOneToOne: false
@@ -3113,13 +3114,6 @@ export type Database = {
             columns: ["master_partner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_language_school_id_fkey"
-            columns: ["language_school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -4402,50 +4396,6 @@ export type Database = {
         }[]
       }
       get_my_earnings_summary: { Args: never; Returns: Json }
-      get_school_important_contacts: {
-        Args: { p_school_id: string; p_city?: string }
-        Returns: {
-          id: string
-          name_ar: string
-          name_en: string
-          role_ar: string
-          role_en: string
-          phone: string
-          email: string
-          link: string
-          category: string
-          city: string
-          country: string
-          address_ar: string
-          address_en: string
-          source_url: string
-          last_verified_at: string
-          display_order: number
-          match_scope: string
-        }[]
-      }
-      get_student_important_contacts: {
-        Args: never
-        Returns: {
-          id: string
-          name_ar: string
-          name_en: string
-          role_ar: string
-          role_en: string
-          phone: string
-          email: string
-          link: string
-          category: string
-          city: string
-          country: string
-          address_ar: string
-          address_en: string
-          source_url: string
-          last_verified_at: string
-          display_order: number
-          match_scope: string
-        }[]
-      }
       get_my_network: {
         Args: never
         Returns: {
@@ -4499,6 +4449,28 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Json
       }
+      get_school_important_contacts: {
+        Args: { p_city?: string; p_school_id: string }
+        Returns: {
+          address_ar: string
+          address_en: string
+          category: string
+          city: string
+          country: string
+          display_order: number
+          email: string
+          id: string
+          last_verified_at: string
+          link: string
+          match_scope: string
+          name_ar: string
+          name_en: string
+          phone: string
+          role_ar: string
+          role_en: string
+          source_url: string
+        }[]
+      }
       get_staff_directory: {
         Args: never
         Returns: {
@@ -4506,6 +4478,28 @@ export type Database = {
           id: string
           is_manager: boolean
           role: string
+        }[]
+      }
+      get_student_important_contacts: {
+        Args: never
+        Returns: {
+          address_ar: string
+          address_en: string
+          category: string
+          city: string
+          country: string
+          display_order: number
+          email: string
+          id: string
+          last_verified_at: string
+          link: string
+          match_scope: string
+          name_ar: string
+          name_en: string
+          phone: string
+          role_ar: string
+          role_en: string
+          source_url: string
         }[]
       }
       get_thread_read_state: {
