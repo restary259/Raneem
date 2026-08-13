@@ -3105,7 +3105,13 @@
       "tools": "Tools",
       "toolsDesc": "Helpful tools for your study journey",
       "cvBuilderDesc": "Draft a German CV (Lebenslauf)",
-      "bagrutDesc": "Convert Bagrut scores to German grades"
+      "bagrutDesc": "Convert Bagrut scores to German grades",
+      "welcome": "Welcome",
+      "destinationDE": "Germany",
+      "journeyStart": "Home",
+      "whatsappCta": "Chat on WhatsApp",
+      "directLine": "Your direct line to the team",
+      "directLineDesc": "Questions about your case? Reach us instantly."
     }
   },
   "settings": {

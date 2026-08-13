@@ -3123,7 +3123,13 @@
       "tools": "الأدوات",
       "toolsDesc": "أدوات مفيدة لمسيرة دراستك",
       "cvBuilderDesc": "أنشئ سيرة ذاتية ألمانية (Lebenslauf)",
-      "bagrutDesc": "تحويل درجات البجروت إلى درجات ألمانية"
+      "bagrutDesc": "تحويل درجات البجروت إلى درجات ألمانية",
+      "welcome": "مرحباً",
+      "destinationDE": "ألمانيا",
+      "journeyStart": "الوطن",
+      "whatsappCta": "محادثة عبر واتساب",
+      "directLine": "خطك المباشر مع الفريق",
+      "directLineDesc": "عندك سؤال عن ملفك؟ تواصل معنا فوراً."
     }
   },
   "settings": {
