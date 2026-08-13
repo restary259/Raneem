@@ -262,7 +262,8 @@
       "signatureImgHint": "Upload a scanned handwritten signature on a transparent or white background.",
       "sectionsHint": "Reorder sections. Empty sections never appear in the CV.",
       "contrastWarn": "This color is light — headings will be auto-darkened for readability."
-    }
+    },
+    "printFailed": "Could not find the CV to print."
   },
   "universityFinder": {
     "title": "Tools & Calculators",
