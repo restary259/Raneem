@@ -140,6 +140,49 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - Build: `npm run build` (tsc+vite) clean; `npx vitest run` 317/317 pass incl. 2
   new `invoiceTotals.test.ts` cases (parse + reconcile) + i18n parity guard.
 
+## Form draft autosave — 30-min inactivity expiry (2026-08-13)
+- `src/hooks/useFormDraft.ts` is the single reusable localStorage draft hook
+  (prefix `darb:draft:`). Drafts are stored as `{ v, savedAt, data }` where
+  `savedAt` is rewritten with `Date.now()` on every debounced write (600ms
+  default), so expiry is measured from the LAST save (inactivity), not creation.
+- **Expiry was a hardcoded 7 days; now 30 min** (`DEFAULT_EXPIRES_MS =
+  30*60*1000`). Configurable via the `expiresMs` option (default 30 min). On
+  mount, an expired/`savedAt`-past-TTL draft is removed from localStorage and
+  the hook sets `expired: true` once (instead of restoring it) so the form can
+  show the "expired after 30 min of inactivity" notice. `version`-mismatched
+  drafts are still removed silently.
+- **Active idle-timeout**: while enabled, a single `setTimeout` (re-armed on
+  every `savedAt` change) removes a draft that sits idle past `savedAt + TTL`
+  without needing a refresh — no per-second re-renders. `clearDraft()` clears it
+  and also clears the idle timer.
+- New return fields: `expiresAt` (= `savedAt + TTL`, for the status UI),
+  `expired` (set once on mount-expiry/active-expiry), `acknowledgeExpired()`.
+  `savedAt`, `clearDraft`, `acknowledgeRestore` unchanged.
+- **Consumers** (both call `clearDraft()` strictly after backend success; the
+  catch/failed path does NOT clear, so the user can retry):
+  - `ProfileCompletionForm.tsx` — key `profile-completion:<caseId>` (per-case).
+  - `SubmitNewStudentPage.tsx` — key `submit-new-student` (one per device; left
+    as-is). Key scoping to the auth user id was NOT added (would break existing
+    valid drafts mid-session); only one new-student draft at a time per device.
+  - The separate server-side draft in `CaseProfileForm.tsx`
+    (`case_submissions.draft_updated_at`) is real submission data, NOT this
+    localStorage system — out of scope, unchanged.
+- **Status UI**: `src/components/common/DraftStatus.tsx` renders a subtle
+  "✓ Auto-saved · Expires in N min" line (emerald) that switches to amber under
+  5 min, plus an optional secondary "Clear draft" button (confirms, calls
+  `clearDraft`, resets fields — never touches the case/submission record). A
+  30s `setInterval` updates only a small local "minutes remaining" state — it
+  never re-renders the parent form. When `expired` is set, it shows the expiry
+  notice instead. Used by both forms near their footer. Respects RTL (logical
+  props, dir-aware via the existing layout).
+- **i18n**: new keys under `common.draft.*` (`autoSaved`, `expiresIn`,
+  `expiringSoon`, `expired`, `expiredBody`, `clearDraft`, `clearDraftConfirm`)
+  added to en + ar (parity-guarded by `src/lib/i18nKeys.test.ts`).
+- Tests: `src/hooks/useFormDraft.test.ts` (10 cases, fake timers) — fresh /
+  10-min / 29-min restore, 30-min+1s expired+removed, version mismatch, write
+  resets the timer, active expiry while mounted, clearDraft, key isolation,
+  disabled. Build clean; `npx vitest run` 327/327 pass (+10 new).
+
 ## Student account creation / invite (no dead activation links)
 
 - `create-student-from-case` (edge function) has three invite-mode branches and

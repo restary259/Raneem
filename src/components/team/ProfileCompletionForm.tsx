@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth, ageFromISO, parseISODate } from "@/utils/dateUtils";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/common/DraftStatus";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -275,7 +276,7 @@ export default function ProfileCompletionForm({
     programId, schoolId, startMonth, arrivalDate, courseStart, courseEnd,
     accommodationId, insuranceId,
   };
-  const { restoredDraft, clearDraft, acknowledgeRestore } = useFormDraft({
+  const { restoredDraft, savedAt, expiresAt, expired, clearDraft, acknowledgeRestore, acknowledgeExpired } = useFormDraft({
     key: `profile-completion:${caseId}`,
     version: 1,
     value: draftValue,
@@ -296,6 +297,15 @@ export default function ProfileCompletionForm({
     toast({ title: t("common.draft.restoredTitle"), description: t("common.draft.restoredBody") });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoredDraft]);
+
+  // When the hook found an already-expired draft on mount, show the expiry
+  // notice once (no fields are restored — the hook already discarded it).
+  useEffect(() => {
+    if (!expired) return;
+    toast({ title: t("common.draft.expired"), description: t("common.draft.expiredBody") });
+    acknowledgeExpired();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expired]);
 
   const age = ageFromISO(dob);
 
@@ -510,6 +520,20 @@ export default function ProfileCompletionForm({
     } finally {
       setSaving(false);
     }
+  };
+
+  /** Clears the saved draft and resets every form field to empty. */
+  const handleClearDraft = () => {
+    clearDraft();
+    setFirstName(""); setMiddleName(""); setLastName("");
+    setDob(""); setGender(""); setCityOfBirth("");
+    setEmail(""); setPhone("");
+    setEmergencyName(""); setEmergencyPhone("");
+    setStreet(""); setHouseNo(""); setPostcode(""); setCity("");
+    setProgramId(""); setSchoolId(""); setStartMonth("");
+    setArrivalDate(""); setCourseStart(""); setCourseEnd("");
+    setAccommodationId(""); setInsuranceId("");
+    setErrors({});
   };
 
   /* ── Derived ────────────────────────────────────────────────────────── */
@@ -944,6 +968,16 @@ export default function ProfileCompletionForm({
             </div>
           )}
         </div>
+      )}
+
+      {/* Draft status + expiry countdown */}
+      {(savedAt !== null || expired) && (
+        <DraftStatus
+          savedAt={savedAt}
+          expiresAt={expiresAt}
+          expired={expired}
+          onClear={handleClearDraft}
+        />
       )}
 
       {/* Navigation */}

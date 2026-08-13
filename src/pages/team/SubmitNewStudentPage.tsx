@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/common/DraftStatus";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { readFunctionError, readFunctionErrorBody } from "@/lib/functionError";
@@ -332,7 +333,7 @@ export default function SubmitNewStudentPage() {
     accommodationWeeks,
     insuranceId,
   };
-  const { restoredDraft, clearDraft, acknowledgeRestore } = useFormDraft({
+  const { restoredDraft, savedAt, expiresAt, expired, clearDraft, acknowledgeRestore, acknowledgeExpired } = useFormDraft({
     key: "submit-new-student",
     version: 2,
     value: draftValue,
@@ -372,6 +373,15 @@ export default function SubmitNewStudentPage() {
     toast({ title: t("common.draft.restoredTitle"), description: t("common.draft.restoredBody") });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoredDraft]);
+
+  // When the hook found an already-expired draft on mount, show the expiry
+  // notice once (no fields are restored — the hook already discarded it).
+  useEffect(() => {
+    if (!expired) return;
+    toast({ title: t("common.draft.expired"), description: t("common.draft.expiredBody") });
+    acknowledgeExpired();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expired]);
 
   /* ─── Catalogue selections, always scoped to the chosen school ─────── */
   const selectedSchool = schools.find((s) => s.id === schoolId);
@@ -781,6 +791,22 @@ export default function SubmitNewStudentPage() {
     }
   };
 
+  /** Clears the saved draft and resets every form field to empty. */
+  const handleClearDraft = () => {
+    clearDraft();
+    setStep(1);
+    setFirstName(""); setMiddleName(""); setLastName("");
+    setDob(""); setGender(""); setCityOfBirth("");
+    setEducationLevel(""); setPassportType("");
+    setEmail(""); setPhone("");
+    setEmergencyName(""); setEmergencyPhone("");
+    setStreet(""); setHouseNo(""); setPostcode(""); setCity("");
+    setSchoolId(""); setProgramId(""); setStartMonth("");
+    setArrivalDate(""); setCourseStart(""); setCourseEnd("");
+    setAccommodationId(""); setProgramWeeks(""); setAccommodationWeeks(""); setInsuranceId("");
+    setReviewConfirmed(false);
+  };
+
   /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6" dir={isAr ? "rtl" : "ltr"}>
@@ -792,6 +818,16 @@ export default function SubmitNewStudentPage() {
       </div>
 
       <StepBar step={step} t={t} />
+
+      {/* Draft status + expiry countdown (visible on every step) */}
+      {(savedAt !== null || expired) && (
+        <DraftStatus
+          savedAt={savedAt}
+          expiresAt={expiresAt}
+          expired={expired}
+          onClear={handleClearDraft}
+        />
+      )}
 
       {/* ══ STEP 1: Student Info ══ */}
       {step === 1 && (

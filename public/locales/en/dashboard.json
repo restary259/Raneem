@@ -1421,7 +1421,14 @@
       "restoredTitle": "Draft restored",
       "restoredBody": "We recovered your unsaved changes.",
       "discard": "Discard draft",
-      "unsaved": "You have unsaved changes. Leave this page?"
+      "unsaved": "You have unsaved changes. Leave this page?",
+      "autoSaved": "Auto-saved",
+      "expiresIn": "Expires in {{minutes}} min",
+      "expiringSoon": "Expires in {{minutes}} min",
+      "expired": "Draft expired",
+      "expiredBody": "Your saved draft expired after 30 minutes of inactivity.",
+      "clearDraft": "Clear draft",
+      "clearDraftConfirm": "Clear the saved draft? Your typed changes will be lost."
     },
     "pagination": {
       "showing": "Showing {{from}}–{{to}} of {{total}}",
