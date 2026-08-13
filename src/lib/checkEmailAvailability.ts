@@ -20,12 +20,18 @@ export interface EmailAvailabilityResult {
 export async function checkEmailAvailability(
   email: string,
 ): Promise<EmailAvailabilityResult> {
+  // Never call the function with a half-typed address — it returns 400.
+  const normalized = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalized) || normalized.length > 255) {
+    return { available: true, existing_role: null, deactivated: false };
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
   const { data, error } = await supabase.functions.invoke("check-email-availability", {
-    body: { email: email.trim().toLowerCase() },
+    body: { email: normalized },
     headers: { Authorization: `Bearer ${session?.access_token}` },
   });
 
