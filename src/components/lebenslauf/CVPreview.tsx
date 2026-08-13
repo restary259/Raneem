@@ -8,15 +8,20 @@ import ModernSidebarTemplate from "./templates/ModernSidebarTemplate";
 
 interface Props {
   data: CVData;
+  /** id of the preview root. Defaults to "cv-preview" (the on-screen preview).
+   *  The PDF capture path renders a second, off-screen copy with id
+   *  "cv-capture" so it is always laid out at full A4 width regardless of the
+   *  mobile edit/preview toggle (html2canvas cannot capture display:none). */
+  id?: string;
 }
 
-const CVPreview: React.FC<Props> = ({ data }) => {
+const CVPreview: React.FC<Props> = ({ data, id = "cv-preview" }) => {
   const dir = data.contentLanguage === "ar" ? "rtl" : "ltr";
   const vars = designVars(data.design);
 
   return (
     <div
-      id="cv-preview"
+      id={id}
       dir={dir}
       className="cv-preview-container bg-white shadow-lg border rounded-lg overflow-hidden print:overflow-visible print:shadow-none print:border-0 print:rounded-none"
       style={{ ...vars } as React.CSSProperties}

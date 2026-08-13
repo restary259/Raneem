@@ -38,16 +38,16 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
   stickyTopClassName = "lg:top-20",
 }) => {
   const { t } = useTranslation("resources");
-  const { data, setData, updateData, updatePersonal, updateDesign, updateSignature, saveDraft, loadDraft, clearAll, handlePrint: doPrint } = useLebenslauf();
+  const { data, setData, updateData, updatePersonal, updateDesign, updateSignature, saveDraft, loadDraft, clearAll, downloadPdf, generating } = useLebenslauf();
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
 
   const errors = useMemo(() => validate(data, (k, fb) => t(k, fb) as string), [data, t]);
 
   const canPrint = !errors.firstName && !errors.lastName && !errors.email;
 
-  const onPrint = () => {
-    if (!canPrint) return;
-    doPrint();
+  const onDownload = () => {
+    if (!canPrint || generating) return;
+    void downloadPdf();
   };
 
   // Only the form + preview panes scroll in the dashboard; everything else
@@ -76,7 +76,7 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
 
       {/* Toolbar */}
       <div className={`flex flex-wrap gap-2 mb-6 print:hidden ${headerCls}`}>
-        <Button onClick={onPrint} disabled={!canPrint} className="gap-2" title={!canPrint ? t("lebenslaufBuilder.val_fixFirst", "Fix required fields first") : undefined}><Download className="h-4 w-4" />{t("lebenslaufBuilder.actions.downloadPDF")}</Button>
+        <Button onClick={onDownload} disabled={!canPrint || generating} className="gap-2" title={!canPrint ? t("lebenslaufBuilder.val_fixFirst", "Fix required fields first") : undefined}><Download className="h-4 w-4" />{generating ? t("lebenslaufBuilder.pdfGenerating", "Generating…") : t("lebenslaufBuilder.actions.downloadPDF")}</Button>
         <Button variant="outline" onClick={saveDraft} className="gap-2"><Save className="h-4 w-4" />{t("lebenslaufBuilder.actions.saveDraft")}</Button>
         <Button variant="outline" onClick={loadDraft} className="gap-2"><Upload className="h-4 w-4" />{t("lebenslaufBuilder.actions.loadDraft")}</Button>
         <Button variant="destructive" onClick={clearAll} className="gap-2"><Trash2 className="h-4 w-4" />{t("lebenslaufBuilder.actions.clearAll")}</Button>
@@ -99,6 +99,19 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
             <CVPreview data={data} />
           </div>
         </div>
+      </div>
+
+      {/* Off-screen, always-mounted capture copy. This is what the PDF path
+          rasterizes so generation works regardless of the mobile edit/preview
+          toggle (html2canvas cannot capture a display:none element). It is
+          positioned off-canvas and sized to the A4 print width so the layout
+          matches the printed PDF; it is excluded from the print stylesheet. */}
+      <div
+        aria-hidden="true"
+        className="fixed -left-[10000px] top-0 w-[210mm] pointer-events-none print:hidden"
+        style={{ zIndex: -1 }}
+      >
+        <CVPreview data={data} id="cv-capture" />
       </div>
     </div>
   );

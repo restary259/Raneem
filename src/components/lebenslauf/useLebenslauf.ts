@@ -134,118 +134,27 @@ export const useLebenslauf = () => {
     toast({ title: t("lebenslaufBuilder.cleared") });
   }, [toast, t]);
 
-  const handlePrint = useCallback(() => {
-    // Print ONLY the CV preview into an isolated offscreen iframe so the
-    // result is immune to the surrounding dashboard chrome, the mobile
-    // preview/display:none toggle, and the app's global print CSS (the legacy
-    // `body * { visibility: hidden }` hack in cv-print.css does not reach
-    // inside this iframe). The cloned #cv-preview markup carries its own `dir`
-    // attribute and inline designVars CSS custom properties, so RTL and the
-    // selected design render exactly as on screen.
-    const preview = document.getElementById("cv-preview");
-    if (!preview) {
-      toast({ title: t("lebenslaufBuilder.printFailed", "Could not find the CV to print."), variant: "destructive" });
-      window.print();
-      return;
+  const [generating, setGenerating] = useState(false);
+
+  const downloadPdf = useCallback(async () => {
+    if (generating) return;
+    setGenerating(true);
+    const safeName = `${data.personal.firstName} ${data.personal.lastName}`
+      .trim()
+      .replace(/[\\/:*?"<>|]+/g, "")
+      .replace(/\s+/g, "-");
+    const fileName = `${safeName ? `Lebenslauf-${safeName}` : "Lebenslauf"}.pdf`;
+    try {
+      const { downloadCvPdf } = await import("@/utils/cvPdf");
+      await downloadCvPdf("cv-capture", fileName);
+      toast({ title: t("lebenslaufBuilder.pdfReady", "PDF downloaded") });
+    } catch (err) {
+      console.error("[CV] PDF generation failed", err);
+      toast({ title: t("lebenslaufBuilder.pdfFailed", "Could not generate the PDF. Please try again."), variant: "destructive" });
+    } finally {
+      setGenerating(false);
     }
-
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.style.cssText =
-      "position:fixed;inset-inline-start:0;top:-10000px;width:210mm;height:297mm;border:0;visibility:hidden;";
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument;
-    if (!doc) {
-      document.body.removeChild(iframe);
-      window.print();
-      return;
-    }
-
-    // Re-apply the app's compiled stylesheets (Tailwind utilities + template
-    // classes + designVars) so the clone looks identical to the on-screen CV.
-    const headLinks = Array.from(document.head.querySelectorAll('link[rel="stylesheet"], style')) as HTMLElement[];
-
-    doc.open();
-    doc.write("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>CV</title></head><body></body></html>");
-    doc.close();
-
-    for (const node of headLinks) {
-      doc.head.appendChild(node.cloneNode(true));
-    }
-
-    // Override styles injected AFTER the app styles: in this isolated document
-    // there is no dashboard chrome to hide, so neutralize the global
-    // `body * { visibility: hidden }` / display:none rules and re-assert only
-    // the page-break + @page rules we actually want. A static positioned root
-    // lets long CVs paginate across A4 pages (position:fixed truncates to one).
-    const override = doc.createElement("style");
-    override.textContent = `
-      html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-      body * { visibility: visible !important; }
-      #cv-preview, #cv-preview * { overflow: visible !important; max-height: none !important; }
-      #cv-preview {
-        position: static !important; left: auto !important; top: auto !important;
-        width: 100% !important; max-width: none !important; margin: 0 !important;
-        box-shadow: none !important; border: 0 !important; border-radius: 0 !important;
-      }
-      .print\\:hidden { display: none !important; }
-      @page { size: A4; margin: 10mm; }
-      section, .cv-section { break-inside: auto; }
-      .cv-entry, .cv-sidebar, .cv-timeline-entry { break-inside: avoid; page-break-inside: avoid; }
-      h2, .cv-section > h2 { break-after: avoid; page-break-after: avoid; }
-    `;
-    doc.head.appendChild(override);
-
-    // Clone only the preview (NOT its display:none parent column), so the
-    // mobile-toggle can never blank the print. outerHTML preserves dir + the
-    // inline designVars CSS custom properties set by CVPreview.
-    doc.body.innerHTML = preview.outerHTML;
-
-    const finish = () => {
-      const cw = iframe.contentWindow;
-      if (!cw) return;
-      cw.focus();
-      cw.print();
-    };
-
-    const cleanup = () => {
-      window.removeEventListener("afterprint", cleanup);
-      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-    };
-
-    const waitForImages = (root: Document | ShadowRoot): Promise<void> => {
-      const imgs = Array.from(root.querySelectorAll("img"));
-      if (imgs.length === 0) return Promise.resolve();
-      return Promise.all(
-        imgs.map(
-          (img) =>
-            new Promise<void>((resolve) => {
-              if (img.complete) return resolve();
-              img.addEventListener("load", () => resolve(), { once: true });
-              img.addEventListener("error", () => resolve(), { once: true });
-            })
-        )
-      ).then(() => undefined);
-    };
-
-    // afterprint fires reliably in modern browsers; the timeout is a fallback
-    // for the native print preview dialog staying open in some browsers.
-    window.addEventListener("afterprint", cleanup, { once: true });
-    window.setTimeout(cleanup, 60_000);
-
-    const run = async () => {
-      try {
-        await waitForImages(doc);
-        // Let the just-injected stylesheets apply before printing.
-        await new Promise((r) => requestAnimationFrame(() => r(null)));
-        finish();
-      } catch {
-        finish();
-      }
-    };
-    void run();
-  }, [t, toast]);
+  }, [data.personal.firstName, data.personal.lastName, generating, t, toast]);
 
   return {
     data,
@@ -257,6 +166,7 @@ export const useLebenslauf = () => {
     saveDraft,
     loadDraft,
     clearAll,
-    handlePrint,
+    downloadPdf,
+    generating,
   };
 };

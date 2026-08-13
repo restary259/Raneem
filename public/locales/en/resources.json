@@ -263,7 +263,9 @@
       "sectionsHint": "Reorder sections. Empty sections never appear in the CV.",
       "contrastWarn": "This color is light — headings will be auto-darkened for readability."
     },
-    "printFailed": "Could not find the CV to print."
+    "pdfGenerating": "Generating…",
+    "pdfFailed": "Could not generate the PDF. Please try again.",
+    "pdfReady": "PDF downloaded"
   },
   "universityFinder": {
     "title": "Tools & Calculators",
