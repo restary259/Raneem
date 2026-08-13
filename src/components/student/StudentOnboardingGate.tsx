@@ -9,7 +9,6 @@ import { isValidPhone } from "@/lib/studentProfileFields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BirthdayPicker } from "@/components/shared/BirthdayPicker";
+import { OnboardingShell } from "@/components/student/OnboardingShell";
 
 interface EmergencyContact {
   name: string;
@@ -499,8 +498,78 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   ];
 
   const stepLabel = steps[task.step];
-  const progress = Math.round((taskIndex / (TASKS.length - 1)) * 100);
   const err = attempted ? taskErrorFor(task, profile, contacts) : null;
+
+  // Per-task headline + short explanation. Falls back to the flat field label
+  // when no friendly copy exists (switch-legal detail fields, etc.).
+  const headlineKeyFor = (key: keyof ProfileShape): string => {
+    if (key in { full_name: 1, phone_number: 1, date_of_birth: 1, gender: 1, nationality: 1, city: 1, country: 1, university_name: 1, intake_month: 1, arrival_date: 1, eye_color: 1, passport_expiry: 1, has_changed_legal_name: 1, has_criminal_record: 1, has_dual_citizenship: 1, emergency_contacts: 1 }) {
+      return `studentOnboarding.q.${key}`;
+    }
+    return "";
+  };
+  const headlineFallbackFor = (key: keyof ProfileShape): string => {
+    const m: Record<string, string> = {
+      full_name: "What's your full name?",
+      phone_number: "What's your phone number?",
+      date_of_birth: "When's your birthday?",
+      gender: "What's your gender?",
+      nationality: "What's your nationality?",
+      city: "Where were you born?",
+      country: "Where do you live now?",
+      university_name: "Which language school will you attend?",
+      intake_month: "Which intake are you joining?",
+      arrival_date: "When do you arrive in Germany?",
+      eye_color: "What's your eye color?",
+      passport_expiry: "When does your passport expire?",
+      has_changed_legal_name: "Have you ever changed your legal name?",
+      has_criminal_record: "Do you have a criminal record?",
+      has_dual_citizenship: "Do you hold dual citizenship?",
+      emergency_contacts: "Who should we contact in an emergency?",
+    };
+    return m[key] ?? labelFallbackFor(key);
+  };
+  const descriptionKeyFor = (key: keyof ProfileShape): string => `studentOnboarding.q.${key}Desc`;
+  const descriptionFallbackFor = (key: keyof ProfileShape): string => {
+    const m: Record<string, string> = {
+      full_name: "Use your name exactly as it appears on your passport — it's used for all official documents.",
+      phone_number: "We'll send your appointment reminders and case updates here.",
+      date_of_birth: "German universities verify age against your passport at enrollment, so this needs to match exactly.",
+      gender: "Required for your visa application and university enrollment.",
+      nationality: "This determines your visa requirements and application path.",
+      city: "Your city of birth as shown on your passport.",
+      country: "Your current address — where correspondence should reach you.",
+      university_name: "Choose your school — the contacts and requirements shown will adapt to your selection.",
+      intake_month: "The month you start your language program.",
+      arrival_date: "Your planned arrival date — we'll time your appointments around it.",
+      eye_color: "Listed on your residence permit and biometric documents.",
+      passport_expiry: "Your passport must be valid for the duration of your studies.",
+      emergency_contacts: "Add at least two people we can reach if something happens to you while in Germany.",
+    };
+    return m[key] ?? "";
+  };
+
+  const headlineKey = headlineKeyFor(task.key);
+  const taskTitle = headlineKey
+    ? t(headlineKey, headlineFallbackFor(task.key))
+    : t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key));
+  const taskDesc = descriptionFallbackFor(task.key)
+    ? t(descriptionKeyFor(task.key), descriptionFallbackFor(task.key))
+    : null;
+
+  // Which section comes after the current one (for the "X next" context label).
+  const nextSectionLabel = task.step < 3 ? steps[task.step + 1] : null;
+  const nextSection = nextSectionLabel
+    ? t("studentOnboarding.sectionNext", { section: nextSectionLabel })
+    : null;
+
+  const stepsRemaining = TASKS.length - 1 - taskIndex;
+  const remainingNote =
+    stepsRemaining > 1
+      ? t("studentOnboarding.stepsRemaining", { count: stepsRemaining })
+      : stepsRemaining === 1
+        ? t("studentOnboarding.stepsRemainingOne", "1 step to go")
+        : null;
 
   const renderField = () => {
     switch (task.type) {
@@ -805,47 +874,52 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 pt-6 pb-28 sm:pb-6">
-      <Card>
-        <CardHeader className="space-y-3">
-          <div>
-            <CardTitle className="text-lg">{t("studentOnboarding.title", "Complete your profile")}</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("studentOnboarding.subtitle", "We need these details before your file can move forward.")}
-            </p>
+    <OnboardingShell
+      stepIndex={taskIndex}
+      totalSteps={TASKS.length}
+      section={stepLabel}
+      nextSection={nextSection}
+      journeyStart={t("studentOnboarding.journeyStart", "Start")}
+      journeyEnd={t("studentOnboarding.journeyEnd", "DE")}
+      title={taskTitle}
+      description={taskDesc}
+      onBack={taskIndex === 0 ? null : back}
+      disabled={saving}
+      footer={
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={back}
+              disabled={taskIndex === 0 || saving}
+              className="min-h-12 shrink-0 px-4 text-[13.5px] font-medium text-muted-foreground"
+            >
+              <ArrowLeft className="me-1 h-4 w-4 rtl:rotate-180" />
+              {t("studentOnboarding.back", "Back")}
+            </Button>
+            <Button
+              onClick={next}
+              disabled={saving}
+              className="min-h-12 flex-1 rounded-2xl bg-brand text-[14.5px] font-bold text-brand-foreground shadow-[0_8px_24px_-8px_hsl(var(--brand)/0.5)] hover:bg-brand-strong"
+            >
+              {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+              {isLastTask
+                ? t("studentOnboarding.save", "Save and continue")
+                : t("studentOnboarding.continue", "Continue")}
+              {!isLastTask && <ArrowRight className="ms-1.5 h-4 w-4 rtl:rotate-180" />}
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Progress value={progress} className="h-2" />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{stepLabel}</span>
-              <span>{t("studentOnboarding.taskOf", { current: taskIndex + 1, total: TASKS.length })}</span>
-            </div>
+          <div className="flex items-center justify-center gap-2 text-[10.5px] text-muted-foreground/70">
+            {remainingNote && <span>{remainingNote}</span>}
+            {remainingNote && <span aria-hidden>·</span>}
+            <span>{t("studentOnboarding.savedAutomatically", "Saved automatically")}</span>
           </div>
-        </CardHeader>
-        <CardContent>{renderField()}</CardContent>
-      </Card>
-
-      {/* Sticky bottom nav so the primary action is always thumb-reachable on mobile. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:border-0 sm:bg-transparent sm:backdrop-blur-none sm:p-0">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:py-0 sm:pb-6">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={back}
-            disabled={taskIndex === 0 || saving}
-            className="min-h-11"
-          >
-            <ArrowLeft className="me-1 h-4 w-4 rtl:rotate-180" />
-            {t("studentOnboarding.back", "Back")}
-          </Button>
-          <Button onClick={next} disabled={saving} className="min-h-11 min-w-40">
-            {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-            {isLastTask ? t("studentOnboarding.save", "Save and continue") : t("studentOnboarding.next", "Next")}
-            {!isLastTask && <ArrowRight className="ms-1 h-4 w-4 rtl:rotate-180" />}
-          </Button>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {renderField()}
+    </OnboardingShell>
   );
 };
 

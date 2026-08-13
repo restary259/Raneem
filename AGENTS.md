@@ -293,3 +293,41 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - i18n: new `studentOnboarding.selectSchool` / `.schoolContacts` /
   `.schoolContactsHint` / `.noSchoolContacts` / `.schoolLoading` keys (en+ar).
 - Build/test: `npm run build` clean; `npx vitest run` 296/296 pass.
+
+## Onboarding wizard UI/UX redesign (2026-08-13)
+- **UI-only redesign** of `StudentOnboardingGate`. The task model (16 TASKS, 4
+  steps), `ProfileShape`, `SELECT_COLUMNS`, `isProfileComplete`,
+  `stepComplete`, `taskErrorFor`, `load()`, `persist()`, `stepPatch()`, `next()`
+  validation, `back()`, `cleanedContacts()`, the school-select + live
+  contacts-preview logic, and per-step persistence are all UNCHANGED — only
+  the visual shell and per-step copy changed.
+- New reusable **`OnboardingShell`** (`src/components/student/OnboardingShell.tsx`)
+  owns layout only: header (back + mono "03 / 16" step counter), journey
+  progress (origin stamp → dashed track → plane marker at the REAL completion
+  % → destination stamp), section-context row (current section gold/mono +
+  "X next" faint), content slot (editorial headline + short explanation +
+  field), and footer slot (secondary Back + full-width brand Continue +
+  "N steps to go · Saved automatically"). It is presentational — no state.
+- Theme: the reference's dark aesthetic was ADAPTED, not copied. The app
+  defaults to light (`defaultTheme="light"`, `enableSystem={false}`); student
+  routes follow the persisted `darb-theme` pref, so the shell uses semantic
+  tokens (bg-background, text-foreground, border-border, bg-brand /
+  text-brand-foreground) that work in BOTH light and dark. The reference's
+  gold maps to the existing `--brand` DARB orange. No new fonts imported
+  (Tajawal/IBM Plex Sans Arabic stay) — no serif, for performance + brand
+  consistency.
+- RTL: journey track uses CSS logical `insetInlineStart` for the plane marker
+  position so it flips automatically in Arabic; icons use `rtl:rotate-180`;
+  layout uses logical properties throughout.
+- Per-task friendly headlines + short explanations via new
+  `studentOnboarding.q.<key>` / `.q.<key>Desc` keys (en+ar, 88 keys each, parity
+  confirmed) with inline English fallbacks. Switch-legal detail fields fall
+  back to the flat label (no misleading copy).
+- "Saved automatically" + "N steps to go" are ACCURATE: the wizard persists per
+  step on advance, and the remaining count is derived from `TASKS.length`.
+  No fake time estimates (per spec).
+- Removed now-unused imports (Card/CardHeader/CardTitle/CardContent, Progress).
+  The `fade-in` keyframe (already in tailwind config) drives the step
+  transition; reduced-motion respected.
+- Build/test: `npm run build` clean; `npx vitest run` 296/296 pass (incl.
+  i18n parity guard + onboarding `isProfileComplete` tests).
