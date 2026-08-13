@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, GraduationCap, Link2, Loader2, Mail, Phone, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,19 @@ interface EmergencyContact {
   phone: string;
 }
 
+/** A contact returned by get_school_important_contacts for the wizard preview. */
+interface PreviewContact {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  role_en: string | null;
+  role_ar: string | null;
+  phone: string | null;
+  email: string | null;
+  link: string | null;
+  match_scope: string;
+}
+
 /**
  * Full profile shape captured by the wizard. Mirrors the field set the admin
  * sidebar shows in AdminStudentsPage (PROFILE_SELECT), EXCLUDING the sensitive
@@ -42,6 +55,7 @@ interface ProfileShape {
   city: string | null;
   country: string | null;
   university_name: string | null;
+  language_school_id: string | null;
   intake_month: string | null;
   arrival_date: string | null;
   passport_expiry: string | null;
@@ -64,6 +78,7 @@ const EMPTY_PROFILE: ProfileShape = {
   city: null,
   country: null,
   university_name: null,
+  language_school_id: null,
   intake_month: null,
   arrival_date: null,
   passport_expiry: null,
@@ -80,7 +95,7 @@ const EMPTY_PROFILE: ProfileShape = {
 // Single select of every column the wizard reads or writes — loaded once on
 // mount, never re-fetched per keystroke.
 const SELECT_COLUMNS =
-  "full_name, phone_number, date_of_birth, gender, nationality, city, country, university_name, intake_month, arrival_date, passport_expiry, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country, emergency_contacts, emergency_contact_name, emergency_contact_phone";
+  "full_name, phone_number, date_of_birth, gender, nationality, city, country, university_name, language_school_id, intake_month, arrival_date, passport_expiry, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country, emergency_contacts, emergency_contact_name, emergency_contact_phone";
 
 const EYE_COLORS = ["brown", "blue", "green", "hazel", "gray", "other"] as const;
 
@@ -142,7 +157,7 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
  * when the step's last task is completed), so the resume-at-first-incomplete
  * behavior is preserved.
  */
-type TaskType = "text" | "tel" | "dob" | "gender" | "eye" | "date" | "switch-legal" | "contacts";
+type TaskType = "text" | "tel" | "dob" | "gender" | "eye" | "date" | "switch-legal" | "contacts" | "school-select";
 
 interface Task {
   step: number;
@@ -163,7 +178,7 @@ const TASKS: Task[] = [
   { step: 0, key: "city", type: "text" },
   { step: 0, key: "country", type: "text" },
   // step 1 — Study & arrival
-  { step: 1, key: "university_name", type: "text" },
+  { step: 1, key: "university_name", type: "school-select" },
   { step: 1, key: "intake_month", type: "text" },
   { step: 1, key: "arrival_date", type: "date" },
   // step 2 — Legal & identity
@@ -255,7 +270,7 @@ const taskErrorFor = (
  * and resume without data loss.
  */
 const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { t } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -267,13 +282,28 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [attempted, setAttempted] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
+  // Active language schools for the onboarding dropdown + live preview of the
+  // contacts that apply to the selected school (universal + school/city).
+  const [schools, setSchools] = useState<{ id: string; name_ar: string; name_en: string; city: string | null }[]>([]);
+  const [previewContacts, setPreviewContacts] = useState<PreviewContact[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
   const load = useCallback(async () => {
     if (!user?.id) return;
-    const { data } = await (supabase as any)
-      .from("profiles")
-      .select(SELECT_COLUMNS)
-      .eq("id", user.id)
-      .maybeSingle();
+    const [profileRes, schoolsRes] = await Promise.all([
+      (supabase as any)
+        .from("profiles")
+        .select(SELECT_COLUMNS)
+        .eq("id", user.id)
+        .maybeSingle(),
+      (supabase as any)
+        .from("schools")
+        .select("id,name_ar,name_en,city")
+        .eq("is_active", true)
+        .order("name_en"),
+    ]);
+    const data = profileRes.data;
+    setSchools((schoolsRes.data as { id: string; name_ar: string; name_en: string; city: string | null }[]) ?? []);
     if (data) {
       const merged: ProfileShape = {
         ...EMPTY_PROFILE,
@@ -313,6 +343,26 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [load]);
 
   const complete = useMemo(() => isProfileComplete(profile), [profile]);
+
+  // Live preview: when the student picks a school, fetch the contacts that
+  // apply to it (universal + school/city scoped) via the same RPC the real
+  // Important Contacts page uses. No filtering happens client-side.
+  const schoolId = profile?.language_school_id ?? null;
+  useEffect(() => {
+    if (!schoolId) {
+      setPreviewContacts([]);
+      return;
+    }
+    let cancelled = false;
+    setPreviewLoading(true);
+    (supabase as any)
+      .rpc("get_school_important_contacts", { p_school_id: schoolId })
+      .then((res: any) => {
+        if (!cancelled) setPreviewContacts((res.data as PreviewContact[]) ?? []);
+      })
+      .finally(() => { if (!cancelled) setPreviewLoading(false); });
+    return () => { cancelled = true; };
+  }, [schoolId]);
 
   const setField =
     (key: keyof ProfileShape) =>
@@ -362,6 +412,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     if (step === 1) {
       return {
         university_name: profile?.university_name,
+        language_school_id: profile?.language_school_id,
         intake_month: profile?.intake_month,
         arrival_date: profile?.arrival_date || null,
       };
@@ -421,7 +472,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Auto-focus the active input/select when the task changes.
   useEffect(() => {
-    if (task.type === "dob" || task.type === "gender" || task.type === "eye") return;
+    if (task.type === "dob" || task.type === "gender" || task.type === "eye" || task.type === "school-select") return;
     const id = `task-${task.key}`;
     const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
     if (el) {
@@ -453,6 +504,83 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const renderField = () => {
     switch (task.type) {
+      case "school-select": {
+        const isAr = i18n.language === "ar";
+        return (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="task-university_name">
+                {t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}
+              </Label>
+              <Select
+                value={profile?.language_school_id ?? ""}
+                onValueChange={v => {
+                  const sch = schools.find(s => s.id === v);
+                  setProfile(prev => ({
+                    ...(prev as ProfileShape),
+                    language_school_id: v,
+                    // Keep the text name in sync so the admin sidebar / legacy
+                    // readers that read university_name still show the school.
+                    university_name: sch ? (isAr ? sch.name_ar : sch.name_en) : null,
+                  }));
+                  setAttempted(false);
+                }}
+              >
+                <SelectTrigger id="task-university_name" className="h-12 text-base">
+                  <SelectValue placeholder={t("studentOnboarding.selectSchool", "Select your language school")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {schools.map(s => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {isAr ? s.name_ar : s.name_en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
+            </div>
+
+            {/* Live preview of the contacts available at the selected school. */}
+            {schoolId && (
+              <div className="rounded-xl border border-border p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-semibold">{t("studentOnboarding.schoolContacts", "Your school contacts")}</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("studentOnboarding.schoolContactsHint", "These are the important contacts available to students at your school.")}
+                </p>
+                {previewLoading ? (
+                  <p className="text-xs text-muted-foreground py-2">{t("studentOnboarding.schoolLoading", "Loading school contacts…")}</p>
+                ) : previewContacts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2">{t("studentOnboarding.noSchoolContacts", "No school-specific contacts yet. Universal contacts are shown below.")}</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {previewContacts.slice(0, 6).map(c => (
+                      <li key={c.id} className="rounded-lg bg-muted/50 px-3 py-2">
+                        <p className="text-sm font-medium text-foreground">{isAr ? c.name_ar : c.name_en}</p>
+                        {(isAr ? c.role_ar : c.role_en) && (
+                          <p className="text-[11px] text-muted-foreground">{isAr ? c.role_ar : c.role_en}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {c.phone && <span className="inline-flex items-center gap-1 text-[11px] text-primary"><Phone className="h-3 w-3" />{c.phone}</span>}
+                          {c.email && <span className="inline-flex items-center gap-1 text-[11px] text-primary"><Mail className="h-3 w-3" />{c.email}</span>}
+                          {c.link && <span className="inline-flex items-center gap-1 text-[11px] text-primary"><Link2 className="h-3 w-3" />{t("contacts.officialSite", "Official website")}</span>}
+                        </div>
+                      </li>
+                    ))}
+                    {previewContacts.length > 6 && (
+                      <li className="text-[11px] text-muted-foreground pt-1">
+                        {t("studentOnboarding.taskOf", { current: 6, total: previewContacts.length })}…
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      }
       case "text":
       case "tel":
         return (

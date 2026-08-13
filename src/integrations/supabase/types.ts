@@ -2944,6 +2944,7 @@ export type Database = {
           intake_month: string | null
           is_manager: boolean
           is_master_partner: boolean
+          language_school_id: string | null
           linked_case_id: string | null
           master_partner_id: string | null
           must_change_password: boolean
@@ -3003,6 +3004,7 @@ export type Database = {
           intake_month?: string | null
           is_manager?: boolean
           is_master_partner?: boolean
+          language_school_id?: string | null
           linked_case_id?: string | null
           master_partner_id?: string | null
           must_change_password?: boolean
@@ -3062,6 +3064,7 @@ export type Database = {
           intake_month?: string | null
           is_manager?: boolean
           is_master_partner?: boolean
+          language_school_id?: string | null
           linked_case_id?: string | null
           master_partner_id?: string | null
           must_change_password?: boolean
@@ -3104,6 +3107,13 @@ export type Database = {
             columns: ["master_partner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_language_school_id_fkey"
+            columns: ["language_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
         ]
@@ -4386,6 +4396,28 @@ export type Database = {
         }[]
       }
       get_my_earnings_summary: { Args: never; Returns: Json }
+      get_school_important_contacts: {
+        Args: { p_school_id: string; p_city?: string }
+        Returns: {
+          id: string
+          name_ar: string
+          name_en: string
+          role_ar: string
+          role_en: string
+          phone: string
+          email: string
+          link: string
+          category: string
+          city: string
+          country: string
+          address_ar: string
+          address_en: string
+          source_url: string
+          last_verified_at: string
+          display_order: number
+          match_scope: string
+        }[]
+      }
       get_student_important_contacts: {
         Args: never
         Returns: {

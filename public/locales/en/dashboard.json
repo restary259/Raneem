@@ -3971,7 +3971,12 @@
     "errRequired": "This field is required",
     "errPhoneInvalid": "Invalid phone number (7–15 digits, e.g. +972501234567)",
     "errContactsMin": "Add at least two contacts with a name and phone number.",
-    "taskOf": "{{current}} of {{total}}"
+    "taskOf": "{{current}} of {{total}}",
+    "selectSchool": "Select your language school",
+    "schoolContacts": "Your school contacts",
+    "schoolContactsHint": "These are the important contacts available to students at your school.",
+    "noSchoolContacts": "No school-specific contacts yet. Universal contacts are shown below.",
+    "schoolLoading": "Loading school contacts…"
   },
   "pushSettings": {
     "title": "Device notifications",

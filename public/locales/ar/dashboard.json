@@ -3989,7 +3989,12 @@
     "errRequired": "هذا الحقل مطلوب",
     "errPhoneInvalid": "رقم هاتف غير صالح (٧–١٥ رقماً، مثال: +972501234567)",
     "errContactsMin": "أضف جهتي اتصال على الأقل مع الاسم ورقم الهاتف.",
-    "taskOf": "{{current}} من {{total}}"
+    "taskOf": "{{current}} من {{total}}",
+    "selectSchool": "اختر معهدك اللغوي",
+    "schoolContacts": "جهات اتصال معهدك",
+    "schoolContactsHint": "هذه جهات الاتصال المهمة المتاحة لطلاب معهدك.",
+    "noSchoolContacts": "لا توجد جهات اتصال خاصة بالمعهد بعد. تظهر جهات الاتصال العامة أدناه.",
+    "schoolLoading": "جارٍ تحميل جهات الاتصال…"
   },
   "pushSettings": {
     "title": "إشعارات الجهاز",

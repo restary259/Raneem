@@ -262,3 +262,34 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   relationship; added the `get_student_important_contacts` function signature.
 - Build/test: `npm run build` clean; `npx vitest run` 296/296 pass incl. the
   new 10 contact-matching tests + i18nKeys parity guard.
+
+## Onboarding school picker + live contacts preview (2026-08-13)
+- The wizard's "Language school" step is now a **dropdown of active `schools`**
+  (not free text). The student's choice persists as an authoritative FK
+  `profiles.language_school_id` (added by migration
+  `20260813130000_onboarding_school_picker.sql`), while `university_name` is
+  kept in sync as the display name for legacy readers (admin sidebar).
+- **Single matching implementation**: the core predicate lives in the
+  parameterized RPC `get_school_important_contacts(p_school_id, p_city)`; the
+  student resolver `get_student_important_contacts()` delegates to it
+  (resolving the student's school from `case_submissions.school_id`, falling
+  back to `profiles.language_school_id` when the case has no school yet — so a
+  student who just picked a school in onboarding sees the right contacts even
+  before a case/submission exists). Both RPCs are SECURITY DEFINER, granted to
+  `authenticated` only.
+- On school selection the wizard calls `get_school_important_contacts` and
+  renders a compact live preview (universal + school/city contacts) inline,
+  so the student immediately sees the data that applies to their school. The
+  preview uses the SAME RPC as the real Important Contacts page — no logic
+  duplicated.
+- `StudentOnboardingGate`: `university_name` task switched to type
+  `school-select`; `ProfileShape`/`EMPTY_PROFILE`/`SELECT_COLUMNS`/`stepPatch`
+  gained `language_school_id`; active schools fetched in `load()`; preview
+  fetched via effect on `language_school_id` change (cancelled on cleanup).
+  Auto-focus skips `school-select` (it's a Radix Select, not an input).
+- Generated `types.ts`: `profiles` Row/Insert/Update gained
+  `language_school_id` + the `schools` FK relationship; added the
+  `get_school_important_contacts` function signature.
+- i18n: new `studentOnboarding.selectSchool` / `.schoolContacts` /
+  `.schoolContactsHint` / `.noSchoolContacts` / `.schoolLoading` keys (en+ar).
+- Build/test: `npm run build` clean; `npx vitest run` 296/296 pass.
