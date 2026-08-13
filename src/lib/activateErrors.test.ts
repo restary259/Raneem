@@ -23,7 +23,7 @@ const t = ((key: string, opts?: Record<string, unknown>): string => {
     template.replace(/\{\{(\w+)\}\}/g, (_, name: string) => String(opts?.[name] ?? ""));
   if (!dict[key]) return opts?.defaultValue ? fallback(String(opts.defaultValue)) : key;
   return fallback(dict[key]);
-};
+}) as unknown as TFunction;
 
 describe("activationErrorMessage", () => {
   it("returns null for unknown codes and empty payloads", () => {
