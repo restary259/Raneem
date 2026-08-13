@@ -71,17 +71,33 @@ serve(async (req) => {
       return json({ error: "Email does not match this invitation", code: "email_mismatch" }, 403);
     }
 
-    // ── Create the auth account ───────────────────────────────────────────
-    // One identity = one role. An invitation may NEVER take over an email that
-    // already belongs to an account: doing so would reset that person's
-    // password and bolt a second role onto their identity, which then makes
-    // deleting one "account" destroy the other.
+    // ── Resolve the identity ──────────────────────────────────────────────
+    // One identity = one role. The invitation may never take over an email
+    // that already belongs to a DIFFERENT role: doing so would reset that
+    // person's password and bolt a second role onto their identity, which then
+    // makes deleting one "account" destroy the other. But an identity that was
+    // already provisioned for THIS role — by an earlier approval step, a
+    // resend race, or a refresh after a partial activation — is continuing its
+    // activation, not a duplicate account, so it is adopted instead.
     const existing = await resolveIdentity(admin, email);
-    if (existing.exists) {
+
+    if (existing.exists && existing.deactivated) {
       return json(
         {
           error:
-            "This email already belongs to an account. Ask an admin to use a different address.",
+            "This account has been deactivated. Ask an admin to reactivate it before continuing.",
+          code: "identity_conflict",
+          existing_role: existing.role,
+          deactivated: true,
+        },
+        409,
+      );
+    }
+    if (existing.exists && existing.role && existing.role !== inv.intended_role) {
+      return json(
+        {
+          error:
+            `This email already has the role ${existing.role}. One person can hold only one role in Darb.`,
           code: "identity_conflict",
           existing_role: existing.role,
           deactivated: existing.deactivated,
@@ -90,28 +106,71 @@ serve(async (req) => {
       );
     }
 
-    const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-    if (createError || !createdUser?.user) {
-      return json(
-        { error: createError?.message ?? "Account could not be created", code: "server_error" },
-        400,
-      );
-    }
-    const userId: string = createdUser.user.id;
-    const created = true;
+    let userId: string;
+    let created: boolean;
 
-    // ── Role (idempotent) ─────────────────────────────────────────────────
+    if (existing.exists && existing.userId) {
+      // Identity already provisioned (no role yet, or already this role) and
+      // still needs activation — adopt it. The invitation token + email match
+      // are the authorization to set the chosen password; no second auth
+      // account is ever created.
+      userId = existing.userId;
+      created = false;
+      const { error: adoptError } = await admin.auth.admin.updateUserById(userId, {
+        password,
+        email_confirm: true,
+      });
+      if (adoptError) {
+        return json(
+          { error: adoptError.message ?? "Account could not be updated", code: "server_error" },
+          400,
+        );
+      }
+    } else {
+      const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+      if (createError || !createdUser?.user) {
+        return json(
+          { error: createError?.message ?? "Account could not be created", code: "server_error" },
+          400,
+        );
+      }
+      userId = createdUser.user.id;
+      created = true;
+    }
+
+    // ── Role (idempotent; one role per user) ──────────────────────────────
     const { error: roleError } = await admin
       .from("user_roles")
       .upsert(
         { user_id: userId, role: inv.intended_role },
-        { onConflict: "user_id,role", ignoreDuplicates: true },
+        { onConflict: "user_id", ignoreDuplicates: true },
       );
     if (roleError) return json({ error: serverError(roleError, "Failed to assign role"), code: "server_error" }, 500);
+
+    // A concurrent accept for the same identity with a different role could
+    // have won the arbiter — surface it instead of silently continuing.
+    if (existing.exists && !existing.role) {
+      const { data: now } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (now && now.role !== inv.intended_role) {
+        return json(
+          {
+            error:
+              `This email already has the role ${now.role}. One person can hold only one role in Darb.`,
+            code: "identity_conflict",
+            existing_role: now.role,
+          },
+          409,
+        );
+      }
+    }
 
     // ── Profile: only the columns this flow owns ──────────────────────────
     const profilePatch: Record<string, unknown> = {

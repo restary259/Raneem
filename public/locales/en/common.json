@@ -417,7 +417,15 @@
     "accepted": "This invitation has already been accepted. Please sign in.",
     "revoked": "This invitation was cancelled. Contact the DARB team.",
     "missingToken": "The link is missing an invitation code.",
-    "goToLogin": "Go to sign in"
+    "goToLogin": "Go to sign in",
+    "roleAdmin": "Admin",
+    "roleTeamMember": "Team member",
+    "rolePartner": "Partner",
+    "roleAmbassador": "Ambassador",
+    "roleStudent": "Student",
+    "anotherRole": "another",
+    "identityConflict": "This email already has the role {{role}} in DARB. One person can hold only one role — sign in with that account instead.",
+    "identityConflictDeactivated": "This account has been deactivated. Ask the DARB team to reactivate it before continuing."
   },
   "common": {
     "close": "Close"

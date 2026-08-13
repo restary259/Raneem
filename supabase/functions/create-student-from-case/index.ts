@@ -344,7 +344,7 @@ serve(async (req) => {
         .from("user_roles")
         .upsert(
           { user_id: caseData.student_user_id, role: "student" },
-          { onConflict: "user_id,role", ignoreDuplicates: true },
+          { onConflict: "user_id", ignoreDuplicates: true },
         );
 
       if (linkedRoleError) {
@@ -644,7 +644,7 @@ serve(async (req) => {
     // ── Assign student role ────────────────────────────────────────────────
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
-      .upsert({ user_id: studentId, role: "student" }, { onConflict: "user_id,role", ignoreDuplicates: true });
+      .upsert({ user_id: studentId, role: "student" }, { onConflict: "user_id", ignoreDuplicates: true });
 
     if (roleError) {
       console.error("create-student-from-case: student role assignment failed", roleError);

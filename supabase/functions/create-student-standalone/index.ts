@@ -113,7 +113,7 @@ serve(async (req) => {
     // Assign student role
     await supabaseAdmin.from("user_roles").upsert(
       { user_id: userId, role: "student" },
-      { onConflict: "user_id,role", ignoreDuplicates: true }
+      { onConflict: "user_id", ignoreDuplicates: true }
     );
 
     // Create profile — prefill from case data if case_id provided

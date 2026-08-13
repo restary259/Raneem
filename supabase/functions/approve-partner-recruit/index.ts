@@ -4,14 +4,22 @@ import { buildCorsHeaders } from "../_shared/cors.ts";
 import { serverError } from "../_shared/errors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
 import { createInvitation } from "../_shared/invitations.ts";
+import { resolveIdentity } from "../_shared/identity.ts";
 
 
 /**
  * Single, retry-safe entry point for approving a partner recruit application.
  *
  * Everything the approval needs happens server-side and is derived from the
- * application row itself (never from the client body): account creation, role
- * assignment, master-partner linking, status flip and the branded invite mail.
+ * application row itself (never from the client body): the durable invitation,
+ * the master-partner link, the status flip and the branded invite mail.
+ *
+ * The auth account is intentionally NOT created here. The invite-mode pattern
+ * (mirroring create-student-from-case) lets accept-invitation be the single
+ * point that creates the identity, assigns the social_media_partner role,
+ * links the master partner and closes the invitation at activation. Pre-creating
+ * the account here produced a dead activation link — accept-invitation rejected
+ * the email with "already belongs to an account".
  */
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
@@ -134,6 +142,10 @@ serve(async (req) => {
       if (app.status !== "approved") {
         return json({ error: "Only approved applications can be re-invited" }, 409);
       }
+      const identity = await resolveIdentity(admin, email);
+      if (identity.exists && identity.role === "social_media_partner") {
+        return json({ success: true, emailed: false, already_activated: true, email });
+      }
       const emailed = await sendInvite(email);
       await admin.from("admin_audit_log").insert({
         admin_id: adminId,
@@ -144,93 +156,90 @@ serve(async (req) => {
       return json({ success: true, emailed, email });
     }
 
+    // ---- Idempotent double-approve ----------------------------------------
     if (app.status === "approved") {
-      return json({ error: "This application was already approved" }, 409);
+      return json({ success: true, already_approved: true, emailed: false, email });
     }
     if (app.status !== "pending") {
       return json({ error: `Application is ${app.status}` }, 409);
     }
 
-    // ---- Create or reuse the auth account ---------------------------------
-    let userId: string | null = null;
-    let isNewAccount = false;
+    // ---- Resolve the recruit's identity -----------------------------------
+    // An existing identity may only be adopted when it is already a partner
+    // (idempotent approve) or when it has no role yet (activated later by
+    // accept-invitation). A different role or a deactivated account is a hard
+    // conflict — never a silent reuse (that would violate one-role-per-user
+    // and could reset somebody else's password).
+    const identity = await resolveIdentity(admin, email);
 
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
-      email,
-      password: crypto.randomUUID() + "aA1!",
-      email_confirm: true,
-      user_metadata: { full_name: fullName },
-    });
-
-    if (createError) {
-      if (!/already/i.test(createError.message ?? "")) {
-        return json({ error: createError.message }, 400);
-      }
-      const { data: existingProfile } = await admin
-        .from("profiles")
-        .select("id")
-        .ilike("email", email)
-        .maybeSingle();
-      userId = existingProfile?.id ?? null;
-      if (!userId) {
-        const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-        userId =
-          list?.users?.find((u) => (u.email ?? "").toLowerCase() === email)?.id ?? null;
-      }
-      if (!userId) {
-        return json(
-          { error: "This email is already registered but the account could not be found." },
-          409,
-        );
-      }
-    } else {
-      userId = created.user.id;
-      isNewAccount = true;
+    if (identity.exists && identity.deactivated) {
+      return json(
+        {
+          error:
+            "This email belongs to a deactivated account. Reactivate that account instead, or use a different email.",
+          code: "identity_conflict",
+          existing_role: identity.role,
+          deactivated: true,
+        },
+        409,
+      );
+    }
+    if (identity.exists && identity.role && identity.role !== "social_media_partner") {
+      return json(
+        {
+          error:
+            `This email already belongs to a ${identity.role} account. One person can hold only one role in Darb — use a different email.`,
+          code: "identity_conflict",
+          existing_role: identity.role,
+          deactivated: identity.deactivated,
+        },
+        409,
+      );
     }
 
-    // ---- Role + network link (idempotent) ---------------------------------
-    const { data: existingRole } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "social_media_partner")
-      .maybeSingle();
-    if (!existingRole) {
-      const { error: roleError } = await admin
-        .from("user_roles")
-        .insert({ user_id: userId, role: "social_media_partner" });
-      if (roleError) return json({ error: serverError(roleError, "Failed to assign role") }, 500);
-    }
+    const alreadyActivated =
+      identity.exists && identity.role === "social_media_partner";
 
-    // Only the columns this flow owns — no blanket profile reset.
-    const profilePatch: Record<string, unknown> = {
-      id: userId,
-      email,
-      full_name: fullName,
-      master_partner_id: app.master_partner_id,
-    };
-    if (isNewAccount) profilePatch.must_change_password = true;
-    const { error: profileError } = await admin.from("profiles").upsert(profilePatch);
-    if (profileError) return json({ error: serverError(profileError, "Failed to create profile") }, 500);
-
-    // ---- Flip the application ---------------------------------------------
+    // ---- Flip the application (no account is created here) -----------------
+    // created_user_id is set to the recruit's existing identity when there is
+    // one, and is backfilled by accept-invitation for brand-new identities at
+    // activation time.
     const { error: statusError } = await admin
       .from("partner_recruit_applications")
       .update({
         status: "approved",
-        created_user_id: userId,
+        created_user_id: identity.exists ? identity.userId : null,
         reviewed_by: adminId,
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", applicationId);
     if (statusError) return json({ error: serverError(statusError, "Failed to approve application") }, 500);
 
+    // Already an active partner: no new account, no duplicate role, no dead
+    // email. Just confirm the approval.
+    if (alreadyActivated) {
+      await admin.from("admin_audit_log").insert({
+        admin_id: adminId,
+        action: "approve_partner_recruit",
+        target_id: identity.userId,
+        details: `Approved ${email} into ${master.full_name ?? "master partner"}'s network (account already active)`,
+      });
+      return json({
+        success: true,
+        user_id: identity.userId,
+        email,
+        emailed: false,
+        reused_existing: true,
+        already_activated: true,
+      });
+    }
+
     const emailed = await sendInvite(email);
 
     await admin.from("admin_audit_log").insert({
       admin_id: adminId,
       action: "approve_partner_recruit",
-      target_id: userId,
+      target_id: identity.userId ?? null,
       details: `Approved ${email} into ${master.full_name ?? "master partner"}'s network${
         emailed ? " and sent the activation email" : " (activation email failed)"
       }`,
@@ -238,10 +247,10 @@ serve(async (req) => {
 
     return json({
       success: true,
-      user_id: userId,
+      user_id: identity.userId ?? null,
       email,
       emailed,
-      reused_existing: !isNewAccount,
+      reused_existing: identity.exists,
     });
   } catch (e) {
     console.error("approve-partner-recruit error:", e);

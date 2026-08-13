@@ -29,33 +29,68 @@ export async function resolveIdentity(
     fullName: null,
   };
 
-  const { data: profile } = await admin
+  // Primary source is profiles (every auth identity gets a profile via the
+  // on_auth_user_created trigger). Limit 2 so a duplicated profile row
+  // (profiles.email has NO unique constraint) surfaces as ambiguous instead of
+  // an unhandled maybeSingle() error.
+  const { data: matches, error: profileError } = await admin
     .from("profiles")
     .select("id, full_name, deleted_at")
     .ilike("email", email)
-    .maybeSingle();
+    .limit(2);
+  if (profileError) {
+    console.error("resolveIdentity: profile lookup failed", { email, error: profileError });
+  }
 
-  let userId: string | null = profile?.id ?? null;
+  let userId: string | null = null;
+  let profile: { id: string; full_name: string | null; deleted_at: string | null } | undefined;
+
+  if (matches && matches.length > 0) {
+    if (matches.length > 1) {
+      console.warn("resolveIdentity: multiple profiles share the same email", { email });
+    }
+    profile = matches[0];
+    userId = profile.id;
+  }
 
   if (!userId) {
-    // No profile row — the identity may still exist in auth.
-    const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    userId = list?.users?.find(
-      (u: { email?: string; id: string }) => (u.email ?? "").toLowerCase() === email,
-    )?.id ?? null;
+    // No profile row — the identity may still exist in auth. Scan every page,
+    // not just the first 1000 users.
+    const perPage = 1000;
+    let page = 1;
+    while (page <= 10) {
+      const { data: list, error: listError } = await admin.auth.admin.listUsers({
+        page,
+        perPage,
+      });
+      if (listError) {
+        console.error("resolveIdentity: auth user lookup failed", { email, error: listError });
+        break;
+      }
+      const users = list?.users ?? [];
+      userId =
+        users.find(
+          (u: { email?: string; id: string }) => (u.email ?? "").toLowerCase() === email,
+        )?.id ?? null;
+      if (userId || users.length < perPage) break;
+      page += 1;
+    }
     if (!userId) return empty;
   }
 
-  const { data: roleRow } = await admin
+  const { data: roleRows, error: roleError } = await admin
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .maybeSingle();
+    .limit(2);
+  if (roleError) {
+    console.error("resolveIdentity: role lookup failed", { userId, error: roleError });
+  }
 
   return {
     exists: true,
     userId,
-    role: (roleRow?.role as string) ?? null,
+    role: (roleRows?.[0]?.role as string) ?? null,
     deactivated: Boolean(profile?.deleted_at),
     fullName: profile?.full_name ?? null,
   };

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import PasswordStrength, { validatePassword } from "@/components/auth/PasswordStrength";
 import { useAuth, ROLE_TO_PATH, type AppRole } from "@/contexts/AuthContext";
+import { activationErrorMessage } from "@/lib/activateErrors";
 
 type PreviewState = "loading" | "valid" | "invalid" | "expired" | "accepted" | "revoked";
 
@@ -76,24 +77,7 @@ const ActivateAccountPage = () => {
   }, [token]);
 
   const errorFor = useCallback(
-    (code?: string) => {
-      switch (code) {
-        case "email_mismatch":
-          return t("activate.emailMismatch");
-        case "expired":
-          return t("activate.expired");
-        case "accepted":
-          return t("activate.accepted");
-        case "revoked":
-          return t("activate.revoked");
-        case "weak_password":
-          return t("activate.weakPassword");
-        case "invalid":
-          return t("activate.invalid");
-        default:
-          return null;
-      }
-    },
+    (payload: Record<string, unknown> | null | undefined) => activationErrorMessage(payload, t),
     [t],
   );
 
@@ -124,7 +108,7 @@ const ActivateAccountPage = () => {
             payload = null;
           }
         }
-        const mapped = errorFor(payload?.code as string | undefined);
+        const mapped = errorFor(payload);
         throw new Error(mapped ?? (payload?.error as string) ?? error.message);
       }
 
