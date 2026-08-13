@@ -19,6 +19,7 @@ import DeactivateAccountDialog from '@/components/admin/DeactivateAccountDialog'
 import { buildReferralUrl } from '@/lib/referral';
 import { formatILS } from '@/lib/money';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
+import { identityConflictMessage } from '@/lib/identityConflict';
 
 interface TeamMember {
   id: string;
@@ -76,29 +77,11 @@ const AdminTeamPage = () => {
   const [form, setForm] = useState({ fullName: '', email: '', role: 'team_member' });
 
   /** Turns an identity collision into a message that explains the conflict. */
-  const conflictMessage = useCallback((result: any) => {
-    if (result?.code !== 'identity_conflict') return null;
-    const roleKeys: Record<string, string> = {
-      team_member: 'admin.team.teamMemberRole',
-      social_media_partner: 'admin.team.partnerRole',
-      ambassador: 'admin.team.ambassadorRole',
-      admin: 'admin.team.adminRole',
-      student: 'admin.team.studentRole',
-    };
-    const key = roleKeys[result.existing_role as string];
-    const existing = key ? t(key, result.existing_role) : t('admin.team.someRole', 'another');
-    return result.deactivated
-      ? t('admin.team.conflictDeactivated', {
-          role: existing,
-          defaultValue:
-            'This email belongs to a deactivated {{role}} account. Reactivate that account instead of creating a new one, or use a different email.',
-        })
-      : t('admin.team.conflictActive', {
-          role: existing,
-          defaultValue:
-            'This email is already used by a {{role}} account. One person can hold only one role in Darb — use a different email address.',
-        });
-  }, [t]);
+  const conflictMessage = useCallback(
+    (result: any) => identityConflictMessage(result, t),
+    [t],
+  );
+
 
   const callInviteFn = useCallback(async (payload: Record<string, unknown>) => {
     // A stale/expired access token makes the edge function reject with 401
@@ -244,8 +227,14 @@ const AdminTeamPage = () => {
         },
         body: JSON.stringify({ full_name: form.fullName, email: form.email, role: form.role }),
       });
-      const result = await resp.json();
-      if (!resp.ok) throw new Error(conflictMessage(result) || 'Failed to create member');
+      const result = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(
+          conflictMessage(result) ||
+            (result as any)?.error ||
+            t('admin.team.createFailed', 'Failed to create member'),
+        );
+      }
       setNewCreds({ email: form.email, password: result.tempPassword || result.temp_password });
       setForm({ fullName: '', email: '', role: 'team_member' });
       await fetchMembers();
