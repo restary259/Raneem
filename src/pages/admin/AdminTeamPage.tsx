@@ -101,16 +101,40 @@ const AdminTeamPage = () => {
   }, [t]);
 
   const callInviteFn = useCallback(async (payload: Record<string, unknown>) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    // A stale/expired access token makes the edge function reject with 401
+    // "Invalid token". Force a refresh first and fail with a clear message.
+    let { data: { session } } = await supabase.auth.getSession();
+    const expSoon = !session?.expires_at || session.expires_at * 1000 - Date.now() < 60_000;
+    if (expSoon) {
+      const { data } = await supabase.auth.refreshSession();
+      session = data.session ?? session;
+    }
+    if (!session?.access_token) {
+      throw new Error(
+        t('admin.team.sessionExpired', 'Your session expired. Please sign in again and retry.'),
+      );
+    }
     const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-account`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify(payload),
     });
-    const result = await resp.json();
-    if (!resp.ok) throw new Error(conflictMessage(result) || 'Request failed');
+    const result = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      if (resp.status === 401) {
+        throw new Error(
+          t('admin.team.sessionExpired', 'Your session expired. Please sign in again and retry.'),
+        );
+      }
+      throw new Error(conflictMessage(result) || (result as any)?.error || 'Request failed');
+    }
     return result;
-  }, [conflictMessage]);
+  }, [conflictMessage, t]);
+
 
   const fetchInvitations = useCallback(async () => {
     const { data } = await (supabase as any)
