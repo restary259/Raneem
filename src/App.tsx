@@ -108,6 +108,8 @@ const StudentReferPage = lazy(() => import("./pages/student/StudentReferPage"));
 const StudentContactsPage = lazy(() => import("./pages/student/StudentContactsPage"));
 const StudentDataPage = lazy(() => import("./pages/student/StudentDataPage"));
 const StudentFeesPage = lazy(() => import("./pages/student/StudentFeesPage"));
+const StudentBagrutPage = lazy(() => import("./pages/student/StudentBagrutPage"));
+const StudentCvBuilderPage = lazy(() => import("./pages/student/StudentCvBuilderPage"));
 const StudentOnboardingGate = lazy(() => import("./components/student/StudentOnboardingGate"));
 
 /** Permanent failures (auth/permission/not-found/validation) must never be retried. */
@@ -349,6 +351,8 @@ const App = () => {
               <Route path="contacts" element={<StudentContactsPage />} />
               <Route path="fees" element={<StudentFeesPage />} />
               <Route path="my-data" element={<StudentDataPage />} />
+              <Route path="tools/bagrut" element={<StudentBagrutPage />} />
+              <Route path="tools/cv" element={<StudentCvBuilderPage />} />
             </Route>
 
             {/* ── Legacy redirects (old routes → new) ── */}

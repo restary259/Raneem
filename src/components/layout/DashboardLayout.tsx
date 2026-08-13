@@ -167,6 +167,15 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
         { key: "nav.myData", icon: ShieldCheck, href: "/student/my-data" },
       ],
     },
+    {
+      key: "nav.group.tools",
+      icon: Wrench,
+      href: "",
+      children: [
+        { key: "nav.bagrut", icon: Calculator, href: "/student/tools/bagrut" },
+        { key: "nav.cvBuilder", icon: FileText, href: "/student/tools/cv" },
+      ],
+    },
     { key: "nav.refer", icon: Heart, href: "/student/refer" },
   ],
 
