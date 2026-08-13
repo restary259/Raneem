@@ -26,6 +26,7 @@ import {
   Check,
   X,
   Trash2,
+  ExternalLink,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -39,7 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { matchesRef } from "@/lib/reference";
 import { CaseStatus } from "@/lib/caseStatus";
@@ -228,6 +229,7 @@ const AdminPipelinePage = () => {
 
 
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [cases, setCases] = useState<Case[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -708,6 +710,23 @@ const AdminPipelinePage = () => {
                   )}
                 </div>
               </SheetHeader>
+
+              <div className="pb-2">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    const caseId = selectedCase.id;
+                    setSelectedCase(null);
+                    setEditMode(false);
+                    setDraft(null);
+                    navigate(`/admin/cases/${caseId}`);
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {t("admin.submissions.openFullCase")}
+                </Button>
+              </div>
 
               <div className="space-y-6">
                 {/* ── CONTACT ── always read-only ── */}
