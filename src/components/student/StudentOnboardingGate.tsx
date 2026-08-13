@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -640,7 +641,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                   setAttempted(false);
                 }}
               >
-                <SelectTrigger id="task-university_name" className="h-12 text-base">
+                <SelectTrigger id="task-university_name">
                   <SelectValue placeholder={t("studentOnboarding.selectSchool", "Select your language school")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -674,17 +675,17 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                       <li key={c.id} className="rounded-lg bg-muted/50 px-3 py-2">
                         <p className="text-sm font-medium text-foreground">{isAr ? c.name_ar : c.name_en}</p>
                         {(isAr ? c.role_ar : c.role_en) && (
-                          <p className="text-[11px] text-muted-foreground">{isAr ? c.role_ar : c.role_en}</p>
+                          <p className="text-xs text-muted-foreground">{isAr ? c.role_ar : c.role_en}</p>
                         )}
                         <div className="flex flex-wrap gap-2 mt-1">
-                          {c.phone && <span className="inline-flex items-center gap-1 text-[11px] text-primary"><Phone className="h-3 w-3" />{c.phone}</span>}
-                          {c.email && <span className="inline-flex items-center gap-1 text-[11px] text-primary"><Mail className="h-3 w-3" />{c.email}</span>}
-                          {c.link && <span className="inline-flex items-center gap-1 text-[11px] text-primary"><Link2 className="h-3 w-3" />{t("contacts.officialSite", "Official website")}</span>}
+                          {c.phone && <span className="inline-flex items-center gap-1 text-xs text-primary"><Phone className="h-3 w-3" />{c.phone}</span>}
+                          {c.email && <span className="inline-flex items-center gap-1 text-xs text-primary"><Mail className="h-3 w-3" />{c.email}</span>}
+                          {c.link && <span className="inline-flex items-center gap-1 text-xs text-primary"><Link2 className="h-3 w-3" />{t("contacts.officialSite", "Official website")}</span>}
                         </div>
                       </li>
                     ))}
                     {previewContacts.length > 6 && (
-                      <li className="text-[11px] text-muted-foreground pt-1">
+                      <li className="text-xs text-muted-foreground pt-1">
                         {t("studentOnboarding.taskOf", { current: 6, total: previewContacts.length })}…
                       </li>
                     )}
@@ -710,7 +711,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               value={(profile?.[task.key] as string) ?? ""}
               onChange={setField(task.key)}
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); next(); } }}
-              className={cn("h-12 text-base", err && "border-destructive focus-visible:ring-destructive")}
+              className={cn(err && "border-destructive focus-visible:ring-destructive")}
               placeholder={task.type === "tel" ? t("studentOnboarding.ph.phone", "+972…") : undefined}
             />
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
@@ -737,7 +738,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               value={profile?.gender ?? ""}
               onValueChange={v => { setProfile(prev => ({ ...(prev as ProfileShape), gender: v })); setAttempted(false); }}
             >
-              <SelectTrigger id="task-gender" className="h-12 text-base">
+              <SelectTrigger id="task-gender">
                 <SelectValue placeholder={t("studentOnboarding.selectGender", "Select gender")} />
               </SelectTrigger>
               <SelectContent>
@@ -756,7 +757,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               value={profile?.eye_color ?? ""}
               onValueChange={v => { setProfile(prev => ({ ...(prev as ProfileShape), eye_color: v })); setAttempted(false); }}
             >
-              <SelectTrigger id="task-eye_color" className="h-12 text-base">
+              <SelectTrigger id="task-eye_color">
                 <SelectValue placeholder={t("studentOnboarding.selectEyeColor", "Select eye color")} />
               </SelectTrigger>
               <SelectContent>
@@ -781,7 +782,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               type="date"
               value={(profile?.[task.key] as string) ?? ""}
               onChange={setField(task.key)}
-              className={cn("h-12 text-base", err && "border-destructive focus-visible:ring-destructive")}
+              className={cn(err && "border-destructive focus-visible:ring-destructive")}
             />
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
@@ -809,7 +810,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                   id="task-street"
                   value={profile?.street ?? ""}
                   onChange={e => { setProfile(prev => ({ ...(prev as ProfileShape), street: e.target.value })); setAttempted(false); }}
-                  className={cn("h-12 text-base", err && !filled(profile?.street) && "border-destructive focus-visible:ring-destructive")}
+                  className={cn(err && !filled(profile?.street) && "border-destructive focus-visible:ring-destructive")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -818,7 +819,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                   id="task-house_number"
                   value={profile?.house_number ?? ""}
                   onChange={e => { setProfile(prev => ({ ...(prev as ProfileShape), house_number: e.target.value })); setAttempted(false); }}
-                  className={cn("h-12 text-base", err && !filled(profile?.house_number) && "border-destructive focus-visible:ring-destructive")}
+                  className={cn(err && !filled(profile?.house_number) && "border-destructive focus-visible:ring-destructive")}
                 />
               </div>
             </div>
@@ -828,7 +829,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                 id="task-residential_city"
                 value={profile?.residential_city ?? ""}
                 onChange={e => { setProfile(prev => ({ ...(prev as ProfileShape), residential_city: e.target.value })); setAttempted(false); }}
-                className={cn("h-12 text-base", err && !filled(profile?.residential_city) && "border-destructive focus-visible:ring-destructive")}
+                className={cn(err && !filled(profile?.residential_city) && "border-destructive focus-visible:ring-destructive")}
               />
             </div>
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
@@ -871,7 +872,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                     onChange={setField(task.detailKey)}
                     enterKeyHint="next"
                     onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); next(); } }}
-                    className="h-12 text-base"
+                   
                   />
                 )}
               </div>
@@ -901,17 +902,18 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               const phoneErr = attempted && filled(c.phone) && !isValidPhone(c.phone);
               const phoneMissing = attempted && !filled(c.phone);
               return (
-                <div key={i} className="space-y-3 rounded-lg border border-border p-3">
+                <Card key={i}>
+                  <CardContent className="space-y-3 p-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor={`ec-name-${i}`} className="text-destructive">
-                      {t("studentOnboarding.contactName", "Name")} *
+                    <Label htmlFor={`ec-name-${i}`}>
+                      {t("studentOnboarding.contactName", "Name")} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id={`ec-name-${i}`}
                       value={c.name}
                       onChange={e => setContact(i, "name", e.target.value)}
                       autoComplete="off"
-                      className={cn("h-11 text-base", nameErr && "border-destructive focus-visible:ring-destructive")}
+                      className={cn(nameErr && "border-destructive focus-visible:ring-destructive")}
                     />
                     {nameErr && <p className="text-xs text-destructive">{t("studentOnboarding.errRequired", "This field is required")}</p>}
                   </div>
@@ -924,13 +926,13 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                       value={c.relationship}
                       onChange={e => setContact(i, "relationship", e.target.value)}
                       autoComplete="off"
-                      className="h-11 text-base"
+                     
                     />
                   </div>
                   <div className="flex items-end gap-2">
                     <div className="flex-1 space-y-1.5">
-                      <Label htmlFor={`ec-phone-${i}`} className="text-destructive">
-                        {t("studentOnboarding.contactPhone", "Phone")} *
+                      <Label htmlFor={`ec-phone-${i}`}>
+                        {t("studentOnboarding.contactPhone", "Phone")} <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id={`ec-phone-${i}`}
@@ -939,7 +941,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                         autoComplete="tel"
                         value={c.phone}
                         onChange={e => setContact(i, "phone", e.target.value)}
-                        className={cn("h-11 text-base", (phoneErr || phoneMissing) && "border-destructive focus-visible:ring-destructive")}
+                        className={cn((phoneErr || phoneMissing) && "border-destructive focus-visible:ring-destructive")}
                       />
                       {phoneMissing && <p className="text-xs text-destructive">{t("studentOnboarding.errRequired", "This field is required")}</p>}
                       {phoneErr && <p className="text-xs text-destructive">{t("studentOnboarding.errPhoneInvalid", "Invalid phone number (7–15 digits)")}</p>}
@@ -956,7 +958,8 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                       </Button>
                     )}
                   </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
@@ -983,10 +986,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={back}
               disabled={taskIndex === 0 || saving}
-              className="min-h-12 shrink-0 px-4 text-[13.5px] font-medium text-muted-foreground"
+              className="shrink-0"
             >
               <ArrowLeft className="me-1 h-4 w-4 rtl:rotate-180" />
               {t("studentOnboarding.back", "Back")}
@@ -994,7 +997,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             <Button
               onClick={next}
               disabled={saving}
-              className="min-h-12 flex-1 rounded-2xl bg-brand text-[14.5px] font-bold text-brand-foreground shadow-[0_8px_24px_-8px_hsl(var(--brand)/0.5)] hover:bg-brand-strong"
+              className="flex-1"
             >
               {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               {isLastTask
@@ -1003,7 +1006,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               {!isLastTask && <ArrowRight className="ms-1.5 h-4 w-4 rtl:rotate-180" />}
             </Button>
           </div>
-          <div className="flex items-center justify-center gap-2 text-[10.5px] text-muted-foreground/70">
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             {remainingNote && <span>{remainingNote}</span>}
             {remainingNote && <span aria-hidden>·</span>}
             <span>{t("studentOnboarding.savedAutomatically", "Saved automatically")}</span>
