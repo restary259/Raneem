@@ -6,8 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, CheckCircle2, CreditCard, FileText, Globe, ListChecks, MessageSquare, User } from 'lucide-react';
-import CaseMessages from '@/components/cases/CaseMessages';
+import { CalendarDays, CheckCircle2, CreditCard, FileText, Globe, ListChecks, User } from 'lucide-react';
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import PaymentDisclosureCard from '@/components/student/PaymentDisclosureCard';
 import StudentOverviewSection from '@/components/student/StudentOverviewSection';
@@ -176,7 +175,7 @@ export default function StudentNextStepsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-6" dir={dir}>
       {showPayDisclosure && <PaymentDisclosureCard />}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
@@ -187,8 +186,6 @@ export default function StudentNextStepsPage() {
           {t('student.next.subtitle', 'Everything that needs your attention right now.')}
         </p>
       </div>
-
-      <StudentOverviewSection />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -232,19 +229,7 @@ export default function StudentNextStepsPage() {
         </CardContent>
       </Card>
 
-      {activeCaseId && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-primary" />
-              {t('case.messages.title', 'Messages')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CaseMessages caseId={activeCaseId} />
-          </CardContent>
-        </Card>
-      )}
+      <StudentOverviewSection />
     </div>
 
   );
