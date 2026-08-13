@@ -110,7 +110,8 @@ serve(async (req) => {
 
     const userId = newUser.user.id;
 
-    // Assign student role
+    // Assign student role — onConflict targets the single-column unique index
+    // user_roles_one_role_per_user.
     await supabaseAdmin.from("user_roles").upsert(
       { user_id: userId, role: "student" },
       { onConflict: "user_id", ignoreDuplicates: true }

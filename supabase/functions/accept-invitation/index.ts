@@ -143,6 +143,7 @@ serve(async (req) => {
     }
 
     // ── Role (idempotent; one role per user) ──────────────────────────────
+    // onConflict targets the single-column unique index user_roles_one_role_per_user.
     const { error: roleError } = await admin
       .from("user_roles")
       .upsert(

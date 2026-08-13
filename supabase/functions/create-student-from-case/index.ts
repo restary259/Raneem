@@ -340,6 +340,7 @@ serve(async (req) => {
         );
       }
 
+      // onConflict targets the single-column unique index user_roles_one_role_per_user.
       const { error: linkedRoleError } = await supabaseAdmin
         .from("user_roles")
         .upsert(
@@ -642,6 +643,7 @@ serve(async (req) => {
     }
 
     // ── Assign student role ────────────────────────────────────────────────
+    // onConflict targets the single-column unique index user_roles_one_role_per_user.
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: studentId, role: "student" }, { onConflict: "user_id", ignoreDuplicates: true });
