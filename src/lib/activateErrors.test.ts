@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
+import type { TFunction } from "i18next";
 import { activationErrorMessage } from "./activateErrors";
 
-const t = (key: string, opts?: Record<string, unknown>): string => {
+const t = ((key: string, opts?: Record<string, unknown>): string => {
   const dict: Record<string, string> = {
     "activate.emailMismatch": "emailMismatch",
     "activate.expired": "expired",

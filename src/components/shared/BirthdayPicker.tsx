@@ -25,7 +25,7 @@ interface Props {
   id?: string;
   /** Year values to list; defaults to DOB_YEARS (past). Pass a future range
    * for dates like arrival_date so the picker stays the same segmented style. */
-  years?: string[];
+  years?: ReadonlyArray<string | number>;
 }
 
 export function BirthdayPicker({
