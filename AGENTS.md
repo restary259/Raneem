@@ -196,3 +196,168 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - `src/integrations/supabase/types.ts` (generated) KEEPS `passport_number` on purpose: it mirrors the live retained DB columns; `supabase gen types` would re-add them, so removing is non-durable and diverges from schema. No code reads those generated fields now.
 - Orphaned locale keys (`profile.passportNumber`, `admin.ready.passportNumber`, `sheets.col.passportNumber`) LEFT in en/ar for i18n parity — `src/lib/i18nKeys.test.ts` only flags missing keys, not orphans. `passportType` keys are a DIFFERENT concept (passport-type dropdown) and remain in use. `myData.identityDesc` + `student.next.completeProfileDetail` copy updated to drop "passport number".
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 278/278 pass incl. i18nKeys parity guard + onboarding test.
+
+## Student sidebar regrouped into collapsible sections (2026-08-13)
+- The student sidebar (and mobile bottom nav) was restructured from 10 flat top-level
+  items into 5 intentional destinations: **Next Steps** (top-level), **Study File**
+  (collapsible: Checklist/Documents/Visa/Fees), **Communication** (collapsible:
+  Messages/Contacts), **My Account** (collapsible: Profile/My data), **Refer**
+  (top-level). Admin/team/partner roles keep their existing flat `group`-heading
+  layout unchanged.
+- `NavItem` (in `src/components/layout/DashboardLayout.tsx`) gained an optional
+  `children?: NavItem[]`. Parents with children render as a Radix `Collapsible`
+  (`@/components/ui/collapsible`) with `SidebarMenuSub`/`SidebarMenuSubButton`
+  children; leaf items render as before. `SidebarNav` keeps `openGroups` state and
+  auto-expands ONLY the group whose child route is active on route/role change
+  (collapses the rest). In collapsed-icon mode, sub-items are hidden.
+- `NAV_CONFIG.student` group parents use `key: "nav.group.studyFile|communication|account"`
+  (i18n keys under `nav.group.*` in en/ar `dashboard.json`) with `href: ""` (ignored for
+  parents). Added `nav.group.studyFile/communication/account/referral` to both locales.
+- `MobileBottomNav` student config mirrors the 5 top-level destinations; grouped parents
+  link to their first child route and stay active while ANY child route is open (via
+  `groupChildHrefs` map).
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 286/286 pass incl.
+  i18nKeys parity guard.
+
+## Context-aware Important Contacts (2026-08-13)
+- Students no longer see ALL `important_contacts` rows. Each contact has a
+  `scope` ('universal' | 'school_city' | 'school_only' | 'city_only'), a
+  nullable `language_school_id` FK → `schools(id)`, and `is_universal`.
+  Matching is data-driven — no school/city names hardcoded in React.
+- Migration: `20260813120000_context_aware_important_contacts.sql` adds the
+  columns + CHECK constraints (scope⇔is_universal, school required for
+  school_* scopes, city required for city/school_city), backfills every
+  existing row to `scope='universal', is_universal=true` (no behaviour change
+  until admin re-scopes), and creates the SECURITY DEFINER RPC
+  `get_student_important_contacts()` (granted to `authenticated` only).
+- **Single source of truth**: the RPC resolves the student's active school
+  (auth.uid() → most-recent non-deleted case → `case_submissions.school_id`
+  → `schools.city`, falling back to `cases.city`) and returns ONLY the
+  applicable active contacts, deduped by id, with a `match_scope` tag
+  ('universal'|'school'|'city'|'school_city') for grouping. The student page
+  just renders what the RPC returns.
+- **Security/RLS**: students canNOT `SELECT important_contacts` directly —
+  the broad "roled/authenticated users read active contacts" policies were
+  DROPPED. Students reach contacts only through the RPC (which filters by
+  auth.uid()). Admins keep full CRUD ("Admins manage important contacts").
+  This closes the leak where any student could `select *` and see every
+  school's contacts.
+- `src/lib/importantContacts.ts` mirrors the SAME matching rules in a pure TS
+  predicate (`matchContact` / `filterContactsByContext`) for unit-testability
+  without a DB and admin preview. If targeting changes, update BOTH the SQL
+  RPC and this predicate. Vitest (`importantContacts.test.ts`) covers the 8
+  acceptance cases (FU Heidelberg, GO Heidelberg, FU other-city, no school,
+  disabled contact, new school+city, new universal, duplicate-once).
+- `StudentContactsPage` switched from `.from('important_contacts').select()`
+  to `.rpc('get_student_important_contacts')`, groups by `match_scope`
+  (Emergency & Essential / Your Language School / Your City), and shows empty
+  states. Reloads on focus/user change so a school/city change reflects.
+- `AdminSettingsPage` contacts tab now has a scope selector + school dropdown
+  (active schools) + city (datalist of known cities), scope-aware validation,
+  filters (scope/school/city/category/status), search, Scope badge, and
+  Edit/Duplicate/Enable-Disable/Delete actions. Edit reuses the same dialog
+  (tracked by `editingContactId`).
+- Generated `types.ts` updated: `important_contacts` Row/Insert/Update gained
+  `scope`, `language_school_id`, `is_universal` + the `schools` FK
+  relationship; added the `get_student_important_contacts` function signature.
+- Build/test: `npm run build` clean; `npx vitest run` 296/296 pass incl. the
+  new 10 contact-matching tests + i18nKeys parity guard.
+
+## Onboarding school picker + live contacts preview (2026-08-13)
+- The wizard's "Language school" step is now a **dropdown of active `schools`**
+  (not free text). The student's choice persists as an authoritative FK
+  `profiles.language_school_id` (added by migration
+  `20260813130000_onboarding_school_picker.sql`), while `university_name` is
+  kept in sync as the display name for legacy readers (admin sidebar).
+- **Single matching implementation**: the core predicate lives in the
+  parameterized RPC `get_school_important_contacts(p_school_id, p_city)`; the
+  student resolver `get_student_important_contacts()` delegates to it
+  (resolving the student's school from `case_submissions.school_id`, falling
+  back to `profiles.language_school_id` when the case has no school yet — so a
+  student who just picked a school in onboarding sees the right contacts even
+  before a case/submission exists). Both RPCs are SECURITY DEFINER, granted to
+  `authenticated` only.
+- On school selection the wizard calls `get_school_important_contacts` and
+  renders a compact live preview (universal + school/city contacts) inline,
+  so the student immediately sees the data that applies to their school. The
+  preview uses the SAME RPC as the real Important Contacts page — no logic
+  duplicated.
+- `StudentOnboardingGate`: `university_name` task switched to type
+  `school-select`; `ProfileShape`/`EMPTY_PROFILE`/`SELECT_COLUMNS`/`stepPatch`
+  gained `language_school_id`; active schools fetched in `load()`; preview
+  fetched via effect on `language_school_id` change (cancelled on cleanup).
+  Auto-focus skips `school-select` (it's a Radix Select, not an input).
+- Generated `types.ts`: `profiles` Row/Insert/Update gained
+  `language_school_id` + the `schools` FK relationship; added the
+  `get_school_important_contacts` function signature.
+- i18n: new `studentOnboarding.selectSchool` / `.schoolContacts` /
+  `.schoolContactsHint` / `.noSchoolContacts` / `.schoolLoading` keys (en+ar).
+- Build/test: `npm run build` clean; `npx vitest run` 296/296 pass.
+
+## Onboarding wizard UI/UX redesign (2026-08-13)
+- **UI-only redesign** of `StudentOnboardingGate`. The task model (16 TASKS, 4
+  steps), `ProfileShape`, `SELECT_COLUMNS`, `isProfileComplete`,
+  `stepComplete`, `taskErrorFor`, `load()`, `persist()`, `stepPatch()`, `next()`
+  validation, `back()`, `cleanedContacts()`, the school-select + live
+  contacts-preview logic, and per-step persistence are all UNCHANGED — only
+  the visual shell and per-step copy changed.
+- New reusable **`OnboardingShell`** (`src/components/student/OnboardingShell.tsx`)
+  owns layout only: header (back + mono "03 / 16" step counter), journey
+  progress (origin stamp → dashed track → plane marker at the REAL completion
+  % → destination stamp), section-context row (current section gold/mono +
+  "X next" faint), content slot (editorial headline + short explanation +
+  field), and footer slot (secondary Back + full-width brand Continue +
+  "N steps to go · Saved automatically"). It is presentational — no state.
+- Theme: the reference's dark aesthetic was ADAPTED, not copied. The app
+  defaults to light (`defaultTheme="light"`, `enableSystem={false}`); student
+  routes follow the persisted `darb-theme` pref, so the shell uses semantic
+  tokens (bg-background, text-foreground, border-border, bg-brand /
+  text-brand-foreground) that work in BOTH light and dark. The reference's
+  gold maps to the existing `--brand` DARB orange. No new fonts imported
+  (Tajawal/IBM Plex Sans Arabic stay) — no serif, for performance + brand
+  consistency.
+- RTL: journey track uses CSS logical `insetInlineStart` for the plane marker
+  position so it flips automatically in Arabic; icons use `rtl:rotate-180`;
+  layout uses logical properties throughout.
+- Per-task friendly headlines + short explanations via new
+  `studentOnboarding.q.<key>` / `.q.<key>Desc` keys (en+ar, 88 keys each, parity
+  confirmed) with inline English fallbacks. Switch-legal detail fields fall
+  back to the flat label (no misleading copy).
+- "Saved automatically" + "N steps to go" are ACCURATE: the wizard persists per
+  step on advance, and the remaining count is derived from `TASKS.length`.
+  No fake time estimates (per spec).
+- Removed now-unused imports (Card/CardHeader/CardTitle/CardContent, Progress).
+  The `fade-in` keyframe (already in tailwind config) drives the step
+  transition; reduced-motion respected.
+- Build/test: `npm run build` clean; `npx vitest run` 296/296 pass (incl.
+  i18n parity guard + onboarding `isProfileComplete` tests).
+
+## Onboarding wizard: arrival-date picker, nationality default, structured address (2026-08-13)
+- **Arrival date now uses the same segmented Year/Month/Day picker as the
+  birthday field.** `BirthdayPicker` gained an optional `years?: string[]`
+  prop (defaults to `DOB_YEARS`); the wizard passes `ARRIVAL_YEARS` (current
+  year → +6) for the `arrival_date` task (new task type `arrival-date`). The
+  old plain `<Input type="date">` is gone from this field; `passport_expiry`
+  (step 2) still uses the native date input.
+- **Nationality defaults to "Israel"** for new students
+  (`DEFAULT_NATIONALITY` seeded into `EMPTY_PROFILE`), but the field stays a
+  free-text input the student can edit.
+- **Home address broken into Street + House number + City.** New task type
+  `address` (key `country`, step 0) renders three inputs. New `profiles`
+  columns `street`, `house_number`, `residential_city` (nullable text,
+  migration `20260813140000_structured_address.sql`). On save, `stepPatch(0)`
+  derives the legacy combined `country` string as `"Street House, City"` so
+  every existing reader (AdminStudentsPage "Address / Country", StudentProfile
+  `home_address`) keeps working unchanged.
+- **Backward compat:** `isProfileComplete`/`stepComplete(0)` use a `hasAddress`
+  helper — complete when (street + house_number + residential_city) OR the
+  legacy `country` is filled — so existing students who only filled the old
+  single text field are NOT re-gated by the wizard.
+- `types.ts` (Row/Insert/Update) + `src/types/profile.ts` gained the 3 columns;
+  `SELECT_COLUMNS` fetches them; `labelKeyFor`/`labelFallbackFor` map them;
+  `taskErrorFor` validates the 3 fields together. New i18n keys
+  `studentOnboarding.street` / `.houseNumber` / `.residentialCity` (en+ar, 91
+  each, parity).
+- Build/test: `npm run build` clean; `npx vitest run` 299/299 pass (incl. 3 new
+  address tests: structured-only complete, incomplete structured rejected,
+  legacy country backward compat).

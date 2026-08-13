@@ -1764,6 +1764,8 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_universal: boolean
+          language_school_id: string | null
           last_verified_at: string | null
           link: string | null
           name_ar: string
@@ -1771,6 +1773,7 @@ export type Database = {
           phone: string | null
           role_ar: string | null
           role_en: string | null
+          scope: string
           source_url: string | null
           updated_at: string
         }
@@ -1785,6 +1788,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_universal?: boolean
+          language_school_id?: string | null
           last_verified_at?: string | null
           link?: string | null
           name_ar: string
@@ -1792,6 +1797,7 @@ export type Database = {
           phone?: string | null
           role_ar?: string | null
           role_en?: string | null
+          scope?: string
           source_url?: string | null
           updated_at?: string
         }
@@ -1806,6 +1812,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_universal?: boolean
+          language_school_id?: string | null
           last_verified_at?: string | null
           link?: string | null
           name_ar?: string
@@ -1813,10 +1821,19 @@ export type Database = {
           phone?: string | null
           role_ar?: string | null
           role_en?: string | null
+          scope?: string
           source_url?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "important_contacts_language_school_id_fkey"
+            columns: ["language_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       influencer_invites: {
         Row: {
@@ -2927,6 +2944,7 @@ export type Database = {
           intake_month: string | null
           is_manager: boolean
           is_master_partner: boolean
+          language_school_id: string | null
           linked_case_id: string | null
           master_partner_id: string | null
           must_change_password: boolean
@@ -2986,6 +3004,7 @@ export type Database = {
           intake_month?: string | null
           is_manager?: boolean
           is_master_partner?: boolean
+          language_school_id?: string | null
           linked_case_id?: string | null
           master_partner_id?: string | null
           must_change_password?: boolean
@@ -3045,6 +3064,7 @@ export type Database = {
           intake_month?: string | null
           is_manager?: boolean
           is_master_partner?: boolean
+          language_school_id?: string | null
           linked_case_id?: string | null
           master_partner_id?: string | null
           must_change_password?: boolean
@@ -3073,6 +3093,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_language_school_id_fkey"
+            columns: ["language_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
           {
@@ -4422,6 +4449,28 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Json
       }
+      get_school_important_contacts: {
+        Args: { p_city?: string; p_school_id: string }
+        Returns: {
+          address_ar: string
+          address_en: string
+          category: string
+          city: string
+          country: string
+          display_order: number
+          email: string
+          id: string
+          last_verified_at: string
+          link: string
+          match_scope: string
+          name_ar: string
+          name_en: string
+          phone: string
+          role_ar: string
+          role_en: string
+          source_url: string
+        }[]
+      }
       get_staff_directory: {
         Args: never
         Returns: {
@@ -4429,6 +4478,28 @@ export type Database = {
           id: string
           is_manager: boolean
           role: string
+        }[]
+      }
+      get_student_important_contacts: {
+        Args: never
+        Returns: {
+          address_ar: string
+          address_en: string
+          category: string
+          city: string
+          country: string
+          display_order: number
+          email: string
+          id: string
+          last_verified_at: string
+          link: string
+          match_scope: string
+          name_ar: string
+          name_en: string
+          phone: string
+          role_ar: string
+          role_en: string
+          source_url: string
         }[]
       }
       get_thread_read_state: {

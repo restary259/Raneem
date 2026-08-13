@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,9 @@ import {
   ShieldAlert,
   DollarSign,
   Eye,
+  Edit,
+  Copy,
+  Search,
 } from "lucide-react";
 import CommissionSettingsPanel from "@/components/admin/CommissionSettingsPanel";
 import PipelineStatusesPanel from "@/components/admin/PipelineStatusesPanel";
@@ -66,6 +70,17 @@ interface Contact {
   city?: string | null;
   source_url?: string | null;
   last_verified_at?: string | null;
+  scope?: string;
+  is_universal?: boolean;
+  language_school_id?: string | null;
+}
+
+interface School {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  city: string | null;
+  is_active: boolean;
 }
 
 interface VisaField {
@@ -82,6 +97,7 @@ interface VisaField {
 
 const CATEGORIES = ["emergency", "medical", "legal", "team", "language_school", "city_office", "immigration", "other"];
 const FIELD_TYPES = ["text", "date", "select", "boolean"];
+const CONTACT_SCOPES = ["universal", "school_city", "school_only", "city_only"];
 
 // Data categories for selective reset.
 // Deletion order within each category matters: child rows first, then parents.
@@ -119,16 +135,25 @@ const AdminSettingsPage = () => {
 
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
 
-  const [contactForm, setContactForm] = useState({
+  // Admin contacts tab filters / search.
+  const [contactFilter, setContactFilter] = useState({
+    school: "all", city: "all", category: "all", scope: "all", status: "all", search: "",
+  });
+
+  const emptyContactForm = {
     name_ar: "", name_en: "", role_ar: "", role_en: "",
     phone: "", email: "", link: "", category: "other", display_order: "0",
     address_ar: "", address_en: "", city: "", source_url: "", verified_today: true,
-  });
+    scope: "universal", language_school_id: "",
+  };
+  const [contactForm, setContactForm] = useState<typeof emptyContactForm>(emptyContactForm);
 
   // ── Visa fields state ──────────────────────────────────────────────
   const [visaFields, setVisaFields] = useState<VisaField[]>([]);
@@ -150,12 +175,14 @@ const AdminSettingsPage = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, cRes] = await Promise.all([
+      const [sRes, cRes, schRes] = await Promise.all([
         supabase.from("platform_settings").select("*").limit(1).single(),
-        supabase.from("important_contacts").select("*").order("display_order"),
+        (supabase as any).from("important_contacts").select("*").order("display_order"),
+        (supabase as any).from("schools").select("id,name_ar,name_en,city,is_active").order("name_en"),
       ]);
       if (sRes.data) setSettings(sRes.data);
       setContacts(cRes.data || []);
+      setSchools((schRes.data as School[]) || []);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -206,28 +233,120 @@ const AdminSettingsPage = () => {
     }
   };
 
-  const createContact = async () => {
-    if (!contactForm.name_ar || !contactForm.name_en) {
-      toast({ variant: "destructive", description: t('admin.settings.nameRequired', 'Name is required') });
+  // Build the targeting payload from the form, enforcing the scope rules so
+  // the server CHECK constraints never reject the write:
+  //  - universal: no school, no targeting city
+  //  - school_only: school set, no targeting city
+  //  - city_only: no school, city set
+  //  - school_city: school + city set
+  const buildContactPayload = () => {
+    const scope = contactForm.scope;
+    const isUniversal = scope === "universal";
+    const needsSchool = scope === "school_only" || scope === "school_city";
+    const needsCity = scope === "city_only" || scope === "school_city";
+    return {
+      name_ar: contactForm.name_ar,
+      name_en: contactForm.name_en,
+      role_ar: contactForm.role_ar || null,
+      role_en: contactForm.role_en || null,
+      phone: contactForm.phone || null,
+      email: contactForm.email || null,
+      link: contactForm.link || null,
+      category: contactForm.category,
+      display_order: Number(contactForm.display_order) || 0,
+      address_ar: contactForm.address_ar || null,
+      address_en: contactForm.address_en || null,
+      city: needsCity ? (contactForm.city || null) : (isUniversal ? null : (scope === "school_only" ? null : (contactForm.city || null))),
+      source_url: contactForm.source_url || null,
+      last_verified_at: contactForm.verified_today ? new Date().toISOString() : null,
+      scope,
+      is_universal: isUniversal,
+      language_school_id: needsSchool ? (contactForm.language_school_id || null) : null,
+    } as any;
+  };
+
+  const validateContactForm = (): string | null => {
+    if (!contactForm.name_ar || !contactForm.name_en)
+      return t('admin.settings.nameRequired', 'Name is required');
+    const scope = contactForm.scope;
+    if ((scope === "school_only" || scope === "school_city") && !contactForm.language_school_id)
+      return t('contacts.schoolLabel', 'Language school') + " — required";
+    if ((scope === "city_only" || scope === "school_city") && !contactForm.city)
+      return t('contacts.cityLabel', 'City') + " — required";
+    return null;
+  };
+
+  const resetContactForm = () => {
+    setContactForm(emptyContactForm);
+    setEditingContactId(null);
+  };
+
+  const saveContact = async () => {
+    const err = validateContactForm();
+    if (err) {
+      toast({ variant: "destructive", description: err });
       return;
     }
     setContactSaving(true);
     try {
-      const { error } = await supabase.from("important_contacts").insert({
-        name_ar: contactForm.name_ar, name_en: contactForm.name_en,
-        role_ar: contactForm.role_ar || null, role_en: contactForm.role_en || null,
-        phone: contactForm.phone || null, email: contactForm.email || null,
-        link: contactForm.link || null, category: contactForm.category,
-        display_order: Number(contactForm.display_order) || 0,
-        address_ar: contactForm.address_ar || null, address_en: contactForm.address_en || null,
-        city: contactForm.city || null, source_url: contactForm.source_url || null,
-        last_verified_at: contactForm.verified_today ? new Date().toISOString() : null,
-      } as any);
-      if (error) throw error;
-      setContactForm({ name_ar: "", name_en: "", role_ar: "", role_en: "", phone: "", email: "", link: "", category: "other", display_order: "0", address_ar: "", address_en: "", city: "", source_url: "", verified_today: true });
+      const payload = buildContactPayload();
+      if (editingContactId) {
+        const { error } = await (supabase as any).from("important_contacts").update(payload).eq("id", editingContactId);
+        if (error) throw error;
+        toast({ description: t('contacts.contactUpdated', 'Contact updated') });
+      } else {
+        const { error } = await (supabase as any).from("important_contacts").insert(payload);
+        if (error) throw error;
+        toast({ description: t('admin.settings.contactCreated', 'Contact created') });
+      }
+      resetContactForm();
       setContactOpen(false);
       await fetchData();
-      toast({ description: t('admin.settings.contactCreated', 'Contact created') });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  const openCreateContact = () => {
+    resetContactForm();
+    setContactOpen(true);
+  };
+
+  const openEditContact = (c: Contact) => {
+    setEditingContactId(c.id);
+    setContactForm({
+      name_ar: c.name_ar, name_en: c.name_en,
+      role_ar: c.role_ar || "", role_en: c.role_en || "",
+      phone: c.phone || "", email: c.email || "", link: c.link || "",
+      category: c.category, display_order: String(c.display_order ?? 0),
+      address_ar: c.address_ar || "", address_en: c.address_en || "",
+      city: c.city || "", source_url: c.source_url || "",
+      verified_today: false,
+      scope: c.scope || "universal",
+      language_school_id: c.language_school_id || "",
+    });
+    setContactOpen(true);
+  };
+
+  const duplicateContact = async (c: Contact) => {
+    setContactSaving(true);
+    try {
+      const { error } = await (supabase as any).from("important_contacts").insert({
+        name_ar: c.name_ar, name_en: c.name_en,
+        role_ar: c.role_ar, role_en: c.role_en,
+        phone: c.phone, email: c.email, link: c.link, category: c.category,
+        display_order: c.display_order,
+        address_ar: c.address_ar ?? null, address_en: c.address_en ?? null,
+        city: c.city ?? null, source_url: c.source_url ?? null,
+        scope: c.scope || "universal",
+        is_universal: (c.scope || "universal") === "universal",
+        language_school_id: c.language_school_id ?? null,
+      });
+      if (error) throw error;
+      await fetchData();
+      toast({ description: t('contacts.contactDuplicated', 'Contact duplicated') });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -236,16 +355,50 @@ const AdminSettingsPage = () => {
   };
 
   const toggleContact = async (id: string, current: boolean) => {
-    const { error } = await supabase.from("important_contacts").update({ is_active: !current }).eq("id", id);
+    const { error } = await (supabase as any).from("important_contacts").update({ is_active: !current }).eq("id", id);
     if (error) toast({ variant: "destructive", description: error.message });
     else fetchData();
   };
 
   const deleteContact = async (id: string) => {
-    const { error } = await supabase.from("important_contacts").delete().eq("id", id);
+    const { error } = await (supabase as any).from("important_contacts").delete().eq("id", id);
     if (error) toast({ variant: "destructive", description: error.message });
     else fetchData();
   };
+
+  const scopeLabel = (scope: string) => {
+    const m: Record<string, string> = {
+      universal: t('contacts.scopeUniversal', 'Universal'),
+      school_city: t('contacts.scopeSchoolCity', 'School + City'),
+      school_only: t('contacts.scopeSchoolOnly', 'School Only'),
+      city_only: t('contacts.scopeCityOnly', 'City Only'),
+    };
+    return m[scope] ?? scope;
+  };
+
+  const schoolName = (id?: string | null) => {
+    if (!id) return isRtl ? "—" : "—";
+    const s = schools.find((x) => x.id === id);
+    return s ? (isRtl ? s.name_ar : s.name_en) : id;
+  };
+
+  // Filtered + searched contacts for the admin list.
+  const filteredContacts = contacts.filter((c) => {
+    const f = contactFilter;
+    if (f.school !== "all" && (c.language_school_id ?? "") !== f.school) return false;
+    if (f.city !== "all" && (c.city ?? "") !== f.city) return false;
+    if (f.category !== "all" && c.category !== f.category) return false;
+    if (f.scope !== "all" && (c.scope ?? "universal") !== f.scope) return false;
+    if (f.status !== "all" && (c.is_active ? "active" : "inactive") !== f.status) return false;
+    if (f.search) {
+      const q = f.search.toLowerCase();
+      const hay = [c.name_ar, c.name_en, c.phone, c.email, c.category, c.city, c.scope].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const distinctCities = Array.from(new Set([...contacts.map((c) => c.city).filter(Boolean), ...schools.map((s) => s.city).filter(Boolean)])) as string[];
 
   const createVisaField = async () => {
     if (!visaFieldForm.field_key || !visaFieldForm.label_en || !visaFieldForm.label_ar) {
@@ -450,39 +603,39 @@ const AdminSettingsPage = () => {
 
         {/* ── Important Contacts ── */}
         <TabsContent value="contacts" className="space-y-4 mt-4">
-          <div className="flex justify-end">
-            <Dialog open={contactOpen} onOpenChange={setContactOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {t("admin.settings.addContact", "Add Contact")}
-                </Button>
-              </DialogTrigger>
-              <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{t("admin.settings.addContact", "Add Contact")}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.settings.contactFormArabicName')}</Label>
-                      <Input value={contactForm.name_ar} onChange={(e) => setContactForm((f) => ({ ...f, name_ar: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.settings.contactFormEnglishName')}</Label>
-                      <Input value={contactForm.name_en} onChange={(e) => setContactForm((f) => ({ ...f, name_en: e.target.value }))} />
-                    </div>
+          <Dialog open={contactOpen} onOpenChange={(o) => { setContactOpen(o); if (!o) resetContactForm(); }}>
+            <div className="flex justify-end">
+              <Button size="sm" className="gap-2" onClick={openCreateContact}>
+                <Plus className="h-4 w-4" />
+                {t("admin.settings.addContact", "Add Contact")}
+              </Button>
+            </div>
+            <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingContactId ? t('contacts.editContact', 'Edit Contact') : t("admin.settings.addContact", "Add Contact")}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>{t('admin.settings.contactFormArabicName')}</Label>
+                    <Input value={contactForm.name_ar} onChange={(e) => setContactForm((f) => ({ ...f, name_ar: e.target.value }))} />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.settings.contactFormRoleAr')}</Label>
-                      <Input value={contactForm.role_ar} onChange={(e) => setContactForm((f) => ({ ...f, role_ar: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.settings.contactFormRoleEn')}</Label>
-                      <Input value={contactForm.role_en} onChange={(e) => setContactForm((f) => ({ ...f, role_en: e.target.value }))} />
-                    </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.settings.contactFormEnglishName')}</Label>
+                    <Input value={contactForm.name_en} onChange={(e) => setContactForm((f) => ({ ...f, name_en: e.target.value }))} />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>{t('admin.settings.contactFormRoleAr')}</Label>
+                    <Input value={contactForm.role_ar} onChange={(e) => setContactForm((f) => ({ ...f, role_ar: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.settings.contactFormRoleEn')}</Label>
+                    <Input value={contactForm.role_en} onChange={(e) => setContactForm((f) => ({ ...f, role_en: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label>{t('admin.settings.contactFormPhone')}</Label>
                     <Input value={contactForm.phone} onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))} />
@@ -491,79 +644,181 @@ const AdminSettingsPage = () => {
                     <Label>{t('admin.settings.contactFormEmail')}</Label>
                     <Input value={contactForm.email} onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))} />
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('admin.settings.contactFormLink')}</Label>
+                  <Input value={contactForm.link} onChange={(e) => setContactForm((f) => ({ ...f, link: e.target.value }))} />
+                </div>
+
+                {/* ── Targeting scope ── */}
+                <div className="rounded-md border border-border p-3 space-y-3">
                   <div className="space-y-1">
-                    <Label>{t('admin.settings.contactFormLink')}</Label>
-                    <Input value={contactForm.link} onChange={(e) => setContactForm((f) => ({ ...f, link: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.settings.contactFormCategory')}</Label>
-                    <Select value={contactForm.category} onValueChange={(v) => setContactForm((f) => ({ ...f, category: v }))}>
+                    <Label>{t('contacts.scopeLabel', 'Targeting scope')}</Label>
+                    <Select value={contactForm.scope} onValueChange={(v) => setContactForm((f) => ({ ...f, scope: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map((c) => (<SelectItem key={c} value={c}>{catLabel(c)}</SelectItem>))}
+                        {CONTACT_SCOPES.map((s) => (<SelectItem key={s} value={s}>{scopeLabel(s)}</SelectItem>))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  {(contactForm.scope === "school_only" || contactForm.scope === "school_city") && (
                     <div className="space-y-1">
-                      <Label>{isRtl ? "العنوان (عربي)" : "Address (Arabic)"}</Label>
-                      <Input value={contactForm.address_ar} onChange={(e) => setContactForm((f) => ({ ...f, address_ar: e.target.value }))} />
+                      <Label>{t('contacts.schoolLabel', 'Language school')}</Label>
+                      <Select value={contactForm.language_school_id || ""} onValueChange={(v) => {
+                        const sch = schools.find((s) => s.id === v);
+                        setContactForm((f) => ({ ...f, language_school_id: v, city: sch?.city ?? f.city }));
+                      }}>
+                        <SelectTrigger><SelectValue placeholder={t('contacts.allSchools', 'All schools')} /></SelectTrigger>
+                        <SelectContent>
+                          {schools.filter((s) => s.is_active).map((s) => (
+                            <SelectItem key={s.id} value={s.id}>{isRtl ? s.name_ar : s.name_en}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                  )}
+                  {(contactForm.scope === "city_only" || contactForm.scope === "school_city") && (
                     <div className="space-y-1">
-                      <Label>{isRtl ? "العنوان (إنجليزي)" : "Address (English)"}</Label>
-                      <Input value={contactForm.address_en} onChange={(e) => setContactForm((f) => ({ ...f, address_en: e.target.value }))} />
+                      <Label>{t('contacts.cityLabel', 'City')}</Label>
+                      <Input
+                        list="contact-cities-datalist"
+                        value={contactForm.city}
+                        onChange={(e) => setContactForm((f) => ({ ...f, city: e.target.value }))}
+                        placeholder="Heidelberg"
+                      />
+                      <datalist id="contact-cities-datalist">
+                        {distinctCities.map((c) => (<option key={c} value={c} />))}
+                      </datalist>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label>{isRtl ? "المدينة" : "City"}</Label>
-                      <Input value={contactForm.city} onChange={(e) => setContactForm((f) => ({ ...f, city: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{isRtl ? "رابط المصدر الرسمي" : "Official source URL"}</Label>
-                      <Input value={contactForm.source_url} onChange={(e) => setContactForm((f) => ({ ...f, source_url: e.target.value }))} />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between rounded-md border border-border p-3">
-                    <Label className="text-sm">{isRtl ? "تم التحقق اليوم" : "Mark verified today"}</Label>
-                    <Switch checked={contactForm.verified_today} onCheckedChange={(v) => setContactForm((f) => ({ ...f, verified_today: v }))} />
+                  )}
+                  {contactForm.scope === "universal" && (
+                    <p className="text-xs text-muted-foreground">
+                      {isRtl ? "جهة اتصال عامة تظهر لكل الطلاب." : "Universal contact — visible to every student."}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label>{t('admin.settings.contactFormCategory')}</Label>
+                  <Select value={contactForm.category} onValueChange={(v) => setContactForm((f) => ({ ...f, category: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((c) => (<SelectItem key={c} value={c}>{catLabel(c)}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label>{isRtl ? "العنوان (عربي)" : "Address (Arabic)"}</Label>
+                    <Input value={contactForm.address_ar} onChange={(e) => setContactForm((f) => ({ ...f, address_ar: e.target.value }))} />
                   </div>
                   <div className="space-y-1">
-                    <Label>{t('admin.settings.contactFormOrder')}</Label>
-                    <Input type="number" value={contactForm.display_order}
-                      onChange={(e) => setContactForm((f) => ({ ...f, display_order: e.target.value }))} />
+                    <Label>{isRtl ? "العنوان (إنجليزي)" : "Address (English)"}</Label>
+                    <Input value={contactForm.address_en} onChange={(e) => setContactForm((f) => ({ ...f, address_en: e.target.value }))} />
                   </div>
-                  <Button className="w-full" onClick={createContact} disabled={contactSaving}>
-                    {contactSaving ? t('admin.settings.saving') : t("common.save")}
-                  </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
+                <div className="space-y-1">
+                  <Label>{isRtl ? "رابط المصدر الرسمي" : "Official source URL"}</Label>
+                  <Input value={contactForm.source_url} onChange={(e) => setContactForm((f) => ({ ...f, source_url: e.target.value }))} />
+                </div>
+                <div className="flex items-center justify-between rounded-md border border-border p-3">
+                  <Label className="text-sm">{isRtl ? "تم التحقق اليوم" : "Mark verified today"}</Label>
+                  <Switch checked={contactForm.verified_today} onCheckedChange={(v) => setContactForm((f) => ({ ...f, verified_today: v }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>{t('admin.settings.contactFormOrder')}</Label>
+                  <Input type="number" value={contactForm.display_order}
+                    onChange={(e) => setContactForm((f) => ({ ...f, display_order: e.target.value }))} />
+                </div>
+                <Button className="w-full" onClick={saveContact} disabled={contactSaving}>
+                  {contactSaving ? t('admin.settings.saving') : t("common.save")}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* ── Filters + search ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div className="relative col-span-2 sm:col-span-3 lg:col-span-2">
+              <Search className="absolute top-1/2 -translate-y-1/2 start-2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="ps-8"
+                placeholder={t('contacts.search', 'Search…')}
+                value={contactFilter.search}
+                onChange={(e) => setContactFilter((f) => ({ ...f, search: e.target.value }))}
+              />
+            </div>
+            <Select value={contactFilter.scope} onValueChange={(v) => setContactFilter((f) => ({ ...f, scope: v }))}>
+              <SelectTrigger><SelectValue placeholder={t('contacts.filterScope', 'Scope')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('contacts.filterScope', 'Scope')}</SelectItem>
+                {CONTACT_SCOPES.map((s) => (<SelectItem key={s} value={s}>{scopeLabel(s)}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Select value={contactFilter.school} onValueChange={(v) => setContactFilter((f) => ({ ...f, school: v }))}>
+              <SelectTrigger><SelectValue placeholder={t('contacts.filterSchool', 'School')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('contacts.filterSchool', 'School')}</SelectItem>
+                {schools.map((s) => (<SelectItem key={s.id} value={s.id}>{isRtl ? s.name_ar : s.name_en}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Select value={contactFilter.city} onValueChange={(v) => setContactFilter((f) => ({ ...f, city: v }))}>
+              <SelectTrigger><SelectValue placeholder={t('contacts.filterCity', 'City')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('contacts.filterCity', 'City')}</SelectItem>
+                {distinctCities.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Select value={contactFilter.category} onValueChange={(v) => setContactFilter((f) => ({ ...f, category: v }))}>
+              <SelectTrigger><SelectValue placeholder={t('contacts.filterCategory', 'Category')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('contacts.filterCategory', 'Category')}</SelectItem>
+                {CATEGORIES.map((c) => (<SelectItem key={c} value={c}>{catLabel(c)}</SelectItem>))}
+              </SelectContent>
+            </Select>
+            <Select value={contactFilter.status} onValueChange={(v) => setContactFilter((f) => ({ ...f, status: v }))}>
+              <SelectTrigger><SelectValue placeholder={t('contacts.filterStatus', 'Status')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('contacts.filterStatus', 'Status')}</SelectItem>
+                <SelectItem value="active">{t('contacts.statusActive', 'Active')}</SelectItem>
+                <SelectItem value="inactive">{t('contacts.statusInactive', 'Inactive')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <Card>
             <CardContent className="p-0">
               {contacts.length === 0 ? (
                 <p className="p-8 text-center text-sm text-muted-foreground">{t('admin.settings.noContacts')}</p>
+              ) : filteredContacts.length === 0 ? (
+                <p className="p-8 text-center text-sm text-muted-foreground">{isRtl ? "لا توجد نتائج للفلتر الحالي." : "No contacts match the current filters."}</p>
               ) : (
                 <div className="divide-y divide-border">
-                  {contacts.map((c) => (
-                    <div key={c.id} className="flex items-start justify-between p-4">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-foreground">{isRtl ? c.name_ar : c.name_en}</p>
+                  {filteredContacts.map((c) => (
+                    <div key={c.id} className="flex items-start justify-between p-4 gap-3">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-medium text-foreground">{isRtl ? c.name_ar : c.name_en}</p>
+                          <Badge variant="outline" className="text-[10px] font-normal">{scopeLabel(c.scope || "universal")}</Badge>
+                          {!c.is_active && <Badge variant="secondary" className="text-[10px]">{t('contacts.statusInactive', 'Inactive')}</Badge>}
+                        </div>
                         {(isRtl ? c.role_ar : c.role_en) && (
                           <p className="text-xs text-muted-foreground">{isRtl ? c.role_ar : c.role_en}</p>
                         )}
-                        {(c.city || (isRtl ? c.address_ar : c.address_en)) && (
-                          <p className="text-xs text-muted-foreground">
-                            {[c.city, isRtl ? c.address_ar : c.address_en].filter(Boolean).join(' — ')}
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {[
+                            (c.scope === "school_only" || c.scope === "school_city") ? schoolName(c.language_school_id) : null,
+                            (c.scope === "city_only" || c.scope === "school_city") ? c.city : null,
+                          ].filter(Boolean).join(" — ") || (isRtl ? "كل الطلاب" : "All students")}
+                        </p>
                         <div className="flex flex-wrap gap-3 mt-1">
                           {c.phone && (<a href={`tel:${c.phone.replace(/\s/g, '')}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Phone className="h-3 w-3" />{c.phone}</a>)}
                           {c.email && (<a href={`mailto:${c.email}`} className="flex items-center gap-1 text-xs text-primary hover:underline"><Mail className="h-3 w-3" />{c.email}</a>)}
                           {c.link && (<a href={c.link} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline"><LinkIcon className="h-3 w-3" />Link</a>)}
                         </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {catLabel(c.category)} · #{c.display_order}
+                        </p>
                         {c.last_verified_at && (
                           <p className="text-[11px] text-muted-foreground">
                             {(isRtl ? "تم التحقق: " : "Verified: ") + new Date(c.last_verified_at).toLocaleDateString('en-US')}
@@ -571,8 +826,13 @@ const AdminSettingsPage = () => {
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 ms-4 shrink-0">
-                        <span className="text-xs text-muted-foreground">{catLabel(c.category)}</span>
+                      <div className="flex items-center gap-1 ms-4 shrink-0">
+                        <Button variant="ghost" size="icon" aria-label={t('contacts.edit', 'Edit')} onClick={() => openEditContact(c)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" aria-label={t('contacts.duplicate', 'Duplicate')} onClick={() => duplicateContact(c)} disabled={contactSaving}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
                         <Switch checked={c.is_active} onCheckedChange={() => toggleContact(c.id, c.is_active)} />
                         <Button variant="ghost" size="icon" aria-label={isRtl ? "حذف جهة الاتصال" : "Delete contact"} onClick={() => deleteContact(c.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />

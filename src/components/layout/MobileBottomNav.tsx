@@ -45,12 +45,14 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
     { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
   ],
+  // Student: 5 top-level destinations mirroring the grouped sidebar.
+  // Grouped parents link to their first child route (the most common entry).
   student: [
     { key: 'nav.nextSteps', icon: Sparkles, href: '/student' },
-    { key: 'nav.messages', icon: MessageSquare, href: '/student/messages' },
-    { key: 'nav.checklist', icon: ListChecks, href: '/student/checklist' },
-    { key: 'nav.documents', icon: FileText, href: '/student/documents' },
-    { key: 'nav.visa', icon: Globe, href: '/student/visa' },
+    { key: 'nav.group.studyFile', icon: BookOpen, href: '/student/checklist' },
+    { key: 'nav.group.communication', icon: MessageSquare, href: '/student/messages' },
+    { key: 'nav.group.account', icon: User, href: '/student/profile' },
+    { key: 'nav.refer', icon: Heart, href: '/student/refer' },
   ],
 
 };
@@ -91,18 +93,31 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.submissions': t('nav.submissions', 'Submissions'),
     'nav.messages': t('nav.messages', 'Messages'),
     'nav.inbox': t('nav.inbox', 'Applications'),
+    'nav.group.studyFile': t('nav.group.studyFile', 'Study'),
+    'nav.group.communication': t('nav.group.communication', 'Comms'),
+    'nav.group.account': t('nav.group.account', 'Account'),
+    'nav.nextSteps': t('nav.nextSteps', 'Next'),
+  };
+
+  // Student grouped parents stay active while any of their child routes is open.
+  const groupChildHrefs: Record<string, string[]> = {
+    'nav.group.studyFile': ['/student/checklist', '/student/documents', '/student/visa', '/student/fees'],
+    'nav.group.communication': ['/student/messages', '/student/contacts'],
+    'nav.group.account': ['/student/profile', '/student/my-data'],
   };
 
   return (
     <nav className="md:hidden fixed bottom-0 start-0 end-0 z-50 min-h-16 bg-background border-t border-border flex items-center pb-safe">
       {items.map((item) => {
-        const isActive =
-          location.pathname === item.href ||
-          (item.href !== '/admin' &&
-            item.href !== '/team' &&
-            item.href !== '/partner' &&
-            item.href !== '/student/checklist' &&
-            location.pathname.startsWith(item.href));
+        const childHrefs = groupChildHrefs[item.key];
+        const isActive = childHrefs
+          ? childHrefs.some((h) => location.pathname === h || location.pathname.startsWith(h))
+          : location.pathname === item.href ||
+            (item.href !== '/admin' &&
+              item.href !== '/team' &&
+              item.href !== '/partner' &&
+              item.href !== '/student/checklist' &&
+              location.pathname.startsWith(item.href));
         return (
           <Link
             key={item.key}

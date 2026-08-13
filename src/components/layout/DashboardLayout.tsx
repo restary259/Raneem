@@ -9,9 +9,13 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import NotificationBell from "@/components/common/NotificationBell";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NotificationOnboardingDialog from "@/components/notifications/NotificationOnboardingDialog";
@@ -49,6 +53,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Home,
   Table,
   Calculator,
@@ -68,6 +73,9 @@ interface NavItem {
   href: string;
   /** i18n key of the sidebar group heading this item belongs to */
   group?: string;
+  /** When present, this item renders as an expandable parent whose children
+   *  live under it (collapsible). `href` is ignored for parents. */
+  children?: NavItem[];
 }
 
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
@@ -119,15 +127,36 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ],
   student: [
     { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
-    { key: "nav.messages", icon: MessageSquare, href: "/student/messages" },
-    { key: "nav.checklist", icon: ListChecks, href: "/student/checklist" },
-    { key: "nav.profile", icon: User, href: "/student/profile" },
-    { key: "nav.documents", icon: FileText, href: "/student/documents" },
-    { key: "nav.visa", icon: Globe, href: "/student/visa" },
-    { key: "nav.fees", icon: Receipt, href: "/student/fees" },
+    {
+      key: "nav.group.studyFile",
+      icon: BookOpen,
+      href: "",
+      children: [
+        { key: "nav.checklist", icon: ListChecks, href: "/student/checklist" },
+        { key: "nav.documents", icon: FileText, href: "/student/documents" },
+        { key: "nav.visa", icon: Globe, href: "/student/visa" },
+        { key: "nav.fees", icon: Receipt, href: "/student/fees" },
+      ],
+    },
+    {
+      key: "nav.group.communication",
+      icon: MessageSquare,
+      href: "",
+      children: [
+        { key: "nav.messages", icon: MessageSquare, href: "/student/messages" },
+        { key: "nav.contacts", icon: Users, href: "/student/contacts" },
+      ],
+    },
+    {
+      key: "nav.group.account",
+      icon: User,
+      href: "",
+      children: [
+        { key: "nav.profile", icon: User, href: "/student/profile" },
+        { key: "nav.myData", icon: ShieldCheck, href: "/student/my-data" },
+      ],
+    },
     { key: "nav.refer", icon: Heart, href: "/student/refer" },
-    { key: "nav.contacts", icon: Users, href: "/student/contacts" },
-    { key: "nav.myData", icon: ShieldCheck, href: "/student/my-data" },
   ],
 
 };
@@ -148,6 +177,31 @@ function SidebarNav({ role }: { role: AppRole }) {
     : baseItems;
   const unreadMessages = useUnreadCaseMessages(true);
 
+  const isItemActive = (item: NavItem): boolean => {
+    if (!item.href) return false;
+    const exactHomeRoles = ["/admin", "/team", "/partner"];
+    return (
+      location.pathname === item.href ||
+      (!exactHomeRoles.includes(item.href) &&
+        item.href !== "/student/checklist" &&
+        location.pathname.startsWith(item.href))
+    );
+  };
+
+  const isParentActive = (parent: NavItem): boolean =>
+    !!parent.children?.some((child) => isItemActive(child));
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  // Auto-expand the group containing the active route; collapse the rest.
+  useEffect(() => {
+    const next: Record<string, boolean> = {};
+    for (const item of items) {
+      if (item.children?.length) next[item.key] = isParentActive(item);
+    }
+    setOpenGroups(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, role]);
 
   return (
     <SidebarContent>
@@ -167,14 +221,86 @@ function SidebarNav({ role }: { role: AppRole }) {
 
       <SidebarMenu className="mt-2 px-2">
         {items.map((item, index) => {
-          const isActive =
-            location.pathname === item.href ||
-            (item.href !== "/admin" &&
-              item.href !== "/team" &&
-              item.href !== "/partner" &&
-              item.href !== "/student/checklist" &&
-              location.pathname.startsWith(item.href));
+          const isActive = isItemActive(item);
           const showGroup = !!item.group && item.group !== items[index - 1]?.group;
+
+          if (item.children?.length) {
+            const parentActive = isParentActive(item);
+            const open = !!openGroups[item.key] || collapsed;
+            return (
+              <React.Fragment key={item.key}>
+                {showGroup && !collapsed && (
+                  <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {t(item.group as string, item.group as string)}
+                  </p>
+                )}
+                <SidebarMenuItem>
+                  <Collapsible
+                    open={open}
+                    onOpenChange={(o) => setOpenGroups((prev) => ({ ...prev, [item.key]: o }))}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors w-full",
+                            "hover:bg-accent hover:text-accent-foreground",
+                            parentActive && "bg-primary/10 text-primary font-medium",
+                            collapsed && "justify-center px-2",
+                          )}
+                          title={collapsed ? t(item.key, item.key) : undefined}
+                        >
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          {!collapsed && <span className="flex-1 text-start">{t(item.key, item.key)}</span>}
+                          {!collapsed && (
+                            <ChevronDown
+                              className={cn(
+                                "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                                open && "rotate-180",
+                              )}
+                            />
+                          )}
+                        </button>
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    {!collapsed && (
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.children.map((child) => {
+                            const childActive = isItemActive(child);
+                            return (
+                              <SidebarMenuSubItem key={child.key}>
+                                <SidebarMenuSubButton asChild isActive={childActive}>
+                                  <Link
+                                    to={child.href}
+                                    className={cn(
+                                      "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+                                      "hover:bg-accent hover:text-accent-foreground",
+                                      childActive && "bg-primary/10 text-primary font-medium",
+                                    )}
+                                  >
+                                    <child.icon className="h-4 w-4 shrink-0" />
+                                    <span>{t(child.key, child.key)}</span>
+                                    {child.key === "nav.messages" && unreadMessages > 0 && (
+                                      <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                                        {unreadMessages}
+                                      </span>
+                                    )}
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    )}
+                  </Collapsible>
+                </SidebarMenuItem>
+              </React.Fragment>
+            );
+          }
+
           return (
             <React.Fragment key={item.key}>
               {showGroup && !collapsed && (

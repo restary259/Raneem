@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
+import type { TFunction } from "i18next";
 import { activationErrorMessage } from "./activateErrors";
 
-const t = (key: string, opts?: Record<string, unknown>): string => {
+const t = ((key: string, opts?: Record<string, unknown>): string => {
   const dict: Record<string, string> = {
     "activate.emailMismatch": "emailMismatch",
     "activate.expired": "expired",
@@ -22,7 +23,7 @@ const t = (key: string, opts?: Record<string, unknown>): string => {
     template.replace(/\{\{(\w+)\}\}/g, (_, name: string) => String(opts?.[name] ?? ""));
   if (!dict[key]) return opts?.defaultValue ? fallback(String(opts.defaultValue)) : key;
   return fallback(dict[key]);
-};
+}) as unknown as TFunction;
 
 describe("activationErrorMessage", () => {
   it("returns null for unknown codes and empty payloads", () => {

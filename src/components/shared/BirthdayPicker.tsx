@@ -23,6 +23,9 @@ interface Props {
   phDay?: string;
   ageLabel?: (age: number) => string;
   id?: string;
+  /** Year values to list; defaults to DOB_YEARS (past). Pass a future range
+   * for dates like arrival_date so the picker stays the same segmented style. */
+  years?: ReadonlyArray<string | number>;
 }
 
 export function BirthdayPicker({
@@ -34,6 +37,7 @@ export function BirthdayPicker({
   phDay = "Day",
   ageLabel,
   id,
+  years = DOB_YEARS,
 }: Props) {
   const parsed = parseISODate(value);
   const [selYear, setSelYear] = useState(parsed.year);
@@ -86,7 +90,7 @@ export function BirthdayPicker({
             <SelectValue placeholder={phYear} />
           </SelectTrigger>
           <SelectContent className="max-h-48">
-            {DOB_YEARS.map((y) => (
+            {years.map((y) => (
               <SelectItem key={y} value={String(y)}>
                 {y}
               </SelectItem>
