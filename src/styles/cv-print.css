@@ -9,15 +9,23 @@
     visibility: visible;
   }
 
+  /*
+   * IMPORTANT: do NOT use position: fixed here — it truncates the document to a
+   * single printed page in several browsers. Instead let the preview flow in
+   * normal document flow so long CVs paginate naturally across multiple A4
+   * pages. The container's own padding provides the page margins; @page adds a
+   * small safety margin for printers that ignore the box padding.
+   */
   #cv-preview {
-    position: fixed;
-    left: 0;
-    top: 0;
+    position: static;
+    left: auto;
+    top: auto;
     width: 100%;
+    max-width: none;
     margin: 0;
-    padding: 10mm 15mm;
     box-shadow: none;
     border: none;
+    border-radius: 0;
     overflow: visible !important;
     max-height: none !important;
   }
@@ -57,23 +65,37 @@
 
   @page {
     size: A4;
-    margin: 0;
+    margin: 10mm;
   }
 
-  /* Page break handling */
-  section {
+  /*
+   * Page-break handling: avoid breaking inside a section, and crucially avoid
+   * breaking inside individual CV entries (the audit found the old entry-level
+   * rules were inert because templates never applied those classes — every
+   * template now emits .cv-entry on each entry).
+   */
+  section,
+  .cv-section {
     break-inside: avoid;
   }
 
-  /* Avoid breaking individual CV entries */
   .cv-entry,
-  .education-entry,
-  .experience-entry,
-  .certificate-entry,
-  .volunteer-entry,
-  .publication-entry,
-  .reference-entry {
+  .cv-sidebar,
+  .cv-timeline-entry {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  /* Allow a very long section to still break between entries rather than
+     jumping a whole section to the next page and leaving a large gap. */
+  .cv-section {
+    break-inside: auto;
+  }
+
+  /* Avoid orphaned section headings at the bottom of a page. */
+  h2,
+  .cv-section > h2 {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 }

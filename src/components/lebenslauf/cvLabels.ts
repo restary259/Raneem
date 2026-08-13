@@ -24,6 +24,18 @@ export interface CVLabels {
   digitalSkills: string;
   volunteering: string;
   technicalSkills: string;
+  profile: string;
+  projects: string;
+  awards: string;
+  interests: string;
+  thesis: string;
+  grade: string;
+  expectedGraduation: string;
+  signature: string;
+  place: string;
+  date: string;
+  website: string;
+  professionalTitle: string;
 }
 
 const labels: Record<CVLanguage, CVLabels> = {
@@ -51,6 +63,18 @@ const labels: Record<CVLanguage, CVLabels> = {
     digitalSkills: 'Digitale & sonstige Fähigkeiten',
     volunteering: 'Ehrenamt',
     technicalSkills: 'Technische Fähigkeiten',
+      profile: 'Profil',
+      projects: 'Projekte',
+      awards: 'Auszeichnungen',
+      interests: 'Interessen',
+      thesis: 'Abschlussarbeit',
+      grade: 'Note',
+      expectedGraduation: 'Voraussichtlicher Abschluss',
+      signature: 'Unterschrift',
+      place: 'Ort',
+      date: 'Datum',
+      website: 'Website',
+      professionalTitle: 'Berufsbezeichnung',
   },
   en: {
     education: 'Education',
@@ -76,6 +100,18 @@ const labels: Record<CVLanguage, CVLabels> = {
     digitalSkills: 'Digital & Other Skills',
     volunteering: 'Volunteering',
     technicalSkills: 'Technical Skills',
+      profile: 'Profile',
+      projects: 'Projects',
+      awards: 'Awards & Achievements',
+      interests: 'Interests',
+      thesis: 'Thesis',
+      grade: 'Grade / GPA',
+      expectedGraduation: 'Expected Graduation',
+      signature: 'Signature',
+      place: 'Place',
+      date: 'Date',
+      website: 'Website',
+      professionalTitle: 'Professional Title',
   },
   ar: {
     education: 'التعليم',
@@ -101,6 +137,18 @@ const labels: Record<CVLanguage, CVLabels> = {
     digitalSkills: 'المهارات الرقمية والأخرى',
     volunteering: 'التطوع',
     technicalSkills: 'المهارات التقنية',
+      profile: 'الملخص الشخصي',
+      projects: 'المشاريع',
+      awards: 'الجوائز والإنجازات',
+      interests: 'الاهتمامات',
+      thesis: 'رسالة التخرج',
+      grade: 'التقدير/المعدل',
+      expectedGraduation: 'تاريخ التخرج المتوقع',
+      signature: 'التوقيع',
+      place: 'المكان',
+      date: 'التاريخ',
+      website: 'الموقع الإلكتروني',
+      professionalTitle: 'المسمى المهني',
   },
 };
 

@@ -509,3 +509,77 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - Build/test: `npm run build` clean; `npx vitest run` 299/299 pass (incl. 3 new
   address tests: structured-only complete, incomplete structured rejected,
   legacy country backward compat).
+
+## Lebenslauf/CV Builder overhaul (2026-08-13)
+- The public CV Builder (`/resources/lebenslauf-builder`, `LebenslaufBuilder.tsx`)
+  was overhauled into a full-featured, design-customizable, auto-saving tool with
+  4 templates, 12 sections, WCAG-AA-safe colors, and clean print/PDF output.
+- **4 templates** (`CVPreview.tsx` routes by `data.template`):
+  `german-standard` (tabular, photo left), `academic` (research-focused,
+  publications/research front-loaded), `europass` (EU grid, language passport
+  grid), `modern-sidebar` (2-column with colored sidebar — NEW 4th template).
+  Each lives in `src/components/lebenslauf/templates/` and consumes the SAME
+  `CVData` shape + design CSS vars — no per-template data divergence.
+- **Design system** (`cvDesign.ts`): `COLOR_PRESETS` (6 presets: Classic Black,
+  Academic Navy, Modern Petrol, Forest Academic, Burgundy Academic, Minimal
+  Slate), `TYPOGRAPHY_PRESETS` (Professional/Minimal), `FONTS` registry, spacing
+  presets (compact/normal/relaxed). `safeAccentOnWhite()` darkens any accent
+  until it passes WCAG AA (>=4.5:1) on white — a too-light accent NEVER reaches
+  the preview. `designVars()` emits the CSS custom properties
+  (`--cv-accent`, `--cv-font`, `--cv-heading-font`, `--cv-date-font`,
+  `--cv-spacing-root`, etc.) that all 4 templates consume. Unit-tested in
+  `cvDesign.test.ts` (16 tests: color safety, luminance, contrast, presets,
+  font-stack fallback, createEmptyCVData shape).
+- **12 sections** (canonical order in `ALL_SECTIONS` / `sectionOrder`):
+  personal, profile, education, experience, projects, publications, awards,
+  skills, certificates, volunteer, references, signature. New sections vs the
+  old builder: **Profile** (short bio), **Projects** (`ProjectEntry`), **Awards**
+  (`AwardEntry`), **Signature** (none/line/image + place/date). Skills gained
+  `interests` (string array). Education gained progressive advanced fields:
+  program, focus, grade, expectedGraduation, coursework, achievements, thesis
+  (toggled via "Advanced fields" per entry — progressive disclosure).
+- **Bullets**: experience/projects/volunteer entries store a `bullets: string[]`
+  array (one bullet per line in a textarea, split on newlines). Rendered via the
+  shared `<Bullets>` helper in `templateHelpers.tsx`.
+- **Shared render helpers** (`templateHelpers.tsx`): `<Bullets>`,
+  `<SectionHeading>`, `<SignatureBlock>`, `clean()` (trim/empty-filter),
+  `dateRange()` (from–to / Present). All 4 templates import these so rendering
+  is consistent and DRY.
+- **Labels** (`cvLabels.ts`): section/field labels in de/en/ar. The label
+  dictionary is the SINGLE source for preview headings — the content language
+  (`data.contentLanguage`) selects which language's labels render, independent
+  of the UI language. New keys: profile, projects, awards, interests, thesis,
+  grade, expectedGraduation, signature, place, date, website,
+  professionalTitle (all in de/en/ar).
+- **Auto-save/restore** (`useLebenslauf.ts`): drafts persist to
+  `localStorage` under `darb-cv-draft` with a 30-min inactivity expiry (matches
+  the draft auto-save pattern from commit `39c2970`). On mount, the hook
+  restores the draft if it exists and hasn't expired; otherwise it seeds
+  `createEmptyCVData()`. A `lastSaved` timestamp + dirty flag drive the
+  "Saved / Unsaved changes" status indicator. `clearDraft()` wipes the key.
+  The hook exposes `{ data, setData, updatePersonal, updateData, updateDesign,
+  updateSignature, errors, validate, saveDraft, loadDraft, clearDraft,
+  draftStatus }`.
+- **Validation** (`LebenslaufBuilder.tsx`): a `validate(data, t)` function
+  (called outside of hooks to avoid rules-of-hooks violations) checks
+  required fields (first name, last name, email format) and date ranges
+  (from ≤ to). Errors render inline under the offending field and block
+  "Download PDF" until resolved.
+- **Print/PDF** (`src/styles/cv-print.css`): the old `position: fixed` preview
+  container (which clipped multi-page CVs to one printed page) was removed.
+  The print stylesheet now uses normal flow with `@page` margins,
+  `break-inside: avoid` on entries, and page-break-before on major sections.
+  "Download PDF" calls `window.print()` (the user picks "Save as PDF"); the
+  on-screen preview is A4-proportioned so what you see is what prints.
+- **i18n parity**: all new UI keys live under `lebenslaufBuilder.*` in
+  `public/locales/{en,ar}/resources.json` (the builder uses the `resources`
+  namespace). The vitest `i18nKeys.test.ts` parity guard passes — every
+  `t("lebenslaufBuilder.*")` key used in source exists in both en and ar.
+  Inline English fallbacks (`t("key", "fallback")`) ensure missing keys still
+  render.
+- **Mobile**: `LebenslaufBuilder` has an Edit/Preview toggle on small screens
+  (shows one at a time); on desktop both render side-by-side.
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 343/343 pass
+  (incl. 16 new cvDesign color-safety tests + i18nKeys parity guard). ESLint:
+  0 errors across all lebenslauf files (5 `react-refresh/only-export-components`
+  warnings in `templateHelpers.tsx` are pre-existing pattern, not build-gated).

@@ -134,7 +134,8 @@
     "templates": {
       "academic": "أكاديمي/بحثي",
       "germanStandard": "ألماني قياسي",
-      "europass": "يوروباس"
+      "europass": "يوروباس",
+      "modernSidebar": "الشريط الجانبي الحديث"
     },
     "sections": {
       "personal": "البيانات الشخصية",
@@ -144,7 +145,13 @@
       "certificates": "الشهادات والدورات",
       "volunteer": "العمل التطوعي",
       "publications": "الأبحاث والمنشورات",
-      "references": "المراجع"
+      "references": "المراجع",
+      "summary": "الملخص الشخصي",
+      "projects": "المشاريع",
+      "awards": "الجوائز",
+      "signature": "التوقيع",
+      "sectionsOrder": "الأقسام",
+      "design": "التصميم"
     },
     "fields": {
       "firstName": "الاسم الأول",
@@ -182,7 +189,23 @@
       "doi": "رابط DOI",
       "refName": "اسم المرجع",
       "refPosition": "المنصب",
-      "refContact": "وسيلة التواصل"
+      "refContact": "وسيلة التواصل",
+      "professionalTitle": "المسمى المهني",
+      "website": "الموقع الإلكتروني",
+      "program": "التخصص / البرنامج",
+      "focus": "مجال التركيز",
+      "grade": "التقدير / المعدل",
+      "expectedGraduation": "تاريخ التخرج المتوقع",
+      "thesis": "رسالة التخرج",
+      "coursework": "المواد ذات الصلة (مفصولة بفواصل)",
+      "achievements": "الإنجازات (مفصولة بفواصل)",
+      "bullets": "الوصف (نقاط)",
+      "interests": "الاهتمامات",
+      "projectName": "اسم المشروع",
+      "awardTitle": "عنوان الجائزة",
+      "place": "المكان (Ort)",
+      "description": "الوصف",
+      "url": "الرابط"
     },
     "actions": {
       "addEntry": "إضافة عنصر",
@@ -194,14 +217,52 @@
       "downloadJPG": "تحميل كصورة JPG",
       "saveDraft": "حفظ المسودة",
       "loadDraft": "تحميل المسودة",
-      "clearAll": "مسح الكل"
+      "clearAll": "مسح الكل",
+      "upload": "رفع",
+      "remove": "إزالة",
+      "addBullet": "إضافة نقطة"
     },
     "showPhoto": "إظهار الصورة",
     "showBirthDate": "إظهار تاريخ الميلاد",
     "preview": "معاينة",
     "draftSaved": "تم حفظ المسودة",
     "draftLoaded": "تم تحميل المسودة",
-    "noDraft": "لا توجد مسودة محفوظة"
+    "noDraft": "لا توجد مسودة محفوظة",
+    "draftSaveFailed": "تعذّر حفظ المسودة (قد تكون مساحة التخزين ممتلئة).",
+    "draftLoadFailed": "تعذّر تحميل المسودة.",
+    "clearConfirm": "مسح جميع الحقول وحذف المسودة المحفوظة؟ لا يمكن التراجع عن هذا.",
+    "cleared": "تم المسح.",
+    "edit": "تحرير",
+    "customColor": "لون مخصص",
+    "designPresets": "نماذج التصميم",
+    "accentColor": "لون التمييز",
+    "typography": "الخطوط",
+    "bodyFont": "خط النص",
+    "headingFont": "خط العناوين",
+    "spacing": "التباعد",
+    "spacing_compact": "مضغوط",
+    "spacing_normal": "عادي",
+    "spacing_relaxed": "مريح",
+    "advancedFields": "حقول متقدمة",
+    "val_nameRequired": "الاسم مطلوب",
+    "val_email": "أدخل بريدًا إلكترونيًا صحيحًا",
+    "val_dates": "يجب أن يسبق تاريخ البدء تاريخ الانتهاء",
+    "val_fixFirst": "أصلح الحقول المطلوبة أولًا",
+    "sigNone": "بدون توقيع",
+    "sigLine": "سطر التوقيع (المكان، التاريخ)",
+    "sigImage": "رفع صورة التوقيع",
+    "hints": {
+      "bulletHint": "مسؤولية أو إنجاز…",
+      "titleHint": "مثال: علوم الحاسوب (بكالوريوس)",
+      "photoHint": "اختياري — الطلبات الألمانية الحديثة لا تتطلب صورة.",
+      "summaryHint": "2–3 جُمل تلخّص خلفيتك وأهدافك. اختياري.",
+      "languageHint": "استخدم مستويات CEFR: A1–C2.",
+      "interestsHint": "قراءة، تنزّه…",
+      "signatureHint": "اختياري. للطلبات الألمانية الرسمية يمكنك إضافة المكان والتاريخ والتوقيع.",
+      "signatureImgHint": "ارفع توقيعًا يدويًا ممسوحًا ضوئيًا على خلفية شفافة أو بيضاء.",
+      "sectionsHint": "أعد ترتيب الأقسام. الأقسام الفارغة لا تظهر في السيرة.",
+      "contrastWarn": "هذا اللون فاتح — سيتم توتير العناوين تلقائيًا للوضوح."
+    }
   },
   "universityFinder": {
     "title": "الأدوات والحاسبات",

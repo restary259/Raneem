@@ -134,7 +134,8 @@
     "templates": {
       "academic": "Academic / Research",
       "germanStandard": "German Standard",
-      "europass": "Europass"
+      "europass": "Europass",
+      "modernSidebar": "Modern Sidebar"
     },
     "sections": {
       "personal": "Personal Information",
@@ -144,7 +145,13 @@
       "certificates": "Certificates & Courses",
       "volunteer": "Volunteer Work",
       "publications": "Publications & Research",
-      "references": "References"
+      "references": "References",
+      "summary": "Profile",
+      "projects": "Projects",
+      "awards": "Awards",
+      "signature": "Signature",
+      "sectionsOrder": "Sections",
+      "design": "Design"
     },
     "fields": {
       "firstName": "First Name",
@@ -182,7 +189,23 @@
       "doi": "DOI Link",
       "refName": "Reference Name",
       "refPosition": "Position",
-      "refContact": "Contact"
+      "refContact": "Contact",
+      "professionalTitle": "Professional title",
+      "website": "Website",
+      "program": "Program / major",
+      "focus": "Focus / specialization",
+      "grade": "Grade / GPA",
+      "expectedGraduation": "Expected graduation",
+      "thesis": "Thesis / final project",
+      "coursework": "Relevant coursework (comma-separated)",
+      "achievements": "Achievements (comma-separated)",
+      "bullets": "Description (bullets)",
+      "interests": "Interests",
+      "projectName": "Project name",
+      "awardTitle": "Award title",
+      "place": "Place (Ort)",
+      "description": "Description",
+      "url": "URL"
     },
     "actions": {
       "addEntry": "Add Entry",
@@ -194,14 +217,52 @@
       "downloadJPG": "Download as JPG",
       "saveDraft": "Save Draft",
       "loadDraft": "Load Draft",
-      "clearAll": "Clear All"
+      "clearAll": "Clear All",
+      "upload": "Upload",
+      "remove": "Remove",
+      "addBullet": "Add bullet"
     },
     "showPhoto": "Show Photo",
     "showBirthDate": "Show Date of Birth",
     "preview": "Preview",
     "draftSaved": "Draft saved",
     "draftLoaded": "Draft loaded",
-    "noDraft": "No saved draft found"
+    "noDraft": "No saved draft found",
+    "draftSaveFailed": "Could not save the draft (storage may be full).",
+    "draftLoadFailed": "Could not load the draft.",
+    "clearConfirm": "Clear all fields and delete the saved draft? This cannot be undone.",
+    "cleared": "Cleared.",
+    "edit": "Edit",
+    "customColor": "Custom color",
+    "designPresets": "Design presets",
+    "accentColor": "Accent color",
+    "typography": "Typography",
+    "bodyFont": "Body font",
+    "headingFont": "Heading font",
+    "spacing": "Spacing",
+    "spacing_compact": "Compact",
+    "spacing_normal": "Normal",
+    "spacing_relaxed": "Relaxed",
+    "advancedFields": "Advanced fields",
+    "val_nameRequired": "Name is required",
+    "val_email": "Enter a valid email",
+    "val_dates": "Start date must be before end date",
+    "val_fixFirst": "Fix the required fields first",
+    "sigNone": "No signature",
+    "sigLine": "Signature line (place, date)",
+    "sigImage": "Upload a signature image",
+    "hints": {
+      "bulletHint": "Responsibility or achievement…",
+      "titleHint": "e.g. Computer Science (B.Sc.)",
+      "photoHint": "Optional — modern German applications do not require a photo.",
+      "summaryHint": "2–3 sentences summarizing your background and goals. Optional.",
+      "languageHint": "Use CEFR levels: A1–C2.",
+      "interestsHint": "Reading, hiking…",
+      "signatureHint": "Optional. For formal German applications you may add place, date and a signature.",
+      "signatureImgHint": "Upload a scanned handwritten signature on a transparent or white background.",
+      "sectionsHint": "Reorder sections. Empty sections never appear in the CV.",
+      "contrastWarn": "This color is light — headings will be auto-darkened for readability."
+    }
   },
   "universityFinder": {
     "title": "Tools & Calculators",
