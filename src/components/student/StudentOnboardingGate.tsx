@@ -337,8 +337,23 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq("is_active", true)
         .order("name_en"),
     ]);
+    // Surface query failures instead of silently rendering an empty dropdown.
+    // The schools query is gated only by the "Authenticated can read schools"
+    // RLS policy; a failure here usually means the schools table/policy is out
+    // of sync with the migrations on the live DB.
+    if (schoolsRes.error) {
+      console.error("[Darb onboarding] schools query failed:", schoolsRes.error);
+      toast({
+        variant: "destructive",
+        description: t("studentOnboarding.errSchoolsLoad", "Could not load language schools. Please refresh, or contact support if it persists."),
+      });
+    }
+    if (profileRes.error) {
+      console.error("[Darb onboarding] profile query failed:", profileRes.error);
+    }
+    const schoolRows = (schoolsRes.data as { id: string; name_ar: string; name_en: string; city: string | null }[] | null) ?? [];
+    setSchools(schoolRows);
     const data = profileRes.data;
-    setSchools((schoolsRes.data as { id: string; name_ar: string; name_en: string; city: string | null }[]) ?? []);
     if (data) {
       const merged: ProfileShape = {
         ...EMPTY_PROFILE,

@@ -4016,7 +4016,8 @@
     "street": "Street",
     "houseNumber": "House number",
     "residentialCity": "City",
-    "noSchools": "No language schools are configured yet. Please contact the admin to add your school, then refresh this page."
+    "noSchools": "No language schools are configured yet. Please contact the admin to add your school, then refresh this page.",
+    "errSchoolsLoad": "Could not load language schools. Please refresh, or contact support if it persists."
   },
   "pushSettings": {
     "title": "Device notifications",
