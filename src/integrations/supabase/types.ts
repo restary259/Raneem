@@ -1764,6 +1764,8 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_universal: boolean
+          language_school_id: string | null
           last_verified_at: string | null
           link: string | null
           name_ar: string
@@ -1771,6 +1773,7 @@ export type Database = {
           phone: string | null
           role_ar: string | null
           role_en: string | null
+          scope: string
           source_url: string | null
           updated_at: string
         }
@@ -1785,6 +1788,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_universal?: boolean
+          language_school_id?: string | null
           last_verified_at?: string | null
           link?: string | null
           name_ar: string
@@ -1792,6 +1797,7 @@ export type Database = {
           phone?: string | null
           role_ar?: string | null
           role_en?: string | null
+          scope?: string
           source_url?: string | null
           updated_at?: string
         }
@@ -1806,6 +1812,8 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_universal?: boolean
+          language_school_id?: string | null
           last_verified_at?: string | null
           link?: string | null
           name_ar?: string
@@ -1813,10 +1821,19 @@ export type Database = {
           phone?: string | null
           role_ar?: string | null
           role_en?: string | null
+          scope?: string
           source_url?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "important_contacts_language_school_id_fkey"
+            columns: ["language_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       influencer_invites: {
         Row: {
@@ -4369,6 +4386,28 @@ export type Database = {
         }[]
       }
       get_my_earnings_summary: { Args: never; Returns: Json }
+      get_student_important_contacts: {
+        Args: never
+        Returns: {
+          id: string
+          name_ar: string
+          name_en: string
+          role_ar: string
+          role_en: string
+          phone: string
+          email: string
+          link: string
+          category: string
+          city: string
+          country: string
+          address_ar: string
+          address_en: string
+          source_url: string
+          last_verified_at: string
+          display_order: number
+          match_scope: string
+        }[]
+      }
       get_my_network: {
         Args: never
         Returns: {

@@ -218,3 +218,47 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   `groupChildHrefs` map).
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 286/286 pass incl.
   i18nKeys parity guard.
+
+## Context-aware Important Contacts (2026-08-13)
+- Students no longer see ALL `important_contacts` rows. Each contact has a
+  `scope` ('universal' | 'school_city' | 'school_only' | 'city_only'), a
+  nullable `language_school_id` FK → `schools(id)`, and `is_universal`.
+  Matching is data-driven — no school/city names hardcoded in React.
+- Migration: `20260813120000_context_aware_important_contacts.sql` adds the
+  columns + CHECK constraints (scope⇔is_universal, school required for
+  school_* scopes, city required for city/school_city), backfills every
+  existing row to `scope='universal', is_universal=true` (no behaviour change
+  until admin re-scopes), and creates the SECURITY DEFINER RPC
+  `get_student_important_contacts()` (granted to `authenticated` only).
+- **Single source of truth**: the RPC resolves the student's active school
+  (auth.uid() → most-recent non-deleted case → `case_submissions.school_id`
+  → `schools.city`, falling back to `cases.city`) and returns ONLY the
+  applicable active contacts, deduped by id, with a `match_scope` tag
+  ('universal'|'school'|'city'|'school_city') for grouping. The student page
+  just renders what the RPC returns.
+- **Security/RLS**: students canNOT `SELECT important_contacts` directly —
+  the broad "roled/authenticated users read active contacts" policies were
+  DROPPED. Students reach contacts only through the RPC (which filters by
+  auth.uid()). Admins keep full CRUD ("Admins manage important contacts").
+  This closes the leak where any student could `select *` and see every
+  school's contacts.
+- `src/lib/importantContacts.ts` mirrors the SAME matching rules in a pure TS
+  predicate (`matchContact` / `filterContactsByContext`) for unit-testability
+  without a DB and admin preview. If targeting changes, update BOTH the SQL
+  RPC and this predicate. Vitest (`importantContacts.test.ts`) covers the 8
+  acceptance cases (FU Heidelberg, GO Heidelberg, FU other-city, no school,
+  disabled contact, new school+city, new universal, duplicate-once).
+- `StudentContactsPage` switched from `.from('important_contacts').select()`
+  to `.rpc('get_student_important_contacts')`, groups by `match_scope`
+  (Emergency & Essential / Your Language School / Your City), and shows empty
+  states. Reloads on focus/user change so a school/city change reflects.
+- `AdminSettingsPage` contacts tab now has a scope selector + school dropdown
+  (active schools) + city (datalist of known cities), scope-aware validation,
+  filters (scope/school/city/category/status), search, Scope badge, and
+  Edit/Duplicate/Enable-Disable/Delete actions. Edit reuses the same dialog
+  (tracked by `editingContactId`).
+- Generated `types.ts` updated: `important_contacts` Row/Insert/Update gained
+  `scope`, `language_school_id`, `is_universal` + the `schools` FK
+  relationship; added the `get_student_important_contacts` function signature.
+- Build/test: `npm run build` clean; `npx vitest run` 296/296 pass incl. the
+  new 10 contact-matching tests + i18nKeys parity guard.
