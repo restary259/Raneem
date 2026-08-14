@@ -21,7 +21,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NotificationOnboardingDialog from "@/components/notifications/NotificationOnboardingDialog";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
-import ThemeToggle from "@/components/common/ThemeToggle";
+import ThemePicker from "@/components/common/ThemePicker";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
@@ -413,7 +413,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             <SidebarTrigger />
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
-              <ThemeToggle />
+              <ThemePicker />
 
               {canMessage && (
                 <TooltipProvider>

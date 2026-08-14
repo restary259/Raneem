@@ -3914,8 +3914,13 @@
     "rateSave": "Apply rate"
   },
   "theme": {
-    "dark": "Dark mode",
-    "light": "Light mode"
+    "dark": "Dark",
+    "light": "Light",
+    "aurora": "Aurora",
+    "choose": "Choose theme",
+    "lightDesc": "Bright and neutral",
+    "darkDesc": "Low-glare charcoal",
+    "auroraDesc": "Deep indigo with teal accents"
   },
   "myData": {
     "title": "My data & privacy",
@@ -4243,6 +4248,9 @@
     "overviewTitle": "Overview",
     "assignHint": "Assigning moves the case into a team member's queue. Other fields stay admin-only.",
     "whatsapp": "WhatsApp",
-    "call": "Call"
+    "call": "Call",
+    "viewList": "List",
+    "viewBoard": "Board",
+    "emptyStage": "Nothing here"
   }
 }

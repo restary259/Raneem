@@ -40,7 +40,6 @@ import {
   CaseStatus,
   CASE_STATUS_ORDER,
   CASE_STATUS_LABELS,
-  STATUS_COLORS,
   resolveStatus,
   statusIndex,
   isActiveStatus,
@@ -565,7 +564,6 @@ const TeamPipelinePage: React.FC = () => {
                 {filtered.map((c) => {
                   const status = resolveStatus(c.status);
                   const meta = CASE_STATUS_LABELS[status];
-                  const colorCls = STATUS_COLORS[status] ?? "bg-muted text-muted-foreground";
                   const attn = attnFor(c);
                   const owner = assigneeName(c.assigned_to);
                   const sla = slaSummary(c.status, c.last_activity_at ?? c.created_at);
