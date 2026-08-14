@@ -97,7 +97,9 @@ export default function MessageList({
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLElement | null>(null);
   const [showJump, setShowJump] = useState(false);
+  const didInitialScroll = useRef(false);
   const lastId = messages[messages.length - 1]?.id ?? null;
+  const firstId = messages[0]?.id ?? null;
   const lastAuthor = messages[messages.length - 1]?.authorId ?? null;
 
   /** The scroll container is an ancestor of this list, not the list itself. */
@@ -122,11 +124,29 @@ export default function MessageList({
     setShowJump(false);
   };
 
-  /* Land on the newest message when the thread opens. */
+  /* Reset the one-shot flag when the thread identity changes, so a reused
+     MessageList instance (no remount on thread switch) still jumps to the
+     newest message of the newly opened thread. Declared BEFORE the land
+     effect so that, when both firstId and messages.length change in the same
+     commit (a thread switch), this reset runs first and the land effect below
+     sees didInitialScroll === false. */
   useEffect(() => {
-    scrollToBottom();
+    didInitialScroll.current = false;
+  }, [firstId]);
+
+  /* Land on the newest message when the thread opens. Anchored to when the
+     messages first render (loading finished) rather than to component mount,
+     because the skeleton branch returns early and bottomRef isn't in the DOM
+     during loading. Uses instant ("auto") scrolling so the first landing can't
+     be interrupted by layout shifts (avatars/attachments/day dividers). The
+     didInitialScroll ref guarantees this runs only once per opened thread. */
+  useEffect(() => {
+    if (loading || messages.length === 0) return;
+    if (didInitialScroll.current) return;
+    didInitialScroll.current = true;
+    requestAnimationFrame(() => scrollToBottom("auto"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loading, messages.length]);
 
   /* New message: follow it only when the reader is already at the bottom or
      it is their own message — never yank them out of older history. */

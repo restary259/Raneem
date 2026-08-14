@@ -583,3 +583,29 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   (incl. 16 new cvDesign color-safety tests + i18nKeys parity guard). ESLint:
   0 errors across all lebenslauf files (5 `react-refresh/only-export-components`
   warnings in `templateHelpers.tsx` are pre-existing pattern, not build-gated).
+
+## Case/direct chat scroll-to-newest on open (2026-08-14)
+- `src/components/messages/MessageList.tsx` is the dashboard case/direct chat
+  list (NOT the AI advisor `ChatMessageList`/`useAIChat` popup, which is a
+  separate stack that scrolls on every message change).
+- The old on-mount `useEffect([])` "land on newest" scroll fired while the
+  parent (CaseMessages/DirectMessages) was still loading; during loading
+  MessageList returns the skeleton branch early so `bottomRef` was NOT in the
+  DOM and `scrollToBottom()` was a no-op. After messages loaded that effect
+  never re-ran; only the `lastId` effect fired, which uses "smooth" + an
+  `isNearBottom()` gate that can land short when message rows change height
+  after layout.
+- Fix: the initial scroll is now anchored to **loading finishing + messages
+  present**, not mount. A `didInitialScroll` ref makes it a one-shot per
+  opened thread, and it uses `scrollToBottom("auto")` (instant, not smooth)
+  wrapped in `requestAnimationFrame` so the full list paints first — the
+  landing can't be interrupted by layout shifts (avatars/attachments/day
+  dividers). An effect on `[firstId]` (declared BEFORE the land effect so it
+  wins the same-commit ordering on a thread switch) resets the flag so a
+  reused MessageList instance still jumps for a new thread.
+- The `lastId` follow-on effect (smooth scroll when near bottom OR own
+  message, else show the jump button) is UNCHANGED — reading older history
+  is never yanked down; the "jump to latest" button + near-bottom follow
+  logic are preserved. Presentational scroll fix only; no changes to
+  CaseMessageService, RLS, realtime, or the composer.
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 343/343 pass.
