@@ -276,6 +276,41 @@ export type Database = {
           },
         ]
       }
+      agent_self_referral_overrides: {
+        Row: {
+          agent_id: string
+          commission_amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_self_referral_overrides_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_chat_logs: {
         Row: {
           created_at: string
@@ -2689,13 +2724,14 @@ export type Database = {
       }
       partner_recruit_applications: {
         Row: {
+          agent_id: string | null
           city: string | null
           created_at: string
           created_user_id: string | null
           email: string
           full_name: string
           id: string
-          master_partner_id: string
+          master_partner_id: string | null
           note: string | null
           phone: string
           recruit_code: string
@@ -2706,13 +2742,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_id?: string | null
           city?: string | null
           created_at?: string
           created_user_id?: string | null
           email: string
           full_name: string
           id?: string
-          master_partner_id: string
+          master_partner_id?: string | null
           note?: string | null
           phone: string
           recruit_code: string
@@ -2723,13 +2760,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_id?: string | null
           city?: string | null
           created_at?: string
           created_user_id?: string | null
           email?: string
           full_name?: string
           id?: string
-          master_partner_id?: string
+          master_partner_id?: string | null
           note?: string | null
           phone?: string
           recruit_code?: string
@@ -2740,6 +2778,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "partner_recruit_applications_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "partner_recruit_applications_created_user_id_fkey"
             columns: ["created_user_id"]
@@ -2950,6 +2995,7 @@ export type Database = {
       platform_settings: {
         Row: {
           agent_commission_rate: number
+          agent_self_referral_rate: number
           ambassador_commission_rate: number
           default_course_weeks: number
           forgotten_contacted_days: number
@@ -2965,6 +3011,7 @@ export type Database = {
         }
         Insert: {
           agent_commission_rate?: number
+          agent_self_referral_rate?: number
           ambassador_commission_rate?: number
           default_course_weeks?: number
           forgotten_contacted_days?: number
@@ -2980,6 +3027,7 @@ export type Database = {
         }
         Update: {
           agent_commission_rate?: number
+          agent_self_referral_rate?: number
           ambassador_commission_rate?: number
           default_course_weeks?: number
           forgotten_contacted_days?: number
@@ -2997,12 +3045,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agent_can_create_accounts: boolean
           agent_can_invite_directly: boolean
           agent_id: string | null
           arrival_date: string | null
           bank_account_number: string | null
           bank_branch: string | null
+          bank_country: string | null
           bank_name: string | null
+          bic: string | null
           biometric_photo_url: string | null
           case_id: string | null
           city: string | null
@@ -3063,12 +3114,15 @@ export type Database = {
           visa_status: string
         }
         Insert: {
+          agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
+          bank_country?: string | null
           bank_name?: string | null
+          bic?: string | null
           biometric_photo_url?: string | null
           case_id?: string | null
           city?: string | null
@@ -3129,12 +3183,15 @@ export type Database = {
           visa_status?: string
         }
         Update: {
+          agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
+          bank_country?: string | null
           bank_name?: string | null
+          bic?: string | null
           biometric_photo_url?: string | null
           case_id?: string | null
           city?: string | null
@@ -4359,6 +4416,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_agent_recruit_link: {
+        Args: never
+        Returns: {
+          code: string
+          target_path: string
+        }[]
+      }
       ensure_case_finance_confirmations: {
         Args: { p_case_id: string }
         Returns: undefined
@@ -4397,6 +4461,13 @@ export type Database = {
           actor_name: string
           event_count: number
           last_seen: string
+        }[]
+      }
+      get_effective_agent_self_referral: {
+        Args: { p_agent_id: string }
+        Returns: {
+          agent_id: string
+          amount: number
         }[]
       }
       get_effective_agent_split: {
@@ -4498,6 +4569,7 @@ export type Database = {
       get_my_agent_network: {
         Args: never
         Returns: {
+          agent_amount: number
           city: string
           email: string
           full_name: string
@@ -4506,6 +4578,7 @@ export type Database = {
           paid_cases: number
           partner_id: string
           referral_code: string
+          role: string
           status: string
           students_count: number
         }[]
@@ -5073,6 +5146,10 @@ export type Database = {
           p_social_link?: string
         }
         Returns: string
+      }
+      sync_agent_relationship_row: {
+        Args: { p_agent_id: string; p_user_id: string }
+        Returns: undefined
       }
       sync_case_school_payments: {
         Args: { p_case_id: string }

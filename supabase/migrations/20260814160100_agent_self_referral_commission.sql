@@ -142,22 +142,23 @@ BEGIN
     v_master_share := COALESCE(v_split.master_share, 0);
     v_master := v_split.master_partner_id;
 
-    -- ── Agent carve-out (from the same pool) ──────────────────────────────
+    -- ── Agent override (ADDITIVE, on top of the partner pool) ─────────────
     -- The referring partner/ambassador may have been recruited by an Agent
-    -- (profiles.agent_id). The agent earns a flat admin-set amount carved out
-    -- of the pool FIRST, then the master share, then the partner gets the
-    -- remainder. The pool outlay never changes.
+    -- (profiles.agent_id). The agent earns a flat admin-set amount (default
+    -- ₪500) that is NOT carved out of the partner pool — the partner keeps
+    -- their full ₪1,000 and the agent's share is paid on top, absorbed by
+    -- DARB's margin (platform_revenue_ils).
     SELECT p.agent_id INTO v_agent FROM public.profiles p WHERE p.id = v_partner_id;
     IF v_agent IS NOT NULL AND v_agent <> v_partner_id THEN
       SELECT * INTO v_agent_split FROM public.get_effective_agent_split(v_agent, v_partner_id);
       v_agent_share := COALESCE(v_agent_split.agent_amount, 0);
-      v_agent_share := GREATEST(0, LEAST(v_agent_share, v_pool));
+      v_agent_share := GREATEST(0, v_agent_share);
     END IF;
 
-    -- Re-apply carve order: agent first, master capped at the remainder, partner
-    -- gets what is left. Total = pool.
-    v_master_share := GREATEST(0, LEAST(v_master_share, v_pool - v_agent_share));
-    v_partner_comm := GREATEST(0, v_pool - v_agent_share - v_master_share);
+    -- The pool is split between the master partner (carve) and the partner.
+    -- The agent share sits OUTSIDE the pool. Total pool outlay = v_pool.
+    v_master_share := GREATEST(0, LEAST(v_master_share, v_pool));
+    v_partner_comm := GREATEST(0, v_pool - v_master_share);
 
     IF v_partner_comm > 0 THEN
       INSERT INTO rewards (
@@ -193,7 +194,7 @@ BEGIN
       ) VALUES (
         v_agent, v_agent_share, 'pending', p_case_id, 'agent_override', v_partner_id,
         'Agent recruitment share from case ' || COALESCE(v_case.case_reference, p_case_id::text),
-        'agent', v_case.case_reference, v_agent_share, v_pool, 'calculated_service_total',
+        'agent', v_case.case_reference, v_agent_share, v_agent_share, 'calculated_service_total',
         now() + interval '20 days', 'case_enrollment_paid'
       ) ON CONFLICT (case_id, user_id, reward_type) WHERE case_id IS NOT NULL DO NOTHING;
     END IF;
@@ -210,11 +211,12 @@ BEGIN
   -- get_case_financials.service_total and the admin Payment-Split preview.
   -- Agent self-referral: subtracts the self-referral amount directly from the
   -- margin (same as a partner referral subtracting the pool).
-  -- Standard path: the agent carve comes out of the pool, not the margin.
+  -- Standard path: the agent override is ADDITIVE, so it is subtracted from
+  -- the margin on top of the partner pool.
   IF v_is_agent_self_referral THEN
     v_admin_remainder := GREATEST(0, v_net - v_t_comm - v_agent_self_amount);
   ELSE
-    v_admin_remainder := GREATEST(0, v_net - v_t_comm - v_pool);
+    v_admin_remainder := GREATEST(0, v_net - v_t_comm - v_pool - v_agent_share);
   END IF;
 
   UPDATE cases
