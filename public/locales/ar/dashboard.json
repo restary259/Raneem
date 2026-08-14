@@ -2362,7 +2362,8 @@
     "performance": "أداء الشبكة",
     "myData": "بياناتي",
     "account": "حسابي",
-    "fees": "الرسوم"
+    "fees": "الرسوم",
+    "apply": "تقديم طلب"
   },
   "case": {
     "status": {
@@ -4215,5 +4216,14 @@
     "schoolCosts": "تكاليف المدرسة (€)",
     "referralDiscount": "خصم الإحالة",
     "serviceTotal": "إجمالي الخدمات"
+  },
+  "manager": {
+    "pipelineTitle": "المسار",
+    "pipelineSubtitle": "أسند إحالات الشركاء والسفراء إلى عضو في الفريق.",
+    "searchPlaceholder": "ابحث بالاسم أو الهاتف…",
+    "filterAll": "كل الحالات",
+    "filterAssigned": "مُسندة",
+    "noCases": "لا توجد حالات شركاء/سفراء لإسنادها حالياً.",
+    "referral": "إحالة"
   }
 }

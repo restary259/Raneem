@@ -1,0 +1,679 @@
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones, Link2, AlertTriangle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useDirection } from "@/hooks/useDirection";
+import { captureReferralCode, getReferralCode, verifyReferralCode } from "@/lib/referral";
+import FieldGroup from "@/components/common/FieldGroup";
+import ConsentBlock from "@/components/common/ConsentBlock";
+import { recordConsent } from "@/lib/consent";
+import {
+  PASSPORT_TYPES,
+  EDUCATION_LEVELS,
+  UNIT_OPTIONS,
+  APPLYING_WITH_OPTIONS,
+  EMPTY_COMPANION,
+  APPLY_TOTAL_STEPS,
+} from "./applyConstants";
+
+const isDev = Boolean(import.meta.env.DEV);
+const debug = (...args: unknown[]) => { if (isDev) console.log(...args); };
+const debugError = (...args: unknown[]) => { if (isDev) console.error(...args); };
+
+export interface ApplyFormProps {
+  /** When true, renders only the form card (no full-screen chrome / hero /
+   *  trust badges) for embedding inside a dashboard layout. */
+  embedded?: boolean;
+  /** When true, sends the caller's session access token so the edge function
+   *  attributes the case to the logged-in partner server-side. Public apply
+   *  uses the anon key instead. */
+  useSessionAuth?: boolean;
+  /** Called once after a successful submission (embedded mode navigates away;
+   *  public mode shows its own success screen). */
+  onSubmitted?: () => void;
+}
+
+type Companion = {
+  name: string;
+  phone: string;
+  passportType: string;
+  city: string;
+  education: string;
+  englishUnits: string;
+  mathUnits: string;
+  preferredMajor: string;
+};
+
+/**
+ * The multi-step apply form, shared by the public /apply page and the
+ * in-dashboard partner apply page. The form body is identical in both; only
+ * the surrounding chrome and the auth header differ (see ApplyFormProps).
+ */
+const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth = false, onSubmitted }) => {
+  const { t, i18n } = useTranslation("landing");
+  const { dir, isRtl } = useDirection();
+  const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const isAr = i18n.language === "ar";
+
+  const [step, setStep] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
+
+  // Step 1 — Identity
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [passportType, setPassportType] = useState("");
+  const [city, setCity] = useState("");
+
+  // Step 2 — Education
+  const [educationLevel, setEducationLevel] = useState("");
+  const [englishUnits, setEnglishUnits] = useState("");
+  const [mathUnits, setMathUnits] = useState("");
+  const [fieldOfStudy, setFieldOfStudy] = useState("");
+  const [englishProficiency, setEnglishProficiency] = useState("");
+
+  // Step 3 — Major
+  const [preferredMajor, setPreferredMajor] = useState("");
+
+  // Step 4 — Companion
+  const [applyingWith, setApplyingWith] = useState("alone");
+  const [companions, setCompanions] = useState<Companion[]>([{ ...EMPTY_COMPANION }]);
+
+  const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
+  const [refOwner, setRefOwner] = useState<string | null>(null);
+  const [refBroken, setRefBroken] = useState(false);
+
+  useEffect(() => {
+    const code = captureReferralCode(searchParams.toString());
+    setRefCode(code);
+    if (!code) {
+      setRefOwner(null);
+      setRefBroken(false);
+      return;
+    }
+    let active = true;
+    verifyReferralCode(code).then((health) => {
+      if (!active) return;
+      if (health.valid) {
+        setRefOwner(health.ownerName);
+        setRefBroken(false);
+      } else {
+        setRefCode(null);
+        setRefOwner(null);
+        setRefBroken(true);
+      }
+    });
+    return () => { active = false; };
+  }, [searchParams]);
+
+  const isValidPhone = (p: string) => {
+    const cleaned = p.replace(/[\s\-()]/g, "");
+    return /^05\d{8}$/.test(cleaned) || /^\+9725\d{8}$/.test(cleaned) || /^\+?\d{7,15}$/.test(cleaned);
+  };
+  const [phoneError, setPhoneError] = useState("");
+
+  const handlePhoneChange = (val: string) => {
+    setPhone(val);
+    if (val.trim() && !isValidPhone(val)) {
+      setPhoneError(
+        isAr
+          ? "رقم هاتف غير صالح (مثال: 0501234567 أو +491234567890)"
+          : "Invalid phone number (e.g. 0501234567 or +491234567890)",
+      );
+    } else {
+      setPhoneError("");
+    }
+  };
+
+  const showBagrut = educationLevel === "bagrut";
+  const showHigherEd = educationLevel === "bachelor" || educationLevel === "master";
+  const hasCompanions = applyingWith !== "alone";
+
+  const canGoNext = () => {
+    if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone);
+    if (step === 2 && showBagrut) return !!englishUnits && !!mathUnits;
+    return true;
+  };
+
+  const addCompanion = () => setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]);
+  const updateCompanion = (index: number, field: string, value: string) =>
+    setCompanions((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
+  const removeCompanion = (index: number) =>
+    setCompanions((prev) => prev.filter((_, i) => i !== index));
+
+  /** Resolve the auth header for the edge-function call. Public form uses the
+   *  anon key; the in-dashboard partner form uses the caller's session token. */
+  const buildHeaders = async (): Promise<Record<string, string>> => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (useSessionAuth) {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
+  const handleSubmit = async () => {
+    if (loading) return;
+
+    if (!consentAgreed) {
+      toast({
+        title: isAr ? "الموافقة مطلوبة" : "Consent required",
+        description: isAr
+          ? "يرجى الموافقة على معالجة بياناتك قبل الإرسال"
+          : "Please agree to the processing of your data before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (educationLevel === "bagrut" && !englishUnits) {
+      toast({
+        title: isAr ? "الرجاء اختيار وحدات الإنجليزي" : "English Units Required",
+        description: isAr ? "يجب اختيار عدد وحدات الإنجليزي قبل الإرسال" : "Please go back to step 2 and select your English units",
+        variant: "destructive",
+      });
+      setStep(2);
+      return;
+    }
+    if (educationLevel === "bagrut" && !mathUnits) {
+      toast({
+        title: isAr ? "الرجاء اختيار وحدات الرياضيات" : "Math Units Required",
+        description: isAr ? "يجب اختيار عدد وحدات الرياضيات قبل الإرسال" : "Please go back to step 2 and select your Math units",
+        variant: "destructive",
+      });
+      setStep(2);
+      return;
+    }
+
+    setLoading(true);
+
+    // A signed-in partner doesn't need a referral code to be credited — the
+    // edge function attributes from their JWT. Only warn public applicants.
+    if (!useSessionAuth && !refCode) {
+      toast({
+        title: isAr ? "لا يوجد رابط إحالة" : "No referral link",
+        description: isAr
+          ? "لم يُعثر على رمز إحالة صالح؛ سيُسجّل الطلب دون نسبة إلى شريك."
+          : "No valid referral code found; your application will be recorded without partner attribution.",
+        variant: "default",
+      });
+    }
+
+    void recordConsent({
+      sourceForm: "apply_page",
+      subjectName: fullName,
+      phone,
+      serviceContact: true,
+      marketing: marketingConsent,
+      marketingChannels: marketingConsent ? { email: true, whatsapp: true, sms: false } : undefined,
+      locale: i18n.language,
+    });
+
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const caseUrl = `https://${projectId}.supabase.co/functions/v1/create-case-from-apply`;
+    const headers = await buildHeaders();
+    // The anon key is still required for the public form (the function is
+    // invokable with anon); the partner form sends a session bearer instead.
+    if (!useSessionAuth) headers["apikey"] = anonKey;
+
+    const basePayload = {
+      full_name: fullName.trim(),
+      phone_number: phone.trim(),
+      source: "apply_page",
+      ref_code: refCode,
+      city: city.trim() || null,
+      education_level: educationLevel || null,
+      bagrut_score: null,
+      english_level: englishProficiency || null,
+      english_units: englishUnits ? parseInt(englishUnits) : null,
+      math_units: mathUnits ? parseInt(mathUnits) : null,
+      passport_type: passportType || null,
+      degree_interest: preferredMajor.trim() || fieldOfStudy.trim() || null,
+    };
+
+    try {
+      const caseResp = await fetch(caseUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(basePayload),
+      });
+      const caseResult = await caseResp.json();
+      if (!caseResp.ok && caseResp.status !== 409) {
+        throw new Error(caseResult.error || "Failed to create case");
+      }
+
+      let companionsCreated = 0;
+      let companionsFailed = 0;
+      if (hasCompanions) {
+        for (const c of companions) {
+          if (!c.name.trim() || !c.phone.trim()) continue;
+          try {
+            const compCaseResp = await fetch(caseUrl, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                full_name: c.name.trim(),
+                phone_number: c.phone.trim(),
+                source: "apply_page",
+                ref_code: refCode,
+                city: c.city.trim() || null,
+                education_level: c.education || null,
+                passport_type: c.passportType || null,
+                math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
+                english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
+                bagrut_score: null,
+                english_level: null,
+                degree_interest: c.preferredMajor.trim() || null,
+              }),
+            });
+            if (compCaseResp.status === 409) {
+              companionsCreated++;
+            } else if (!compCaseResp.ok) {
+              companionsFailed++;
+            } else {
+              companionsCreated++;
+            }
+          } catch {
+            companionsFailed++;
+          }
+        }
+      }
+
+      if (hasCompanions && companionsFailed > 0) {
+        toast({
+          title: isAr ? "تعذّر إنشاء بعض الرفاق" : "Some companions could not be added",
+          description: isAr
+            ? `تم إنشاء ${companionsCreated} رفيق، وفشل ${companionsFailed}.`
+            : `${companionsCreated} companion(s) created, ${companionsFailed} failed.`,
+          variant: "destructive",
+        });
+      }
+
+      setSubmitted(true);
+      onSubmitted?.();
+    } catch (err: unknown) {
+      debugError("[ApplyForm] Submission failed:", err);
+      toast({
+        title: t("apply.error", "حدث خطأ، حاول مرة أخرى"),
+        description: err instanceof Error ? err.message : "",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const TOTAL_STEPS = APPLY_TOTAL_STEPS;
+  const progressValue = (step / TOTAL_STEPS) * 100;
+  const NextIcon = isRtl ? ChevronLeft : ChevronRight;
+  const BackIcon = isRtl ? ChevronRight : ChevronLeft;
+
+  const stepTitles = [
+    isAr ? "المعلومات الشخصية" : "Personal Information",
+    isAr ? "الخلفية التعليمية" : "Education Background",
+    isAr ? "التخصص المفضل" : "Desired Major",
+    isAr ? "التقديم مع شخص آخر؟" : "Applying with someone?",
+  ];
+
+  // ── Success screen ──────────────────────────────────────────────
+  if (submitted) {
+    if (embedded) {
+      return (
+        <div className="w-full max-w-md mx-auto text-center space-y-6 animate-fade-in py-8">
+          <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
+            <CheckCircle className="h-12 w-12 text-accent" />
+          </div>
+          <h2 className="text-xl font-bold">{t("apply.successTitle", "تم استلام بياناتك ✅")}</h2>
+          <p className="text-muted-foreground text-sm">
+            {t("apply.successSubtitle", "سيتم التواصل معك عبر واتساب قريباً")}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-screen flex flex-col" dir={dir}>
+        <div className="min-h-screen flex flex-col bg-background text-foreground">
+          <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />
+          <main className="flex-1 flex items-center justify-center p-4">
+            <div className="w-full max-w-md text-center space-y-6 animate-fade-in">
+              <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
+                <span className="absolute inset-0 rounded-full bg-accent/20 animate-[ping_1.5s_ease-out_infinite]" />
+                <span className="absolute inset-2 rounded-full bg-accent/15 animate-[ping_1.5s_ease-out_0.3s_infinite]" />
+                <div className="relative w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center animate-scale-in">
+                  <CheckCircle className="h-10 w-10 text-accent" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold">{t("apply.successTitle", "تم استلام بياناتك ✅")}</h2>
+              <p className="text-muted-foreground">
+                {t("apply.successSubtitle", "سيتم التواصل معك عبر واتساب قريباً")}
+              </p>
+              <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-2">
+                <p className="text-sm font-semibold text-foreground">
+                  {isAr
+                    ? "📩 سنتواصل معك خلال 24 إلى 48 ساعة عبر واتساب"
+                    : "📩 We will contact you within 24 to 48 hours via WhatsApp"}
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <a href="/">
+                  <Button variant="outline" className="w-full h-12 rounded-xl text-base font-semibold">
+                    {t("apply.exploreWebsite", "تصفّح موقعنا")}
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Form card (shared) ─────────────────────────────────────────
+  const formCard = (
+    <div className="w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-fade-in">
+      <div className="px-5 py-4 border-b border-border bg-muted/30">
+        <h2 className="text-sm font-semibold">{stepTitles[step - 1]}</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {t("apply.step", "خطوة")} {step} / {TOTAL_STEPS}
+        </p>
+      </div>
+
+      <div className="p-5 space-y-5">
+        {refOwner && (
+          <div data-testid="referral-valid" className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
+            <Link2 className="h-4 w-4 shrink-0" />
+            <span>
+              {isAr
+                ? `تم إحالتك من قبل ${refOwner} — فريق درب يرافقك`
+                : `You were referred by ${refOwner} — the Darb team is with you`}
+            </span>
+          </div>
+        )}
+        {refBroken && (
+          <div data-testid="referral-broken" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-300">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>
+              {isAr
+                ? "تعذّر التحقق من رابط الإحالة — سيتم تسجيل طلبك دون نسبة إلى شريك."
+                : "Your referral link could not be verified — your application will be recorded without partner attribution."}
+            </span>
+          </div>
+        )}
+
+        {/* Step 1 — Identity */}
+        {step === 1 && (
+          <div className="space-y-4 animate-fade-in">
+            <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"} dir={dir} className="h-11" />
+            </FieldGroup>
+            <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
+              <Input value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className={`h-11 ${phoneError ? "border-destructive" : ""}`} />
+              {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
+            </FieldGroup>
+            <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
+              <div className="grid grid-cols-1 gap-2">
+                {PASSPORT_TYPES.map((pt) => (
+                  <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                    {isAr ? pt.label : pt.labelEn}
+                  </button>
+                ))}
+              </div>
+            </FieldGroup>
+            <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
+            </FieldGroup>
+          </div>
+        )}
+
+        {/* Step 2 — Education */}
+        {step === 2 && (
+          <div className="space-y-4 animate-fade-in">
+            <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
+              <div className="grid grid-cols-2 gap-2">
+                {EDUCATION_LEVELS.map((lvl) => (
+                  <button key={lvl.value} type="button" onClick={() => setEducationLevel(lvl.value)} className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${educationLevel === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                    {isAr ? lvl.label : lvl.labelEn}
+                  </button>
+                ))}
+              </div>
+            </FieldGroup>
+
+            {showBagrut && (
+              <>
+                <FieldGroup label={isAr ? "وحدات الإنجليزي *" : "English Units *"}>
+                  <div className="flex gap-2">
+                    {UNIT_OPTIONS.map((u) => (
+                      <button key={u} type="button" onClick={() => setEnglishUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${englishUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                    ))}
+                  </div>
+                  {!englishUnits && <p className="text-xs text-muted-foreground mt-1">{isAr ? "الرجاء اختيار عدد وحدات الإنجليزي" : "Please select your English units"}</p>}
+                </FieldGroup>
+                <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
+                  <div className="flex gap-2">
+                    {UNIT_OPTIONS.map((u) => (
+                      <button key={u} type="button" onClick={() => setMathUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${mathUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                    ))}
+                  </div>
+                  {!mathUnits && <p className="text-xs text-muted-foreground mt-1">{isAr ? "الرجاء اختيار عدد وحدات الرياضيات" : "Please select your Math units"}</p>}
+                </FieldGroup>
+              </>
+            )}
+
+            {showHigherEd && (
+              <>
+                <FieldGroup label={isAr ? "مجال الدراسة" : "Field of Study"}>
+                  <Input value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} placeholder={isAr ? "مثال: هندسة برمجيات" : "e.g. Software Engineering"} dir={dir} className="h-11" />
+                </FieldGroup>
+                <FieldGroup label={isAr ? "مستوى الإنجليزية" : "English Proficiency"}>
+                  <div className="flex gap-2">
+                    {["beginner", "intermediate", "advanced"].map((lvl) => (
+                      <button key={lvl} type="button" onClick={() => setEnglishProficiency(lvl)} className={`flex-1 py-2.5 rounded-xl border text-xs font-medium transition-all ${englishProficiency === lvl ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>
+                        {isAr ? ({ beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" } as Record<string, string>)[lvl] : lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </FieldGroup>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Step 3 — Desired Major */}
+        {step === 3 && (
+          <div className="space-y-4 animate-fade-in">
+            <FieldGroup label={isAr ? "التخصص المفضل" : "Preferred Major"}>
+              <Input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder={isAr ? "اكتب التخصص الذي تريده..." : "Type your desired major..."} dir={dir} className="h-11" />
+            </FieldGroup>
+            <p className="text-xs text-muted-foreground">{isAr ? "يمكنك تخطي هذه الخطوة إذا لم تكن متأكدًا بعد" : "You can skip this step if you're not sure yet"}</p>
+          </div>
+        )}
+
+        {/* Step 4 — Applying with someone? */}
+        {step === 4 && (
+          <div className="space-y-4 animate-fade-in">
+            <FieldGroup label={isAr ? "هل تتقدم مع فرد من العائلة أو صديق؟" : "Are you applying with a family member or a friend?"}>
+              <div className="grid grid-cols-1 gap-2">
+                {APPLYING_WITH_OPTIONS.map((opt) => (
+                  <button key={opt.value} type="button" onClick={() => { setApplyingWith(opt.value); if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]); if (opt.value === "multiple" && companions.length < 2) setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]); }} className={`w-full text-start px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${applyingWith === opt.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                    {isAr ? opt.label : opt.labelEn}
+                  </button>
+                ))}
+              </div>
+            </FieldGroup>
+
+            {hasCompanions && (
+              <div className="space-y-5 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
+                {companions.map((c, idx) => (
+                  <div key={idx} className="space-y-3">
+                    {companions.length > 1 && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-foreground/70">{isAr ? `الشخص ${idx + 1}` : `Person ${idx + 1}`}</p>
+                        {idx > 0 && <button type="button" onClick={() => removeCompanion(idx)} className="text-xs text-destructive hover:underline">{isAr ? "حذف" : "Remove"}</button>}
+                      </div>
+                    )}
+                    <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
+                      <Input value={c.name} onChange={(e) => updateCompanion(idx, "name", e.target.value)} placeholder={isAr ? "الاسم الكامل" : "Full name"} dir={dir} className="h-11" />
+                    </FieldGroup>
+                    <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
+                      <Input value={c.phone} onChange={(e) => updateCompanion(idx, "phone", e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className="h-11" />
+                    </FieldGroup>
+                    <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
+                      <div className="grid grid-cols-1 gap-2">
+                        {PASSPORT_TYPES.map((pt) => (
+                          <button key={pt.value} type="button" onClick={() => updateCompanion(idx, "passportType", pt.value)} className={`w-full text-start px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${c.passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? pt.label : pt.labelEn}</button>
+                        ))}
+                      </div>
+                    </FieldGroup>
+                    <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
+                      <Input value={c.city} onChange={(e) => updateCompanion(idx, "city", e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
+                    </FieldGroup>
+                    <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
+                      <div className="grid grid-cols-2 gap-2">
+                        {EDUCATION_LEVELS.map((lvl) => (
+                          <button key={lvl.value} type="button" onClick={() => updateCompanion(idx, "education", lvl.value)} className={`px-2 py-2 rounded-xl border text-[11px] font-medium transition-all ${c.education === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? lvl.label : lvl.labelEn}</button>
+                        ))}
+                      </div>
+                    </FieldGroup>
+                    {c.education === "bagrut" && (
+                      <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-background/60 border border-border animate-fade-in">
+                        <FieldGroup label={isAr ? "وحدات الإنجليزي" : "English Units"}>
+                          <div className="flex gap-1.5">
+                            {UNIT_OPTIONS.map((u) => (
+                              <button key={u} type="button" onClick={() => updateCompanion(idx, "englishUnits", u)} className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${c.englishUnits === u ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                            ))}
+                          </div>
+                        </FieldGroup>
+                        <FieldGroup label={isAr ? "وحدات الرياضيات" : "Math Units"}>
+                          <div className="flex gap-1.5">
+                            {UNIT_OPTIONS.map((u) => (
+                              <button key={u} type="button" onClick={() => updateCompanion(idx, "mathUnits", u)} className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${c.mathUnits === u ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                            ))}
+                          </div>
+                        </FieldGroup>
+                      </div>
+                    )}
+                    <FieldGroup label={isAr ? "التخصص المفضل (اختياري)" : "Preferred Major (optional)"}>
+                      <Input value={c.preferredMajor} onChange={(e) => updateCompanion(idx, "preferredMajor", e.target.value)} placeholder={isAr ? "مثال: هندسة، طب..." : "e.g. Engineering, Medicine..."} dir={dir} className="h-11" />
+                    </FieldGroup>
+                    {idx < companions.length - 1 && <hr className="border-border" />}
+                  </div>
+                ))}
+                {applyingWith === "multiple" && (
+                  <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={addCompanion}>
+                    {isAr ? "+ إضافة شخص آخر" : "+ Add another person"}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === TOTAL_STEPS && (
+          <ConsentBlock
+            isAr={isAr}
+            collected={isAr ? "الاسم الكامل، رقم الهاتف، المدينة، نوع جواز السفر والمعلومات الدراسية" : "full name, phone number, city, passport type and education details"}
+            agreed={consentAgreed}
+            onAgreedChange={setConsentAgreed}
+            marketing={marketingConsent}
+            onMarketingChange={setMarketingConsent}
+          />
+        )}
+
+        {/* Navigation */}
+        <div className="flex gap-3 pt-2">
+          {step > 1 && (
+            <Button variant="outline" className="flex-1 h-11 rounded-xl" onClick={() => setStep((s) => s - 1)}>
+              <BackIcon className="h-4 w-4" />
+              {isAr ? "رجوع" : "Back"}
+            </Button>
+          )}
+          {step < TOTAL_STEPS ? (
+            <Button className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setStep((s) => s + 1)} disabled={!canGoNext()}>
+              {isAr ? "التالي" : "Next"}
+              <NextIcon className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleSubmit} disabled={loading || !canGoNext() || !consentAgreed}>
+              {loading ? "..." : isAr ? "أرسل بياناتي" : "Submit"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Embedded: just the card + step indicators, no full-screen chrome ──
+  if (embedded) {
+    return (
+      <div dir={dir} className="w-full max-w-lg mx-auto px-1 py-6 space-y-6">
+        <div className="w-full flex items-center gap-1">
+          {[1, 2, 3, 4].map((s) => (
+            <div key={s} className="flex-1 flex flex-col items-center gap-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${s < step ? "bg-accent text-accent-foreground" : s === step ? "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : "bg-muted text-muted-foreground"}`}>
+                {s < step ? <CheckCircle className="h-4 w-4" /> : s}
+              </div>
+              <span className="text-[9px] text-muted-foreground text-center leading-tight hidden sm:block">{stepTitles[s - 1]}</span>
+            </div>
+          ))}
+        </div>
+        <Progress value={progressValue} aria-label={isRtl ? "تقدّم تعبئة الطلب" : "Application progress"} className="h-1.5 w-full" />
+        {formCard}
+      </div>
+    );
+  }
+
+  // ── Public: full-screen page with hero + trust badges ──
+  return (
+    <div className="min-h-screen flex flex-col" dir={dir}>
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
+        <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />
+        <main className="flex-1 flex flex-col items-center px-4 py-6 md:py-10 gap-6 max-w-lg mx-auto w-full">
+          <section className="text-center space-y-2 animate-fade-in">
+            <h1 className="text-xl md:text-2xl font-bold leading-tight">{t("apply.heroTitle")}</h1>
+            <p className="text-muted-foreground text-sm">{t("apply.heroSubtitle")}</p>
+          </section>
+
+          <div className="w-full flex items-center gap-1">
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} className="flex-1 flex flex-col items-center gap-1">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${s < step ? "bg-accent text-accent-foreground" : s === step ? "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : "bg-muted text-muted-foreground"}`}>
+                  {s < step ? <CheckCircle className="h-4 w-4" /> : s}
+                </div>
+                <span className="text-[9px] text-muted-foreground text-center leading-tight hidden sm:block">{stepTitles[s - 1]}</span>
+              </div>
+            ))}
+          </div>
+          <Progress value={progressValue} aria-label={isRtl ? "تقدّم تعبئة الطلب" : "Application progress"} className="h-1.5 w-full" />
+
+          {formCard}
+
+          <div className="grid grid-cols-3 gap-2.5 w-full">
+            {[
+              { icon: GraduationCap, label: t("apply.trustBadge1", "استشارة مجانية") },
+              { icon: Shield, label: t("apply.trustBadge2", "مدارس معتمدة") },
+              { icon: Headphones, label: t("apply.trustBadge3", "متابعة حتى التسجيل") },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-col items-center gap-1.5 text-center p-3 rounded-xl border border-border bg-card text-xs text-muted-foreground">
+                <Icon className="h-5 w-5 text-accent" />
+                <span className="leading-tight">{label}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground text-center pb-4">Darb Study International © {new Date().getFullYear()}</p>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default ApplyForm;

@@ -2344,7 +2344,8 @@
     "performance": "Network performance",
     "myData": "My data",
     "account": "My Account",
-    "fees": "Fees"
+    "fees": "Fees",
+    "apply": "Apply"
   },
   "case": {
     "status": {
@@ -4197,5 +4198,14 @@
     "schoolCosts": "School costs (€)",
     "referralDiscount": "Referral discount",
     "serviceTotal": "Service total"
+  },
+  "manager": {
+    "pipelineTitle": "Pipeline",
+    "pipelineSubtitle": "Assign partner & ambassador referrals to a team member.",
+    "searchPlaceholder": "Search by name or phone…",
+    "filterAll": "All cases",
+    "filterAssigned": "Assigned",
+    "noCases": "No partner/ambassador cases to assign right now.",
+    "referral": "Referral"
   }
 }

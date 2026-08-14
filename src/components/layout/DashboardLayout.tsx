@@ -25,6 +25,7 @@ import ThemeToggle from "@/components/common/ThemeToggle";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
+import { useIsManager } from "@/hooks/useIsManager";
 
 import {
   LayoutDashboard,
@@ -62,6 +63,7 @@ import {
   ShieldCheck,
   Receipt,
   Wrench,
+  ClipboardEdit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
@@ -78,6 +80,21 @@ interface NavItem {
    *  live under it (collapsible). `href` is ignored for parents. */
   children?: NavItem[];
 }
+
+/**
+ * Shared partner/ambassador sidebar items. Both roles share the base nav so the
+ * two dashboards stay in sync; `social_media_partner` (lawyers) appends the
+ * in-dashboard "Apply" item, while `ambassador` (influencers) keeps the
+ * referral-link-only feature set. Declared as a const so the per-role arrays
+ * can still diverge without duplicating the common entries.
+ */
+const PARTNER_BASE_NAV: NavItem[] = [
+  { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
+  { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
+  { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
+  { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
+  { key: "nav.account", icon: User, href: "/partner/profile" },
+];
 
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
@@ -123,19 +140,10 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ],
 
   social_media_partner: [
-    { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
-    { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
-    { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
-    { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
-    { key: "nav.account", icon: User, href: "/partner/profile" },
+    ...PARTNER_BASE_NAV,
+    { key: "nav.apply", icon: ClipboardEdit, href: "/partner/apply", group: "nav.group.work" },
   ],
-  ambassador: [
-    { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
-    { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
-    { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
-    { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
-    { key: "nav.account", icon: User, href: "/partner/profile" },
-  ],
+  ambassador: [...PARTNER_BASE_NAV],
   student: [
     { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
     {
@@ -187,14 +195,21 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const { isMaster } = useIsMasterPartner();
+  const { isManager } = useIsManager();
   const baseItems = NAV_CONFIG[role] ?? [];
-  const items: NavItem[] = isMaster && role === "social_media_partner"
+  const isPartnerRole = role === "social_media_partner" || role === "ambassador";
+  const items: NavItem[] = isMaster && isPartnerRole
     ? [
         ...baseItems,
-        { key: "nav.network", icon: Crown, href: "/partner/network" },
-        { key: "nav.performance", icon: BarChart2, href: "/partner/performance" },
+        { key: "nav.network", icon: Crown, href: "/partner/network", group: "nav.group.work" },
+        { key: "nav.performance", icon: BarChart2, href: "/partner/performance", group: "nav.group.work" },
       ]
-    : baseItems;
+    : isManager && role === "team_member"
+      ? [
+          ...baseItems,
+          { key: "nav.pipeline", icon: GitBranch, href: "/team/pipeline", group: "nav.group.work" },
+        ]
+      : baseItems;
   const unreadMessages = useUnreadCaseMessages(true);
 
   const isItemActive = (item: NavItem): boolean => {

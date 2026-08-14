@@ -18,6 +18,17 @@ interface NavItem {
   href: string;
 }
 
+// Shared partner/ambassador bottom-nav destinations. Mirrors PARTNER_BASE_NAV
+// in DashboardLayout — kept here separately because mobile caps at 5 items and
+// omits the partner "Apply" entry (the Apply form is a full-page flow, not a
+// daily-destination tab). Both roles use the identical set today.
+const PARTNER_MOBILE_NAV: NavItem[] = [
+  { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
+  { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
+  { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
+  { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
+];
+
 // Max 5 items per role for mobile bottom nav
 const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
@@ -33,18 +44,8 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.messages', icon: MessageSquare, href: '/team/messages' },
     { key: 'nav.appointments', icon: CalendarDays, href: '/team/appointments' },
   ],
-  social_media_partner: [
-    { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
-    { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
-    { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
-    { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
-  ],
-  ambassador: [
-    { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
-    { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
-    { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
-    { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
-  ],
+  social_media_partner: [...PARTNER_MOBILE_NAV],
+  ambassador: [...PARTNER_MOBILE_NAV],
   // Student: 5 top-level destinations mirroring the grouped sidebar.
   // Grouped parents link to their first child route (the most common entry).
   student: [

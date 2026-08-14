@@ -623,7 +623,7 @@ const AdminTeamPage = () => {
                         />
                       </label>
                     )}
-                    {m.role === 'social_media_partner' && (
+                    {(m.role === 'social_media_partner' || m.role === 'ambassador') && (
                       <MasterPartnerToggle
                         partnerId={m.id}
                         partnerName={m.full_name}

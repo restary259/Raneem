@@ -4521,6 +4521,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_manager: {
+        Args: { p_uid: string }
+        Returns: boolean
+      }
       insert_lead_from_apply: {
         Args: {
           p_accommodation?: boolean
@@ -4572,6 +4576,10 @@ export type Database = {
           students_count: number
           total_earned: number
         }[]
+      }
+      list_team_directory: {
+        Args: never
+        Returns: { id: string; full_name: string }[]
       }
       list_payout_requests: {
         Args: never

@@ -3,8 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * True when the signed-in partner has been upgraded to master partner.
- * The flag lives on `profiles.is_master_partner` and can only be set by an admin.
+ * True when the signed-in partner OR ambassador has been upgraded to master
+ * partner. The flag lives on `profiles.is_master_partner` and can only be set
+ * by an admin. Both social_media_partner and ambassador can be promoted to
+ * master and recruit others into their own role.
  */
 export function useIsMasterPartner() {
   const { user, role } = useAuth();
@@ -14,7 +16,7 @@ export function useIsMasterPartner() {
   useEffect(() => {
     let active = true;
     const run = async () => {
-      if (!user || role !== 'social_media_partner') {
+      if (!user || (role !== 'social_media_partner' && role !== 'ambassador')) {
         if (active) { setIsMaster(false); setLoading(false); }
         return;
       }

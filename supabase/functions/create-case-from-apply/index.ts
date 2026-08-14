@@ -35,9 +35,18 @@ function isRateLimited(ip: string): boolean {
   return entry.count > RATE_LIMIT;
 }
 
-type Caller = { userId: string | null; isStaff: boolean };
+type Caller = {
+  userId: string | null;
+  isStaff: boolean;
+  isPartner: boolean;
+};
 
-/** Resolves the caller from the bearer token, if the request carries a user JWT. */
+/**
+ * Resolves the caller from the bearer token, if the request carries a user JWT.
+ * A logged-in social_media_partner / ambassador (submitting from their own
+ * dashboard apply form) is identified as `isPartner` so the case can be
+ * attributed to them server-side — never from the request body.
+ */
 async function resolveCaller(
   req: Request,
   admin: ReturnType<typeof createClient>,
@@ -46,20 +55,24 @@ async function resolveCaller(
   const token = authHeader.toLowerCase().startsWith("bearer ")
     ? authHeader.slice(7).trim()
     : "";
-  if (!token) return { userId: null, isStaff: false };
+  if (!token) return { userId: null, isStaff: false, isPartner: false };
 
   const { data: userData } = await admin.auth.getUser(token);
   const userId = userData?.user?.id ?? null;
-  if (!userId) return { userId: null, isStaff: false };
+  if (!userId) return { userId: null, isStaff: false, isPartner: false };
 
-  const { data: staffRole } = await admin
+  const { data: roleRow } = await admin
     .from("user_roles")
-    .select("user_id")
+    .select("role")
     .eq("user_id", userId)
-    .in("role", ["admin", "team_member"])
     .maybeSingle();
 
-  return { userId, isStaff: !!staffRole };
+  const role = roleRow?.role as string | undefined;
+  return {
+    userId,
+    isStaff: role === "admin" || role === "team_member",
+    isPartner: role === "social_media_partner" || role === "ambassador",
+  };
 }
 
 Deno.serve(async (req) => {
@@ -228,6 +241,18 @@ Deno.serve(async (req) => {
           attributionMethod = "manual";
         }
       }
+    }
+
+    // ── Partner self-attribution (dashboard apply form) ─────────────
+    // A logged-in partner/ambassador submitting from their own dashboard
+    // attributes the case to themselves, derived server-side from the JWT —
+    // the client-supplied partner_id is ignored for non-staff callers so a
+    // partner can never credit a different account. A referral code on the
+    // request still wins (the partner may be sharing a student's ref link),
+    // so this only fills attribution when nothing else resolved it.
+    if (!validatedPartnerId && caller.isPartner && caller.userId) {
+      validatedPartnerId = caller.userId;
+      attributionMethod = "partner_self";
     }
 
     // ── Referral discount ─────────────────────────────────────────────

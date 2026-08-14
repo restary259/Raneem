@@ -672,3 +672,28 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   logic are preserved. Presentational scroll fix only; no changes to
   CaseMessageService, RLS, realtime, or the composer.
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 343/343 pass.
+
+
+## Route / role consolidation — partner apply, manager tier, master-ambassador (2026-08-14)
+
+- **Roles** (unchanged enum): admin, team_member, social_media_partner, ambassador, student. "Manager" and "master partner" are NOT enum values — they are flags on profiles (is_manager on a team_member; is_master_partner on a partner/ambassador), admin-only settable (the restrict_profiles_write trigger blocks non-admins from changing either).
+
+### De-duplicated partner/ambassador nav
+- DashboardLayout.tsx: a single PARTNER_BASE_NAV const holds the shared partner/ambassador sidebar entries. social_media_partner (lawyers) appends an Apply item (/partner/apply); ambassador (influencers) keeps the referral-link-only set (no Apply). MobileBottomNav.tsx mirrors this via PARTNER_MOBILE_NAV (4 tabs — Apply is a full-page flow, not a daily tab). The two roles no longer duplicate an identical nav block.
+- Master-partner nav injection (useIsMasterPartner) now fires for BOTH social_media_partner and ambassador (was partner-only), adding /partner/network + /partner/performance. The master toggle in AdminTeamPage (MasterPartnerToggle) also now renders for ambassadors.
+
+### Manager tier (team_member + is_manager)
+- useIsManager() hook reads profiles.is_manager (team_member only).
+- DashboardLayout injects a Pipeline item (/team/pipeline) into the team sidebar ONLY for managers. Non-managers keep the assigned-only view.
+- TeamPipelinePage (/team/pipeline): lists cases that arrived via a partner/ambassador referral (cases.partner_id IS NOT NULL, active non-terminal) and lets the manager assign each to a team member via a Select. It is a focused assignment surface — NO catalog/settings/delete. Non-managers are bounced to /team. Team members are listed via the SECURITY DEFINER RPC list_team_directory() (id + full_name only — team members cannot SELECT arbitrary user_roles/profiles rows by RLS).
+- RLS (migration 20260814120000_manager_pipeline_partner_apply.sql):
+  - is_active_manager(uid) helper (team_member + is_manager + not deleted).
+  - cases: "Manager can view active cases" (SELECT, non-archived) and "Manager can assign cases" (UPDATE OF assigned_to only, WITH CHECK re-validates the manager flag). Both ADDITIVE — the existing "Team can manage assigned cases" (FOR ALL, assigned_to = self) stays, so a manager who is also assigned a case keeps full team access to it. A manager can ONLY change assigned_to; status/partner_id/referral fields stay admin/team as before.
+  - get_my_permissions() now ORs-in view_cases/assign_cases/view_students when is_active_manager, so the UI can gate the nav on a clean flag. The manager set deliberately EXCLUDES manage_settings/pipeline/team/partners and deletes — those remain admin-only.
+  - Manager tier enforcement is in RLS, not client trust.
+
+### In-dashboard partner apply form (single source of truth)
+- The 941-line public ApplyPage was split: the multi-step form now lives in src/components/apply/ApplyForm.tsx (shared component), with constants in src/components/apply/applyConstants.ts. ApplyPage is now a 14-line wrapper that renders <ApplyForm /> (public chrome, anon-key submission, its own success screen). No duplicated form code.
+- PartnerApplyPage (/partner/apply, social_media_partner only) renders <ApplyForm embedded useSessionAuth onSubmitted={...} />. embedded omits the full-screen chrome/hero/trust badges (renders inside the dashboard shell); useSessionAuth sends the partner session access token in Authorization: Bearer instead of the anon apikey, so the edge function attributes the case to the logged-in partner server-side. Ambassadors are redirected away (no Apply route/nav for them).
+- create-case-from-apply edge function: resolveCaller now detects isPartner (social_media_partner/ambassador) from the JWT. After the staff-only partner_id branch and the referral-code resolution, a partner self-attribution branch fills validatedPartnerId from caller.userId (server-derived — the client-supplied partner_id is still ignored for non-staff callers, so a partner can never credit a different account) with attributionMethod = "partner_self". A referral code on the request still wins (the partner may be sharing a student ref link).
+- Build/test: npm run build (tsc+vite) clean; npx vitest run 343/343 pass.
