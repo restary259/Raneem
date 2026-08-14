@@ -295,6 +295,11 @@ export default function AgentRecruitPage() {
                   <Input value={city} onChange={(e) => setCity(e.target.value)} />
                 </div>
               </div>
+              {submitError && (
+                <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+                  {submitError}
+                </p>
+              )}
               <Button onClick={submit} disabled={submitting || !formValid} className="w-full sm:w-auto gap-2">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> :
                   effectiveMode === "invite" ? <Send className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
