@@ -273,13 +273,14 @@ const App = () => {
               }
             >
               <Route index element={<AdminCommandCenter />} />
-              <Route path="pipeline" element={<AdminPipelinePage />} />
+              <Route path="pipeline" element={<AdminPipelineHubPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="team" element={<AdminTeamPage />} />
               <Route path="programs" element={<AdminProgramsPage />} />
-              <Route path="submissions" element={<AdminSubmissionsPage />} />
-              <Route path="financials" element={<AdminFinancialsPage />} />
-              <Route path="analytics" element={<AdminAnalyticsPage />} />
+              {/* Consolidated into hubs — old links keep working. */}
+              <Route path="submissions" element={<Navigate to="/admin/pipeline?tab=submissions" replace />} />
+              <Route path="financials" element={<AdminFinanceHubPage />} />
+              <Route path="analytics" element={<Navigate to="/admin/financials?tab=analytics" replace />} />
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="inbox" element={<AdminInboxPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
@@ -287,7 +288,8 @@ const App = () => {
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="referrals" element={<AdminReferralsPage />} />
-              <Route path="spreadsheet" element={<AdminSpreadsheetPage />} />
+              <Route path="spreadsheet" element={<Navigate to="/admin/financials?tab=spreadsheet" replace />} />
+
             </Route>
 
             {/* ── Team Dashboard (/team/*) ── */}
