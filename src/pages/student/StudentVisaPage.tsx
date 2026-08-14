@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Globe, Edit, Save, X, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { toneClasses } from "@/lib/statusTokens";
+
 
 interface VisaField {
   id: string;
@@ -25,11 +27,11 @@ interface VisaField {
 }
 
 const VISA_STATUS_COLORS: Record<string, string> = {
-  not_applied: "bg-muted text-muted-foreground",
-  applied: "bg-blue-100 text-blue-800",
-  approved: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  received: "bg-emerald-100 text-emerald-800",
+  not_applied: toneClasses("neutral").chip,
+  applied: toneClasses("contacted").chip,
+  approved: toneClasses("enrolled").chip,
+  rejected: toneClasses("danger").chip,
+  received: toneClasses("enrolled").chip,
 };
 
 const eyeColorOptions = ["brown", "blue", "green", "hazel", "gray", "other"];

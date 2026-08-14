@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { TrendingUp, Users, Calendar, DollarSign, BadgeDollarSign } from 'lucide-react';
+import { LoadingState, EmptyState } from '@/components/shell';
 
 /* ── Chart colours — explicit HSL values for Recharts (no CSS var support in SVG) ── */
 const CHART_COLORS = [
@@ -34,7 +35,8 @@ export default function TeamAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    if (!user) return () => {};
+    let ignore = false;
     setLoading(true);
     const monthStart = startOfMonth(new Date()).toISOString();
     const monthEnd   = endOfMonth(new Date()).toISOString();
@@ -66,6 +68,7 @@ export default function TeamAnalyticsPage() {
         .maybeSingle(),
     ]);
 
+    if (ignore) return;
     const counts: Record<string, number> = {};
     for (const c of casesRes.data ?? []) counts[c.status] = (counts[c.status] ?? 0) + 1;
     setCaseCounts(counts);
@@ -80,9 +83,14 @@ export default function TeamAnalyticsPage() {
 
 
     setLoading(false);
+    return () => { ignore = true; };
   }, [user]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    fetchData().then((fn) => { cleanup = fn; });
+    return () => { cleanup?.(); };
+  }, [fetchData]);
 
   /* Translate status keys for chart labels */
   const chartData = Object.entries(caseCounts).map(([status, count]) => ({
@@ -131,25 +139,25 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-200 dark:border-emerald-800">
+        <Card className="border-primary/20">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
-              <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
+              <BadgeDollarSign className="h-4 w-4 text-primary" />
               <span className="text-xs text-muted-foreground">{t('lawyer.analytics.commissionPerCase')}</span>
             </div>
-            <div className="text-3xl font-bold tabular-nums text-emerald-600">
+            <div className="text-3xl font-bold tabular-nums text-primary">
               {commissionPerCase !== null ? `₪${commissionPerCase.toLocaleString('en-US')}` : '—'}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-200 dark:border-emerald-800">
+        <Card className="border-primary/20">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-4 w-4 text-emerald-600" />
+              <DollarSign className="h-4 w-4 text-primary" />
               <span className="text-xs text-muted-foreground">{t('lawyer.analytics.availableBalance', 'Available')}</span>
             </div>
-            <div className="text-3xl font-bold tabular-nums text-emerald-600">
+            <div className="text-3xl font-bold tabular-nums text-primary">
               ₪{Number(earnings.available).toLocaleString('en-US')}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground tabular-nums">
@@ -169,13 +177,9 @@ export default function TeamAnalyticsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="h-40 flex items-center justify-center text-muted-foreground text-sm">
-              {t('lawyer.analytics.loading')}
-            </div>
+            <LoadingState variant="kpi" rows={4} label={t('lawyer.analytics.loading')} />
           ) : chartData.length === 0 ? (
-            <div className="h-40 flex items-center justify-center text-muted-foreground text-sm">
-              {t('lawyer.analytics.noData')}
-            </div>
+            <EmptyState title={t('lawyer.analytics.noData')} className="py-10" />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart

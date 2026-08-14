@@ -65,10 +65,10 @@ const AdminActivityPage = () => {
 
   const entityColor: Record<string, string> = {
     case: 'bg-primary/10 text-primary',
-    appointment: 'bg-purple-100 text-purple-800',
-    submission: 'bg-teal-100 text-teal-800',
-    student: 'bg-blue-100 text-blue-800',
-    team: 'bg-orange-100 text-orange-800',
+    appointment: 'bg-accent/10 text-accent-foreground',
+    submission: 'bg-emerald-500/10 text-emerald-700',
+    student: 'bg-sky-500/10 text-sky-700',
+    team: 'bg-amber-500/10 text-amber-700',
   };
 
   return (

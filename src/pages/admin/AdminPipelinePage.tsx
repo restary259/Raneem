@@ -45,6 +45,8 @@ import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { matchesRef } from "@/lib/reference";
 import { CaseStatus } from "@/lib/caseStatus";
 import { SLA_DAYS } from "@/lib/slaPolicy";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { toneClasses } from "@/lib/statusTokens";
 
 /* ─────────────────────────── constants ─────────────────────────── */
 
@@ -53,17 +55,17 @@ const NON_BOARD_STATUSES = ["forgotten", "cancelled"];
 
 
 const STATUS_LABELS: Record<string, { en: string; ar: string; color: string }> = {
-  new: { en: "New", ar: "جديد", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  contacted: { en: "Contacted", ar: "تم التواصل", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  new: { en: "New", ar: "جديد", color: toneClasses("new").chip },
+  contacted: { en: "Contacted", ar: "تم التواصل", color: toneClasses("contacted").chip },
   appointment_scheduled: {
     en: "Appointment",
     ar: "موعد محدد",
-    color: "bg-purple-100 text-purple-800 border-purple-200",
+    color: toneClasses("appointment").chip,
   },
-  profile_completion: { en: "Profile", ar: "استكمال الملف", color: "bg-orange-100 text-orange-800 border-orange-200" },
-  payment_confirmed: { en: "Payment Confirmed", ar: "تأكيد الدفع", color: "bg-teal-100 text-teal-800 border-teal-200" },
-  submitted: { en: "Submitted", ar: "تم التقديم", color: "bg-indigo-100 text-indigo-800 border-indigo-200" },
-  enrollment_paid: { en: "Enrolled", ar: "مسجل", color: "bg-green-100 text-green-800 border-green-200" },
+  profile_completion: { en: "Profile", ar: "استكمال الملف", color: toneClasses("profile").chip },
+  payment_confirmed: { en: "Payment Confirmed", ar: "تأكيد الدفع", color: toneClasses("payment").chip },
+  submitted: { en: "Submitted", ar: "تم التقديم", color: toneClasses("submitted").chip },
+  enrollment_paid: { en: "Enrolled", ar: "مسجل", color: toneClasses("enrolled").chip },
 };
 
 const PASSPORT_OPTIONS = [
@@ -387,12 +389,13 @@ const AdminPipelinePage = () => {
   const hasDuplicatePhone = (c: Case) => phoneCount[c.phone_number] > 1;
 
   /* ── filter ── */
+  const debouncedSearch = useDebouncedValue(search, 250);
   const filtered = cases.filter((c) => {
     const matchSearch =
-      !search ||
-      c.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone_number.includes(search) ||
-      matchesRef((c as any).case_reference, search);
+      !debouncedSearch ||
+      c.full_name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      c.phone_number.includes(debouncedSearch) ||
+      matchesRef((c as any).case_reference, debouncedSearch);
     const matchTeam =
       filterTeam === "all" || c.assigned_to === filterTeam || (filterTeam === "unassigned" && !c.assigned_to);
     return matchSearch && matchTeam;
@@ -407,11 +410,11 @@ const AdminPipelinePage = () => {
       : STATUS_LABELS[status]?.color ?? "bg-muted";
 
   const sourceMeta: Record<string, { label: string; cls: string }> = {
-    apply_page: { label: "Apply", cls: "bg-blue-100 text-blue-700" },
-    contact_form: { label: "Form", cls: "bg-yellow-100 text-yellow-700" },
+    apply_page: { label: "Apply", cls: toneClasses("new").chip },
+    contact_form: { label: "Form", cls: toneClasses("contacted").chip },
     manual: { label: "Manual", cls: "bg-secondary text-secondary-foreground" },
-    submit_new_student: { label: "Enroll", cls: "bg-purple-100 text-purple-700" },
-    referral: { label: "Referral", cls: "bg-green-100 text-green-700" },
+    submit_new_student: { label: "Enroll", cls: toneClasses("appointment").chip },
+    referral: { label: "Referral", cls: toneClasses("enrolled").chip },
   };
 
   const hasApplyInfo = (c: Case) =>
@@ -526,7 +529,7 @@ const AdminPipelinePage = () => {
                                 </span>
                                 {(isRedStale || isOrangeStale) && (
                                   <AlertTriangle
-                                    className={`h-3.5 w-3.5 ${isRedStale ? "text-destructive" : "text-orange-500"}`}
+                                    className={`h-3.5 w-3.5 ${isRedStale ? "text-destructive" : toneClasses("payment").text}`}
                                   />
                                 )}
                               </div>
@@ -536,9 +539,9 @@ const AdminPipelinePage = () => {
 
                             {/* Duplicate phone warning */}
                             {hasDuplicatePhone(c) && (
-                              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 border border-amber-300 w-fit">
-                                <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
-                                <span className="text-[10px] font-semibold text-amber-700">Duplicate Phone</span>
+                              <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded border w-fit ${toneClasses("payment").chip}`}>
+                                <AlertTriangle className="h-3 w-3 shrink-0" />
+                                <span className="text-[10px] font-semibold">Duplicate Phone</span>
                               </div>
                             )}
 
@@ -546,12 +549,12 @@ const AdminPipelinePage = () => {
                             {(c.english_units != null || c.math_units != null) && (
                               <div className="flex items-center gap-1.5">
                                 {c.english_units != null && (
-                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
+                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("new").chip}`}>
                                     EN {c.english_units}
                                   </span>
                                 )}
                                 {c.math_units != null && (
-                                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("appointment").chip}`}>
                                     MA {c.math_units}
                                   </span>
                                 )}
@@ -676,7 +679,7 @@ const AdminPipelinePage = () => {
                           const legacyDiscount = selectedCase.discount_amount ?? 0;
                           const shown = referralDiscount > 0 ? referralDiscount : legacyDiscount;
                           return shown > 0 ? (
-                            <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded">
+                            <span className={`text-xs border px-2 py-0.5 rounded ${toneClasses("enrolled").chip}`}>
                               {t('admin.pipeline.discount')}: ₪{shown}
                             </span>
                           ) : null;

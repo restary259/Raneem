@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { RefreshCw, Clock } from 'lucide-react';
+import { LoadingState, ErrorState } from '@/components/shell';
 
 const STATUSES = ['new', 'contacted', 'appointment_scheduled', 'profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid', 'forgotten', 'cancelled'];
 const STATUS_COLORS = ['#6366f1', '#f59e0b', '#8b5cf6', '#f97316', '#14b8a6', '#3b82f6', '#22c55e', '#ef4444', '#94a3b8'];
@@ -16,27 +17,49 @@ const AdminAnalyticsPage = () => {
   const { toast } = useToast();
   const isRtl = i18n.language === 'ar';
 
-  const [cases, setCases] = useState<any[]>([]);
+  interface CaseRow {
+    status: string;
+    source: string | null;
+    created_at: string;
+    last_activity_at: string;
+  }
+
+  const [cases, setCases] = useState<CaseRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       // Exclude archived cases so analytics reflect the active pipeline,
       // matching the universe shown on the Pipeline board and Command Center.
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('cases')
         .select('status, source, created_at, last_activity_at')
         .eq('archived', false);
-      if (error) throw error;
-      setCases(data || []);
+      if (fetchError) throw fetchError;
+      return data || [];
     } catch (err: any) {
+      setError(err.message);
       toast({ variant: 'destructive', description: err.message });
+      return null;
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    let ignore = false;
+    fetchData().then(data => {
+      if (!ignore && data) setCases(data as CaseRow[]);
+    });
+    return () => { ignore = true; };
+  }, [fetchData]);
+
+  const refresh = useCallback(() => {
+    fetchData().then(data => { if (data) setCases(data as CaseRow[]); });
+  }, [fetchData]);
 
   const statusLabels: Record<string, string> = {
     new: t('admin.analytics.statusNew'),
@@ -88,12 +111,18 @@ const AdminAnalyticsPage = () => {
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t('admin.analytics.title')}</h1>
-        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
+      {loading && cases.length === 0 && <LoadingState variant="kpi" rows={4} />}
+      {error && !loading && (
+        <ErrorState title={t('admin.analytics.loadFailed', 'Failed to load analytics')} description={error} onRetry={refresh} />
+      )}
+
       {/* KPI summary */}
+      {(!loading || cases.length > 0) && !error && (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: t('admin.analytics.kpiTotalCases'), value: cases.length },
@@ -109,7 +138,10 @@ const AdminAnalyticsPage = () => {
           </Card>
         ))}
       </div>
+      )}
 
+
+      {(!loading || cases.length > 0) && !error && (
       <div className="grid md:grid-cols-2 gap-6" dir="ltr">
         {/* Funnel */}
         <Card>
@@ -221,6 +253,7 @@ const AdminAnalyticsPage = () => {
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   );
 };

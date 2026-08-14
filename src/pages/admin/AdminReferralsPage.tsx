@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from '@/components/common/TablePagination';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { LoadingState, EmptyState, ErrorState } from '@/components/shell';
 import { Link2, RefreshCw, Trash2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { discountAppliedFromCase } from '@/lib/referralDiscount';
@@ -48,15 +52,19 @@ const AdminReferralsPage = () => {
   const [query, setQuery] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<AdminReferralRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const debouncedQuery = useDebouncedValue(query, 250);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data: referrals, error } = await (supabase as any)
+    setError(null);
+    const { data: referrals, error: fetchError } = await (supabase as any)
       .from('referrals')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) {
+    if (fetchError) {
       setLoading(false);
+      setError(fetchError.message);
       return;
     }
     const raw = (referrals || []) as AdminReferralRow[];
@@ -111,16 +119,18 @@ const AdminReferralsPage = () => {
     toast({ description: t('admin.referralsMgmt.deleted') });
   };
 
-  const filtered = rows.filter(r => {
+  const filtered = useMemo(() => rows.filter(r => {
     if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return true;
     return (
       r.referred_name.toLowerCase().includes(q)
       || r.referred_phone.toLowerCase().includes(q)
       || (r.referrer?.full_name ?? '').toLowerCase().includes(q)
     );
-  });
+  }), [rows, statusFilter, debouncedQuery]);
+
+  const pagination = usePagination(filtered, 25);
 
   const dateFormat = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language === 'ar' ? 'ar' : 'en-US');
@@ -170,12 +180,11 @@ const AdminReferralsPage = () => {
           </div>
 
           {loading ? (
-            <p className="py-10 text-center text-muted-foreground">{t('admin.referralsMgmt.loading')}</p>
+            <LoadingState variant="table" rows={6} />
+          ) : error ? (
+            <ErrorState title={t('admin.referralsMgmt.loadFailed', 'Failed to load referrals')} description={error} onRetry={load} />
           ) : filtered.length === 0 ? (
-            <div className="py-10 text-center text-muted-foreground">
-              <Users className="mx-auto mb-2 h-8 w-8 opacity-40" />
-              {t('admin.referralsMgmt.noReferrals')}
-            </div>
+            <EmptyState icon={Users} title={t('admin.referralsMgmt.noReferrals')} />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -191,7 +200,7 @@ const AdminReferralsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(r => (
+                  {pagination.items.map(r => (
                     <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 whitespace-nowrap">
                         <div className="font-medium">{r.referrer?.full_name || '—'}</div>
@@ -257,6 +266,7 @@ const AdminReferralsPage = () => {
                   ))}
                 </tbody>
               </table>
+              <TablePagination pagination={pagination} />
             </div>
           )}
         </CardContent>

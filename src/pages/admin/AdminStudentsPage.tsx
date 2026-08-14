@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { LoadingState, EmptyState } from "@/components/shell";
 import StudentOverview from "@/components/students/StudentOverview";
 import AdminPasswordConfirm from "@/components/admin/AdminPasswordConfirm";
 
@@ -738,9 +740,10 @@ export default function AdminStudentsPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const debouncedSearch = useDebouncedValue(search, 250);
   const filtered = students.filter((s) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
+    if (!debouncedSearch) return true;
+    const q = debouncedSearch.toLowerCase();
     return s.full_name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.phone_number || "").includes(q);
   });
 
@@ -790,16 +793,12 @@ export default function AdminStudentsPage() {
 
       {/* List */}
       {loading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
-          ))}
-        </div>
+        <LoadingState variant="rows" rows={5} />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
-          <p>{t("admin.students.noRegistered")}</p>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title={t("admin.students.noRegistered")}
+        />
       ) : (
         <div className="space-y-2">
           {pagination.items.map((s) => (

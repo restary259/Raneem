@@ -38,6 +38,7 @@ import AppointmentSchedulerModal from "@/components/team/AppointmentSchedulerMod
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { LoadingState } from "@/components/shell";
 
 interface CaseRow {
   id: string;
@@ -131,6 +132,7 @@ export default function CaseDetailPage() {
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
+    let ignore = false;
     setLoading(true);
     try {
       const [caseRes, apptRes, subRes, docsRes, settingsRes] = await Promise.all([
@@ -142,6 +144,7 @@ export default function CaseDetailPage() {
       ]);
 
       if (caseRes.error) throw caseRes.error;
+      if (ignore) return;
       const row = caseRes.data as unknown as CaseRow;
       setCaseData(row);
       setAppointments((apptRes.data as AppointmentRow[]) ?? []);
@@ -166,14 +169,17 @@ export default function CaseDetailPage() {
         setAssigneeName(null);
       }
     } catch {
-      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
+      if (!ignore) toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
-      setLoading(false);
+      if (!ignore) setLoading(false);
     }
+    return () => { ignore = true; };
   }, [id, user, toast, isRtl, t]);
 
   useEffect(() => {
-    void fetchData();
+    let cleanup: (() => void) | undefined;
+    fetchData().then((fn) => { cleanup = fn; });
+    return () => { cleanup?.(); };
   }, [fetchData]);
 
   const tasks = useMemo(() => {
@@ -335,7 +341,9 @@ export default function CaseDetailPage() {
   // an in-progress student profile draft is never wiped by a background refresh.
   if (loading && !caseData) {
     return (
-      <div className="flex h-64 items-center justify-center text-muted-foreground">{t("case.detail.loading")}</div>
+      <div className="mx-auto max-w-5xl p-4 sm:p-6">
+        <LoadingState variant="rows" rows={4} label={t("case.detail.loading")} />
+      </div>
     );
   }
 
