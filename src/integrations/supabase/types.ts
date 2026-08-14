@@ -4553,7 +4553,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      is_active_manager: { Args: { p_uid: string }; Returns: boolean }
       is_direct_thread_member: {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
@@ -4607,13 +4606,6 @@ export type Database = {
           status: string
           thread_id: string
           transaction_ref: string
-        }[]
-      }
-      list_team_directory: {
-        Args: never
-        Returns: {
-          full_name: string
-          id: string
         }[]
       }
       log_activity: {

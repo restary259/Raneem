@@ -413,8 +413,6 @@
       "deleteAccount": "Delete account",
       "deleteConfirmTitle": "Delete account?",
       "deleteConfirmDesc": "This removes the account and revokes all access. This cannot be undone.",
-      "manager": "Manager",
-      "managerHint": "Managers are reachable by all team members in the internal chat",
       "copyPassword": "Copy password",
       "viewDetails": "View performance details",
       "stats": {
@@ -4205,15 +4203,5 @@
     "schoolCosts": "School costs (€)",
     "referralDiscount": "Referral discount",
     "serviceTotal": "Service total"
-  },
-  "manager": {
-    "pipelineTitle": "Pipeline",
-    "pipelineSubtitle": "Assign partner & ambassador referrals to a team member.",
-    "searchPlaceholder": "Search by name or phone…",
-    "filterAll": "All cases",
-    "filterAssigned": "Assigned",
-    "noCases": "No partner/ambassador cases to assign right now.",
-    "referral": "Referral",
-    "needsAssignment": "Needs assignment"
   }
 }

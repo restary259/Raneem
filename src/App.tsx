@@ -306,7 +306,6 @@ const App = () => {
               <Route path="students/:id" element={<TeamStudentProfilePage />} />
               <Route path="analytics" element={<TeamAnalyticsPage />} />
               <Route path="spreadsheet" element={<TeamSpreadsheetPage />} />
-              <Route path="pipeline" element={<Navigate to="/team/cases" replace />} />
               <Route path="bagrut" element={<TeamBagrutConverter />} />
               <Route path="tools/currency" element={<TeamCurrencyPage />} />
               <Route path="tools/cv" element={<TeamCvBuilderPage />} />

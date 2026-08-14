@@ -9,12 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Loader2, Phone, UserCheck } from 'lucide-react';
+import { Search, Plus, Loader2, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { isLinkablePhone } from '@/lib/phone';
-import { useIsManager } from '@/hooks/useIsManager';
 import {
   ACTIVE_STATUSES,
   CaseStatus,
@@ -31,14 +29,8 @@ interface Case {
   status: string;
   source: string;
   assigned_to: string | null;
-  partner_id: string | null;
   last_activity_at: string;
   created_at: string;
-}
-
-interface TeamDirMember {
-  id: string;
-  full_name: string;
 }
 
 // Canonical filter list: 'all' + every active stage + terminal states.
@@ -53,17 +45,13 @@ export default function TeamCasesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t, i18n } = useTranslation('dashboard');
+  const { i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
-  const { isManager } = useIsManager();
 
   const [cases, setCases] = useState<Case[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamDirMember[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [needsAssignmentOnly, setNeedsAssignmentOnly] = useState(false);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [assigning, setAssigning] = useState<string | null>(null);
 
   // New case modal — only name + phone required (no appointment at creation)
   const [showNew, setShowNew] = useState(false);
@@ -77,63 +65,27 @@ export default function TeamCasesPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const caseQuery = supabase
+      const { data, error } = await supabase
         .from('cases')
-        .select('id, full_name, phone_number, status, source, assigned_to, partner_id, last_activity_at, created_at')
+        .select('*')
         .order('last_activity_at', { ascending: false });
-
-      if (isManager) {
-        // Managers also need the team directory to power the inline assign Select.
-        const [caseRes, teamRes] = await Promise.all([
-          caseQuery,
-          supabase.rpc('list_team_directory'),
-        ]);
-        if (caseRes.error) throw caseRes.error;
-        setCases((caseRes.data as Case[]) ?? []);
-        setTeamMembers((teamRes.data as TeamDirMember[]) ?? []);
-      } else {
-        const { data, error } = await caseQuery;
-        if (error) throw error;
-        setCases((data as Case[]) ?? []);
-      }
+      if (error) throw error;
+      setCases((data as Case[]) ?? []);
     } catch {
       toast({ variant: 'destructive', description: isAr ? 'تعذر تحميل الملفات، حاول مرة أخرى' : 'Failed to load cases, please try again' });
     } finally {
       setLoading(false);
     }
-  }, [user, toast, isManager]);
+  }, [user, toast]);
 
   useEffect(() => { fetchCases(); }, [fetchCases]);
-
-  const assignCase = async (caseId: string, userId: string | null) => {
-    setAssigning(caseId);
-    try {
-      // Only assigned_to is touched; RLS restricts the UPDATE to that column.
-      const { error } = await supabase
-        .from('cases')
-        .update({ assigned_to: userId || null })
-        .eq('id', caseId);
-      if (error) throw error;
-      setCases(prev => prev.map(c => (c.id === caseId ? { ...c, assigned_to: userId } : c)));
-      toast({ description: t('admin.pipeline.caseAssigned', 'Case assigned successfully') });
-    } catch (err: unknown) {
-      toast({ variant: 'destructive', description: err instanceof Error ? err.message : '' });
-    } finally {
-      setAssigning(null);
-    }
-  };
-
-  const assigneeName = (id: string | null) =>
-    id ? teamMembers.find(tm => tm.id === id)?.full_name ?? null : null;
 
   const filtered = cases.filter(c => {
     const matchStatus = statusFilter === 'all' || c.status === statusFilter;
     const matchSearch = !search ||
       c.full_name.toLowerCase().includes(search.toLowerCase()) ||
       c.phone_number.includes(search);
-    // Manager-only triage filter: partner/ambassador referrals with no assignee.
-    const matchNeedsAssignment = !needsAssignmentOnly || (!!c.partner_id && !c.assigned_to);
-    return matchStatus && matchSearch && matchNeedsAssignment;
+    return matchStatus && matchSearch;
   });
 
   const checkDuplicate = async (phone: string) => {
@@ -229,7 +181,7 @@ export default function TeamCasesPage() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-1 flex-wrap items-center">
+        <div className="flex gap-1 flex-wrap">
           {STATUS_FILTERS.map(s => (
             <Button
               key={s}
@@ -241,18 +193,6 @@ export default function TeamCasesPage() {
               {statusLabel(s)}
             </Button>
           ))}
-          {/* Manager-only triage filter: unassigned partner/ambassador referrals. */}
-          {isManager && (
-            <Button
-              size="sm"
-              variant={needsAssignmentOnly ? 'default' : 'outline'}
-              onClick={() => setNeedsAssignmentOnly(v => !v)}
-              className="text-xs h-9"
-            >
-              <UserCheck className="h-3.5 w-3.5 me-1" />
-              {t('manager.needsAssignment', 'Needs assignment')}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -292,37 +232,6 @@ export default function TeamCasesPage() {
                     {formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}
                   </span>
                 </div>
-                {/* Manager-only assign control (updates assigned_to only). */}
-                {isManager && (
-                  <div
-                    className="mt-2 flex items-center gap-2"
-                    // Prevent the card's navigate-on-click from firing when
-                    // interacting with the assign Select.
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <Select
-                      value={c.assigned_to || 'unassigned'}
-                      onValueChange={val => assignCase(c.id, val === 'unassigned' ? null : val)}
-                      disabled={assigning === c.id}
-                    >
-                      <SelectTrigger className="h-8 w-full sm:w-56 text-xs">
-                        <UserCheck className="h-3.5 w-3.5 me-1.5 shrink-0" />
-                        <SelectValue placeholder={t('admin.pipeline.assignPlaceholder', 'Assign to team member')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">{t('admin.pipeline.unassigned', 'Unassigned')}</SelectItem>
-                        {teamMembers.map(tm => (
-                          <SelectItem key={tm.id} value={tm.id}>{tm.full_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {c.assigned_to && assigneeName(c.assigned_to) && (
-                      <span className="hidden sm:inline text-xs text-muted-foreground shrink-0">
-                        {assigneeName(c.assigned_to)}
-                      </span>
-                    )}
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}

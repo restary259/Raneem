@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, ShieldCheck, Mail, Send, X } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
+import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, Mail, Send, X } from 'lucide-react';
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
 import TeamMemberDetailSheet from '@/components/admin/TeamMemberDetailSheet';
@@ -33,8 +32,6 @@ interface TeamMember {
   commission: number;
   /** True when the amount comes from a per-account override, not the default. */
   commissionOverridden: boolean;
-  /** Managers are visible to team members in the internal chat directory. */
-  is_manager: boolean;
   /** Partners upgraded to master partner get the network dashboard. */
   is_master_partner: boolean;
 }
@@ -142,7 +139,7 @@ const AdminTeamPage = () => {
       if (userIds.length === 0) { setMembers([]); setLoading(false); return; }
 
       const [profilesRes, settingsRes, partnerOvRes, teamOvRes] = await Promise.all([
-        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_manager, is_master_partner').in('id', userIds),
+        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_master_partner').in('id', userIds),
         (supabase as any).from('platform_settings').select('partner_commission_rate, ambassador_commission_rate, team_member_commission_rate').limit(1).maybeSingle(),
         (supabase as any).from('partner_commission_overrides').select('partner_id, commission_amount'),
         (supabase as any).from('team_member_commission_overrides').select('team_member_id, commission_amount'),
@@ -183,7 +180,6 @@ const AdminTeamPage = () => {
               : profileMap[r.user_id]?.referral_code ?? null,
           commission: overrideMap[r.user_id] ?? defaults[r.role] ?? 0,
           commissionOverridden: overrideMap[r.user_id] !== undefined,
-          is_manager: profileMap[r.user_id]?.is_manager === true,
           is_master_partner: profileMap[r.user_id]?.is_master_partner === true,
         }));
 
@@ -304,20 +300,6 @@ const AdminTeamPage = () => {
   // Account removal goes through admin_deactivate_account (DeactivateAccountDialog):
   // it revokes exactly one role, keeps every business record, and never touches
   // the auth identity or any other account.
-
-
-
-  const toggleManager = async (memberId: string, next: boolean) => {
-    setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, is_manager: next } : m)));
-    const { error } = await (supabase as any)
-      .from('profiles')
-      .update({ is_manager: next })
-      .eq('id', memberId);
-    if (error) {
-      setMembers(prev => prev.map(m => (m.id === memberId ? { ...m, is_manager: !next } : m)));
-      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: t('common.actionFailed', 'Something went wrong. Please try again or contact support.') });
-    }
-  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -610,19 +592,6 @@ const AdminTeamPage = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {m.role === 'team_member' && (
-                      <label
-                        className="flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
-                        title={t('admin.team.managerHint', 'Managers are reachable by all team members in the internal chat')}
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>{t('admin.team.manager', 'Manager')}</span>
-                        <Switch
-                          checked={m.is_manager}
-                          onCheckedChange={(v) => toggleManager(m.id, v)}
-                        />
-                      </label>
-                    )}
                     {(m.role === 'social_media_partner' || m.role === 'ambassador') && (
                       <MasterPartnerToggle
                         partnerId={m.id}
