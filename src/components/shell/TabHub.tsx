@@ -14,6 +14,8 @@ interface TabHubProps {
   /** Query-string key used to deep-link a tab. */
   param?: string;
   className?: string;
+  /** Extra classes forwarded to the SegmentedTabs TabsList (e.g. centering). */
+  tabsListClassName?: string;
 }
 
 /**
@@ -23,7 +25,7 @@ interface TabHubProps {
  * unchanged, so data hooks, services and permissions behave exactly as before.
  * Only the active panel mounts, so consolidation never adds extra fetches.
  */
-export default function TabHub({ tabs, param = "tab", className }: TabHubProps) {
+export default function TabHub({ tabs, param = "tab", className, tabsListClassName }: TabHubProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get(param);
   const active = tabs.some((t) => t.value === requested) ? (requested as string) : tabs[0]?.value;
@@ -42,7 +44,7 @@ export default function TabHub({ tabs, param = "tab", className }: TabHubProps) 
 
   return (
     <Tabs value={active} onValueChange={onChange} className={className}>
-      <SegmentedTabs items={tabs.map(({ render, ...rest }) => rest)} />
+      <SegmentedTabs items={tabs.map(({ render, ...rest }) => rest)} className={tabsListClassName} />
       {tabs.map((tab) => (
         <TabsContent key={tab.value} value={tab.value} className="mt-3 focus-visible:outline-none">
           {active === tab.value && (
