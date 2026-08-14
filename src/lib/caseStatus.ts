@@ -1,3 +1,4 @@
+import { TONE_BY_STATUS, toneClasses, toneForColorName, toneForStatus } from '@/lib/statusTokens';
 export enum CaseStatus {
   NEW = 'new',
   CONTACTED = 'contacted',
@@ -72,18 +73,10 @@ export function statusIndex(status: string): number {
   return idx >= 0 ? idx : 0;
 }
 
-/** Badge colors for each status — using semantic Tailwind classes */
-export const STATUS_COLORS: Record<string, string> = {
-  [CaseStatus.NEW]:               'bg-slate-100 text-slate-800',
-  [CaseStatus.CONTACTED]:         'bg-blue-100 text-blue-800',
-  [CaseStatus.APPT_SCHEDULED]:    'bg-purple-100 text-purple-800',
-  [CaseStatus.PROFILE_COMPLETION]:'bg-yellow-100 text-yellow-800',
-  [CaseStatus.PAYMENT_CONFIRMED]: 'bg-amber-100 text-amber-800',
-  [CaseStatus.SUBMITTED]:         'bg-cyan-100 text-cyan-800',
-  [CaseStatus.ENROLLMENT_PAID]:   'bg-green-100 text-green-800',
-  [CaseStatus.FORGOTTEN]:         'bg-red-100 text-red-800',
-  [CaseStatus.CANCELLED]:         'bg-gray-100 text-gray-800',
-};
+/** Badge classes per status — theme-aware semantic tokens (statusTokens.ts). */
+export const STATUS_COLORS: Record<string, string> = Object.fromEntries(
+  Object.keys(TONE_BY_STATUS).map((key) => [key, toneClasses(toneForStatus(key)).chip]),
+);
 
 /* ------------------------------------------------------------------ *
  * Configurable pipeline stages (Phase 2)
@@ -108,21 +101,8 @@ export const PIPELINE_STATUS_COLORS = [
   'teal', 'indigo', 'green', 'red', 'gray',
 ] as const;
 
-const COLOR_CLASSES: Record<string, string> = {
-  slate:  'bg-slate-100 text-slate-800 border-slate-200',
-  blue:   'bg-blue-100 text-blue-800 border-blue-200',
-  yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  purple: 'bg-purple-100 text-purple-800 border-purple-200',
-  orange: 'bg-orange-100 text-orange-800 border-orange-200',
-  teal:   'bg-teal-100 text-teal-800 border-teal-200',
-  indigo: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  green:  'bg-green-100 text-green-800 border-green-200',
-  red:    'bg-red-100 text-red-800 border-red-200',
-  gray:   'bg-gray-100 text-gray-800 border-gray-200',
-};
-
 export function statusColorClasses(color?: string | null): string {
-  return COLOR_CLASSES[color ?? 'slate'] ?? COLOR_CLASSES.slate;
+  return toneClasses(toneForColorName(color)).chip;
 }
 
 export const PIPELINE_STATUS_FALLBACK: PipelineStatus[] = [

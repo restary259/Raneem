@@ -85,9 +85,7 @@ export function StatusLine({
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-colors",
                 done || current ? tc.fill : "bg-border",
-                current && "ring-2 ring-offset-1 ring-offset-background ring-[hsl(var(--status-" +
-                  "" +
-                  "))]",
+                current && "h-2",
               )}
             />
           );
