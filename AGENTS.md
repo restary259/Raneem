@@ -808,3 +808,42 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   `profiles.referral_code` so the page can build the apply URL. Each link has
   its own copy button + independent copied state. i18n keys `yourLinks`,
   `yourLinksHint`, `applyLink`, `applyLinkHint`, `applyLinkMissing` (en+ar).
+
+## Agent recruit wizard + manual-account-creation toggle + ₪500 commission (2026-08-14)
+- `AgentRecruitPage.tsx`: the three separate cards (role selection, delivery
+  mode + per-recruit commission, recruit details) are merged into ONE wizard
+  `Card` titled "Recruit a partner or ambassador" with numbered step headers
+  (1: Who are you recruiting?, 2: How should they receive their account? +
+  the per-recruit commission line, 3: Recruit details) separated by
+  `border-t`. The recruiting-link fallback card stays separate. A new
+  `StepHeader` helper renders the numbered badge. All existing submit/delivery
+  logic is unchanged.
+- **Per-recruit commission line**: the ₪ amount shown is `perRecruitRate`
+  (from `agent_commission_overrides` override → `platform_settings.agent_commission_rate`
+  global). New i18n `agent.perRecruitRateHint` (en+ar) explains it's earned
+  when a student brought by the recruit pays. `agent.perRecruitRate` (ar:
+  "عمولة لكل مسؤول تجنيد") is the label.
+- **₪500 commission**: migration `20260814190000_agent_commission_rate_500.sql`
+  raises `platform_settings.agent_commission_rate` default from ₪200 → ₪500
+  and updates the existing row. This is the flat amount the agent earns (carved
+  out of the partner pool FIRST via `get_effective_agent_split` →
+  `record_case_commission`) when a student referred by a recruited
+  partner/ambassador reaches `enrollment_paid`. `get_effective_agent_split`
+  still clamps to `LEAST(amount, pool)`, so with the default ₪500 partner pool
+  the agent earns the full ₪500 and the referring partner gets the remainder.
+  Per-agent overrides still win.
+- **Manual account creation toggle**: `profiles.agent_can_create_accounts`
+  (boolean, default false, admin-only settable via `restrict_profiles_write` —
+  same guard pattern as `agent_can_invite_directly`) now has an admin UI.
+  `AgentCreateAccountsToggle` (`src/components/admin/AgentCreateAccountsToggle.tsx`,
+  mirrors `AgentInviteToggle`: confirmation AlertDialog, only flips the flag,
+  never touches earnings/referral/payouts) renders in `AdminTeamPage` next to
+  `AgentInviteToggle` for `role === 'agent'` rows. The page now SELECTs
+  `agent_can_create_accounts`, maps it on the member, and updates local state
+  on toggle. When an admin enables it, the agent's recruit page "Create
+  account manually" delivery card becomes active (no longer disabled) and
+  `effectiveMode` can be `manual` → `agent-create-account` returns a temp
+  password. New i18n keys under `admin.agents.create*` (en+ar): badge "Manual",
+  grant/revoke titles+body+toast, toggle hint.
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 345/345 pass
+  incl. i18n parity guard.

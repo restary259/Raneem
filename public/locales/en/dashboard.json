@@ -1248,7 +1248,15 @@
       "revokeTitle": "Disable direct invites?",
       "revokeBody": "{{name}} will no longer be able to invite partners or ambassadors directly. Nothing is deleted — existing recruits, earnings and payout history stay.",
       "inviteGranted": "Direct invite enabled",
-      "inviteRevoked": "Direct invite disabled"
+      "inviteRevoked": "Direct invite disabled",
+      "createAccountsGranted": "Manual account creation enabled",
+      "createAccountsRevoked": "Manual account creation disabled",
+      "createToggleHint": "Permission only — lets this agent create partner/ambassador accounts manually and receive a temp password. Nothing else changes.",
+      "createBadge": "Manual",
+      "createGrantTitle": "Allow manual account creation?",
+      "createRevokeTitle": "Disable manual account creation?",
+      "createGrantBody": "{{name}} will be able to create partner & ambassador accounts directly from their own dashboard and receive a temporary password to share with the recruit. Their earnings, referral code and payout history are not affected.",
+      "createRevokeBody": "{{name}} will no longer be able to create accounts manually (direct invites remain available if enabled). Nothing is deleted — existing recruits, earnings and payout history stay."
     },
     "authFailures": {
       "title": "Authorization Failures",
@@ -4058,7 +4066,7 @@
     "yourLinks": "Your links",
     "yourLinksHint": "Share these links to recruit partners or to refer students.",
     "applyLink": "Referral apply form",
-    "applyLinkHint": "Share this link with students. Applications submitted through it are attributed to you.",
+    "applyLinkHint": "Share this link with students. Every application submitted through it is automatically attributed to you, and you earn the self-referral reward when the case is paid.",
     "applyLinkMissing": "No referral link yet.",
     "recentRecruits": "Recent recruits",
     "tabAll": "All",
@@ -4103,7 +4111,6 @@
     "applySubtitle": "Submit a student application on their behalf. The case is automatically attributed to you.",
     "applyAutoAttribution": "Automatic attribution",
     "applyAutoAttributionHint": "Every application you submit here is automatically linked to your agent account. You earn the self-referral reward when the case is paid.",
-    "applyLinkHint": "Share this link with students. Every application submitted through it is automatically attributed to you, and you earn the self-referral reward when the case is paid.",
     "studentsTitle": "Students",
     "studentsSubtitle": "Students generated through your network and personal referrals.",
     "noStudents": "No students yet",
@@ -4146,7 +4153,9 @@
       "errAccount": "Account number must be 4-12 digits",
       "errIban": "Enter a valid IBAN",
       "errIbanRequired": "IBAN or bank name is required"
-    }
+    },
+    "recruitWizardTitle": "Recruit a partner or ambassador",
+    "perRecruitRateHint": "Earned when a student brought by this recruit pays."
   },
   "theme": {
     "dark": "Dark",

@@ -14,6 +14,7 @@ import { UserPlus, RefreshCw, Copy, CheckCheck, Trash2, Link2, Mail, Send, X } f
 import { Crown } from 'lucide-react';
 import MasterPartnerToggle from '@/components/admin/MasterPartnerToggle';
 import AgentInviteToggle from '@/components/admin/AgentInviteToggle';
+import AgentCreateAccountsToggle from '@/components/admin/AgentCreateAccountsToggle';
 import TeamMemberDetailSheet from '@/components/admin/TeamMemberDetailSheet';
 import DeactivateAccountDialog from '@/components/admin/DeactivateAccountDialog';
 import { buildReferralUrl } from '@/lib/referral';
@@ -37,6 +38,8 @@ interface TeamMember {
   is_master_partner: boolean;
   /** Agents granted permission invite partners/ambassadors directly. */
   agent_can_invite_directly: boolean;
+  /** Agents granted permission to create partner/ambassador accounts manually. */
+  agent_can_create_accounts: boolean;
 }
 
 interface PendingInvitation {
@@ -142,7 +145,7 @@ const AdminTeamPage = () => {
       if (userIds.length === 0) { setMembers([]); setLoading(false); return; }
 
       const [profilesRes, settingsRes, partnerOvRes, teamOvRes, agentOvRes] = await Promise.all([
-        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_master_partner, agent_can_invite_directly').in('id', userIds),
+        (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_master_partner, agent_can_invite_directly, agent_can_create_accounts').in('id', userIds),
         (supabase as any).from('platform_settings').select('partner_commission_rate, ambassador_commission_rate, team_member_commission_rate, agent_commission_rate').limit(1).maybeSingle(),
         (supabase as any).from('partner_commission_overrides').select('partner_id, commission_amount'),
         (supabase as any).from('team_member_commission_overrides').select('team_member_id, commission_amount'),
@@ -188,6 +191,7 @@ const AdminTeamPage = () => {
           commissionOverridden: overrideMap[r.user_id] !== undefined,
           is_master_partner: profileMap[r.user_id]?.is_master_partner === true,
           agent_can_invite_directly: profileMap[r.user_id]?.agent_can_invite_directly === true,
+          agent_can_create_accounts: profileMap[r.user_id]?.agent_can_create_accounts === true,
         }));
 
 
@@ -615,6 +619,14 @@ const AdminTeamPage = () => {
                         agentName={m.full_name}
                         canInvite={m.agent_can_invite_directly}
                         onChanged={(next) => setMembers(prev => prev.map(x => (x.id === m.id ? { ...x, agent_can_invite_directly: next } : x)))}
+                      />
+                    )}
+                    {m.role === 'agent' && (
+                      <AgentCreateAccountsToggle
+                        agentId={m.id}
+                        agentName={m.full_name}
+                        canCreateAccounts={m.agent_can_create_accounts}
+                        onChanged={(next) => setMembers(prev => prev.map(x => (x.id === m.id ? { ...x, agent_can_create_accounts: next } : x)))}
                       />
                     )}
                     <Badge variant="secondary">{roleLabel(m.role)}</Badge>

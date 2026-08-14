@@ -198,117 +198,127 @@ export default function AgentRecruitPage() {
         </Card>
       ) : (
         <>
-          {/* Role + delivery mode selection */}
+          {/* Combined wizard card — role, delivery + commission, details */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t("agent.recruitStep1", "Who are you recruiting?")}</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-primary" />
+                {t("agent.recruitWizardTitle", "Recruit a partner or ambassador")}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <RoleCard
-                  active={role === "social_media_partner"}
-                  onClick={() => setRole("social_media_partner")}
-                  icon={Users}
-                  title={t("agent.rolePartner", "Partner")}
-                  desc={t("agent.rolePartnerDesc", "Lawyer / agency partner")}
-                />
-                <RoleCard
-                  active={role === "ambassador"}
-                  onClick={() => setRole("ambassador")}
-                  icon={Megaphone}
-                  title={t("agent.roleAmbassador", "Ambassador")}
-                  desc={t("agent.roleAmbassadorDesc", "Influencer / referrer")}
-                />
+            <CardContent className="space-y-6">
+              {/* Step 1 — role */}
+              <div className="space-y-3">
+                <StepHeader step={1} label={t("agent.recruitStep1", "Who are you recruiting?")} />
+                <div className="grid grid-cols-2 gap-3">
+                  <RoleCard
+                    active={role === "social_media_partner"}
+                    onClick={() => setRole("social_media_partner")}
+                    icon={Users}
+                    title={t("agent.rolePartner", "Partner")}
+                    desc={t("agent.rolePartnerDesc", "Lawyer / agency partner")}
+                  />
+                  <RoleCard
+                    active={role === "ambassador"}
+                    onClick={() => setRole("ambassador")}
+                    icon={Megaphone}
+                    title={t("agent.roleAmbassador", "Ambassador")}
+                    desc={t("agent.roleAmbassadorDesc", "Influencer / referrer")}
+                  />
+                </div>
               </div>
-              <div className="rounded-lg bg-muted/30 p-3 text-sm flex items-center justify-between gap-2">
-                <span className="text-muted-foreground">{t("agent.perRecruitRate", "Per-recruit rate")}</span>
-                <span className="font-bold text-primary">{fmt(perRecruitRate)}</span>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Delivery mode */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t("agent.recruitStep2", "How should they receive their account?")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <DeliveryCard
-                active={effectiveMode === "invite"}
-                onClick={() => setMode("invite")}
-                icon={Mail}
-                title={t("agent.deliveryInvite", "Send Gmail invite")}
-                desc={t("agent.deliveryInviteDesc", "The recruit receives a branded DARB email with an activation link and sets their own password.")}
-                disabled={!canInvite}
-                disabledHint={t("agent.deliveryInviteDisabled", "Direct invites are not enabled for your account.")}
-              />
-              <DeliveryCard
-                active={effectiveMode === "manual" && canCreateManual}
-                onClick={() => setMode("manual")}
-                icon={KeyRound}
-                title={t("agent.deliveryManual", "Create account manually")}
-                desc={t("agent.deliveryManualDesc", "Create the account now and receive a temporary password to share with the recruit.")}
-                disabled={!canCreateManual}
-                disabledHint={t("agent.deliveryManualDisabled", "Manual account creation is not enabled for your account.")}
-              />
-            </CardContent>
-          </Card>
+              <div className="border-t border-border" />
 
-          {/* Recruit details */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t("agent.recruitStep3", "Recruit details")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label>{t("agent.inviteFullName", "Full name")}</Label>
-                <Input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder={t("agent.inviteFullNamePlaceholder", "e.g. Sara Khalil")}
-                  maxLength={100}
+              {/* Step 2 — delivery mode + per-recruit commission */}
+              <div className="space-y-3">
+                <StepHeader step={2} label={t("agent.recruitStep2", "How should they receive their account?")} />
+                <DeliveryCard
+                  active={effectiveMode === "invite"}
+                  onClick={() => setMode("invite")}
+                  icon={Mail}
+                  title={t("agent.deliveryInvite", "Send Gmail invite")}
+                  desc={t("agent.deliveryInviteDesc", "The recruit receives a branded DARB email with an activation link and sets their own password.")}
+                  disabled={!canInvite}
+                  disabledHint={t("agent.deliveryInviteDisabled", "Direct invites are not enabled for your account.")}
                 />
+                <DeliveryCard
+                  active={effectiveMode === "manual" && canCreateManual}
+                  onClick={() => setMode("manual")}
+                  icon={KeyRound}
+                  title={t("agent.deliveryManual", "Create account manually")}
+                  desc={t("agent.deliveryManualDesc", "Create the account now and receive a temporary password to share with the recruit.")}
+                  disabled={!canCreateManual}
+                  disabledHint={t("agent.deliveryManualDisabled", "Manual account creation is not enabled for your account.")}
+                />
+                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground">
+                      {t("agent.perRecruitRate", "Per-recruit rate")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t("agent.perRecruitRateHint", "Earned when a student brought by this recruit pays.")}
+                    </p>
+                  </div>
+                  <span className="font-mono text-sm font-bold text-emerald-600 whitespace-nowrap">{fmt(perRecruitRate)}</span>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>{t("agent.inviteEmail", "Email")}</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  dir="ltr"
-                  maxLength={255}
-                  className={email && !emailValid ? "border-destructive focus-visible:ring-destructive" : undefined}
-                  aria-invalid={!!email && !emailValid}
-                />
-                {email && !emailValid && (
-                  <p className="text-xs text-destructive">{t("agent.inviteEmailInvalid", "Enter a valid email address")}</p>
+
+              <div className="border-t border-border" />
+
+              {/* Step 3 — recruit details */}
+              <div className="space-y-4">
+                <StepHeader step={3} label={t("agent.recruitStep3", "Recruit details")} />
+                <div className="space-y-1.5">
+                  <Label>{t("agent.inviteFullName", "Full name")}</Label>
+                  <Input
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder={t("agent.inviteFullNamePlaceholder", "e.g. Sara Khalil")}
+                    maxLength={100}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("agent.inviteEmail", "Email")}</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    dir="ltr"
+                    maxLength={255}
+                    className={email && !emailValid ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    aria-invalid={!!email && !emailValid}
+                  />
+                  {email && !emailValid && (
+                    <p className="text-xs text-destructive">{t("agent.inviteEmailInvalid", "Enter a valid email address")}</p>
+                  )}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>{t("partner.profile.phone", "Phone")}</Label>
+                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" placeholder="0501234567" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("partner.profile.city", "City")}</Label>
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} />
+                  </div>
+                </div>
+                {submitError && (
+                  <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+                    {submitError}
+                  </p>
                 )}
+                <Button onClick={submit} disabled={submitting || !formValid} className="w-full sm:w-auto gap-2">
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> :
+                    effectiveMode === "invite" ? <Send className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
+                  {submitting
+                    ? t("common.saving", "Saving...")
+                    : effectiveMode === "invite"
+                      ? t("agent.sendInvite", "Send invitation")
+                      : t("agent.createAccount", "Create account")}
+                </Button>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>{t("partner.profile.phone", "Phone")}</Label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" placeholder="0501234567" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{t("partner.profile.city", "City")}</Label>
-                  <Input value={city} onChange={(e) => setCity(e.target.value)} />
-                </div>
-              </div>
-              {submitError && (
-                <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-                  {submitError}
-                </p>
-              )}
-              <Button onClick={submit} disabled={submitting || !formValid} className="w-full sm:w-auto gap-2">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> :
-                  effectiveMode === "invite" ? <Send className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
-                {submitting
-                  ? t("common.saving", "Saving...")
-                  : effectiveMode === "invite"
-                    ? t("agent.sendInvite", "Send invitation")
-                    : t("agent.createAccount", "Create account")}
-              </Button>
             </CardContent>
           </Card>
         </>
@@ -343,6 +353,17 @@ export default function AgentRecruitPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function StepHeader({ step, label }: { step: number; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+        {step}
+      </span>
+      <h3 className="text-sm font-semibold text-foreground">{label}</h3>
     </div>
   );
 }
