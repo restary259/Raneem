@@ -506,8 +506,19 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             </div>
           </header>
 
-          {/* Page content */}
-          <main className={cn("flex-1 min-w-0 overflow-y-auto overflow-x-hidden md:pb-0", chatFullscreen ? "pb-0" : "pb-16")}>
+          {/* Page content.
+              Mobile bottom padding must match the bar's real height — min-h-16
+              (4rem) PLUS the safe-area inset the bar adds via pb-safe — otherwise
+              on notched devices the bar's safe-area portion overlaps the last
+              content. The bar is hidden for full-screen mobile chats. */}
+          <main
+            className={cn(
+              "flex-1 min-w-0 overflow-y-auto overflow-x-hidden md:pb-0",
+              chatFullscreen
+                ? "pb-0"
+                : "pb-[calc(4rem+env(safe-area-inset-bottom))]",
+            )}
+          >
             <TabErrorBoundary>
               <Outlet />
             </TabErrorBoundary>

@@ -195,21 +195,39 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const tabClass = (active: boolean) =>
     cn(
       'flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors relative',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
       active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
     );
 
   return (
-    <nav className="md:hidden fixed bottom-0 start-0 end-0 z-50 min-h-16 bg-background border-t border-border flex items-center pb-safe">
+    <nav
+      role="navigation"
+      aria-label={t('nav.bottomNav', 'Main navigation')}
+      className="md:hidden fixed bottom-0 start-0 end-0 z-50 min-h-16 bg-background border-t border-border flex items-stretch pb-safe"
+    >
       {items.map((item) => {
         const isActive = isItemActive(item);
+        const labelText = label(item.key);
         return (
-          <Link key={item.key} to={item.href} className={tabClass(isActive)}>
-            <item.icon className={cn('h-5 w-5', isActive && 'text-primary')} />
-            <span className="w-full truncate max-w-[64px] sm:max-w-[72px] text-center leading-tight">
-              {label(item.key)}
+          <Link
+            key={item.key}
+            to={item.href}
+            aria-current={isActive ? 'page' : undefined}
+            aria-label={labelText}
+            className={tabClass(isActive)}
+          >
+            <item.icon
+              className={cn('h-5 w-5 shrink-0', isActive && 'text-primary')}
+              aria-hidden="true"
+            />
+            <span className="w-full min-w-0 truncate max-w-[68px] sm:max-w-[72px] text-center leading-tight">
+              {labelText}
             </span>
             {isActive && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+              <span
+                aria-hidden="true"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary"
+              />
             )}
           </Link>
         );
@@ -217,13 +235,24 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
 
       {moreItems.length > 0 && (
         <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-          <SheetTrigger className={tabClass(moreActive)} aria-label={t('nav.more', 'More')}>
-            <MoreHorizontal className={cn('h-5 w-5', moreActive && 'text-primary')} />
-            <span className="w-full truncate max-w-[64px] text-center leading-tight">
+          <SheetTrigger
+            className={tabClass(moreActive)}
+            aria-label={t('nav.more', 'More')}
+            aria-current={moreActive ? 'page' : undefined}
+            aria-expanded={moreOpen}
+          >
+            <MoreHorizontal
+              className={cn('h-5 w-5 shrink-0', moreActive && 'text-primary')}
+              aria-hidden="true"
+            />
+            <span className="w-full min-w-0 truncate max-w-[68px] text-center leading-tight">
               {t('nav.more', 'More')}
             </span>
             {moreActive && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary" />
+              <span
+                aria-hidden="true"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary"
+              />
             )}
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
@@ -233,20 +262,23 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
             <div className="mt-4 grid grid-cols-3 gap-2">
               {moreItems.map((item) => {
                 const isActive = location.pathname.startsWith(item.href);
+                const labelText = label(item.key);
                 return (
                   <Link
                     key={item.key}
                     to={item.href}
                     onClick={() => setMoreOpen(false)}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-label={labelText}
                     className={cn(
-                      'flex flex-col items-center gap-2 rounded-xl border border-border p-3 text-center text-xs transition-colors',
+                      'flex flex-col items-center gap-2 rounded-xl border border-border p-3 text-center text-xs transition-colors min-w-0',
                       isActive
                         ? 'border-primary/40 bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-muted',
                     )}
                   >
-                    <item.icon className="h-5 w-5" />
-                    <span className="w-full truncate leading-tight">{label(item.key)}</span>
+                    <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span className="w-full min-w-0 truncate leading-tight">{labelText}</span>
                   </Link>
                 );
               })}

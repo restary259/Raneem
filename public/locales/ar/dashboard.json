@@ -2405,7 +2405,8 @@
     "recruit": "تجنيد",
     "bankDetails": "التفاصيل البنكية",
     "reports": "التقارير",
-    "more": "المزيد"
+    "more": "المزيد",
+    "bottomNav": "التنقل الرئيسي"
   },
   "case": {
     "status": {

@@ -2387,7 +2387,8 @@
     "recruit": "Recruit",
     "bankDetails": "Bank Details",
     "reports": "Reports",
-    "more": "More"
+    "more": "More",
+    "bottomNav": "Main navigation"
   },
   "case": {
     "status": {
