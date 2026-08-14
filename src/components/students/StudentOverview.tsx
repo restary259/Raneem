@@ -477,7 +477,7 @@ function FinancialSnapshot({
 }: {
   fin: CaseFinancials;
   isAr: boolean;
-  t: (key: string, fallback?: string) => string;
+  t: TFunction<"dashboard">;
 }) {
   const eurCosts = (fin.school_costs ?? []).filter((c) => c.currency === "EUR");
   const hasDiscount = (fin.referral_discount ?? 0) > 0;
@@ -532,7 +532,7 @@ function VisaReadOnly({
   values: Record<string, string>;
   loading: boolean;
   isAr: boolean;
-  t: (key: string, fallback?: string) => string;
+  t: TFunction<"dashboard">;
 }) {
   if (loading) {
     return (

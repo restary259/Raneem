@@ -19,7 +19,6 @@ export interface ActiveStudent {
 export interface PendingInvitation {
   id: string;
   invited_email: string;
-  [key: string]: unknown;
 }
 
 /** Normalize an email for comparison: trim + lowercase. */
@@ -32,10 +31,10 @@ export function normalizeEmail(email: string | null | undefined): string {
  * invited_email does NOT match any active student's email. An invitation whose
  * account is already active is not "pending" regardless of what the row says.
  */
-export function filterActiveInvitations(
-  invitations: PendingInvitation[],
+export function filterActiveInvitations<T extends PendingInvitation>(
+  invitations: T[],
   students: ActiveStudent[],
-): PendingInvitation[] {
+): T[] {
   const activeEmails = new Set(
     students.map((s) => normalizeEmail(s.email)).filter(Boolean),
   );

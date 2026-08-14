@@ -561,7 +561,7 @@ const TeamPipelinePage: React.FC = () => {
 
       {/* Detail drawer — assign is the ONLY write action (Edit/Delete omitted). */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="end" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           {selected && (
             <>
               <SheetHeader className="space-y-0">
