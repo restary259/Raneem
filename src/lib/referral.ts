@@ -98,6 +98,15 @@ export interface ReferralHealth {
   valid: boolean;
   /** First name of the owner — the only thing the lookup ever returns. */
   ownerName: string | null;
+  /**
+   * True when the health check could NOT complete (network/RPC error). This is
+   * NOT the same as `valid: false` (a genuinely invalid/disabled code): the
+   * code may still be perfectly good, we just couldn't verify it this time.
+   * Callers should KEEP (not drop) the stored code when `unverified` is true —
+   * the server resolves it again at submission, so a transient client-side
+   * lookup failure must never strip a partner's attribution from the case.
+   */
+  unverified?: boolean;
 }
 
 /**
@@ -107,6 +116,12 @@ export interface ReferralHealth {
  * come back invalid. A failed check also *deletes* the stored token, so a
  * broken link can never silently attribute a student to the wrong partner on
  * a later visit.
+ *
+ * A network/RPC failure is reported as `{ valid: false, unverified: true }`
+ * and does NOT delete the stored token — the code might be fine, we simply
+ * could not reach the server to confirm it. The apply form keeps the code and
+ * still submits it, because `create-case-from-apply` resolves the code
+ * server-side anyway (and ignores it if it turns out to be invalid).
  */
 export async function verifyReferralCode(code: string | null): Promise<ReferralHealth> {
   if (!code) return { valid: false, ownerName: null };
@@ -122,10 +137,30 @@ export async function verifyReferralCode(code: string | null): Promise<ReferralH
     clearReferralCode();
     return { valid: false, ownerName: null };
   } catch {
-    // Network/RPC failure is not proof the code is bad — keep it stored, but
-    // do not claim an attribution we could not verify.
-    return { valid: false, ownerName: null };
+    // Network/RPC failure is not proof the code is bad — keep it stored. Mark
+    // `unverified` so the caller can distinguish "could not check" from "checked
+    // and rejected" and avoid dropping a valid attribution.
+    return { valid: false, ownerName: null, unverified: true };
   }
+}
+
+
+/**
+ * Decision helper for the apply form: given a `verifyReferralCode` result,
+ * returns whether the stored referral code should be KEPT and submitted.
+ *
+ * - A valid code is kept.
+ * - An unverified code (transient network/RPC error) is KEPT — the server
+ *   resolves it again at submission, so a momentary lookup failure must never
+ *   strip a partner's attribution from the case (which would leave the case
+ *   unattributed: visible to Admin, invisible to the partner dashboard / KPI).
+ * - A server-confirmed rejection (valid:false, not unverified) drops the code.
+ *
+ * Extracted as a pure function so the apply form's attribution-preservation
+ * guarantee is unit-testable without rendering React.
+ */
+export function shouldKeepReferralCode(health: ReferralHealth): boolean {
+  return health.valid || !!health.unverified;
 }
 
 

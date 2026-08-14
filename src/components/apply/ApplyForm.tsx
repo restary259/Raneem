@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones, Link2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
-import { captureReferralCode, getReferralCode, verifyReferralCode } from "@/lib/referral";
+import { captureReferralCode, getReferralCode, verifyReferralCode, shouldKeepReferralCode } from "@/lib/referral";
 import FieldGroup from "@/components/common/FieldGroup";
 import ConsentBlock from "@/components/common/ConsentBlock";
 import { recordConsent } from "@/lib/consent";
@@ -102,10 +102,16 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
     let active = true;
     verifyReferralCode(code).then((health) => {
       if (!active) return;
-      if (health.valid) {
-        setRefOwner(health.ownerName);
+      if (shouldKeepReferralCode(health)) {
+        // Valid OR unverified (transient lookup failure): keep the stored code
+        // and submit it. The server resolves it again at submission, so a
+        // momentary client-side lookup failure must never strip a partner's
+        // attribution from the case (which would leave the case unattributed —
+        // visible to Admin, invisible to the partner dashboard / KPI).
+        setRefOwner(health.valid ? health.ownerName : null);
         setRefBroken(false);
       } else {
+        // Server confirmed the code is invalid/disabled — drop it.
         setRefCode(null);
         setRefOwner(null);
         setRefBroken(true);

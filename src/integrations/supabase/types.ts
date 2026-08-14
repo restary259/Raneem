@@ -4301,6 +4301,19 @@ export type Database = {
         }
         Returns: Json
       }
+      backfill_case_attribution: {
+        Args: {
+          p_case_id: string
+          p_partner_id?: string
+          p_referred_by?: string
+          p_attribution_method?: string
+        }
+        Returns: {
+          partner_id: string
+          referred_by: string
+          source_attribution_method: string
+        }[]
+      }
       admin_deactivate_account: {
         Args: { _reason?: string; _target_id: string }
         Returns: Json

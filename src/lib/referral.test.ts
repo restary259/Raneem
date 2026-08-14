@@ -18,6 +18,7 @@ import {
   captureReferralCode,
   clearReferralCode,
   getReferralCode,
+  shouldKeepReferralCode,
   verifyReferralCode,
 } from "./referral";
 
@@ -109,13 +110,49 @@ describe("verifyReferralCode", () => {
   it("keeps an unverified code when the lookup fails", async () => {
     storeRef("partner-42");
     rpcResult = { data: null, error: { message: "network down" } };
-    expect(await verifyReferralCode("partner-42")).toEqual({ valid: false, ownerName: null });
+    const health = await verifyReferralCode("partner-42");
+    expect(health.valid).toBe(false);
+    expect(health.unverified).toBe(true);
+    // The stored code MUST survive a network failure so the apply form can
+    // still submit it (the server resolves it again).
     expect(getReferralCode()).toBe("partner-42");
+  });
+
+  it("does NOT mark a rejected code as unverified", async () => {
+    storeRef("partner-42");
+    rpcResult = { data: { valid: false }, error: null };
+    const health = await verifyReferralCode("partner-42");
+    expect(health.valid).toBe(false);
+    expect(health.unverified).toBeUndefined();
+    // A server-confirmed rejection deletes the stored code.
+    expect(getReferralCode()).toBeNull();
   });
 
   it("short-circuits when there is no code", async () => {
     expect(await verifyReferralCode(null)).toEqual({ valid: false, ownerName: null });
     expect(rpcCalls).toHaveLength(0);
+  });
+});
+
+describe("shouldKeepReferralCode", () => {
+  // Regression guard: a transient lookup failure must never strip a partner's
+  // attribution from the case. If the apply form drops the code on a network
+  // blip, the case is created with partner_id = NULL — visible to Admin but
+  // invisible to the partner dashboard / KPI (the reported bug).
+  it("keeps a valid code", () => {
+    expect(shouldKeepReferralCode({ valid: true, ownerName: "Sami" })).toBe(true);
+  });
+
+  it("keeps an unverified (network-error) code so the server can resolve it", () => {
+    expect(shouldKeepReferralCode({ valid: false, ownerName: null, unverified: true })).toBe(true);
+  });
+
+  it("drops a server-confirmed rejection", () => {
+    expect(shouldKeepReferralCode({ valid: false, ownerName: null })).toBe(false);
+  });
+
+  it("drops a null-code short-circuit result", () => {
+    expect(shouldKeepReferralCode({ valid: false, ownerName: null })).toBe(false);
   });
 });
 

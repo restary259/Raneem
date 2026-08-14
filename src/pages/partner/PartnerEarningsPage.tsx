@@ -119,17 +119,19 @@ export default function PartnerEarningsPage() {
     const allRewards = rewardRows || [];
     setRewards(allRewards);
 
-    const caseIds = [...new Set(
-      allRewards
-        .map((r: any) => r.admin_notes?.replace("Partner commission from case ", "").trim())
-        .filter((id: string) => id?.length === 36)
-    )] as string[];
-    if (caseIds.length > 0) {
-      const { data: caseRows } = await (supabase as any).from("cases").select("id,full_name").in("id", caseIds);
-      const map: Record<string, string> = {};
-      (caseRows || []).forEach((c: any) => { map[c.id] = c.full_name; });
-      setPaidCaseMap(map);
+    // Resolve paid-case names from the cases already loaded above via the
+    // get_partner_pool_cases reader (SECURITY DEFINER). A direct
+    // `.from('cases').select(...)` is blocked by RLS for partner/ambassador
+    // roles (the only cases SELECT policy was dropped in 20260806020018 and
+    // never recreated — partners reach cases only through the RPC), so the
+    // previous direct lookup silently returned an empty map and paid case
+    // names rendered as "—". Reusing the already-fetched list avoids a second
+    // round-trip AND the RLS dead-end.
+    const map: Record<string, string> = {};
+    for (const c of casesData ?? []) {
+      map[c.id] = c.full_name;
     }
+    setPaidCaseMap(map);
 
     setIsLoading(false);
   }, []);

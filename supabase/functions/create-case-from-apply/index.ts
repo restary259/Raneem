@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
     // who happens to share the same phone number, so we let the new submission through.
     const { data: existingCase } = await supabaseAdmin
       .from("cases")
-      .select("id, full_name, status, source, referral_discount")
+      .select("id, full_name, status, source, referral_discount, partner_id, referred_by, source_attribution_method")
       .eq("phone_number", cleanPhone)
       .in("source", ["contact_form", "apply_page"])
       .maybeSingle();
@@ -302,6 +302,38 @@ Deno.serve(async (req) => {
           bagrut_score: cleanBagrutScore ?? undefined,
         })
         .eq("id", existingCase.id);
+
+      // ── Backfill referral attribution on the existing case ──────────────
+      // A student often first reaches us via an unattributed contact_form /
+      // apply_page submission, then later re-applies through a partner's
+      // referral link. The duplicate-phone path used to update only the
+      // education fields and SILENTLY DROP the newly-resolved partner/referrer
+      // attribution — so the partner dashboard never saw the student and the
+      // KPI never incremented, even though Admin could see the case.
+      //
+      // Backfill is delegated to the SECURITY DEFINER `backfill_case_attribution`
+      // RPC because the `restrict_cases_financial_columns` BEFORE UPDATE trigger
+      // guards partner_id / referred_by / source_attribution_method against
+      // non-admin writes (and a service-role write has auth.uid() = NULL). The
+      // RPC sets the trusted internal GUC (like record_case_commission) AND is
+      // ADDITIVE ONLY — it never overwrites an attribution already on the case,
+      // so a later submission can never steal or re-attribute another partner's
+      // case. All values passed in are already server-resolved (JWT /
+      // resolve_referral_code), never client-trusted.
+      if (validatedPartnerId || validatedReferrerId) {
+        const { error: backfillErr } = await supabaseAdmin.rpc(
+          "backfill_case_attribution",
+          {
+            p_case_id: existingCase.id,
+            p_partner_id: validatedPartnerId ?? null,
+            p_referred_by: validatedReferrerId ?? null,
+            p_attribution_method: attributionMethod ?? null,
+          },
+        );
+        if (backfillErr) {
+          console.error("attribution backfill failed:", backfillErr.message);
+        }
+      }
 
       // Referral flow hitting an existing contact_form/apply_page case: never
       // create a duplicate case — instead link the referral row to the existing

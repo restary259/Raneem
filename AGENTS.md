@@ -847,3 +847,132 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   grant/revoke titles+body+toast, toggle hint.
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 345/345 pass
   incl. i18n parity guard.
+
+## Partner/Ambassador/Agent referral workflow — dashboard visibility fixes (2026-08-14)
+
+End-to-end audit of the "case appears in Admin but NOT in the Partner/Ambassador
+dashboard / KPI, and Agent can't see recruited-partner students" bug. Five root
+causes found and fixed; none of them were a missing relationship — the hierarchy
+(Agent → Partner/Ambassador → Student) and the attribution columns
+(`cases.partner_id` / `cases.referred_by`, `profiles.agent_id`) were already
+correct. The data was right; the READ paths were broken.
+
+### BUG 1 (CRITICAL): ambassadors were invisible to their own dashboard
+- `get_partner_pool_cases` (the SECURITY DEFINER RPC that backs
+  `PartnerOverviewPage` / `PartnerStudentsPage` / `PartnerEarningsPage`) gated
+  ONLY on `has_role(auth.uid(), 'social_media_partner')`. Ambassadors use the
+  SAME `/partner/*` routes and the SAME pages (App.tsx:329, DashboardLayout
+  PARTNER_BASE_NAV), so an ambassador (role='ambassador') ALWAYS got an empty
+  set — even when a case was correctly attributed
+  (`cases.partner_id = ambassador`) and Admin saw it. The ambassador's
+  "Students registered" / KPI / case list never updated after a referral.
+  This is the exact reported symptom for ambassadors.
+- FIX (migration `20260814210000_partner_ambassador_case_visibility.sql`):
+  the RPC now accepts BOTH `has_role('social_media_partner') OR
+  has_role('ambassador')`. Ownership scoping (`partner_id = auth.uid() OR
+  referred_by = auth.uid() OR pool-mode global`) is UNCHANGED — an ambassador
+  still only sees their own attributed cases (or the agency pool when enabled),
+  never another ambassador's. SECURITY DEFINER + search_path public unchanged;
+  no RLS weakened; grant unchanged (`authenticated` only).
+
+### BUG 2 (CRITICAL): referral code dropped on transient verifyReferralCode error
+- `src/components/apply/ApplyForm.tsx` called `verifyReferralCode(code)` and, in
+  the `.then`, set `refCode(null)` whenever `health.valid === false` — but
+  `verifyReferralCode` returns `{valid:false}` BOTH for a genuinely invalid
+  code AND for a transient network/RPC error (catch). So a student using a
+  partner's referral link whose `check_referral_code` RPC blipped → `ref_code`
+  nulled → `create-case-from-apply` received no `ref_code` → case created with
+  `partner_id = NULL` → partner dashboard never sees it, KPI never increments,
+  Admin sees the unattributed case.
+- FIX: `src/lib/referral.ts` `ReferralHealth` gained `unverified?: boolean`
+  (true ONLY on the catch/network-error path; the stored code is NOT cleared on
+  that path — only on a server-confirmed rejection). New pure helper
+  `shouldKeepReferralCode(health)` returns `true` for valid OR unverified.
+  `ApplyForm` now keeps the code when `shouldKeepReferralCode` is true and only
+  drops it on a server-confirmed rejection. The server resolves the code again
+  at submission anyway, so a momentary client-side lookup failure can never
+  strip a partner's attribution.
+- Tests: `src/lib/referral.test.ts` +5 cases (unverified keeps code, rejected
+  drops, shouldKeepReferralCode valid/unverified/rejected/null).
+
+### BUG 3 (CRITICAL): duplicate-phone path dropped partner attribution
+- `supabase/functions/create-case-from-apply/index.ts` duplicate-phone branch
+  (when an existing contact_form/apply_page case matches the phone) updated only
+  the education fields and SILENTLY DROPPED the newly-resolved partner/referrer
+  attribution. Scenario: student first applied via contact_form (no partner),
+  later re-applies via a partner's referral link → existing case found →
+  partner_id stays NULL → partner never credited, student never appears in
+  partner dashboard. Admin sees the case (unattributed).
+- FIX: new SECURITY DEFINER RPC `backfill_case_attribution(p_case_id,
+  p_partner_id, p_referred_by, p_attribution_method)` (in the same migration)
+  is ADDITIVE ONLY (sets a column only when it is currently NULL — never
+  overwrites, so a later submission can't steal/re-attribute another partner's
+  case). The edge function calls it in the duplicate-phone branch. All values
+  passed in are already server-resolved (JWT / resolve_referral_code), never
+  client-trusted.
+- WHY a SECURITY DEFINER RPC (not a direct UPDATE): the
+  `restrict_cases_financial_columns` BEFORE UPDATE trigger guards
+  `partner_id` / `referred_by` / `source_attribution_method` against non-admin
+  writes. A service-role edge-function write has `auth.uid() = NULL` →
+  `has_role(NULL,'admin') = false` → the trigger would RAISE on a guarded
+  column change. The RPC sets the trusted `app.internal_commission_split` GUC
+  (the SAME escape hatch `record_case_commission` uses) before the UPDATE,
+  exactly like the commission split. Granted to `service_role` ONLY (revoked
+  from anon/authenticated) so no dashboard client can rewrite attribution.
+- `types.ts`: added `backfill_case_attribution` signature.
+- Diagnostic: `supabase/diagnostics/referral_workflow_audit.sql` flags
+  pre-existing orphaned cases (apply/contact, no attribution, phone reused by
+  an attributed case) that may need a one-time admin review — the RPC recovers
+  going forward, NOT retroactively (same data-caveat pattern as the referral
+  discount commission fix; a one-time correction is an operator decision).
+
+### BUG 4: PartnerEarningsPage paid-case names blank (RLS dead-end)
+- `src/pages/partner/PartnerEarningsPage.tsx` did a direct
+  `.from('cases').select('id,full_name').in('id', caseIds)` to resolve names
+  for paid rewards — but after migration `20260806020018` dropped the only
+  partner `cases` SELECT policy ("Partners can view their own cases"), there is
+  NO direct SELECT policy on `cases` for partner/ambassador roles (they reach
+  cases ONLY through `get_partner_pool_cases`). The direct lookup silently
+  returned an empty map → paid case names rendered as "—".
+- FIX: build `paidCaseMap` from the cases already loaded via
+  `get_partner_pool_cases` (the page already fetches them) — no second
+  round-trip, no RLS dead-end. (Lower severity: cosmetic name resolution, not
+  attribution/KPI; the reward amounts themselves come from the `rewards` table
+  which has its own `user_id = auth.uid()` SELECT policy.)
+
+### BUG 5: agent KPI/list basis inconsistency (consistency, not a visibility gap)
+- `get_my_agent_network.students_count` used `COALESCE(c.partner_id, c.referred_by)
+  = r.id` while `paid_cases` used only `c.partner_id = r.id`. A recruit's id can
+  only ever appear in `cases.partner_id` (a partner/ambassador referral resolves
+  to partner_id, never referred_by — referred_by is reserved for student-to-
+  student referrals), so the COALESCE was a no-op for real recruits but could in
+  principle make the KPI count exceed what the agent's cases SELECT policy +
+  AgentStudentsPage `.in('partner_id', ...)` filter surface. Aligned
+  `students_count` to the same `partner_id` basis used everywhere else.
+  Behaviour unchanged for every real recruit.
+
+### What was NOT changed (confirmed correct, not the bug)
+- The attribution data flow itself: referral link `?ref=` → `referral.ts`
+  (capture + 90-day localStorage) → `ApplyForm` sends `ref_code` in the body →
+  `create-case-from-apply` resolves it server-side via `resolve_referral_code`
+  (consults `partner_links` then `profiles.referral_code` with
+  `referral_code_enabled`, since `20260812100000`) → writes `cases.partner_id` /
+  `cases.referred_by` / `cases.source_attribution_method`. Partner dashboard
+  self-attribution (`partner_self`) derives from the JWT, never the body.
+- The hierarchy: Agent → Partner/Ambassador → Student is intact. Agent
+  visibility derives from `profiles.agent_id` (recruits) → `cases.partner_id`
+  (their students) via the `agent_owns_recruit` SECURITY DEFINER helper + the
+  "Agents can view network and self-referral cases" SELECT policy
+  (`20260814183000` + recursion fix `20260814183100`). Direct partner/ambassador
+  attribution on `cases.partner_id` is NOT changed by adding agent visibility.
+- `record_case_commission` agent carve-out, the ₪500 agent commission rate, the
+  agent self-referral rate, commission splits, financials, the case pipeline,
+  role enums, and unrelated RLS are all untouched.
+
+### Build/test
+- `npm run build` (tsc+vite) clean; `npx vitest run` 350/350 pass
+  (+5 referral attribution-preservation tests; i18n parity guard green).
+- NOTE: applying `20260814210000` requires Supabase admin/service-role access
+  (DDL). It is NOT applied by the Vercel frontend build or the `ci.yml`
+  workflow. Run via `supabase db push` or the Supabase dashboard SQL editor.
+  The anon/authenticated JWT cannot run DDL.
