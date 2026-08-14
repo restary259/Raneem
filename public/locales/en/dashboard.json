@@ -4155,7 +4155,12 @@
       "errIbanRequired": "IBAN or bank name is required"
     },
     "recruitWizardTitle": "Recruit a partner or ambassador",
-    "perRecruitRateHint": "Earned when a student brought by this recruit pays."
+    "perRecruitRateHint": "Earned when a student brought by this recruit pays.",
+    "kpiDirectStudents": "Direct referrals",
+    "kpiPartnerStudents": "Via partners",
+    "kpiAmbassadorStudents": "Via ambassadors",
+    "kpiSubmitted": "Submitted",
+    "kpiConversion": "Conversion"
   },
   "theme": {
     "dark": "Dark",

@@ -94,17 +94,52 @@ export default function AgentOverviewPage() {
     {
       key: "students",
       label: t("agent.ovNetworkStudents", "Network students"),
-      value: stats.networkStudents.toLocaleString("en-US"),
+      value: stats.totalStudents.toLocaleString("en-US"),
       icon: GraduationCap,
     },
     {
-      key: "paid",
+      key: "enrolled",
       label: t("agent.ovPaidCases", "Paid cases"),
-      value: stats.paidCases.toLocaleString("en-US"),
+      value: stats.enrolledCases.toLocaleString("en-US"),
       icon: Award,
       tone: toneClasses("enrolled").text,
     },
   ];
+
+  const funnelKpis: KpiItem[] = [
+    {
+      key: "direct",
+      label: t("agent.kpiDirectStudents", "Direct referrals"),
+      value: stats.directStudents.toLocaleString("en-US"),
+      icon: Link2,
+    },
+    {
+      key: "viaPartners",
+      label: t("agent.kpiPartnerStudents", "Via partners"),
+      value: stats.partnerStudents.toLocaleString("en-US"),
+      icon: Users,
+    },
+    {
+      key: "viaAmbassadors",
+      label: t("agent.kpiAmbassadorStudents", "Via ambassadors"),
+      value: stats.ambassadorStudents.toLocaleString("en-US"),
+      icon: Megaphone,
+    },
+    {
+      key: "submitted",
+      label: t("agent.kpiSubmitted", "Submitted"),
+      value: stats.submittedCases.toLocaleString("en-US"),
+      icon: TrendingUp,
+      tone: toneClasses("submitted").text,
+    },
+    {
+      key: "conversion",
+      label: t("agent.kpiConversion", "Conversion"),
+      value: `${stats.conversionRate}%`,
+      icon: Award,
+    },
+  ];
+
 
   const earningsBuckets: KpiItem[] = [
     {
@@ -188,6 +223,8 @@ export default function AgentOverviewPage() {
         </SectionCard>
 
         <KpiRow items={kpis} columns={4} />
+        <KpiRow items={funnelKpis} columns={4} />
+
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Student sources */}

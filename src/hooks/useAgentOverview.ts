@@ -52,6 +52,22 @@ export interface AgentStats {
   networkStudents: number;
   paidCases: number;
   overrideEarned: number;
+  /** Students the agent referred personally (their own apply link). */
+  directStudents: number;
+  /** Students referred by partners in the network. */
+  partnerStudents: number;
+  /** Students referred by ambassadors in the network. */
+  ambassadorStudents: number;
+  /** Every distinct case attributable to the agent (network + direct). */
+  totalStudents: number;
+  newCases: number;
+  submittedCases: number;
+  enrolledCases: number;
+  casesLast30d: number;
+  /** enrolled / total students, 0–100. */
+  conversionRate: number;
+  commissionNetwork: number;
+  commissionSelf: number;
 }
 
 export interface AgentOverviewData {
@@ -63,6 +79,7 @@ export interface AgentOverviewData {
   loading: boolean;
   refetch: () => void;
 }
+
 
 const fmt0 = (n: unknown) => Number(n || 0);
 
@@ -83,8 +100,10 @@ export function useAgentOverview(): AgentOverviewData {
   const [loading, setLoading] = useState(true);
   const { summary: earnings } = useEarningsSummary(true);
 
+  const [kpis, setKpis] = useState<Record<string, number> | null>(null);
+
   const load = useCallback(async (uid: string) => {
-    const [profRes, netRes, linkRes, settingsRes, overrideRes, selfRefRes] = await Promise.all([
+    const [profRes, netRes, linkRes, settingsRes, overrideRes, selfRefRes, kpiRes] = await Promise.all([
       (supabase as any)
         .from("profiles")
         .select("full_name, email, agent_can_invite_directly, referral_code")
@@ -107,6 +126,8 @@ export function useAgentOverview(): AgentOverviewData {
         .select("commission_amount")
         .eq("agent_id", uid)
         .maybeSingle(),
+      // Authoritative, server-side network KPIs (no client aggregation).
+      (supabase as any).rpc("get_my_agent_kpis"),
     ]);
 
     const prof = profRes.data;
@@ -120,6 +141,7 @@ export function useAgentOverview(): AgentOverviewData {
     });
 
     setRecruits((netRes.data ?? []) as AgentRecruit[]);
+    setKpis((kpiRes?.data ?? null) as Record<string, number> | null);
 
     const globalPerRecruit = Number(settingsRes.data?.agent_commission_rate ?? 0);
     const perRecruit = Number(overrideRes.data?.commission_amount ?? globalPerRecruit);
@@ -148,15 +170,39 @@ export function useAgentOverview(): AgentOverviewData {
     }
   }, [userId, load]);
 
-  // Derive stats from the recruit list (single source of truth).
+  // KPIs come from the backend RPC. The recruit list is only a fallback for
+  // the counts it can express, so a stale deploy never shows blanks.
+  const totalStudents = kpis ? fmt0(kpis.students_total) : recruits.reduce((s, r) => s + fmt0(r.students_count), 0);
+  const enrolled = kpis ? fmt0(kpis.cases_enrolled) : recruits.reduce((s, r) => s + fmt0(r.paid_cases), 0);
+
   const stats: AgentStats = {
-    totalPartners: recruits.filter((r) => !r.role || r.role === "social_media_partner").length,
-    totalAmbassadors: recruits.filter((r) => r.role === "ambassador").length,
-    activeRecruits: recruits.filter((r) => r.status === "active").length,
-    networkStudents: recruits.reduce((s, r) => s + fmt0(r.students_count), 0),
-    paidCases: recruits.reduce((s, r) => s + fmt0(r.paid_cases), 0),
+    totalPartners: kpis
+      ? fmt0(kpis.partners)
+      : recruits.filter((r) => !r.role || r.role === "social_media_partner").length,
+    totalAmbassadors: kpis ? fmt0(kpis.ambassadors) : recruits.filter((r) => r.role === "ambassador").length,
+    activeRecruits: kpis ? fmt0(kpis.members_active) : recruits.filter((r) => r.status === "active").length,
+    networkStudents: kpis
+      ? fmt0(kpis.students_network)
+      : recruits.reduce((s, r) => s + fmt0(r.students_count), 0),
+    paidCases: enrolled,
     overrideEarned: recruits.reduce((s, r) => s + fmt0(r.override_earned), 0),
+    directStudents: fmt0(kpis?.students_direct),
+    partnerStudents: kpis
+      ? fmt0(kpis.students_partner)
+      : recruits.filter((r) => !r.role || r.role === "social_media_partner").reduce((s, r) => s + fmt0(r.students_count), 0),
+    ambassadorStudents: kpis
+      ? fmt0(kpis.students_ambassador)
+      : recruits.filter((r) => r.role === "ambassador").reduce((s, r) => s + fmt0(r.students_count), 0),
+    totalStudents,
+    newCases: fmt0(kpis?.cases_new),
+    submittedCases: fmt0(kpis?.cases_submitted),
+    enrolledCases: enrolled,
+    casesLast30d: fmt0(kpis?.cases_last_30d),
+    conversionRate: totalStudents > 0 ? Math.round((enrolled / totalStudents) * 100) : 0,
+    commissionNetwork: fmt0(kpis?.commission_network),
+    commissionSelf: fmt0(kpis?.commission_self),
   };
 
   return { profile, recruits, stats, rates, earnings, loading, refetch };
 }
+

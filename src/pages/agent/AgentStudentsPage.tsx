@@ -67,12 +67,14 @@ export default function AgentStudentsPage() {
       setLoading(false);
       return;
     }
+    const idList = allRecruitIds.join(",");
     const { data, error } = await (supabase as any)
       .from("cases")
       .select("id, full_name, status, created_at, source, partner_id, referred_by, source_attribution_method")
-      .in("partner_id", allRecruitIds)
+      .or(`partner_id.in.(${idList}),referred_by.in.(${idList})`)
       .order("created_at", { ascending: false })
       .limit(200);
+
     if (error) console.error("agent students fetch error:", error);
     setCases((data ?? []) as AgentStudentCase[]);
     setLoading(false);
