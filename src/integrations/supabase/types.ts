@@ -2937,6 +2937,7 @@ export type Database = {
           has_changed_legal_name: boolean
           has_criminal_record: boolean
           has_dual_citizenship: boolean
+          house_number: string | null
           iban: string | null
           iban_confirmed_at: string | null
           id: string
@@ -2960,7 +2961,9 @@ export type Database = {
           push_onboarding_updated_at: string | null
           referral_code: string | null
           referral_code_enabled: boolean
+          residential_city: string | null
           second_passport_country: string | null
+          street: string | null
           student_status: string
           university_name: string | null
           updated_at: string
@@ -2997,6 +3000,7 @@ export type Database = {
           has_changed_legal_name?: boolean
           has_criminal_record?: boolean
           has_dual_citizenship?: boolean
+          house_number?: string | null
           iban?: string | null
           iban_confirmed_at?: string | null
           id: string
@@ -3020,7 +3024,9 @@ export type Database = {
           push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
+          residential_city?: string | null
           second_passport_country?: string | null
+          street?: string | null
           student_status?: string
           university_name?: string | null
           updated_at?: string
@@ -3057,6 +3063,7 @@ export type Database = {
           has_changed_legal_name?: boolean
           has_criminal_record?: boolean
           has_dual_citizenship?: boolean
+          house_number?: string | null
           iban?: string | null
           iban_confirmed_at?: string | null
           id?: string
@@ -3080,7 +3087,9 @@ export type Database = {
           push_onboarding_updated_at?: string | null
           referral_code?: string | null
           referral_code_enabled?: boolean
+          residential_city?: string | null
           second_passport_country?: string | null
+          street?: string | null
           student_status?: string
           university_name?: string | null
           updated_at?: string
@@ -4449,6 +4458,7 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Json
       }
+      get_referral_discount_amount: { Args: never; Returns: number }
       get_school_important_contacts: {
         Args: { p_city?: string; p_school_id: string }
         Returns: {
@@ -4521,10 +4531,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_active_manager: {
-        Args: { p_uid: string }
-        Returns: boolean
-      }
       insert_lead_from_apply: {
         Args: {
           p_accommodation?: boolean
@@ -4547,6 +4553,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_active_manager: { Args: { p_uid: string }; Returns: boolean }
       is_direct_thread_member: {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
@@ -4577,10 +4584,6 @@ export type Database = {
           total_earned: number
         }[]
       }
-      list_team_directory: {
-        Args: never
-        Returns: { id: string; full_name: string }[]
-      }
       list_payout_requests: {
         Args: never
         Returns: {
@@ -4604,6 +4607,13 @@ export type Database = {
           status: string
           thread_id: string
           transaction_ref: string
+        }[]
+      }
+      list_team_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
         }[]
       }
       log_activity: {
