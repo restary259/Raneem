@@ -225,41 +225,6 @@ export type Database = {
           },
         ]
       }
-      agent_self_referral_overrides: {
-        Row: {
-          agent_id: string
-          commission_amount: number
-          created_at: string
-          id: string
-          notes: string | null
-          updated_at: string
-        }
-        Insert: {
-          agent_id: string
-          commission_amount?: number
-          created_at?: string
-          id?: string
-          notes?: string | null
-          updated_at?: string
-        }
-        Update: {
-          agent_id?: string
-          commission_amount?: number
-          created_at?: string
-          id?: string
-          notes?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "agent_self_referral_overrides_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agent_relationships: {
         Row: {
           active: boolean
@@ -2985,7 +2950,6 @@ export type Database = {
       platform_settings: {
         Row: {
           agent_commission_rate: number
-          agent_self_referral_rate: number
           ambassador_commission_rate: number
           default_course_weeks: number
           forgotten_contacted_days: number
@@ -3001,7 +2965,6 @@ export type Database = {
         }
         Insert: {
           agent_commission_rate?: number
-          agent_self_referral_rate?: number
           ambassador_commission_rate?: number
           default_course_weeks?: number
           forgotten_contacted_days?: number
@@ -3017,7 +2980,6 @@ export type Database = {
         }
         Update: {
           agent_commission_rate?: number
-          agent_self_referral_rate?: number
           ambassador_commission_rate?: number
           default_course_weeks?: number
           forgotten_contacted_days?: number
@@ -3035,15 +2997,12 @@ export type Database = {
       }
       profiles: {
         Row: {
-          agent_can_create_accounts: boolean
           agent_can_invite_directly: boolean
           agent_id: string | null
           arrival_date: string | null
           bank_account_number: string | null
           bank_branch: string | null
-          bank_country: string | null
           bank_name: string | null
-          bic: string | null
           biometric_photo_url: string | null
           case_id: string | null
           city: string | null
@@ -3104,15 +3063,12 @@ export type Database = {
           visa_status: string
         }
         Insert: {
-          agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
-          bank_country?: string | null
           bank_name?: string | null
-          bic?: string | null
           biometric_photo_url?: string | null
           case_id?: string | null
           city?: string | null
@@ -3173,15 +3129,12 @@ export type Database = {
           visa_status?: string
         }
         Update: {
-          agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
-          bank_country?: string | null
           bank_name?: string | null
-          bic?: string | null
           biometric_photo_url?: string | null
           case_id?: string | null
           city?: string | null
@@ -4454,20 +4407,6 @@ export type Database = {
           pool_amount: number
         }[]
       }
-      ensure_agent_recruit_link: {
-        Args: Record<string, never>
-        Returns: {
-          code: string
-          agent_id: string
-        }[]
-      }
-      get_effective_agent_self_referral: {
-        Args: { p_agent_id: string }
-        Returns: {
-          amount: number
-          agent_id: string
-        }[]
-      }
       get_effective_partner_split: {
         Args: { p_partner_id: string }
         Returns: {
@@ -4567,7 +4506,6 @@ export type Database = {
           paid_cases: number
           partner_id: string
           referral_code: string
-          role: string
           status: string
           students_count: number
         }[]

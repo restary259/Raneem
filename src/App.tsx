@@ -59,14 +59,11 @@ const AccessibilityStatementPage = lazy(() => import("./pages/legal/Accessibilit
 
 // Lazy-loaded Admin pages
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
-const AdminSpreadsheetPage = lazy(() => import("./pages/admin/AdminSpreadsheetPage"));
 const AdminCommandCenter = lazy(() => import("./pages/admin/AdminCommandCenter"));
-const AdminPipelinePage = lazy(() => import("./pages/admin/AdminPipelinePage"));
+const AdminPipelineHubPage = lazy(() => import("./pages/admin/AdminPipelineHubPage"));
 const AdminTeamPage = lazy(() => import("./pages/admin/AdminTeamPage"));
 const AdminProgramsPage = lazy(() => import("./pages/admin/AdminProgramsPage"));
-const AdminSubmissionsPage = lazy(() => import("./pages/admin/AdminSubmissionsPage"));
-const AdminFinancialsPage = lazy(() => import("./pages/admin/AdminFinancialsPage"));
-const AdminAnalyticsPage = lazy(() => import("./pages/admin/AdminAnalyticsPage"));
+const AdminFinanceHubPage = lazy(() => import("./pages/admin/AdminFinanceHubPage"));
 const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
@@ -79,14 +76,12 @@ const PartnerMessagesPage = lazy(() => import("./pages/messages/PartnerMessagesP
 
 // Team pages (Phase 3)
 const TeamWorkPage = lazy(() => import("./pages/team/TeamWorkPage"));
-const TeamCasesPage = lazy(() => import("./pages/team/TeamCasesPage"));
+const TeamCasesHubPage = lazy(() => import("./pages/team/TeamCasesHubPage"));
 const CaseDetailPage = lazy(() => import("./pages/team/CaseDetailPage"));
 const TeamAppointmentsPage = lazy(() => import("./pages/team/TeamAppointmentsPage"));
 const SubmitNewStudentPage = lazy(() => import("./pages/team/SubmitNewStudentPage"));
-const TeamStudentsPage = lazy(() => import("./pages/team/TeamStudentsPage"));
 const TeamStudentProfilePage = lazy(() => import("./pages/team/TeamStudentProfilePage"));
-const TeamAnalyticsPage = lazy(() => import("./pages/team/TeamAnalyticsPage"));
-const TeamSpreadsheetPage = lazy(() => import("./pages/team/TeamSpreadsheetPage"));
+const TeamReportsPage = lazy(() => import("./pages/team/TeamReportsPage"));
 const TeamBagrutConverter = lazy(() => import("./pages/team/BagrutConverter"));
 const TeamCurrencyPage = lazy(() => import("./pages/team/TeamCurrencyPage"));
 const TeamCvBuilderPage = lazy(() => import("./pages/team/TeamCvBuilderPage"));
@@ -95,22 +90,19 @@ const TeamCvBuilderPage = lazy(() => import("./pages/team/TeamCvBuilderPage"));
 const PartnerOverviewPage = lazy(() => import("./pages/partner/PartnerOverviewPage"));
 const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPage"));
 const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
-const PartnerNetworkPage = lazy(() => import("./pages/partner/PartnerNetworkPage"));
-const PartnerPerformancePage = lazy(() => import("./pages/partner/PartnerPerformancePage"));
+const PartnerNetworkHubPage = lazy(() => import("./pages/partner/PartnerNetworkHubPage"));
 const PartnerProfilePage = lazy(() => import("./pages/partner/PartnerProfilePage"));
 const PartnerApplyPage = lazy(() => import("./pages/partner/PartnerApplyPage"));
 
 // Agent pages
 const AgentOverviewPage = lazy(() => import("./pages/agent/AgentOverviewPage"));
-const AgentNetworkPage = lazy(() => import("./pages/agent/AgentNetworkPage"));
-const AgentEarningsPage = lazy(() => import("./pages/agent/AgentEarningsPage"));
+const AgentNetworkHubPage = lazy(() => import("./pages/agent/AgentNetworkHubPage"));
+const AgentEarningsHubPage = lazy(() => import("./pages/agent/AgentEarningsHubPage"));
 const AgentMessagesPage = lazy(() => import("./pages/agent/AgentMessagesPage"));
 const AgentSettingsPage = lazy(() => import("./pages/agent/AgentSettingsPage"));
-const AgentRecruitPage = lazy(() => import("./pages/agent/AgentRecruitPage"));
 const AgentStudentsPage = lazy(() => import("./pages/agent/AgentStudentsPage"));
-const AgentAnalyticsPage = lazy(() => import("./pages/agent/AgentAnalyticsPage"));
 const AgentApplyPage = lazy(() => import("./pages/agent/AgentApplyPage"));
-const AgentBankDetailsPage = lazy(() => import("./pages/agent/AgentBankDetailsPage"));
+
 
 // Student pages (Phase 5)
 const StudentNextStepsPage = lazy(() => import("./pages/student/StudentNextStepsPage"));
@@ -281,13 +273,14 @@ const App = () => {
               }
             >
               <Route index element={<AdminCommandCenter />} />
-              <Route path="pipeline" element={<AdminPipelinePage />} />
+              <Route path="pipeline" element={<AdminPipelineHubPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="team" element={<AdminTeamPage />} />
               <Route path="programs" element={<AdminProgramsPage />} />
-              <Route path="submissions" element={<AdminSubmissionsPage />} />
-              <Route path="financials" element={<AdminFinancialsPage />} />
-              <Route path="analytics" element={<AdminAnalyticsPage />} />
+              {/* Consolidated into hubs — old links keep working. */}
+              <Route path="submissions" element={<Navigate to="/admin/pipeline?tab=submissions" replace />} />
+              <Route path="financials" element={<AdminFinanceHubPage />} />
+              <Route path="analytics" element={<Navigate to="/admin/financials?tab=analytics" replace />} />
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="inbox" element={<AdminInboxPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
@@ -295,7 +288,8 @@ const App = () => {
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="referrals" element={<AdminReferralsPage />} />
-              <Route path="spreadsheet" element={<AdminSpreadsheetPage />} />
+              <Route path="spreadsheet" element={<Navigate to="/admin/financials?tab=spreadsheet" replace />} />
+
             </Route>
 
             {/* ── Team Dashboard (/team/*) ── */}
@@ -308,17 +302,18 @@ const App = () => {
               }
             >
               <Route index element={<TeamWorkPage />} />
-              <Route path="cases" element={<TeamCasesPage />} />
+              <Route path="cases" element={<TeamCasesHubPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
               <Route path="appointments" element={<TeamAppointmentsPage />} />
 
               <Route path="appointments/today" element={<Navigate to="/team" replace />} />
               <Route path="submit" element={<SubmitNewStudentPage />} />
-              <Route path="students" element={<TeamStudentsPage />} />
+              <Route path="students" element={<Navigate to="/team/cases?tab=students" replace />} />
               <Route path="students/:id" element={<TeamStudentProfilePage />} />
-              <Route path="analytics" element={<TeamAnalyticsPage />} />
-              <Route path="spreadsheet" element={<TeamSpreadsheetPage />} />
+              <Route path="analytics" element={<TeamReportsPage />} />
+              <Route path="spreadsheet" element={<Navigate to="/team/analytics?tab=spreadsheet" replace />} />
+
               <Route path="bagrut" element={<TeamBagrutConverter />} />
               <Route path="tools/currency" element={<TeamCurrencyPage />} />
               <Route path="tools/cv" element={<TeamCvBuilderPage />} />
@@ -337,8 +332,9 @@ const App = () => {
               <Route path="messages" element={<PartnerMessagesPage />} />
               <Route path="students" element={<PartnerStudentsPage />} />
               <Route path="earnings" element={<PartnerEarningsPage />} />
-              <Route path="network" element={<PartnerNetworkPage />} />
-              <Route path="performance" element={<PartnerPerformancePage />} />
+              <Route path="network" element={<PartnerNetworkHubPage />} />
+              <Route path="performance" element={<Navigate to="/partner/network?tab=performance" replace />} />
+
               <Route path="profile" element={<PartnerProfilePage />} />
               <Route path="apply" element={<PartnerApplyPage />} />
             </Route>
@@ -353,14 +349,15 @@ const App = () => {
               }
             >
               <Route index element={<AgentOverviewPage />} />
-              <Route path="network" element={<AgentNetworkPage />} />
-              <Route path="recruit" element={<AgentRecruitPage />} />
+              <Route path="network" element={<AgentNetworkHubPage />} />
+              <Route path="recruit" element={<Navigate to="/agent/network?tab=recruit" replace />} />
               <Route path="students" element={<AgentStudentsPage />} />
-              <Route path="analytics" element={<AgentAnalyticsPage />} />
+              <Route path="analytics" element={<Navigate to="/agent/network?tab=performance" replace />} />
               <Route path="apply" element={<AgentApplyPage />} />
-              <Route path="earnings" element={<AgentEarningsPage />} />
+              <Route path="earnings" element={<AgentEarningsHubPage />} />
               <Route path="messages" element={<AgentMessagesPage />} />
-              <Route path="bank-details" element={<AgentBankDetailsPage />} />
+              <Route path="bank-details" element={<Navigate to="/agent/earnings?tab=bank" replace />} />
+
               <Route path="profile" element={<AgentSettingsPage />} />
             </Route>
 
