@@ -11,6 +11,8 @@ import { Loader2, Inbox, Search, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { downloadCsv } from "@/utils/csv";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { LoadingState, EmptyState } from "@/components/shell";
 
 type Submission = {
   id: string;
@@ -63,15 +65,16 @@ const AdminInboxPage = () => {
     setRecruitPending(pending);
   }, []);
 
+  const debouncedSearch = useDebouncedValue(search, 250);
   const matchesSearch = useCallback(
     (r: Submission) => {
-      const q = search.trim().toLowerCase();
+      const q = debouncedSearch.trim().toLowerCase();
       if (!q) return true;
       const d = r.data || {};
       return [d.name, d.full_name, d.email, d.phone, d.whatsapp]
         .some((v) => String(v ?? "").toLowerCase().includes(q));
     },
-    [search]
+    [debouncedSearch]
   );
 
   const searched = useMemo(() => rows.filter(matchesSearch), [rows, matchesSearch]);
@@ -167,9 +170,12 @@ const AdminInboxPage = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
+          <LoadingState variant="table" rows={6} />
+        ) : searched.length === 0 ? (
+          <EmptyState
+            icon={Inbox}
+            title={t("admin.inbox.empty", "No submissions found")}
+          />
         ) : (
           <>
             <TabsContent value="all" className="mt-0">

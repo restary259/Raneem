@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Users, Megaphone, Link2, Search, GraduationCap } from "lucide-react";
-import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { LoadingState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 import { STATUS_COLORS } from "@/lib/caseStatus";
 
 interface AgentStudentCase {
@@ -42,6 +42,7 @@ export default function AgentStudentsPage() {
   const [cases, setCases] = useState<AgentStudentCase[]>([]);
   const [recruitIds, setRecruitIds] = useState<{ partners: Set<string>; ambassadors: Set<string> }>({ partners: new Set(), ambassadors: new Set() });
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 250);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [loading, setLoading] = useState(true);
 
@@ -115,13 +116,21 @@ export default function AgentStudentsPage() {
     return c;
   }, [cases, classifySource]);
 
-  const filtered = cases.filter((c) => {
-    const matchSearch = !search || firstNameOnly(c.full_name).toLowerCase().includes(search.toLowerCase());
+  const filtered = useMemo(() => cases.filter((c) => {
+    const matchSearch = !debouncedSearch || firstNameOnly(c.full_name).toLowerCase().includes(debouncedSearch.toLowerCase());
     const matchSource = sourceFilter === "all" || classifySource(c) === sourceFilter;
     return matchSearch && matchSource;
-  });
+  }), [cases, debouncedSearch, sourceFilter, classifySource]);
 
-  if (!userId || loading) return <DashboardLoading />;
+  const pagination = usePagination(filtered, 25);
+
+  if (!userId || loading) {
+    return (
+      <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
+        <LoadingState variant="table" rows={6} label={t("common.loading", "Loading")} />
+      </div>
+    );
+  }
 
   const sourceIcons: Record<SourceFilter, React.ComponentType<{ className?: string }>> = {
     all: GraduationCap,
@@ -200,7 +209,7 @@ export default function AgentStudentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((c) => {
+                  {pagination.items.map((c) => {
                     const src = classifySource(c);
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
@@ -218,7 +227,7 @@ export default function AgentStudentsPage() {
             </div>
             {/* Mobile card list */}
             <div className="sm:hidden divide-y divide-border">
-              {filtered.map((c) => {
+              {pagination.items.map((c) => {
                 const src = classifySource(c);
                 return (
                   <div key={c.id} className="p-4 space-y-1.5">
@@ -231,6 +240,7 @@ export default function AgentStudentsPage() {
                 );
               })}
             </div>
+            <TablePagination pagination={pagination} />
           </CardContent>
         </Card>
       )}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
@@ -6,9 +6,10 @@ import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Users, Search, UserPlus, ChevronRight, Award, GraduationCap, TrendingUp, Mail, MapPin } from "lucide-react";
-import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { LoadingState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 import { useAgentOverview, type AgentRecruit } from "@/hooks/useAgentOverview";
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
@@ -25,6 +26,7 @@ export default function AgentNetworkPage() {
   const locale = i18n.language === "ar" ? "ar" : "en-US";
   const { recruits, loading, refetch } = useAgentOverview();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 250);
   const [tab, setTab] = useState<Tab>("all");
   const [selected, setSelected] = useState<AgentRecruit | null>(null);
 
@@ -39,17 +41,26 @@ export default function AgentNetworkPage() {
     pending: recruits.filter((r) => r.status !== "active").length,
   }), [recruits]);
 
-  const filtered = recruits.filter((r) => {
-    const matchSearch = !search || r.full_name.toLowerCase().includes(search.toLowerCase());
+  const filtered = useMemo(() => recruits.filter((r) => {
+    const matchSearch = !debouncedSearch || r.full_name.toLowerCase().includes(debouncedSearch.toLowerCase());
     let matchTab = true;
     if (tab === "partners") matchTab = !r.role || r.role === "social_media_partner";
     else if (tab === "ambassadors") matchTab = r.role === "ambassador";
     else if (tab === "active") matchTab = r.status === "active";
     else if (tab === "pending") matchTab = r.status !== "active";
     return matchSearch && matchTab;
-  });
+  }), [recruits, debouncedSearch, tab]);
 
-  if (loading) return <DashboardLoading />;
+  const pagination = usePagination(filtered, 25);
+  const handleSelect = useCallback((r: AgentRecruit) => setSelected(r), []);
+
+  if (loading) {
+    return (
+      <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
+        <LoadingState variant="table" rows={6} label={t("common.loading", "Loading")} />
+      </div>
+    );
+  }
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: "all", label: t("agent.tabAll", "All"), count: counts.all },
@@ -99,11 +110,11 @@ export default function AgentNetworkPage() {
       {/* Search */}
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
+        <Input
           placeholder={t("agent.searchRecruits", "Search by name")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full ps-9 pe-3 py-2 rounded-md border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="ps-9"
         />
       </div>
 
@@ -143,10 +154,10 @@ export default function AgentNetworkPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((r) => (
+                  {pagination.items.map((r) => (
                     <tr
                       key={r.partner_id}
-                      onClick={() => setSelected(r)}
+                      onClick={() => handleSelect(r)}
                       className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap max-w-[160px] truncate">{r.full_name}</td>
@@ -157,7 +168,7 @@ export default function AgentNetworkPage() {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{Number(r.students_count)}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{Number(r.paid_cases)}</td>
-                      <td className="px-4 py-3 whitespace-nowrap font-semibold text-emerald-600">{fmt(r.override_earned)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap font-semibold text-[hsl(var(--status-enrolled))]">{fmt(r.override_earned)}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <Badge variant={r.status === "active" ? "default" : "secondary"} className="text-xs">{r.status}</Badge>
                       </td>
@@ -169,11 +180,11 @@ export default function AgentNetworkPage() {
             </div>
             {/* Mobile card list */}
             <div className="sm:hidden divide-y divide-border">
-              {filtered.map((r) => (
+              {pagination.items.map((r) => (
                 <button
                   key={r.partner_id}
-                  onClick={() => setSelected(r)}
-                  className="w-full p-4 text-start hover:bg-muted/20 transition-colors"
+                  onClick={() => handleSelect(r)}
+                  className="w-full p-4 text-start hover:bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-sm truncate">{r.full_name}</p>
@@ -184,11 +195,12 @@ export default function AgentNetworkPage() {
                       {r.role === "ambassador" ? t("agent.roleAmbassador", "Ambassador") : t("agent.rolePartner", "Partner")}
                       {" · "}{t("agent.colStudents", "Students")}: {Number(r.students_count)}
                     </span>
-                    <span className="text-xs font-semibold text-emerald-600">{fmt(r.override_earned)}</span>
+                    <span className="text-xs font-semibold text-[hsl(var(--status-enrolled))]">{fmt(r.override_earned)}</span>
                   </div>
                 </button>
               ))}
             </div>
+            <TablePagination pagination={pagination} />
           </CardContent>
         </Card>
       )}

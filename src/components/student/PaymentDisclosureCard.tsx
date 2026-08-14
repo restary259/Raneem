@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toneClasses } from '@/lib/statusTokens';
 
 /**
  * Shown to the student once their case reaches the payment stage.
@@ -14,10 +15,10 @@ const PaymentDisclosureCard: React.FC = () => {
   const lines = ['l1', 'l2', 'l3', 'l4'];
 
   return (
-    <Card className="border-amber-500/40 bg-amber-500/5">
+    <Card className={`border-[hsl(var(--status-payment)/0.4)] ${toneClasses("payment").tint}`}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Info className="h-5 w-5 text-amber-600" aria-hidden="true" />
+          <Info className={`h-5 w-5 ${toneClasses("payment").text}`} aria-hidden="true" />
           {t('student.payDisclosure.title')}
         </CardTitle>
       </CardHeader>

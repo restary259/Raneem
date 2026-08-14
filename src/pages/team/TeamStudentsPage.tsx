@@ -21,6 +21,7 @@ import {
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { readFunctionErrorBody, readFunctionError } from "@/lib/functionError";
 import { filterActiveInvitations } from "@/lib/studentInvitations";
+import { LoadingState, EmptyState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface StudentRecord {
@@ -60,6 +61,7 @@ export default function TeamStudentsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 250);
 
   /* ── Pending student invitations ─────────────────────────────────── */
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
@@ -428,11 +430,13 @@ export default function TeamStudentsPage() {
   };
 
   /* ── Filtered list ───────────────────────────────────────────────── */
-  const filtered = students.filter((s) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
+  const filtered = useMemo(() => students.filter((s) => {
+    if (!debouncedSearch.trim()) return true;
+    const q = debouncedSearch.toLowerCase();
     return (s.full_name ?? "").toLowerCase().includes(q) || (s.email ?? "").toLowerCase().includes(q);
-  });
+  }), [students, debouncedSearch]);
+
+  const studentPagination = usePagination(filtered, 25);
 
   /* ─────────────────────────────────────────────────────────────────  
      RENDER  
@@ -880,25 +884,18 @@ export default function TeamStudentsPage() {
 
       {/* ── Student list ───────────────────────────────────────────── */}
       {listLoading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin me-2" />
-          {t("team.students.loading")}
-        </div>
+        <LoadingState variant="table" rows={5} label={t("team.students.loading")} />
       ) : filtered.length === 0 ? (
-        <div className="border-2 border-dashed border-border rounded-2xl p-12 text-center">
-          <User className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-foreground">
-            {search ? t("team.students.noResults") : t("team.students.noStudents", "No student accounts yet")}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {!search && t("team.students.noStudentsHint", "Create a student account to get started.")}
-          </p>
-        </div>
+        <EmptyState
+          icon={User}
+          title={search ? t("team.students.noResults") : t("team.students.noStudents", "No student accounts yet")}
+          description={!search ? t("team.students.noStudentsHint", "Create a student account to get started.") : undefined}
+        />
       ) : (
         <Card>
           <CardContent className="p-0">
             <div className="divide-y divide-border">
-              {filtered.map((s) => (
+              {studentPagination.items.map((s) => (
                 <div
                   key={s.id}
                   role="button"
@@ -910,7 +907,7 @@ export default function TeamStudentsPage() {
                       navigate(`/team/students/${s.id}`);
                     }
                   }}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="h-4 w-4 text-primary" />
@@ -928,6 +925,7 @@ export default function TeamStudentsPage() {
                 </div>
               ))}
             </div>
+            <TablePagination pagination={studentPagination} />
           </CardContent>
         </Card>
       )}

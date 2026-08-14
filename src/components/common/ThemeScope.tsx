@@ -2,7 +2,7 @@ import React from "react";
 import { ThemeProvider } from "next-themes";
 import { useLocation } from "react-router-dom";
 
-const DASHBOARD_PREFIXES = ["/admin", "/team", "/partner", "/student"];
+const DASHBOARD_PREFIXES = ["/admin", "/team", "/partner", "/agent", "/student"];
 
 /**
  * Theme ownership lives here and nowhere else: `next-themes` is the single

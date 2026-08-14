@@ -731,7 +731,8 @@
       "commission": "Commission",
       "funnelTitle": "Client Funnel",
       "noStageData": "Not enough data yet to calculate stage durations",
-      "noStageDataSub": "This chart fills in as cases move through the pipeline over the coming days"
+      "noStageDataSub": "This chart fills in as cases move through the pipeline over the coming days",
+      "loadFailed": "Failed to load analytics"
     },
     "commission": {
       "globalRates": "Global Commission Rates",
@@ -1092,6 +1093,7 @@
       "all": "All",
       "familyType": "Family",
       "noReferrals": "No referrals found",
+      "loadFailed": "Failed to load referrals",
       "statusUpdated": "Status updated",
       "deleted": "Referral deleted",
       "deleteDesc": "This will permanently delete this referral. This action cannot be undone.",
@@ -1268,7 +1270,8 @@
         "contact": "Contact"
       },
       "exportRecruits": "Switch to a submissions tab to export",
-      "searchPlaceholder": "Search by name, email or phone"
+      "searchPlaceholder": "Search by name, email or phone",
+      "empty": "No submissions found"
     },
     "contacts": {
       "searchPlaceholder": "Search by name or email",
@@ -1480,7 +1483,8 @@
     "archived": "Archived",
     "back": "Back",
     "copy": "Copy",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "retry": "Retry"
   },
   "funnel": {
     "new": "Lead Submitted",

@@ -5,6 +5,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardCheck, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { LoadingState, EmptyState, ErrorState, TablePagination, usePagination } from '@/components/shell';
+import { toneClasses } from '@/lib/statusTokens';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,18 +27,30 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
   const [completions, setCompletions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [confirmItem, setConfirmItem] = useState<{ id: string; name: string; completed: boolean } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
 
   useEffect(() => {
-    fetchData();
+    let ignore = false;
+    setIsLoading(true);
+    fetchData(ignore);
+    return () => {
+      ignore = true;
+    };
   }, [userId]);
 
-  const fetchData = async () => {
+  const fetchData = async (ignore = false) => {
     const [itemsRes, completionsRes] = await Promise.all([
       (supabase as any).from('checklist_items').select('*').order('sort_order', { ascending: true }),
       (supabase as any).from('student_checklist').select('*').eq('student_id', userId),
     ]);
+    if (ignore) return;
+    if (itemsRes.error || completionsRes.error) {
+      setLoadError((itemsRes.error || completionsRes.error)?.message ?? t('common.error', 'Error'));
+    } else {
+      setLoadError(null);
+    }
     if (itemsRes.data) setItems(itemsRes.data);
     if (completionsRes.data) setCompletions(completionsRes.data);
     setIsLoading(false);
@@ -82,7 +96,18 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+    return <LoadingState variant="rows" rows={5} />;
+  }
+
+  if (loadError && items.length === 0) {
+    return (
+      <ErrorState
+        title={t('common.error', 'Error')}
+        description={loadError}
+        onRetry={() => fetchData()}
+        retryLabel={t('common.retry', 'Retry')}
+      />
+    );
   }
 
   const completedCount = items.filter(item => completions.find(c => c.checklist_item_id === item.id && c.is_completed)).length;
@@ -118,7 +143,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
                 {t('checklist.progress', { completed: completedCount, total: items.length })}
               </p>
               {progress === 100 && (
-                <p className="text-emerald-600 font-semibold text-sm mt-2 flex items-center gap-1">
+                <p className={`${toneClasses('enrolled').text} font-semibold text-sm mt-2 flex items-center gap-1`}>
                   <CheckCircle2 className="h-4 w-4" />{t('checklist.allComplete')}
                 </p>
               )}
@@ -136,7 +161,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
             <Card
               key={item.id}
               className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                isCompleted ? 'bg-emerald-50/50 border-emerald-200' : ''
+                isCompleted ? `${toneClasses('enrolled').tint} border-[hsl(var(--status-enrolled)/0.3)]` : 'hover:bg-muted/40'
               }`}
               onClick={() => handleItemClick(item.id, item.item_name, isCompleted)}
             >
@@ -161,9 +186,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
         })}
       </div>
 
-      {items.length === 0 && (
-        <p className="text-center text-muted-foreground py-8">{t('checklist.noItems')}</p>
-      )}
+      {items.length === 0 && <EmptyState title={t('checklist.noItems')} />}
 
       {/* Confirmation Dialog */}
       <AlertDialog open={!!confirmItem} onOpenChange={(open) => !open && setConfirmItem(null)}>

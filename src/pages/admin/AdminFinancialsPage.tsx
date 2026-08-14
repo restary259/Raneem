@@ -56,7 +56,7 @@ const OverviewTab = () => {
       label: t("admin.financials.kpiAdminNet"),
       value: `${fmt(data.platformNetRevenue)} ILS`,
       icon: TrendingUp,
-      color: "text-green-600 bg-green-600/10",
+      color: "text-emerald-600 bg-emerald-600/10",
     },
     {
       label: t("admin.financials.kpiPartnerPending"),
@@ -68,13 +68,13 @@ const OverviewTab = () => {
       label: t("admin.financials.kpiPartnerPaid"),
       value: `${fmt(data.partnerCommissionPaid)} ILS`,
       icon: Percent,
-      color: "text-orange-600 bg-orange-600/10",
+      color: "text-primary bg-primary/10",
     },
     {
       label: t("admin.financials.kpiEnrolledStudents"),
       value: data.enrolledCount.toLocaleString("en-US"),
       icon: Users,
-      color: "text-teal-600 bg-teal-600/10",
+      color: "text-sky-600 bg-sky-600/10",
     },
     {
       label: t("admin.financials.kpiReferralDiscounts"),
