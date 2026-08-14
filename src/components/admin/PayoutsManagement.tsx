@@ -9,7 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Download, FileText, HandCoins, UserCheck, GraduationCap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTranslation } from 'react-i18next';
-import RoleDirectory, { PayoutRole } from './RoleDirectory';
+import RoleDirectory from './RoleDirectory';
+import type { PayoutRole } from './RequesterProfilePanel';
 
 /**
  * Admin payout surface — five role-segmented directories.
