@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
 import StudentOverview from "@/components/students/StudentOverview";
+import AdminPasswordConfirm from "@/components/admin/AdminPasswordConfirm";
 
 import {
   RefreshCw,
@@ -299,6 +300,7 @@ export default function AdminStudentsPage() {
   const [editingVisa, setEditingVisa] = useState(false);
   const [visaDraft, setVisaDraft] = useState<Record<string, string>>({});
   const [savingVisa, setSavingVisa] = useState(false);
+  const [visaConfirmOpen, setVisaConfirmOpen] = useState(false);
 
   const [referralCount, setReferralCount] = useState(0);
 
@@ -901,7 +903,7 @@ export default function AdminStudentsPage() {
                         </p>
                         {!editingVisa ? (
                           <Button variant="outline" size="sm" className="h-7 text-xs gap-1"
-                            onClick={() => { setVisaDraft({ ...visaValues }); setEditingVisa(true); }}>
+                            onClick={() => setVisaConfirmOpen(true)}>
                             <Edit3 className="h-3 w-3" /> {t("admin.students.edit")}
                           </Button>
                         ) : (
@@ -1064,6 +1066,17 @@ export default function AdminStudentsPage() {
                     </div>
                   </div>
                 )}
+              />
+
+              <AdminPasswordConfirm
+                open={visaConfirmOpen}
+                reason={t("admin.students.visaConfirmReason", "Editing visa information is sensitive.")}
+                onCancel={() => setVisaConfirmOpen(false)}
+                onConfirmed={() => {
+                  setVisaConfirmOpen(false);
+                  setVisaDraft({ ...visaValues });
+                  setEditingVisa(true);
+                }}
               />
 
               <div className="mt-5 space-y-5">

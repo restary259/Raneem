@@ -15,21 +15,22 @@ import {
   Globe,
   FileText,
   CreditCard,
-  History,
   ChevronLeft,
   ChevronRight,
+  School,
+  GraduationCap,
+  Hash,
+  UserCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { useCaseFinancials, type CaseFinancials } from "@/hooks/useCaseFinancials";
-import { useCaseEvents } from "@/hooks/useCaseEvents";
 import { statusColorClasses } from "@/lib/caseStatus";
 import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { formatILS } from "@/lib/money";
 import { readStudentProfile, missingProfileFields } from "@/lib/studentProfileFields";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
-import CaseTimeline from "@/components/cases/CaseTimeline";
 
 export interface VisaField {
   id: string;
@@ -72,15 +73,19 @@ type NextAction = {
 /**
  * Shared student "overview" command-center consumed by the team student
  * profile page and the admin students sheet. Composes existing components
- * (CaseProgressRail, CaseProfileSummary, CaseTimeline) and reads money from
- * the authoritative `get_case_financials` RPC via useCaseFinancials — the
+ * (CaseProgressRail, CaseProfileSummary) and reads money from the
+ * authoritative `get_case_financials` RPC via useCaseFinancials — the
  * frontend never re-adds prices, so displayed totals always match the case
  * Finance tab.
  *
+ * Layout (top → bottom): Student information → Case progress → Next action
+ * + Financial snapshot → Detail tabs (Personal / Contact / Visa /
+ * Documents). Recent activity is intentionally NOT shown here — it lives on
+ * the case detail timeline.
+ *
  * Graceful degradation: when `caseData` is null (standalone student with no
- * linked case) the progress rail / next-action / financial snapshot /
- * recent-activity sections are hidden and only Contact + Visa (+ Documents)
- * remain.
+ * linked case) the progress rail / next-action / financial-snapshot sections
+ * are hidden and only the detail tabs remain.
  */
 export default function StudentOverview({
   profile,
@@ -102,7 +107,52 @@ export default function StudentOverview({
 
   const { statuses } = usePipelineStatuses();
   const { financials, isLoading: finLoading } = useCaseFinancials(hasCase ? caseId : undefined);
-  const { events, loading: eventsLoading } = useCaseEvents(hasCase ? caseId : undefined);
+
+  // Resolve display names for the compact info header: the assigned team
+  // member (cases.assigned_to → profiles), the program (case_submissions
+  // .program_id → programs) and the language school (profiles
+  // .language_school_id → schools, used only when university_name isn't
+  // already carrying the synced display name). All from existing tables —
+  // no new data source.
+  const [assignedName, setAssignedName] = useState<string | null>(null);
+  const [programName, setProgramName] = useState<string | null>(null);
+  const [schoolName, setSchoolName] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const assignedTo = caseData?.assigned_to as string | null | undefined;
+    const programId = submission?.program_id as string | null | undefined;
+    const languageSchoolId = profile.language_school_id as string | null | undefined;
+    const hasSchoolDisplay = !!(profile.university_name as string | null | undefined);
+
+    type NameRow = { name_en: string | null; name_ar: string | null } | null;
+    type ProfileRow = { full_name: string | null; email: string | null } | null;
+    const empty = { data: null } as { data: null };
+
+    (async () => {
+      const [assignedRes, programRes, schoolRes] = await Promise.all([
+        assignedTo
+          ? supabase.from("profiles").select("full_name, email").eq("id", assignedTo).maybeSingle()
+          : Promise.resolve(empty as { data: ProfileRow }),
+        programId
+          ? supabase.from("programs").select("id, name_en, name_ar").eq("id", programId).maybeSingle()
+          : Promise.resolve(empty as { data: NameRow }),
+        !hasSchoolDisplay && languageSchoolId
+          ? supabase.from("schools").select("id, name_en, name_ar").eq("id", languageSchoolId).maybeSingle()
+          : Promise.resolve(empty as { data: NameRow }),
+      ]);
+      if (cancelled) return;
+      const prefer = (r: NameRow) =>
+        r ? (isAr ? r.name_ar || r.name_en : r.name_en || r.name_ar) || "" : "";
+      const assigned = assignedRes.data as ProfileRow;
+      setAssignedName(assigned ? assigned.full_name || assigned.email || null : null);
+      setProgramName(prefer(programRes.data as NameRow) || null);
+      setSchoolName(prefer(schoolRes.data as NameRow) || null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [caseData?.assigned_to, submission?.program_id, profile.language_school_id, profile.university_name, isAr]);
 
   // Visa fields/values for the read-only Visa tab (team). Admin supplies its
   // own editable renderer via renderVisaTab.
@@ -154,9 +204,12 @@ export default function StudentOverview({
   const waHref = isLinkablePhone(phone) ? whatsappUrl(phone) : null;
 
   // ── Next action derivation (status + profile completeness + finance) ──
+  // Only UNFINISHED work is surfaced. Terminal success/cancelled states have
+  // nothing outstanding, so no next-action card is shown for them.
   const nextAction: NextAction | null = (() => {
     if (!hasCase) return null;
     const status = statusKey;
+    if (status === "enrollment_paid" || status === "cancelled") return null;
     const profileValues = readStudentProfile(caseData!, submission);
     const missing = missingProfileFields(profileValues);
     if (status === "profile_completion" || (status && ["new", "contacted", "appointment_scheduled"].includes(status) && missing.length > 0)) {
@@ -177,7 +230,7 @@ export default function StudentOverview({
         icon: CreditCard,
       };
     }
-    if (status === "submitted" || status === "enrollment_paid") {
+    if (status === "submitted") {
       return {
         title: t("student.next.prepareVisa", "Prepare your visa file"),
         detail: t("student.next.prepareVisaDetail", "Fill in the visa form fields and upload the required proofs."),
@@ -214,7 +267,7 @@ export default function StudentOverview({
 
   return (
     <div className="space-y-4">
-      {/* ── Header ───────────────────────────────────────────────────── */}
+      {/* ── Student information (who is this student?) ──────────────── */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
@@ -232,10 +285,20 @@ export default function StudentOverview({
                 )}
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {caseRef && <span className="font-medium text-foreground">#{caseRef}</span>}
+                {caseRef && <span className="flex items-center gap-1 font-medium text-foreground"><Hash className="h-3 w-3" />{caseRef}</span>}
                 {email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{email}</span>}
                 {phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{phone}</span>}
               </div>
+
+              {/* Compact key facts — real fields from the profile / case /
+                  submission. Only rendered when the value is present. */}
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                <InfoRow icon={School} label={t("studentOverview.languageSchool", "Language school")} value={(profile.university_name as string) || schoolName} />
+                <InfoRow icon={GraduationCap} label={t("studentOverview.program", "Program")} value={programName} />
+                <InfoRow icon={UserCheck} label={t("studentOverview.assignedTeamMember", "Assigned team member")} value={assignedName} />
+                <InfoRow icon={FileText} label={t("studentOverview.caseStatus", "Case status")} value={statusLabel} />
+              </div>
+
               <div className="mt-3 flex flex-wrap gap-2">
                 {openCase && (
                   <Button size="sm" variant="default" className="gap-1.5" onClick={() => navigate(openCase)}>
@@ -336,12 +399,12 @@ export default function StudentOverview({
         </div>
       )}
 
-      {/* ── Student information tabs ────────────────────────────────── */}
+      {/* ── Detail tabs ─────────────────────────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <User className="h-4 w-4 text-primary" />
-            {t("studentOverview.studentInformation", "Student information")}
+            {t("studentOverview.details", "Details")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -381,35 +444,27 @@ export default function StudentOverview({
           </Tabs>
         </CardContent>
       </Card>
+    </div>
+  );
+}
 
-      {/* ── Recent activity ─────────────────────────────────────────── */}
-      {hasCase && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <History className="h-4 w-4 text-primary" />
-              {t("studentOverview.recentActivity", "Recent activity")}
-            </CardTitle>
-            {openCase && (
-              <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => navigate(openCase)}>
-                {t("studentOverview.viewAll", "View all")}
-                <Chevron className="h-3.5 w-3.5 rtl:rotate-180" />
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="pt-0">
-            {eventsLoading ? (
-              <div className="py-4 flex items-center justify-center">
-                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : events.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">{t("caseTimeline.empty", "No activity yet.")}</p>
-            ) : (
-              <CaseTimeline caseId={caseId!} canAddNote={false} />
-            )}
-          </CardContent>
-        </Card>
-      )}
+/* ── Compact labelled row for the student information header ──────────── */
+function InfoRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string | null | undefined;
+}) {
+  return (
+    <div className="min-w-0 flex items-center gap-2">
+      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <div className="min-w-0">
+        <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
+        <p className="text-sm font-medium text-foreground truncate">{value || "—"}</p>
+      </div>
     </div>
   );
 }
@@ -435,8 +490,17 @@ function FinancialSnapshot({
   return (
     <div className="space-y-0.5">
       {hasDiscount && row(t("studentOverview.serviceTotal", "Service total"), formatILS(fin.service_total + fin.referral_discount))}
-      {hasDiscount && row(`− ${t("studentOverview.referralDiscount", "Referral discount")}`, formatILS(fin.referral_discount))}
-      {row(t("finance.summary.services", "Services"), formatILS(fin.service_total), true)}
+      {hasDiscount && (
+        <div className="flex items-center justify-between py-1 rounded-md bg-emerald-500/10 px-2 -mx-2">
+          <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+            {isAr ? "− خصم الإحالة" : "− Referral discount"}
+          </span>
+          <span className="text-sm tabular-nums font-semibold text-emerald-700 dark:text-emerald-300">
+            {formatILS(fin.referral_discount)}
+          </span>
+        </div>
+      )}
+      {row(t("studentOverview.finalTotal", "Final total"), formatILS(fin.service_total), true)}
       {row(t("finance.summary.paid", "Paid"), formatILS(fin.total_confirmed))}
       {row(t("finance.summary.remaining", "Remaining"), formatILS(fin.remaining), true)}
       {eurCosts.length > 0 && (
@@ -518,7 +582,7 @@ function ContactRows({
     { label: isAr ? "الهاتف" : "Phone", value: (caseData?.phone_number ?? profile.phone_number) as string | null },
     { label: isAr ? "المدينة" : "City", value: profile.city as string | null },
     { label: isAr ? "الدولة" : "Country", value: profile.country as string | null },
-    { label: isAr ? "الجامعة" : "University", value: profile.university_name as string | null },
+    { label: isAr ? "مدرسة اللغة" : "Language school", value: profile.university_name as string | null },
     { label: isAr ? "جهة اتصال الطوارئ" : "Emergency contact", value: profile.emergency_contact_phone as string | null },
   ];
   return (

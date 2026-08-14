@@ -579,10 +579,73 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   render.
 - **Mobile**: `LebenslaufBuilder` has an Edit/Preview toggle on small screens
   (shows one at a time); on desktop both render side-by-side.
-- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 343/343 pass
+- Build/test: `npm run build` clean; `npx vitest run` 343/343 pass
   (incl. 16 new cvDesign color-safety tests + i18nKeys parity guard). ESLint:
   0 errors across all lebenslauf files (5 `react-refresh/only-export-components`
   warnings in `templateHelpers.tsx` are pre-existing pattern, not build-gated).
+
+## Student Overview command-center + visa/documents permissions (2026-08-14)
+- `StudentOverview.tsx` is a SHARED component (variant `"page"` for team,
+  `"sheet"`-like for admin via the `tabs` prop). Layout is fixed top→bottom:
+  **Student information** (identity header with a compact key-facts grid:
+  name, case ref, email, phone, language school, program, assigned team
+  member, case status) → **Case progress** rail → **Next action + Financial
+  snapshot** (two columns) → **Detail tabs** (Personal / Contact / Visa /
+  Documents). Recent activity was REMOVED from the overview (it lives on the
+  case-detail timeline; `useCaseEvents`/`CaseTimeline` imports dropped). The
+  header resolves `assigned_to → profiles.full_name`, `submission.program_id
+  → programs.name_en/ar`, and `profiles.language_school_id → schools` (only
+  when `university_name` isn't already the synced display name) in ONE effect.
+- **Next action only surfaces UNFINISHED work**: terminal states
+  (`enrollment_paid`, `cancelled`) return `null` → no next-action card. The
+  `submitted` prepare-visa branch no longer fires for `enrollment_paid`.
+- **Visa permissions (enforced at the DB, not just UI)**: migration
+  `20260814000000_student_overview_visa_docs.sql` REPLACES the team
+  `FOR ALL` "Team manage assigned visa values/applications" policies with
+  SELECT-only "Team read assigned visa…" policies. Team can read their
+  assigned students' visa but CANNOT write it (matches the read-only
+  `VisaReadOnly` fallback already rendered for team). Admin keeps full
+  `FOR ALL`; student INSERT/UPDATE unchanged.
+- **Admin visa edit now requires re-auth**: `AdminStudentsPage` gates the
+  visa "Edit" button behind `AdminPasswordConfirm` (verify-admin-password
+  edge function, server-side password check) — `visaConfirmOpen` state;
+  `onConfirmed` sets `visaDraft` + `editingVisa=true`. The `Edit` button no
+  longer opens edit mode directly. New i18n key `admin.students.visaConfirmReason`.
+- **Team can now upload documents**: `TeamStudentProfilePage` passes
+  `renderDocumentsTab={() => <DocumentsPanel studentId caseId actorUserId
+  canDelete={false} />}` (it previously had NO documents tab at all).
+  `actorUserId` is resolved from `supabase.auth.getSession()`. The shared
+  `DocumentsPanel` stamps `uploaded_by = actorUserId`, `case_id = caseId`,
+  `is_visible_to_student = true` on insert, reuses `validateUploadFile` +
+  `documents.*` i18n + the `student-documents` bucket + signed-URL download
+  (same path as the student `DocumentsManager`). Team `canDelete=false` (RLS
+  has no team UPDATE/DELETE on documents). Admin keeps its existing inline
+  documents UI (its own realtime + soft-delete) — DocumentsPanel is the
+  team path; both back the SAME `documents` table.
+- **Document-upload notification (reuse, not new infra)**: the same migration
+  adds a SECURITY DEFINER trigger `trg_student_document_added` (AFTER INSERT
+  ON documents) → `notify_student_document_added()`. It inserts an in-app
+  `notifications` row (source `'document_added'`, bilingual title/body naming
+  the actor + file, `case_id` link) ONLY when `uploaded_by` is a staff member
+  (not null, not the student) and `is_visible_to_student`. Student
+  self-uploads never notify. This mirrors the existing trigger pattern
+  (`notify_student_profile_update`, `notify_case_status_change`) — no new
+  notification infrastructure. Email is NOT wired for this event (no template).
+- **Financial snapshot discount**: `FinancialSnapshot` already sources from
+  `get_case_financials` (the authoritative RPC; `service_total` is NET of
+  `referral_discount`). The discount row is now an emerald
+  `bg-emerald-500/10` line with `− Referral discount` / `− خصم الإحالة`, shown
+  only when `referral_discount > 0`; the net total is labeled "Final total"
+  (`studentOverview.finalTotal`). Math reconciles: `service_total +
+  referral_discount` (original) − `referral_discount` = `service_total`.
+- **i18n**: new `studentOverview.*` keys (`details`, `languageSchool`,
+  `program`, `assignedTeamMember`, `caseStatus`, `finalTotal`,
+  `documentsHint`) + `admin.students.visaConfirmReason` added to en + ar
+  (parity guarded by `src/lib/i18nKeys.test.ts`). Contact tab "University" →
+  "Language school" / "مدرسة اللغة".
+- Build/test: `npm run build` clean; `npx vitest run` 343/343 pass. New files
+  lint clean (`DocumentsPanel.tsx`, `TeamStudentProfilePage.tsx`);
+  `StudentOverview.tsx` keeps its pre-existing `no-explicit-any` notes.
 
 ## Case/direct chat scroll-to-newest on open (2026-08-14)
 - `src/components/messages/MessageList.tsx` is the dashboard case/direct chat

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import StudentOverview from '@/components/students/StudentOverview';
+import DocumentsPanel from '@/components/students/DocumentsPanel';
 
 export default function TeamStudentProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +14,7 @@ export default function TeamStudentProfilePage() {
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [caseData, setCaseData] = useState<Record<string, unknown> | null>(null);
   const [submission, setSubmission] = useState<Record<string, unknown> | null>(null);
+  const [actorUserId, setActorUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -51,8 +53,19 @@ export default function TeamStudentProfilePage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Resolve the signed-in team member so document uploads are attributed to
+  // them (uploaded_by) and the in-app notification names the actor.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setActorUserId(session?.user?.id ?? null);
+    });
+  }, []);
+
   if (loading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
   if (!profile) return <div className="p-6 text-muted-foreground">Not found</div>;
+
+  const studentId = profile.id as string;
+  const linkedCaseId = (caseData?.id as string) ?? null;
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-4">
@@ -69,6 +82,14 @@ export default function TeamStudentProfilePage() {
         variant="page"
         caseHref={(cid) => `/team/cases/${cid}`}
         financeHref={(cid) => `/team/cases/${cid}`}
+        renderDocumentsTab={() => (
+          <DocumentsPanel
+            studentId={studentId}
+            caseId={linkedCaseId}
+            actorUserId={actorUserId}
+            canDelete={false}
+          />
+        )}
       />
     </div>
   );
