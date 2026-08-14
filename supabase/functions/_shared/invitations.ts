@@ -110,7 +110,8 @@ export async function createInvitation(
 
   const myAttribution = `${input.masterPartnerId ?? "none"}:${input.agentId ?? "none"}`;
   const conflicting = siblings?.find(
-    (s) => `${s.master_partner_id ?? "none"}:${s.agent_id ?? "none"}` !== myAttribution,
+    (s: { master_partner_id: string | null; agent_id: string | null }) =>
+      `${s.master_partner_id ?? "none"}:${s.agent_id ?? "none"}` !== myAttribution,
   );
   if (conflicting) {
     throw new InvitationConflictError(

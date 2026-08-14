@@ -9,8 +9,12 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = true  
   [functions.admin-weekly-digest]  
     verify_jwt = true  
+  [functions.agent-invite-recruit]  
+    verify_jwt = true  
   [functions.ai-chat]  
     verify_jwt = false  
+  [functions.approve-partner-recruit]  
+    verify_jwt = true  
   [functions.auth-email-hook]  
     verify_jwt = false  
   [functions.auth-guard]  
@@ -75,6 +79,8 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = false  
   [functions.handle-email-suppression]  
     verify_jwt = false  
+  [functions.invite-account]  
+    verify_jwt = true  
   [functions.accept-invitation]  
     verify_jwt = false  
   [functions.send-appointment-reminders]  
