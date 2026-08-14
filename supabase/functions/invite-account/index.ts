@@ -21,7 +21,7 @@ const ROLE_MAP: Record<Role, { type: InvitationType; template: string; nameKey: 
   team_member: { type: "team", template: "team-invite", nameKey: "memberName" },
   social_media_partner: { type: "partner", template: "partner-invite", nameKey: "partnerName" },
   ambassador: { type: "ambassador", template: "ambassador-invite", nameKey: "ambassadorName" },
-  agent: { type: "agent", template: "team-invite", nameKey: "memberName" },
+  agent: { type: "agent", template: "agent-invite", nameKey: "agentName" },
 };
 
 serve(async (req) => {

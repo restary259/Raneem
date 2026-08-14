@@ -9,6 +9,7 @@ import { template as ambassadorInvite } from './ambassador-invite.tsx'
 import { template as appointmentReminder } from './appointment-reminder.tsx'
 import { template as caseInvoice } from './case-invoice.tsx'
 import { template as accountInvite } from './account-invite.tsx'
+import { template as agentInvite } from './agent-invite.tsx'
 
 export interface TemplateEntry {
   component: (props: any) => React.ReactElement
@@ -35,5 +36,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'appointment-reminder': appointmentReminder,
   'case-invoice': caseInvoice,
   'account-invite': accountInvite,
+  'agent-invite': agentInvite,
 }
 
