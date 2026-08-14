@@ -225,10 +225,11 @@ function SidebarNav({ role }: { role: AppRole }) {
   const items: NavItem[] = isMaster && isPartnerRole
     ? [
         ...baseItems,
+        // Network hub also holds the per-partner performance tab.
         { key: "nav.network", icon: Crown, href: "/partner/network", group: "nav.group.work" },
-        { key: "nav.performance", icon: BarChart2, href: "/partner/performance", group: "nav.group.work" },
       ]
     : baseItems;
+
   const unreadMessages = useUnreadCaseMessages(true);
 
   const isItemActive = (item: NavItem): boolean => {
