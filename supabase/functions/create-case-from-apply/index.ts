@@ -214,12 +214,14 @@ Deno.serve(async (req) => {
           .from("user_roles")
           .select("role")
           .eq("user_id", resolvedId)
-          .in("role", ["social_media_partner", "ambassador", "student"])
+          .in("role", ["social_media_partner", "ambassador", "student", "agent"])
           .maybeSingle();
 
         if (roleRow?.role === "student") {
           validatedReferrerId = resolvedId as string;
         } else if (roleRow) {
+          // partner / ambassador / agent — attribute via partner_id so the
+          // commission function recognizes the agent self-referral reward.
           validatedPartnerId = resolvedId as string;
         }
         if (roleRow) attributionMethod = "link";

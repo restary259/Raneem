@@ -4094,6 +4094,7 @@
     "applySubtitle": "Submit a student application on their behalf. The case is automatically attributed to you.",
     "applyAutoAttribution": "Automatic attribution",
     "applyAutoAttributionHint": "Every application you submit here is automatically linked to your agent account. You earn the self-referral reward when the case is paid.",
+    "applyLinkHint": "Share this link with students. Every application submitted through it is automatically attributed to you, and you earn the self-referral reward when the case is paid.",
     "studentsTitle": "Students",
     "studentsSubtitle": "Students generated through your network and personal referrals.",
     "noStudents": "No students yet",

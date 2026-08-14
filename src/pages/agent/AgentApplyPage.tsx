@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import ApplyForm from "@/components/apply/ApplyForm";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
 import { useDirection } from "@/hooks/useDirection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link2, Info } from "lucide-react";
@@ -14,12 +15,14 @@ import { Link2, Info } from "lucide-react";
  * is the direct referrer). The agent earns the agent_self_referral_rate
  * (default ₪1000) when the case reaches enrollment_paid.
  *
- * The referral attribution is automatic — the agent never types a referral
- * code. The JWT identifies them.
+ * Below the form, a shareable `/apply?ref=<code>` link card lets the agent
+ * share the public apply page with students. Applications submitted through
+ * that link are attributed to the agent via cases.partner_id (link method),
+ * which the commission function recognizes as an agent self-referral.
  */
 const AgentApplyPage: React.FC = () => {
   const { t } = useTranslation("dashboard");
-  const { role, initialized } = useAuth();
+  const { role, initialized, user } = useAuth();
   const { dir } = useDirection();
   const [ready, setReady] = useState(false);
 
@@ -61,6 +64,13 @@ const AgentApplyPage: React.FC = () => {
       </Card>
 
       <ApplyForm embedded useSessionAuth onSubmitted={() => { /* stay on the success screen */ }} />
+
+      {user?.id && (
+        <ReferralLinkCard
+          userId={user.id}
+          hint={t("agent.applyLinkHint", "Share this link with students. Every application submitted through it is automatically attributed to you, and you earn the self-referral reward when the case is paid.")}
+        />
+      )}
     </div>
   );
 };
