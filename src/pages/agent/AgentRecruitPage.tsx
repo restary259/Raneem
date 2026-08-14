@@ -149,7 +149,9 @@ export default function AgentRecruitPage() {
       setPhone("");
       setCity("");
     } catch (err: any) {
-      toast({ variant: "destructive", description: err?.message ?? t("common.actionFailed", "Something went wrong. Please try again or contact support.") });
+      const message = err?.message ?? t("common.actionFailed", "Something went wrong. Please try again or contact support.");
+      setSubmitError(message);
+      toast({ variant: "destructive", description: message });
     } finally {
       setSubmitting(false);
     }
