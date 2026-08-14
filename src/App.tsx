@@ -209,16 +209,19 @@ const App = () => {
   // Hide all distractions on the apply page
   const isApplyPage = location.pathname === "/apply";
 
-  // Paths that use DashboardLayout (no bottom nav / chat)
-  const isDashboardPath =
-    location.pathname.startsWith("/admin") ||
-    location.pathname.startsWith("/team") ||
-    location.pathname.startsWith("/partner") ||
-    location.pathname.startsWith("/student");
+  // Paths that use DashboardLayout (no bottom nav / chat).
+  // Every dashboard role prefix must be listed here, otherwise the public
+  // BottomNav renders on top of the dashboard's own MobileBottomNav.
+  const isDashboardPath = ["/admin", "/team", "/partner", "/agent", "/student"].some(
+    (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
+  );
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen w-full pb-20 md:pb-0 relative" dir={dir}>
+      <div
+        className={`min-h-screen w-full relative ${isDashboardPath ? "" : "pb-20 md:pb-0"}`}
+        dir={dir}
+      >
         <Toaster />
         <Sonner />
         {!isApplyPage && !isDashboardPath && (
