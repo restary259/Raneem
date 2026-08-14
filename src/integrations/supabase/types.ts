@@ -4301,19 +4301,6 @@ export type Database = {
         }
         Returns: Json
       }
-      backfill_case_attribution: {
-        Args: {
-          p_case_id: string
-          p_partner_id?: string
-          p_referred_by?: string
-          p_attribution_method?: string
-        }
-        Returns: {
-          partner_id: string
-          referred_by: string
-          source_attribution_method: string
-        }[]
-      }
       admin_deactivate_account: {
         Args: { _reason?: string; _target_id: string }
         Returns: Json
@@ -4334,6 +4321,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      agent_owns_recruit: {
+        Args: { p_agent: string; p_recruit: string }
+        Returns: boolean
+      }
       anonymize_user: { Args: { p_user_id: string }; Returns: undefined }
       approve_recruit_application: {
         Args: { p_id: string; p_user_id: string }
@@ -4342,6 +4333,19 @@ export type Database = {
       assert_case_ready_for_enrollment: {
         Args: { p_case_id: string }
         Returns: Json
+      }
+      backfill_case_attribution: {
+        Args: {
+          p_attribution_method?: string
+          p_case_id: string
+          p_partner_id?: string
+          p_referred_by?: string
+        }
+        Returns: {
+          partner_id: string
+          referred_by: string
+          source_attribution_method: string
+        }[]
       }
       can_access_case_thread: {
         Args: { _case_id: string; _user_id: string }
