@@ -61,36 +61,8 @@ export default function CaseProgressRail({
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
-      <div
-        className="flex min-w-0 flex-1 items-center"
-        role="img"
-        aria-label={t("case.progressLabel", "Case progress")}
-      >
-        {stages.map((stage, idx) => {
-          const done = currentIndex >= 0 && idx < currentIndex;
-          const current = idx === currentIndex;
-          return (
-            <React.Fragment key={stage.key}>
-              {idx > 0 && (
-                <div
-                  className={cn("h-px flex-1 min-w-[6px]", done || current ? "bg-primary" : "bg-border")}
-                />
-              )}
-              <div
-                title={label(stage.key)}
-                className={cn(
-                  "shrink-0 rounded-full flex items-center justify-center",
-                  done && "h-2.5 w-2.5 bg-primary",
-                  current && "h-3.5 w-3.5 border-2 border-primary bg-background",
-                  !done && !current && "h-2.5 w-2.5 bg-muted-foreground/40",
-                )}
-              >
-                {done && <Check className="h-2 w-2 text-primary-foreground" aria-hidden />}
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
+      <StatusSteps statuses={statuses} currentKey={currentKey} className="min-w-0 flex-1" />
+
 
       {onAdvance &&
         (nextStages.length === 0 ? (
