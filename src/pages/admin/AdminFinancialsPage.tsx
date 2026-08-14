@@ -125,7 +125,7 @@ const OverviewTab = () => {
                   </p>
                   <div className="text-end">
                     <p className="text-sm font-medium text-foreground">
-                      {(s.service_fee || 0).toLocaleString("en-US")} ILS
+                      {(s.effective_service_fee ?? s.service_fee ?? 0).toLocaleString("en-US")} ILS
                     </p>
                   </div>
                 </div>

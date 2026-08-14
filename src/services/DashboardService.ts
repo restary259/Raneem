@@ -26,7 +26,7 @@ export const DashboardService = {
         .from('case_submissions')
         .select('service_fee, enrollment_paid_at, case_id')
         .not('enrollment_paid_at', 'is', null),
-      db.from('rewards').select('amount, status, admin_notes'),
+      db.from('rewards').select('amount, status, admin_notes, case_id'),
       db
         .from('cases')
         .select('id, referral_discount, platform_revenue_ils, status')
@@ -71,6 +71,38 @@ export const DashboardService = {
       serviceFees - teamCommissionsTotal - partnerCommissionsTotal
     );
 
+    // Per-case effective service fee: prefer the recorded service_fee, otherwise
+    // reconstruct the real DARB total from platform revenue + commissions. This
+    // mirrors the KPI-level serviceFeesFromCases logic but keyed per case_id, so
+    // the recent-enrolled list renders the true amount for cases whose
+    // case_submissions.service_fee was never populated.
+    const teamCommByCase: Record<string, number> = {};
+    const partnerCommByCase: Record<string, number> = {};
+    for (const r of allRewards) {
+      if (!r.case_id) continue;
+      const amt = r.amount || 0;
+      if (r.admin_notes?.startsWith('Team commission from case')) {
+        teamCommByCase[r.case_id] = (teamCommByCase[r.case_id] || 0) + amt;
+      } else if (r.admin_notes?.startsWith('Partner commission from case')) {
+        partnerCommByCase[r.case_id] = (partnerCommByCase[r.case_id] || 0) + amt;
+      }
+    }
+    const platformRevenueByCase: Record<string, number> = {};
+    for (const c of cases) {
+      platformRevenueByCase[c.id] = c.platform_revenue_ils || 0;
+    }
+
+    const enrichedSubmissions = submissions.map((s) => {
+      const fallback =
+        (platformRevenueByCase[s.case_id] || 0) +
+        (teamCommByCase[s.case_id] || 0) +
+        (partnerCommByCase[s.case_id] || 0);
+      return {
+        ...s,
+        effective_service_fee: s.service_fee > 0 ? s.service_fee : fallback,
+      };
+    });
+
     return {
       serviceFees,
       partnerCommissionPending,
@@ -79,7 +111,7 @@ export const DashboardService = {
       enrolledCount,
       referralDiscounts,
       partnerCommissionRate,
-      submissions,
+      submissions: enrichedSubmissions,
     };
   },
 };
