@@ -127,3 +127,81 @@ Worked example (service fee ₪5000, pool ₪1000):
 
 In both columns the whole ₪1000 pool is paid out and Darb's margin
 (₪4000) is identical — only the split between partner and master changes.
+
+## 10. Agent override (carve-out from the partner pool)
+
+An **Agent** is a first-class role (`app_role = 'agent'`) that recruits and
+manages Partners and Ambassadors and earns a flat admin-set commission carved
+out of the **same ₪1000 partner pool** — never extra money, never from the team
+member's commission or Darb's margin. The Agent role generalizes the
+master-partner carve-out (section 8) to a recruiter of recruiters.
+
+- A Partner or Ambassador recruited by an Agent carries
+  `profiles.agent_id` (mirrors `profiles.master_partner_id`), settable by an
+  admin (via the partner-profile "attach to agent" toggle) or automatically at
+  activation when the recruit applied via the Agent's `/join/AG-XXXX` link.
+- The recruit attribution flows through the durable invitation:
+  `user_invitations.agent_id` → `accept-invitation` stamps
+  `profiles.agent_id` at activation. `master_partner_id` and `agent_id` are
+  mutually exclusive on an application/invitation — a recruit belongs to one
+  recruiter.
+- `agent_commission_rate` (in `platform_settings`, default ₪200) is the global
+  default Agent override. A per-Agent override may be set in
+  `agent_commission_overrides` (`agent_id`, `commission_amount`), resolved by
+  `get_effective_agent_split(agent_id, recruited_partner_id)`.
+
+### Carve order from the fixed pool
+
+When a case reaches `enrollment_paid` and the referring partner/ambassador has
+an `agent_id`, `record_case_commission` carves from the ₪1000 pool in this
+order (the whole pool is still paid out; Darb's margin is unchanged):
+
+1. `agent_share` — resolved via `get_effective_agent_split`, clamped to the
+   pool (min 0, max pool).
+2. `master_share` — capped at `pool − agent_share`.
+3. `partner_amount = max(0, pool − agent_share − master_share)`.
+
+```
+platform_revenue_ils = max(0, service_fee − team_commission − partner_pool)
+```
+
+The pool outlay never changes — only the three-way split between the referring
+partner, the master partner (if any), and the agent changes.
+
+### Reward recording
+
+- `rewards.reward_type = 'agent_override'`
+- `rewards.recipient_role = 'agent'`
+- `rewards.source_user_id` = the referring partner/ambassador (so it is never
+  confused with the base `referral` reward or the `master_partner` override).
+- `rewards.unlock_at = now() + interval '20 days'` — **the same 20-day payout
+  lock** as every other reward (section 7). No special-casing in
+  `request_payout` or the chat payout flow.
+- Idempotent via `ON CONFLICT (case_id, user_id, reward_type) DO NOTHING`
+  alongside the existing `commission_split_done` guard.
+
+### Payouts
+
+Agent payouts reuse the existing infrastructure unchanged: `rewards` →
+`get_my_payout_preview` → `request_payout_via_chat` (creates an
+admin↔agent direct thread with a `payout_request` message) →
+`admin_respond_payout_request`. `payout_requests.requestor_role = 'agent'`.
+
+### Where the Agent override applies
+
+Only to cases referred by partners/ambassadors inside that Agent's own network
+(`profiles.agent_id = agent.id`) — never company-wide, and never on a case the
+agent referred directly (an agent is not a partner/ambassador; one identity =
+one role). If the referring partner has no `agent_id`, the carve does not apply
+and the split is exactly sections 8–9.
+
+### Precedence with the master share
+
+An Agent and a master partner can both sit in the chain above the same
+referring partner (the partner has both an `agent_id` and a
+`master_partner_id`). In that case the agent share is carved first, then the
+master share is capped at the remainder, then the partner gets what is left.
+If the business intent is "agent OR master, never both," remove
+`master_partner_id` from the recruit before assigning an agent — the engine
+does not enforce mutual exclusivity between the two recruiters today.
+

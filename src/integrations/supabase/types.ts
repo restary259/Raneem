@@ -2689,6 +2689,7 @@ export type Database = {
       }
       partner_recruit_applications: {
         Row: {
+          agent_id: string | null
           city: string | null
           created_at: string
           created_user_id: string | null
@@ -2706,6 +2707,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_id?: string | null
           city?: string | null
           created_at?: string
           created_user_id?: string | null
@@ -2723,6 +2725,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_id?: string | null
           city?: string | null
           created_at?: string
           created_user_id?: string | null
@@ -2757,6 +2760,13 @@ export type Database = {
           {
             foreignKeyName: "partner_recruit_applications_reviewed_by_fkey"
             columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_recruit_applications_agent_id_fkey"
+            columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -4350,6 +4360,13 @@ export type Database = {
         Returns: undefined
       }
       ensure_master_recruit_link: {
+        Args: never
+        Returns: {
+          code: string
+          target_path: string
+        }[]
+      }
+      ensure_agent_recruit_link: {
         Args: never
         Returns: {
           code: string

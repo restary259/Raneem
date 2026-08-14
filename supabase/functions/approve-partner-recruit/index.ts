@@ -65,9 +65,15 @@ serve(async (req) => {
     const action = parsed.data.action ?? "approve";
 
     // ---- Load the application -------------------------------------------
+    // agent_id is set when the recruit applied via an Agent's /join/AG-XXXX
+    // link (ensure_agent_recruit_link). When present, the recruit is linked to
+    // the agent (profiles.agent_id) at activation — mirroring the
+    // master_partner_id attribution. master_partner_id and agent_id are
+    // mutually exclusive on an application (submit_recruit_application sets
+    // exactly one).
     const { data: app, error: appError } = await admin
       .from("partner_recruit_applications")
-      .select("id, full_name, email, status, master_partner_id, created_user_id")
+      .select("id, full_name, email, status, master_partner_id, agent_id, created_user_id")
       .eq("id", applicationId)
       .maybeSingle();
     if (appError) return json({ error: serverError(appError, "Failed to load application") }, 500);
@@ -77,23 +83,49 @@ serve(async (req) => {
     const fullName = String(app.full_name ?? "").trim();
     if (!email || !fullName) return json({ error: "Application is missing an email or name" }, 400);
 
-    // ---- Validate the recruiting master partner --------------------------
-    const { data: master } = await admin
-      .from("profiles")
-      .select("id, full_name, is_master_partner")
-      .eq("id", app.master_partner_id)
-      .maybeSingle();
-    if (!master) return json({ error: "The recruiting partner profile no longer exists" }, 409);
-    if (!master.is_master_partner) {
-      return json({ error: "The recruiting partner is no longer a master partner" }, 409);
+    // ---- Validate the recruiter ------------------------------------------
+    // Either a master partner (legacy MP- flow) or an agent (AG- flow). The
+    // application carries exactly one of master_partner_id / agent_id.
+    const agentId = (app.agent_id as string | null) ?? null;
+
+    if (agentId) {
+      const { data: agent } = await admin
+        .from("profiles")
+        .select("id, full_name")
+        .eq("id", agentId)
+        .maybeSingle();
+      if (!agent) return json({ error: "The recruiting agent profile no longer exists" }, 409);
+      const { data: agentRole } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", agentId)
+        .eq("role", "agent")
+        .maybeSingle();
+      if (!agentRole) return json({ error: "The recruiting account is no longer an agent" }, 409);
+    } else {
+      // ---- Validate the recruiting master partner ----------------------
+      const { data: master } = await admin
+        .from("profiles")
+        .select("id, full_name, is_master_partner")
+        .eq("id", app.master_partner_id)
+        .maybeSingle();
+      if (!master) return json({ error: "The recruiting partner profile no longer exists" }, 409);
+      if (!master.is_master_partner) {
+        return json({ error: "The recruiting partner is no longer a master partner" }, 409);
+      }
     }
 
-    const masterPartnerId = app.master_partner_id as string;
-    const masterName = (master.full_name as string | null) ?? null;
+    const masterPartnerId = (app.master_partner_id as string | null) ?? null;
+    const recruiterName = agentId
+      ? ((await admin.from("profiles").select("full_name").eq("id", agentId).maybeSingle()).data?.full_name as string | null) ?? null
+      : ((await admin.from("profiles").select("full_name").eq("id", masterPartnerId).maybeSingle()).data?.full_name as string | null) ?? null;
+
 
     /**
-     * Durable invitation link + branded invite. Never emails a password, and the
-     * master-partner attribution lives on the invitation row, not in the URL.
+     * Durable invitation link + branded invite. Never emails a password, and
+     * the recruiter attribution (master_partner_id OR agent_id) lives on the
+     * invitation row, not in the URL. accept-invitation stamps the matching
+     * profile column at activation.
      */
 
     async function sendInvite(targetEmail: string) {
@@ -104,7 +136,8 @@ serve(async (req) => {
           invitationType: "partner",
           intendedRole: "social_media_partner",
           inviterId: adminId,
-          masterPartnerId,
+          masterPartnerId: masterPartnerId ?? undefined,
+          agentId: agentId ?? undefined,
           recruitApplicationId: applicationId,
         });
       } catch (e) {
@@ -112,7 +145,6 @@ serve(async (req) => {
         return false;
       }
       const resp = await fetch(
-
         `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
         {
           method: "POST",
@@ -127,7 +159,7 @@ serve(async (req) => {
             templateData: {
               partnerName: fullName,
               email: targetEmail,
-              masterName,
+              masterName: recruiterName,
               activationUrl,
             },
           }),
@@ -222,7 +254,7 @@ serve(async (req) => {
         admin_id: adminId,
         action: "approve_partner_recruit",
         target_id: identity.userId,
-        details: `Approved ${email} into ${master.full_name ?? "master partner"}'s network (account already active)`,
+        details: `Approved ${email} into ${recruiterName ?? "recruiter"}'s network (account already active)`,
       });
       return json({
         success: true,
@@ -240,7 +272,7 @@ serve(async (req) => {
       admin_id: adminId,
       action: "approve_partner_recruit",
       target_id: identity.userId ?? null,
-      details: `Approved ${email} into ${master.full_name ?? "master partner"}'s network${
+      details: `Approved ${email} into ${recruiterName ?? "recruiter"}'s network${
         emailed ? " and sent the activation email" : " (activation email failed)"
       }`,
     });

@@ -11,7 +11,8 @@ import { Loader2, Mail, UserPlus } from "lucide-react";
 interface AppRow {
   id: string;
   recruit_code: string;
-  master_partner_id: string;
+  master_partner_id: string | null;
+  agent_id: string | null;
   full_name: string;
   email: string;
   phone: string;
@@ -21,6 +22,7 @@ interface AppRow {
   status: string;
   created_at: string;
   master?: { full_name: string | null } | null;
+  agent?: { full_name: string | null } | null;
 }
 
 interface Props {
@@ -30,7 +32,8 @@ interface Props {
   onCount?: (total: number, pending: number) => void;
 }
 
-/** Admin review of partner applications that arrived through a master partner's recruit link. */
+/** Admin review of partner applications that arrived through a recruiter's
+ *  (master partner OR agent) recruit link. */
 export default function RecruitApplicationsPanel({ search = "", onCount }: Props) {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
@@ -42,7 +45,7 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
   const load = useCallback(async () => {
     const { data } = await (supabase as any)
       .from("partner_recruit_applications")
-      .select("*, master:profiles!partner_recruit_applications_master_partner_id_fkey(full_name)")
+      .select("*, master:profiles!partner_recruit_applications_master_partner_id_fkey(full_name), agent:profiles!partner_recruit_applications_agent_id_fkey(full_name)")
       .order("created_at", { ascending: false });
     const next = (data || []) as AppRow[];
     setRows(next);
@@ -148,7 +151,9 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
               </p>
               <p className="text-xs">
                 {t("admin.recruit.recruitedBy", "Recruited by")}:{" "}
-                <span className="font-semibold">{r.master?.full_name ?? "—"}</span>{" "}
+                <span className="font-semibold">
+                  {r.agent?.full_name ?? r.master?.full_name ?? "—"}
+                </span>{" "}
                 <span className="text-muted-foreground">({r.recruit_code})</span>
               </p>
               {r.note && <p className="text-xs text-muted-foreground italic">“{r.note}”</p>}

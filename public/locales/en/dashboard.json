@@ -3948,7 +3948,10 @@
     "attached": "Assigned to agent",
     "detached": "Removed from agent",
     "parentSection": "Agent (recruiter)",
-    "parentHint": "Assigning an agent only routes a flat override from the partner pool on paid cases. Nothing else changes."
+    "parentHint": "Assigning an agent only routes a flat override from the partner pool on paid cases. Nothing else changes.",
+    "inviteTitle": "Recruiting link",
+    "inviteHint": "Share this link with partners or ambassadors you want to recruit. Applications through it are attached to your network after Darb approves them.",
+    "inviteMissing": "No recruiting link yet."
   },
   "theme": {
     "dark": "Dark",

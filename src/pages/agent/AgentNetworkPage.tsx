@@ -6,7 +6,9 @@ import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Crown, Users, Copy, Check, Link2 } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 
 interface NetworkRow {
@@ -24,10 +26,10 @@ interface NetworkRow {
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
 
-/** Agent network: the partners/ambassadors this agent recruited and the
- *  override each generates. The recruit-link + invite flow (analogous to the
- *  master-partner recruit link) is added in a follow-up; for now this page
- *  reads the live agent_id link the admin sets and the per-recruit split. */
+/** Agent network: the partners/ambassadors this agent recruited, the
+ *  per-recruit override, and the agent's /join/AG-XXXX recruit link
+ *  (mirrors the master-partner recruit link). Approved recruits are linked to
+ *  the agent (profiles.agent_id) at activation via accept-invitation. */
 export default function AgentNetworkPage() {
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -35,11 +37,18 @@ export default function AgentNetworkPage() {
   const [rows, setRows] = useState<NetworkRow[]>([]);
   const [splits, setSplits] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async (uid: string) => {
-    const { data } = await (supabase as any).rpc("get_my_agent_network");
-    const list = (data ?? []) as NetworkRow[];
+    const [netRes, linkRes] = await Promise.all([
+      (supabase as any).rpc("get_my_agent_network"),
+      (supabase as any).rpc("ensure_agent_recruit_link"),
+    ]);
+    const list = (netRes.data ?? []) as NetworkRow[];
     setRows(list);
+    const linkRow = Array.isArray(linkRes.data) ? linkRes.data[0] : linkRes.data;
+    setInviteCode(linkRow?.code ?? null);
     const entries = await Promise.all(
       list.map(async (r) => {
         const { data: s } = await (supabase as any).rpc("get_effective_agent_split", {
@@ -62,6 +71,16 @@ export default function AgentNetworkPage() {
 
   const totalOverride = rows.reduce((s, r) => s + Number(r.override_earned || 0), 0);
   const totalStudents = rows.reduce((s, r) => s + Number(r.students_count || 0), 0);
+  const inviteUrl = inviteCode ? `${window.location.origin}/join/${inviteCode}` : "";
+
+  const copy = async () => {
+    if (!inviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* clipboard may be unavailable; the input stays selectable */ }
+  };
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
@@ -89,6 +108,30 @@ export default function AgentNetworkPage() {
           <p className="text-2xl font-bold">{fmt(totalOverride)}</p>
         </CardContent></Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Link2 className="h-4 w-4 text-primary" />
+            {t("agent.inviteTitle", "Recruiting link")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t("agent.inviteHint", "Share this link with partners or ambassadors you want to recruit. Applications through it are attached to your network after Darb approves them.")}
+          </p>
+          {inviteCode ? (
+            <div className="flex gap-2">
+              <Input readOnly value={inviteUrl} className="text-xs" dir="ltr" />
+              <Button variant="outline" size="icon" onClick={copy} aria-label={t("common.copy", "Copy")}>
+                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t("agent.inviteMissing", "No recruiting link yet.")}</p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2">
