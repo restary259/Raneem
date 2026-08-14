@@ -1,8 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { PipelineStatus } from "@/lib/caseStatus";
 import { cn } from "@/lib/utils";
+import { StatusSteps } from "@/components/cases/CaseVisuals";
 import { Button } from "@/components/ui/button";
 import { stageBlockReason } from "@/services/CaseStageService";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
