@@ -50,6 +50,7 @@ export default function AgentRecruitPage() {
   const [city, setCity] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ email: string; role: RecruitRole; mode: DeliveryMode; tempPassword?: string } | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [canInvite, setCanInvite] = useState(false);
   const [canCreateManual, setCanCreateManual] = useState(false);
@@ -110,6 +111,7 @@ export default function AgentRecruitPage() {
   const submit = async () => {
     if (!formValid || submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       if (effectiveMode === "manual" && canCreateManual) {
         // Manual account creation via the agent-create-account edge function.
@@ -147,7 +149,9 @@ export default function AgentRecruitPage() {
       setPhone("");
       setCity("");
     } catch (err: any) {
-      toast({ variant: "destructive", description: err?.message ?? t("common.actionFailed", "Something went wrong. Please try again or contact support.") });
+      const message = err?.message ?? t("common.actionFailed", "Something went wrong. Please try again or contact support.");
+      setSubmitError(message);
+      toast({ variant: "destructive", description: message });
     } finally {
       setSubmitting(false);
     }
@@ -291,6 +295,11 @@ export default function AgentRecruitPage() {
                   <Input value={city} onChange={(e) => setCity(e.target.value)} />
                 </div>
               </div>
+              {submitError && (
+                <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+                  {submitError}
+                </p>
+              )}
               <Button onClick={submit} disabled={submitting || !formValid} className="w-full sm:w-auto gap-2">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> :
                   effectiveMode === "invite" ? <Send className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
