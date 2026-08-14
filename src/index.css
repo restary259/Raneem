@@ -48,7 +48,22 @@
     --sidebar-accent-foreground: 222.2 47.6% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 222.2 84% 4.9%;
+
+    /* Semantic pipeline status hues — see src/lib/statusTokens.ts */
+    --status-new: 215 16% 42%;
+    --status-contacted: 217 82% 46%;
+    --status-appointment: 268 62% 52%;
+    --status-profile: 190 78% 34%;
+    --status-payment: 33 90% 40%;
+    --status-submitted: 245 62% 55%;
+    --status-enrolled: 152 62% 32%;
+    --status-danger: 0 72% 47%;
+
+    /* Elevation + motion primitives shared by all themes */
+    --surface-shadow: 0 1px 2px hsl(222 47% 11% / 0.05), 0 8px 24px -12px hsl(222 47% 11% / 0.12);
+    --surface-shadow-lg: 0 2px 4px hsl(222 47% 11% / 0.06), 0 18px 44px -18px hsl(222 47% 11% / 0.22);
   }
+
 
   .dark {
     /* Neutral, low-chroma dark surfaces (Lovable-style) rather than blue slate. */
