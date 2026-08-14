@@ -2403,7 +2403,9 @@
     "fees": "الرسوم",
     "apply": "تقديم طلب",
     "recruit": "تجنيد",
-    "bankDetails": "التفاصيل البنكية"
+    "bankDetails": "التفاصيل البنكية",
+    "reports": "التقارير",
+    "more": "المزيد"
   },
   "case": {
     "status": {

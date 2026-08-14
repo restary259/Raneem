@@ -2385,7 +2385,9 @@
     "fees": "Fees",
     "apply": "Apply",
     "recruit": "Recruit",
-    "bankDetails": "Bank Details"
+    "bankDetails": "Bank Details",
+    "reports": "Reports",
+    "more": "More"
   },
   "case": {
     "status": {
