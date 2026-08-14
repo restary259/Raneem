@@ -25,7 +25,6 @@ import ThemePicker from "@/components/common/ThemePicker";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
-import { useIsManager } from "@/hooks/useIsManager";
 
 import {
   LayoutDashboard,
@@ -195,7 +194,6 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const { isMaster } = useIsMasterPartner();
-  const { isManager } = useIsManager();
   const baseItems = NAV_CONFIG[role] ?? [];
   const isPartnerRole = role === "social_media_partner" || role === "ambassador";
   const items: NavItem[] = isMaster && isPartnerRole
@@ -204,12 +202,7 @@ function SidebarNav({ role }: { role: AppRole }) {
         { key: "nav.network", icon: Crown, href: "/partner/network", group: "nav.group.work" },
         { key: "nav.performance", icon: BarChart2, href: "/partner/performance", group: "nav.group.work" },
       ]
-    : isManager && role === "team_member"
-      ? [
-          ...baseItems,
-          { key: "nav.pipeline", icon: GitBranch, href: "/team/pipeline", group: "nav.group.work" },
-        ]
-      : baseItems;
+    : baseItems;
   const unreadMessages = useUnreadCaseMessages(true);
 
   const isItemActive = (item: NavItem): boolean => {
