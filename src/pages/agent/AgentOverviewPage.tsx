@@ -94,11 +94,52 @@ export default function AgentOverviewPage() {
     {
       key: "students",
       label: t("agent.ovNetworkStudents", "Network students"),
-      value: stats.students != null ? "" : "",
+      value: stats.totalStudents.toLocaleString("en-US"),
       icon: GraduationCap,
     },
-
+    {
+      key: "enrolled",
+      label: t("agent.ovPaidCases", "Paid cases"),
+      value: stats.enrolledCases.toLocaleString("en-US"),
+      icon: Award,
+      tone: toneClasses("enrolled").text,
+    },
   ];
+
+  const funnelKpis: KpiItem[] = [
+    {
+      key: "direct",
+      label: t("agent.kpiDirectStudents", "Direct referrals"),
+      value: stats.directStudents.toLocaleString("en-US"),
+      icon: Link2,
+    },
+    {
+      key: "viaPartners",
+      label: t("agent.kpiPartnerStudents", "Via partners"),
+      value: stats.partnerStudents.toLocaleString("en-US"),
+      icon: Users,
+    },
+    {
+      key: "viaAmbassadors",
+      label: t("agent.kpiAmbassadorStudents", "Via ambassadors"),
+      value: stats.ambassadorStudents.toLocaleString("en-US"),
+      icon: Megaphone,
+    },
+    {
+      key: "submitted",
+      label: t("agent.kpiSubmitted", "Submitted"),
+      value: stats.submittedCases.toLocaleString("en-US"),
+      icon: TrendingUp,
+      tone: toneClasses("submitted").text,
+    },
+    {
+      key: "conversion",
+      label: t("agent.kpiConversion", "Conversion"),
+      value: `${stats.conversionRate}%`,
+      icon: Award,
+    },
+  ];
+
 
   const earningsBuckets: KpiItem[] = [
     {
