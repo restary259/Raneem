@@ -4173,7 +4173,12 @@
       "errIbanRequired": "IBAN أو اسم البنك مطلوب"
     },
     "recruitWizardTitle": "تجنيد شريك أو سفير",
-    "perRecruitRateHint": "تُكتسب عندما يدفع طالب أحضره هذا المُجنَّد."
+    "perRecruitRateHint": "تُكتسب عندما يدفع طالب أحضره هذا المُجنَّد.",
+    "kpiDirectStudents": "إحالات مباشرة",
+    "kpiPartnerStudents": "عبر الشركاء",
+    "kpiAmbassadorStudents": "عبر السفراء",
+    "kpiSubmitted": "تم التقديم",
+    "kpiConversion": "نسبة التحويل"
   },
   "theme": {
     "dark": "داكن",
