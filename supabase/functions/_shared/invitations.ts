@@ -99,13 +99,14 @@ export async function createInvitation(
   // invitation for the same email + type under ANOTHER recruiter must not be
   // silently revoked (that would steal attribution). Same-recruiter duplicates
   // (e.g. re-invites across cases) are still refreshed below.
-  const { data: siblings, error: siblingsError } = await admin
+  let siblingsQuery = admin
     .from("user_invitations")
     .select("id, master_partner_id, agent_id")
     .eq("status", "pending")
     .ilike("invited_email", email)
-    .eq("invitation_type", input.invitationType)
-    .neq("id", existing?.id ?? "");
+    .eq("invitation_type", input.invitationType);
+  if (existing?.id) siblingsQuery = siblingsQuery.neq("id", existing.id);
+  const { data: siblings, error: siblingsError } = await siblingsQuery;
   if (siblingsError) throw new Error(siblingsError.message);
 
   const myAttribution = `${input.masterPartnerId ?? "none"}:${input.agentId ?? "none"}`;
