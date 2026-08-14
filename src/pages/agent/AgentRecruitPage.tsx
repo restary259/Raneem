@@ -111,6 +111,7 @@ export default function AgentRecruitPage() {
   const submit = async () => {
     if (!formValid || submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       if (effectiveMode === "manual" && canCreateManual) {
         // Manual account creation via the agent-create-account edge function.
