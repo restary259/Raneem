@@ -4583,6 +4583,7 @@ export type Database = {
           vat_amount: number
         }[]
       }
+      get_my_agent_kpis: { Args: never; Returns: Json }
       get_my_agent_network: {
         Args: never
         Returns: {
