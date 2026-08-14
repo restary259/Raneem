@@ -778,12 +778,27 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   touched. `AgentStudentsPage.classifySource` already maps `partner_id === uid`
   → "self" (Your own referrals tab), so no frontend change is needed once RLS
   is applied.
+- **Recursion fix (20260814183100)**: the first migration's inline
+  `partner_id IN (SELECT id FROM profiles WHERE agent_id = auth.uid())`
+  subquery caused **mutual RLS recursion** → Postgres 42P17 "infinite
+  recursion detected in policy for relation cases". Cycle: the cases policy
+  reads `profiles`; `profiles` has "Assigned team can view student profiles"
+  (reads `cases`); each evaluates the other. The corrective migration moves
+  the recruit check into a SECURITY DEFINER function
+  `agent_owns_recruit(p_recruit, p_agent)` (reads `profiles.agent_id` WITHOUT
+  RLS, breaking the cycle) and rewrites the policy to call it. **Apply this
+  migration whenever the base one is applied** — the base one alone leaves
+  every agent cases read erroring (worse than empty).
 - Verified live: the agent JWT (role=agent) returns `[]` for
   `cases?partner_id=eq.<self>` despite a successfully-submitted
   self-referral case → confirms RLS (not attribution) is the blocker.
-- **NOTE**: applying this migration requires Supabase admin/service-role
+  After the base migration was applied without the recursion fix, the same
+  query returned `42P17 infinite recursion detected in policy for relation
+  "cases"` → confirmed the cycle; after the recursion-fix migration is
+  applied it returns the rows.
+- **NOTE**: applying these migrations requires Supabase admin/service-role
   access (DDL). It is NOT applied by the Vercel frontend build or the
-  `ci.yml` workflow. Run it via the Supabase dashboard SQL editor or
+  `ci.yml` workflow. Run via the Supabase dashboard SQL editor or
   `supabase db push`. The anon/agent JWT cannot run DDL.
 - "Your links" card on `AgentOverviewPage`: renamed from "Recruiting link" to
   a single "Your links" card holding BOTH shareable links — the recruiting
