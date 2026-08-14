@@ -31,6 +31,8 @@ import {
   Phone,
   AlertTriangle,
   CheckCircle2,
+  LayoutGrid,
+  Rows3,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
@@ -44,6 +46,8 @@ import {
   isActiveStatus,
 } from "@/lib/caseStatus";
 import { SLA_DAYS, slaSummary } from "@/lib/slaPolicy";
+import { CaseCard, CaseStatusChip } from "@/components/cases/CaseVisuals";
+import { toneClasses, toneForAttention } from "@/lib/statusTokens";
 
 interface PipelineCase {
   id: string;
@@ -105,6 +109,7 @@ const TeamPipelinePage: React.FC = () => {
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "attn", dir: "desc" });
 
+  const [view, setView] = useState<"list" | "board">("list");
   const [selected, setSelected] = useState<PipelineCase | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -339,10 +344,33 @@ const TeamPipelinePage: React.FC = () => {
             {t("manager.pipelineSubtitleCombined", "Triage and assign active cases to your team.")}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          {t("common.refresh", "Refresh")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+            {([
+              { key: "list" as const, icon: Rows3, label: t("manager.viewList", "List") },
+              { key: "board" as const, icon: LayoutGrid, label: t("manager.viewBoard", "Board") },
+            ]).map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                onClick={() => setView(v.key)}
+                aria-pressed={view === v.key}
+                className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                  view === v.key
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <v.icon className="h-3.5 w-3.5" />
+                {v.label}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            {t("common.refresh", "Refresh")}
+          </Button>
+        </div>
       </div>
 
       {/* Controls: search + quick filters + stage pills */}
@@ -499,20 +527,12 @@ const TeamPipelinePage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${colorCls}`}>
-                          {isAr ? meta.ar : meta.en}
-                        </span>
+                        <CaseStatusChip status={status} label={isAr ? meta.ar : meta.en} size="xs" />
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                              attn === "overdue"
-                                ? "bg-destructive"
-                                : attn === "warn"
-                                  ? "bg-orange-400"
-                                  : "bg-muted-foreground/40"
-                            }`}
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${toneClasses(toneForAttention(attn)).dot}`}
                           />
                           <span className="text-[13px]">{nextActionFor(c)}</span>
                         </div>
@@ -538,7 +558,7 @@ const TeamPipelinePage: React.FC = () => {
                             {sla ?? t("manager.overdue", "Overdue")}
                           </span>
                         ) : attn === "warn" ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-400/15 text-orange-600">
+                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${toneClasses("payment").chip}`}>
                             {t("manager.needsAttention", "Needs attention")}
                           </span>
                         ) : (
