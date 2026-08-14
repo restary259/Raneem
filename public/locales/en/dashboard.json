@@ -628,7 +628,9 @@
       "approveCreatesAccount": "Approving creates a student account and links it to this case.",
       "approveExistingAccount": "A student account is already linked to this case. Approving only records the review.",
       "notCollected": "Not collected",
-      "referralDiscount": "Referral discount applied"
+      "referralDiscount": "Referral discount applied",
+      "accountAlreadyInvited": "Student account already invited — no action needed.",
+      "accountAlreadyCreated": "Student account already created — no action needed."
     },
     "financials": {
       "title": "Financial Dashboard",

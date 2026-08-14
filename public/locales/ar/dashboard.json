@@ -628,7 +628,9 @@
       "approveCreatesAccount": "سيتم إنشاء حساب للطالب وربطه بهذه الحالة عند الاعتماد.",
       "approveExistingAccount": "حساب الطالب مرتبط بالفعل بهذه الحالة. سيتم اعتماد الطلب فقط.",
       "notCollected": "لم يتم جمعها",
-      "referralDiscount": "تم تطبيق خصم الإحالة"
+      "referralDiscount": "تم تطبيق خصم الإحالة",
+      "accountAlreadyInvited": "تمت دعوة حساب الطالب بالفعل — لا حاجة لأي إجراء.",
+      "accountAlreadyCreated": "تم إنشاء حساب الطالب بالفعل — لا حاجة لأي إجراء."
     },
     "financials": {
       "title": "لوحة المالية",

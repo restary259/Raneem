@@ -118,6 +118,12 @@ const AdminSubmissionsPage = () => {
   // Student account email captured during enrollment confirmation
   const [approveEmail, setApproveEmail] = useState("");
 
+  // Whether a pending student invitation already exists for the selected case
+  // (the team already sent the activation link at submission time). When true,
+  // the enroll panel must NOT re-ask for the student's email or re-send an
+  // invite — it only needs the admin password confirmation.
+  const [hasPendingInvitation, setHasPendingInvitation] = useState(false);
+
   const enrichCases = useCallback(async (ids: string[], rawCases: any[]) => {
     if (ids.length === 0) return [];
     const [subRes, docsRes] = await Promise.all([
@@ -311,6 +317,25 @@ const AdminSubmissionsPage = () => {
   const openSplitPanel = async () => {
     if (!selected) return;
     setApproveEmail("");
+    // Check whether the team already sent the student an activation link (a
+    // pending user_invitations row for this case). create-student-from-case in
+    // invite mode no longer pre-creates the auth account, so student_user_id
+    // stays NULL until the student activates — that NULL alone is NOT a signal
+    // to re-invite.
+    setHasPendingInvitation(false);
+    try {
+      const { data: pending } = await (supabase as any)
+        .from("user_invitations")
+        .select("id")
+        .eq("case_id", selected.id)
+        .eq("invitation_type", "student")
+        .eq("status", "pending")
+        .limit(1);
+      setHasPendingInvitation((pending || []).length > 0);
+    } catch {
+      // Non-fatal: if the check fails, fall back to the email prompt.
+      setHasPendingInvitation(false);
+    }
     await loadSplitPreview(selected);
     setShowSplitPanel(true);
   };
@@ -335,10 +360,16 @@ const AdminSubmissionsPage = () => {
     if (!selected) return;
     setMarking(true);
     try {
+      // The account is already provisioned (no second invite needed) when the
+      // case already has a linked student_user_id OR a pending invitation was
+      // sent by the team at submission time.
+      const accountAlreadyHandled = !!selected.student_user_id || hasPendingInvitation;
+
       // Fail fast: an email that already belongs to a partner/admin/team account
       // can never become a student account (one identity = one role). Catch it
       // BEFORE the case is marked paid so the admin can correct the address.
-      if (!selected.student_user_id && approveEmail.trim()) {
+      // Only run this when we're genuinely about to create/invite an account.
+      if (!accountAlreadyHandled && approveEmail.trim()) {
         try {
           const availability = await checkEmailAvailability(approveEmail.trim());
           if (!availability.available && availability.existing_role !== "student") {
@@ -381,8 +412,10 @@ const AdminSubmissionsPage = () => {
       if (!resp.ok) throw new Error(result.error || "Failed");
 
       // Create the student account at the moment the case becomes real, if it
-      // doesn't exist yet (this replaces the old separate "Approve" step).
-      if (!selected.student_user_id && approveEmail.trim()) {
+      // doesn't exist yet AND no invitation was already sent by the team at
+      // submission time. Re-inviting here would duplicate the activation link
+      // the team already sent via CaseDetailPage.handleSubmitToAdmin.
+      if (!accountAlreadyHandled && approveEmail.trim()) {
         const accResp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-student-from-case`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
@@ -912,19 +945,34 @@ const AdminSubmissionsPage = () => {
                 </span>
               </div>
             </div>
-            {!selected?.student_user_id && (
-              <div className="space-y-1.5 rounded-lg border border-border p-3">
-                <Label htmlFor="approve-email">{t("admin.submissions.studentEmail")}</Label>
-                <Input
-                  id="approve-email"
-                  type="email"
-                  autoComplete="off"
-                  value={approveEmail}
-                  onChange={(e) => setApproveEmail(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">{t("admin.submissions.approveCreatesAccount")}</p>
-              </div>
-            )}
+            {(() => {
+              const accountAlreadyHandled = !!selected?.student_user_id || hasPendingInvitation;
+              if (accountAlreadyHandled) {
+                return (
+                  <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <span>
+                      {selected?.student_user_id
+                        ? t("admin.submissions.accountAlreadyCreated", "Student account already created — no action needed.")
+                        : t("admin.submissions.accountAlreadyInvited", "Student account already invited — no action needed.")}
+                    </span>
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-1.5 rounded-lg border border-border p-3">
+                  <Label htmlFor="approve-email">{t("admin.submissions.studentEmail")}</Label>
+                  <Input
+                    id="approve-email"
+                    type="email"
+                    autoComplete="off"
+                    value={approveEmail}
+                    onChange={(e) => setApproveEmail(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">{t("admin.submissions.approveCreatesAccount")}</p>
+                </div>
+              );
+            })()}
             <p className="text-xs text-muted-foreground">
               {t(
                 "admin.submissions.splitNote",
@@ -942,7 +990,10 @@ const AdminSubmissionsPage = () => {
                 setShowPasswordGate(true);
               }}
               disabled={
-                marking || (!selected?.student_user_id && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approveEmail.trim()))
+                marking ||
+                (!selected?.student_user_id &&
+                  !hasPendingInvitation &&
+                  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(approveEmail.trim()))
               }
             >
               <Lock className="h-4 w-4 me-1" />
