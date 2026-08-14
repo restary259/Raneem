@@ -41,11 +41,14 @@ REVOKE ALL ON FUNCTION public.is_active_manager(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.is_active_manager(uuid) TO authenticated, service_role;
 
 -- ────────────────────────────────────────────────────────────
--- 2. cases: manager can SELECT all active (non-archived) cases and
---    UPDATE only assigned_to. These are ADDITIVE permissive policies — the
---    existing "Team can manage assigned cases" (FOR ALL, assigned_to = self)
---    stays, so a manager who is also assigned a case keeps full team access
---    to that case. The new policies only widen visibility + the assign column.
+-- 2. cases: manager can SELECT all active (non-archived) cases and UPDATE
+--    rows (so RLS permits the write). Column-level restriction (assigned_to
+--    ONLY) is enforced by the enforce_manager_assign_only() trigger below —
+--    PostgreSQL RLS policies do not support a column list on FOR UPDATE.
+--    These are ADDITIVE permissive policies — the existing "Team can manage
+--    assigned cases" (FOR ALL, assigned_to = self) stays, so a manager who is
+--    also assigned a case keeps full team access to that case's *other*
+--    columns only via the admin/team path (the manager trigger still applies).
 -- ────────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Manager can view active cases" ON public.cases;
 CREATE POLICY "Manager can view active cases"
@@ -56,15 +59,59 @@ USING (
   AND COALESCE(archived, false) = false
 );
 
--- UPDATE OF assigned_to only — the column list guarantees a manager cannot
--- touch status, partner_id, referral fields, etc. WITH CHECK re-validates the
--- manager flag so a revoked manager cannot keep assigning.
+-- UPDATE (visibility) — the manager may target active cases. The WITH CHECK
+-- re-validates the manager flag so a revoked manager cannot keep assigning.
+-- The trigger below guarantees only assigned_to actually changes.
 DROP POLICY IF EXISTS "Manager can assign cases" ON public.cases;
 CREATE POLICY "Manager can assign cases"
 ON public.cases
-FOR UPDATE OF assigned_to TO authenticated
+FOR UPDATE TO authenticated
 USING (public.is_active_manager(auth.uid()))
 WITH CHECK (public.is_active_manager(auth.uid()));
+
+-- ────────────────────────────────────────────────────────────
+-- 2b. enforce_manager_assign_only(): a manager (non-admin) may change ONLY
+--     assigned_to on a case. Any other column change is rejected. Admins are
+--     exempt (they have full access). The comparison strips assigned_to from
+--     both rows (via jsonb) so it's column-list-agnostic and survives schema
+--     additions. Uses auth.uid() so it works under the SESSION_USER/RLS path.
+-- ────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.enforce_manager_assign_only()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_is_manager boolean := false;
+BEGIN
+  IF v_uid IS NULL THEN
+    RETURN NEW; -- service-role / non-session context: not a manager write
+  END IF;
+  SELECT public.is_active_manager(v_uid) INTO v_is_manager;
+
+  -- Only restrict managers who are NOT admins (admins keep full access).
+  IF v_is_manager
+     AND NOT public.has_role(v_uid, 'admin'::public.app_role)
+     AND (row_to_json(NEW)::jsonb - 'assigned_to')
+       IS DISTINCT FROM (row_to_json(OLD)::jsonb - 'assigned_to')
+  THEN
+    RAISE EXCEPTION 'Manager may only change the assigned_to column on cases';
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.enforce_manager_assign_only() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.enforce_manager_assign_only() TO authenticated, service_role;
+
+DROP TRIGGER IF EXISTS trg_enforce_manager_assign_only ON public.cases;
+CREATE TRIGGER trg_enforce_manager_assign_only
+BEFORE UPDATE ON public.cases
+FOR EACH ROW
+EXECUTE FUNCTION public.enforce_manager_assign_only();
 
 -- ────────────────────────────────────────────────────────────
 -- 3. Team directory for managers: list team_member id + name only.
