@@ -110,6 +110,7 @@ const AdminSubmissionsPage = () => {
     partners: [],
     partnerCommission: 0,
     teamCommission: 0,
+    agent: null,
     platformRevenue: 0,
   });
 
@@ -304,16 +305,44 @@ const AdminSubmissionsPage = () => {
         }
       }
 
+      // Recruiting agent (profiles.agent_id on the referring partner) earns a
+      // flat amount ON TOP of the partner pool — it is absorbed by DARB's
+      // margin, matching record_case_commission.
+      let agentLine: { name: string; amount: number } | null = null;
+      if (linkedPartnerId) {
+        const { data: partnerProfile } = await (supabase as any)
+          .from("profiles")
+          .select("agent_id")
+          .eq("id", linkedPartnerId)
+          .maybeSingle();
+        const agentId = partnerProfile?.agent_id ?? null;
+        if (agentId && agentId !== linkedPartnerId) {
+          const [{ data: split }, { data: agentProfile }] = await Promise.all([
+            (supabase as any).rpc("get_effective_agent_split", {
+              p_agent_id: agentId,
+              p_partner_id: linkedPartnerId,
+            }),
+            (supabase as any).from("profiles").select("full_name").eq("id", agentId).maybeSingle(),
+          ]);
+          const row = Array.isArray(split) ? split[0] : split;
+          const amount = Math.max(0, Number(row?.agent_amount ?? 0));
+          if (amount > 0) {
+            agentLine = { name: agentProfile?.full_name ?? agentId.slice(0, 8), amount };
+          }
+        }
+      }
+
       setSplitPreview({
         serviceFee: fee,
         referralDiscount,
         partners: qualifyingPartners,
         partnerCommission: totalPartner,
         teamCommission,
-        platformRevenue: Math.max(0, fee - teamCommission - totalPartner),
+        agent: agentLine,
+        platformRevenue: Math.max(0, fee - teamCommission - totalPartner - (agentLine?.amount ?? 0)),
       });
     } catch {
-      setSplitPreview({ serviceFee: fee, referralDiscount, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: fee });
+      setSplitPreview({ serviceFee: fee, referralDiscount, partners: [], partnerCommission: 0, teamCommission: 0, agent: null, platformRevenue: fee });
     }
   }, []);
 
@@ -454,7 +483,7 @@ const AdminSubmissionsPage = () => {
       setSelected(null);
       setShowSplitPanel(false);
       setApproveEmail("");
-      setSplitPreview({ serviceFee: 0, referralDiscount: 0, partners: [], partnerCommission: 0, teamCommission: 0, platformRevenue: 0 });
+      setSplitPreview({ serviceFee: 0, referralDiscount: 0, partners: [], partnerCommission: 0, teamCommission: 0, agent: null, platformRevenue: 0 });
       await fetchCases();
     } catch (err: any) {
       console.error("[AdminSubmissions]", err);
@@ -941,6 +970,16 @@ const AdminSubmissionsPage = () => {
                   -₪{splitPreview.teamCommission.toLocaleString("en-US")}
                 </span>
               </div>
+              {splitPreview.agent && (
+                <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
+                  <span className="text-muted-foreground">
+                    {t("admin.commission.agent", "Agent")}: {splitPreview.agent.name}
+                  </span>
+                  <span className="font-semibold text-destructive">
+                    -₪{splitPreview.agent.amount.toLocaleString("en-US")}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm">
                 <span className="font-semibold">{t("admin.commission.platformRevenue", "Platform Revenue")}</span>
                 <span className="font-bold text-emerald-700">
