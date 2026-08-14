@@ -46,6 +46,12 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ],
   social_media_partner: [...PARTNER_MOBILE_NAV],
   ambassador: [...PARTNER_MOBILE_NAV],
+  agent: [
+    { key: 'nav.overview', icon: LayoutDashboard, href: '/agent' },
+    { key: 'nav.network', icon: Users, href: '/agent/network' },
+    { key: 'nav.earnings', icon: TrendingUp, href: '/agent/earnings' },
+    { key: 'nav.messages', icon: MessageSquare, href: '/agent/messages' },
+  ],
   // Student: 5 top-level destinations mirroring the grouped sidebar.
   // Grouped parents link to their first child route (the most common entry).
   student: [
@@ -94,6 +100,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.submissions': t('nav.submissions', 'Submissions'),
     'nav.messages': t('nav.messages', 'Messages'),
     'nav.inbox': t('nav.inbox', 'Applications'),
+    'nav.network': t('nav.network', 'Network'),
     'nav.group.studyFile': t('nav.group.studyFile', 'Study'),
     'nav.group.communication': t('nav.group.communication', 'Comms'),
     'nav.group.account': t('nav.group.account', 'Account'),
@@ -117,6 +124,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
             (item.href !== '/admin' &&
               item.href !== '/team' &&
               item.href !== '/partner' &&
+              item.href !== '/agent' &&
               item.href !== '/student/checklist' &&
               location.pathname.startsWith(item.href));
         return (

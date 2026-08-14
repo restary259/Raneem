@@ -143,6 +143,13 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.apply", icon: ClipboardEdit, href: "/partner/apply", group: "nav.group.work" },
   ],
   ambassador: [...PARTNER_BASE_NAV],
+  agent: [
+    { key: "nav.overview", icon: LayoutDashboard, href: "/agent", group: "nav.group.work" },
+    { key: "nav.network", icon: Crown, href: "/agent/network", group: "nav.group.work" },
+    { key: "nav.earnings", icon: TrendingUp, href: "/agent/earnings", group: "nav.group.money" },
+    { key: "nav.messages", icon: MessageSquare, href: "/agent/messages", group: "nav.group.comms" },
+    { key: "nav.account", icon: User, href: "/agent/profile", group: "nav.group.account" },
+  ],
   student: [
     { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
     {
@@ -207,7 +214,7 @@ function SidebarNav({ role }: { role: AppRole }) {
 
   const isItemActive = (item: NavItem): boolean => {
     if (!item.href) return false;
-    const exactHomeRoles = ["/admin", "/team", "/partner"];
+    const exactHomeRoles = ["/admin", "/team", "/partner", "/agent"];
     return (
       location.pathname === item.href ||
       (!exactHomeRoles.includes(item.href) &&

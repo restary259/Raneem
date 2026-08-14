@@ -15,6 +15,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import PartnerDashboardLayout from "./components/layout/PartnerDashboardLayout";
+import AgentDashboardLayout from "./components/layout/AgentDashboardLayout";
 
 // Secondary public pages — lazy so the first mobile paint only ships "/"
 const WhoWeArePage = lazy(() => import("./pages/WhoWeArePage"));
@@ -98,6 +99,13 @@ const PartnerNetworkPage = lazy(() => import("./pages/partner/PartnerNetworkPage
 const PartnerPerformancePage = lazy(() => import("./pages/partner/PartnerPerformancePage"));
 const PartnerProfilePage = lazy(() => import("./pages/partner/PartnerProfilePage"));
 const PartnerApplyPage = lazy(() => import("./pages/partner/PartnerApplyPage"));
+
+// Agent pages
+const AgentOverviewPage = lazy(() => import("./pages/agent/AgentOverviewPage"));
+const AgentNetworkPage = lazy(() => import("./pages/agent/AgentNetworkPage"));
+const AgentEarningsPage = lazy(() => import("./pages/agent/AgentEarningsPage"));
+const AgentMessagesPage = lazy(() => import("./pages/agent/AgentMessagesPage"));
+const AgentSettingsPage = lazy(() => import("./pages/agent/AgentSettingsPage"));
 
 // Student pages (Phase 5)
 const StudentNextStepsPage = lazy(() => import("./pages/student/StudentNextStepsPage"));
@@ -328,6 +336,22 @@ const App = () => {
               <Route path="performance" element={<PartnerPerformancePage />} />
               <Route path="profile" element={<PartnerProfilePage />} />
               <Route path="apply" element={<PartnerApplyPage />} />
+            </Route>
+
+            {/* ── Agent Dashboard (/agent/*) ── */}
+            <Route
+              path="/agent"
+              element={
+                <ProtectedRoute allowedRoles={["agent"]}>
+                  <AgentDashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AgentOverviewPage />} />
+              <Route path="network" element={<AgentNetworkPage />} />
+              <Route path="earnings" element={<AgentEarningsPage />} />
+              <Route path="messages" element={<AgentMessagesPage />} />
+              <Route path="profile" element={<AgentSettingsPage />} />
             </Route>
 
 

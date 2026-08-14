@@ -53,16 +53,19 @@ serve(async (req) => {
     const parsed = await parseBody(req, z.object({
       email: emailField,
       full_name: personName,
-      role: z.enum(["team_member", "admin", "social_media_partner", "ambassador"]),
+      role: z.enum(["team_member", "admin", "social_media_partner", "ambassador", "agent"]),
       commission_amount: z.number().int().min(0).max(1000000).optional().nullable(),
       // Set when the new partner was recruited by a master partner.
       master_partner_id: z.string().uuid().optional().nullable(),
+      // Set when the new partner/ambassador was recruited by an Agent (mirrors
+      // master_partner_id), or when creating the Agent's own account under one.
+      agent_id: z.string().uuid().optional().nullable(),
     }));
     if (!parsed.ok) {
       return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const body = parsed.data;
-    const { email, full_name, role, commission_amount, master_partner_id } = body;
+    const { email, full_name, role, commission_amount, master_partner_id, agent_id } = body;
 
     if (!email || !full_name || !role) {
       return new Response(JSON.stringify({ error: "Email, full_name, and role required" }), {
@@ -85,7 +88,7 @@ serve(async (req) => {
       });
     }
 
-    if (!["team_member", "social_media_partner", "ambassador"].includes(role)) {
+    if (!["team_member", "social_media_partner", "ambassador", "agent"].includes(role)) {
       return new Response(JSON.stringify({ error: "Invalid role" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -138,6 +141,9 @@ serve(async (req) => {
       // Only partners can belong to a master partner's network.
       master_partner_id:
         dbRole === "social_media_partner" && master_partner_id ? master_partner_id : null,
+      // Agent link: applies to an Agent's own account or to a partner/
+      // ambassador recruited by an Agent.
+      agent_id: agent_id ?? null,
     });
 
 

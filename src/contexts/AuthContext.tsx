@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { unsubscribeFromPush } from '@/lib/webPush';
 
-export type AppRole = 'admin' | 'team_member' | 'social_media_partner' | 'ambassador' | 'student';
+export type AppRole = 'admin' | 'team_member' | 'social_media_partner' | 'ambassador' | 'student' | 'agent';
 
 export const ROLE_TO_PATH: Record<AppRole, string> = {
   admin: '/admin',
@@ -11,6 +11,7 @@ export const ROLE_TO_PATH: Record<AppRole, string> = {
   social_media_partner: '/partner',
   ambassador: '/partner',
   student: '/student/checklist',
+  agent: '/agent',
 };
 
 interface AuthState {

@@ -42,7 +42,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const { toast } = useToast();
   const { user, role } = useAuth();
   const isStaff = role === "admin" || role === "team_member";
-  const isPartner = role === "social_media_partner" || role === "ambassador";
+  const isPartner = role === "social_media_partner" || role === "ambassador" || role === "agent";
   const caseLinkBase = role === "admin" ? "/admin/cases" : "/team/cases";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);

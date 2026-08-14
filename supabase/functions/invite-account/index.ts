@@ -15,12 +15,13 @@ import { identityConflict } from "../_shared/identity.ts";
  * invitation row, never from the link.
  */
 
-type Role = "team_member" | "social_media_partner" | "ambassador";
+type Role = "team_member" | "social_media_partner" | "ambassador" | "agent";
 
 const ROLE_MAP: Record<Role, { type: InvitationType; template: string; nameKey: string }> = {
   team_member: { type: "team", template: "team-invite", nameKey: "memberName" },
   social_media_partner: { type: "partner", template: "partner-invite", nameKey: "partnerName" },
   ambassador: { type: "ambassador", template: "ambassador-invite", nameKey: "ambassadorName" },
+  agent: { type: "agent", template: "team-invite", nameKey: "memberName" },
 };
 
 serve(async (req) => {
@@ -61,7 +62,7 @@ serve(async (req) => {
         action: z.enum(["send", "revoke"]).default("send"),
         email: emailField.optional(),
         full_name: personName.optional(),
-        role: z.enum(["team_member", "social_media_partner", "ambassador"]).optional(),
+        role: z.enum(["team_member", "social_media_partner", "ambassador", "agent"]).optional(),
         invitation_id: z.string().uuid().optional(),
       }),
     );

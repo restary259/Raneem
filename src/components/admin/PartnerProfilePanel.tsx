@@ -12,6 +12,7 @@ import {
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import LinkedStudentsModal from './LinkedStudentsModal';
 import MasterPartnerToggle from './MasterPartnerToggle';
+import AgentParentToggle from './AgentParentToggle';
 
 import { usePayoutActions } from '@/hooks/usePayoutActions';
 import { useDirection } from '@/hooks/useDirection';
@@ -36,6 +37,7 @@ export interface PartnerDirectoryRow {
   last_request_at: string | null;
   is_master_partner?: boolean;
   master_partner_name?: string | null;
+  agent_id?: string | null;
   recruited_count?: number;
   earned_referral?: number;
   earned_override?: number;
@@ -68,9 +70,11 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
   const [studentsModal, setStudentsModal] = useState<string[] | null>(null);
   const { toast } = useToast();
   const [isMaster, setIsMaster] = useState(!!partner.is_master_partner);
+  const [agentId, setAgentId] = useState<string | null>(partner.agent_id ?? null);
   const [network, setNetwork] = useState<any[]>([]);
 
   useEffect(() => { setIsMaster(!!partner.is_master_partner); }, [partner.is_master_partner, partner.partner_id]);
+  useEffect(() => { setAgentId(partner.agent_id ?? null); }, [partner.agent_id, partner.partner_id]);
 
   const loadNetwork = useCallback(async () => {
     if (!isMaster) { setNetwork([]); return; }
@@ -248,6 +252,21 @@ const PartnerProfilePanel: React.FC<Props> = ({ partner, requests, allPartners =
               variant="plain"
             />
 
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">{t('agent.parentSection', 'Agent (recruiter)')}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('agent.parentHint', 'Assigning an agent only routes a flat override from the partner pool on paid cases. Nothing else changes.')}
+              </p>
+            </div>
+            <AgentParentToggle
+              recruitId={partner.partner_id}
+              recruitName={partner.full_name}
+              currentAgentId={agentId}
+              onChanged={(next) => { setAgentId(next); onRefresh(); }}
+            />
           </div>
         </CardContent>
       </Card>

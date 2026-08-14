@@ -8,16 +8,17 @@
 
 export const APP_URL = "https://darb.agency";
 
-export type InvitationType = "student" | "partner" | "team" | "ambassador";
+export type InvitationType = "student" | "partner" | "team" | "ambassador" | "agent";
 
 export interface CreateInvitationInput {
   invitedEmail: string;
   invitationType: InvitationType;
-  intendedRole: "student" | "social_media_partner" | "team_member" | "ambassador";
+  intendedRole: "student" | "social_media_partner" | "team_member" | "ambassador" | "agent";
   /** Shown in the account once the invitation is accepted. */
   invitedName?: string | null;
   inviterId?: string | null;
   masterPartnerId?: string | null;
+  agentId?: string | null;
   caseId?: string | null;
   recruitApplicationId?: string | null;
   /** Days until the link stops working. */
@@ -81,6 +82,7 @@ export async function createInvitation(
     token_hash,
     inviter_id: input.inviterId ?? null,
     master_partner_id: input.masterPartnerId ?? null,
+    agent_id: input.agentId ?? null,
     case_id: input.caseId ?? null,
     recruit_application_id: input.recruitApplicationId ?? null,
     status: "pending",

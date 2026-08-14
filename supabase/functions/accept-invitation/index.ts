@@ -185,6 +185,13 @@ serve(async (req) => {
     if (inv.invitation_type === "partner" && inv.master_partner_id) {
       profilePatch.master_partner_id = inv.master_partner_id;
     }
+    // An Agent who recruits a partner/ambassador (or is invited as one
+    // themselves) is linked through profiles.agent_id — the exact mirror of
+    // master_partner_id. Applies to partner/ambassador recruits carrying an
+    // agent_id, and to a direct "agent" invitation (the agent's own account).
+    if (inv.agent_id) {
+      profilePatch.agent_id = inv.agent_id;
+    }
     if (inv.invitation_type === "student" && inv.case_id) {
       profilePatch.case_id = inv.case_id;
     }

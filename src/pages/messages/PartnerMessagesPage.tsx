@@ -19,8 +19,12 @@ import {
 } from "@/services/DirectMessageService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 
-/** Partners and ambassadors talk directly with the Darb admins. */
-export default function PartnerMessagesPage() {
+/**
+ * Partners and ambassadors talk directly with the Darb admins. This component
+ * is also reused by the Agent dashboard (via the `viewerRole` prop) — agents
+ * chat with admins under the same direct-thread infrastructure.
+ */
+export default function PartnerMessagesPage({ viewerRole = "social_media_partner" }: { viewerRole?: string }) {
   const { t } = useTranslation("dashboard");
   const { user } = useAuth();
   const { toast } = useToast();
@@ -62,7 +66,7 @@ export default function PartnerMessagesPage() {
   };
 
   const displayName = (name: string | null | undefined, role: string | null | undefined) =>
-    chatDisplayName(name, role, "social_media_partner", t("chat.adminLabel"));
+    chatDisplayName(name, role, viewerRole, t("chat.adminLabel"));
 
   const items: ThreadListItem[] = threads.map((thread) => ({
     id: thread.threadId,

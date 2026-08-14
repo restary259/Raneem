@@ -122,7 +122,7 @@ const AdminTeamPage = () => {
       .from('user_invitations')
       .select('id, invited_email, invited_name, invitation_type, intended_role, status, expires_at, created_at')
       .eq('status', 'pending')
-      .in('invitation_type', ['team', 'partner', 'ambassador'])
+      .in('invitation_type', ['team', 'partner', 'ambassador', 'agent'])
       .order('created_at', { ascending: false });
     setInvitations((data || []) as PendingInvitation[]);
   }, []);
@@ -132,17 +132,18 @@ const AdminTeamPage = () => {
       const rolesRes = await supabase
         .from('user_roles')
         .select('user_id, role, created_at')
-        .in('role', ['team_member', 'social_media_partner', 'ambassador']);
+        .in('role', ['team_member', 'social_media_partner', 'ambassador', 'agent']);
       if (rolesRes.error) throw rolesRes.error;
 
       const userIds = (rolesRes.data || []).map(r => r.user_id);
       if (userIds.length === 0) { setMembers([]); setLoading(false); return; }
 
-      const [profilesRes, settingsRes, partnerOvRes, teamOvRes] = await Promise.all([
+      const [profilesRes, settingsRes, partnerOvRes, teamOvRes, agentOvRes] = await Promise.all([
         (supabase as any).from('profiles').select('id, full_name, email, referral_code, referral_code_enabled, is_master_partner').in('id', userIds),
-        (supabase as any).from('platform_settings').select('partner_commission_rate, ambassador_commission_rate, team_member_commission_rate').limit(1).maybeSingle(),
+        (supabase as any).from('platform_settings').select('partner_commission_rate, ambassador_commission_rate, team_member_commission_rate, agent_commission_rate').limit(1).maybeSingle(),
         (supabase as any).from('partner_commission_overrides').select('partner_id, commission_amount'),
         (supabase as any).from('team_member_commission_overrides').select('team_member_id, commission_amount'),
+        (supabase as any).from('agent_commission_overrides').select('agent_id, commission_amount'),
       ]);
       if (profilesRes.error) throw profilesRes.error;
 
@@ -152,11 +153,13 @@ const AdminTeamPage = () => {
       const overrideMap: Record<string, number> = {};
       (partnerOvRes.data || []).forEach((o: any) => { overrideMap[o.partner_id] = o.commission_amount; });
       (teamOvRes.data || []).forEach((o: any) => { overrideMap[o.team_member_id] = o.commission_amount; });
+      (agentOvRes.data || []).forEach((o: any) => { overrideMap[o.agent_id] = o.commission_amount; });
 
       const defaults: Record<string, number> = {
         social_media_partner: settingsRes.data?.partner_commission_rate ?? 0,
         ambassador: settingsRes.data?.ambassador_commission_rate ?? 0,
         team_member: settingsRes.data?.team_member_commission_rate ?? 0,
+        agent: settingsRes.data?.agent_commission_rate ?? 0,
       };
 
       // A user can hold more than one role row; the directory shows one card per
@@ -312,6 +315,7 @@ const AdminTeamPage = () => {
       team_member: t('admin.team.teamMemberRole'),
       social_media_partner: t('admin.team.partnerRole'),
       ambassador: t('admin.team.ambassadorRole', 'Ambassador'),
+      agent: t('admin.team.agentRole', 'Agent'),
     };
     return map[role] || role;
   };
@@ -443,6 +447,7 @@ const AdminTeamPage = () => {
                         <SelectItem value="team_member">{t('admin.team.teamMemberRole')}</SelectItem>
                         <SelectItem value="social_media_partner">{t('admin.team.partnerRole')}</SelectItem>
                         <SelectItem value="ambassador">{t('admin.team.ambassadorRole', 'Ambassador')}</SelectItem>
+                        <SelectItem value="agent">{t('admin.team.agentRole', 'Agent')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

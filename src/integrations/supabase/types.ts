@@ -2469,6 +2469,92 @@ export type Database = {
           },
         ]
       }
+      agent_commission_overrides: {
+        Row: {
+          agent_id: string
+          commission_amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_commission_overrides_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_relationships: {
+        Row: {
+          active: boolean
+          agent_id: string
+          agreement_status: string
+          commission_amount_ils: number
+          created_at: string
+          id: string
+          recruited_role: string
+          recruited_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          agent_id: string
+          agreement_status?: string
+          commission_amount_ils?: number
+          created_at?: string
+          id?: string
+          recruited_role: string
+          recruited_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          agent_id?: string
+          agreement_status?: string
+          commission_amount_ils?: number
+          created_at?: string
+          id?: string
+          recruited_role?: string
+          recruited_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_relationships_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_relationships_recruited_user_id_fkey"
+            columns: ["recruited_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_commission_overrides: {
         Row: {
           commission_amount: number
@@ -2863,6 +2949,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          agent_commission_rate: number
           ambassador_commission_rate: number
           default_course_weeks: number
           forgotten_contacted_days: number
@@ -2877,6 +2964,7 @@ export type Database = {
           vat_rate: number
         }
         Insert: {
+          agent_commission_rate?: number
           ambassador_commission_rate?: number
           default_course_weeks?: number
           forgotten_contacted_days?: number
@@ -2891,6 +2979,7 @@ export type Database = {
           vat_rate?: number
         }
         Update: {
+          agent_commission_rate?: number
           ambassador_commission_rate?: number
           default_course_weeks?: number
           forgotten_contacted_days?: number
@@ -2908,6 +2997,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agent_id: string | null
           arrival_date: string | null
           bank_account_number: string | null
           bank_branch: string | null
@@ -2971,6 +3061,7 @@ export type Database = {
           visa_status: string
         }
         Insert: {
+          agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
@@ -3034,6 +3125,7 @@ export type Database = {
           visa_status?: string
         }
         Update: {
+          agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
@@ -3121,6 +3213,13 @@ export type Database = {
           {
             foreignKeyName: "profiles_master_partner_id_fkey"
             columns: ["master_partner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_agent_id_fkey"
+            columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3790,6 +3889,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_user_id: string | null
+          agent_id: string | null
           case_id: string | null
           created_at: string
           expires_at: string
@@ -3808,6 +3908,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_user_id?: string | null
+          agent_id?: string | null
           case_id?: string | null
           created_at?: string
           expires_at?: string
@@ -3826,6 +3927,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_user_id?: string | null
+          agent_id?: string | null
           case_id?: string | null
           created_at?: string
           expires_at?: string
@@ -4295,6 +4397,14 @@ export type Database = {
           responded_at: string
         }[]
       }
+      get_effective_agent_split: {
+        Args: { p_agent_id: string; p_recruited_partner_id: string }
+        Returns: {
+          agent_amount: number
+          agent_id: string
+          pool_amount: number
+        }[]
+      }
       get_forgotten_cases: {
         Args: never
         Returns: {
@@ -4406,6 +4516,21 @@ export type Database = {
       }
       get_my_earnings_summary: { Args: never; Returns: Json }
       get_my_network: {
+        Args: never
+        Returns: {
+          city: string
+          email: string
+          full_name: string
+          joined_at: string
+          override_earned: number
+          paid_cases: number
+          partner_id: string
+          referral_code: string
+          status: string
+          students_count: number
+        }[]
+      }
+      get_my_agent_network: {
         Args: never
         Returns: {
           city: string
@@ -4562,6 +4687,7 @@ export type Database = {
         Args: never
         Returns: {
           available_amount: number
+          agent_id: string
           city: string
           created_at: string
           earned_override: number
@@ -4871,6 +4997,7 @@ export type Database = {
         | "social_media_partner"
         | "student"
         | "ambassador"
+        | "agent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5004,6 +5131,7 @@ export const Constants = {
         "social_media_partner",
         "student",
         "ambassador",
+        "agent",
       ],
     },
   },
