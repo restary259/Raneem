@@ -87,8 +87,12 @@ export default function AgentStudentsPage() {
     (c: AgentStudentCase): SourceFilter => {
       const pid = c.partner_id;
       if (pid === userId) return "self";
-      if (recruitIds.ambassadors.has(pid ?? "")) return "ambassador";
-      if (recruitIds.partners.has(pid ?? "")) return "partner";
+      if (pid && recruitIds.ambassadors.has(pid)) return "ambassador";
+      if (pid && recruitIds.partners.has(pid)) return "partner";
+      const rid = c.referred_by;
+      if (rid === userId) return "self";
+      if (rid && recruitIds.ambassadors.has(rid)) return "ambassador";
+      if (rid && recruitIds.partners.has(rid)) return "partner";
       return "all";
     },
     [userId, recruitIds],

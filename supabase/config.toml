@@ -11,6 +11,8 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = true  
   [functions.agent-invite-recruit]  
     verify_jwt = true  
+  [functions.agent-create-account]
+    verify_jwt = true
   [functions.ai-chat]  
     verify_jwt = false  
   [functions.approve-partner-recruit]  

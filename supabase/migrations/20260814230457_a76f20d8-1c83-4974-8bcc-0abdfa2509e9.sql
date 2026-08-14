@@ -171,6 +171,7 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION public.get_my_agent_kpis() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_my_agent_kpis() FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_my_agent_kpis() TO authenticated;
 
