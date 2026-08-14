@@ -95,36 +95,50 @@ const PARTNER_BASE_NAV: NavItem[] = [
   { key: "nav.account", icon: User, href: "/partner/profile" },
 ];
 
+/**
+ * Sidebar destinations per role.
+ *
+ * Sibling pages over the same dataset were merged into tabbed hubs (see
+ * `TabHub`), so each role's sidebar lists destinations rather than views:
+ * Admin 13 → 9, Team 8 → 5 (+ Tools), Agent 10 → 6. The removed routes still
+ * exist and redirect into their hub tab, so bookmarks keep working.
+ */
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.comms" },
 
     { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
+    // Pipeline hub: board + submissions review.
     { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
-    { key: "nav.submissions", icon: FileCheck, href: "/admin/submissions", group: "nav.group.work" },
     { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
 
+    // Money hub: financials + spreadsheet + analytics.
     { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
-    { key: "nav.spreadsheet", icon: Table, href: "/admin/spreadsheet", group: "nav.group.money" },
-    { key: "nav.analytics", icon: BarChart2, href: "/admin/analytics", group: "nav.group.money" },
     { key: "nav.team", icon: Users, href: "/admin/team", group: "nav.group.people" },
     { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
     { key: "nav.referrals", icon: Link2, href: "/admin/referrals", group: "nav.group.people" },
-    { key: "nav.programs", icon: BookOpen, href: "/admin/programs", group: "nav.group.setup" },
-    { key: "nav.activity", icon: Activity, href: "/admin/activity", group: "nav.group.setup" },
-    { key: "nav.settings", icon: Settings, href: "/admin/settings", group: "nav.group.setup" },
+    {
+      key: "nav.group.setup",
+      icon: Settings,
+      href: "",
+      children: [
+        { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },
+        { key: "nav.activity", icon: Activity, href: "/admin/activity" },
+        { key: "nav.settings", icon: Settings, href: "/admin/settings" },
+      ],
+    },
   ],
   team_member: [
     { key: "nav.messages", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
 
     { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
+    // Cases hub: active cases + student accounts. "Submit new student" is an
+    // action inside that page, not a separate destination.
     { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
     { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
-    { key: "nav.submitNew", icon: UserPlus, href: "/team/submit", group: "nav.group.work" },
-    { key: "nav.students", icon: GraduationCap, href: "/team/students", group: "nav.group.work" },
 
-    { key: "nav.analytics", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
-    { key: "nav.spreadsheet", icon: Table, href: "/team/spreadsheet", group: "nav.group.setup" },
+    // Reports hub: analytics + spreadsheet.
+    { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
 
     {
       key: "nav.group.tools",
@@ -145,16 +159,16 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ambassador: [...PARTNER_BASE_NAV],
   agent: [
     { key: "nav.overview", icon: LayoutDashboard, href: "/agent", group: "nav.group.work" },
+    // Network hub: network + recruit + performance.
     { key: "nav.network", icon: Users, href: "/agent/network", group: "nav.group.work" },
-    { key: "nav.recruit", icon: UserPlus, href: "/agent/recruit", group: "nav.group.work" },
     { key: "nav.students", icon: GraduationCap, href: "/agent/students", group: "nav.group.work" },
-    { key: "nav.analytics", icon: BarChart2, href: "/agent/analytics", group: "nav.group.work" },
     { key: "nav.apply", icon: ClipboardEdit, href: "/agent/apply", group: "nav.group.work" },
+    // Money hub: earnings + bank details.
     { key: "nav.earnings", icon: TrendingUp, href: "/agent/earnings", group: "nav.group.money" },
     { key: "nav.messages", icon: MessageSquare, href: "/agent/messages", group: "nav.group.comms" },
-    { key: "nav.bankDetails", icon: ShieldCheck, href: "/agent/bank-details", group: "nav.group.account" },
     { key: "nav.account", icon: User, href: "/agent/profile", group: "nav.group.account" },
   ],
+
   student: [
     { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
     {
