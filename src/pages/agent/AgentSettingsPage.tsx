@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,9 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
-import BankDetailsEditor from "@/components/common/BankDetailsEditor";
 import { validatePassword } from "@/components/auth/PasswordStrength";
-import { User, Lock } from "lucide-react";
+import { User, Lock, ShieldCheck, ChevronRight } from "lucide-react";
 
 interface AgentProfile {
   id: string;
@@ -138,7 +138,27 @@ export default function AgentSettingsPage() {
         </CardContent>
       </Card>
 
-      {user && <BankDetailsEditor userId={user.id} />}
+      {user && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              {t("nav.bankDetails", "Bank Details")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              {t("agent.bank.subtitle", "Secure financial information for receiving your commission payouts.")}
+            </p>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/agent/bank-details">
+                {t("agent.bank.manage", "Manage bank details")}
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

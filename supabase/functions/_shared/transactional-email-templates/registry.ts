@@ -8,6 +8,7 @@ import { template as teamInvite } from './team-invite.tsx'
 import { template as ambassadorInvite } from './ambassador-invite.tsx'
 import { template as appointmentReminder } from './appointment-reminder.tsx'
 import { template as caseInvoice } from './case-invoice.tsx'
+import { template as accountInvite } from './account-invite.tsx'
 
 export interface TemplateEntry {
   component: (props: any) => React.ReactElement
@@ -16,6 +17,13 @@ export interface TemplateEntry {
   previewData?: Record<string, any>
   to?: string
 }
+
+/**
+ * The branded fallback template used when a caller requests a template name
+ * that is not in the registry. Exported so send-transactional-email can use
+ * it as a safety net without duplicating the component.
+ */
+export const FALLBACK_TEMPLATE = accountInvite
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-message': newMessage,
@@ -26,5 +34,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ambassador-invite': ambassadorInvite,
   'appointment-reminder': appointmentReminder,
   'case-invoice': caseInvoice,
+  'account-invite': accountInvite,
 }
 

@@ -13,22 +13,25 @@ interface Props {
   partnerName?: string
   email?: string
   masterName?: string
+  agentName?: string
   activationUrl?: string
 }
 
-const Email = ({ partnerName, email, masterName, activationUrl }: Props) => (
+const Email = ({ partnerName, email, masterName, agentName, activationUrl }: Props) => (
   <EmailLayout
     preview="تمت الموافقة على انضمامك كوكيل في درب — فعّل حسابك"
     title="تمت الموافقة على انضمامك كوكيل"
   >
     <EmailText>{partnerName ? `مرحباً ${partnerName}،` : 'مرحباً،'}</EmailText>
     <EmailText>
-      يسعدنا انضمامك إلى شبكة وكلاء درب. تم إنشاء حسابك، ويمكنك من خلاله متابعة الطلاب الذين تقوم
-      بترشيحهم، ومتابعة عمولاتك، ومراسلة الإدارة مباشرة.
+      {agentName
+        ? `لقد دعاك ${agentName} للانضمام إلى شبكة وكلاء درب. تم إنشاء حسابك، ويمكنك من خلاله متابعة الطلاب الذين تقوم بترشيحهم، ومتابعة عمولاتك، ومراسلة الإدارة مباشرة.`
+        : 'يسعدنا انضمامك إلى شبكة وكلاء درب. تم إنشاء حسابك، ويمكنك من خلاله متابعة الطلاب الذين تقوم بترشيحهم، ومتابعة عمولاتك، ومراسلة الإدارة مباشرة.'}
     </EmailText>
 
     <EmailCard>
       {email ? <EmailInfoRow label="البريد الإلكتروني" value={email} ltrValue /> : null}
+      {agentName ? <EmailInfoRow label="الوكيل المُجنِّد" value={agentName} /> : null}
       {masterName ? <EmailInfoRow label="الوكيل الرئيسي" value={masterName} /> : null}
     </EmailCard>
 

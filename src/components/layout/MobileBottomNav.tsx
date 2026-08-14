@@ -49,6 +49,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   agent: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/agent' },
     { key: 'nav.network', icon: Users, href: '/agent/network' },
+    { key: 'nav.recruit', icon: UserPlus, href: '/agent/recruit' },
     { key: 'nav.earnings', icon: TrendingUp, href: '/agent/earnings' },
     { key: 'nav.messages', icon: MessageSquare, href: '/agent/messages' },
   ],
@@ -101,6 +102,8 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.messages': t('nav.messages', 'Messages'),
     'nav.inbox': t('nav.inbox', 'Applications'),
     'nav.network': t('nav.network', 'Network'),
+    'nav.recruit': t('nav.recruit', 'Recruit'),
+    'nav.bankDetails': t('nav.bankDetails', 'Bank'),
     'nav.group.studyFile': t('nav.group.studyFile', 'Study'),
     'nav.group.communication': t('nav.group.communication', 'Comms'),
     'nav.group.account': t('nav.group.account', 'Account'),

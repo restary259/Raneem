@@ -106,6 +106,11 @@ const AgentNetworkPage = lazy(() => import("./pages/agent/AgentNetworkPage"));
 const AgentEarningsPage = lazy(() => import("./pages/agent/AgentEarningsPage"));
 const AgentMessagesPage = lazy(() => import("./pages/agent/AgentMessagesPage"));
 const AgentSettingsPage = lazy(() => import("./pages/agent/AgentSettingsPage"));
+const AgentRecruitPage = lazy(() => import("./pages/agent/AgentRecruitPage"));
+const AgentStudentsPage = lazy(() => import("./pages/agent/AgentStudentsPage"));
+const AgentAnalyticsPage = lazy(() => import("./pages/agent/AgentAnalyticsPage"));
+const AgentApplyPage = lazy(() => import("./pages/agent/AgentApplyPage"));
+const AgentBankDetailsPage = lazy(() => import("./pages/agent/AgentBankDetailsPage"));
 
 // Student pages (Phase 5)
 const StudentNextStepsPage = lazy(() => import("./pages/student/StudentNextStepsPage"));
@@ -349,8 +354,13 @@ const App = () => {
             >
               <Route index element={<AgentOverviewPage />} />
               <Route path="network" element={<AgentNetworkPage />} />
+              <Route path="recruit" element={<AgentRecruitPage />} />
+              <Route path="students" element={<AgentStudentsPage />} />
+              <Route path="analytics" element={<AgentAnalyticsPage />} />
+              <Route path="apply" element={<AgentApplyPage />} />
               <Route path="earnings" element={<AgentEarningsPage />} />
               <Route path="messages" element={<AgentMessagesPage />} />
+              <Route path="bank-details" element={<AgentBankDetailsPage />} />
               <Route path="profile" element={<AgentSettingsPage />} />
             </Route>
 

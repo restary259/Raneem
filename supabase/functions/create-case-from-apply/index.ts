@@ -43,9 +43,11 @@ type Caller = {
 
 /**
  * Resolves the caller from the bearer token, if the request carries a user JWT.
- * A logged-in social_media_partner / ambassador (submitting from their own
- * dashboard apply form) is identified as `isPartner` so the case can be
- * attributed to them server-side — never from the request body.
+ * A logged-in social_media_partner / ambassador / agent (submitting from their
+ * own dashboard apply form) is identified as `isPartner` so the case can be
+ * attributed to them server-side — never from the request body. For an agent,
+ * the attribution becomes a self-referral (the agent earns the
+ * agent_self_referral_rate when the case pays out).
  */
 async function resolveCaller(
   req: Request,
@@ -71,7 +73,7 @@ async function resolveCaller(
   return {
     userId,
     isStaff: role === "admin" || role === "team_member",
-    isPartner: role === "social_media_partner" || role === "ambassador",
+    isPartner: role === "social_media_partner" || role === "ambassador" || role === "agent",
   };
 }
 

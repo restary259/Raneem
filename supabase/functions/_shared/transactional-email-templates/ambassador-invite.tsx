@@ -12,22 +12,25 @@ import type { TemplateEntry } from './registry.ts'
 interface Props {
   ambassadorName?: string
   email?: string
+  agentName?: string
   activationUrl?: string
 }
 
-const Email = ({ ambassadorName, email, activationUrl }: Props) => (
+const Email = ({ ambassadorName, email, agentName, activationUrl }: Props) => (
   <EmailLayout
     preview="تم إنشاء حسابك كسفير لدرب — فعّل حسابك"
     title="مرحباً بك كسفير في درب"
   >
     <EmailText>{ambassadorName ? `مرحباً ${ambassadorName}،` : 'مرحباً،'}</EmailText>
     <EmailText>
-      يسعدنا انضمامك إلى سفراء درب. من خلال حسابك يمكنك مشاركة رابط الإحالة الخاص بك، ومتابعة
-      الطلاب الذين ينضمون عن طريقك، ومتابعة مكافآتك.
+      {agentName
+        ? `لقد دعاك ${agentName} للانضمام إلى سفراء درب. من خلال حسابك يمكنك مشاركة رابط الإحالة الخاص بك، ومتابعة الطلاب الذين ينضمون عن طريقك، ومتابعة مكافآتك.`
+        : 'يسعدنا انضمامك إلى سفراء درب. من خلال حسابك يمكنك مشاركة رابط الإحالة الخاص بك، ومتابعة الطلاب الذين ينضمون عن طريقك، ومتابعة مكافآتك.'}
     </EmailText>
 
     <EmailCard>
       {email ? <EmailInfoRow label="البريد الإلكتروني" value={email} ltrValue /> : null}
+      {agentName ? <EmailInfoRow label="الوكيل المُجنِّد" value={agentName} /> : null}
       <EmailInfoRow label="الصلاحية" value="سفير" />
     </EmailCard>
 

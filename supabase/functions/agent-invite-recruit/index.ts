@@ -64,7 +64,7 @@ serve(async (req) => {
 
     const { data: profile, error: profileError } = await admin
       .from("profiles")
-      .select("agent_can_invite_directly, deleted_at")
+      .select("agent_can_invite_directly, deleted_at, full_name")
       .eq("id", agentId)
       .maybeSingle();
     if (profileError || !profile || profile.deleted_at) {
@@ -73,6 +73,7 @@ serve(async (req) => {
     if (!profile.agent_can_invite_directly) {
       return json({ error: "Direct invites are not enabled for this account" }, 403);
     }
+    const agentName = profile.full_name ?? null;
 
     const parsed = await parseBody(
       req,
@@ -128,6 +129,7 @@ serve(async (req) => {
           templateData: {
             [cfg.nameKey]: body.full_name,
             email,
+            agentName,
             activationUrl,
           },
         }),

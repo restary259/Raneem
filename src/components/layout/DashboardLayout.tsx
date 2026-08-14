@@ -145,9 +145,14 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ambassador: [...PARTNER_BASE_NAV],
   agent: [
     { key: "nav.overview", icon: LayoutDashboard, href: "/agent", group: "nav.group.work" },
-    { key: "nav.network", icon: Crown, href: "/agent/network", group: "nav.group.work" },
+    { key: "nav.network", icon: Users, href: "/agent/network", group: "nav.group.work" },
+    { key: "nav.recruit", icon: UserPlus, href: "/agent/recruit", group: "nav.group.work" },
+    { key: "nav.students", icon: GraduationCap, href: "/agent/students", group: "nav.group.work" },
+    { key: "nav.analytics", icon: BarChart2, href: "/agent/analytics", group: "nav.group.work" },
+    { key: "nav.apply", icon: ClipboardEdit, href: "/agent/apply", group: "nav.group.work" },
     { key: "nav.earnings", icon: TrendingUp, href: "/agent/earnings", group: "nav.group.money" },
     { key: "nav.messages", icon: MessageSquare, href: "/agent/messages", group: "nav.group.comms" },
+    { key: "nav.bankDetails", icon: ShieldCheck, href: "/agent/bank-details", group: "nav.group.account" },
     { key: "nav.account", icon: User, href: "/agent/profile", group: "nav.group.account" },
   ],
   student: [

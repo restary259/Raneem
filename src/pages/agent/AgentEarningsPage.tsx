@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, Clock, Send, Lock, History } from "lucide-react";
+import { Award, Clock, Lock, History, MessageSquare, ArrowRight } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import {
   getMyPayoutPreview,
-  requestPayoutViaChat,
   type PayoutPreview,
 } from "@/services/PayoutRequestService";
 import { useEarningsSummary } from "@/hooks/useEarningsSummary";
@@ -17,8 +17,9 @@ import { useEarningsSummary } from "@/hooks/useEarningsSummary";
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
 
 /** Agent earnings: locked/available/paid buckets derived server-side from the
- *  agent's own agent_override rewards, plus the 20-day lock and the chat payout
- *  request. Reuses the exact same RPCs as partners/ambassadors/team. */
+ *  agent's own rewards, plus the 20-day lock. Payout requests are handled
+ *  inside the Chat workflow (no standalone payout button here) — the button
+ *  below links to the admin chat where the payout request action lives. */
 export default function AgentEarningsPage() {
   const { t } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -26,7 +27,6 @@ export default function AgentEarningsPage() {
   const { summary: earnings } = useEarningsSummary(true);
   const [preview, setPreview] = useState<PayoutPreview | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -39,19 +39,6 @@ export default function AgentEarningsPage() {
   }, [toast]);
 
   useEffect(() => { load(); }, [load]);
-
-  const requestPayout = async () => {
-    setSubmitting(true);
-    try {
-      const res = await requestPayoutViaChat();
-      toast({ title: t("influencer.earnings.requestSubmitted", "Request submitted!"), description: fmt(res.amount) });
-      await load();
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   if (loading) return <DashboardLoading />;
 
@@ -77,6 +64,17 @@ export default function AgentEarningsPage() {
         </p>
       </div>
 
+      {/* Total earnings banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-5 flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-foreground">{t("agent.totalEarnings", "Total earnings")}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t("agent.earningsBannerHint", "Override commissions from your recruited network + self-referrals.")}
+          </p>
+        </div>
+        <p className="text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all">{fmt(earnings.total)}</p>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {buckets.map((b) => (
           <Card key={b.label}>
@@ -92,33 +90,41 @@ export default function AgentEarningsPage() {
       </div>
 
       {locked > 0 && (
-        <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 dark:bg-amber-500/10 rounded-lg p-3">
-          <Lock className="h-4 w-4" />
+        <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 rounded-lg p-3">
+          <Lock className="h-4 w-4 shrink-0" />
           {t("influencer.earnings.lockActive", "20-day lock active")}
         </div>
       )}
 
+      {/* Payout via chat (centralized) */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">{t("influencer.earnings.requestPayout", "Request a payout")}</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-primary" />
+            {t("agent.payoutViaChat", "Request a payout")}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            {t("influencer.earnings.waitingPeriod", "20-day waiting period not over yet")}
+            {hasOpen
+              ? t("agent.payoutPendingDesc", "You have a pending payout request. Admin will respond in your chat.")
+              : available > 0
+                ? t("agent.payoutAvailableDesc", { amount: fmt(available) })
+                : t("influencer.earnings.waitingPeriod", "20-day waiting period not over yet")}
           </p>
-          <Button
-            onClick={requestPayout}
-            disabled={submitting || available <= 0 || hasOpen}
-            className="gap-2"
-          >
-            <Send className="h-4 w-4" />
-            {submitting ? t("influencer.earnings.sending", "Sending...") : t("influencer.earnings.requestPayout", "Request payout")}
-          </Button>
           {hasOpen && (
-            <Badge variant="secondary" className="ms-2">
+            <Badge variant="secondary" className="gap-1">
+              <Clock className="h-3 w-3" />
               {t("influencer.earnings.requestPending", "Request pending")}
             </Badge>
           )}
+          <Button asChild className="gap-2">
+            <Link to="/agent/messages">
+              <MessageSquare className="h-4 w-4" />
+              {t("agent.openChatForPayout", "Open chat to request payout")}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

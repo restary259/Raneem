@@ -2,7 +2,7 @@ import * as React from "npm:react@18.3.1";
 import { renderAsync } from "npm:@react-email/components@0.0.22";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { TEMPLATES } from "../_shared/transactional-email-templates/registry.ts";
+import { TEMPLATES, FALLBACK_TEMPLATE } from "../_shared/transactional-email-templates/registry.ts";
 import { requireAuth } from "../_shared/auth.ts";
 
 // Configuration baked in at scaffold time — do NOT change these manually.
@@ -92,20 +92,16 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 1. Look up template from registry (early — needed to resolve recipient)
-  const template = TEMPLATES[templateName];
-
+  // 1. Look up template from registry. If the requested template does not
+  // exist, fall back to the branded generic account-invitation template so
+  // no invitation email ever sends as unbranded/plain text. This is the
+  // system-wide safety net for invitation emails.
+  let template = TEMPLATES[templateName];
+  let usedFallback = false;
   if (!template) {
-    console.error("Template not found in registry", { templateName });
-    return new Response(
-      JSON.stringify({
-        error: `Template '${templateName}' not found. Available: ${Object.keys(TEMPLATES).join(", ")}`,
-      }),
-      {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+    console.warn("Template not found in registry — using branded fallback", { templateName });
+    template = FALLBACK_TEMPLATE;
+    usedFallback = true;
   }
 
   // Resolve effective recipient: template-level `to` takes precedence over
