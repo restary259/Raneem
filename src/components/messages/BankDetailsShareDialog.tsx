@@ -34,12 +34,12 @@ export default function BankDetailsShareDialog({
   const canSend = hasBankDetails(details);
 
   const fields: { key: string; label: string; value: string; mono?: boolean }[] = [
-    { key: "bankName", label: t("chat.bankShare.bankName"), value: details?.bankName ?? "" },
-    { key: "branch", label: t("chat.bankShare.branch"), value: details?.bankBranch ?? "" },
-    { key: "account", label: t("chat.bankShare.account"), value: details?.bankAccount ?? "", mono: true },
-    { key: "iban", label: t("chat.bankShare.iban"), value: details?.iban ?? "", mono: true },
-    { key: "bic", label: t("chat.bankShare.bic"), value: details?.bic ?? "", mono: true },
-    { key: "country", label: t("chat.bankShare.country"), value: details?.bankCountry ?? "" },
+    { key: "bankName", label: t("chat.bankShare.bankName", "Bank name"), value: details?.bankName ?? "" },
+    { key: "branch", label: t("chat.bankShare.branch", "Branch number"), value: details?.bankBranch ?? "" },
+    { key: "account", label: t("chat.bankShare.account", "Account number"), value: details?.bankAccount ?? "", mono: true },
+    { key: "iban", label: t("chat.bankShare.iban", "IBAN"), value: details?.iban ?? "", mono: true },
+    { key: "bic", label: t("chat.bankShare.bic", "BIC / SWIFT"), value: details?.bic ?? "", mono: true },
+    { key: "country", label: t("chat.bankShare.country", "Country"), value: details?.bankCountry ?? "" },
   ];
 
   return (
@@ -48,9 +48,9 @@ export default function BankDetailsShareDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Landmark className="h-5 w-5 text-primary" />
-            {t("chat.bankShare.title")}
+            {t("chat.bankShare.title", "Bank details")}
           </DialogTitle>
-          <DialogDescription>{t("chat.bankShare.reviewHint")}</DialogDescription>
+          <DialogDescription>{t("chat.bankShare.reviewHint", "Review your saved bank details below. They will be sent to Administration for processing your payouts.")}</DialogDescription>
         </DialogHeader>
 
         {!details ? (
@@ -75,7 +75,7 @@ export default function BankDetailsShareDialog({
             </div>
 
             {!canSend && (
-              <p className="text-xs text-amber-700">{t("chat.bankShare.empty")}</p>
+              <p className="text-xs text-amber-700">{t("chat.bankShare.empty", "No bank details saved yet. Add your bank details in Bank details first.")}</p>
             )}
           </div>
         )}
@@ -86,7 +86,7 @@ export default function BankDetailsShareDialog({
           </Button>
           <Button disabled={!canSend || submitting} onClick={onConfirm}>
             {submitting && <Loader2 className="me-1 h-4 w-4 animate-spin" />}
-            {t("chat.bankShare.send")}
+            {t("chat.bankShare.send", "Send details")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -188,7 +188,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
         preview: t("chat.bankShare.emailPreview", "Bank details"),
       });
       setBankShareOpen(false);
-      toast({ description: t("chat.bankShare.sent") });
+      toast({ description: t("chat.bankShare.sent", "Bank details sent to Administration") });
       await load();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });

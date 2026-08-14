@@ -17,22 +17,22 @@ export default function BankDetailsCard({ details }: Props) {
   const { toast } = useToast();
 
   const fields: { key: string; label: string; value: string; mono?: boolean }[] = [
-    { key: "bankName", label: t("chat.bankShare.bankName"), value: details.bankName },
-    { key: "branch", label: t("chat.bankShare.branch"), value: details.bankBranch },
-    { key: "account", label: t("chat.bankShare.account"), value: details.bankAccount, mono: true },
-    { key: "iban", label: t("chat.bankShare.iban"), value: details.iban, mono: true },
-    { key: "bic", label: t("chat.bankShare.bic"), value: details.bic, mono: true },
-    { key: "country", label: t("chat.bankShare.country"), value: details.bankCountry },
+    { key: "bankName", label: t("chat.bankShare.bankName", "Bank name"), value: details.bankName },
+    { key: "branch", label: t("chat.bankShare.branch", "Branch number"), value: details.bankBranch },
+    { key: "account", label: t("chat.bankShare.account", "Account number"), value: details.bankAccount, mono: true },
+    { key: "iban", label: t("chat.bankShare.iban", "IBAN"), value: details.iban, mono: true },
+    { key: "bic", label: t("chat.bankShare.bic", "BIC / SWIFT"), value: details.bic, mono: true },
+    { key: "country", label: t("chat.bankShare.country", "Country"), value: details.bankCountry },
   ];
 
   const humanBlock = fields
     .map((f) => `${f.label}: ${f.value || "—"}`)
     .join("\n");
 
-  const copy = (text: string, msg = t("chat.bankShare.copied")) => {
+  const copy = (text: string, msg = t("chat.bankShare.copied", "Copied")) => {
     navigator.clipboard.writeText(text).then(
       () => toast({ description: msg }),
-      () => toast({ variant: "destructive", description: t("chat.bankShare.copied") }),
+      () => toast({ variant: "destructive", description: t("chat.bankShare.copied", "Copied") }),
     );
   };
 
@@ -40,7 +40,7 @@ export default function BankDetailsCard({ details }: Props) {
     <div className="min-w-[240px] space-y-2 rounded-xl border border-primary/25 bg-background/70 p-3">
       <div className="flex items-center gap-1.5 text-sm font-semibold">
         <Landmark className="h-4 w-4 text-primary" />
-        {t("chat.bankShare.title")}
+        {t("chat.bankShare.title", "Bank details")}
       </div>
 
       <div className="space-y-1.5 text-sm">
@@ -61,7 +61,7 @@ export default function BankDetailsCard({ details }: Props) {
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6 shrink-0"
-                aria-label={t("chat.bankShare.copyAll")}
+                aria-label={t("chat.bankShare.copyAll", "Copy all")}
                 onClick={() => copy(f.value)}
               >
                 <Copy className="h-3.5 w-3.5" />
@@ -71,9 +71,9 @@ export default function BankDetailsCard({ details }: Props) {
         ))}
       </div>
 
-      <Button size="sm" variant="outline" className="w-full" onClick={() => copy(humanBlock, t("chat.bankShare.copiedAll", "Copied all"))}>
+      <Button size="sm" variant="outline" className="w-full" onClick={() => copy(humanBlock, t("chat.bankShare.copiedAll", "All bank details copied"))}>
         <Copy className="me-1.5 h-3.5 w-3.5" />
-        {t("chat.bankShare.copyAll")}
+        {t("chat.bankShare.copyAll", "Copy all")}
       </Button>
     </div>
   );
