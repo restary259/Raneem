@@ -50,6 +50,7 @@ export default function AgentRecruitPage() {
   const [city, setCity] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ email: string; role: RecruitRole; mode: DeliveryMode; tempPassword?: string } | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [canInvite, setCanInvite] = useState(false);
   const [canCreateManual, setCanCreateManual] = useState(false);
