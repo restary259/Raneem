@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useTranslation } from "react-i18next";
@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Users, Search } from "lucide-react";
-import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { LoadingState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { STATUS_COLORS } from "@/lib/caseStatus";
@@ -14,6 +14,7 @@ import { STATUS_COLORS } from "@/lib/caseStatus";
 export default function PartnerStudentsPage() {
   const [cases, setCases] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 250);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const { t, i18n } = useTranslation("dashboard");
@@ -70,21 +71,29 @@ export default function PartnerStudentsPage() {
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
 
-  if (!userId || isLoading) return <DashboardLoading />;
-
   const statusLabel = (s: string) => {
     return t(`partner.status.${s}`, { defaultValue: s });
   };
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
-  const filtered = cases.filter((c) => {
-    const matchSearch = !search || firstNameOnly(c.full_name).toLowerCase().includes(search.toLowerCase());
+  const filtered = useMemo(() => cases.filter((c) => {
+    const matchSearch = !debouncedSearch || firstNameOnly(c.full_name).toLowerCase().includes(debouncedSearch.toLowerCase());
     const matchStatus = statusFilter === "all" || c.status === statusFilter;
     return matchSearch && matchStatus;
-  });
+  }), [cases, debouncedSearch, statusFilter]);
+
+  const pagination = usePagination(filtered, 25);
 
   const statuses = [...new Set(cases.map((c) => c.status))];
+
+  if (!userId || isLoading) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
+        <LoadingState variant="table" rows={6} label={t("common.loading", "Loading")} />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
@@ -143,7 +152,7 @@ export default function PartnerStudentsPage() {
           </div>
           {/* Rows */}
           <div className="divide-y divide-border bg-background">
-            {filtered.map((c) => (
+            {pagination.items.map((c) => (
               <div
                 key={c.id}
                 className="grid grid-cols-3 items-center px-4 py-3 text-sm hover:bg-muted/30 transition-colors"
@@ -158,6 +167,7 @@ export default function PartnerStudentsPage() {
               </div>
             ))}
           </div>
+          <TablePagination pagination={pagination} />
         </div>
       )}
 

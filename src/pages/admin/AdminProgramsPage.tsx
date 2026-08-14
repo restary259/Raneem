@@ -29,6 +29,23 @@ import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/com
 import InsuranceRatesEditor from "@/components/admin/InsuranceRatesEditor";
 import { AgePriceTier, parseAgeTiers, formatAgeLadder } from "@/lib/insurancePricing";
 
+import { toneClasses } from "@/lib/statusTokens";
+
+const TONE = {
+  new: toneClasses("new").chip,
+  appointment: toneClasses("appointment").chip,
+  payment: toneClasses("payment").chip,
+  enrolled: toneClasses("enrolled").chip,
+} as const;
+
+const TONE_TEXT = {
+  submitted: toneClasses("submitted").text,
+  payment: toneClasses("payment").text,
+  enrolled: toneClasses("enrolled").text,
+} as const;
+
+
+
 
 function groupBySchool<T extends { school_id: string | null }>(
   items: T[],
@@ -460,9 +477,9 @@ const AdminProgramsPage = () => {
 
 
   const tierColor: Record<string, string> = {
-    basic: "bg-blue-100 text-blue-700",
-    standard: "bg-purple-100 text-purple-700",
-    premium: "bg-amber-100 text-amber-700",
+    basic: toneClasses("new").chip,
+    standard: toneClasses("appointment").chip,
+    premium: toneClasses("payment").chip,
   };
 
   return (
@@ -728,28 +745,28 @@ const AdminProgramsPage = () => {
                           </span>
                         )}
                         {p.price != null && (
-                          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
                             💰 {p.price.toLocaleString('en-US')} {p.currency}
                           </span>
                         )}
                         {parseTiers(p.price_tiers).length > 0 && (
-                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
                             {t('admin.programs.tiersCount', { count: parseTiers(p.price_tiers).length })}
                           </span>
                         )}
                         {p.duration_in_months && (
-                          <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.new}`}>
                             <Clock className="h-3 w-3 me-1" />
                             {p.duration_in_months}mo
                           </span>
                         )}
                         {p.lessons_per_week && (
-                          <span className="inline-flex items-center rounded-full bg-purple-500/10 px-2 py-0.5 text-xs text-purple-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.appointment}`}>
                             {p.lessons_per_week} {t('admin.programs.lessonsWk')}
                           </span>
                         )}
                         {p.fixed_start_day_of_month && (
-                          <span className="inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-xs text-orange-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
                             {t('admin.programs.startsDay', { day: p.fixed_start_day_of_month })}
                           </span>
                         )}
@@ -880,8 +897,8 @@ const AdminProgramsPage = () => {
                 <CardContent className="p-0">
                   <div className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
-                        <Building2 className="h-4 w-4 text-indigo-600" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-submitted)/0.12)]">
+                        <Building2 className={`h-4 w-4 ${TONE_TEXT.submitted}`} />
                       </div>
                       <div>
                         <p className="text-sm font-semibold">{s.name_en}</p>
@@ -1083,7 +1100,7 @@ const AdminProgramsPage = () => {
             {groupBySchool(accommodations, schools).map((group) => (
               <div key={group.key} className="space-y-3">
                 <div className="flex items-center gap-2 border-b pb-1">
-                  <Building2 className="h-4 w-4 text-amber-600" />
+                  <Building2 className={`h-4 w-4 ${TONE_TEXT.payment}`} />
                   <h3 className="text-sm font-semibold">{group.label}</h3>
                   <span className="text-xs text-muted-foreground">({group.items.length})</span>
                 </div>
@@ -1098,8 +1115,8 @@ const AdminProgramsPage = () => {
                   <CardContent className="p-0">
                     <div className="p-4 space-y-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-                          <Home className="h-4 w-4 text-amber-600" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-payment)/0.12)]">
+                          <Home className={`h-4 w-4 ${TONE_TEXT.payment}`} />
                         </div>
                         <div>
                           <p className="text-sm font-semibold">{a.name_en}</p>
@@ -1113,7 +1130,7 @@ const AdminProgramsPage = () => {
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {a.price != null && (
-                          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
                             💰 {a.price.toLocaleString('en-US')} {a.currency}/mo
                           </span>
                         )}
@@ -1128,17 +1145,17 @@ const AdminProgramsPage = () => {
                           </span>
                         )}
                         {a.deposit != null && (
-                          <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.new}`}>
                             {t('admin.programs.labelDeposit')}: {a.deposit.toLocaleString('en-US')} {a.currency}
                           </span>
                         )}
                         {a.placement_fee != null && (
-                          <span className="inline-flex items-center rounded-full bg-purple-500/10 px-2 py-0.5 text-xs text-purple-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.appointment}`}>
                             {t('admin.programs.labelPlacementFee')}: {a.placement_fee.toLocaleString('en-US')} {a.currency}
                           </span>
                         )}
                         {parseTiers(a.price_tiers).length > 0 && (
-                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
                             {formatTierLadder(parseTiers(a.price_tiers), a.currency, t('admin.programs.weeksShort'))}
                           </span>
                         )}
@@ -1372,8 +1389,8 @@ const AdminProgramsPage = () => {
                 <CardContent className="p-0">
                   <div className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-500/10">
-                        <Shield className="h-4 w-4 text-green-600" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-enrolled)/0.12)]">
+                        <Shield className={`h-4 w-4 ${TONE_TEXT.enrolled}`} />
                       </div>
                       <div>
                         <p className="text-sm font-semibold">{ins.name}</p>
@@ -1383,7 +1400,7 @@ const AdminProgramsPage = () => {
                       </div>
                     </div>
                     {parseAgeTiers(ins.age_price_tiers).length > 0 ? (
-                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
                         💰 {formatAgeLadder(
                           parseAgeTiers(ins.age_price_tiers),
                           ins.currency === "EUR" ? "€" : "₪",
@@ -1391,11 +1408,11 @@ const AdminProgramsPage = () => {
                         )}
                       </span>
                     ) : ins.price > 0 ? (
-                      <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
                         💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.payment}`}>
                         {t('admin.programs.noPriceSet')}
                       </span>
                     )}

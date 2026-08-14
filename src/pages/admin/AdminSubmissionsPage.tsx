@@ -530,7 +530,7 @@ const AdminSubmissionsPage = () => {
         >
           {t("admin.submissions.tabCompleted", "Completed")}
           <span
-            className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "completed" ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"}`}
+            className={`ms-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === "completed" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
           >
             {completedCases.length}
           </span>
@@ -684,8 +684,8 @@ const AdminSubmissionsPage = () => {
                     <Badge
                       className={
                         selected.submission?.payment_confirmed
-                          ? "bg-green-100 text-green-800"
-                          : "bg-amber-100 text-amber-800"
+                          ? "bg-primary/10 text-primary"
+                          : "bg-amber-500/10 text-amber-700"
                       }
                     >
                       {selected.submission?.payment_confirmed
@@ -921,7 +921,7 @@ const AdminSubmissionsPage = () => {
               {splitPreview.partners.length === 0 && (
                 <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
                   <span className="text-muted-foreground">{t("admin.commission.partner", "Partner Commission")}</span>
-                  <span className="font-semibold text-orange-600">-₪0</span>
+                  <span className="font-semibold text-destructive">-₪0</span>
                 </div>
               )}
               {splitPreview.partners.map((p) => (
@@ -929,12 +929,12 @@ const AdminSubmissionsPage = () => {
                   <span className="text-muted-foreground">
                     {t("admin.commission.partner", "Partner")}: {p.name}
                   </span>
-                  <span className="font-semibold text-orange-600">-₪{p.amount.toLocaleString("en-US")}</span>
+                  <span className="font-semibold text-destructive">-₪{p.amount.toLocaleString("en-US")}</span>
                 </div>
               ))}
               <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
                 <span className="text-muted-foreground">{t("admin.commission.teamMember", "Team Commission")}</span>
-                <span className="font-semibold text-purple-600">
+                <span className="font-semibold text-destructive">
                   -₪{splitPreview.teamCommission.toLocaleString("en-US")}
                 </span>
               </div>

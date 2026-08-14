@@ -15,6 +15,7 @@ import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { formatDateTime } from '@/utils/dateUtils';
 import { formatILS } from '@/lib/money';
 import { CaseStatus } from '@/lib/caseStatus';
+import { toneClasses } from '@/lib/statusTokens';
 
 interface StepRow {
   id: string;
@@ -77,7 +78,7 @@ export default function StudentNextStepsPage() {
         title: t('student.next.completeProfile', 'Complete your profile'),
         detail: t('student.next.completeProfileDetail', 'Date of birth and emergency contact are required.'),
         href: '/student/profile',
-        tone: 'text-amber-600',
+        tone: toneClasses('payment').text,
       });
     }
 
@@ -95,7 +96,7 @@ export default function StudentNextStepsPage() {
         title: t('student.next.uploadDocuments', 'Upload your documents'),
         detail: t('student.next.uploadDocumentsDetail', 'Start with your passport copy and certificates.'),
         href: '/student/documents',
-        tone: 'text-blue-600',
+        tone: toneClasses('contacted').text,
       });
     }
 
@@ -150,7 +151,7 @@ export default function StudentNextStepsPage() {
           title: t('student.next.prepareVisa', 'Prepare your visa file'),
           detail: t('student.next.prepareVisaDetail', 'Fill in the visa form fields and upload the required proofs.'),
           href: '/student/visa',
-          tone: 'text-teal-600',
+          tone: toneClasses('submitted').text,
         });
       }
     }
@@ -203,7 +204,7 @@ export default function StudentNextStepsPage() {
         <CardContent className="p-0">
           {steps.length === 0 ? (
             <div className="py-12 text-center">
-              <CheckCircle2 className="h-10 w-10 text-emerald-500/50 mx-auto mb-3" />
+              <CheckCircle2 className={`h-10 w-10 opacity-50 ${toneClasses("enrolled").text} mx-auto mb-3`} />
               <p className="text-sm text-muted-foreground">
                 {t('student.next.allClear', 'You are all caught up. We will notify you when something is needed.')}
               </p>

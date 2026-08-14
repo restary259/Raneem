@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CalendarDays, Clock, RotateCcw, Users } from "lucide-react";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
+import { LoadingState, EmptyState } from "@/components/shell";
 
 const STALE_DAYS = 7;
 const DAY_MS = 86_400_000;
@@ -66,6 +67,7 @@ export default function TeamWorkPage() {
 
   const fetchData = useCallback(async () => {
     if (!user) return;
+    let ignore = false;
     setLoading(true);
     try {
       const dayStart = new Date();
@@ -126,6 +128,7 @@ export default function TeamWorkPage() {
       if (casesRes.error) throw casesRes.error;
       if (staleRes.error) throw staleRes.error;
 
+      if (ignore) return;
       setTodayAppts((todayRes.data as unknown as ApptRow[]) ?? []);
       setOverdueAppts((overdueRes.data as unknown as ApptRow[]) ?? []);
       setOverdueCount(overdueCountRes.count ?? 0);
@@ -151,18 +154,22 @@ export default function TeamWorkPage() {
       ]);
       if (returnedRes.error) throw returnedRes.error;
       if (returnedCountRes.error) throw returnedCountRes.error;
+      if (ignore) return;
       setReturned((returnedRes.data as unknown as ReturnedRow[]) ?? []);
       setReturnedCount(returnedCountRes.count ?? 0);
       void caseIds;
     } catch (err) {
       console.error("TeamWorkPage fetchData error:", err);
     } finally {
-      setLoading(false);
+      if (!ignore) setLoading(false);
     }
+    return () => { ignore = true; };
   }, [user]);
 
   useEffect(() => {
-    fetchData();
+    let cleanup: (() => void) | undefined;
+    fetchData().then((fn) => { cleanup = fn; });
+    return () => { cleanup?.(); };
   }, [fetchData]);
 
   const dateStr = new Date().toLocaleDateString("en-US", {
@@ -188,7 +195,7 @@ export default function TeamWorkPage() {
       icon: RotateCcw,
       label: t("team.work.statReturned", "Returned by admin"),
       value: returnedCount,
-      tone: "text-amber-600",
+      tone: "text-[hsl(var(--status-payment))]",
     },
     {
       icon: Users,
@@ -227,10 +234,10 @@ export default function TeamWorkPage() {
       </div>
 
       {returned.length > 0 && (
-        <Card className="border-amber-500/50 bg-amber-500/5">
+        <Card className="border-[hsl(var(--status-payment)/0.5)] bg-[hsl(var(--status-payment)/0.05)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <RotateCcw className="h-4 w-4 text-amber-600" />
+              <RotateCcw className="h-4 w-4 text-[hsl(var(--status-payment))]" />
               {t("team.work.returnedTitle", "Returned by admin — changes requested")}
             </CardTitle>
           </CardHeader>
@@ -238,7 +245,7 @@ export default function TeamWorkPage() {
             {returned.map((r) => (
               <div
                 key={r.id}
-                className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border bg-background p-3"
+                className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border bg-background p-3 transition-colors hover:bg-muted/40"
               >
                 <div className="min-w-0">
                   <div className="font-medium truncate">{r.case?.full_name ?? "—"}</div>
@@ -299,19 +306,15 @@ export default function TeamWorkPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">
-                {t("common.loading", "Loading...")}
-              </p>
+              <LoadingState variant="rows" rows={3} label={t("common.loading", "Loading...")} />
             ) : todayAppts.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">
-                {t("team.work.noAppointments", "No appointments today")}
-              </p>
+              <EmptyState title={t("team.work.noAppointments", "No appointments today")} className="py-6" />
             ) : (
               <div className="space-y-2">
                 {todayAppts.map((a) => (
                   <div
                     key={a.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border p-3"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border p-3 transition-colors hover:bg-muted/40"
                   >
                     <div className="min-w-0">
                       <div className="font-medium truncate">{a.case?.full_name ?? "—"}</div>
@@ -353,19 +356,15 @@ export default function TeamWorkPage() {
         <Card className="min-w-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="h-4 w-4 text-amber-600" />
+              <Clock className="h-4 w-4 text-[hsl(var(--status-payment))]" />
               {t("team.work.staleTitle", "Cases with no activity")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">
-                {t("common.loading", "Loading...")}
-              </p>
+              <LoadingState variant="rows" rows={3} label={t("common.loading", "Loading...")} />
             ) : staleCases.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">
-                {t("team.work.noStale", "Every case has recent activity")}
-              </p>
+              <EmptyState title={t("team.work.noStale", "Every case has recent activity")} className="py-6" />
             ) : (
               <div className="space-y-2">
                 {staleCases.map((c) => {
@@ -375,7 +374,7 @@ export default function TeamWorkPage() {
                   return (
                     <div
                       key={c.id}
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border p-3"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-border p-3 transition-colors hover:bg-muted/40"
                     >
                       <div className="min-w-0">
                         <div className="font-medium truncate">{c.full_name}</div>

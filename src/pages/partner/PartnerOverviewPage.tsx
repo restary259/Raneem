@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard, CalendarDays } from "lucide-react";
-import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { LoadingState } from "@/components/shell";
 import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
 import RateOfferInbox from "@/components/partner/RateOfferInbox";
 
@@ -14,15 +14,15 @@ import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 const STATUS_COLOR: Record<string, string> = {
-  new: "bg-slate-100 text-slate-700",
-  contacted: "bg-blue-100 text-blue-700",
-  appointment_scheduled: "bg-purple-100 text-purple-700",
-  profile_completion: "bg-yellow-100 text-yellow-700",
-  payment_confirmed: "bg-emerald-100 text-emerald-700",
-  submitted: "bg-green-100 text-green-700",
-  enrollment_paid: "bg-teal-100 text-teal-700",
-  rejected: "bg-red-100 text-red-700",
-  cancelled: "bg-gray-100 text-gray-500",
+  new: "bg-[hsl(var(--status-new)/0.14)] text-[hsl(var(--status-new))]",
+  contacted: "bg-[hsl(var(--status-contacted)/0.14)] text-[hsl(var(--status-contacted))]",
+  appointment_scheduled: "bg-[hsl(var(--status-appointment)/0.14)] text-[hsl(var(--status-appointment))]",
+  profile_completion: "bg-[hsl(var(--status-profile)/0.14)] text-[hsl(var(--status-profile))]",
+  payment_confirmed: "bg-[hsl(var(--status-payment)/0.14)] text-[hsl(var(--status-payment))]",
+  submitted: "bg-[hsl(var(--status-submitted)/0.14)] text-[hsl(var(--status-submitted))]",
+  enrollment_paid: "bg-[hsl(var(--status-enrolled)/0.14)] text-[hsl(var(--status-enrolled))]",
+  rejected: "bg-destructive/10 text-destructive",
+  cancelled: "bg-muted text-muted-foreground",
 };
 
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
@@ -120,7 +120,14 @@ export default function PartnerOverviewPage() {
   useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription("rewards", () => { if (userId) load(userId); }, !!userId);
 
-  if (!userId || isLoading) return <DashboardLoading />;
+  if (!userId || isLoading) {
+    return (
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6" dir={dir}>
+        <LoadingState variant="kpi" rows={6} label={t("common.loading", "Loading")} />
+        <LoadingState variant="table" rows={6} />
+      </div>
+    );
+  }
 
   const total = cases.length;
   const commissionEligibleCases = isPoolMode
@@ -142,25 +149,25 @@ export default function PartnerOverviewPage() {
       label: t("partner.totalApplications"),
       value: total,
       icon: Users,
-      color: "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-500/15",
+      color: "text-[hsl(var(--status-contacted))] bg-[hsl(var(--status-contacted)/0.1)]",
     },
     {
       label: t("partner.paidCases"),
       value: paid,
       icon: CreditCard,
-      color: "text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/15",
+      color: "text-[hsl(var(--status-enrolled))] bg-[hsl(var(--status-enrolled)/0.1)]",
     },
     {
       label: t("partner.enrolled"),
       value: enrolled,
       icon: Award,
-      color: "text-teal-600 bg-teal-50 dark:text-teal-300 dark:bg-teal-500/15",
+      color: "text-[hsl(var(--status-profile))] bg-[hsl(var(--status-profile)/0.1)]",
     },
     {
       label: t('partner.paidThisMonth', 'Paid This Month'),
       value: `₪${paidThisMonth.toLocaleString('en-US')}`,
       icon: CalendarDays,
-      color: "text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/15",
+      color: "text-[hsl(var(--status-enrolled))] bg-[hsl(var(--status-enrolled)/0.1)]",
     },
     {
       label: t('partner.paidAllTime', 'Paid All Time'),
@@ -172,7 +179,7 @@ export default function PartnerOverviewPage() {
       label: t("partner.perCaseComm"),
       value: `₪${commissionRate.toLocaleString('en-US')}`,
       icon: CheckCircle,
-      color: "text-sky-600 bg-sky-50 dark:text-sky-300 dark:bg-sky-500/15",
+      color: "text-brand bg-brand/10",
     },
 
   ];
@@ -207,7 +214,7 @@ export default function PartnerOverviewPage() {
             {t("partner.projMultiplier", { paid, rate: commissionRate.toLocaleString('en-US') })}
           </p>
           {paidAllTime > 0 && (
-            <p className="text-xs text-emerald-600 mt-1 font-semibold">
+            <p className="text-xs text-[hsl(var(--status-enrolled))] mt-1 font-semibold">
               {t('partner.paidOut', { amount: paidAllTime.toLocaleString('en-US') })}
             </p>
           )}
@@ -323,7 +330,7 @@ export default function PartnerOverviewPage() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {earnsCommission ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(var(--status-enrolled))]">
                               <CheckCircle className="h-3 w-3 shrink-0" />
                               ₪{commissionRate.toLocaleString('en-US')} {t("partner.projLabel")}
                             </span>

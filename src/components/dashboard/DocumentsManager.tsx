@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Upload, File, Download, Trash2, Plus, Search, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
+import { LoadingState, EmptyState, ErrorState, TablePagination, usePagination, useDebouncedValue } from "@/components/shell";
+import { toneClasses } from "@/lib/statusTokens";
 
 interface Document {
   id: string;
@@ -67,15 +69,22 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
   const [expiryDate, setExpiryDate] = useState("");
   const [notes, setNotes] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebouncedValue(searchQuery, 250);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
   const { t, i18n } = useTranslation("dashboard");
 
   useEffect(() => {
-    fetchDocuments();
+    let ignore = false;
+    setIsLoading(true);
+    fetchDocuments(ignore);
+    return () => {
+      ignore = true;
+    };
   }, [userId]);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (ignore = false) => {
     try {
       const { data, error } = await (supabase as any)
         .from("documents")
@@ -83,11 +92,15 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
         .eq("student_id", userId)
         .order("created_at", { ascending: false });
       if (error) throw error;
+      if (ignore) return;
       setDocuments(data || []);
+      setLoadError(null);
     } catch (error: any) {
+      if (ignore) return;
+      setLoadError(error.message);
       toast({ variant: "destructive", title: t("documents.loadError"), description: error.message });
     } finally {
-      setIsLoading(false);
+      if (!ignore) setIsLoading(false);
     }
   };
 
@@ -230,40 +243,60 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
     return new Date(date) < new Date();
   };
 
-  const filteredDocuments = documents.filter((doc) => {
-    const matchesSearch =
-      !searchQuery ||
-      doc.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.notes?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === "all" || doc.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredDocuments = useMemo(
+    () =>
+      documents.filter((doc) => {
+        const matchesSearch =
+          !debouncedSearch ||
+          doc.file_name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+          doc.notes?.toLowerCase().includes(debouncedSearch.toLowerCase());
+        const matchesCategory = filterCategory === "all" || doc.category === filterCategory;
+        return matchesSearch && matchesCategory;
+      }),
+    [documents, debouncedSearch, filterCategory],
+  );
+
+  const pagination = usePagination(filteredDocuments, 25);
 
   const locale = i18n.language === "ar" ? "ar-SA" : "en-US";
 
-  if (isLoading) return <div className="text-center py-8">{t("documents.loading")}</div>;
+  if (isLoading) return <LoadingState variant="cards" rows={4} label={t("documents.loading")} />;
+
+  if (loadError && documents.length === 0) {
+    return (
+      <ErrorState
+        title={t("documents.loadError")}
+        description={loadError}
+        onRetry={() => {
+          setIsLoading(true);
+          fetchDocuments();
+        }}
+        retryLabel={t("common.retry", "Retry")}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
       {(documents.filter((d) => isExpiringSoon(d.expiry_date)).length > 0 ||
         documents.filter((d) => isExpired(d.expiry_date)).length > 0) && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className={`border ${toneClasses("payment").tint} border-[hsl(var(--status-payment)/0.3)]`}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-5 w-5 text-orange-600" />
-              <h3 className="font-semibold text-orange-800">{t("documents.alerts")}</h3>
+              <AlertTriangle className={`h-5 w-5 ${toneClasses("payment").text}`} />
+              <h3 className={`font-semibold ${toneClasses("payment").text}`}>{t("documents.alerts")}</h3>
             </div>
             {documents
               .filter((d) => isExpired(d.expiry_date))
               .map((d) => (
-                <p key={d.id} className="text-sm text-red-600">
+                <p key={d.id} className={`text-sm ${toneClasses("danger").text}`}>
                   ⚠️ {d.file_name} - {t("documents.expired")}
                 </p>
               ))}
             {documents
               .filter((d) => isExpiringSoon(d.expiry_date))
               .map((d) => (
-                <p key={d.id} className="text-sm text-orange-600">
+                <p key={d.id} className={`text-sm ${toneClasses("payment").text}`}>
                   ⏰ {d.file_name} -{" "}
                   {t("documents.expiringSoon", { date: new Date(d.expiry_date!).toLocaleDateString(locale) })}
                 </p>
@@ -356,7 +389,7 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -380,57 +413,66 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
           </div>
 
           {filteredDocuments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {documents.length === 0 ? t("documents.noDocuments") : t("documents.noResults")}
-            </div>
+            <EmptyState
+              icon={File}
+              title={documents.length === 0 ? t("documents.noDocuments") : t("documents.noResults")}
+            />
           ) : (
-            <div className="space-y-3">
-              {filteredDocuments.map((doc) => (
-                <Card
-                  key={doc.id}
-                  className={`border ${isExpired(doc.expiry_date) ? "border-red-300 bg-red-50" : isExpiringSoon(doc.expiry_date) ? "border-orange-300 bg-orange-50" : "border-gray-200"}`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2 bg-blue-100 rounded-lg shrink-0">
-                          <File className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-medium truncate">{doc.file_name}</h3>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
-                              {t(`documents.categories.${doc.category}`, doc.category)}
-                            </Badge>
-                            <span className="text-xs text-gray-500">{formatFileSize(doc.file_size)}</span>
-                            {doc.expiry_date && (
-                              <span
-                                className={`text-xs ${isExpired(doc.expiry_date) ? "text-red-600 font-bold" : isExpiringSoon(doc.expiry_date) ? "text-orange-600" : "text-gray-500"}`}
-                              >
-                                {isExpired(doc.expiry_date)
-                                  ? t("documents.expiredLabel")
-                                  : t("documents.expiresLabel", {
-                                      date: new Date(doc.expiry_date).toLocaleDateString(locale),
-                                    })}
-                              </span>
-                            )}
+            <>
+              <div className="space-y-3">
+                {pagination.items.map((doc) => {
+                  const expired = isExpired(doc.expiry_date);
+                  const expiringSoon = isExpiringSoon(doc.expiry_date);
+                  const tone = expired ? toneClasses("danger") : expiringSoon ? toneClasses("payment") : null;
+                  return (
+                    <Card
+                      key={doc.id}
+                      className={`border transition-colors ${tone ? `${tone.tint} border-[hsl(var(--status-${expired ? "danger" : "payment"})/0.3)]` : "border-border"}`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between flex-wrap gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                              <File className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="min-w-0">
+                              <h3 className="font-medium truncate">{doc.file_name}</h3>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  {t(`documents.categories.${doc.category}`, doc.category)}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">{formatFileSize(doc.file_size)}</span>
+                                {doc.expiry_date && (
+                                  <span
+                                    className={`text-xs ${expired ? `${toneClasses("danger").text} font-bold` : expiringSoon ? toneClasses("payment").text : "text-muted-foreground"}`}
+                                  >
+                                    {expired
+                                      ? t("documents.expiredLabel")
+                                      : t("documents.expiresLabel", {
+                                          date: new Date(doc.expiry_date).toLocaleDateString(locale),
+                                        })}
+                                  </span>
+                                )}
+                              </div>
+                              {doc.notes && <p className="text-xs text-muted-foreground mt-1 truncate">{doc.notes}</p>}
+                            </div>
                           </div>
-                          {doc.notes && <p className="text-xs text-gray-500 mt-1 truncate">{doc.notes}</p>}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button variant="outline" size="sm" className="min-h-[44px] min-w-[44px]" onClick={() => handleDownload(doc)}>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <Button variant="destructive" size="sm" className="min-h-[44px] min-w-[44px]" onClick={() => handleDelete(doc)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button variant="outline" size="sm" onClick={() => handleDownload(doc)}>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(doc)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+              <TablePagination pagination={pagination} />
+            </>
           )}
         </CardContent>
       </Card>

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { DollarSign, Award, Clock, Info, History, CheckCircle2, Hourglass, Send, Lock } from "lucide-react";
-import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { LoadingState } from "@/components/shell";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useToast } from "@/hooks/use-toast";
@@ -142,7 +142,14 @@ export default function PartnerEarningsPage() {
   useRealtimeSubscription("rewards", () => { if (userId) { load(userId); refetchEarnings(); } }, !!userId);
   useRealtimeSubscription("payout_requests", () => { if (userId) { load(userId); refetchEarnings(); } }, !!userId);
 
-  if (!userId || isLoading) return <DashboardLoading />;
+  if (!userId || isLoading) {
+    return (
+      <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6" dir={dir}>
+        <LoadingState variant="kpi" rows={3} label={t("common.loading", "Loading")} />
+        <LoadingState variant="table" rows={5} />
+      </div>
+    );
+  }
 
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
@@ -174,18 +181,18 @@ export default function PartnerEarningsPage() {
 
   const getCaseRewardInfo = (caseId: string) => {
     const reward = rewards.find((r: any) => r.admin_notes?.includes(caseId));
-    if (!reward) return { label: isAr ? "متوقع" : "Projected", color: "bg-yellow-100 text-yellow-800" };
-    if (reward.status === "paid") return { label: isAr ? "مدفوع" : "Paid", color: "bg-emerald-100 text-emerald-800" };
-    if (reward.status === "approved") return { label: isAr ? "طلب صرف مقدم" : "Payout Requested", color: "bg-blue-100 text-blue-800" };
+    if (!reward) return { label: isAr ? "متوقع" : "Projected", color: "bg-[hsl(var(--status-payment)/0.14)] text-[hsl(var(--status-payment))]" };
+    if (reward.status === "paid") return { label: isAr ? "مدفوع" : "Paid", color: "bg-[hsl(var(--status-enrolled)/0.14)] text-[hsl(var(--status-enrolled))]" };
+    if (reward.status === "approved") return { label: isAr ? "طلب صرف مقدم" : "Payout Requested", color: "bg-[hsl(var(--status-contacted)/0.14)] text-[hsl(var(--status-contacted))]" };
     const age = (now.getTime() - new Date(reward.created_at).getTime()) / (1000 * 60 * 60 * 24);
     if (age < LOCK_DAYS) {
       const daysLeft = Math.ceil(LOCK_DAYS - age);
       return {
         label: isAr ? `مقفل (${daysLeft} يوم)` : `Locked (${daysLeft}d)`,
-        color: "bg-gray-100 text-gray-600",
+        color: "bg-muted text-muted-foreground",
       };
     }
-    return { label: isAr ? "متاح للصرف" : "Ready for Payout", color: "bg-orange-100 text-orange-800" };
+    return { label: isAr ? "متاح للصرف" : "Ready for Payout", color: "bg-brand/10 text-brand" };
   };
 
   const caseStageLabel = (s: string) => {
@@ -198,9 +205,9 @@ export default function PartnerEarningsPage() {
   };
 
   const caseStageColor: Record<string, string> = {
-    payment_confirmed: "bg-amber-100 text-amber-800",
-    submitted: "bg-cyan-100 text-cyan-800",
-    enrollment_paid: "bg-green-100 text-green-800",
+    payment_confirmed: "bg-[hsl(var(--status-payment)/0.14)] text-[hsl(var(--status-payment))]",
+    submitted: "bg-[hsl(var(--status-submitted)/0.14)] text-[hsl(var(--status-submitted))]",
+    enrollment_paid: "bg-[hsl(var(--status-enrolled)/0.14)] text-[hsl(var(--status-enrolled))]",
   };
 
   return (
@@ -223,7 +230,7 @@ export default function PartnerEarningsPage() {
         )}
 
         {hasOpenRequest && (
-          <div className="flex items-center gap-1.5 text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-full px-3 py-1.5">
+          <div className="flex items-center gap-1.5 text-xs text-[hsl(var(--status-contacted))] bg-[hsl(var(--status-contacted)/0.1)] border border-[hsl(var(--status-contacted)/0.3)] rounded-full px-3 py-1.5">
             <Hourglass className="h-3.5 w-3.5" />
             {isAr ? "طلب صرف قيد المراجعة" : "Payout request under review"}
           </div>
@@ -271,7 +278,7 @@ export default function PartnerEarningsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Hourglass className="h-4 w-4 text-orange-500" />
+              <Hourglass className="h-4 w-4 text-[hsl(var(--status-payment))]" />
               <span className="text-xs">{isAr ? "في الانتظار" : "Awaiting Payout"}</span>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">
@@ -285,7 +292,7 @@ export default function PartnerEarningsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 text-[hsl(var(--status-enrolled))]" />
               <span className="text-xs">{isAr ? "مدفوع" : "Paid Out"}</span>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">
@@ -457,8 +464,8 @@ export default function PartnerEarningsPage() {
                       </p>
                     </div>
                     <div className="text-end">
-                      <p className="font-bold text-emerald-600">₪{Number(r.amount).toLocaleString("en-US")}</p>
-                      <Badge className="text-xs bg-emerald-100 text-emerald-800">{t("partner.paymentHistoryBadge")}</Badge>
+                      <p className="font-bold text-[hsl(var(--status-enrolled))]">₪{Number(r.amount).toLocaleString("en-US")}</p>
+                      <Badge className="text-xs bg-[hsl(var(--status-enrolled)/0.14)] text-[hsl(var(--status-enrolled))]">{t("partner.paymentHistoryBadge")}</Badge>
                     </div>
                   </div>
                 );

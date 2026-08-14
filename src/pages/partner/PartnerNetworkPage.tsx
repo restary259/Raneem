@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import { LoadingState, usePagination, TablePagination } from "@/components/shell";
 import RateOfferDialog from "@/components/partner/RateOfferDialog";
 import { Crown, Copy, Check, Users, Megaphone } from "lucide-react";
 
@@ -103,9 +103,23 @@ export default function PartnerNetworkPage() {
     toast({ title: t("master.announceSent", "Announcement sent"), description: `${data ?? 0}` });
   };
 
-  if (masterLoading) return <DashboardLoading />;
+  if (masterLoading) {
+    return (
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
+        <LoadingState variant="rows" rows={4} label={t("common.loading", "Loading")} />
+      </div>
+    );
+  }
   if (!isMaster) return <Navigate to="/partner" replace />;
-  if (loading) return <DashboardLoading />;
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
+        <LoadingState variant="table" rows={6} label={t("common.loading", "Loading")} />
+      </div>
+    );
+  }
+
+  const pagination = usePagination(rows, 25);
 
   const totalOverride = rows.reduce((s, r) => s + Number(r.override_earned || 0), 0);
   const totalStudents = rows.reduce((s, r) => s + Number(r.students_count || 0), 0);
@@ -114,7 +128,7 @@ export default function PartnerNetworkPage() {
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Crown className="h-6 w-6 text-amber-600" />
+          <Crown className="h-6 w-6 text-[hsl(var(--status-payment))]" />
           {t("master.networkTitle", "My network")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -149,7 +163,7 @@ export default function PartnerNetworkPage() {
             <div className="flex gap-2">
               <Input readOnly value={inviteUrl} className="text-xs" />
               <Button variant="outline" size="icon" onClick={copy} aria-label={t("common.copy", "Copy")}>
-                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4 text-[hsl(var(--status-enrolled))]" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
           ) : (
@@ -172,7 +186,7 @@ export default function PartnerNetworkPage() {
             </p>
           ) : (
             <div className="divide-y divide-border">
-              {rows.map((r) => {
+              {pagination.items.map((r) => {
                 const s = splits[r.partner_id];
                 const pending = offers.find(
                   (o) => o.partner_id === r.partner_id && o.status === "pending",
@@ -196,7 +210,7 @@ export default function PartnerNetworkPage() {
                       </p>
                     )}
                     {pending && (
-                      <p className="text-xs text-amber-700 mt-0.5">
+                      <p className="text-xs text-[hsl(var(--status-payment))] mt-0.5">
                         {t("master.offerPending", "Offer pending: {{amount}}", { amount: fmt(pending.partner_amount) })}
                       </p>
                     )}
@@ -223,6 +237,7 @@ export default function PartnerNetworkPage() {
 
             </div>
           )}
+          {rows.length > 0 && <TablePagination pagination={pagination} />}
         </CardContent>
       </Card>
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { formatCurrencyAmount } from "@/lib/money";
 import { validateUploadFile } from "@/lib/uploadRules";
+import { toneClasses } from "@/lib/statusTokens";
 
 interface ServiceLine {
   id: string;
@@ -216,7 +217,7 @@ const StudentFeesPage = () => {
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t("studentFees.referralDiscount", "Referral discount")}</span>
-                <span className="font-medium text-emerald-600" dir="ltr">−{formatCurrencyAmount(fin.referral_discount, "ILS")}</span>
+                <span className={`font-medium ${toneClasses("enrolled").text}`} dir="ltr">−{formatCurrencyAmount(fin.referral_discount, "ILS")}</span>
               </div>
               <div className="flex items-center justify-between border-t border-border pt-1 text-sm font-semibold">
                 <span>{t("studentFees.netTotal", "Net total")}</span>
@@ -261,15 +262,15 @@ const StudentFeesPage = () => {
                     <span className="font-semibold">{formatCurrencyAmount(c.total, c.currency || "EUR")}</span>
                   </div>
                   {payment?.status === "confirmed" || proof?.status === "approved" ? (
-                    <div className="flex items-center gap-2 text-sm text-emerald-700">
+                    <div className={`flex items-center gap-2 text-sm ${toneClasses("enrolled").text}`}>
                       <CheckCircle2 className="h-4 w-4" /> {t("studentFees.paymentConfirmedByAdmin", "Payment confirmed by Admin")}
                     </div>
                   ) : proof?.status === "rejected" ? (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-red-700">
+                      <div className={`flex items-center gap-2 text-sm ${toneClasses("danger").text}`}>
                         <XCircle className="h-4 w-4" /> {t("studentFees.proofRejected", "Payment proof rejected")}
                       </div>
-                      <p className="text-xs text-red-700">
+                      <p className={`text-xs ${toneClasses("danger").text}`}>
                         {proof.rejection_reason || t("studentFees.proofRejectedFallback", "Please upload a replacement proof.")}
                       </p>
                       <label className="inline-flex">
@@ -290,7 +291,7 @@ const StudentFeesPage = () => {
                       </label>
                     </div>
                   ) : proof?.status === "pending" || payment?.status === "submitted" ? (
-                    <div className="flex items-center gap-2 text-sm text-amber-700">
+                    <div className={`flex items-center gap-2 text-sm ${toneClasses("payment").text}`}>
                       <Clock3 className="h-4 w-4" /> {t("studentFees.proofSubmitted", "Proof submitted — awaiting Admin verification")}
                     </div>
                   ) : (

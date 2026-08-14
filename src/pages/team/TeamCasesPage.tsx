@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,7 @@ import {
   CASE_STATUS_LABELS,
   STATUS_COLORS,
 } from '@/lib/caseStatus';
+import { LoadingState, EmptyState, ErrorState, usePagination, TablePagination, useDebouncedValue } from '@/components/shell';
 
 type StatusFilter = 'all' | CaseStatus;
 
@@ -51,7 +52,9 @@ export default function TeamCasesPage() {
   const [cases, setCases] = useState<Case[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 250);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // New case modal — only name + phone required (no appointment at creation)
   const [showNew, setShowNew] = useState(false);
@@ -61,32 +64,42 @@ export default function TeamCasesPage() {
   const [creating, setCreating] = useState(false);
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
 
-  const fetchCases = useCallback(async () => {
-    if (!user) return;
+  const fetchCases = useCallback(() => {
+    if (!user) return () => {};
+    let ignore = false;
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('cases')
-        .select('*')
-        .order('last_activity_at', { ascending: false });
-      if (error) throw error;
-      setCases((data as Case[]) ?? []);
-    } catch {
-      toast({ variant: 'destructive', description: isAr ? 'تعذر تحميل الملفات، حاول مرة أخرى' : 'Failed to load cases, please try again' });
-    } finally {
-      setLoading(false);
-    }
-  }, [user, toast]);
+    setLoadError(false);
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cases')
+          .select('*')
+          .order('last_activity_at', { ascending: false });
+        if (error) throw error;
+        if (!ignore) setCases((data as Case[]) ?? []);
+      } catch {
+        if (!ignore) {
+          setLoadError(true);
+          toast({ variant: 'destructive', description: isAr ? 'تعذر تحميل الملفات، حاول مرة أخرى' : 'Failed to load cases, please try again' });
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    })();
+    return () => { ignore = true; };
+  }, [user, toast, isAr]);
 
-  useEffect(() => { fetchCases(); }, [fetchCases]);
+  useEffect(() => fetchCases(), [fetchCases]);
 
-  const filtered = cases.filter(c => {
+  const filtered = useMemo(() => cases.filter(c => {
     const matchStatus = statusFilter === 'all' || c.status === statusFilter;
-    const matchSearch = !search ||
-      c.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone_number.includes(search);
+    const matchSearch = !debouncedSearch ||
+      c.full_name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      c.phone_number.includes(debouncedSearch);
     return matchStatus && matchSearch;
-  });
+  }), [cases, statusFilter, debouncedSearch]);
+
+  const pagination = usePagination(filtered, 25);
 
   const checkDuplicate = async (phone: string) => {
     if (!phone.trim() || phone.length < 7) return;
@@ -205,45 +218,49 @@ export default function TeamCasesPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-          {isAr ? 'جار التحميل...' : 'Loading...'}
-        </div>
+        <LoadingState variant="cards" rows={6} label={isAr ? 'جار التحميل...' : 'Loading...'} />
+      ) : loadError ? (
+        <ErrorState
+          title={isAr ? 'تعذر تحميل الملفات' : 'Failed to load cases'}
+          onRetry={fetchCases}
+          retryLabel={isAr ? 'إعادة المحاولة' : 'Retry'}
+        />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <p>{isAr ? 'لا توجد ملفات' : 'No cases found'}</p>
-        </div>
+        <EmptyState title={isAr ? 'لا توجد ملفات' : 'No cases found'} />
       ) : (
-        <div className="space-y-2">
-          {filtered.map(c => (
-            <Card
-              key={c.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate(`/team/cases/${c.id}`)}
-            >
-              <CardContent className="p-4">
-                {/* Row 1: name + badge */}
-                <div className="flex items-start justify-between gap-2 min-w-0">
-                  <span className="font-semibold text-sm leading-snug truncate min-w-0 flex-1">
-                    {c.full_name}
-                  </span>
-                  <Badge className={`shrink-0 text-xs ${STATUS_COLORS[c.status] ?? 'bg-muted text-foreground border-border'}`}>
-                    {statusLabel(c.status)}
-                  </Badge>
-                </div>
-                {/* Row 2: phone + timestamp */}
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 flex-wrap">
-                  <Phone className="h-3 w-3 shrink-0" />
-                  <span className="shrink-0">{c.phone_number}</span>
-                  <span className="text-muted-foreground/40 shrink-0">·</span>
-                  <span dir="ltr" className="inline-block whitespace-nowrap">
-                    {formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <>
+          <div className="space-y-2">
+            {pagination.items.map(c => (
+              <Card
+                key={c.id}
+                className="cursor-pointer transition-colors hover:bg-muted/40 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => navigate(`/team/cases/${c.id}`)}
+              >
+                <CardContent className="p-4">
+                  {/* Row 1: name + badge */}
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <span className="font-semibold text-sm leading-snug truncate min-w-0 flex-1">
+                      {c.full_name}
+                    </span>
+                    <Badge className={`shrink-0 text-xs ${STATUS_COLORS[c.status] ?? 'bg-muted text-foreground border-border'}`}>
+                      {statusLabel(c.status)}
+                    </Badge>
+                  </div>
+                  {/* Row 2: phone + timestamp */}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 flex-wrap">
+                    <Phone className="h-3 w-3 shrink-0" />
+                    <span className="shrink-0">{c.phone_number}</span>
+                    <span className="text-muted-foreground/40 shrink-0">·</span>
+                    <span dir="ltr" className="inline-block whitespace-nowrap">
+                      {formatDistanceToNow(new Date(c.last_activity_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <TablePagination pagination={pagination} />
+        </>
       )}
 
       {/* New Case Dialog — only name + phone required */}

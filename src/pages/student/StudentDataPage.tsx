@@ -50,18 +50,22 @@ const StudentDataPage = () => {
   const [exporting, setExporting] = useState(false);
   const [requests, setRequests] = useState<DataRequestRow[]>([]);
 
-  const loadRequests = async () => {
+  const loadRequests = async (ignore = false) => {
     if (!user?.id) return;
     const { data, error } = await supabase
       .from('data_requests')
       .select('id, request_type, status, message, admin_note, created_at')
       .order('created_at', { ascending: false });
-    if (error) return;
+    if (ignore || error) return;
     setRequests((data ?? []) as DataRequestRow[]);
   };
 
   useEffect(() => {
-    loadRequests();
+    let ignore = false;
+    loadRequests(ignore);
+    return () => {
+      ignore = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
