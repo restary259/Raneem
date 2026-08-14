@@ -2,7 +2,8 @@
 import type { Config } from "tailwindcss";
 
 export default {
-	darkMode: ["class"],
+	// `dark:` variants must also fire inside the third (aurora) dark theme.
+	darkMode: ["variant", ["&:is(.dark *)", "&:is(.dark)", "&:is(.aurora *)", "&:is(.aurora)"]],
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
@@ -79,6 +80,10 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			boxShadow: {
+				surface: 'var(--surface-shadow)',
+				'surface-lg': 'var(--surface-shadow-lg)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

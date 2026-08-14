@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toneClasses, toneForStatus } from "@/lib/statusTokens";
 
 interface CaseStatusPipelineProps {
   currentStatus: string;
@@ -31,7 +32,7 @@ export default function CaseStatusPipeline({
                 <div
                   className={cn(
                     "h-0.5 w-4 shrink-0",
-                    isDone ? "bg-green-400" : "bg-border"
+                    isDone ? toneClasses(toneForStatus(stages[idx - 1])).fill : "bg-border"
                   )}
                 />
               )}
@@ -44,15 +45,14 @@ export default function CaseStatusPipeline({
                 <div
                   className={cn(
                     "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors",
-                    isDone
-                      ? "bg-green-100 border-green-400 text-green-700"
-                      : "",
+                    isDone ? cn(toneClasses(toneForStatus(stage)).chip, "border") : "",
                     isCurrent
-                      ? "bg-blue-100 border-blue-400 text-blue-700 ring-2 ring-blue-300"
+                      ? cn(
+                          toneClasses(toneForStatus(stage)).chip,
+                          "border ring-2 ring-current/30",
+                        )
                       : "",
-                    isFuture
-                      ? "bg-gray-100 border-gray-300 text-gray-400"
-                      : ""
+                    isFuture ? "bg-muted border-border text-muted-foreground" : ""
                   )}
                 >
                   {isDone ? (

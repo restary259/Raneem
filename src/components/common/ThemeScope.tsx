@@ -22,6 +22,7 @@ export default function ThemeScope({ children }: { children: React.ReactNode }) 
       defaultTheme="light"
       enableSystem={false}
       storageKey="darb-theme"
+      themes={["light", "dark", "aurora"]}
       forcedTheme={isDashboard ? undefined : "light"}
       disableTransitionOnChange
     >

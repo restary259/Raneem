@@ -48,7 +48,22 @@
     --sidebar-accent-foreground: 222.2 47.6% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 222.2 84% 4.9%;
+
+    /* Semantic pipeline status hues — see src/lib/statusTokens.ts */
+    --status-new: 215 16% 42%;
+    --status-contacted: 217 82% 46%;
+    --status-appointment: 268 62% 52%;
+    --status-profile: 190 78% 34%;
+    --status-payment: 33 90% 40%;
+    --status-submitted: 245 62% 55%;
+    --status-enrolled: 152 62% 32%;
+    --status-danger: 0 72% 47%;
+
+    /* Elevation + motion primitives shared by all themes */
+    --surface-shadow: 0 1px 2px hsl(222 47% 11% / 0.05), 0 8px 24px -12px hsl(222 47% 11% / 0.12);
+    --surface-shadow-lg: 0 2px 4px hsl(222 47% 11% / 0.06), 0 18px 44px -18px hsl(222 47% 11% / 0.22);
   }
+
 
   .dark {
     /* Neutral, low-chroma dark surfaces (Lovable-style) rather than blue slate. */
@@ -95,7 +110,78 @@
     --sidebar-border: 240 4% 16%;
     --sidebar-ring: 240 5% 65%;
 
+    /* Status hues lifted for contrast on dark surfaces */
+    --status-new: 220 9% 70%;
+    --status-contacted: 213 92% 68%;
+    --status-appointment: 268 90% 76%;
+    --status-profile: 187 84% 60%;
+    --status-payment: 38 94% 62%;
+    --status-submitted: 245 90% 76%;
+    --status-enrolled: 152 62% 55%;
+    --status-danger: 0 84% 68%;
+
+    --surface-shadow: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -12px hsl(0 0% 0% / 0.6);
+    --surface-shadow-lg: 0 2px 6px hsl(0 0% 0% / 0.45), 0 18px 44px -18px hsl(0 0% 0% / 0.7);
   }
+
+  /* ── Aurora: a third, premium theme (deep indigo-slate + teal/violet) ──
+     Owned by next-themes exactly like light/dark; dashboards only. */
+  .aurora {
+    --background: 232 32% 9%;
+    --foreground: 226 34% 96%;
+
+    --card: 232 28% 12%;
+    --card-foreground: 226 34% 96%;
+
+    --popover: 232 28% 13%;
+    --popover-foreground: 226 34% 96%;
+
+    --muted: 232 22% 18%;
+    --muted-foreground: 226 18% 70%;
+
+    --accent: 232 24% 20%;
+    --accent-foreground: 226 34% 96%;
+
+    --brand: 24.6 95% 58%;
+    --brand-foreground: 0 0% 100%;
+    --brand-strong: 24.6 95% 44%;
+
+    --destructive: 352 74% 55%;
+    --destructive-foreground: 226 34% 98%;
+
+    --border: 232 22% 22%;
+    --input: 232 22% 24%;
+    --ring: 174 72% 56%;
+
+    --primary: 174 72% 56%;
+    --primary-foreground: 232 40% 10%;
+
+    --secondary: 232 22% 18%;
+    --secondary-foreground: 226 34% 96%;
+
+    --sidebar-background: 233 34% 11%;
+    --sidebar-foreground: 226 24% 88%;
+    --sidebar-primary: 174 72% 56%;
+    --sidebar-primary-foreground: 232 40% 10%;
+    --sidebar-accent: 232 24% 18%;
+    --sidebar-accent-foreground: 226 34% 96%;
+    --sidebar-border: 232 22% 20%;
+    --sidebar-ring: 174 72% 56%;
+
+    --status-new: 226 18% 72%;
+    --status-contacted: 205 92% 68%;
+    --status-appointment: 272 88% 78%;
+    --status-profile: 174 72% 58%;
+    --status-payment: 38 94% 64%;
+    --status-submitted: 248 92% 78%;
+    --status-enrolled: 160 68% 55%;
+    --status-danger: 352 88% 70%;
+
+    --surface-shadow: 0 1px 2px hsl(232 60% 3% / 0.5), 0 10px 28px -14px hsl(232 60% 3% / 0.75);
+    --surface-shadow-lg: 0 2px 6px hsl(232 60% 3% / 0.55), 0 22px 52px -20px hsl(232 60% 3% / 0.85);
+  }
+
+
 
 
   [dir="rtl"] {

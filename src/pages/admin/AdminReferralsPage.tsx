@@ -72,8 +72,8 @@ const AdminReferralsPage = () => {
         : Promise.resolve({ data: [] }),
     ]);
 
-    const profilesById = new Map((profilesRes.data || []).map((p: any) => [p.id, p]));
-    const casesById = new Map((casesRes.data || []).map((c: any) => [c.id, c]));
+    const profilesById = new Map<string, any>((profilesRes.data || []).map((p: any) => [p.id, p]));
+    const casesById = new Map<string, any>((casesRes.data || []).map((c: any) => [c.id, c]));
 
     setRows(raw.map(r => ({
       ...r,

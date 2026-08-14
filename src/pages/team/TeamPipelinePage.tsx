@@ -31,6 +31,8 @@ import {
   Phone,
   AlertTriangle,
   CheckCircle2,
+  LayoutGrid,
+  Rows3,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
@@ -38,12 +40,13 @@ import {
   CaseStatus,
   CASE_STATUS_ORDER,
   CASE_STATUS_LABELS,
-  STATUS_COLORS,
   resolveStatus,
   statusIndex,
   isActiveStatus,
 } from "@/lib/caseStatus";
 import { SLA_DAYS, slaSummary } from "@/lib/slaPolicy";
+import { CaseCard, CaseStatusChip } from "@/components/cases/CaseVisuals";
+import { toneClasses, toneForAttention } from "@/lib/statusTokens";
 
 interface PipelineCase {
   id: string;
@@ -105,6 +108,7 @@ const TeamPipelinePage: React.FC = () => {
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "attn", dir: "desc" });
 
+  const [view, setView] = useState<"list" | "board">("list");
   const [selected, setSelected] = useState<PipelineCase | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -339,10 +343,33 @@ const TeamPipelinePage: React.FC = () => {
             {t("manager.pipelineSubtitleCombined", "Triage and assign active cases to your team.")}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          {t("common.refresh", "Refresh")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+            {([
+              { key: "list" as const, icon: Rows3, label: t("manager.viewList", "List") },
+              { key: "board" as const, icon: LayoutGrid, label: t("manager.viewBoard", "Board") },
+            ]).map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                onClick={() => setView(v.key)}
+                aria-pressed={view === v.key}
+                className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                  view === v.key
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <v.icon className="h-3.5 w-3.5" />
+                {v.label}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            {t("common.refresh", "Refresh")}
+          </Button>
+        </div>
       </div>
 
       {/* Controls: search + quick filters + stage pills */}
@@ -408,15 +435,83 @@ const TeamPipelinePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Cases — list (table) or board (stage columns) */}
       {loading ? (
         <DashboardLoading label={t("common.loading", "Loading…")} />
       ) : filtered.length === 0 ? (
         <Card className="py-12 text-center text-muted-foreground">
           {t("manager.noCases", "No partner/ambassador cases to assign right now.")}
         </Card>
+      ) : view === "board" ? (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {STAGE_PILLS.map((stage) => {
+            const column = filtered.filter((c) => resolveStatus(c.status) === stage);
+            const meta = CASE_STATUS_LABELS[stage];
+            return (
+              <div key={stage} className="w-[16rem] shrink-0 space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <CaseStatusChip status={stage} label={isAr ? meta.ar : meta.en} size="xs" />
+                  <span className="text-xs font-medium text-muted-foreground">{column.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {column.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
+                      {t("manager.emptyStage", "Nothing here")}
+                    </div>
+                  ) : (
+                    column.map((c) => {
+                      const attn = attnFor(c);
+                      const owner = assigneeName(c.assigned_to);
+                      const sla = slaSummary(c.status, c.last_activity_at ?? c.created_at);
+                      return (
+                        <CaseCard key={c.id} status={stage} onClick={() => openDrawer(c)}>
+                          <p className="truncate text-sm font-semibold text-foreground">{c.full_name}</p>
+                          <p className="truncate font-mono text-[11px] text-muted-foreground" dir="ltr">
+                            {c.phone_number}
+                          </p>
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <span
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${toneClasses(toneForAttention(attn)).dot}`}
+                              aria-hidden
+                            />
+                            <span className="truncate text-[12px] text-muted-foreground">
+                              {nextActionFor(c)}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between gap-2">
+                            <span className="truncate text-[11px] text-muted-foreground">
+                              {owner ?? (
+                                <span className="font-semibold text-destructive">
+                                  {t("manager.unassigned", "Unassigned")}
+                                </span>
+                              )}
+                            </span>
+                            {attn !== "normal" && (
+                              <span
+                                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${
+                                  toneClasses(toneForAttention(attn)).chip
+                                }`}
+                              >
+                                {attn === "overdue" && <AlertTriangle className="h-3 w-3" />}
+                                {sla ??
+                                  (attn === "overdue"
+                                    ? t("manager.overdue", "Overdue")
+                                    : t("manager.needsAttention", "Needs attention"))}
+                              </span>
+                            )}
+                          </div>
+                        </CaseCard>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden bg-card">
+        <div className="rounded-lg border border-border overflow-hidden bg-card shadow-surface">
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -469,7 +564,6 @@ const TeamPipelinePage: React.FC = () => {
                 {filtered.map((c) => {
                   const status = resolveStatus(c.status);
                   const meta = CASE_STATUS_LABELS[status];
-                  const colorCls = STATUS_COLORS[status] ?? "bg-muted text-muted-foreground";
                   const attn = attnFor(c);
                   const owner = assigneeName(c.assigned_to);
                   const sla = slaSummary(c.status, c.last_activity_at ?? c.created_at);
@@ -499,20 +593,12 @@ const TeamPipelinePage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${colorCls}`}>
-                          {isAr ? meta.ar : meta.en}
-                        </span>
+                        <CaseStatusChip status={status} label={isAr ? meta.ar : meta.en} size="xs" />
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                              attn === "overdue"
-                                ? "bg-destructive"
-                                : attn === "warn"
-                                  ? "bg-orange-400"
-                                  : "bg-muted-foreground/40"
-                            }`}
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${toneClasses(toneForAttention(attn)).dot}`}
                           />
                           <span className="text-[13px]">{nextActionFor(c)}</span>
                         </div>
@@ -538,7 +624,7 @@ const TeamPipelinePage: React.FC = () => {
                             {sla ?? t("manager.overdue", "Overdue")}
                           </span>
                         ) : attn === "warn" ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-400/15 text-orange-600">
+                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${toneClasses("payment").chip}`}>
                             {t("manager.needsAttention", "Needs attention")}
                           </span>
                         ) : (
@@ -561,7 +647,7 @@ const TeamPipelinePage: React.FC = () => {
 
       {/* Detail drawer — assign is the ONLY write action (Edit/Delete omitted). */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="end" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           {selected && (
             <>
               <SheetHeader className="space-y-0">
