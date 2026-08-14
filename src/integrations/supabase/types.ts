@@ -3007,6 +3007,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agent_can_invite_directly: boolean
           agent_id: string | null
           arrival_date: string | null
           bank_account_number: string | null
@@ -3071,6 +3072,7 @@ export type Database = {
           visa_status: string
         }
         Insert: {
+          agent_can_invite_directly?: boolean
           agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
@@ -3135,6 +3137,7 @@ export type Database = {
           visa_status?: string
         }
         Update: {
+          agent_can_invite_directly?: boolean
           agent_id?: string | null
           arrival_date?: string | null
           bank_account_number?: string | null
