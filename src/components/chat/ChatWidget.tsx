@@ -11,12 +11,19 @@ const ChatWidget = () => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
 
-  // Hide chat widget on distraction-free routes
+  // Hide the public AI widget on the apply flow and on every dashboard
+  // (dashboards have their own real messaging inbox — the floating AI bubble
+  // covered the mobile bottom navigation there).
   if (typeof window !== 'undefined') {
     const path = window.location.pathname;
-    if (path === '/apply' || path === '/team-dashboard' || path === '/student-dashboard' || path.startsWith('/admin') || path.startsWith('/partner')) {
-      return null;
-    }
+    const hidden =
+      path === '/apply' ||
+      path === '/team-dashboard' ||
+      path === '/student-dashboard' ||
+      ['/admin', '/partner', '/agent', '/team', '/student'].some(
+        (p) => path === p || path.startsWith(`${p}/`),
+      );
+    if (hidden) return null;
   }
 
   const toggleChat = () => {
