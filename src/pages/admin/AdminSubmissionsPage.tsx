@@ -72,10 +72,13 @@ interface CommissionPreview {
   referralDiscount: number;
   partners: { partnerId: string; name: string; amount: number }[];
   teamCommission: number;
+  /** Recruiting agent paid on top of the partner pool (additive). */
+  agent: { name: string; amount: number } | null;
   platformRevenue: number;
   // legacy single field for the log message
   partnerCommission: number;
 }
+
 
 const AdminSubmissionsPage = () => {
   const { t, i18n } = useTranslation("dashboard");
