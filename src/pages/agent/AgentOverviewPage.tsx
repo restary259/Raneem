@@ -94,16 +94,10 @@ export default function AgentOverviewPage() {
     {
       key: "students",
       label: t("agent.ovNetworkStudents", "Network students"),
-      value: stats.networkStudents.toLocaleString("en-US"),
+      value: stats.students != null ? "" : "",
       icon: GraduationCap,
     },
-    {
-      key: "paid",
-      label: t("agent.ovPaidCases", "Paid cases"),
-      value: stats.paidCases.toLocaleString("en-US"),
-      icon: Award,
-      tone: toneClasses("enrolled").text,
-    },
+
   ];
 
   const earningsBuckets: KpiItem[] = [
