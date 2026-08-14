@@ -58,7 +58,7 @@ export default function AgentEarningsPage() {
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
       <div>
-        <h1 className="text-2xl font-bold">{t("agent.earningsTitle", "Earnings")}</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("agent.earningsTitle", "Earnings")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
           {t("agent.earningsSubtitle", "Override commissions from your recruited partners & ambassadors.")}
         </p>

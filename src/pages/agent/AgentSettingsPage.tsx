@@ -102,7 +102,7 @@ export default function AgentSettingsPage() {
   return (
     <div dir={dir} className="p-4 sm:p-6 max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <User className="h-6 w-6 text-primary" />
           {t("agent.settingsTitle", "Account settings")}
         </h1>

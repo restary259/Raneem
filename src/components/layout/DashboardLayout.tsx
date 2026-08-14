@@ -404,9 +404,27 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
-  const canMessage = role === "admin" || role === "team_member";
+  // Every role that has a messages destination gets the header quick-access
+  // button + unread badge. Students have their own messages route too, but they
+  // are gated through StudentOnboardingGate and rarely need the header shortcut
+  // while in the checklist flow; the sidebar item remains their primary path.
+  const canMessage =
+    role === "admin" ||
+    role === "team_member" ||
+    role === "agent" ||
+    role === "social_media_partner" ||
+    role === "ambassador";
   const headerUnread = useUnreadCaseMessages(canMessage);
-  const messagesHref = role === "admin" ? "/admin/messages" : "/team/messages";
+  const messagesHref =
+    role === "admin"
+      ? "/admin/messages"
+      : role === "team_member"
+        ? "/team/messages"
+        : role === "agent"
+          ? "/agent/messages"
+          : role === "student"
+            ? "/student/messages"
+            : "/partner/messages";
   /* Theme is owned entirely by ThemeScope/next-themes — no manual class work. */
 
 
