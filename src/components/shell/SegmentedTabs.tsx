@@ -23,15 +23,15 @@ interface SegmentedTabsProps {
  */
 export default function SegmentedTabs({ items, className }: SegmentedTabsProps) {
   return (
-    <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <TabsList className={cn("inline-flex h-9 w-auto min-w-full justify-start gap-1", className)}>
+    <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex sm:justify-center">
+      <TabsList className={cn("inline-flex h-10 min-w-full justify-start gap-2 sm:w-fit sm:min-w-0 sm:justify-center", className)}>
         {items.map((item) => (
           <TabsTrigger
             key={item.value}
             value={item.value}
-            className="shrink-0 gap-1.5 text-xs data-[state=active]:shadow-sm"
+            className="shrink-0 gap-1.5 px-4 py-2 text-sm data-[state=active]:shadow-sm"
           >
-            {item.icon && <item.icon className="h-3.5 w-3.5" aria-hidden />}
+            {item.icon && <item.icon className="h-4 w-4" aria-hidden />}
             {item.label}
             {typeof item.count === "number" && (
               <span className="rounded-full bg-muted px-1.5 text-[10px] tabular-nums text-muted-foreground">
