@@ -436,15 +436,83 @@ const TeamPipelinePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Cases — list (table) or board (stage columns) */}
       {loading ? (
         <DashboardLoading label={t("common.loading", "Loading…")} />
       ) : filtered.length === 0 ? (
         <Card className="py-12 text-center text-muted-foreground">
           {t("manager.noCases", "No partner/ambassador cases to assign right now.")}
         </Card>
+      ) : view === "board" ? (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {STAGE_PILLS.map((stage) => {
+            const column = filtered.filter((c) => resolveStatus(c.status) === stage);
+            const meta = CASE_STATUS_LABELS[stage];
+            return (
+              <div key={stage} className="w-[16rem] shrink-0 space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <CaseStatusChip status={stage} label={isAr ? meta.ar : meta.en} size="xs" />
+                  <span className="text-xs font-medium text-muted-foreground">{column.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {column.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
+                      {t("manager.emptyStage", "Nothing here")}
+                    </div>
+                  ) : (
+                    column.map((c) => {
+                      const attn = attnFor(c);
+                      const owner = assigneeName(c.assigned_to);
+                      const sla = slaSummary(c.status, c.last_activity_at ?? c.created_at);
+                      return (
+                        <CaseCard key={c.id} status={stage} onClick={() => openDrawer(c)}>
+                          <p className="truncate text-sm font-semibold text-foreground">{c.full_name}</p>
+                          <p className="truncate font-mono text-[11px] text-muted-foreground" dir="ltr">
+                            {c.phone_number}
+                          </p>
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <span
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${toneClasses(toneForAttention(attn)).dot}`}
+                              aria-hidden
+                            />
+                            <span className="truncate text-[12px] text-muted-foreground">
+                              {nextActionFor(c)}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between gap-2">
+                            <span className="truncate text-[11px] text-muted-foreground">
+                              {owner ?? (
+                                <span className="font-semibold text-destructive">
+                                  {t("manager.unassigned", "Unassigned")}
+                                </span>
+                              )}
+                            </span>
+                            {attn !== "normal" && (
+                              <span
+                                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${
+                                  toneClasses(toneForAttention(attn)).chip
+                                }`}
+                              >
+                                {attn === "overdue" && <AlertTriangle className="h-3 w-3" />}
+                                {sla ??
+                                  (attn === "overdue"
+                                    ? t("manager.overdue", "Overdue")
+                                    : t("manager.needsAttention", "Needs attention"))}
+                              </span>
+                            )}
+                          </div>
+                        </CaseCard>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden bg-card">
+        <div className="rounded-lg border border-border overflow-hidden bg-card shadow-surface">
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
