@@ -32,6 +32,7 @@ import { toneClasses } from "@/lib/statusTokens";
 import { useAgentOverview } from "@/hooks/useAgentOverview";
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
+const fmtCount = (n: number) => Number(n || 0).toLocaleString("en-US");
 
 /**
  * Agent overview — composed from the shared dashboard shell primitives so it
@@ -82,25 +83,25 @@ export default function AgentOverviewPage() {
     {
       key: "partners",
       label: t("agent.ovRecruitedPartners", "Recruited partners"),
-      value: stats.totalPartners.toLocaleString("en-US"),
+      value: fmtCount(stats.totalPartners),
       icon: Users,
     },
     {
       key: "ambassadors",
       label: t("agent.ovRecruitedAmbassadors", "Recruited ambassadors"),
-      value: stats.totalAmbassadors.toLocaleString("en-US"),
+      value: fmtCount(stats.totalAmbassadors),
       icon: Megaphone,
     },
     {
       key: "students",
       label: t("agent.ovNetworkStudents", "Network students"),
-      value: stats.totalStudents.toLocaleString("en-US"),
+      value: fmtCount(stats.totalStudents),
       icon: GraduationCap,
     },
     {
       key: "enrolled",
       label: t("agent.ovPaidCases", "Paid cases"),
-      value: stats.enrolledCases.toLocaleString("en-US"),
+      value: fmtCount(stats.enrolledCases),
       icon: Award,
       tone: toneClasses("enrolled").text,
     },
@@ -110,25 +111,25 @@ export default function AgentOverviewPage() {
     {
       key: "direct",
       label: t("agent.kpiDirectStudents", "Direct referrals"),
-      value: stats.directStudents.toLocaleString("en-US"),
+      value: fmtCount(stats.directStudents),
       icon: Link2,
     },
     {
       key: "viaPartners",
       label: t("agent.kpiPartnerStudents", "Via partners"),
-      value: stats.partnerStudents.toLocaleString("en-US"),
+      value: fmtCount(stats.partnerStudents),
       icon: Users,
     },
     {
       key: "viaAmbassadors",
       label: t("agent.kpiAmbassadorStudents", "Via ambassadors"),
-      value: stats.ambassadorStudents.toLocaleString("en-US"),
+      value: fmtCount(stats.ambassadorStudents),
       icon: Megaphone,
     },
     {
       key: "submitted",
       label: t("agent.kpiSubmitted", "Submitted"),
-      value: stats.submittedCases.toLocaleString("en-US"),
+      value: fmtCount(stats.submittedCases),
       icon: TrendingUp,
       tone: toneClasses("submitted").text,
     },
@@ -212,7 +213,7 @@ export default function AgentOverviewPage() {
               </p>
               {earnings.paid > 0 && (
                 <p className={`mt-1 text-xs font-medium ${toneClasses("enrolled").text}`}>
-                  {t("agent.paidOut", { amount: earnings.paid.toLocaleString("en-US") })}
+                  {t("agent.paidOut", { amount: fmtCount(earnings.paid) })}
                 </p>
               )}
             </div>
