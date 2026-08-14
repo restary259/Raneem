@@ -47,17 +47,26 @@ export default function AgentOverviewPage() {
   useRealtimeSubscription("rewards", () => refetch(), !!profile);
   useRealtimeSubscription("profiles", () => refetch(), !!profile);
 
-  const [copied, setCopied] = React.useState(false);
+  const [copiedRecruit, setCopiedRecruit] = React.useState(false);
+  const [copiedApply, setCopiedApply] = React.useState(false);
   const recruitUrl = profile?.recruit_code
     ? `${window.location.origin}/join/${profile.recruit_code}`
     : "";
+  const applyUrl = profile?.referral_code
+    ? `${window.location.origin}/apply?ref=${encodeURIComponent(profile.referral_code)}`
+    : "";
 
-  const copyLink = async () => {
-    if (!recruitUrl) return;
+  const copyLink = async (url: string, which: "recruit" | "apply") => {
+    if (!url) return;
     try {
-      await navigator.clipboard.writeText(recruitUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(url);
+      if (which === "recruit") {
+        setCopiedRecruit(true);
+        setTimeout(() => setCopiedRecruit(false), 1500);
+      } else {
+        setCopiedApply(true);
+        setTimeout(() => setCopiedApply(false), 1500);
+      }
     } catch { /* clipboard may be unavailable */ }
   };
 
@@ -233,38 +242,85 @@ export default function AgentOverviewPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {/* Recruiting link */}
-          <SectionCard title={t("agent.recruitLink", "Recruiting link")} icon={Link2}>
+          {/* Your links */}
+          <SectionCard title={t("agent.yourLinks", "Your links")} icon={Link2}>
             <p className="text-xs text-muted-foreground">
-              {t("agent.recruitLinkHint", "Share this link to recruit partners or ambassadors into your network.")}
+              {t("agent.yourLinksHint", "Share these links to recruit partners or to refer students.")}
             </p>
-            {recruitUrl ? (
-              <div className="mt-3 flex gap-2">
-                <input
-                  readOnly
-                  value={recruitUrl}
-                  dir="ltr"
-                  aria-label={t("agent.recruitLink", "Recruiting link")}
-                  className="min-w-0 flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs text-muted-foreground"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={copyLink}
-                  aria-label={t("common.copy", "Copy")}
-                >
-                  {copied ? (
-                    <Check className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            ) : (
-              <p className="mt-3 text-xs text-muted-foreground">
-                {t("agent.inviteMissing", "No recruiting link yet.")}
+
+            {/* Recruiting link */}
+            <div className="mt-3 space-y-1.5">
+              <p className="text-xs font-medium text-foreground">
+                {t("agent.recruitLink", "Recruiting link")}
               </p>
-            )}
+              <p className="text-xs text-muted-foreground">
+                {t("agent.recruitLinkHint", "Share this link to recruit partners or ambassadors into your network.")}
+              </p>
+              {recruitUrl ? (
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={recruitUrl}
+                    dir="ltr"
+                    aria-label={t("agent.recruitLink", "Recruiting link")}
+                    className="min-w-0 flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs text-muted-foreground"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyLink(recruitUrl, "recruit")}
+                    aria-label={t("common.copy", "Copy")}
+                  >
+                    {copiedRecruit ? (
+                      <Check className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t("agent.inviteMissing", "No recruiting link yet.")}
+                </p>
+              )}
+            </div>
+
+            {/* Referral apply form link */}
+            <div className="mt-4 space-y-1.5">
+              <p className="text-xs font-medium text-foreground">
+                {t("agent.applyLink", "Referral apply form")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("agent.applyLinkHint", "Share this link with students. Applications submitted through it are attributed to you.")}
+              </p>
+              {applyUrl ? (
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={applyUrl}
+                    dir="ltr"
+                    aria-label={t("agent.applyLink", "Referral apply form")}
+                    className="min-w-0 flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs text-muted-foreground"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyLink(applyUrl, "apply")}
+                    aria-label={t("common.copy", "Copy")}
+                  >
+                    {copiedApply ? (
+                      <Check className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t("agent.applyLinkMissing", "No referral link yet.")}
+                </p>
+              )}
+            </div>
           </SectionCard>
 
           {/* Recent recruits */}

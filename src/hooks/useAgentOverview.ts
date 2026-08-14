@@ -42,6 +42,7 @@ export interface AgentProfile {
   email: string | null;
   agent_can_invite_directly: boolean;
   recruit_code: string | null;
+  referral_code: string | null;
 }
 
 export interface AgentStats {
@@ -86,7 +87,7 @@ export function useAgentOverview(): AgentOverviewData {
     const [profRes, netRes, linkRes, settingsRes, overrideRes, selfRefRes] = await Promise.all([
       (supabase as any)
         .from("profiles")
-        .select("full_name, email, agent_can_invite_directly")
+        .select("full_name, email, agent_can_invite_directly, referral_code")
         .eq("id", uid)
         .maybeSingle(),
       (supabase as any).rpc("get_my_agent_network"),
@@ -115,6 +116,7 @@ export function useAgentOverview(): AgentOverviewData {
       email: prof?.email ?? null,
       agent_can_invite_directly: prof?.agent_can_invite_directly ?? false,
       recruit_code: linkRow?.code ?? null,
+      referral_code: prof?.referral_code ?? null,
     });
 
     setRecruits((netRes.data ?? []) as AgentRecruit[]);
