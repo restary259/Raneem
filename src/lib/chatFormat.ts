@@ -16,7 +16,7 @@ export interface ChatMessage {
   createdAt: string;
   visibility?: "internal" | "shared";
   attachments: ChatAttachment[];
-  kind: "text" | "request" | "payout_request";
+  kind: "text" | "request" | "payout_request" | "bank_share";
   requestStatus?: string | null;
   editedAt?: string | null;
   mentions?: string[];
@@ -335,3 +335,66 @@ export function formatThreadTime(iso: string | null, now: Date = new Date()): st
 
 /** Human-readable list of the extensions users may attach. */
 export const ALLOWED_ATTACHMENT_LABEL = "PNG, JPG, WEBP, GIF, PDF, DOC(X), XLS(X), TXT";
+
+/* ── Bank-details share (no DB kind; encoded in the message body) ──────────── */
+
+/** Bank fields shared from a partner/ambassador/agent profile into the admin chat. */
+export interface BankDetailsPayload {
+  bankCountry: string;
+  bankName: string;
+  bankBranch: string;
+  bankAccount: string;
+  iban: string;
+  bic: string;
+}
+
+/** Leading marker on the first line; MessageList detects it and renders a card. */
+export const BANK_DETAILS_MARKER = "::bank-details::";
+
+/**
+ * Encodes bank details into a chat message body: a recognisable marker line,
+ * a compact JSON line (for reliable parsing), then a blank line and a
+ * human-readable formatted block (the admin copy-paste fallback).
+ */
+export function buildBankDetailsBody(details: BankDetailsPayload): string {
+  const json = JSON.stringify(details);
+  const human = [
+    `Bank name: ${details.bankName || "—"}`,
+    `Branch: ${details.bankBranch || "—"}`,
+    `Account number: ${details.bankAccount || "—"}`,
+    `IBAN: ${details.iban || "—"}`,
+    `BIC/SWIFT: ${details.bic || "—"}`,
+    `Country: ${details.bankCountry || "—"}`,
+  ].join("\n");
+  return `${BANK_DETAILS_MARKER}\n${json}\n\n${human}`;
+}
+
+/**
+ * Inverse of {@link buildBankDetailsBody}. Returns the parsed payload when the
+ * body starts with the marker, otherwise null (plain text message).
+ */
+export function parseBankDetailsBody(body: string | null | undefined): BankDetailsPayload | null {
+  if (!body || !body.startsWith(BANK_DETAILS_MARKER)) return null;
+  const lines = body.slice(BANK_DETAILS_MARKER.length).split("\n");
+  const jsonLine = lines.find((l) => l.trim().startsWith("{"));
+  if (!jsonLine) return null;
+  try {
+    const parsed = JSON.parse(jsonLine.trim());
+    return {
+      bankCountry: String(parsed.bankCountry ?? ""),
+      bankName: String(parsed.bankName ?? ""),
+      bankBranch: String(parsed.bankBranch ?? ""),
+      bankAccount: String(parsed.bankAccount ?? ""),
+      iban: String(parsed.iban ?? ""),
+      bic: String(parsed.bic ?? ""),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** True when every bank field is blank (nothing meaningful to share). */
+export function hasBankDetails(d: BankDetailsPayload | null): boolean {
+  if (!d) return false;
+  return Boolean(d.bankName || d.bankBranch || d.bankAccount || d.iban || d.bic);
+}

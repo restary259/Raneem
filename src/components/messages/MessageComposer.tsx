@@ -6,6 +6,7 @@ import {
   Banknote,
   Hash,
   FileUp,
+  Landmark,
   Loader2,
   Lock,
   Paperclip,
@@ -77,6 +78,8 @@ interface MessageComposerProps {
   onTyping?: () => void;
   /** Partners only: opens the structured payout-request flow from the `+` menu. */
   onRequestPayout?: () => void;
+  /** Partners/ambassadors/agents: sends saved bank details into the admin chat. */
+  onSendBankDetails?: () => void;
 
 }
 
@@ -102,6 +105,7 @@ export default function MessageComposer({
   allowCaseMentions = false,
   onTyping,
   onRequestPayout,
+  onSendBankDetails,
 
 }: MessageComposerProps) {
   const { t } = useTranslation("dashboard");
@@ -374,6 +378,17 @@ export default function MessageComposer({
           },
         ]
       : []),
+      ...(onSendBankDetails
+        ? [
+            {
+              key: "bankDetails",
+              label: t("chat.bankShare.action", "Send bank details"),
+              icon: Landmark,
+              tone: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+              run: () => onSendBankDetails(),
+            },
+          ]
+        : []),
   ];
 
   return (

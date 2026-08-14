@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
 import PayoutRequestDialog from "@/components/messages/PayoutRequestDialog";
+import BankDetailsShareDialog from "@/components/messages/BankDetailsShareDialog";
 import {
   getMyPayoutPreview,
   requestPayoutViaChat,
@@ -26,6 +27,7 @@ import {
   type ThreadReadState,
 } from "@/services/CaseMessageService";
 import type { ChatMessage, MentionablePerson } from "@/lib/chatFormat";
+import { buildBankDetailsBody, type BankDetailsPayload } from "@/lib/chatFormat";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
@@ -53,6 +55,9 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [preview, setPreview] = useState<PayoutPreview | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [bankShareOpen, setBankShareOpen] = useState(false);
+  const [bankDetails, setBankDetails] = useState<BankDetailsPayload | null>(null);
+  const [bankSubmitting, setBankSubmitting] = useState(false);
   const online = useOnlineUsers();
   const { typing, notifyTyping } = useTypingIndicator("direct", threadId);
 
@@ -148,7 +153,49 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
     }
   };
 
+  const openBankShare = async () => {
+    setBankDetails(null);
+    setBankShareOpen(true);
+    try {
+      const { data: row } = await supabase
+        .from("profiles")
+        .select("bank_country, bank_name, bank_branch, bank_account_number, iban, bic")
+        .eq("id", user?.id ?? "")
+        .maybeSingle();
+      setBankDetails({
+        bankCountry: (row?.bank_country as string) ?? "",
+        bankName: (row?.bank_name as string) ?? "",
+        bankBranch: (row?.bank_branch as string) ?? "",
+        bankAccount: (row?.bank_account_number as string) ?? "",
+        iban: (row?.iban as string) ?? "",
+        bic: (row?.bic as string) ?? "",
+      });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+      setBankShareOpen(false);
+    }
+  };
 
+  const submitBankShare = async () => {
+    if (!bankDetails) return;
+    setBankSubmitting(true);
+    try {
+      const body = buildBankDetailsBody(bankDetails);
+      await sendDirectMessage(threadId, body, [], []);
+      void notifyNewMessageEmail({
+        threadType: "direct",
+        threadId,
+        preview: t("chat.bankShare.emailPreview", "Bank details"),
+      });
+      setBankShareOpen(false);
+      toast({ description: t("chat.bankShare.sent") });
+      await load();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setBankSubmitting(false);
+    }
+  };
 
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
@@ -195,6 +242,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
         allowCaseMentions={isStaff}
         onTyping={() => notifyTyping(user?.user_metadata?.full_name ?? "")}
         onRequestPayout={isPartner ? () => openPayout() : undefined}
+        onSendBankDetails={isPartner ? () => openBankShare() : undefined}
         onSend={async (body, attachments, opts) => {
           await sendDirectMessage(threadId, body, attachments, opts.mentions);
           void notifyNewMessageEmail({ threadType: "direct", threadId, preview: body });
@@ -208,6 +256,14 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
         submitting={submitting}
         onOpenChange={setPayoutOpen}
         onConfirm={submitPayout}
+      />
+
+      <BankDetailsShareDialog
+        open={bankShareOpen}
+        details={bankDetails}
+        submitting={bankSubmitting}
+        onOpenChange={setBankShareOpen}
+        onConfirm={submitBankShare}
       />
     </div>
   );

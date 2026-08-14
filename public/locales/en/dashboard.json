@@ -3891,6 +3891,24 @@
       "copyReference": "Copy reference",
       "referenceCopied": "Reference copied"
     },
+    "bankShare": {
+      "action": "Send bank details",
+      "title": "Bank details",
+      "reviewHint": "Review your saved bank details below. They will be sent to Administration for processing your payouts.",
+      "send": "Send details",
+      "sent": "Bank details sent to Administration",
+      "emailPreview": "Bank details",
+      "copied": "Copied",
+      "copiedAll": "All bank details copied",
+      "copyAll": "Copy all",
+      "empty": "No bank details saved yet. Add your bank details in Bank details first.",
+      "bankName": "Bank name",
+      "branch": "Branch number",
+      "account": "Account number",
+      "iban": "IBAN",
+      "bic": "BIC / SWIFT",
+      "country": "Country"
+    },
     "section": {
       "direct": "Direct",
       "cases": "Cases",

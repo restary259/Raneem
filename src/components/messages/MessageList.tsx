@@ -25,12 +25,14 @@ import {
   formatTime,
   groupMessages,
   initials,
+  parseBankDetailsBody,
   splitChatBody,
   type ChatMessage,
   type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
 import PayoutRequestCard from "@/components/messages/PayoutRequestCard";
+import BankDetailsCard from "@/components/messages/BankDetailsCard";
 
 import { resolveCaseRefs, type ThreadReadState } from "@/services/CaseMessageService";
 import type { TypingPerson } from "@/hooks/useTypingIndicator";
@@ -427,7 +429,8 @@ export default function MessageList({
                       </div>
                     ) : (
                       m.body &&
-                      m.kind !== "payout_request" && (
+                      m.kind !== "payout_request" &&
+                      !parseBankDetailsBody(m.body) && (
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">
                           {renderBody(m.body)}
                         </p>
@@ -442,6 +445,11 @@ export default function MessageList({
                         attachments={m.attachments}
                       />
                     )}
+
+                    {(() => {
+                      const bank = parseBankDetailsBody(m.body);
+                      return bank ? <BankDetailsCard details={bank} /> : null;
+                    })()}
 
                     {m.attachments.length > 0 && (
                       <div className="flex flex-wrap gap-2">
