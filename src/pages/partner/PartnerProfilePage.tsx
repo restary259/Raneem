@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { validatePassword } from "@/components/auth/PasswordStrength";
 import { buildReferralUrl } from "@/lib/referral";
-import { User, Lock, Link2, Copy, Check, Crown } from "lucide-react";
+import { User, Lock, Link2, Copy, Check, Crown, ChevronRight } from "lucide-react";
 
 interface PartnerProfile {
   id: string;
@@ -42,6 +42,8 @@ export default function PartnerProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPw, setChangingPw] = useState(false);
+  const [editingPersonal, setEditingPersonal] = useState(false);
+  const [editingPassword, setEditingPassword] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -81,6 +83,14 @@ export default function PartnerProfilePage() {
     }
     toast({ description: t("partner.profile.saved") });
     load();
+    setEditingPersonal(false);
+  };
+
+  const cancelPersonal = () => {
+    setFullName(profile?.full_name ?? "");
+    setPhone(profile?.phone_number ?? "");
+    setCity(profile?.city ?? "");
+    setEditingPersonal(false);
   };
 
   const changePassword = async () => {
@@ -102,6 +112,13 @@ export default function PartnerProfilePage() {
     setNewPassword("");
     setConfirmPassword("");
     toast({ description: t("partner.profile.passwordChanged") });
+    setEditingPassword(false);
+  };
+
+  const cancelPassword = () => {
+    setNewPassword("");
+    setConfirmPassword("");
+    setEditingPassword(false);
   };
 
   if (loading) return <DashboardLoading />;
@@ -139,31 +156,53 @@ export default function PartnerProfilePage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t("partner.profile.details")}</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <User className="h-4 w-4 text-primary" />
+            {t("partner.profile.details")}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>{t("partner.profile.email")}</Label>
-            <Input value={profile?.email ?? ""} disabled dir="ltr" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="pp-name">{t("partner.profile.fullName")}</Label>
-            <Input id="pp-name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="pp-phone">{t("partner.profile.phone")}</Label>
-              <Input id="pp-phone" value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
+        <CardContent>
+          {!editingPersonal ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-3">
+                {t("partner.profile.detailsPreview", "Your name, email, phone and city.")}
+              </p>
+              <Button variant="outline" className="gap-2" onClick={() => setEditingPersonal(true)}>
+                {t("partner.profile.managePersonalDetails", "Manage personal details")}
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>{t("partner.profile.email")}</Label>
+                <Input value={profile?.email ?? ""} disabled dir="ltr" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pp-name">{t("partner.profile.fullName")}</Label>
+                <Input id="pp-name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pp-phone">{t("partner.profile.phone")}</Label>
+                  <Input id="pp-phone" value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pp-city">{t("partner.profile.city")}</Label>
+                  <Input id="pp-city" value={city} onChange={(e) => setCity(e.target.value)} />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={save} disabled={saving} className="w-full sm:w-auto">
+                  {saving ? t("common.saving") : t("common.save")}
+                </Button>
+                <Button variant="outline" onClick={cancelPersonal} className="w-full sm:w-auto">
+                  {t("common.cancel")}
+                </Button>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pp-city">{t("partner.profile.city")}</Label>
-              <Input id="pp-city" value={city} onChange={(e) => setCity(e.target.value)} />
-            </div>
-          </div>
-          <Button onClick={save} disabled={saving} className="w-full sm:w-auto">
-            {saving ? t("common.saving") : t("common.save")}
-          </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -212,37 +251,56 @@ export default function PartnerProfilePage() {
       )}
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Lock className="h-4 w-4 text-primary" />
             {t("partner.profile.changePassword")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="pp-pw">{t("partner.profile.newPassword")}</Label>
-            <Input
-              id="pp-pw"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              dir="ltr"
-            />
-            <p className="text-xs text-muted-foreground">{t("partner.profile.passwordHint")}</p>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="pp-pw2">{t("partner.profile.confirmPassword")}</Label>
-            <Input
-              id="pp-pw2"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              dir="ltr"
-            />
-          </div>
-          <Button onClick={changePassword} disabled={changingPw} className="w-full sm:w-auto">
-            {changingPw ? t("common.saving") : t("partner.profile.updatePassword")}
-          </Button>
+        <CardContent>
+          {!editingPassword ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-3">
+                {t("partner.profile.changePasswordPreview", "Set a new password for your account.")}
+              </p>
+              <Button variant="outline" className="gap-2" onClick={() => setEditingPassword(true)}>
+                {t("partner.profile.changePasswordAction", "Change password")}
+                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="pp-pw">{t("partner.profile.newPassword")}</Label>
+                <Input
+                  id="pp-pw"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  dir="ltr"
+                />
+                <p className="text-xs text-muted-foreground">{t("partner.profile.passwordHint")}</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pp-pw2">{t("partner.profile.confirmPassword")}</Label>
+                <Input
+                  id="pp-pw2"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  dir="ltr"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={changePassword} disabled={changingPw} className="w-full sm:w-auto">
+                  {changingPw ? t("common.saving") : t("partner.profile.updatePassword")}
+                </Button>
+                <Button variant="outline" onClick={cancelPassword} className="w-full sm:w-auto">
+                  {t("common.cancel")}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
