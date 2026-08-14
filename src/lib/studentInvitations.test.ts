@@ -6,7 +6,7 @@ import {
   type ActiveStudent,
 } from "./studentInvitations";
 
-const inv = (id: string, email: string): PendingInvitation => ({
+const inv = (id: string, email: string) => ({
   id,
   invited_email: email,
   invited_name: null,
