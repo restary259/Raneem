@@ -302,17 +302,18 @@ const App = () => {
               }
             >
               <Route index element={<TeamWorkPage />} />
-              <Route path="cases" element={<TeamCasesPage />} />
+              <Route path="cases" element={<TeamCasesHubPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
               <Route path="appointments" element={<TeamAppointmentsPage />} />
 
               <Route path="appointments/today" element={<Navigate to="/team" replace />} />
               <Route path="submit" element={<SubmitNewStudentPage />} />
-              <Route path="students" element={<TeamStudentsPage />} />
+              <Route path="students" element={<Navigate to="/team/cases?tab=students" replace />} />
               <Route path="students/:id" element={<TeamStudentProfilePage />} />
-              <Route path="analytics" element={<TeamAnalyticsPage />} />
-              <Route path="spreadsheet" element={<TeamSpreadsheetPage />} />
+              <Route path="analytics" element={<TeamReportsPage />} />
+              <Route path="spreadsheet" element={<Navigate to="/team/analytics?tab=spreadsheet" replace />} />
+
               <Route path="bagrut" element={<TeamBagrutConverter />} />
               <Route path="tools/currency" element={<TeamCurrencyPage />} />
               <Route path="tools/cv" element={<TeamCvBuilderPage />} />
@@ -331,8 +332,9 @@ const App = () => {
               <Route path="messages" element={<PartnerMessagesPage />} />
               <Route path="students" element={<PartnerStudentsPage />} />
               <Route path="earnings" element={<PartnerEarningsPage />} />
-              <Route path="network" element={<PartnerNetworkPage />} />
-              <Route path="performance" element={<PartnerPerformancePage />} />
+              <Route path="network" element={<PartnerNetworkHubPage />} />
+              <Route path="performance" element={<Navigate to="/partner/network?tab=performance" replace />} />
+
               <Route path="profile" element={<PartnerProfilePage />} />
               <Route path="apply" element={<PartnerApplyPage />} />
             </Route>
@@ -347,14 +349,15 @@ const App = () => {
               }
             >
               <Route index element={<AgentOverviewPage />} />
-              <Route path="network" element={<AgentNetworkPage />} />
-              <Route path="recruit" element={<AgentRecruitPage />} />
+              <Route path="network" element={<AgentNetworkHubPage />} />
+              <Route path="recruit" element={<Navigate to="/agent/network?tab=recruit" replace />} />
               <Route path="students" element={<AgentStudentsPage />} />
-              <Route path="analytics" element={<AgentAnalyticsPage />} />
+              <Route path="analytics" element={<Navigate to="/agent/network?tab=performance" replace />} />
               <Route path="apply" element={<AgentApplyPage />} />
-              <Route path="earnings" element={<AgentEarningsPage />} />
+              <Route path="earnings" element={<AgentEarningsHubPage />} />
               <Route path="messages" element={<AgentMessagesPage />} />
-              <Route path="bank-details" element={<AgentBankDetailsPage />} />
+              <Route path="bank-details" element={<Navigate to="/agent/earnings?tab=bank" replace />} />
+
               <Route path="profile" element={<AgentSettingsPage />} />
             </Route>
 
