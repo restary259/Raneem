@@ -52,6 +52,22 @@ export interface AgentStats {
   networkStudents: number;
   paidCases: number;
   overrideEarned: number;
+  /** Students the agent referred personally (their own apply link). */
+  directStudents: number;
+  /** Students referred by partners in the network. */
+  partnerStudents: number;
+  /** Students referred by ambassadors in the network. */
+  ambassadorStudents: number;
+  /** Every distinct case attributable to the agent (network + direct). */
+  totalStudents: number;
+  newCases: number;
+  submittedCases: number;
+  enrolledCases: number;
+  casesLast30d: number;
+  /** enrolled / total students, 0–100. */
+  conversionRate: number;
+  commissionNetwork: number;
+  commissionSelf: number;
 }
 
 export interface AgentOverviewData {
@@ -63,6 +79,7 @@ export interface AgentOverviewData {
   loading: boolean;
   refetch: () => void;
 }
+
 
 const fmt0 = (n: unknown) => Number(n || 0);
 
