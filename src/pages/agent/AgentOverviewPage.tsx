@@ -223,7 +223,7 @@ export default function AgentOverviewPage() {
         </SectionCard>
 
         <KpiRow items={kpis} columns={4} />
-        <KpiRow items={funnelKpis} columns={5} />
+        <KpiRow items={funnelKpis} columns={4} />
 
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
