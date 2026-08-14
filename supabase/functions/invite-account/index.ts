@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { serverError } from "../_shared/errors.ts";
 import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
-import { createInvitation, InvitationType } from "../_shared/invitations.ts";
+import { createInvitation, InvitationConflictError, InvitationType } from "../_shared/invitations.ts";
 import { identityConflict } from "../_shared/identity.ts";
 
 /**
@@ -111,6 +111,9 @@ serve(async (req) => {
         inviterId: adminId,
       });
     } catch (e) {
+      if (e instanceof InvitationConflictError) {
+        return json({ error: e.message, code: "invitation_conflict" }, 409);
+      }
       console.error("invitation creation failed", e);
       return json({ error: "Could not create the invitation" }, 500);
     }

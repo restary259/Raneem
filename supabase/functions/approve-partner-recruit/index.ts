@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { serverError } from "../_shared/errors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
-import { createInvitation } from "../_shared/invitations.ts";
+import { createInvitation, InvitationConflictError } from "../_shared/invitations.ts";
 import { resolveIdentity } from "../_shared/identity.ts";
 
 
@@ -141,6 +141,9 @@ serve(async (req) => {
           recruitApplicationId: applicationId,
         });
       } catch (e) {
+        // The recruit's live invitation belongs to another recruiter — surface
+        // it as a 409 (handled by the caller), never as a generic failure.
+        if (e instanceof InvitationConflictError) throw e;
         console.error("invitation creation failed", e);
         return false;
       }
@@ -266,7 +269,22 @@ serve(async (req) => {
       });
     }
 
-    const emailed = await sendInvite(email);
+    let emailed: boolean;
+    try {
+      emailed = await sendInvite(email);
+    } catch (e) {
+      if (e instanceof InvitationConflictError) {
+        // The recruit already belongs to another recruiter's network. Revert the
+        // premature approval so the application can be re-reviewed, and tell the
+        // admin who owns the pending invitation.
+        await admin
+          .from("partner_recruit_applications")
+          .update({ status: "pending", reviewed_by: null, reviewed_at: null })
+          .eq("id", applicationId);
+        return json({ error: e.message, code: "invitation_conflict" }, 409);
+      }
+      throw e;
+    }
 
     await admin.from("admin_audit_log").insert({
       admin_id: adminId,
@@ -285,6 +303,10 @@ serve(async (req) => {
       reused_existing: identity.exists,
     });
   } catch (e) {
+    if (e instanceof InvitationConflictError) {
+      console.error("approve-partner-recruit invitation conflict:", e.message);
+      return json({ error: e.message, code: "invitation_conflict" }, 409);
+    }
     console.error("approve-partner-recruit error:", e);
     return json({ error: "Server error" }, 500);
   }

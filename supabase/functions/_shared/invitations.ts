@@ -42,6 +42,26 @@ export async function hashToken(token: string): Promise<string> {
 }
 
 /**
+ * Thrown when a live invitation already exists for the same email + type under
+ * a DIFFERENT recruiter (a different master_partner_id or agent_id). The recruit
+ * belongs to the recruiter who first invited them, so the conflict surfaces as a
+ * 409 instead of silently revoking and re-attributing the original invitation.
+ */
+export class InvitationConflictError extends Error {
+  constructor(
+    message: string,
+    public readonly details: {
+      invitation_type: InvitationType;
+      master_partner_id: string | null;
+      agent_id: string | null;
+    },
+  ) {
+    super(message);
+    this.name = "InvitationConflictError";
+  }
+}
+
+/**
  * Creates the invitation, or refreshes the token of the pending invitation that
  * already exists for this recipient/target. Never produces a second live
  * invitation for the same person, so "resend" is always safe.
@@ -62,7 +82,7 @@ export async function createInvitation(
 
   let query = admin
     .from("user_invitations")
-    .select("id")
+    .select("id, master_partner_id, agent_id")
     .eq("status", "pending")
     .ilike("invited_email", email)
     .eq("invitation_type", input.invitationType);
@@ -74,6 +94,35 @@ export async function createInvitation(
 
   const { data: existing } = await query.maybeSingle();
 
+  // ── Recruiter-attribution conflict ─────────────────────────────────────
+  // A recruit belongs to the recruiter who first invited them. A live
+  // invitation for the same email + type under ANOTHER recruiter must not be
+  // silently revoked (that would steal attribution). Same-recruiter duplicates
+  // (e.g. re-invites across cases) are still refreshed below.
+  const { data: siblings, error: siblingsError } = await admin
+    .from("user_invitations")
+    .select("id, master_partner_id, agent_id")
+    .eq("status", "pending")
+    .ilike("invited_email", email)
+    .eq("invitation_type", input.invitationType)
+    .neq("id", existing?.id ?? "");
+  if (siblingsError) throw new Error(siblingsError.message);
+
+  const myAttribution = `${input.masterPartnerId ?? "none"}:${input.agentId ?? "none"}`;
+  const conflicting = siblings?.find(
+    (s) => `${s.master_partner_id ?? "none"}:${s.agent_id ?? "none"}` !== myAttribution,
+  );
+  if (conflicting) {
+    throw new InvitationConflictError(
+      `An active ${input.invitationType} invitation already exists for this email under a different recruiter`,
+      {
+        invitation_type: input.invitationType,
+        master_partner_id: conflicting.master_partner_id ?? null,
+        agent_id: conflicting.agent_id ?? null,
+      },
+    );
+  }
+
   const payload = {
     invited_email: email,
     invited_name: input.invitedName?.trim() || null,
@@ -81,8 +130,10 @@ export async function createInvitation(
     intended_role: input.intendedRole,
     token_hash,
     inviter_id: input.inviterId ?? null,
-    master_partner_id: input.masterPartnerId ?? null,
-    agent_id: input.agentId ?? null,
+    // Attribution is preserved across resends: a null incoming value keeps the
+    // original recruiter instead of wiping it.
+    master_partner_id: input.masterPartnerId ?? existing?.master_partner_id ?? null,
+    agent_id: input.agentId ?? existing?.agent_id ?? null,
     case_id: input.caseId ?? null,
     recruit_application_id: input.recruitApplicationId ?? null,
     status: "pending",
@@ -100,9 +151,11 @@ export async function createInvitation(
     if (error) throw new Error(error.message);
   }
 
-  // Only one live invitation per recipient and type: revoke every other
-  // pending invitation for this email so an older link can never be used to
-  // activate against a stale case.
+  // Only one live invitation per recipient, type and recruiter: revoke every
+  // other pending invitation for this email so an older link can never be used
+  // to activate against a stale case. Attribution conflicts were already
+  // rejected above; the remaining siblings share the recruiter and are
+  // duplicates of this invite.
   let stale = admin
     .from("user_invitations")
     .update({ status: "revoked" })

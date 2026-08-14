@@ -27,6 +27,9 @@ interface NetworkRow {
   students_count: number;
   paid_cases: number;
   override_earned: number;
+  /** Effective per-recruit override returned by the bulk get_my_agent_network
+   *  RPC (absent while the deployed RPC is the old 10-column version). */
+  agent_amount?: number;
 }
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
@@ -44,12 +47,43 @@ export default function AgentNetworkPage() {
   const locale = i18n.language === "ar" ? "ar" : "en-US";
   const [rows, setRows] = useState<NetworkRow[]>([]);
   const [splits, setSplits] = useState<Record<string, number>>({});
+  const [splitsLoaded, setSplitsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [canInvite, setCanInvite] = useState(false);
   const [inviteForm, setInviteForm] = useState({ full_name: "", email: "", role: "social_media_partner" });
   const [inviting, setInviting] = useState(false);
+  const inviteEmail = inviteForm.email.trim().toLowerCase();
+  const inviteEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail);
+  const inviteFormValid = inviteForm.full_name.trim().length > 0 && inviteEmailValid;
+
+  // Per-recruit override rates are fetched in the background so the recruit list
+  // renders immediately. The bulk get_my_agent_network RPC now returns
+  // agent_amount per row (ONE query, no N+1), so this only runs for rows that
+  // lack it — i.e. while the deployed RPC is still the old 10-column version.
+  const loadSplits = useCallback(async (uid: string, list: NetworkRow[]) => {
+    if (list.length === 0) {
+      setSplitsLoaded(true);
+      return;
+    }
+    const entries = await Promise.all(
+      list.map(async (r) => {
+        try {
+          const { data: s } = await (supabase as any).rpc("get_effective_agent_split", {
+            p_agent_id: uid,
+            p_recruited_partner_id: r.partner_id,
+          });
+          const row = Array.isArray(s) ? s[0] : null;
+          return [r.partner_id, Number(row?.agent_amount ?? 0)] as const;
+        } catch {
+          return [r.partner_id, 0] as const;
+        }
+      }),
+    );
+    setSplits(Object.fromEntries(entries));
+    setSplitsLoaded(true);
+  }, []);
 
   const load = useCallback(async (uid: string) => {
     const [netRes, linkRes, profileRes] = await Promise.all([
@@ -62,19 +96,11 @@ export default function AgentNetworkPage() {
     const linkRow = Array.isArray(linkRes.data) ? linkRes.data[0] : linkRes.data;
     setInviteCode(linkRow?.code ?? null);
     setCanInvite(profileRes.data?.agent_can_invite_directly === true);
-    const entries = await Promise.all(
-      list.map(async (r) => {
-        const { data: s } = await (supabase as any).rpc("get_effective_agent_split", {
-          p_agent_id: uid,
-          p_recruited_partner_id: r.partner_id,
-        });
-        const row = Array.isArray(s) ? s[0] : null;
-        return [r.partner_id, Number(row?.agent_amount ?? 0)] as const;
-      }),
-    );
-    setSplits(Object.fromEntries(entries));
     setLoading(false);
-  }, []);
+    // Rows carrying agent_amount render immediately; the rest (old RPC) fall
+    // back to background per-recruit splits.
+    void loadSplits(uid, list.filter((r) => r.agent_amount == null));
+  }, [loadSplits]);
 
   const userId = useAuthedUserId(load);
   useRealtimeSubscription("profiles", () => { if (userId) load(userId); }, !!userId);
@@ -160,7 +186,7 @@ export default function AgentNetworkPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {t("agent.directInviteHint", "Send an activation link directly. The invited person signs up with this email and joins your network after Darb approves them.")}
+              {t("agent.directInviteHint", "Send an activation link directly. The invited person signs up with this email and joins your network as soon as they activate their account.")}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
@@ -181,7 +207,12 @@ export default function AgentNetworkPage() {
                   placeholder="name@example.com"
                   dir="ltr"
                   maxLength={255}
+                  className={inviteEmail && !inviteEmailValid ? "border-destructive focus-visible:ring-destructive" : undefined}
+                  aria-invalid={!!inviteEmail && !inviteEmailValid}
                 />
+                {inviteEmail && !inviteEmailValid && (
+                  <p className="text-xs text-destructive">{t("agent.inviteEmailInvalid", "Enter a valid email address")}</p>
+                )}
               </div>
             </div>
             <div className="space-y-1.5">
@@ -197,7 +228,7 @@ export default function AgentNetworkPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={sendInvite} disabled={inviting} className="gap-2">
+            <Button onClick={sendInvite} disabled={inviting || !inviteFormValid} className="gap-2">
               {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {inviting ? t("agent.inviteSending", "Sending...") : t("agent.sendInvite", "Send invitation")}
             </Button>
@@ -252,7 +283,11 @@ export default function AgentNetworkPage() {
                     </p>
                     <p className="text-xs mt-1">
                       {t("agent.agreedRate", "Override rate")}:{" "}
-                      <span className="font-semibold">{fmt(splits[r.partner_id] ?? 0)}</span>
+                      {r.agent_amount != null || splitsLoaded ? (
+                        <span className="font-semibold">{fmt(r.agent_amount ?? splits[r.partner_id] ?? 0)}</span>
+                      ) : (
+                        <span className="inline-block h-3 w-12 animate-pulse rounded bg-muted align-middle" />
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 text-xs">

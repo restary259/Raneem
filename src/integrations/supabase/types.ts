@@ -4498,6 +4498,7 @@ export type Database = {
       get_my_agent_network: {
         Args: never
         Returns: {
+          agent_amount: number
           city: string
           email: string
           full_name: string

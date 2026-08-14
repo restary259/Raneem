@@ -697,3 +697,59 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - PartnerApplyPage (/partner/apply, social_media_partner only) renders <ApplyForm embedded useSessionAuth onSubmitted={...} />. embedded omits the full-screen chrome/hero/trust badges (renders inside the dashboard shell); useSessionAuth sends the partner session access token in Authorization: Bearer instead of the anon apikey, so the edge function attributes the case to the logged-in partner server-side. Ambassadors are redirected away (no Apply route/nav for them).
 - create-case-from-apply edge function: resolveCaller now detects isPartner (social_media_partner/ambassador) from the JWT. After the staff-only partner_id branch and the referral-code resolution, a partner self-attribution branch fills validatedPartnerId from caller.userId (server-derived — the client-supplied partner_id is still ignored for non-staff callers, so a partner can never credit a different account) with attributionMethod = "partner_self". A referral code on the request still wins (the partner may be sharing a student ref link).
 - Build/test: npm run build (tsc+vite) clean; npx vitest run 343/343 pass.
+
+## Agent backend fixes (2026-08-14)
+- **Bulk network split (no more N+1)**: `get_my_agent_network()` now returns an
+  `agent_amount` column (the effective per-recruit override, resolved by the
+  SAME `get_effective_agent_split` the page used per-row) — one RPC replaces the
+  old "1 list call + N split calls". Migration
+  `20260814150000_agent_backend_fixes.sql`. `AgentNetworkPage` is hybrid: rows
+  carrying `agent_amount` render immediately; rows that lack it (old deployed
+  RPC) fall back to the background `get_effective_agent_split` loop, so the page
+  never shows a wrong/zero rate during the rollout. Generated
+  `src/integrations/supabase/types.ts` `get_my_agent_network` Returns gained
+  `agent_amount`.
+- **agent_relationships is now a real audit trail** (the table existed since
+  `20260814140100` but nothing ever wrote to it). The single writer is
+  `sync_agent_relationship_row(p_agent_id, p_user_id)` (SECURITY DEFINER):
+  deactivates stale links for the recruit, resolves the recruit's role and the
+  effective commission server-side, and upserts the live row
+  (`ON CONFLICT` matches the partial unique index
+  `(agent_id, recruited_user_id) WHERE recruited_user_id IS NOT NULL AND active = true`).
+  Triggers: `trg_sync_agent_relationship` on `profiles.agent_id` (attach/detach/reassign),
+  and `trg_sync_agent_relationship_on_role` on `user_roles` (covers the ordering
+  where a profile with `agent_id` is created before the partner/ambassador role
+  is granted — accept-invitation ordering). A role downgrade out of
+  partner/ambassador deactivates the link (history kept); detaching
+  (`agent_id = NULL`) also deactivates, never deletes. Existing agent→recruit
+  links are backfilled idempotently.
+- **Multi-level agent chaining fully closed**: `enforce_agent_graph` (profiles
+  trigger, from `20260814140100`) only fires on `agent_id` changes, so a user
+  could be granted the 'agent' role AFTER already belonging to an agent's
+  network without any trigger firing. New `enforce_agent_graph_on_role` (BEFORE
+  trigger on `user_roles`) rejects granting 'agent' to a profile with
+  `agent_id` set — same invariant as the profiles path.
+- **createInvitation is attribution-safe** (`_shared/invitations.ts`):
+  - Conflict: a live pending invitation for the same email + type under a
+    DIFFERENT recruiter (different `master_partner_id` or `agent_id`) now throws
+    `InvitationConflictError` instead of being silently revoked and
+    re-attributed. Same-recruiter duplicates (re-invites across cases) are still
+    refreshed/revoked as before.
+  - Resend preserves attribution: a null incoming `masterPartnerId`/`agentId`
+    keeps the existing values instead of wiping them (this is what fixed
+    `invite-account` resends killing an agent-recruit's `agent_id`).
+  - `agent-invite-recruit`, `invite-account` and `approve-partner-recruit`
+    surface `InvitationConflictError` as a 409 with `code: "invitation_conflict"`.
+    `approve-partner-recruit` reverts the premature `approved` flip back to
+    `pending` (clearing `reviewed_by`/`reviewed_at`) so a conflicted application
+    is never stuck "approved without an invite".
+- **create-team-member**: `agent_id` is only stamped for
+  `social_media_partner`/`ambassador` roles (an agent can never sit under
+  another agent — `enforce_agent_graph` forbids chaining — and a team_member
+  belongs to no recruitment network).
+- **Frontend**: `identityConflictMessage` (`src/lib/identityConflict.ts`)
+  handles `code: "invitation_conflict"` with the new localized
+  `admin.team.conflictPendingInvite` key (en + ar). `AgentNetworkPage`'s direct
+  invite surfaces it via the same toast path.
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 345/345 pass
+  (+2 identityConflict `invitation_conflict` cases; i18n parity guard green).

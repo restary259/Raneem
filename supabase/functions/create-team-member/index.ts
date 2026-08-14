@@ -141,9 +141,14 @@ serve(async (req) => {
       // Only partners can belong to a master partner's network.
       master_partner_id:
         dbRole === "social_media_partner" && master_partner_id ? master_partner_id : null,
-      // Agent link: applies to an Agent's own account or to a partner/
-      // ambassador recruited by an Agent.
-      agent_id: agent_id ?? null,
+      // Agent link only makes sense for a partner/ambassador recruited by an
+      // Agent (mirrors master_partner_id). An agent can never sit under another
+      // agent (enforce_agent_graph forbids multi-level chaining), and a
+      // team_member belongs to no recruitment network.
+      agent_id:
+        (dbRole === "social_media_partner" || dbRole === "ambassador") && agent_id
+          ? agent_id
+          : null,
     });
 
 

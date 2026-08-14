@@ -34,7 +34,19 @@ export function identityConflictMessage(
   result: IdentityConflictResult | null | undefined,
   t: TFunction,
 ): string | null {
-  if (!result || result.code !== "identity_conflict") return null;
+  if (!result) return null;
+
+  // A live invitation already exists for this email + type under a DIFFERENT
+  // recruiter (InvitationConflictError from createInvitation). The recruit
+  // belongs to whoever invited them first — never silently re-attribute.
+  if (result.code === "invitation_conflict") {
+    return t("admin.team.conflictPendingInvite", {
+      defaultValue:
+        "This email already has a pending invitation under a different recruiter. Revoke that invitation before sending a new one, or use a different email address.",
+    });
+  }
+
+  if (result.code !== "identity_conflict") return null;
 
   const key = result.existing_role ? ROLE_KEYS[result.existing_role] : undefined;
   const existing = key

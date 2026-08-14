@@ -64,4 +64,25 @@ describe("identityConflictMessage", () => {
     );
     expect(msg).toContain("another");
   });
+
+  it("describes an invitation_conflict (different recruiter) without a role", () => {
+    const msg = identityConflictMessage(
+      {
+        error: "An active partner invitation already exists for this email under a different recruiter",
+        code: "invitation_conflict",
+      },
+      t,
+    );
+    expect(msg).toContain("pending invitation");
+    expect(msg).toContain("different recruiter");
+  });
+
+  it("still returns null for unknown codes when invitation_conflict is not set", () => {
+    expect(
+      identityConflictMessage({ error: "x", code: "identity_conflict", existing_role: "student", deactivated: false }, t),
+    ).toContain("student");
+    expect(
+      identityConflictMessage({ error: "x", code: "SOMETHING_ELSE" }, t),
+    ).toBeNull();
+  });
 });

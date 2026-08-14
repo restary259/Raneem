@@ -435,6 +435,7 @@
       "conflictSameRole": "This email already has an active {{role}} account. Manage the existing account instead of creating a new one, or use a different email address.",
       "conflictActive": "This email is already used by a {{role}} account. One person can hold only one role in Darb — use a different email address.",
       "conflictDeactivated": "This email belongs to a deactivated {{role}} account. Reactivate that account instead of creating a new one, or use a different email.",
+      "conflictPendingInvite": "This email already has a pending invitation under a different recruiter. Revoke that invitation before sending a new one, or use a different email address.",
       "deactivateTitle": "Deactivate {{name}}?",
       "deactivateIsolation": "This affects only this account. Other accounts, even with a similar name, are untouched.",
       "deactivateRemovedTitle": "What is removed",
@@ -3987,7 +3988,7 @@
     "inviteHint": "Share this link with partners or ambassadors you want to recruit. Applications through it are attached to your network after Darb approves them.",
     "inviteMissing": "No recruiting link yet.",
     "directInviteTitle": "Invite a partner / ambassador",
-    "directInviteHint": "Send an activation link directly. The invited person signs up with this email and joins your network after Darb approves them.",
+    "directInviteHint": "Send an activation link directly. The invited person signs up with this email and joins your network as soon as they activate their account.",
     "inviteFullName": "Full name",
     "inviteFullNamePlaceholder": "e.g. Sara Khalil",
     "inviteEmail": "Email",
@@ -3995,7 +3996,8 @@
     "sendInvite": "Send invitation",
     "inviteSending": "Sending...",
     "inviteSent": "Invitation sent",
-    "inviteRequired": "Name and email are required"
+    "inviteRequired": "Name and email are required",
+    "inviteEmailInvalid": "Enter a valid email address"
   },
   "theme": {
     "dark": "Dark",
