@@ -3014,6 +3014,7 @@ export type Database = {
           created_by: string | null
           criminal_record_details: string | null
           date_of_birth: string | null
+          deactivated_at: string | null
           deactivated_by: string | null
           deactivated_reason: string | null
           deleted_at: string | null
@@ -3079,6 +3080,7 @@ export type Database = {
           created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
+          deactivated_at?: string | null
           deactivated_by?: string | null
           deactivated_reason?: string | null
           deleted_at?: string | null
@@ -3144,6 +3146,7 @@ export type Database = {
           created_by?: string | null
           criminal_record_details?: string | null
           date_of_birth?: string | null
+          deactivated_at?: string | null
           deactivated_by?: string | null
           deactivated_reason?: string | null
           deleted_at?: string | null
