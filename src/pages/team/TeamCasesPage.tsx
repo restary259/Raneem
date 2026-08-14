@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, Loader2, Phone } from 'lucide-react';
+import { Search, Plus, Loader2, Phone, UserPlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { isLinkablePhone } from '@/lib/phone';
@@ -163,12 +163,20 @@ export default function TeamCasesPage() {
 
   return (
     <div className="p-6 space-y-4 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-2xl font-bold">{isAr ? 'الملفات' : 'Cases'}</h1>
-        <Button onClick={() => setShowNew(true)} size="sm">
-          <Plus className="h-4 w-4 me-2" /> {isAr ? 'ملف جديد' : 'New Case'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* "Submit new student" is an action on this page, not its own
+              sidebar destination. */}
+          <Button variant="outline" size="sm" onClick={() => navigate('/team/submit')}>
+            <UserPlus className="h-4 w-4 me-2" /> {isAr ? 'طالب جديد' : 'New student'}
+          </Button>
+          <Button onClick={() => setShowNew(true)} size="sm">
+            <Plus className="h-4 w-4 me-2" /> {isAr ? 'ملف جديد' : 'New Case'}
+          </Button>
+        </div>
       </div>
+
 
       {/* Search + Status filter pills */}
       <div className="flex gap-2 flex-col sm:flex-row">
