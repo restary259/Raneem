@@ -976,3 +976,52 @@ correct. The data was right; the READ paths were broken.
   (DDL). It is NOT applied by the Vercel frontend build or the `ci.yml`
   workflow. Run via `supabase db push` or the Supabase dashboard SQL editor.
   The anon/authenticated JWT cannot run DDL.
+
+## Migration-to-Code Reconciliation (2026-08-15)
+
+### DashboardService KPI classification (FIN-01)
+- `src/services/DashboardService.ts` classified rewards by free-text
+  `admin_notes` prefix ("Partner commission from case…" / "Team commission
+  from case…"). Agent self-referral rewards (note "Agent self-referral from
+  case…") and master/agent_override shares fell into NEITHER bucket, so
+  partner-pool outlay was understated and platform net revenue overstated.
+- Fixed: classify by the structured `reward_type` column (authoritative),
+  falling back to `admin_notes` prefix only for legacy rows that predate
+  `reward_type`. `isTeam` = `reward_type === 'team'`; `isPartnerPool` = any
+  non-team reward (partner referral, master share, agent self-referral, agent
+  override — all reduce platform margin). Matches the pattern already used in
+  `src/components/spreadsheet/sheetQueries.ts`. The rewards query now selects
+  `reward_type, recipient_role` alongside the previous fields. Both the
+  KPI-level totals and the per-case reconstruction use the same helpers.
+
+### case_payment_proofs.payment_id NOT NULL bug (live fix)
+- `submit_german_payment_proof` / `submit_case_payment_proof` insert without
+  `payment_id` (a Germany-side proof can arrive before any payment row exists),
+  but the live column was `NOT NULL` because the align_darb migration's
+  `CREATE TABLE IF NOT EXISTS` was a no-op on the already-existing table.
+  Every student proof upload hit a NOT NULL violation.
+- Migration `20260815140000_drop_payment_proof_not_null.sql`: drops NOT NULL on
+  `payment_id`, recreates `payment_id` FK as `ON DELETE SET NULL` (proof is
+  evidence — don't delete it when a payment is removed, just unlink), recreates
+  `uploaded_by` FK as `ON DELETE RESTRICT` (was SET NULL on a NOT NULL column,
+  which made profile deletion fail with a cryptic violation). Adds a
+  deprecation `COMMENT ON COLUMN referrals.discount_applied`.
+- `src/integrations/supabase/types.ts` updated: `payment_id` Row →
+  `string | null`, Insert → `payment_id?: string | null`.
+
+### Dead code removal (Option B — full pipeline + dead modules)
+- Deleted the entire dead dashboard pipeline: `dataService.ts`,
+  `useDashboardData.ts`, and the handwritten/stale `src/types/database.ts`
+  (sole importer was `dataService.ts`). The authoritative generated types live
+  in `src/integrations/supabase/types.ts`.
+- Deleted 12 additional dead modules with zero importers (verified via grep):
+  `services/CaseCostingService.ts`, `services/CasePaymentService.ts`,
+  `hooks/{useCasePayments,usePermissions,useScrollAnimation,useSessionGuard}.ts`,
+  `lib/{authFailureLog,conflictPrevention,cost-data,importantContacts,serviceFee,types}.ts`
+  plus their 4 test files. `authFailureLog.ts` became dead because
+  `dataService.ts` was its only consumer.
+- NOTE: `20260815140000` requires Supabase admin/service-role access (DDL).
+  Apply via `supabase db push` or the dashboard SQL editor. The frontend build
+  and CI do NOT apply DDL.
+- Build: `npm run build` clean; `npx vitest run` 320/320 pass (was 350; −30
+  tests that only covered deleted dead code).

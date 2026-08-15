@@ -70,7 +70,6 @@ export interface CaseFinanceHandle {
 interface ProofRow {
   id: string;
   case_id: string;
-  payment_id: string;
   payment_type: "school_course" | "school_accommodation" | "school_insurance";
   file_path: string;
   uploaded_at: string;
@@ -172,7 +171,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const loadProofs = useCallback(async () => {
     const { data, error } = await (supabase as any)
       .from("case_payment_proofs")
-      .select("id, case_id, payment_id, payment_type, file_path, uploaded_at, status, rejection_reason, reviewed_at")
+      .select("id, case_id, payment_type, file_path, uploaded_at, status, rejection_reason, reviewed_at")
       .eq("case_id", caseId)
       .order("uploaded_at", { ascending: false });
     if (error) {

@@ -26,7 +26,7 @@ export const DashboardService = {
         .from('case_submissions')
         .select('service_fee, enrollment_paid_at, case_id')
         .not('enrollment_paid_at', 'is', null),
-      db.from('rewards').select('amount, status, admin_notes, case_id'),
+      db.from('rewards').select('amount, status, admin_notes, case_id, reward_type'),
       db
         .from('cases')
         .select('id, referral_discount, platform_revenue_ils, status')
@@ -43,9 +43,16 @@ export const DashboardService = {
     const enrolledCount = cases.length;
     const referralDiscounts = cases.reduce((s, c) => s + (c.referral_discount || 0), 0);
 
-    const partnerRewards = allRewards.filter((r) =>
-      r.admin_notes?.startsWith('Partner commission from case')
-    );
+    // Classify by the structured reward_type column (authoritative); fall back
+    // to admin_notes prefix only for legacy rows that predate reward_type.
+    const isTeam = (r: any): boolean =>
+      r.reward_type ? r.reward_type === 'team' : (r.admin_notes ?? '').startsWith('Team commission');
+    const isPartnerPool = (r: any): boolean => {
+      if (r.reward_type) return r.reward_type !== 'team';
+      return (r.admin_notes ?? '').startsWith('Partner commission');
+    };
+
+    const partnerRewards = allRewards.filter(isPartnerPool);
     const partnerCommissionPending = partnerRewards
       .filter((r) => r.status === 'pending' || r.status === 'approved')
       .reduce((s, r) => s + (r.amount || 0), 0);
@@ -53,9 +60,7 @@ export const DashboardService = {
       .filter((r) => r.status === 'paid')
       .reduce((s, r) => s + (r.amount || 0), 0);
 
-    const teamCommissionsTotal = allRewards
-      .filter((r) => r.admin_notes?.startsWith('Team commission from case'))
-      .reduce((s, r) => s + (r.amount || 0), 0);
+    const teamCommissionsTotal = allRewards.filter(isTeam).reduce((s, r) => s + (r.amount || 0), 0);
     const partnerCommissionsTotal = partnerRewards.reduce((s, r) => s + (r.amount || 0), 0);
 
     const serviceFeesFromSubs = submissions.reduce((s, r) => s + (r.service_fee || 0), 0);
@@ -81,9 +86,9 @@ export const DashboardService = {
     for (const r of allRewards) {
       if (!r.case_id) continue;
       const amt = r.amount || 0;
-      if (r.admin_notes?.startsWith('Team commission from case')) {
+      if (isTeam(r)) {
         teamCommByCase[r.case_id] = (teamCommByCase[r.case_id] || 0) + amt;
-      } else if (r.admin_notes?.startsWith('Partner commission from case')) {
+      } else if (isPartnerPool(r)) {
         partnerCommByCase[r.case_id] = (partnerCommByCase[r.case_id] || 0) + amt;
       }
     }

@@ -257,6 +257,7 @@ serve(async (req) => {
           await supabaseAdmin.from("appointments").delete().in("case_id", caseIds);
           await supabaseAdmin.from("case_submissions").delete().in("case_id", caseIds);
           await supabaseAdmin.from("case_service_snapshots").delete().in("case_id", caseIds);
+          await supabaseAdmin.from("case_payment_proofs").delete().in("case_id", caseIds);
           await supabaseAdmin.from("cases").delete().in("id", caseIds);
         }
         deleted.push("case");
@@ -286,6 +287,10 @@ serve(async (req) => {
 
       // services
       await supabaseAdmin.from("services").delete().eq("student_id", student_id);
+
+      // case_payment_proofs uploaded_by this user — clears the ON DELETE RESTRICT
+      // FK before the profile delete below.
+      await supabaseAdmin.from("case_payment_proofs").delete().eq("uploaded_by", student_id);
 
       if (includeAll || categories.includes("contact_info")) {
         await supabaseAdmin.from("profiles").delete().eq("id", student_id);

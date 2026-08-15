@@ -35,7 +35,6 @@ interface SchoolCost {
 }
 interface ProofRow {
   id: string;
-  payment_id: string;
   payment_type: string;
   file_path: string;
   uploaded_at: string;
@@ -87,7 +86,7 @@ const StudentFeesPage = () => {
         .maybeSingle(),
       (supabase as any)
         .from("case_payment_proofs")
-        .select("id, payment_id, payment_type, file_path, uploaded_at, status, rejection_reason")
+        .select("id, payment_type, file_path, uploaded_at, status, rejection_reason")
         .eq("case_id", myCase.id)
         .order("uploaded_at", { ascending: false }),
     ]);
