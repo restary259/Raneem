@@ -1,15 +1,15 @@
 import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, Users, Shield, Handshake, UserCheck, Plus } from "lucide-react";
+import { RefreshCw, Users, Shield, Handshake, UserCheck, Plus } from "lucide-react";
 import TabHub, { HubTab } from "@/components/shell/TabHub";
-import { EmptyState, LoadingState, ErrorState } from "@/components/shell/States";
 import MemberList from "@/components/admin/MemberList";
 import MemberDetailDrawer from "@/components/admin/MemberDetailDrawer";
-import { EmptyStateProps } from "@/components/shell/States";
+import CreateMemberDialog from "@/components/admin/CreateMemberDialog";
+import PendingInvitations from "@/components/admin/PendingInvitations";
 
 interface MemberRow {
   requester_id: string;
@@ -51,9 +51,12 @@ async function fetchMembers(role?: string): Promise<MemberRow[]> {
 
 const AdminMembersPage: React.FC = () => {
   const { t } = useTranslation("dashboard");
+  const [searchParams] = useSearchParams();
 
   const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [invitesRefreshKey, setInvitesRefreshKey] = useState(0);
 
   // Team tab (team_member)
   const {
@@ -120,6 +123,21 @@ const AdminMembersPage: React.FC = () => {
   const handleRetry = useCallback((refetch: () => void) => {
     refetch();
   }, []);
+
+  const handleRefreshAll = useCallback(async () => {
+    await Promise.allSettled([refetchTeam(), refetchAgents(), refetchPartners(), refetchAmbassadors()]);
+  }, [refetchTeam, refetchAgents, refetchPartners, refetchAmbassadors]);
+
+  const handleCreated = useCallback(() => {
+    setInvitesRefreshKey((n) => n + 1);
+    Promise.allSettled([refetchTeam(), refetchAgents(), refetchPartners(), refetchAmbassadors()]);
+  }, [refetchTeam, refetchAgents, refetchPartners, refetchAmbassadors]);
+
+  const activeRole =
+    (searchParams.get("tab") === "agents" && "agent") ||
+    (searchParams.get("tab") === "partners" && "social_media_partner") ||
+    (searchParams.get("tab") === "ambassadors" && "ambassador") ||
+    "team_member";
 
   const tabs: HubTab[] = [
     {
@@ -206,11 +224,11 @@ const AdminMembersPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => { /* refresh all */ }} disabled={teamLoading || agentLoading || partnerLoading || ambassadorLoading}>
+          <Button variant="outline" size="sm" onClick={handleRefreshAll} disabled={teamLoading || agentLoading || partnerLoading || ambassadorLoading}>
             <RefreshCw className="h-4 w-4 me-2" />
             {t("common.refresh", "Refresh")}
           </Button>
-          <Button onClick={() => { /* open create member dialog */ }}>
+          <Button onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 me-2" />
             {t("admin.members.createMember", "Create Member")}
           </Button>
@@ -236,8 +254,15 @@ const AdminMembersPage: React.FC = () => {
         </div>
       )}
 
+      <PendingInvitations refreshKey={invitesRefreshKey} />
       <TabHub tabs={tabs} param="tab" />
       <MemberDetailDrawer member={selectedMember} open={drawerOpen} onOpenChange={handleCloseDrawer} />
+      <CreateMemberDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultRole={activeRole}
+        onCreated={handleCreated}
+      />
     </div>
   );
 };
