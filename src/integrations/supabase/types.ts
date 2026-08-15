@@ -4601,6 +4601,20 @@ export type Database = {
           students_count: number
         }[]
       }
+      get_my_agent_students: {
+        Args: never
+        Returns: {
+          created_at: string
+          full_name: string
+          id: string
+          partner_id: string
+          referred_by: string
+          source: string
+          source_attribution_method: string
+          src: string
+          status: string
+        }[]
+      }
       get_my_case: {
         Args: never
         Returns: {
