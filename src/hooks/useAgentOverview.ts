@@ -51,7 +51,6 @@ export interface AgentStats {
   activeRecruits: number;
   networkStudents: number;
   paidCases: number;
-  overrideEarned: number;
   /** Students the agent referred personally (their own apply link). */
   directStudents: number;
   /** Students referred by partners in the network. */
@@ -185,7 +184,6 @@ export function useAgentOverview(): AgentOverviewData {
       ? fmt0(kpis.students_network)
       : recruits.reduce((s, r) => s + fmt0(r.students_count), 0),
     paidCases: enrolled,
-    overrideEarned: recruits.reduce((s, r) => s + fmt0(r.override_earned), 0),
     directStudents: fmt0(kpis?.students_direct),
     partnerStudents: kpis
       ? fmt0(kpis.students_partner)

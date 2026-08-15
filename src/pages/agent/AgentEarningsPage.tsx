@@ -13,6 +13,7 @@ import {
   type PayoutPreview,
 } from "@/services/PayoutRequestService";
 import { useEarningsSummary } from "@/hooks/useEarningsSummary";
+import { useAgentOverview } from "@/hooks/useAgentOverview";
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
 
@@ -24,7 +25,8 @@ export default function AgentEarningsPage() {
   const { t } = useTranslation("dashboard");
   const { dir } = useDirection();
   const { toast } = useToast();
-  const { summary: earnings } = useEarningsSummary(true);
+  const { summary: earnings, loading: earningsLoading } = useEarningsSummary(true);
+  const { stats } = useAgentOverview();
   const [preview, setPreview] = useState<PayoutPreview | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,11 +44,13 @@ export default function AgentEarningsPage() {
 
   if (loading) return <DashboardLoading />;
 
-  const available = Number(earnings?.available ?? preview?.eligible_amount ?? 0);
-  const locked = Number(earnings?.locked ?? preview?.locked_amount ?? 0);
+  const available = Number(earningsLoading ? (preview?.eligible_amount ?? 0) : (earnings?.available ?? 0));
+  const locked = Number(earningsLoading ? (preview?.locked_amount ?? 0) : (earnings?.locked ?? 0));
   const requested = Number(earnings?.requested ?? 0);
   const paid = Number(earnings?.paid ?? 0);
   const hasOpen = preview?.has_open_request || requested > 0;
+  const commissionNetwork = Number(stats.commissionNetwork ?? 0);
+  const commissionSelf = Number(stats.commissionSelf ?? 0);
 
   const buckets = [
     { label: t("influencer.earnings.available", "Available"), value: available, icon: Award, color: "text-emerald-600" },
@@ -88,6 +92,26 @@ export default function AgentEarningsPage() {
           </Card>
         ))}
       </div>
+
+      {/* Commission source split: network overrides vs self-referrals.
+          Already computed by get_my_agent_kpis (commission_network /
+          commission_self); surfaced here so agents see where earnings come
+          from. Sums to earnings.total. */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">{t("agent.commissionSource", "Commission source")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("agent.sourceNetwork", "Network overrides")}</span>
+            <span className="font-semibold">{fmt(commissionNetwork)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">{t("agent.sourceSelf", "Self-referrals")}</span>
+            <span className="font-semibold">{fmt(commissionSelf)}</span>
+          </div>
+        </CardContent>
+      </Card>
 
       {locked > 0 && (
         <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 rounded-lg p-3">

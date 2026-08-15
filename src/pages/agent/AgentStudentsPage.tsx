@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Users, Megaphone, Link2, Search, GraduationCap } from "lucide-react";
+import { Users, Megaphone, Link2, Search, GraduationCap, HelpCircle } from "lucide-react";
 import { LoadingState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 import { STATUS_COLORS } from "@/lib/caseStatus";
 
@@ -20,89 +20,48 @@ interface AgentStudentCase {
   partner_id: string | null;
   referred_by: string | null;
   source_attribution_method: string | null;
+  /** Server-attributed source from get_my_agent_students. */
+  src: "self" | "partner" | "ambassador" | "unknown";
 }
 
-type SourceFilter = "all" | "partner" | "ambassador" | "self";
+type SourceFilter = "all" | "partner" | "ambassador" | "self" | "unknown";
 
 const fmtDate = (iso: string, locale: string) => new Date(iso).toLocaleDateString(locale);
 
-/** Agent students: the three sources clearly distinguished.
- *  - Partner-recruited: cases where partner_id belongs to a partner in the
- *    agent's network.
- *  - Ambassador-recruited: cases where partner_id belongs to an ambassador
- *    in the agent's network.
- *  - Self-referral: cases where partner_id = agent (the agent's own apply form).
- *
- * No sensitive student details (no phone/email/address) — only first-name +
- * status + source, matching the partner students page privacy model. */
+/** Agent students: cases attributable to the agent, fetched in full from the
+ *  `get_my_agent_students` RPC (no client-side truncation) with a
+ *  server-computed `src` column so every row is attributed. No sensitive
+ *  student details (no phone/email/address) — only first-name + status +
+ *  source, matching the partner students page privacy model. */
 export default function AgentStudentsPage() {
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const locale = i18n.language === "ar" ? "ar" : "en-US";
   const [cases, setCases] = useState<AgentStudentCase[]>([]);
-  const [recruitIds, setRecruitIds] = useState<{ partners: Set<string>; ambassadors: Set<string> }>({ partners: new Set(), ambassadors: new Set() });
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async (uid: string) => {
-    // 1. Get the agent's network recruits (with role).
-    const netRes = await (supabase as any).rpc("get_my_agent_network");
-    const recruits = (netRes.data ?? []) as Array<{ partner_id: string; role: string }>;
-    const partners = new Set<string>();
-    const ambassadors = new Set<string>();
-    for (const r of recruits) {
-      if (r.role === "ambassador") ambassadors.add(r.partner_id);
-      else partners.add(r.partner_id);
-    }
-    setRecruitIds({ partners, ambassadors });
-
-    // 2. Fetch cases attributed to the agent's network OR to the agent directly.
-    //    The agent sees cases where partner_id is one of their recruits, or
-    //    partner_id = the agent themselves (self-referral).
-    const allRecruitIds = [...partners, ...ambassadors, uid];
-    if (allRecruitIds.length === 0) {
-      setCases([]);
-      setLoading(false);
-      return;
-    }
-    const idList = allRecruitIds.join(",");
-    const { data, error } = await (supabase as any)
-      .from("cases")
-      .select("id, full_name, status, created_at, source, partner_id, referred_by, source_attribution_method")
-      .or(`partner_id.in.(${idList}),referred_by.in.(${idList})`)
-      .order("created_at", { ascending: false })
-      .limit(200);
-
+  const load = useCallback(async () => {
+    // Single RPC: complete case list with server-attributed `src`.
+    // Replaces the previous two-step fetch (network RPC + direct cases query
+    // with a hard .limit(200)) and the client-side classifySource() fallthrough.
+    const { data, error } = await (supabase as any).rpc("get_my_agent_students");
     if (error) console.error("agent students fetch error:", error);
     setCases((data ?? []) as AgentStudentCase[]);
     setLoading(false);
   }, []);
 
-  const userId = useAuthedUserId(load);
-  useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
-
-  const classifySource = useCallback(
-    (c: AgentStudentCase): SourceFilter => {
-      const pid = c.partner_id;
-      if (pid === userId) return "self";
-      if (pid && recruitIds.ambassadors.has(pid)) return "ambassador";
-      if (pid && recruitIds.partners.has(pid)) return "partner";
-      const rid = c.referred_by;
-      if (rid === userId) return "self";
-      if (rid && recruitIds.ambassadors.has(rid)) return "ambassador";
-      if (rid && recruitIds.partners.has(rid)) return "partner";
-      return "all";
-    },
-    [userId, recruitIds],
-  );
+  const userId = useAuthedUserId(() => { load(); });
+  useRealtimeSubscription("cases", () => { load(); }, !!userId);
 
   const sourceLabel = (s: SourceFilter) => {
     switch (s) {
       case "partner": return t("agent.sourcePartner", "Via recruited partners");
       case "ambassador": return t("agent.sourceAmbassador", "Via recruited ambassadors");
       case "self": return t("agent.sourceSelfReferral", "Your own referrals");
+      case "unknown": return t("agent.sourceUnattributed", "Unattributed");
       default: return t("agent.allSources", "All sources");
     }
   };
@@ -112,21 +71,21 @@ export default function AgentStudentsPage() {
   const firstNameOnly = (full: string) => full?.split(" ")[0] || "—";
 
   const counts = useMemo(() => {
-    const c = { all: cases.length, partner: 0, ambassador: 0, self: 0 };
+    const c = { all: cases.length, partner: 0, ambassador: 0, self: 0, unknown: 0 };
     for (const cs of cases) {
-      const s = classifySource(cs);
-      if (s === "partner") c.partner++;
-      else if (s === "ambassador") c.ambassador++;
-      else if (s === "self") c.self++;
+      if (cs.src === "partner") c.partner++;
+      else if (cs.src === "ambassador") c.ambassador++;
+      else if (cs.src === "self") c.self++;
+      else if (cs.src === "unknown") c.unknown++;
     }
     return c;
-  }, [cases, classifySource]);
+  }, [cases]);
 
   const filtered = useMemo(() => cases.filter((c) => {
     const matchSearch = !debouncedSearch || firstNameOnly(c.full_name).toLowerCase().includes(debouncedSearch.toLowerCase());
-    const matchSource = sourceFilter === "all" || classifySource(c) === sourceFilter;
+    const matchSource = sourceFilter === "all" || c.src === sourceFilter;
     return matchSearch && matchSource;
-  }), [cases, debouncedSearch, sourceFilter, classifySource]);
+  }), [cases, debouncedSearch, sourceFilter]);
 
   const pagination = usePagination(filtered, 25);
 
@@ -143,7 +102,12 @@ export default function AgentStudentsPage() {
     partner: Users,
     ambassador: Megaphone,
     self: Link2,
+    unknown: HelpCircle,
   };
+
+  const chipFilters: SourceFilter[] = counts.unknown > 0
+    ? ["all", "partner", "ambassador", "self", "unknown"]
+    : ["all", "partner", "ambassador", "self"];
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6" dir={dir}>
@@ -160,7 +124,7 @@ export default function AgentStudentsPage() {
 
       {/* Source filter chips */}
       <div className="flex flex-wrap gap-2">
-        {(["all", "partner", "ambassador", "self"] as SourceFilter[]).map((s) => {
+        {chipFilters.map((s) => {
           const Icon = sourceIcons[s];
           return (
             <button
@@ -215,36 +179,30 @@ export default function AgentStudentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pagination.items.map((c) => {
-                    const src = classifySource(c);
-                    return (
-                      <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                        <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap max-w-[140px] truncate">{firstNameOnly(c.full_name)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">{sourceLabel(src)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <Badge className={`text-xs w-fit ${STATUS_COLORS[c.status] || "bg-muted text-muted-foreground"}`}>{statusLabel(c.status)}</Badge>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(c.created_at, locale)}</td>
-                      </tr>
-                    );
-                  })}
+                  {pagination.items.map((c) => (
+                    <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap max-w-[140px] truncate">{firstNameOnly(c.full_name)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-xs text-muted-foreground">{sourceLabel(c.src)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Badge className={`text-xs w-fit ${STATUS_COLORS[c.status] || "bg-muted text-muted-foreground"}`}>{statusLabel(c.status)}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{fmtDate(c.created_at, locale)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
             {/* Mobile card list */}
             <div className="sm:hidden divide-y divide-border">
-              {pagination.items.map((c) => {
-                const src = classifySource(c);
-                return (
-                  <div key={c.id} className="p-4 space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium text-sm truncate">{firstNameOnly(c.full_name)}</p>
-                      <Badge className={`text-xs ${STATUS_COLORS[c.status] || "bg-muted text-muted-foreground"}`}>{statusLabel(c.status)}</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{sourceLabel(src)} · {fmtDate(c.created_at, locale)}</p>
+              {pagination.items.map((c) => (
+                <div key={c.id} className="p-4 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-sm truncate">{firstNameOnly(c.full_name)}</p>
+                    <Badge className={`text-xs ${STATUS_COLORS[c.status] || "bg-muted text-muted-foreground"}`}>{statusLabel(c.status)}</Badge>
                   </div>
-                );
-              })}
+                  <p className="text-xs text-muted-foreground">{sourceLabel(c.src)} · {fmtDate(c.created_at, locale)}</p>
+                </div>
+              ))}
             </div>
             <TablePagination pagination={pagination} />
           </CardContent>

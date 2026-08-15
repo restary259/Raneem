@@ -94,7 +94,7 @@ export default function AgentOverviewPage() {
     },
     {
       key: "students",
-      label: t("agent.ovNetworkStudents", "Network students"),
+      label: t("agent.ovTotalStudents", "Total students"),
       value: fmtCount(stats.totalStudents),
       icon: GraduationCap,
     },
@@ -138,6 +138,31 @@ export default function AgentOverviewPage() {
       label: t("agent.kpiConversion", "Conversion"),
       value: `${stats.conversionRate}%`,
       icon: Award,
+    },
+  ];
+
+  // Activity KPIs — these are already computed by get_my_agent_kpis
+  // (cases_new, cases_last_30d, members_active) and exposed via the shared
+  // hook (stats.newCases, stats.casesLast30d, stats.activeRecruits). Surfacing
+  // them adds no extra DB cost.
+  const activityKpis: KpiItem[] = [
+    {
+      key: "newCases",
+      label: t("agent.kpiNewCases", "New cases"),
+      value: fmtCount(stats.newCases),
+      icon: TrendingUp,
+    },
+    {
+      key: "last30d",
+      label: t("agent.kpiLast30d", "Cases (30d)"),
+      value: fmtCount(stats.casesLast30d),
+      icon: Award,
+    },
+    {
+      key: "activeRecruits",
+      label: t("agent.kpiActiveRecruits", "Active recruits"),
+      value: fmtCount(stats.activeRecruits),
+      icon: Users,
     },
   ];
 
@@ -225,6 +250,7 @@ export default function AgentOverviewPage() {
 
         <KpiRow items={kpis} columns={4} />
         <KpiRow items={funnelKpis} columns={4} />
+        <KpiRow items={activityKpis} columns={3} />
 
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -234,16 +260,14 @@ export default function AgentOverviewPage() {
             icon={GraduationCap}
           >
             <div className="space-y-2">
+              {/* Partners and ambassadors share the same per-recruit override
+                  rate (both render `rates.perRecruit`), so collapse them into
+                  one row to avoid showing identical values that imply
+                  differentiated rates. */}
               <SourceRow
                 icon={Users}
-                label={t("agent.sourcePartner", "Via recruited partners")}
-                hint={t("agent.sourcePartnerHint", "Students from partners in your network")}
-                rate={fmt(rates.perRecruit)}
-              />
-              <SourceRow
-                icon={Megaphone}
-                label={t("agent.sourceAmbassador", "Via recruited ambassadors")}
-                hint={t("agent.sourceAmbassadorHint", "Students from ambassadors in your network")}
+                label={t("agent.sourceNetwork", "Via your network")}
+                hint={t("agent.sourceNetworkHint", "Partners and ambassadors you recruited")}
                 rate={fmt(rates.perRecruit)}
               />
               <SourceRow

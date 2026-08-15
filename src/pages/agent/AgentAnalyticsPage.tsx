@@ -77,6 +77,7 @@ export default function AgentAnalyticsPage() {
           </div>
           <p className="text-xl font-bold">{stats.networkStudents}</p>
           <p className="text-xs text-muted-foreground">{t("agent.ovNetworkStudents", "Network students")}</p>
+          <p className="text-[11px] text-muted-foreground">{t("agent.networkStudentsHint", "Via partners & ambassadors")}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <div className="inline-flex items-center justify-center w-9 h-9 rounded-xl mb-2.5 text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/15">
@@ -98,6 +99,9 @@ export default function AgentAnalyticsPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">{t("agent.sourceBreakdown", "Commission by source")}</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            {t("agent.sourceBreakdownEqualNote", "Partners and ambassadors earn the same override rate.")}
+          </p>
         </CardHeader>
         <CardContent className="space-y-3">
           {sourceBreakdown.map((s) => {
