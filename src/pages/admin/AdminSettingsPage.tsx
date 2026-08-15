@@ -36,7 +36,6 @@ import {
   Eye,
   Edit,
   Copy,
-  Search,
 } from "lucide-react";
 import PipelineStatusesPanel from "@/components/admin/PipelineStatusesPanel";
 import ServiceCatalogPanel from "@/components/admin/ServiceCatalogPanel";
@@ -67,6 +66,7 @@ interface Contact {
   address_ar?: string | null;
   address_en?: string | null;
   city?: string | null;
+  country?: string | null;
   source_url?: string | null;
   last_verified_at?: string | null;
   scope?: string;
@@ -141,15 +141,15 @@ const AdminSettingsPage = () => {
   const [contactSaving, setContactSaving] = useState(false);
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
 
-  // Admin contacts tab filters / search.
+  // Admin contacts tab filters.
   const [contactFilter, setContactFilter] = useState({
-    school: "all", city: "all", category: "all", scope: "all", status: "all", search: "",
+    country: "all", school: "all", category: "all", status: "all",
   });
 
   const emptyContactForm = {
     name_ar: "", name_en: "", role_ar: "", role_en: "",
     phone: "", email: "", link: "", category: "other", display_order: "0",
-    address_ar: "", address_en: "", city: "", source_url: "", verified_today: true,
+    address_ar: "", address_en: "", city: "", country: "DE", source_url: "", verified_today: true,
     scope: "universal", language_school_id: "",
   };
   const [contactForm, setContactForm] = useState<typeof emptyContactForm>(emptyContactForm);
@@ -256,6 +256,7 @@ const AdminSettingsPage = () => {
       address_ar: contactForm.address_ar || null,
       address_en: contactForm.address_en || null,
       city: needsCity ? (contactForm.city || null) : (isUniversal ? null : (scope === "school_only" ? null : (contactForm.city || null))),
+      country: contactForm.country?.trim() || "DE",
       source_url: contactForm.source_url || null,
       last_verified_at: contactForm.verified_today ? new Date().toISOString() : null,
       scope,
@@ -321,7 +322,7 @@ const AdminSettingsPage = () => {
       phone: c.phone || "", email: c.email || "", link: c.link || "",
       category: c.category, display_order: String(c.display_order ?? 0),
       address_ar: c.address_ar || "", address_en: c.address_en || "",
-      city: c.city || "", source_url: c.source_url || "",
+      city: c.city || "", country: c.country || "DE", source_url: c.source_url || "",
       verified_today: false,
       scope: c.scope || "universal",
       language_school_id: c.language_school_id || "",
@@ -338,7 +339,7 @@ const AdminSettingsPage = () => {
         phone: c.phone, email: c.email, link: c.link, category: c.category,
         display_order: c.display_order,
         address_ar: c.address_ar ?? null, address_en: c.address_en ?? null,
-        city: c.city ?? null, source_url: c.source_url ?? null,
+        city: c.city ?? null, country: c.country || "DE", source_url: c.source_url ?? null,
         scope: c.scope || "universal",
         is_universal: (c.scope || "universal") === "universal",
         language_school_id: c.language_school_id ?? null,
@@ -381,36 +382,27 @@ const AdminSettingsPage = () => {
     return s ? (isRtl ? s.name_ar : s.name_en) : id;
   };
 
-  // Filtered + searched contacts for the admin list.
+  // Filtered contacts for the admin list: country, school, category, status.
   const filteredContacts = contacts.filter((c) => {
     const f = contactFilter;
+
+    // Country filter: compare case-insensitively.
+    if (f.country !== "all" && (c.country ?? "DE").toLowerCase() !== f.country.toLowerCase()) return false;
 
     // School filter: match by school FK.
     if (f.school !== "all" && (c.language_school_id ?? "") !== f.school) return false;
 
-    // City filter: a school_only contact has no targeting city (the scope rule
-    // nulls it), so resolve its city from the schools list; compare
-    // case-insensitively.
-    if (f.city !== "all") {
-      const directCity = c.city ?? "";
-      const schoolCity =
-        c.scope === "school_only"
-          ? (schools.find((s) => s.id === c.language_school_id)?.city ?? "")
-          : "";
-      if (directCity.toLowerCase() !== f.city.toLowerCase() && schoolCity.toLowerCase() !== f.city.toLowerCase()) return false;
-    }
-
     if (f.category !== "all" && c.category !== f.category) return false;
-    if (f.scope !== "all" && (c.scope ?? "universal") !== f.scope) return false;
     if (f.status !== "all" && (c.is_active ? "active" : "inactive") !== f.status) return false;
-    if (f.search) {
-      const q = f.search.toLowerCase();
-      const hay = [c.name_ar, c.name_en, c.phone, c.email, c.category, c.city, c.scope].filter(Boolean).join(" ").toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
     return true;
   });
 
+  const distinctCountries = Array.from(
+    new Map(contacts.map((c) => c.country).filter(Boolean).map((c) => [c.toLowerCase(), c])).values()
+  ).sort() as string[];
+
+  // Cities for the form's city datalist (the city filter was removed; only the
+  // school_city / city_only form fields still use this list).
   const distinctCities = Array.from(
     new Map([...contacts.map((c) => c.city), ...schools.map((s) => s.city)].filter(Boolean).map((c) => [c.toLowerCase(), c])).values()
   ).sort() as string[];
@@ -716,6 +708,18 @@ const AdminSettingsPage = () => {
                       </datalist>
                     </div>
                   )}
+                  <div className="space-y-1">
+                    <Label>{t('contacts.countryLabel', 'Country')}</Label>
+                    <Input
+                      list="contact-countries-datalist"
+                      value={contactForm.country}
+                      onChange={(e) => setContactForm((f) => ({ ...f, country: e.target.value }))}
+                      placeholder="DE"
+                    />
+                    <datalist id="contact-countries-datalist">
+                      {distinctCountries.map((c) => (<option key={c} value={c} />))}
+                    </datalist>
+                  </div>
                   {contactForm.scope === "universal" && (
                     <p className="text-xs text-muted-foreground">
                       {isRtl ? "جهة اتصال عامة تظهر لكل الطلاب." : "Universal contact — visible to every student."}
@@ -762,22 +766,13 @@ const AdminSettingsPage = () => {
             </DialogContent>
           </Dialog>
 
-          {/* ── Filters + search ── */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            <div className="relative col-span-2 sm:col-span-3 lg:col-span-2">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-2 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="ps-8"
-                placeholder={t('contacts.search', 'Search…')}
-                value={contactFilter.search}
-                onChange={(e) => setContactFilter((f) => ({ ...f, search: e.target.value }))}
-              />
-            </div>
-            <Select value={contactFilter.scope} onValueChange={(v) => setContactFilter((f) => ({ ...f, scope: v }))}>
-              <SelectTrigger><SelectValue placeholder={t('contacts.filterScope', 'Scope')} /></SelectTrigger>
+          {/* ── Filters: country, school, category, status ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <Select value={contactFilter.country} onValueChange={(v) => setContactFilter((f) => ({ ...f, country: v }))}>
+              <SelectTrigger><SelectValue placeholder={t('contacts.filterCountry', 'Country')} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t('contacts.filterScope', 'Scope')}</SelectItem>
-                {CONTACT_SCOPES.map((s) => (<SelectItem key={s} value={s}>{scopeLabel(s)}</SelectItem>))}
+                <SelectItem value="all">{t('contacts.filterCountry', 'Country')}</SelectItem>
+                {distinctCountries.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
               </SelectContent>
             </Select>
             <Select value={contactFilter.school} onValueChange={(v) => setContactFilter((f) => ({ ...f, school: v }))}>
@@ -785,13 +780,6 @@ const AdminSettingsPage = () => {
               <SelectContent>
                 <SelectItem value="all">{t('contacts.filterSchool', 'School')}</SelectItem>
                 {schools.map((s) => (<SelectItem key={s.id} value={s.id}>{isRtl ? s.name_ar : s.name_en}</SelectItem>))}
-              </SelectContent>
-            </Select>
-            <Select value={contactFilter.city} onValueChange={(v) => setContactFilter((f) => ({ ...f, city: v }))}>
-              <SelectTrigger><SelectValue placeholder={t('contacts.filterCity', 'City')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('contacts.filterCity', 'City')}</SelectItem>
-                {distinctCities.map((c) => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
               </SelectContent>
             </Select>
             <Select value={contactFilter.category} onValueChange={(v) => setContactFilter((f) => ({ ...f, category: v }))}>
