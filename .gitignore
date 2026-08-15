@@ -29,3 +29,4 @@ dist-ssr
 *.sw?
 playwright-report/
 test-results/
+.agents_tmp/
