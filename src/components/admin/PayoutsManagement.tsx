@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Download, FileText, HandCoins, UserCheck, GraduationCap } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import SegmentedTabs, { type SegmentItem } from '@/components/shell/SegmentedTabs';
 import { useTranslation } from 'react-i18next';
 import RoleDirectory from './RoleDirectory';
 import type { PayoutRole } from './RequesterProfilePanel';
@@ -143,29 +144,32 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     { value: 'students', role: 'student', label: t('admin.payouts.tabStudents', 'Students'), icon: GraduationCap },
   ];
 
+  const items: SegmentItem[] = tabs.map(tab => {
+    const openCount = roleOpenCount(tab.role);
+    return {
+      value: tab.value,
+      icon: tab.icon,
+      label: (
+        <span className="flex items-center gap-1.5">
+          {tab.label}
+          {openCount > 0 && <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">{openCount}</Badge>}
+        </span>
+      ),
+    };
+  });
+
   return (
     <Tabs defaultValue="partners" className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <TabsList className="flex-wrap">
-          {tabs.map(tab => {
-            const openCount = roleOpenCount(tab.role);
-            const Icon = tab.icon;
-            return (
-              <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
-                <Icon className="h-4 w-4" />
-                {tab.label}
-                {openCount > 0 && <Badge variant="secondary" className="ms-1">{openCount}</Badge>}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-        <div className="flex-1" />
-        <Button size="sm" variant="outline" className="gap-2" onClick={exportExcel}>
-          <Download className="h-4 w-4" />{t('admin.payouts.exportExcel', 'Export Excel')}
-        </Button>
-        <Button size="sm" variant="outline" className="gap-2" onClick={exportPdf}>
-          <FileText className="h-4 w-4" />PDF
-        </Button>
+      <div className="space-y-2">
+        <SegmentedTabs items={items} />
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="outline" className="gap-2" onClick={exportExcel}>
+            <Download className="h-4 w-4" />{t('admin.payouts.exportExcel', 'Export Excel')}
+          </Button>
+          <Button size="sm" variant="outline" className="gap-2" onClick={exportPdf}>
+            <FileText className="h-4 w-4" />PDF
+          </Button>
+        </div>
       </div>
 
       {tabs.map(tab => (

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import SegmentedTabs from '@/components/shell/SegmentedTabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -435,13 +436,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       </div>
 
       <Tabs value={active} onValueChange={setActive}>
-        <TabsList className="flex-wrap h-auto">
-          {sheets.map(s => (
-            <TabsTrigger key={s.key} value={s.key}>
-              {s.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <SegmentedTabs items={sheets.map(s => ({ value: s.key, label: s.label }))} />
 
         {sheets.map(s => (
           <TabsContent key={s.key} value={s.key} className="mt-4">

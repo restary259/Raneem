@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import SegmentedTabs from "@/components/shell/SegmentedTabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -492,12 +493,14 @@ const AdminProgramsPage = () => {
       </div>
 
       <Tabs defaultValue="programs">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="programs">{t('admin.programs.tabPrograms')}</TabsTrigger>
-          <TabsTrigger value="schools">{t('admin.programs.tabSchools')}</TabsTrigger>
-          <TabsTrigger value="accommodations">{t('admin.programs.tabAccommodations')}</TabsTrigger>
-          <TabsTrigger value="insurance">{t('admin.programs.tabInsurance')}</TabsTrigger>
-        </TabsList>
+        <SegmentedTabs
+          items={[
+            { value: "programs", label: t('admin.programs.tabPrograms') },
+            { value: "schools", label: t('admin.programs.tabSchools') },
+            { value: "accommodations", label: t('admin.programs.tabAccommodations') },
+            { value: "insurance", label: t('admin.programs.tabInsurance') },
+          ]}
+        />
 
         {/* Programs Tab */}
         <TabsContent value="programs" className="space-y-4 mt-4">

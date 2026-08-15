@@ -6,7 +6,8 @@ import DataRequestsPanel from "@/components/admin/DataRequestsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import SegmentedTabs from "@/components/shell/SegmentedTabs";
 import { Loader2, Inbox, Search, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
@@ -140,33 +141,31 @@ const AdminInboxPage = () => {
             </Button>
           </div>
 
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="all">
-              {tabLabel("admin.inbox.source.all", "All", searched.length)}
-            </TabsTrigger>
-            <TabsTrigger value="partnership">
-              {tabLabel("admin.inbox.source.partnership", "Partnership", partnership.length)}
-            </TabsTrigger>
-            <TabsTrigger value="contact">
-              {tabLabel("admin.inbox.source.contact", "Contact", contact.length)}
-            </TabsTrigger>
-            <TabsTrigger value="recruits" className="gap-1.5">
-              {tabLabel("admin.inbox.source.recruits", "Recruits", recruitCount)}
-              {recruitPending > 0 && (
-                <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
-                  {recruitPending}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="dataRequests" className="gap-1.5">
-              {tabLabel("admin.inbox.source.dataRequests", "Data requests", dataReqCount)}
-              {dataReqPending > 0 && (
-                <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
-                  {dataReqPending}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+          <SegmentedTabs
+            items={[
+              { value: "all", label: tabLabel("admin.inbox.source.all", "All", searched.length) },
+              { value: "partnership", label: tabLabel("admin.inbox.source.partnership", "Partnership", partnership.length) },
+              { value: "contact", label: tabLabel("admin.inbox.source.contact", "Contact", contact.length) },
+              {
+                value: "recruits",
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    {tabLabel("admin.inbox.source.recruits", "Recruits", recruitCount)}
+                    {recruitPending > 0 && <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">{recruitPending}</Badge>}
+                  </span>
+                ),
+              },
+              {
+                value: "dataRequests",
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    {tabLabel("admin.inbox.source.dataRequests", "Data requests", dataReqCount)}
+                    {dataReqPending > 0 && <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">{dataReqPending}</Badge>}
+                  </span>
+                ),
+              },
+            ]}
+          />
         </div>
 
         {loading ? (

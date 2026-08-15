@@ -18,13 +18,17 @@ interface SegmentedTabsProps {
  * Scrollable segmented control for page-level tabs. Must be rendered inside a
  * shadcn `<Tabs>` so keyboard roving focus and aria wiring come for free.
  *
- * On mobile the row scrolls horizontally instead of wrapping — wrapped pills
- * were pushing real content below the fold.
+ * Fit-aware centering: the row centers when its natural width fits the viewport
+ * and only falls back to left-aligned horizontal scroll when it overflows.
+ * `mx-auto` distributes the slack equally when content is narrower than the
+ * container; when content is wider, the auto margins collapse to 0 and the row
+ * scrolls left-aligned (so the first tab is always reachable at scroll 0).
+ * The scrollbar is hidden in all cases.
  */
 export default function SegmentedTabs({ items, className }: SegmentedTabsProps) {
   return (
-    <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex sm:justify-center">
-      <TabsList className={cn("inline-flex h-10 min-w-full justify-start gap-2 sm:w-fit sm:min-w-0 sm:justify-center", className)}>
+    <div className="overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <TabsList className={cn("flex h-10 w-fit min-w-full mx-auto justify-center gap-2", className)}>
         {items.map((item) => (
           <TabsTrigger
             key={item.value}
