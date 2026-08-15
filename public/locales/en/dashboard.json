@@ -254,7 +254,10 @@
       "rewarded": "Rewarded"
     },
     "namePlaceholder": "Friend's full name",
-    "nameRequired": "Name is required"
+    "nameRequired": "Name is required",
+    "typeLabel": "Who are you referring?",
+    "type_friend": "Friend",
+    "type_family": "Family"
   },
   "rewards": {
     "totalRewards": "Total Rewards",
@@ -2401,7 +2404,8 @@
     "bankDetails": "Bank Details",
     "reports": "Reports",
     "more": "More",
-    "bottomNav": "Main navigation"
+    "bottomNav": "Main navigation",
+    "commission": "Commission"
   },
   "case": {
     "status": {
@@ -3467,7 +3471,9 @@
     "masterShare": "Master partner share (ILS)",
     "allocationPreview": "Allocation per enrolled student",
     "allocationHint": "Recruited partner {{recruited}} ₪ + master partner {{master}} ₪ = {{pool}} ₪ total. The master share is taken out of the partner pool, not added on top.",
-    "masterShareTooHigh": "The master partner share cannot be larger than the partner commission."
+    "masterShareTooHigh": "The master partner share cannot be larger than the partner commission.",
+    "hubRedirect": "Commission configuration has moved to the centralized Commission Hub — the single place to control every commission relationship, with a full audit trail of who changed what and when.",
+    "openHub": "Open Commission Hub"
   },
   "caseTimeline": {
     "title": "Timeline",
@@ -4465,5 +4471,57 @@
     "schoolCosts": "School costs (€)",
     "referralDiscount": "Referral discount",
     "serviceTotal": "Service total"
+  },
+  "commissionHub": {
+    "title": "Commission Hub",
+    "subtitle": "Single source of truth for every commission relationship",
+    "modelBanner": "Agent commissions are ADDITIVE: paid on top of the partner's full pool share, funded from Darb's margin. The partner always keeps their full ₪{{pool}}.",
+    "tabOverview": "Overview",
+    "tabRates": "Global rates",
+    "tabTeam": "Team",
+    "tabAgents": "Agents",
+    "tabIndependent": "Independent",
+    "tabStudents": "Students",
+    "kpiTeam": "Team members",
+    "kpiPartners": "Partners",
+    "kpiAmbassadors": "Ambassadors",
+    "kpiAgents": "Agents",
+    "kpiStudents": "Students",
+    "kpiMasters": "Master partners",
+    "kpiIndependent": "Independent",
+    "kpiAtZero": "Partners at ₪0",
+    "kpiCustom": "{{count}} custom",
+    "recentChanges": "Recent commission changes",
+    "noChanges": "No rate changes recorded yet.",
+    "globalRatesTitle": "Global commission rates",
+    "ratePartner": "Partner pool",
+    "rateAmbassador": "Ambassador",
+    "rateTeam": "Team",
+    "rateMaster": "Master share",
+    "rateAgent": "Agent (additive)",
+    "rateAgentSelf": "Agent self-referral",
+    "rateReferralDiscount": "Referral discount",
+    "rateFriendDiscount": "Friend discount",
+    "rateFriendReward": "Friend referrer reward",
+    "rateFamilyDiscount": "Family discount",
+    "rateFamilyReward": "Family referrer reward",
+    "teamTitle": "Team members",
+    "teamHint": "Per-team-member overrides are configured from the Team page. The global team rate is on the Global rates tab.",
+    "agentsTitle": "Agents & network overrides",
+    "search": "Search…",
+    "none": "None",
+    "default": "default",
+    "studentsReferred": "{{count}} students",
+    "agentAdditiveNote": "Agent overrides are additive — paid from Darb's margin, never deducted from the partner's pool.",
+    "independentTitle": "Independent partners & ambassadors",
+    "independentHint": "Recruited directly by Admin — no agent, no master partner.",
+    "studentReferralTitle": "Student referrals (Refer-a-Friend / Family)",
+    "studentReferralHint": "Student→student referrals pay ONLY the referring student, funded from Darb's margin. They never propagate upstream to any agent or partner.",
+    "perStudentOverrides": "Per-student overrides",
+    "saved": "Commission rate updated",
+    "studentIdRequired": "Enter a student UUID",
+    "studentIdPlaceholder": "Student UUID",
+    "addOverride": "Add",
+    "loadError": "Failed to load commission data"
   }
 }

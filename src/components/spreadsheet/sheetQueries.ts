@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { classifyReward } from '@/lib/commissionClassifier';
 
 export interface SheetScope {
   /** 'admin' sees everything, 'team' only their own rows */
@@ -279,16 +280,7 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
   );
 
   return (data || []).map((r: any) => {
-    const notes: string = r.admin_notes ?? '';
-    // reward_type is the authoritative classification; notes are free text.
-    const kind =
-      r.reward_type === 'partner' || r.reward_type === 'team' || r.reward_type === 'master_override'
-        ? r.reward_type
-        : notes.startsWith('Partner commission')
-          ? 'partner'
-          : notes.startsWith('Team commission')
-            ? 'team'
-            : 'other';
+    const kind = classifyReward(r as any);
     const unlock = new Date(new Date(r.created_at).getTime() + LOCK_DAYS * 86400000);
     return {
       id: r.id,

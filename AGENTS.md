@@ -1025,3 +1025,89 @@ correct. The data was right; the READ paths were broken.
   and CI do NOT apply DDL.
 - Build: `npm run build` clean; `npx vitest run` 320/320 pass (was 350; −30
   tests that only covered deleted dead code).
+
+## Commission System Rebuild — Admin Commission Hub (2026-08-15)
+
+**Objective:** deep audit of the commission/referral/attribution/payout/reward
+system, then rebuild Admin commission settings into a single centralized
+**Admin Commission Hub** at `/admin/commission`.
+
+### Adopted decisions (authoritative)
+
+- **D1 — ADDITIVE agent model.** The agent receives ₪500 (or their configured
+  override) ON TOP of the partner's full ₪1000 pool share. It is NOT carved
+  from the partner pool. It is funded from Darb's platform margin:
+  `platform_revenue_ils = net − team − pool − agent_share`.
+  `get_effective_agent_split` and `record_case_commission` are both the
+  additive versions (no `LEAST(amount, pool)` clamp). This matches the live
+  code in `20260814182120` / `20260814230457` and Rule 2.
+- **D2 — Enforce exclusivity at the Hub.** A single account can be a partner
+  OR an ambassador OR an agent OR a master partner — not several. The Hub is
+  the one place that edits these relationships.
+- **D3 — Margin-funded.** Team commissions and student-referral rewards come
+  out of Darb's margin (platform_revenue), like the agent share. They never
+  reduce a partner's pool.
+
+### Reconciliation
+
+`COMMISSION_RULES.md §10` previously mandated a **carve-from-pool** model that
+contradicted the live additive code. The doc was fixed (not the code): §10 is
+now additive, §4 includes `agent_override` + `student_referral_reward` in the
+platform_revenue formula, and §11 was added for student referrals.
+
+### Migrations (NOT committed/pushed per user instruction)
+
+All three are idempotent and use unique timestamps (`20260816*`):
+
+1. `20260816000000_commission_hub_schema.sql` — new tables
+   (`commission_rate_history`, `student_referral_reward_overrides`) + new
+   `platform_settings` columns (`student_refer_friend_discount/reward`,
+   `student_refer_family_discount/reward`, `referral_discount_amount`) +
+   `referrals.referral_type` + `created_by` audit columns on
+   `agent_commission_overrides` / `agent_self_referral_overrides`, all with
+   ₪0 defaults.
+2. `20260816010000_commission_engine_canonical.sql` — consolidated single
+   canonical `record_case_commission` (additive + student_referral branch +
+   partner_base_pool hardening) and `get_effective_agent_split` (additive).
+   The 16 prior duplicate definitions of `record_case_commission` and 2 of
+   `get_effective_agent_split` are superseded by `CREATE OR REPLACE`.
+3. `20260816020000_commission_hub_rpcs.sql` — `admin_set_commission`
+   centralized write RPC (single chokepoint, writes `commission_rate_history`)
+   + Hub read RPCs (`get_commission_hub_overview`,
+   `get_agent_network_detail`, `get_independent_accounts`,
+   `get_account_commission_history`, `get_student_referral_config`,
+   `get_student_referral_reward`).
+
+### Frontend
+
+- `src/pages/admin/AdminCommissionHubPage.tsx` — the Hub (Overview / Global
+  rates / Team / Agents / Independent / Students tabs), wired via
+  `src/hooks/useCommissionHub.ts`.
+- `src/components/admin/CommissionSettingsPanel.tsx` is superseded: the
+  AdminSettingsPage commission tab now redirects to the Hub.
+- `src/components/dashboard/ReferralForm.tsx` — friend/family selector
+  captures `referral_type`, persisted via the `create-case-from-apply` edge
+  function.
+- `src/services/DashboardService.ts` + `src/components/spreadsheet/sheetQueries.ts`
+  — classifiers updated to recognize `student_referral` / `agent_override` /
+  `master_partner` reward types separately from the partner pool.
+
+### Diagnostics
+
+- `supabase/diagnostics/commission_system_audit.sql` — read-only audit (9
+  checks): conflicting function defs, paid cases missing rewards, leak
+  rewards, orphan agent overrides, partners at ₪0, student rewards to
+  non-students, legacy referrals missing `referral_type`, the additive
+  invariant, and recent `commission_rate_history` rows.
+
+### Migration filename hygiene (recommendation, not applied)
+
+Five pre-existing migration pairs share timestamps
+(`20260813120000`, `20260813130000`, `20260813140000`, `20260814150000`,
+`20260814160000`) on `origin/main`. These were **not renamed** because they
+are already deployed — renaming would make Supabase treat the renamed file as
+a new migration and re-run it. New migrations use unique timestamps.
+
+### Build/test status
+
+`npm run build` clean; `npx vitest run` 355/355 pass.

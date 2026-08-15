@@ -254,7 +254,10 @@
       "rewarded": "مُكافأ"
     },
     "namePlaceholder": "الاسم الكامل للصديق",
-    "nameRequired": "الاسم مطلوب"
+    "nameRequired": "الاسم مطلوب",
+    "typeLabel": "مَن تُحيل؟",
+    "type_friend": "صديق",
+    "type_family": "عائلة"
   },
   "rewards": {
     "totalRewards": "إجمالي المكافآت",
@@ -2419,7 +2422,8 @@
     "bankDetails": "التفاصيل البنكية",
     "reports": "التقارير",
     "more": "المزيد",
-    "bottomNav": "التنقل الرئيسي"
+    "bottomNav": "التنقل الرئيسي",
+    "commission": "العمولات"
   },
   "case": {
     "status": {
@@ -3485,7 +3489,9 @@
     "masterShare": "حصة الشريك الرئيسي (شيكل)",
     "allocationPreview": "التوزيع لكل طالب مسجَّل",
     "allocationHint": "الشريك المُجنَّد {{recruited}} ₪ + الشريك الرئيسي {{master}} ₪ = {{pool}} ₪ إجمالاً. حصة الشريك الرئيسي تُقتطع من عمولة الشريك ولا تُضاف فوقها.",
-    "masterShareTooHigh": "لا يمكن أن تتجاوز حصة الشريك الرئيسي عمولة الشريك."
+    "masterShareTooHigh": "لا يمكن أن تتجاوز حصة الشريك الرئيسي عمولة الشريك.",
+    "hubRedirect": "انتقل ضبط العمولة إلى مركز العمولات المركزي — المكان الوحيد للتحكم بكل علاقات العمولة، مع سجل تدقيق كامل لمن غيَّر ماذا ومتى.",
+    "openHub": "افتح مركز العمولات"
   },
   "caseTimeline": {
     "title": "السجل الزمني",
@@ -4483,5 +4489,57 @@
     "schoolCosts": "تكاليف المدرسة (€)",
     "referralDiscount": "خصم الإحالة",
     "serviceTotal": "إجمالي الخدمات"
+  },
+  "commissionHub": {
+    "title": "مركز العمولات",
+    "subtitle": "المصدر الوحيد لكل علاقات العمولة",
+    "modelBanner": "عمولات الوكلاء إضافية: تُدفع فوق حصة الشريك الكاملة من المجمع، وتُموَّل من هامش درب. يحتفظ الشريك دائمًا بكامل ₪{{pool}}.",
+    "tabOverview": "نظرة عامة",
+    "tabRates": "المعدلات العامة",
+    "tabTeam": "الفريق",
+    "tabAgents": "الوكلاء",
+    "tabIndependent": "مستقلون",
+    "tabStudents": "الطلاب",
+    "kpiTeam": "أعضاء الفريق",
+    "kpiPartners": "الشركاء",
+    "kpiAmbassadors": "السفراء",
+    "kpiAgents": "الوكلاء",
+    "kpiStudents": "الطلاب",
+    "kpiMasters": "الشركاء الرئيسيون",
+    "kpiIndependent": "مستقلون",
+    "kpiAtZero": "شركاء عند ₪0",
+    "kpiCustom": "{{count}} مخصص",
+    "recentChanges": "أحدث تغييرات العمولة",
+    "noChanges": "لا توجد تغييرات مسجلة بعد.",
+    "globalRatesTitle": "معدلات العمولة العامة",
+    "ratePartner": "مجمع الشريك",
+    "rateAmbassador": "السفير",
+    "rateTeam": "الفريق",
+    "rateMaster": "حصة الشريك الرئيسي",
+    "rateAgent": "الوكيل (إضافي)",
+    "rateAgentSelf": "إحالة الوكيل الذاتية",
+    "rateReferralDiscount": "خصم الإحالة",
+    "rateFriendDiscount": "خصم الصديق",
+    "rateFriendReward": "مكافأة مُحيل الصديق",
+    "rateFamilyDiscount": "خصم العائلة",
+    "rateFamilyReward": "مكافأة مُحيل العائلة",
+    "teamTitle": "أعضاء الفريق",
+    "teamHint": "تجاوزات أعضاء الفريق تُضبط من صفحة الفريق. معدل الفريق العام في تبويب المعدلات العامة.",
+    "agentsTitle": "الوكلاء وتجاوزات الشبكة",
+    "search": "بحث…",
+    "none": "لا يوجد",
+    "default": "افتراضي",
+    "studentsReferred": "{{count}} طلاب",
+    "agentAdditiveNote": "تجاوزات الوكلاء إضافية — تُموَّل من هامش درب ولا تُخصم أبدًا من مجمع الشريك.",
+    "independentTitle": "الشركاء والسفراء المستقلون",
+    "independentHint": "مُعَيَّنون مباشرة من المدير — بلا وكيل ولا شريك رئيسي.",
+    "studentReferralTitle": "إحالات الطلاب (صديق / عائلة)",
+    "studentReferralHint": "إحالات الطالب→الطالب تدفع للمُحيل فقط، وتُموَّل من هامش درب. لا تنتقل أبدًا لأعلى إلى أي وكيل أو شريك.",
+    "perStudentOverrides": "تجاوزات لكل طالب",
+    "saved": "تم تحديث معدل العمولة",
+    "studentIdRequired": "أدخل معرّف الطالب",
+    "studentIdPlaceholder": "معرّف الطالب",
+    "addOverride": "إضافة",
+    "loadError": "فشل تحميل بيانات العمولة"
   }
 }

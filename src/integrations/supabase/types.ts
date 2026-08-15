@@ -195,6 +195,7 @@ export type Database = {
           agent_id: string
           commission_amount: number
           created_at: string
+          created_by: string | null
           id: string
           notes: string | null
           updated_at: string
@@ -203,6 +204,7 @@ export type Database = {
           agent_id: string
           commission_amount?: number
           created_at?: string
+          created_by?: string | null
           id?: string
           notes?: string | null
           updated_at?: string
@@ -211,6 +213,7 @@ export type Database = {
           agent_id?: string
           commission_amount?: number
           created_at?: string
+          created_by?: string | null
           id?: string
           notes?: string | null
           updated_at?: string
@@ -281,6 +284,7 @@ export type Database = {
           agent_id: string
           commission_amount: number
           created_at: string
+          created_by: string | null
           id: string
           notes: string | null
           updated_at: string
@@ -289,6 +293,7 @@ export type Database = {
           agent_id: string
           commission_amount?: number
           created_at?: string
+          created_by?: string | null
           id?: string
           notes?: string | null
           updated_at?: string
@@ -297,6 +302,7 @@ export type Database = {
           agent_id?: string
           commission_amount?: number
           created_at?: string
+          created_by?: string | null
           id?: string
           notes?: string | null
           updated_at?: string
@@ -305,6 +311,91 @@ export type Database = {
           {
             foreignKeyName: "agent_self_referral_overrides_agent_id_fkey"
             columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_rate_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          new_value: number | null
+          old_value: number | null
+          rate_kind: string
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          new_value?: number | null
+          old_value?: number | null
+          rate_kind: string
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          new_value?: number | null
+          old_value?: number | null
+          rate_kind?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_rate_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_referral_reward_overrides: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          referral_type: "friend" | "family"
+          reward_amount: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          referral_type: "friend" | "family"
+          reward_amount?: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          referral_type?: "friend" | "family"
+          reward_amount?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_referral_reward_overrides_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3004,6 +3095,11 @@ export type Database = {
           master_partner_override_rate: number
           partner_commission_rate: number
           partner_dashboard_show_all_cases: boolean
+          referral_discount_amount: number
+          student_refer_family_discount: number
+          student_refer_family_reward: number
+          student_refer_friend_discount: number
+          student_refer_friend_reward: number
           team_member_commission_rate: number
           updated_at: string
           updated_by: string | null
@@ -3020,6 +3116,11 @@ export type Database = {
           master_partner_override_rate?: number
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
+          referral_discount_amount?: number
+          student_refer_family_discount?: number
+          student_refer_family_reward?: number
+          student_refer_friend_discount?: number
+          student_refer_friend_reward?: number
           team_member_commission_rate?: number
           updated_at?: string
           updated_by?: string | null
@@ -3036,6 +3137,11 @@ export type Database = {
           master_partner_override_rate?: number
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
+          referral_discount_amount?: number
+          student_refer_family_discount?: number
+          student_refer_family_reward?: number
+          student_refer_friend_discount?: number
+          student_refer_friend_reward?: number
           team_member_commission_rate?: number
           updated_at?: string
           updated_by?: string | null
@@ -3494,6 +3600,7 @@ export type Database = {
           referred_case_id: string | null
           referred_name: string
           referred_phone: string
+          referral_type: "friend" | "family" | null
           referrer_user_id: string
         }
         Insert: {
@@ -3503,6 +3610,7 @@ export type Database = {
           referred_case_id?: string | null
           referred_name: string
           referred_phone: string
+          referral_type?: "friend" | "family" | null
           referrer_user_id: string
         }
         Update: {
@@ -3512,6 +3620,7 @@ export type Database = {
           referred_case_id?: string | null
           referred_name?: string
           referred_phone?: string
+          referral_type?: "friend" | "family" | null
           referrer_user_id?: string
         }
         Relationships: [
@@ -4300,6 +4409,44 @@ export type Database = {
           p_unit_price: number
         }
         Returns: Json
+      }
+      admin_set_commission: {
+        Args: {
+          p_entity_type: string
+          p_entity_id: string | null
+          p_rate_kind: string
+          p_amount: number
+          p_reason: string | null
+        }
+        Returns: Record<string, unknown>
+      }
+      get_account_commission_history: {
+        Args: { p_user_id: string }
+        Returns: Record<string, unknown>
+      }
+      get_agent_network_detail: {
+        Args: { p_agent_id: string }
+        Returns: Record<string, unknown>
+      }
+      get_agent_list: {
+        Args: Record<never, never>
+        Returns: Record<string, unknown>
+      }
+      get_commission_hub_overview: {
+        Args: Record<never, never>
+        Returns: Record<string, unknown>
+      }
+      get_independent_accounts: {
+        Args: Record<never, never>
+        Returns: Record<string, unknown>
+      }
+      get_student_referral_config: {
+        Args: Record<never, never>
+        Returns: Record<string, unknown>
+      }
+      get_student_referral_reward: {
+        Args: { p_student_id: string; p_referral_type: string }
+        Returns: number
       }
       admin_deactivate_account: {
         Args: { _reason?: string; _target_id: string }

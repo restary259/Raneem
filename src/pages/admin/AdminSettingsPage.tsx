@@ -38,7 +38,6 @@ import {
   Copy,
   Search,
 } from "lucide-react";
-import CommissionSettingsPanel from "@/components/admin/CommissionSettingsPanel";
 import PipelineStatusesPanel from "@/components/admin/PipelineStatusesPanel";
 import ServiceCatalogPanel from "@/components/admin/ServiceCatalogPanel";
 
@@ -583,9 +582,19 @@ const AdminSettingsPage = () => {
           )}
         </TabsContent>
 
-        {/* ── Commission Settings ── */}
+        {/* ── Commission Settings → Commission Hub ── */}
         <TabsContent value="commissions" className="mt-4">
-          <CommissionSettingsPanel />
+          <Card>
+            <CardContent className="p-6 text-center space-y-3">
+              <DollarSign className="h-8 w-8 text-primary mx-auto" />
+              <p className="text-sm text-muted-foreground">
+                {t("commissionSettings.hubRedirect", "Commission configuration has moved to the centralized Commission Hub — the single place to control every commission relationship, with a full audit trail of who changed what and when.")}
+              </p>
+              <Button asChild>
+                <a href="/admin/commission">{t("commissionSettings.openHub", "Open Commission Hub")}</a>
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ── Pipeline stages ── */}

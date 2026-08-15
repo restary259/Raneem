@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { isTeam, isStudentReferral, isPartnerPool } from '@/lib/commissionClassifier';
 
 const db = supabase as any;
 
@@ -45,13 +46,7 @@ export const DashboardService = {
 
     // Classify by the structured reward_type column (authoritative); fall back
     // to admin_notes prefix only for legacy rows that predate reward_type.
-    const isTeam = (r: any): boolean =>
-      r.reward_type ? r.reward_type === 'team' : (r.admin_notes ?? '').startsWith('Team commission');
-    const isPartnerPool = (r: any): boolean => {
-      if (r.reward_type) return r.reward_type !== 'team';
-      return (r.admin_notes ?? '').startsWith('Partner commission');
-    };
-
+    // The pure predicates live in commissionClassifier.ts (shared + tested).
     const partnerRewards = allRewards.filter(isPartnerPool);
     const partnerCommissionPending = partnerRewards
       .filter((r) => r.status === 'pending' || r.status === 'approved')
@@ -62,18 +57,20 @@ export const DashboardService = {
 
     const teamCommissionsTotal = allRewards.filter(isTeam).reduce((s, r) => s + (r.amount || 0), 0);
     const partnerCommissionsTotal = partnerRewards.reduce((s, r) => s + (r.amount || 0), 0);
+    const studentReferralTotal = allRewards.filter(isStudentReferral).reduce((s, r) => s + (r.amount || 0), 0);
 
     const serviceFeesFromSubs = submissions.reduce((s, r) => s + (r.service_fee || 0), 0);
     const serviceFeesFromCases =
       cases.reduce((s, c) => s + (c.platform_revenue_ils || 0), 0) +
       teamCommissionsTotal +
-      partnerCommissionsTotal;
+      partnerCommissionsTotal +
+      studentReferralTotal;
 
     const serviceFees = serviceFeesFromSubs > 0 ? serviceFeesFromSubs : serviceFeesFromCases;
 
     const platformNetRevenue = Math.max(
       0,
-      serviceFees - teamCommissionsTotal - partnerCommissionsTotal
+      serviceFees - teamCommissionsTotal - partnerCommissionsTotal - studentReferralTotal
     );
 
     // Per-case effective service fee: prefer the recorded service_fee, otherwise

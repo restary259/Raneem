@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserPlus, Gift } from "lucide-react";
+import { Loader2, UserPlus, Gift, Users, Heart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface ReferralFormProps {
   userId: string;
 }
+
+export type ReferralType = "friend" | "family";
 
 const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
   const { toast } = useToast();
@@ -19,6 +21,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [discountAmount, setDiscountAmount] = useState<number>(500);
+  const [referralType, setReferralType] = useState<ReferralType>("friend");
   const [form, setForm] = useState({ referred_name: "", referred_phone: "" });
 
   const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
@@ -70,7 +73,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
 
     setIsLoading(true);
     try {
-      // 1. Insert referral record
+      // 1. Insert referral record (with referral_type for the student reward)
       const { data: referralData, error: refErr } = await (supabase as any)
         .from("referrals")
         .insert({
@@ -78,6 +81,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
           referred_name: form.referred_name.trim(),
           referred_phone: form.referred_phone.trim(),
           discount_applied: false,
+          referral_type: referralType,
         })
         .select()
         .single();
@@ -93,6 +97,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
             source: "referral",
             referrer_user_id: userId,
             referral_id: referralData?.id ?? null,
+            referral_type: referralType,
           },
         });
       } catch (caseErr) {
@@ -102,6 +107,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
       toast({ title: t("referrals.success") });
       setForm({ referred_name: "", referred_phone: "" });
       setTermsAccepted(false);
+      setReferralType("friend");
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -132,6 +138,33 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Referral type selector (friend / family) — drives the reward type */}
+            <div className="space-y-2">
+              <Label>{t("referrals.typeLabel", "Who are you referring?")}</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {(["friend", "family"] as const).map((type) => {
+                  const Icon = type === "friend" ? Users : Heart;
+                  const selected = referralType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setReferralType(type)}
+                      className={`flex items-center gap-2 p-3 rounded-xl border text-start text-sm transition-all ${
+                        selected
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-card border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="font-medium">
+                        {t(`referrals.type_${type}`, type === "friend" ? "Friend" : "Family")}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="referred_name">{t("referrals.firstName", "Full Name")} *</Label>
               <Input

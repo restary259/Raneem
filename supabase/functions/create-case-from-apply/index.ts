@@ -114,6 +114,10 @@ Deno.serve(async (req) => {
       // Referral fields
       referrer_user_id,
       referral_id,
+      // Student referral type (friend | family) — drives the referring student's
+      // reward at payout via get_student_referral_reward. NULL/unknown for
+      // non-student referrals and legacy rows.
+      referral_type,
       // Extended fields
       city,
       education_level,
@@ -203,6 +207,12 @@ Deno.serve(async (req) => {
 
     let validatedPartnerId: string | null = null;
     let attributionMethod: string | null = null;
+
+    // Normalize the student referral_type (friend | family). Anything else
+    // (including legacy/non-student referrals) is coerced to null so the
+    // get_student_referral_reward resolver pays ₪0 for unknown types.
+    const normalizedReferralType: string | null =
+      referral_type === "friend" || referral_type === "family" ? referral_type : null;
 
     if (ref_code && typeof ref_code === "string" && /^[a-zA-Z0-9-]{3,40}$/.test(ref_code.trim())) {
       const { data: resolvedId } = await supabaseAdmin.rpc("resolve_referral_code", {
@@ -348,7 +358,7 @@ Deno.serve(async (req) => {
         }
         await supabaseAdmin
           .from("referrals")
-          .update({ referred_case_id: existingCase.id })
+          .update({ referred_case_id: existingCase.id, referral_type: normalizedReferralType })
           .eq("id", referral_id)
           .eq("referrer_user_id", validatedReferrerId);
       }
@@ -422,7 +432,7 @@ Deno.serve(async (req) => {
     if (referral_id && typeof referral_id === "string" && UUID.test(referral_id) && validatedReferrerId && newCase?.id) {
       await supabaseAdmin
         .from("referrals")
-        .update({ referred_case_id: newCase.id })
+        .update({ referred_case_id: newCase.id, referral_type: normalizedReferralType })
         .eq("id", referral_id)
         .eq("referrer_user_id", validatedReferrerId);
     }
