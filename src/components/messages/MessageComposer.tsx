@@ -76,7 +76,7 @@ interface MessageComposerProps {
   allowCaseMentions?: boolean;
   /** Called (throttled by the caller) while the user is typing. */
   onTyping?: () => void;
-  /** Partners only: opens the structured payout-request flow from the `+` menu. */
+  /** Payout-eligible roles (partners, agents, team members, students): opens the structured payout-request flow from the `+` menu. */
   onRequestPayout?: () => void;
   /** Partners/ambassadors/agents: sends saved bank details into the admin chat. */
   onSendBankDetails?: () => void;

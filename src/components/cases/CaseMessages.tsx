@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import MessageList from "@/components/messages/MessageList";
 import MessageComposer from "@/components/messages/MessageComposer";
+import PayoutRequestDialog from "@/components/messages/PayoutRequestDialog";
 import {
   clearCaseThread,
   deleteChatMessage,
@@ -26,6 +27,11 @@ import {
 } from "@/lib/chatFormat";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
+import {
+  getMyPayoutPreview,
+  requestPayoutViaChat,
+  type PayoutPreview,
+} from "@/services/PayoutRequestService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 
@@ -44,6 +50,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
   const { user, role } = useAuth();
   const isStaff = role === "admin" || role === "team_member";
   const caseLinkBase = role === "admin" ? "/admin/cases" : "/team/cases";
+  const isStudent = role === "student";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -53,6 +60,9 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
   const [people, setPeople] = useState<MentionablePerson[]>([]);
   const fulfilRef = useRef<HTMLInputElement>(null);
   const [fulfilTarget, setFulfilTarget] = useState<ChatMessage | null>(null);
+  const [payoutOpen, setPayoutOpen] = useState(false);
+  const [payoutPreview, setPayoutPreview] = useState<PayoutPreview | null>(null);
+  const [payoutSubmitting, setPayoutSubmitting] = useState(false);
   const online = useOnlineUsers();
   const { typing, notifyTyping } = useTypingIndicator("case", caseId);
 
@@ -144,6 +154,39 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
     }
   };
 
+  const openPayout = async () => {
+    setPayoutPreview(null);
+    setPayoutOpen(true);
+    try {
+      setPayoutPreview(await getMyPayoutPreview());
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+      setPayoutOpen(false);
+    }
+  };
+
+  const submitPayout = async () => {
+    setPayoutSubmitting(true);
+    try {
+      const res = await requestPayoutViaChat();
+      setPayoutOpen(false);
+      // The payout card is posted server-side to the admin direct thread, so
+      // the composer's email hook never fires — notify the thread explicitly.
+      if (res?.thread_id) {
+        void notifyNewMessageEmail({
+          threadType: "direct",
+          threadId: res.thread_id,
+          preview: t("chat.payout.emailPreview", "New payout request"),
+        });
+      }
+      toast({ description: t("chat.payout.sent") });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setPayoutSubmitting(false);
+    }
+  };
+
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
       {role === "admin" && messages.length > 0 && (
@@ -216,6 +259,7 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
         allowRequests={allowInternal}
         mentionables={people}
         allowCaseMentions={isStaff}
+        onRequestPayout={isStudent ? () => openPayout() : undefined}
         onTyping={() => notifyTyping(user?.user_metadata?.full_name ?? "")}
         onSend={async (body, attachments, opts) => {
           await sendCaseMessage(
@@ -231,6 +275,14 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
           }
           await load();
         }}
+      />
+
+      <PayoutRequestDialog
+        open={payoutOpen}
+        preview={payoutPreview}
+        submitting={payoutSubmitting}
+        onOpenChange={setPayoutOpen}
+        onConfirm={submitPayout}
       />
     </div>
   );

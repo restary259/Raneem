@@ -8,7 +8,7 @@ import {
   LayoutDashboard, GitBranch, Users, BookOpen,
   DollarSign, BarChart2, Activity, Settings,
   CalendarDays, ClipboardList, UserPlus, GraduationCap,
-  TrendingUp, User, FileText, Link2, Inbox, Calculator,
+  TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
   Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
 } from 'lucide-react';
@@ -71,7 +71,6 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
     { key: 'nav.team', icon: Users, href: '/admin/team' },
-    { key: 'nav.referrals', icon: Link2, href: '/admin/referrals' },
     { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },
     { key: 'nav.programs', icon: BookOpen, href: '/admin/programs' },
     { key: 'nav.activity', icon: Activity, href: '/admin/activity' },
@@ -156,7 +155,6 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.network': t('nav.network', 'Network'),
     'nav.recruit': t('nav.recruit', 'Recruit'),
     'nav.apply': t('nav.apply', 'Apply'),
-    'nav.referrals': t('nav.referrals', 'Referrals'),
     'nav.bagrut': t('nav.bagrut', 'Bagrut'),
     'nav.cvBuilder': t('nav.cvBuilder', 'CV'),
     'nav.currency': t('nav.currency', 'Currency'),

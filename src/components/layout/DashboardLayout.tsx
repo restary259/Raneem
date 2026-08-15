@@ -43,7 +43,6 @@ import {
   ClipboardList,
   UserPlus,
   GraduationCap,
-  Link2,
   TrendingUp,
   ListChecks,
   User,
@@ -117,7 +116,6 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: "nav.commission", icon: DollarSign, href: "/admin/commission", group: "nav.group.money" },
     { key: "nav.team", icon: Users, href: "/admin/team", group: "nav.group.people" },
     { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
-    { key: "nav.referrals", icon: Link2, href: "/admin/referrals", group: "nav.group.people" },
     {
       key: "nav.group.setup",
       icon: Settings,
