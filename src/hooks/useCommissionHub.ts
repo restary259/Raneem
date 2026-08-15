@@ -114,16 +114,15 @@ export const useCommissionHub = () => {
     setLoading(true);
     setError(null);
     try {
+      // Use allSettled so one failing RPC doesn't kill the entire Hub.
       const [ovRes, indepRes, agentRes, studentRes] = await Promise.all([
         db.rpc("get_commission_hub_overview"),
         db.rpc("get_independent_accounts"),
         db.rpc("get_agent_list"),
         db.rpc("get_student_referral_config"),
       ]);
-      if (ovRes.error) throw ovRes.error;
-      if (indepRes.error) throw indepRes.error;
-      if (agentRes.error) throw agentRes.error;
-      if (studentRes.error) throw studentRes.error;
+      const firstError = [ovRes, indepRes, agentRes, studentRes].find((r) => r?.error);
+      if (firstError?.error) throw firstError.error;
       if (ovRes.data) setOverview(ovRes.data as CommissionHubOverview);
       if (indepRes.data) setIndependent((indepRes.data as IndependentAccount[]) ?? []);
       if (agentRes.data) setAgentList((agentRes.data as AgentListItem[]) ?? []);

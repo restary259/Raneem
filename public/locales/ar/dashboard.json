@@ -4541,6 +4541,7 @@
     "studentIdRequired": "أدخل معرّف الطالب",
     "studentIdPlaceholder": "معرّف الطالب",
     "addOverride": "إضافة",
-    "loadError": "فشل تحميل بيانات العمولة"
+    "loadError": "فشل تحميل بيانات العمولة",
+    "migrationHint": "قم بتشغيل أحدث ترحيل SQL في محرر SQL في Supabase، ثم اضغط إعادة المحاولة."
   }
 }

@@ -4523,6 +4523,7 @@
     "studentIdRequired": "Enter a student UUID",
     "studentIdPlaceholder": "Student UUID",
     "addOverride": "Add",
-    "loadError": "Failed to load commission data"
+    "loadError": "Failed to load commission data",
+    "migrationHint": "Run the latest SQL migration in Supabase SQL Editor, then click Retry."
   }
 }

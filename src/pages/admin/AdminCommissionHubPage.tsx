@@ -114,6 +114,11 @@ const AdminCommissionHubPage: React.FC = () => {
               {t("commissionHub.loadError", "Failed to load commission data")}
             </p>
             <p className="text-muted-foreground text-xs mt-1">{error}</p>
+            {error.includes("does not exist") && (
+              <p className="text-muted-foreground text-xs mt-1">
+                {t("commissionHub.migrationHint", "Run the latest SQL migration in Supabase SQL Editor, then click Retry.")}
+              </p>
+            )}
           </div>
           <Button variant="outline" size="sm" onClick={refresh}>
             <RefreshCw className="h-4 w-4 me-2" />
