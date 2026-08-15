@@ -112,16 +112,25 @@ serve(async (req) => {
 
     await admin.from("user_roles").insert({ user_id: userId, role });
 
-    await admin.from("profiles").upsert({
+    const { error: upsertError } = await admin.from("profiles").upsert({
       id: userId,
       email,
       full_name: body.full_name,
       phone_number: body.phone?.trim() || null,
       city: body.city?.trim() || null,
-      must_change_password: true,
       commission_amount: 0,
-      agent_id: agentId,
     });
+    if (upsertError) console.error("profile upsert error:", upsertError);
+
+    // Separately stamp the agent-controlled fields — must be a dedicated UPDATE
+    // so it fires AFTER handle_new_user has created the profile row.
+    const { error: stampError } = await admin.from("profiles")
+      .update({ agent_id: agentId, must_change_password: true })
+      .eq("id", userId);
+    if (stampError) {
+      console.error("profile stamp error:", stampError);
+      return json({ error: "Could not link account to agent network" }, 500);
+    }
 
     // Close any pending invitation for this email so it doesn't linger.
     await reconcilePendingInvitations(admin, {
