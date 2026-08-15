@@ -114,7 +114,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     // Money hub: financials + spreadsheet + analytics.
     { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
     { key: "nav.commission", icon: DollarSign, href: "/admin/commission", group: "nav.group.money" },
-    { key: "nav.team", icon: Users, href: "/admin/team", group: "nav.group.people" },
+    { key: "nav.team", icon: Users, href: "/admin/members", group: "nav.group.people" },
     { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
     {
       key: "nav.group.setup",

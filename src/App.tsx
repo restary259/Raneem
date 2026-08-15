@@ -61,7 +61,7 @@ const AccessibilityStatementPage = lazy(() => import("./pages/legal/Accessibilit
 const AdminStudentsPage = lazy(() => import("./pages/admin/AdminStudentsPage"));
 const AdminCommandCenter = lazy(() => import("./pages/admin/AdminCommandCenter"));
 const AdminPipelineHubPage = lazy(() => import("./pages/admin/AdminPipelineHubPage"));
-const AdminTeamPage = lazy(() => import("./pages/admin/AdminTeamPage"));
+const AdminMembersPage = lazy(() => import("./pages/admin/AdminMembersPage"));
 const AdminProgramsPage = lazy(() => import("./pages/admin/AdminProgramsPage"));
 const AdminFinanceHubPage = lazy(() => import("./pages/admin/AdminFinanceHubPage"));
 const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
@@ -278,7 +278,8 @@ const App = () => {
               <Route index element={<AdminCommandCenter />} />
               <Route path="pipeline" element={<AdminPipelineHubPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
-              <Route path="team" element={<AdminTeamPage />} />
+              <Route path="team" element={<Navigate to="/admin/members?tab=team" replace />} />
+              <Route path="members" element={<AdminMembersPage />} />
               <Route path="programs" element={<AdminProgramsPage />} />
               {/* Consolidated into hubs — old links keep working. */}
               <Route path="submissions" element={<Navigate to="/admin/pipeline?tab=submissions" replace />} />

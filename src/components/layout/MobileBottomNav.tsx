@@ -70,7 +70,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
 const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
-    { key: 'nav.team', icon: Users, href: '/admin/team' },
+    { key: 'nav.team', icon: Users, href: '/admin/members' },
     { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },
     { key: 'nav.programs', icon: BookOpen, href: '/admin/programs' },
     { key: 'nav.activity', icon: Activity, href: '/admin/activity' },
