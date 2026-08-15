@@ -384,8 +384,22 @@ const AdminSettingsPage = () => {
   // Filtered + searched contacts for the admin list.
   const filteredContacts = contacts.filter((c) => {
     const f = contactFilter;
+
+    // School filter: match by school FK.
     if (f.school !== "all" && (c.language_school_id ?? "") !== f.school) return false;
-    if (f.city !== "all" && (c.city ?? "") !== f.city) return false;
+
+    // City filter: a school_only contact has no targeting city (the scope rule
+    // nulls it), so resolve its city from the schools list; compare
+    // case-insensitively.
+    if (f.city !== "all") {
+      const directCity = c.city ?? "";
+      const schoolCity =
+        c.scope === "school_only"
+          ? (schools.find((s) => s.id === c.language_school_id)?.city ?? "")
+          : "";
+      if (directCity.toLowerCase() !== f.city.toLowerCase() && schoolCity.toLowerCase() !== f.city.toLowerCase()) return false;
+    }
+
     if (f.category !== "all" && c.category !== f.category) return false;
     if (f.scope !== "all" && (c.scope ?? "universal") !== f.scope) return false;
     if (f.status !== "all" && (c.is_active ? "active" : "inactive") !== f.status) return false;
@@ -397,7 +411,9 @@ const AdminSettingsPage = () => {
     return true;
   });
 
-  const distinctCities = Array.from(new Set([...contacts.map((c) => c.city).filter(Boolean), ...schools.map((s) => s.city).filter(Boolean)])) as string[];
+  const distinctCities = Array.from(
+    new Map([...contacts.map((c) => c.city), ...schools.map((s) => s.city)].filter(Boolean).map((c) => [c.toLowerCase(), c])).values()
+  ).sort() as string[];
 
   const createVisaField = async () => {
     if (!visaFieldForm.field_key || !visaFieldForm.label_en || !visaFieldForm.label_ar) {
