@@ -9,7 +9,6 @@
 -- here is IF NOT EXISTS, so databases that already have them are untouched.
 -- ════════════════════════════════════════════════════════════════════════
 
-BEGIN;
 
 -- ── platform_settings: all columns referenced by get_commission_hub_overview ─
 ALTER TABLE public.platform_settings
@@ -60,4 +59,3 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS notes                     TEXT,
   ADD COLUMN IF NOT EXISTS deleted_at                TIMESTAMPTZ;
 
-COMMIT;

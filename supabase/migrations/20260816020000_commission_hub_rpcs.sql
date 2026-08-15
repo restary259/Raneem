@@ -18,7 +18,6 @@
 -- All read RPCs are admin-only (has_role('admin')) and STABLE.
 -- ════════════════════════════════════════════════════════════════════════
 
-BEGIN;
 
 -- ════════════════════════════════════════════════════════════════════════
 -- admin_set_commission — the single commission-config write path
@@ -459,4 +458,3 @@ $$;
 REVOKE ALL ON FUNCTION public.get_student_referral_config() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_student_referral_config() TO authenticated;
 
-COMMIT;

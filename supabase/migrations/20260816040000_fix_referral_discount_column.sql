@@ -1,18 +1,11 @@
 -- ════════════════════════════════════════════════════════════════════════
 -- DEFINITIVE FIX: column "referral_discount_amount" does not exist
 -- ════════════════════════════════════════════════════════════════════════
--- Root cause: get_commission_hub_overview() and get_referral_discount_amount()
--- reference platform_settings columns by name. In plpgsql, column references
--- are resolved at RUNTIME, not at CREATE FUNCTION time. So the RPC creates
--- successfully even if the column is missing — then explodes when the Hub
--- page calls it.
---
--- This migration is self-contained: it (1) adds every column the RPCs
--- reference, then (2) recreates the RPCs. Running JUST this one migration
--- fixes the error regardless of which earlier migrations were applied.
+-- Run this ENTIRE script in Supabase SQL Editor (click Run once).
+-- No BEGIN/COMMIT wrapper — Supabase SQL Editor runs each statement
+-- in its own transaction, and the wrapper causes "syntax error at end
+-- of input" when combined with $$ dollar-quoted function bodies.
 -- ════════════════════════════════════════════════════════════════════════
-
-BEGIN;
 
 -- ── 1. Ensure all platform_settings columns exist ──────────────────────────
 ALTER TABLE public.platform_settings
@@ -155,5 +148,3 @@ $$;
 
 REVOKE ALL ON FUNCTION public.get_commission_hub_overview() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_commission_hub_overview() TO authenticated;
-
-COMMIT;

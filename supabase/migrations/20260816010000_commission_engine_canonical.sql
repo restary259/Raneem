@@ -29,7 +29,6 @@
 -- Three reward rows: team(₪100), referral/partner(₪1000), agent_override(₪500).
 -- ════════════════════════════════════════════════════════════════════════
 
-BEGIN;
 
 -- ── 1. get_effective_agent_split — ADDITIVE, no pool clamp ────────────────
 -- Returns (agent_amount, agent_id, pool_amount). The agent_amount is resolved
@@ -404,4 +403,3 @@ $function$;
 REVOKE ALL ON FUNCTION public.record_case_commission(uuid, integer) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.record_case_commission(uuid, integer) TO authenticated, service_role;
 
-COMMIT;

@@ -13,7 +13,6 @@
 --   20260816020000_commission_hub_rpcs.sql           (admin_set_commission + Hub reads)
 -- ════════════════════════════════════════════════════════════════════════
 
-BEGIN;
 
 -- ── 1. commission_rate_history — who configured it / when / old → new ──────
 -- The single audit trail for every commission-config change. Populated ONLY by
@@ -108,4 +107,3 @@ ALTER TABLE public.agent_commission_overrides
 ALTER TABLE public.agent_self_referral_overrides
   ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
-COMMIT;
