@@ -61,6 +61,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
             ? t('admin.referralsMgmt.agent')
             : t('admin.referralsMgmt.student');
 
+  // Exports intentionally cover ALL payout requests (every role), not just the
+  // active tab — this is a complete payouts report by design (see AGENTS.md).
   const exportExcel = () =>
     exportCorporateWorkbook({
       fileName: `DARB-payouts-${new Date().toISOString().slice(0, 10)}`,

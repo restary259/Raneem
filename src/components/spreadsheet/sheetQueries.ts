@@ -287,7 +287,7 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
       created_at: r.created_at,
       person: names[r.user_id] ?? '—',
       kind,
-      source: notes || '—',
+      source: r.admin_notes || '—',
       amount: r.amount ?? 0,
       status: r.status,
       unlock_date: unlock.toISOString(),

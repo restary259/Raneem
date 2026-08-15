@@ -3337,6 +3337,7 @@
       "amount": "المبلغ",
       "method": "الطريقة",
       "reference": "المرجع",
+      "transactionRef": "مرجع المعاملة",
       "created": "تاريخ الإنشاء",
       "kind": "النوع",
       "source": "المصدر",

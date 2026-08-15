@@ -147,7 +147,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'amount', label: c('amount'), type: 'currency', total: true },
         { key: 'status', label: c('status'), type: 'enum', enumGroup: 'rewardStatus' },
         { key: 'payment_method', label: c('method'), type: 'enum', enumGroup: 'method' },
-        { key: 'transaction_ref', label: c('reference') },
+        { key: 'transaction_ref', label: c('transactionRef') },
       ],
     };
 
