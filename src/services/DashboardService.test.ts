@@ -13,7 +13,7 @@ type Row = Record<string, unknown>;
 type QueryResult = { data: Row[] | Row | null; error: null };
 
 const tableData: Record<string, Row[] | Row> = {
-  case_submissions: [],
+  case_payments: [],
   rewards: [],
   cases: [],
   platform_settings: {},
@@ -52,7 +52,7 @@ function setTable(table: string, rows: Row[] | Row): void {
 }
 
 beforeEach(() => {
-  tableData.case_submissions = [];
+  tableData.case_payments = [];
   tableData.rewards = [];
   tableData.cases = [];
   tableData.platform_settings = { partner_commission_rate: 0 };
@@ -149,7 +149,7 @@ describe("DashboardService.financialOverview — reward classification", () => {
   });
 
   it("subtracts partner commissions from platform net revenue", async () => {
-    setTable("case_submissions", [{ service_fee: 1000, enrollment_paid_at: "2026-01-01", case_id: "case-1" }]);
+    setTable("case_payments", [{ amount: 1000, confirmed_at: "2026-01-01", case_id: "case-1" }]);
     setTable("rewards", [
       reward({ reward_type: "referral", amount: 300, status: "paid" }),
       reward({ reward_type: "team", amount: 100, status: "paid" }),
@@ -157,5 +157,32 @@ describe("DashboardService.financialOverview — reward classification", () => {
     const r = await DashboardService.financialOverview();
     expect(r.serviceFees).toBe(1000);
     expect(r.platformNetRevenue).toBe(1000 - 300 - 100);
+  });
+
+  it("reads service fees from confirmed case_payments (agency_service)", async () => {
+    setTable("case_payments", [
+      { amount: 5000, confirmed_at: "2026-01-15", case_id: "case-1" },
+      { amount: 3000, confirmed_at: "2026-01-20", case_id: "case-2" },
+    ]);
+    const r = await DashboardService.financialOverview();
+    expect(r.serviceFees).toBe(8000);
+    expect(r.submissions).toHaveLength(2);
+    expect(r.submissions[0].effective_service_fee).toBe(5000);
+  });
+
+  it("falls back to platform_revenue_ils reconstruction when no case_payments exist", async () => {
+    setTable("case_payments", []);
+    setTable("cases", [
+      { id: "case-1", referral_discount: 0, platform_revenue_ils: 3400, status: "enrollment_paid" },
+    ]);
+    setTable("rewards", [
+      reward({ reward_type: "referral", amount: 1000, status: "paid", case_id: "case-1" }),
+      reward({ reward_type: "team", amount: 100, status: "paid", case_id: "case-1" }),
+      reward({ reward_type: "agent_override", amount: 500, status: "paid", case_id: "case-1" }),
+    ]);
+    const r = await DashboardService.financialOverview();
+    // 3400 (platform revenue) + 100 (team) + 1000 (partner) + 500 (agent) = 5000
+    expect(r.serviceFees).toBe(5000);
+    expect(r.platformNetRevenue).toBe(3400);
   });
 });

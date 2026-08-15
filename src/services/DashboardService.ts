@@ -18,15 +18,19 @@ export interface FinancialOverview {
 export const DashboardService = {
   /**
    * Admin financial overview. All amounts are ILS.
-   * Service fees come from paid submissions; legacy cases fall back to
-   * platform_revenue_ils plus recorded commissions.
+   * Service fees come from confirmed agency-service payments in case_payments
+   * (the authoritative source, matching get_monthly_tax_report). Legacy cases
+   * that predate the finance workflow fall back to platform_revenue_ils plus
+   * recorded commissions.
    */
   async financialOverview(): Promise<FinancialOverview> {
-    const [subRes, allRewardsRes, casesRes, settingsRes] = await Promise.all([
+    const [payRes, allRewardsRes, casesRes, settingsRes] = await Promise.all([
       db
-        .from('case_submissions')
-        .select('service_fee, enrollment_paid_at, case_id')
-        .not('enrollment_paid_at', 'is', null),
+        .from('case_payments')
+        .select('amount, case_id, confirmed_at')
+        .eq('payment_type', 'agency_service')
+        .eq('status', 'confirmed')
+        .not('confirmed_at', 'is', null),
       db.from('rewards').select('amount, status, admin_notes, case_id, reward_type'),
       db
         .from('cases')
@@ -36,7 +40,7 @@ export const DashboardService = {
       db.from('platform_settings').select('partner_commission_rate').maybeSingle(),
     ]);
 
-    const submissions: any[] = subRes.data || [];
+    const payments: any[] = payRes.data || [];
     const allRewards: any[] = allRewardsRes.data || [];
     const cases: any[] = casesRes.data || [];
     const partnerCommissionRate = Number(settingsRes.data?.partner_commission_rate ?? 0) || 0;
@@ -59,25 +63,27 @@ export const DashboardService = {
     const partnerCommissionsTotal = partnerRewards.reduce((s, r) => s + (r.amount || 0), 0);
     const studentReferralTotal = allRewards.filter(isStudentReferral).reduce((s, r) => s + (r.amount || 0), 0);
 
-    const serviceFeesFromSubs = submissions.reduce((s, r) => s + (r.service_fee || 0), 0);
+    // Authoritative: confirmed agency-service payments from case_payments.
+    const serviceFeesFromPayments = payments.reduce((s, p) => s + (p.amount || 0), 0);
+
+    // Legacy fallback: reconstruct gross from platform revenue + commissions
+    // for deployments that predate the case_payments finance flow.
     const serviceFeesFromCases =
       cases.reduce((s, c) => s + (c.platform_revenue_ils || 0), 0) +
       teamCommissionsTotal +
       partnerCommissionsTotal +
       studentReferralTotal;
 
-    const serviceFees = serviceFeesFromSubs > 0 ? serviceFeesFromSubs : serviceFeesFromCases;
+    const serviceFees = serviceFeesFromPayments > 0 ? serviceFeesFromPayments : serviceFeesFromCases;
 
     const platformNetRevenue = Math.max(
       0,
       serviceFees - teamCommissionsTotal - partnerCommissionsTotal - studentReferralTotal
     );
 
-    // Per-case effective service fee: prefer the recorded service_fee, otherwise
-    // reconstruct the real DARB total from platform revenue + commissions. This
-    // mirrors the KPI-level serviceFeesFromCases logic but keyed per case_id, so
-    // the recent-enrolled list renders the true amount for cases whose
-    // case_submissions.service_fee was never populated.
+    // Per-case effective service fee for the recent-enrolled list. Each
+    // confirmed payment is authoritative; legacy cases without a payment row
+    // fall back to platform revenue + commissions for that case.
     const teamCommByCase: Record<string, number> = {};
     const partnerCommByCase: Record<string, number> = {};
     for (const r of allRewards) {
@@ -94,14 +100,18 @@ export const DashboardService = {
       platformRevenueByCase[c.id] = c.platform_revenue_ils || 0;
     }
 
-    const enrichedSubmissions = submissions.map((s) => {
+    const enrichedSubmissions = payments.map((p) => {
       const fallback =
-        (platformRevenueByCase[s.case_id] || 0) +
-        (teamCommByCase[s.case_id] || 0) +
-        (partnerCommByCase[s.case_id] || 0);
+        (platformRevenueByCase[p.case_id] || 0) +
+        (teamCommByCase[p.case_id] || 0) +
+        (partnerCommByCase[p.case_id] || 0);
       return {
-        ...s,
-        effective_service_fee: s.service_fee > 0 ? s.service_fee : fallback,
+        ...p,
+        // case_payments.amount is the authoritative fee; fall back to the
+        // reconstruction only if the payment row has no amount (shouldn't happen).
+        service_fee: p.amount,
+        enrollment_paid_at: p.confirmed_at,
+        effective_service_fee: p.amount > 0 ? p.amount : fallback,
       };
     });
 
