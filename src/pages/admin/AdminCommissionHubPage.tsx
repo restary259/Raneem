@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import SegmentedTabs from "@/components/shell/SegmentedTabs";
 import {
   Loader2,
   RefreshCw,
@@ -142,18 +143,17 @@ const AdminCommissionHubPage: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="flex-wrap w-full h-auto">
-          <TabsTrigger value="overview">{t("commissionHub.tabOverview", "Overview")}</TabsTrigger>
-          <TabsTrigger value="rates">{t("commissionHub.tabRates", "Global rates")}</TabsTrigger>
-          <TabsTrigger value="team">{t("commissionHub.tabTeam", "Team")}</TabsTrigger>
-          <TabsTrigger value="agents">{t("commissionHub.tabAgents", "Agents")}</TabsTrigger>
-          <TabsTrigger value="independent">{t("commissionHub.tabIndependent", "Direct (no recruiter)")}</TabsTrigger>
-            <TabsTrigger value="students">{t("commissionHub.tabStudents", "Students")}</TabsTrigger>
-            <TabsTrigger value="simulator" className="gap-2">
-              <Calculator className="h-4 w-4" />
-              {t("commissionHub.tabSimulator", "Simulator")}
-            </TabsTrigger>
-        </TabsList>
+        <SegmentedTabs
+          items={[
+            { value: "overview", label: t("commissionHub.tabOverview", "Overview") },
+            { value: "rates", label: t("commissionHub.tabRates", "Global rates") },
+            { value: "team", label: t("commissionHub.tabTeam", "Team") },
+            { value: "agents", label: t("commissionHub.tabAgents", "Agents") },
+            { value: "independent", label: t("commissionHub.tabIndependent", "Direct (no recruiter)") },
+            { value: "students", label: t("commissionHub.tabStudents", "Students") },
+            { value: "simulator", label: t("commissionHub.tabSimulator", "Simulator"), icon: Calculator },
+          ]}
+        />
 
         {/* ── Overview ── */}
         <TabsContent value="overview" className="space-y-4 mt-4">
