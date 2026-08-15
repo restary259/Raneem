@@ -1229,3 +1229,40 @@ other audit tables like `commission_rate_history`).
 
 `npm run build` clean; `npx vitest run` 366/366 pass (+11 from the new
 `commissionSimulator.test.ts`; i18n parity guard green).
+
+## Student payout direct-thread gate + commission function grants (2026-08-17)
+
+Companion hardening to the student-payout flow (committed in `44720f30`).
+Migrations require Supabase admin/service-role DDL — NOT applied by the Vercel
+build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
+
+- `20260817070000_restrict_commission_function_grants.sql`:
+  - Revokes the over-broad `EXECUTE` grants on the commission functions that
+    the canonical engine (`20260816010000`) recreated with `service_role`
+    execution. Now: `record_case_commission`, `partner_base_pool`,
+    `get_student_referral_reward` are `service_role`-ONLY (they are SECURITY
+    DEFINER with no caller gate, so any authenticated caller could have run
+    them with owner privileges).
+  - `get_effective_agent_split` stays `authenticated`-callable BUT now gates
+    callers: admin OR agent-self OR the `app.internal_commission_split` GUC
+    set to `'on'` (the same escape hatch `record_case_commission` uses, set by
+    the engine around its internal call). Direct client calls with arbitrary
+    agent ids are rejected. The function body itself is unchanged.
+- `20260817080000_student_direct_thread_gate.sql`: `send_direct_message` now
+  rejects a `student` caller unless the target thread is linked to one of
+  their own `payout_requests` rows. This closes the hole where a student could
+  open a DM thread with ANY staff member and chat freely — a student's direct
+  messaging is now limited to the payout conversation the payout flow created.
+  The payout flow inserts the `payout_requests` row BEFORE posting the card, so
+  the card message still posts. Only the gate was added; the rest of the
+  function body is byte-for-byte identical to HEAD.
+- Frontend: `StudentMessagesPage` gained a **Case/Payout tab switcher** (the
+  student's payout direct thread now appears as a second conversation when a
+  `payout_requests.thread_id` exists; a referring student with a payout but no
+  own case still sees the payout conversation). `PayoutRequestCard` labels the
+  requestor role-aware: student requestors show `chat.payout.student`
+  ("Student") instead of "Partner". New i18n keys `messagesInbox.caseTab` /
+  `messagesInbox.payoutTab` / `chat.payout.student` in en + ar (parity-guarded).
+- Build/test: `npm run build` clean; `npx vitest run` green (i18n parity guard
+  included).
+

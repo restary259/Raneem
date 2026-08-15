@@ -3772,7 +3772,9 @@
     "directBlocked": "Direct chats must include an admin.",
     "noCaseYet": "Your conversation opens once your case is created.",
     "partnerSubtitle": "Your direct chats with the Darb team.",
-    "studentSubtitle": "Talk directly with your advisor."
+    "studentSubtitle": "Talk directly with your advisor.",
+    "caseTab": "Case",
+    "payoutTab": "Payout"
   },
   "chat": {
     "day": {
@@ -3908,7 +3910,8 @@
       "paidAt": "Paid",
       "emailPreview": "New payout request",
       "copyReference": "Copy reference",
-      "referenceCopied": "Reference copied"
+      "referenceCopied": "Reference copied",
+      "student": "Student"
     },
     "bankShare": {
       "action": "Send bank details",

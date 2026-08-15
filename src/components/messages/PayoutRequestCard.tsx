@@ -141,7 +141,9 @@ export default function PayoutRequestCard({
         </div>
         {isAdmin && (
           <div className="col-span-2">
-            <p className="text-muted-foreground">{t("chat.payout.partner")}</p>
+            <p className="text-muted-foreground">
+              {detail.partner_role === "student" ? t("chat.payout.student") : t("chat.payout.partner")}
+            </p>
             <p className="font-semibold">{detail.partner_name ?? "—"}</p>
           </div>
         )}

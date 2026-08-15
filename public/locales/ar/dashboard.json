@@ -3790,7 +3790,9 @@
     "directBlocked": "المحادثات المباشرة يجب أن تشمل الإدارة.",
     "noCaseYet": "تبدأ محادثتك فور إنشاء ملفك.",
     "partnerSubtitle": "محادثاتك المباشرة مع فريق درب.",
-    "studentSubtitle": "تواصل مباشرة مع مستشارك."
+    "studentSubtitle": "تواصل مباشرة مع مستشارك.",
+    "caseTab": "الملف",
+    "payoutTab": "الدفعة"
   },
   "chat": {
     "day": {
@@ -3926,7 +3928,8 @@
       "paidAt": "تم الدفع",
       "emailPreview": "طلب صرف جديد",
       "copyReference": "نسخ رقم المرجع",
-      "referenceCopied": "تم نسخ رقم المرجع"
+      "referenceCopied": "تم نسخ رقم المرجع",
+      "student": "الطالب"
     },
     "bankShare": {
       "action": "إرسال التفاصيل البنكية",
