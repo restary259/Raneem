@@ -70,40 +70,43 @@ const CreateMemberDialog: React.FC<CreateMemberDialogProps> = ({
     [t],
   );
 
+  const sessionExpiredMessage = t("admin.team.sessionExpired", "Your session expired. Please sign in again and retry.");
+
+  const ensureAccessToken = useCallback(async () => {
+    let { data: { session } } = await supabase.auth.getSession();
+    const expSoon = !session?.expires_at || session.expires_at * 1000 - Date.now() < 60_000;
+    if (expSoon) {
+      const { data } = await supabase.auth.refreshSession();
+      session = data.session ?? session;
+    }
+    if (!session?.access_token) {
+      throw new Error(sessionExpiredMessage);
+    }
+    return session.access_token;
+  }, [sessionExpiredMessage]);
+
   const callInviteFn = useCallback(
     async (payload: Record<string, unknown>) => {
-      let { data: { session } } = await supabase.auth.getSession();
-      const expSoon = !session?.expires_at || session.expires_at * 1000 - Date.now() < 60_000;
-      if (expSoon) {
-        const { data } = await supabase.auth.refreshSession();
-        session = data.session ?? session;
-      }
-      if (!session?.access_token) {
-        throw new Error(
-          t("admin.team.sessionExpired", "Your session expired. Please sign in again and retry."),
-        );
-      }
+      const token = await ensureAccessToken();
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invite-account`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
       const result = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         if (resp.status === 401) {
-          throw new Error(
-            t("admin.team.sessionExpired", "Your session expired. Please sign in again and retry."),
-          );
+          throw new Error(sessionExpiredMessage);
         }
         throw new Error(conflictMessage(result) || (result as any)?.error || "Request failed");
       }
       return result;
     },
-    [conflictMessage, t],
+    [conflictMessage, ensureAccessToken, sessionExpiredMessage],
   );
 
   const resetForm = () => {
@@ -149,19 +152,20 @@ const CreateMemberDialog: React.FC<CreateMemberDialogProps> = ({
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const token = await ensureAccessToken();
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-team-member`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ full_name: form.fullName, email: form.email, role: form.role }),
       });
       const result = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         throw new Error(
-          conflictMessage(result) ||
+          (resp.status === 401 ? sessionExpiredMessage : null) ||
+            conflictMessage(result) ||
             (result as any)?.error ||
             t("admin.team.createFailed", "Failed to create member"),
         );

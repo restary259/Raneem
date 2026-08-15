@@ -125,6 +125,7 @@ const AdminMembersPage: React.FC = () => {
   }, []);
 
   const handleRefreshAll = useCallback(async () => {
+    setInvitesRefreshKey((n) => n + 1);
     await Promise.allSettled([refetchTeam(), refetchAgents(), refetchPartners(), refetchAmbassadors()]);
   }, [refetchTeam, refetchAgents, refetchPartners, refetchAmbassadors]);
 
