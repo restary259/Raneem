@@ -405,12 +405,18 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     let cancelled = false;
     setPreviewLoading(true);
-    (supabase as any)
-      .rpc("get_school_important_contacts", { p_school_id: schoolId })
-      .then((res: any) => {
-        if (!cancelled) setPreviewContacts((res.data as PreviewContact[]) ?? []);
-      })
-      .finally(() => { if (!cancelled) setPreviewLoading(false); });
+    (async () => {
+      // get_school_important_contacts is gated to the caller's OWN school
+      // (profiles.language_school_id), so persist the selection before
+      // previewing — the wizard otherwise only persists a step on Next.
+      const { error: persistError } = await (supabase as any)
+        .from("profiles")
+        .update({ language_school_id: schoolId })
+        .eq("id", user!.id);
+      if (cancelled || persistError) return;
+      const res = await (supabase as any).rpc("get_school_important_contacts", { p_school_id: schoolId });
+      if (!cancelled) setPreviewContacts((res.data as PreviewContact[]) ?? []);
+    })().finally(() => { if (!cancelled) setPreviewLoading(false); });
     return () => { cancelled = true; };
   }, [schoolId]);
 

@@ -1266,3 +1266,35 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
 - Build/test: `npm run build` clean; `npx vitest run` green (i18n parity guard
   included).
 
+## Important-contacts RPC authorization + case-insensitive city (2026-08-18)
+
+Migrations require Supabase admin/service-role DDL — NOT applied by the Vercel
+build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
+
+- `20260818000000_fix_contacts_case_insensitive_city.sql`: `get_school_important_contacts`
+  now lowercases BOTH sides of the city comparison (`lower(COALESCE(ic.city,''))`
+  vs `lower(COALESCE(NULLIF(p_city,''), sch.city, ''))`). `Heidelberg` vs
+  `heidelberg` no longer silently fails to match; the student resolver delegates
+  here, so the student Contacts page and the onboarding preview inherit the fix.
+  Grants are re-asserted (REVOKE from PUBLIC/anon, GRANT to authenticated).
+  Frontend: `AdminSettingsPage` city filter resolves `school_only` contacts'
+  city from `schools` via `language_school_id` (their own `city` column is
+  nulled by the form CHECK), and `distinctCities` dedupes/sorts case-insensitively.
+- `20260818010000_gate_important_contacts_rpc.sql`: **`get_school_important_contacts`
+  is now scoped to the caller's OWN school.** It is SECURITY DEFINER + granted
+  to `authenticated`, so previously ANY logged-in user could call it with an
+  arbitrary school UUID (school UUIDs are enumerable from `schools`) and read
+  that school's contact names/phones/emails. The gate: admin → any school;
+  `p_school_id IS NULL` → universal contacts only (unchanged for students with
+  no school); otherwise the school must be the caller's `profiles.language_school_id`
+  OR a school on one of their non-deleted `case_submissions` (the SAME two
+  sources `get_student_important_contacts()` resolves). Unauthorized calls
+  return ZERO rows (no error). Case-insensitive matching carried forward.
+- Frontend (wizard preview): because the RPC is now gated, `StudentOnboardingGate`
+  persists `profiles.language_school_id` immediately on school selection BEFORE
+  fetching the preview (the wizard otherwise only persists a step on Next), so
+  the live preview still works for a newly-picked school. `university_name` sync
+  still happens on Next as before.
+- Build/test: `npm run build` clean; `npx vitest run` green (i18n parity guard
+  included).
+
