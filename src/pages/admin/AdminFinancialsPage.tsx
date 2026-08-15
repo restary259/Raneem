@@ -21,6 +21,7 @@ const OverviewTab = () => {
     enrolledCount: 0,
     referralDiscounts: 0,
     partnerCommissionRate: 0,
+    teamCommissionsTotal: 0,
   });
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +52,12 @@ const OverviewTab = () => {
       value: `${fmt(data.serviceFees)} ILS`,
       icon: DollarSign,
       color: "text-primary bg-primary/10",
+    },
+    {
+      label: t("admin.financials.kpiTeamCommissions"),
+      value: `${fmt(data.teamCommissionsTotal)} ILS`,
+      icon: HandCoins,
+      color: "text-violet-600 bg-violet-600/10",
     },
     {
       label: t("admin.financials.kpiAdminNet"),

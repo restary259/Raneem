@@ -873,6 +873,90 @@ export type Database = {
           },
         ]
       }
+      case_financial_snapshots: {
+        Row: {
+          case_id: string
+          gross_total: number
+          referral_discount: number
+          net_total: number
+          referrer_id: string | null
+          referrer_role: string | null
+          agent_id: string | null
+          master_partner_id: string | null
+          partner_rate_used: number
+          agent_rate_used: number
+          master_rate_used: number
+          team_rate_used: number
+          student_reward_used: number
+          partner_commission: number
+          agent_override: number
+          master_override: number
+          team_commission: number
+          student_reward: number
+          total_payouts: number
+          darb_margin: number
+          attribution_model: string
+          is_agent_self_referral: boolean
+          is_student_referrer: boolean
+          student_referral_type: string | null
+          recorded_at: string
+        }
+        Insert: {
+          case_id: string
+          gross_total?: number
+          referral_discount?: number
+          net_total?: number
+          referrer_id?: string | null
+          referrer_role?: string | null
+          agent_id?: string | null
+          master_partner_id?: string | null
+          partner_rate_used?: number
+          agent_rate_used?: number
+          master_rate_used?: number
+          team_rate_used?: number
+          student_reward_used?: number
+          partner_commission?: number
+          agent_override?: number
+          master_override?: number
+          team_commission?: number
+          student_reward?: number
+          total_payouts?: number
+          darb_margin?: number
+          attribution_model?: string
+          is_agent_self_referral?: boolean
+          is_student_referrer?: boolean
+          student_referral_type?: string | null
+          recorded_at?: string
+        }
+        Update: {
+          case_id?: string
+          gross_total?: number
+          referral_discount?: number
+          net_total?: number
+          referrer_id?: string | null
+          referrer_role?: string | null
+          agent_id?: string | null
+          master_partner_id?: string | null
+          partner_rate_used?: number
+          agent_rate_used?: number
+          master_rate_used?: number
+          team_rate_used?: number
+          student_reward_used?: number
+          partner_commission?: number
+          agent_override?: number
+          master_override?: number
+          team_commission?: number
+          student_reward?: number
+          total_payouts?: number
+          darb_margin?: number
+          attribution_model?: string
+          is_agent_self_referral?: boolean
+          is_student_referrer?: boolean
+          student_referral_type?: string | null
+          recorded_at?: string
+        }
+        Relationships: []
+      }
       case_payments: {
         Row: {
           amount: number

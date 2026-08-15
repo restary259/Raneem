@@ -656,7 +656,8 @@
       "partnerDirectHint": "— admin-initiated payments. Rewards marked \"Payout Requested\" must be settled in the Payout Requests tab to avoid double payment.",
       "payoutRequestsTab": "Payout Requests tab",
       "payoutRequestsHint": "— handles formal payout requests submitted by partners from their dashboard (reward status: pending → approved → paid).",
-      "tabPayouts": "Payouts"
+      "tabPayouts": "Payouts",
+      "kpiTeamCommissions": "Team Commissions"
     },
     "partnerPayouts": {
       "title": "Partner Payouts",
@@ -4524,6 +4525,33 @@
     "studentIdPlaceholder": "Student UUID",
     "addOverride": "Add",
     "loadError": "Failed to load commission data",
-    "migrationHint": "Run the latest SQL migration in Supabase SQL Editor, then click Retry."
+    "migrationHint": "Run the latest SQL migration in Supabase SQL Editor, then click Retry.",
+    "tabSimulator": "Simulator",
+    "simTitle": "Commission simulator (what-if)",
+    "simHint": "Pure preview — mirrors the additive engine. No data is written. Change the inputs to see how a case's commission split would be computed at enrollment.",
+    "simAcqType": "Acquisition type",
+    "simAcqPartner": "Partner / Ambassador referral",
+    "simAcqAgentSelf": "Agent self-referral",
+    "simAcqStudent": "Student → Student referral",
+    "simAcqDirect": "Direct (no referrer)",
+    "simGross": "Gross service total",
+    "simDiscount": "Referral discount",
+    "simTeam": "Team commission (flat)",
+    "simPool": "Partner pool",
+    "simMaster": "Master carve (from pool)",
+    "simAgent": "Agent override (additive)",
+    "simAgentSelf": "Agent self-referral amount",
+    "simStudentReward": "Student referrer reward",
+    "simNet": "NET (after discount)",
+    "simTeamOut": "Team commission",
+    "simPartnerShare": "Partner share (net of master)",
+    "simMasterOut": "Master carve",
+    "simAgentOut": "Agent override (additive)",
+    "simAgentSelfOut": "Agent self-referral",
+    "simStudentOut": "Student referrer reward",
+    "simTotalPayouts": "Total payouts",
+    "simDarbMargin": "Darb margin (platform revenue)",
+    "simNegativeMargin": "Negative margin — payouts exceed NET (a warning would be logged)",
+    "simHealthy": "Healthy margin"
   }
 }

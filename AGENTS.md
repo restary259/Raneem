@@ -1111,3 +1111,121 @@ a new migration and re-run it. New migrations use unique timestamps.
 ### Build/test status
 
 `npm run build` clean; `npx vitest run` 355/355 pass.
+
+## Commission system hardening — 7 genuine audit gaps (2026-08-17)
+
+Forensic-audit-driven hardening of the commission/money-path. Scoped to ONLY
+the genuine gaps; the audit findings that were already fixed or not actually
+bugs were explicitly skipped (re-implementing them would have introduced
+regressions, e.g. a universal ₪500 discount or re-adding a dropped RLS policy).
+Plan: `.agents_tmp/PLAN.md`.
+
+### Migrations (unique `20260817*` timestamps; require Supabase admin/service-role DDL — NOT applied by Vercel build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor)
+
+- `20260817000000_master_partner_agent_invariant.sql` (G1): the
+  `restrict_profiles_write()` trusted-caller early-return path now enforces
+  `is_master_partner = true AND agent_id IS NOT NULL → RAISE`. An
+  agent-recruited partner (sits BELOW an agent) can NEVER become a Master
+  Partner (top of an agent network) by any path — admin UI, RPC, or direct
+  UPDATE. This is an integrity invariant (graph-cycle guard), NOT a permission
+  rule, so it fires for admin/service_role too (the early-return path that
+  previously skipped ALL validation). Non-admin callers already can't set
+  `is_master_partner`, but the check is defense-in-depth. Diagnostic SELECT
+  (commented) finds existing violating rows for operator review (NOT auto-deleted).
+- `20260817010000_commission_margin_warning.sql` (G2 + G6 + G7):
+  - **G2**: `record_case_commission` logs a NON-BLOCKING
+    `commission_margin_warning` case event when `total_payouts > net` (negative
+    Darb margin). Enrollment is NOT blocked; the existing
+    `platform_revenue_ils = GREATEST(0, ...)` clamp stays (column never goes
+    negative). `v_total_payouts` is recomputed per branch (agent self-ref uses
+    `agent_self_amount`; student referrer uses `student_reward`; partner uses
+    `pool + agent_share`). A previously-silent negative margin is now visible
+    in the case event log.
+  - **G6**: the deterministic attribution priority (partner_id > referred_by,
+    then role lookup partner/ambassador > agent > student, first match wins,
+    student referrals isolated) is documented in a header comment. No logic change.
+  - **G7**: `auto_split_payment()` redefined to call
+    `record_case_commission(NEW.id, 0)` directly, dropping the stale
+    `case_submissions.service_fee` read (the canonical engine ignores the
+    payment arg and derives the base from `case_services`, so the read was
+    harmless but confusing). `trg_auto_split_payment` defensively DROP+CREATE'd
+    to guarantee continuity regardless of which historical migration ran last.
+- `20260817020000_attribution_lock_after_commission.sql` (G4): new
+  SECURITY DEFINER `guard_case_attribution_lock()` + `BEFORE UPDATE` trigger
+  `trg_guard_case_attribution_lock` on `cases`. Once
+  `commission_split_done = true`, non-admin changes to `partner_id`/`referred_by`
+  → `RAISE EXCEPTION 'ATTRIBUTION_LOCKED...'`. Admin overrides SUCCEED but are
+  logged as an `attribution_override_after_commission` case event (auditable).
+  ADDITIVE to `restrict_cases_financial_columns` (which gates WHO can change
+  attribution: admin-only at any time). This gates WHETHER it can change
+  post-commission + audits admin overrides. The two are orthogonal; either
+  raising aborts the UPDATE. Honors the `app.internal_commission_split` GUC.
+- `20260817030000_case_financial_snapshots.sql` (G3): new
+  `case_financial_snapshots` table — freezes gross/net/discount/rates/payouts
+  at enrollment so future rate/discount changes can't rewrite history. One row
+  per case (UNIQUE `case_id`, `ON DELETE RESTRICT`), written ONCE by the
+  engine. RLS: admin SELECT only; `REVOKE ALL FROM anon, authenticated;
+  GRANT SELECT`. No client INSERT/UPDATE/DELETE (only the SECURITY DEFINER
+  engine writes, as owner, bypassing RLS).
+- `20260817040000_snapshot_in_engine.sql` (G3 cont.): full `CREATE OR REPLACE`
+  of `record_case_commission` (carrying G2/G6 from `20260817010000`) + the
+  snapshot INSERT before the final `UPDATE cases SET commission_split_done`.
+  `ON CONFLICT (case_id) DO NOTHING` so a re-run (idempotency) never overwrites
+  a frozen snapshot. Adds `v_referrer_role` derivation. All money math is
+  byte-for-byte identical to the prior version.
+
+### Frontend
+
+- **G5** (`DashboardService.ts` + `AdminFinancialsPage.tsx`): the
+  `teamCommissionsTotal` that `DashboardService.financialOverview()` already
+  computed (line 62, classified via `isTeam`) is now EXPOSED on the
+  `FinancialOverview` interface + return object, and rendered as a new KPI card
+  in the Admin Financials overview grid (₪ + HandCoins icon, violet). i18n key
+  `admin.financials.kpiTeamCommissions` added to en + ar.
+- **Phase 4 — Commission Hub Simulator**: pure-frontend "what-if" calculator.
+  `src/lib/commissionSimulator.ts` (pure `simulateCommission()` mirroring the
+  ADDITIVE engine: `net = max(0, gross−discount); margin = max(0, net − team −
+  pool − agent − student)`) + `src/components/admin/CommissionSimulator.tsx`
+  (a new "Simulator" tab in `AdminCommissionHubPage`). Inputs: acquisition
+  type (partner/agent_self/student/direct), gross, discount, pool, master carve,
+  agent override, team rate, student reward. Output: NET, per-component payouts,
+  total payouts, Darb margin, PASS/FAIL (negative-margin) badge. NO Supabase
+  calls — pure TS. 27 i18n keys under `commissionHub.sim*`/`tabSimulator`
+  added to en + ar (parity-guarded).
+
+### Generated types
+
+`src/integrations/supabase/types.ts` gained `case_financial_snapshots`
+(Row/Insert/Update: `case_id` PK + gross/discount/net totals, attribution
+columns, rate-used columns, payout-amount columns, classification flags,
+`recorded_at`). `Relationships: []` (the FK to `cases` is enforced in SQL but
+not surfaced as a relationship in the generated types, matching the pattern of
+other audit tables like `commission_rate_history`).
+
+### Diagnostics
+
+`supabase/diagnostics/commission_engine_invariants.sql` extended with:
+- **TEST 5** (snapshot created + immutable): after enrollment, exactly one
+  `case_financial_snapshots` row with correct gross/net/payouts; re-running the
+  engine adds no second row (`ON CONFLICT DO NOTHING`).
+- **TEST 6** (margin-safety warning): with a partner pool override (₪6000)
+  exceeding the ₪5000 net, enrollment logs exactly one
+  `commission_margin_warning` case event and `platform_revenue_ils = 0`
+  (clamped, not negative).
+
+### What success looks like
+
+- An agent-recruited partner CANNOT be designated Master Partner by any path.
+- A negative-margin enrollment produces a visible `commission_margin_warning`
+  in the case event log (not a silent negative `platform_revenue_ils`).
+- A historical enrolled case's financial snapshot is frozen — changing global
+  rates/discounts does not alter its `case_financial_snapshots` row.
+- Attribution cannot be silently changed after commission is recorded (admin
+  override is logged as `attribution_override_after_commission`).
+- The commission engine's business logic (audit scenarios 1–9) is UNCHANGED —
+  this adds guardrails, not new commission math.
+
+### Build/test status
+
+`npm run build` clean; `npx vitest run` 366/366 pass (+11 from the new
+`commissionSimulator.test.ts`; i18n parity guard green).

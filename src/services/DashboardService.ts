@@ -12,6 +12,8 @@ export interface FinancialOverview {
   referralDiscounts: number;
   /** Global default partner commission (flat ILS amount per student). */
   partnerCommissionRate: number;
+  /** Total team-member commissions (flat ILS, all statuses). */
+  teamCommissionsTotal: number;
   submissions: any[];
 }
 
@@ -123,6 +125,7 @@ export const DashboardService = {
       enrolledCount,
       referralDiscounts,
       partnerCommissionRate,
+      teamCommissionsTotal,
       submissions: enrichedSubmissions,
     };
   },

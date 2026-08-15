@@ -21,8 +21,10 @@ import {
   Heart,
   Users2,
   AlertCircle,
+  Calculator,
 } from "lucide-react";
 import { useCommissionHub } from "@/hooks/useCommissionHub";
+import CommissionSimulator from "@/components/admin/CommissionSimulator";
 
 const fmtILS = (n: number | null | undefined) =>
   `₪${(Number(n ?? 0)).toLocaleString("en-US")}`;
@@ -146,7 +148,11 @@ const AdminCommissionHubPage: React.FC = () => {
           <TabsTrigger value="team">{t("commissionHub.tabTeam", "Team")}</TabsTrigger>
           <TabsTrigger value="agents">{t("commissionHub.tabAgents", "Agents")}</TabsTrigger>
           <TabsTrigger value="independent">{t("commissionHub.tabIndependent", "Direct (no recruiter)")}</TabsTrigger>
-          <TabsTrigger value="students">{t("commissionHub.tabStudents", "Students")}</TabsTrigger>
+            <TabsTrigger value="students">{t("commissionHub.tabStudents", "Students")}</TabsTrigger>
+            <TabsTrigger value="simulator" className="gap-2">
+              <Calculator className="h-4 w-4" />
+              {t("commissionHub.tabSimulator", "Simulator")}
+            </TabsTrigger>
         </TabsList>
 
         {/* ── Overview ── */}
@@ -316,6 +322,11 @@ const AdminCommissionHubPage: React.FC = () => {
             onError={(m: string) => toast({ variant: "destructive", description: m })}
             t={t}
           />
+        </TabsContent>
+
+        {/* ── Simulator (pure what-if, no writes) ── */}
+        <TabsContent value="simulator" className="mt-4">
+          <CommissionSimulator t={t} />
         </TabsContent>
       </Tabs>
     </div>

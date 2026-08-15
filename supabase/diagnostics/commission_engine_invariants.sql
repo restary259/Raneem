@@ -152,4 +152,60 @@ BEGIN
 END $$;
 \echo 'TEST 4 (audit trail): PASSED'
 
+-- ── TEST 5: Financial snapshot created + immutable (G3) ───────────────────
+-- Expect: after enrollment, exactly one case_financial_snapshots row exists
+-- with the correct gross/net/payouts. A second record_case_commission call
+-- (idempotency) does NOT add a second row (ON CONFLICT DO NOTHING).
+DO $$
+DECLARE
+  v_case uuid; v_snap_count int; v_snap RECORD;
+BEGIN
+  v_case := pg_temp.make_case('TEST-SNAPSHOT', '11111111-0000-0000-0000-000000000002'::uuid);
+  PERFORM public.record_case_commission(v_case, 0);
+
+  SELECT count(*) INTO v_snap_count FROM case_financial_snapshots WHERE case_id = v_case;
+  ASSERT v_snap_count = 1, 'exactly one snapshot row expected, got %', v_snap_count;
+
+  SELECT * INTO v_snap FROM case_financial_snapshots WHERE case_id = v_case;
+  ASSERT v_snap.gross_total = 5000, 'gross_total should be 5000, got %', v_snap.gross_total;
+  ASSERT v_snap.net_total = 5000, 'net_total should be 5000 (no discount), got %', v_snap.net_total;
+  ASSERT v_snap.partner_commission = 1000, 'partner_commission should be 1000, got %', v_snap.partner_commission;
+  ASSERT v_snap.agent_override = 500, 'agent_override should be 500, got %', v_snap.agent_override;
+  ASSERT v_snap.darb_margin = 3400, 'darb_margin should be 3400, got %', v_snap.darb_margin;
+
+  -- Idempotency: re-running must NOT overwrite or duplicate the snapshot.
+  PERFORM public.record_case_commission(v_case, 0);
+  SELECT count(*) INTO v_snap_count FROM case_financial_snapshots WHERE case_id = v_case;
+  ASSERT v_snap_count = 1, 're-run must not add a snapshot row, got %', v_snap_count;
+END $$;
+\echo 'TEST 5 (snapshot created + immutable): PASSED'
+
+-- ── TEST 6: Margin-safety warning fires on negative margin (G2) ───────────
+-- Expect: when total payouts exceed NET, a commission_margin_warning case
+-- event is logged and platform_revenue_ils is clamped to 0 (not negative).
+-- Setup: partner pool override = ₪6000 (exceeds the ₪5000 case net).
+DO $$
+DECLARE
+  v_case uuid; v_warn int; v_platform int;
+BEGIN
+  -- Inflate the partner pool for this test partner so payouts > net.
+  INSERT INTO partner_commission_overrides (partner_id, commission_amount)
+  VALUES ('11111111-0000-0000-0000-000000000002', 6000)
+  ON CONFLICT (partner_id) DO UPDATE SET commission_amount = 6000;
+
+  v_case := pg_temp.make_case('TEST-MARGIN-WARN', '11111111-0000-0000-0000-000000000002'::uuid);
+  PERFORM public.record_case_commission(v_case, 0);
+
+  SELECT count(*) INTO v_warn FROM case_events
+    WHERE case_id = v_case AND event_type = 'commission_margin_warning';
+  ASSERT v_warn = 1, 'a margin warning event should be logged, got %', v_warn;
+
+  SELECT platform_revenue_ils INTO v_platform FROM cases WHERE id = v_case;
+  ASSERT v_platform = 0, 'platform_revenue should be clamped to 0, got %', v_platform;
+
+  -- Restore the override so later tests aren't affected.
+  DELETE FROM partner_commission_overrides WHERE partner_id = '11111111-0000-0000-0000-000000000002';
+END $$;
+\echo 'TEST 6 (margin-safety warning): PASSED'
+
 ROLLBACK;
