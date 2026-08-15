@@ -140,7 +140,7 @@ const AdminCommissionHubPage: React.FC = () => {
           <TabsTrigger value="rates">{t("commissionHub.tabRates", "Global rates")}</TabsTrigger>
           <TabsTrigger value="team">{t("commissionHub.tabTeam", "Team")}</TabsTrigger>
           <TabsTrigger value="agents">{t("commissionHub.tabAgents", "Agents")}</TabsTrigger>
-          <TabsTrigger value="independent">{t("commissionHub.tabIndependent", "Independent")}</TabsTrigger>
+          <TabsTrigger value="independent">{t("commissionHub.tabIndependent", "Direct (no recruiter)")}</TabsTrigger>
           <TabsTrigger value="students">{t("commissionHub.tabStudents", "Students")}</TabsTrigger>
         </TabsList>
 
@@ -155,7 +155,8 @@ const AdminCommissionHubPage: React.FC = () => {
               sub={t("commissionHub.kpiCustom", "{{count}} custom", { count: overview?.agents_custom ?? 0 })} />
             <KpiCard icon={GraduationCap} label={t("commissionHub.kpiStudents", "Students")} value={overview?.students_total ?? 0} />
             <KpiCard icon={Crown} label={t("commissionHub.kpiMasters", "Master partners")} value={overview?.master_partners ?? 0} />
-            <KpiCard icon={Users} label={t("commissionHub.kpiIndependent", "Independent")} value={overview?.independent_partners ?? 0} />
+            <KpiCard icon={Users} label={t("commissionHub.kpiIndependent", "Direct (no recruiter)")} value={overview?.independent_partners ?? 0}
+              sub={t("commissionHub.kpiIndependentSub", "No agent, no master")} />
             <KpiCard icon={DollarSign} label={t("commissionHub.kpiAtZero", "Partners at ₪0")} value={overview?.partners_at_zero ?? 0} />
           </div>
 
@@ -268,7 +269,7 @@ const AdminCommissionHubPage: React.FC = () => {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                {t("commissionHub.independentTitle", "Independent partners & ambassadors")}
+                {t("commissionHub.independentTitle", "Direct partners & ambassadors (no recruiter)")}
               </CardTitle>
             </CardHeader>
             <CardContent>
