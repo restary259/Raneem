@@ -264,9 +264,9 @@ export function localizedName(
 }
 
 export function localizedDescription(
-  row: { description_en: string | null; description_ar: string | null; description: string | null },
+  row: { description_en: string | null; description_ar: string | null; description?: string | null },
   lang: "en" | "ar",
 ): string | null {
-  if (lang === "ar") return row.description_ar || row.description_en || row.description;
-  return row.description_en || row.description || row.description_ar;
+  if (lang === "ar") return row.description_ar || row.description_en || row.description || null;
+  return row.description_en || row.description || row.description_ar || null;
 }
