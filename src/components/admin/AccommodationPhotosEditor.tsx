@@ -23,6 +23,7 @@ interface PhotoRow {
 
 interface Props {
   accommodationId: string;
+  onPhotosChanged?: () => void;
 }
 
 /**
@@ -31,7 +32,7 @@ interface Props {
  * accommodation). Upload, reorder (up/down), delete. RLS enforces admin-only
  * writes; this component offers no UI to non-admins (it lives in AdminProgramsPage).
  */
-const AccommodationPhotosEditor: React.FC<Props> = ({ accommodationId }) => {
+const AccommodationPhotosEditor: React.FC<Props> = ({ accommodationId, onPhotosChanged }) => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -120,6 +121,7 @@ const AccommodationPhotosEditor: React.FC<Props> = ({ accommodationId }) => {
       }
       toast({ description: t("admin.programs.photosUploaded") });
       await fetchPhotos();
+      onPhotosChanged?.();
     } catch (err: any) {
       if (uploadedPaths.length > 0) {
         await supabase.storage.from("accommodation-photos").remove(uploadedPaths);
@@ -148,6 +150,7 @@ const AccommodationPhotosEditor: React.FC<Props> = ({ accommodationId }) => {
       if (error) throw error;
       toast({ description: t("admin.programs.photosReordered") });
       await fetchPhotos();
+      onPhotosChanged?.();
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -168,6 +171,7 @@ const AccommodationPhotosEditor: React.FC<Props> = ({ accommodationId }) => {
       await supabase.storage.from("accommodation-photos").remove([photo.storage_path]);
       toast({ description: t("admin.programs.photosDeleted") });
       await fetchPhotos();
+      onPhotosChanged?.();
     } catch (err: any) {
       toast({
         variant: "destructive",

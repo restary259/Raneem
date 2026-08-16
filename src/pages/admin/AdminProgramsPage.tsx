@@ -24,6 +24,7 @@ import {
   Pencil,
   Building2,
   Shield,
+  ImageIcon,
   GraduationCap as School,
 } from "lucide-react";
 import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
@@ -38,6 +39,7 @@ const TONE = {
   appointment: toneClasses("appointment").chip,
   payment: toneClasses("payment").chip,
   enrolled: toneClasses("enrolled").chip,
+  danger: toneClasses("danger").chip,
 } as const;
 
 const TONE_TEXT = {
@@ -164,6 +166,7 @@ const AdminProgramsPage = () => {
   const [schools, setSchools] = useState<School[]>([]);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [insurances, setInsurances] = useState<Insurance[]>([]);
+  const [photoCounts, setPhotoCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -224,6 +227,7 @@ const AdminProgramsPage = () => {
         db.from("schools").select("*").order("name_en"),
         db.from("accommodations").select("*").order("name_en"),
         db.from("insurances").select("*").order("tier"),
+        db.from("accommodation_photos").select("accommodation_id"),
       ])) as any[];
       const failed = results.find((r) => r.error);
       // Without this an RLS/network failure renders as "no records exist".
@@ -232,6 +236,11 @@ const AdminProgramsPage = () => {
       setSchools((results[1].data ?? []) as School[]);
       setAccommodations((results[2].data ?? []) as Accommodation[]);
       setInsurances((results[3].data ?? []) as Insurance[]);
+      const counts: Record<string, number> = {};
+      for (const row of (results[4].data ?? []) as { accommodation_id: string }[]) {
+        counts[row.accommodation_id] = (counts[row.accommodation_id] ?? 0) + 1;
+      }
+      setPhotoCounts(counts);
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -242,6 +251,16 @@ const AdminProgramsPage = () => {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  const refreshPhotoCounts = useCallback(async () => {
+    const { data, error } = await db.from("accommodation_photos").select("accommodation_id");
+    if (error) return;
+    const counts: Record<string, number> = {};
+    for (const row of (data ?? []) as { accommodation_id: string }[]) {
+      counts[row.accommodation_id] = (counts[row.accommodation_id] ?? 0) + 1;
+    }
+    setPhotoCounts(counts);
+  }, []);
 
   const saveProgram = async () => {
     if (!progForm.name_en) {
@@ -1093,7 +1112,7 @@ const AdminProgramsPage = () => {
                     />
                   </div>
                   <PriceTiersEditor tiers={accomTiers} onChange={setAccomTiers} />
-                  {editAccomId && <AccommodationPhotosEditor accommodationId={editAccomId} />}
+                  {editAccomId && <AccommodationPhotosEditor accommodationId={editAccomId} onPhotosChanged={refreshPhotoCounts} />}
                   <Button className="w-full" onClick={saveAccom} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
@@ -1162,6 +1181,17 @@ const AdminProgramsPage = () => {
                         {parseTiers(a.price_tiers).length > 0 && (
                           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
                             {formatTierLadder(parseTiers(a.price_tiers), a.currency, t('admin.programs.weeksShort'))}
+                          </span>
+                        )}
+                        {(photoCounts[a.id] ?? 0) > 0 ? (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${TONE.enrolled}`}>
+                            <ImageIcon className="h-3 w-3" />
+                            {photoCounts[a.id]}
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${TONE.danger}`}>
+                            <ImageIcon className="h-3 w-3" />
+                            {t('admin.programs.photosAddHint')}
                           </span>
                         )}
                       </div>

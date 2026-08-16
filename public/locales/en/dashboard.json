@@ -598,6 +598,7 @@
       "photosReordered": "Order updated",
       "photosUploadFailed": "Upload failed",
       "photosDeleteFailed": "Delete failed",
+      "photosAddHint": "No photos",
       "tierBasic": "Basic",
       "tierStandard": "Standard",
       "tierPremium": "Premium",
