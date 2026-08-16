@@ -11,6 +11,7 @@ import type {
   PaymentStatus,
 } from "@/hooks/useCaseFinancials";
 import { formatDateNumeric } from "@/utils/dateUtils";
+import { toneClasses } from "@/lib/statusTokens";
 
 interface Props {
   caseId: string;
@@ -20,11 +21,12 @@ interface Props {
   onChanged: () => void;
 }
 
+/** Payment status → semantic tone chip (theme-aware across light/dark/aurora). */
 const STATUS_CLASS: Record<PaymentStatus, string> = {
-  pending: "bg-slate-100 text-slate-800 border-slate-200",
-  submitted: "bg-amber-100 text-amber-800 border-amber-200",
-  confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  rejected: "bg-red-100 text-red-800 border-red-200",
+  pending: toneClasses("neutral").chip,
+  submitted: toneClasses("payment").chip,
+  confirmed: toneClasses("paid").chip,
+  rejected: toneClasses("danger").chip,
 };
 
 type TranslateFn = (key: string, fallback?: string) => string;
@@ -223,7 +225,7 @@ const CasePayments: React.FC<Props> = ({
 
             const statusClass =
               STATUS_CLASS[payment.status] ??
-              "bg-slate-100 text-slate-800 border-slate-200";
+              toneClasses("neutral").chip;
 
             return (
               <div
@@ -304,10 +306,10 @@ const CasePayments: React.FC<Props> = ({
                     </p>
 
                     {/* Confirmed */}
-                    {payment.status ===
+                                          {payment.status ===
                       "confirmed" &&
                       payment.confirmed_at && (
-                        <p className="text-xs text-emerald-700">
+                        <p className={`text-xs ${toneClasses("paid").text}`}>
                           {t(
                             "finance.payments.confirmedAt",
                             "Confirmed",
@@ -401,7 +403,7 @@ const CasePayments: React.FC<Props> = ({
                 {isDarb &&
                   payment.status ===
                     "confirmed" && (
-                    <p className="text-xs text-emerald-700">
+                    <p className={`text-xs ${toneClasses("paid").text}`}>
                       {t(
                         "finance.payments.darbConfirmed",
                         "DARB service payment confirmed.",

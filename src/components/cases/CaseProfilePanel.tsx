@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CaseProfileForm from "./CaseProfileForm";
 import CaseProfileSummary from "./CaseProfileSummary";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   missingProfileFields,
   PROFILE_FIELD_LABEL_KEYS,
@@ -40,8 +41,8 @@ export default function CaseProfilePanel({ status, caseData, submission, canMana
       </CardHeader>
       <CardContent className="space-y-4">
         {status === "profile_completion" && reopened && (
-          <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
-            <p className="text-sm font-medium text-amber-700">{t("case.submit.changesRequested")}</p>
+          <div className={`rounded-lg border p-3 border-[hsl(var(--status-payment)/0.4)] ${toneClasses("payment").tint}`}>
+            <p className={`text-sm font-medium ${toneClasses("payment").text}`}>{t("case.submit.changesRequested")}</p>
             {submission?.review_note && <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>}
             <p className="mt-1 text-xs text-muted-foreground">
               {t("case.submit.fixAndResend", {
@@ -90,8 +91,8 @@ export default function CaseProfilePanel({ status, caseData, submission, canMana
         )}
 
         {status === "profile_completion" && !savedComplete && (
-          <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
-            <p className="text-sm font-medium text-amber-700">{t("case.detail.paymentBlocked")}</p>
+          <div className={`rounded-lg border p-3 border-[hsl(var(--status-payment)/0.4)] ${toneClasses("payment").tint}`}>
+            <p className={`text-sm font-medium ${toneClasses("payment").text}`}>{t("case.detail.paymentBlocked")}</p>
             {missing.length > 0 && (
               <p className="mt-1 text-xs text-muted-foreground">{missing.map(fieldName).join(" · ")}</p>
             )}

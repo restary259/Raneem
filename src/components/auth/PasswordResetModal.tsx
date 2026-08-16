@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { friendlyAuthError } from '@/lib/authError';
 import { Loader2, Mail } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 
 interface PasswordResetModalProps {
   isOpen: boolean;
@@ -111,11 +112,11 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({ isOpen, onClose
           </form>
         ) : (
           <div className="text-center space-y-4">
-            <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
-              <Mail className="w-8 h-8 text-green-600" />
+            <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${toneClasses('enrolled').tint}`}>
+              <Mail className={`w-8 h-8 ${toneClasses('enrolled').text}`} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-green-800">تم الإرسال بنجاح!</h3>
+              <h3 className={`text-lg font-semibold ${toneClasses('enrolled').text}`}>تم الإرسال بنجاح!</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من بريدك.
               </p>

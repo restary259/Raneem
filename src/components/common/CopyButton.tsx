@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toneClasses } from '@/lib/statusTokens';
 
 export function CopyButton({ value }: { value: string | null | undefined }) {
   const [copied, setCopied] = useState(false);
@@ -35,7 +36,7 @@ export function CopyButton({ value }: { value: string | null | undefined }) {
       aria-label="Copy"
     >
       {copied
-        ? <Check className="h-3.5 w-3.5 text-emerald-600" />
+        ? <Check className={`h-3.5 w-3.5 ${toneClasses("paid").text}`} />
         : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
     </Button>
   );

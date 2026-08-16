@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Search, Activity } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface ActivityEntry {
@@ -66,9 +67,9 @@ const AdminActivityPage = () => {
   const entityColor: Record<string, string> = {
     case: 'bg-primary/10 text-primary',
     appointment: 'bg-accent/10 text-accent-foreground',
-    submission: 'bg-emerald-500/10 text-emerald-700',
-    student: 'bg-sky-500/10 text-sky-700',
-    team: 'bg-amber-500/10 text-amber-700',
+    submission: toneClasses("enrolled").chip,
+    student: toneClasses("submitted").chip,
+    team: toneClasses("payment").chip,
   };
 
   return (

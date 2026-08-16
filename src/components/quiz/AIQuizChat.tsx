@@ -4,6 +4,7 @@ import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Trash2, GraduationCap, BookOpen, Target, MessageCircle } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 import { useAIChat } from '@/hooks/useAIChat';
 import ChatCategoryGrid, { type ChatCategory } from '@/components/chat/ChatCategoryGrid';
 import ChatComposer from '@/components/chat/ChatComposer';
@@ -19,10 +20,10 @@ const AIQuizChat = () => {
   const quizQuickQuestions = t('quiz.quickQuestions', { returnObjects: true }) as string[];
 
   const CATEGORIES: ChatCategory[] = [
-    { label: t('quiz.categories.background'), icon: BookOpen, color: 'bg-orange-100 text-orange-600' },
-    { label: t('quiz.categories.interests'), icon: Target, color: 'bg-blue-100 text-blue-600' },
-    { label: t('quiz.categories.strengths'), icon: GraduationCap, color: 'bg-green-100 text-green-600' },
-    { label: t('quiz.categories.goals'), icon: MessageCircle, color: 'bg-purple-100 text-purple-600' },
+    { label: t('quiz.categories.background'), icon: BookOpen, color: toneClasses('contacted').chip },
+    { label: t('quiz.categories.interests'), icon: Target, color: toneClasses('submitted').chip },
+    { label: t('quiz.categories.strengths'), icon: GraduationCap, color: toneClasses('enrolled').chip },
+    { label: t('quiz.categories.goals'), icon: MessageCircle, color: toneClasses('appointment').chip },
   ];
 
   const {

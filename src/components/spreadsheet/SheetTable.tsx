@@ -11,6 +11,7 @@ import { toExportColumns, toExportRows } from './exportMapping';
 import { useToast } from '@/hooks/use-toast';
 
 import { SheetEnumGroup, useSheetLabels } from './sheetLabels';
+import { toneClasses, toneForStatus, type StatusTone } from '@/lib/statusTokens';
 
 export type SheetColumnType = 'text' | 'number' | 'currency' | 'date' | 'percent' | 'enum';
 
@@ -66,20 +67,13 @@ export const formatCell = (
   }
 };
 
-const STATUS_TONE: Record<string, string> = {
-  new: 'bg-blue-100 text-blue-800',
-  contacted: 'bg-purple-100 text-purple-800',
-  appointment_scheduled: 'bg-indigo-100 text-indigo-800',
-  profile_completion: 'bg-yellow-100 text-yellow-800',
-  payment_confirmed: 'bg-emerald-100 text-emerald-800',
-  submitted: 'bg-cyan-100 text-cyan-800',
-  enrollment_paid: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
-  forgotten: 'bg-gray-100 text-gray-700',
-  pending: 'bg-amber-100 text-amber-800',
-  approved: 'bg-blue-100 text-blue-800',
-  paid: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
+/** Status key → theme-aware chip class. Confirmed money (`paid`) uses the
+ *  dedicated `paid` tone; other keys resolve through the shared tone map. */
+const chipForStatus = (raw: string): string => {
+  const key = raw.toLowerCase();
+  if (key === "paid" || key === "enrollment_paid") return toneClasses("paid").chip;
+  const tone: StatusTone = toneForStatus(key);
+  return toneClasses(tone).chip;
 };
 
 
@@ -247,7 +241,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
                       {c.type === 'enum' && (c.enumGroup ?? 'status') === 'status' && r[c.key] ? (
                         <span
                           className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                            STATUS_TONE[String(r[c.key]).toLowerCase()] ?? 'bg-muted text-muted-foreground'
+                            chipForStatus(String(r[c.key])) ?? 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {formatCell(r[c.key], c, translate)}

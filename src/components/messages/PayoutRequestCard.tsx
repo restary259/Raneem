@@ -17,17 +17,19 @@ import { useToast } from "@/hooks/use-toast";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
 import type { ChatAttachment } from "@/lib/chatFormat";
 import { formatILS } from "@/lib/money";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   adminRespondPayoutRequest,
   getPayoutRequestDetail,
   type PayoutRequestDetail,
 } from "@/services/PayoutRequestService";
 
+/** Payout status → semantic tone chip (theme-aware across light/dark/aurora). */
 const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-900",
-  approved: "bg-blue-100 text-blue-900",
-  paid: "bg-emerald-100 text-emerald-900",
-  rejected: "bg-rose-100 text-rose-900",
+  pending: toneClasses("payment").chip,
+  approved: toneClasses("submitted").chip,
+  paid: toneClasses("paid").chip,
+  rejected: toneClasses("danger").chip,
 };
 
 interface Props {
@@ -98,9 +100,10 @@ export default function PayoutRequestCard({
   }
 
   const status = detail.status ?? "pending";
+  const isPaid = status === "paid";
 
   return (
-    <div className="min-w-[240px] space-y-2 rounded-xl border border-primary/25 bg-background/70 p-3">
+    <div className={`min-w-[240px] space-y-2 rounded-xl border bg-background/70 p-3 ${isPaid ? "border-2 border-[hsl(var(--status-paid)/0.45)]" : "border-primary/25"}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 text-sm font-semibold">
           <Banknote className="h-4 w-4 text-primary" />

@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, ChevronDown, ChevronRight, ImagePlus, X,
 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   COLOR_PRESETS, DESIGN_PRESETS, FONTS, TYPOGRAPHY_PRESETS, applyPreset,
   applyTypographyPreset, isHex, safeAccentOnWhite, contrastRatio,
@@ -554,7 +555,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
                 <Input className="w-28" value={data.design.accent} onChange={(e) => isHex(e.target.value) && updateDesign({ accent: e.target.value, preset: "custom" })} />
               </div>
               {lowContrast && (
-                <p className="text-xs text-amber-600 mt-1">{h("contrastWarn", "This color is light — headings will be auto-darkened for readability.")}</p>
+                <p className={`text-xs ${toneClasses("payment").text} mt-1`}>{h("contrastWarn", "This color is light — headings will be auto-darkened for readability.")}</p>
               )}
             </div>
 

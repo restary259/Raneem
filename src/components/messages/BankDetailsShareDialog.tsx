@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Landmark, Loader2 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   Dialog,
   DialogContent,
@@ -75,7 +76,7 @@ export default function BankDetailsShareDialog({
             </div>
 
             {!canSend && (
-              <p className="text-xs text-amber-700">{t("chat.bankShare.empty", "No bank details saved yet. Add your bank details in Bank details first.")}</p>
+              <p className={`text-xs ${toneClasses("payment").text}`}>{t("chat.bankShare.empty", "No bank details saved yet. Add your bank details in Bank details first.")}</p>
             )}
           </div>
         )}

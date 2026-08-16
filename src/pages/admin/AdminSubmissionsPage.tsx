@@ -20,6 +20,7 @@ import {
   SplitSquareHorizontal,
   CheckCircle2,
 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -625,7 +626,7 @@ const AdminSubmissionsPage = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 gap-1 border hidden sm:flex">
+                    <Badge className={`${toneClasses("enrolled").chip} gap-1 border hidden sm:flex`}>
                       <CheckCircle2 className="h-3 w-3" />
                       {t("admin.submissions.tabCompleted")}
                     </Badge>
@@ -717,7 +718,7 @@ const AdminSubmissionsPage = () => {
                       className={
                         selected.submission?.payment_confirmed
                           ? "bg-primary/10 text-primary"
-                          : "bg-amber-500/10 text-amber-700"
+                          : toneClasses("payment").chip
                       }
                     >
                       {selected.submission?.payment_confirmed
@@ -879,12 +880,12 @@ const AdminSubmissionsPage = () => {
 
               {/* Enrolled badge for completed cases */}
               {selected.status === "enrollment_paid" && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                <div className={`flex items-center gap-2 p-3 rounded-lg ${toneClasses("enrolled").tint} border border-[hsl(var(--status-enrolled)/0.28)]`}>
+                  <CheckCircle2 className={`h-5 w-5 ${toneClasses("enrolled").text} shrink-0`} />
                   <div className="text-sm">
-                    <p className="font-semibold text-emerald-800">{t("admin.submissions.tabCompleted")}</p>
+                    <p className={`font-semibold ${toneClasses("enrolled").text}`}>{t("admin.submissions.tabCompleted")}</p>
                     {selected.submission?.enrollment_paid_at && (
-                      <p className="text-emerald-700 text-xs">
+                      <p className={`${toneClasses("enrolled").text} text-xs`}>
                         {t("admin.submissions.enrolledOn")}: {fmt(selected.submission.enrollment_paid_at)}
                       </p>
                     )}
@@ -941,9 +942,9 @@ const AdminSubmissionsPage = () => {
             </p>
             <div className="space-y-2">
               {splitPreview.referralDiscount > 0 && (
-                <div className="flex justify-between p-3 rounded-lg border border-emerald-200 bg-emerald-50 text-sm">
+                <div className={`flex justify-between p-3 rounded-lg border border-[hsl(var(--status-paid)/0.28)] ${toneClasses("paid").tint} text-sm`}>
                   <span className="text-muted-foreground">{t("admin.submissions.referralDiscount", "Referral discount applied")}</span>
-                  <span className="font-medium text-emerald-600" dir="ltr">−₪{splitPreview.referralDiscount.toLocaleString("en-US")}</span>
+                  <span className={`font-medium ${toneClasses("paid").text}`} dir="ltr">−₪{splitPreview.referralDiscount.toLocaleString("en-US")}</span>
                 </div>
               )}
               <div className="flex justify-between p-3 rounded-lg bg-muted border border-border text-sm">
@@ -980,9 +981,9 @@ const AdminSubmissionsPage = () => {
                   </span>
                 </div>
               )}
-              <div className="flex justify-between p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm">
+              <div className={`flex justify-between p-3 rounded-lg ${toneClasses("paid").tint} border border-[hsl(var(--status-paid)/0.28)] text-sm`}>
                 <span className="font-semibold">{t("admin.commission.platformRevenue", "Platform Revenue")}</span>
-                <span className="font-bold text-emerald-700">
+                <span className={`font-bold ${toneClasses("paid").text}`}>
                   ₪{splitPreview.platformRevenue.toLocaleString("en-US")}
                 </span>
               </div>
@@ -991,7 +992,7 @@ const AdminSubmissionsPage = () => {
               const accountAlreadyHandled = !!selected?.student_user_id || hasPendingInvitation;
               if (accountAlreadyHandled) {
                 return (
-                  <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                  <div className={`flex items-center gap-2 rounded-lg border border-[hsl(var(--status-paid)/0.28)] ${toneClasses("paid").tint} p-3 text-sm ${toneClasses("paid").text}`}>
                     <CheckCircle2 className="h-4 w-4 shrink-0" />
                     <span>
                       {selected?.student_user_id

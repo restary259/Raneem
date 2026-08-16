@@ -11,6 +11,7 @@ import {
   FolderCheck, UserPlus,
 } from 'lucide-react';
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
+import { toneClasses } from '@/lib/statusTokens';
 import LinkedStudentsModal from './LinkedStudentsModal';
 import MasterPartnerToggle from './MasterPartnerToggle';
 import AgentParentToggle from './AgentParentToggle';
@@ -167,14 +168,14 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, allRows =
 
   const kpis = [
     { label: t('admin.payouts.lifetimeEarned', 'Lifetime earned'), value: fmt(row.total_earned), icon: Wallet, tone: 'bg-primary' },
-    { label: t('admin.payouts.colPaid', 'Paid out'), value: fmt(row.paid_amount), icon: CheckCircle, tone: 'bg-emerald-600' },
-    { label: t('admin.payouts.colLocked', 'Locked (20d)'), value: fmt(row.locked_amount), icon: Clock, tone: 'bg-amber-500' },
+    { label: t('admin.payouts.colPaid', 'Paid out'), value: fmt(row.paid_amount), icon: CheckCircle, tone: toneClasses('paid').fill },
+    { label: t('admin.payouts.colLocked', 'Locked (20d)'), value: fmt(row.locked_amount), icon: Clock, tone: toneClasses('payment').fill },
     { label: t('admin.payouts.colAvailable', 'Available'), value: fmt(row.available_amount), icon: DollarSign, tone: 'bg-sky-600' },
     ...(isPartner && isMaster
-      ? [{ label: t('admin.payouts.colOverride', 'Network override'), value: fmt(Number(row.earned_override || 0)), icon: Crown, tone: 'bg-amber-600' }]
+      ? [{ label: t('admin.payouts.colOverride', 'Network override'), value: fmt(Number(row.earned_override || 0)), icon: Crown, tone: toneClasses('payment').fill }]
       : []),
     ...(isAgent
-      ? [{ label: t('admin.payouts.agentOverride', 'Agent override'), value: fmt(Number(row.earned_override || 0)), icon: Crown, tone: 'bg-amber-600' }]
+      ? [{ label: t('admin.payouts.agentOverride', 'Agent override'), value: fmt(Number(row.earned_override || 0)), icon: Crown, tone: toneClasses('payment').fill }]
       : []),
     ...(isTeam
       ? [{ label: t('admin.payouts.teamRewardTotal', 'Team rewards'), value: fmt(Number(row.team_reward_total || 0)), icon: Wallet, tone: 'bg-violet-600' }]
@@ -282,7 +283,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, allRows =
               <h2 className="text-xl font-bold flex items-center gap-2">
                 {row.full_name}
                 {isPartner && isMaster && (
-                  <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+                  <Badge variant="outline" className={`gap-1 ${toneClasses("payment").chip}`}>
                     <Crown className="h-3 w-3" />{t('admin.payouts.masterBadge', 'Master')}
                   </Badge>
                 )}
@@ -342,7 +343,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, allRows =
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Crown className="h-4 w-4 text-amber-600" />
+                  <Crown className={`h-4 w-4 ${toneClasses("payment").text}`} />
                   {t('admin.payouts.networkTitle', 'Recruited network')} ({network.length.toLocaleString('en-US')})
                 </CardTitle>
               </CardHeader>
@@ -393,7 +394,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, allRows =
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <UserPlus className="h-4 w-4 text-amber-600" />
+                  <UserPlus className={`h-4 w-4 ${toneClasses("payment").text}`} />
                   {t('admin.payouts.agentNetwork', 'Agent network')} ({agentNetwork.length.toLocaleString('en-US')})
                 </CardTitle>
               </CardHeader>
@@ -438,7 +439,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, allRows =
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-600"><CheckCircle className="h-5 w-5 text-primary-foreground" /></div>
+                  <div className={`p-2.5 rounded-xl ${toneClasses("paid").fill}`}><CheckCircle className="h-5 w-5 text-primary-foreground" /></div>
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground truncate">{t('admin.payouts.closedCases', 'Closed cases')}</p>
                     <p className="text-lg font-bold">{Number(row.closed_cases || 0).toLocaleString('en-US')}</p>

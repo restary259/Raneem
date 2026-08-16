@@ -3,6 +3,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 import i18n from '@/i18n';
 
 interface Props {
@@ -50,10 +51,10 @@ class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div className={`w-16 h-16 mx-auto mb-4 ${toneClasses("danger").tint} rounded-full flex items-center justify-center`}>
+                <AlertTriangle className={`w-8 h-8 ${toneClasses("danger").text}`} />
               </div>
-              <CardTitle className="text-xl text-red-800">
+              <CardTitle className={`text-xl ${toneClasses("danger").text}`}>
                 {i18n.t('errorBoundary.title', 'An unexpected error occurred')}
               </CardTitle>
             </CardHeader>
@@ -64,10 +65,10 @@ class ErrorBoundary extends Component<Props, State> {
               
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-4 p-4 bg-gray-100 rounded text-sm">
-                  <summary className="cursor-pointer font-medium text-red-600 mb-2">
+                  <summary className={`cursor-pointer font-medium ${toneClasses("danger").text} mb-2`}>
                     {i18n.t('errorBoundary.technicalDetails', 'Technical Details (developers)')}
                   </summary>
-                  <div className="text-red-800">
+                  <div className={toneClasses("danger").text}>
                     <strong>{i18n.t('errorBoundary.errorLabel', 'Error:')}</strong> {this.state.error.message}
                   </div>
                   {this.state.errorInfo && (

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RefreshCw, TrendingUp, Users, DollarSign, Percent, Wallet, HandCoins, Clock, Info } from "lucide-react";
 import PayoutsManagement from "@/components/admin/PayoutsManagement";
+import { toneClasses } from "@/lib/statusTokens";
 
 const OverviewTab = () => {
   const { t } = useTranslation("dashboard");
@@ -63,13 +64,13 @@ const OverviewTab = () => {
       label: t("admin.financials.kpiAdminNet"),
       value: `${fmt(data.platformNetRevenue)} ILS`,
       icon: TrendingUp,
-      color: "text-emerald-600 bg-emerald-600/10",
+      color: `${toneClasses("paid").text} ${toneClasses("paid").tint}`,
     },
     {
       label: t("admin.financials.kpiPartnerPending"),
       value: `${fmt(data.partnerCommissionPending)} ILS`,
       icon: Clock,
-      color: "text-amber-600 bg-amber-600/10",
+      color: `${toneClasses("payment").text} ${toneClasses("payment").tint}`,
     },
     {
       label: t("admin.financials.kpiPartnerPaid"),

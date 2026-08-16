@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertTriangle, Check, X } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 
 export interface DeactivateTarget {
   id: string;
@@ -128,7 +129,7 @@ const DeactivateAccountDialog: React.FC<Props> = ({ target, onOpenChange, onDone
                 <ul className="space-y-1 text-sm">
                   {kept.map((x) => (
                     <li key={x} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                      <Check className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${toneClasses("paid").text}`} />
                       <span>{x}</span>
                     </li>
                   ))}

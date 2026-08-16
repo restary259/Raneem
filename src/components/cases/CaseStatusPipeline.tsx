@@ -13,6 +13,7 @@ const NEON_VAR_BY_TONE: Record<StatusTone, string> = {
   payment: "var(--status-payment)",
   submitted: "var(--status-submitted)",
   enrolled: "var(--status-enrolled)",
+  paid: "var(--status-paid)",
   danger: "var(--status-danger)",
   neutral: "var(--ring)",
 };

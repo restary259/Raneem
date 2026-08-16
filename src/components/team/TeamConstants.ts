@@ -14,16 +14,20 @@ export const TAB_CONFIG: { id: TabId; icon: React.ComponentType<{ className?: st
 
 export const LANGUAGE_SCHOOLS = ['F+U Academy of Languages', 'Alpha Aktiv', 'GO Academy', 'VICTORIA Academy'];
 
+/**
+ * Neon status borders — hue anchored on the semantic --status-* tokens so the
+ * glow tracks light/dark/aurora instead of being a fixed light-mode colour.
+ */
 export const NEON_BORDERS: Record<string, string> = {
-  all: 'border-white/30',
-  new: 'border-[hsl(217,100%,60%)] shadow-[0_0_6px_hsl(217,100%,60%/0.3)]',
-  contacted: 'border-[hsl(50,100%,50%)] shadow-[0_0_6px_hsl(50,100%,50%/0.3)]',
-  appointment_stage: 'border-[hsl(270,100%,65%)] shadow-[0_0_6px_hsl(270,100%,65%/0.3)]',
-  profile_completion: 'border-[hsl(140,70%,50%)] shadow-[0_0_6px_hsl(140,70%,50%/0.3)]',
-  payment_confirmed: 'border-[hsl(30,100%,55%)] shadow-[0_0_6px_hsl(30,100%,55%/0.3)]',
-  submitted: 'border-[hsl(185,100%,50%)] shadow-[0_0_6px_hsl(185,100%,50%/0.3)]',
-  enrollment_paid: 'border-[hsl(140,80%,45%)] shadow-[0_0_6px_hsl(140,80%,45%/0.3)]',
-  sla: 'border-[hsl(0,100%,55%)] shadow-[0_0_6px_hsl(0,100%,55%/0.3)]',
+  all: 'border-border',
+  new: 'border-[hsl(var(--status-new)/0.6)] shadow-[0_0_6px_hsl(var(--status-new)/0.3)]',
+  contacted: 'border-[hsl(var(--status-contacted)/0.6)] shadow-[0_0_6px_hsl(var(--status-contacted)/0.3)]',
+  appointment_stage: 'border-[hsl(var(--status-appointment)/0.6)] shadow-[0_0_6px_hsl(var(--status-appointment)/0.3)]',
+  profile_completion: 'border-[hsl(var(--status-profile)/0.6)] shadow-[0_0_6px_hsl(var(--status-profile)/0.3)]',
+  payment_confirmed: 'border-[hsl(var(--status-payment)/0.6)] shadow-[0_0_6px_hsl(var(--status-payment)/0.3)]',
+  submitted: 'border-[hsl(var(--status-submitted)/0.6)] shadow-[0_0_6px_hsl(var(--status-submitted)/0.3)]',
+  enrollment_paid: 'border-[hsl(var(--status-enrolled)/0.6)] shadow-[0_0_6px_hsl(var(--status-enrolled)/0.3)]',
+  sla: 'border-[hsl(var(--status-danger)/0.6)] shadow-[0_0_6px_hsl(var(--status-danger)/0.3)]',
 };
 
 export function getNeonBorder(status: string): string {

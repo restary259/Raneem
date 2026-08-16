@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, RefreshCw, ChevronRight, Users, Crown } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { matchesRef } from '@/lib/reference';
 import RequesterProfilePanel, { DirectoryRow, PayoutRole } from './RequesterProfilePanel';
@@ -131,7 +132,7 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
       <p className="font-medium truncate flex items-center gap-1.5">
         {p.full_name}
         {isPartner && p.is_master_partner && (
-          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+          <Badge variant="outline" className={`gap-1 ${toneClasses("payment").chip}`}>
             <Crown className="h-3 w-3" />{t('admin.payouts.masterBadge', 'Master')}
           </Badge>
         )}

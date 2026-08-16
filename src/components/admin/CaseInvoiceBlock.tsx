@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getCaseInvoice, invoiceUrl, issueCaseInvoice, sendInvoiceEmail, type CaseInvoice } from "@/services/CaseInvoiceService";
 import { downloadInvoicePdf } from "@/utils/invoicePdf";
 import { selectInvoiceTotals } from "@/utils/invoiceTotals";
+import { toneClasses } from "@/lib/statusTokens";
 
 /** Invoice summary inside Admin review. Invoices are created by Team submission. */
 export default function CaseInvoiceBlock({ caseId, caseStatus }: { caseId: string; caseStatus?: string }) {
@@ -101,7 +102,7 @@ export default function CaseInvoiceBlock({ caseId, caseStatus }: { caseId: strin
           <div className="space-y-2 rounded-lg border border-border p-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-sm">{invoice.invoice_number}</span>
-              <Badge variant="outline" className={invoice.email_status === "sent" ? "border-emerald-300 text-emerald-700" : invoice.email_status === "failed" ? "border-destructive text-destructive" : "text-muted-foreground"}>
+              <Badge variant="outline" className={invoice.email_status === "sent" ? toneClasses("paid").chip : invoice.email_status === "failed" ? toneClasses("danger").chip : "text-muted-foreground"}>
                 {invoice.email_status === "sent" ? L.sent : invoice.email_status === "failed" ? L.failed : L.pending}
               </Badge>
             </div>

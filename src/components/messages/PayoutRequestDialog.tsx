@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   Dialog,
   DialogContent,
@@ -89,7 +90,7 @@ export default function PayoutRequestDialog({
             </ul>
 
             {preview.has_open_request && (
-              <p className="text-xs text-amber-700">{t("chat.payout.openRequest")}</p>
+              <p className={`text-xs ${toneClasses("payment").text}`}>{t("chat.payout.openRequest")}</p>
             )}
             {eligible <= 0 && !preview.has_open_request && (
               <p className="text-xs text-muted-foreground">{t("chat.payout.noneEligible")}</p>

@@ -16,6 +16,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -596,7 +597,7 @@ export default function MessageComposer({
                 className={cn(
                   "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors",
                   visibility === "internal"
-                    ? "bg-amber-500 text-white"
+                    ? `${toneClasses("payment").fill} text-primary-foreground`
                     : "text-muted-foreground hover:bg-accent",
                 )}
               >

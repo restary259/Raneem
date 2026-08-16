@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { format, addMonths } from "date-fns";
 import { Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -563,14 +564,14 @@ export default function ProfileCompletionForm({
                   current
                     ? "bg-primary text-primary-foreground"
                     : done
-                      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                      ? `${toneClasses("enrolled").chip} hover:opacity-80`
                       : "bg-muted text-muted-foreground hover:bg-muted/80",
                 )}
               >
                 {done ? <Check className="h-3 w-3" /> : <span className="w-3 text-center">{i + 1}</span>}
                 <span className="hidden sm:inline">{t(`case.profileForm.steps.${sKey}`)}</span>
               </button>
-              {i < STEP_KEYS.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-emerald-300" : "bg-border")} />}
+              {i < STEP_KEYS.length - 1 && <div className={cn("flex-1 h-px", done ? toneClasses("enrolled").line : "bg-border")} />}
             </React.Fragment>
           );
         })}
@@ -807,7 +808,7 @@ export default function ProfileCompletionForm({
                 {courseEnd || t("case.profileForm.ph.autoCalculated")}
               </div>
               {selectedProgram?.duration_in_months && courseEnd && (
-                <p className="text-xs text-emerald-600 mt-1">
+                <p className={`text-xs mt-1 ${toneClasses("enrolled").text}`}>
                   ✓ {t("case.profileForm.autoFrom", { count: selectedProgram.duration_in_months })}
                 </p>
               )}
@@ -873,7 +874,7 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
             {selectedAccom?.price && (
-              <p className="text-xs text-emerald-600 mt-1">
+              <p className={`text-xs mt-1 ${toneClasses("enrolled").text}`}>
                 💰 {selectedAccom.price.toLocaleString("en-US")} {selectedAccom.currency}
                 {t("case.profileForm.perMonth")}
               </p>

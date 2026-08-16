@@ -19,6 +19,7 @@ export type StatusTone =
   | "payment"
   | "submitted"
   | "enrolled"
+  | "paid"
   | "danger"
   | "neutral";
 
@@ -97,6 +98,14 @@ const TONES: Record<StatusTone, ToneClasses> = {
     tint: "bg-[hsl(var(--status-enrolled)/0.07)]",
     text: "text-[hsl(var(--status-enrolled))]",
     fill: "bg-[hsl(var(--status-enrolled))]",
+  },
+  paid: {
+    chip: "bg-[hsl(var(--status-paid)/0.14)] text-[hsl(var(--status-paid))] border-[hsl(var(--status-paid)/0.28)]",
+    line: "bg-[hsl(var(--status-paid))]",
+    dot: "bg-[hsl(var(--status-paid))]",
+    tint: "bg-[hsl(var(--status-paid)/0.07)]",
+    text: "text-[hsl(var(--status-paid))]",
+    fill: "bg-[hsl(var(--status-paid))]",
   },
   danger: {
     chip: "bg-[hsl(var(--status-danger)/0.14)] text-[hsl(var(--status-danger))] border-[hsl(var(--status-danger)/0.28)]",

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, Plus } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -145,8 +146,8 @@ export default function PartnerMessagesPage({ viewerRole = "social_media_partner
                     {displayName(active.otherUserName, active.otherUserRole)}
                   </p>
                   {active.otherUserId && online.has(active.otherUserId) && (
-                    <p className="flex items-center gap-1 text-[11px] text-emerald-600">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <p className={`flex items-center gap-1 text-[11px] ${toneClasses("enrolled").text}`}>
+                      <span className={`h-2 w-2 rounded-full ${toneClasses("enrolled").dot}`} />
                       {t("chat.presence.online")}
                     </p>
                   )}

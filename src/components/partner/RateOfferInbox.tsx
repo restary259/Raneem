@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Handshake, Loader2 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
 
@@ -67,10 +68,10 @@ export default function RateOfferInbox({ onChanged }: { onChanged?: () => void }
   return (
     <div className="space-y-3">
       {offers.map((o) => (
-        <Card key={o.id} className="border-amber-300 bg-amber-50/60">
+        <Card key={o.id} className={`border-[hsl(var(--status-payment)/0.4)] ${toneClasses("payment").tint}`}>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Handshake className="h-4 w-4 text-amber-700" />
+              <Handshake className={`h-4 w-4 ${toneClasses("payment").text}`} />
               {t("master.offerInboxTitle", "Commission agreement offer")}
               <span className="text-xs font-normal text-muted-foreground">
                 v{o.version} · {new Date(o.offered_at).toLocaleDateString(locale)}

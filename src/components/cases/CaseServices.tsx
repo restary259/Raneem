@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, CheckCircle2, Loader2, Lock } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   Select,
   SelectContent,
@@ -619,7 +620,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
                 {fullServiceItems.map((service) => (
                   <li key={service.id} className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
                     <span className="flex min-w-0 items-center gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                      <CheckCircle2 className={`h-3 w-3 ${toneClasses("enrolled").text}`} />
                       <span className="truncate">{label(service)}</span>
                     </span>
                     <span className="shrink-0">{formatILS(priceFor(service))}</span>

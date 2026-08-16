@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, KeyRound, Smartphone, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 import { validatePassword } from '@/components/auth/PasswordStrength';
 import PasswordStrength from '@/components/auth/PasswordStrength';
 import { useToast } from '@/hooks/use-toast';
@@ -218,8 +219,8 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
         <Card className="w-full max-w-md shadow-2xl">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-2">
-              <div className="p-3 bg-amber-100 rounded-full">
-                <KeyRound className="h-6 w-6 text-amber-600" />
+              <div className={`p-3 rounded-full ${toneClasses("payment").tint}`}>
+                <KeyRound className={`h-6 w-6 ${toneClasses("payment").text}`} />
               </div>
             </div>
             <CardTitle>Set a Strong Password</CardTitle>
@@ -274,8 +275,8 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
         <Card className="w-full max-w-md shadow-2xl">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-2">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Smartphone className="h-6 w-6 text-blue-600" />
+              <div className={`p-3 rounded-full ${toneClasses("submitted").tint}`}>
+                <Smartphone className={`h-6 w-6 ${toneClasses("submitted").text}`} />
               </div>
             </div>
             <CardTitle>Enable Two-Factor Authentication</CardTitle>
@@ -316,8 +317,8 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
         <Card className="w-full max-w-md shadow-2xl">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-2">
-              <div className="p-3 bg-green-100 rounded-full">
-                <ShieldCheck className="h-6 w-6 text-green-600" />
+              <div className={`p-3 rounded-full ${toneClasses("enrolled").tint}`}>
+                <ShieldCheck className={`h-6 w-6 ${toneClasses("enrolled").text}`} />
               </div>
             </div>
             <CardTitle>Two-Factor Verification</CardTitle>

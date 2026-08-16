@@ -16,6 +16,7 @@ import {
   Settings2,
 
 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -421,8 +422,8 @@ export default function CaseMessagesInboxPage() {
                   <p className="flex items-center gap-2 truncate font-medium">
                     {activeCase ? activeCase.caseName : activeDirect!.otherUserName}
                     {activeDirect?.otherUserId && online.has(activeDirect.otherUserId) && (
-                      <span className="flex items-center gap-1 text-[11px] font-normal text-emerald-600">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className={`flex items-center gap-1 text-[11px] font-normal ${toneClasses("enrolled").text}`}>
+                        <span className={`h-2 w-2 rounded-full ${toneClasses("enrolled").dot}`} />
                         {t("chat.presence.online")}
                       </span>
                     )}

@@ -9,6 +9,7 @@ import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useNavigate } from 'react-router-dom';
 import { isActiveStatus } from '@/lib/caseStatus';
 import { isSlaBreached } from '@/lib/slaPolicy';
+import { toneClasses } from '@/lib/statusTokens';
 
 interface CaseCounts {
   total: number;
@@ -205,7 +206,7 @@ const AdminCommandCenter = () => {
       title: t('admin.commandCenter.queueReview', 'Awaiting review'),
       empty: t('admin.commandCenter.queueReviewEmpty', 'Nothing waiting for review'),
       icon: ClipboardCheck,
-      tone: 'text-blue-500',
+      tone: toneClasses("submitted").text,
       href: '/admin/submissions',
       rows: awaitingReview,
     },
@@ -223,7 +224,7 @@ const AdminCommandCenter = () => {
       title: t('admin.commandCenter.queuePayments', 'Outstanding balances'),
       empty: t('admin.commandCenter.queuePaymentsEmpty', 'No outstanding balances'),
       icon: Clock,
-      tone: 'text-amber-600',
+      tone: toneClasses("payment").text,
       href: '/admin/financials',
       rows: outstanding,
     },
@@ -251,24 +252,24 @@ const AdminCommandCenter = () => {
       label: t('admin.commandCenter.submitted', 'Submitted'),
       value: counts.submitted,
       icon: ClipboardCheck,
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
+      color: toneClasses("submitted").text,
+      bg: toneClasses("submitted").tint,
       onClick: () => navigate('/admin/submissions'),
     },
     {
       label: t('admin.commandCenter.enrolled', 'Enrolled'),
       value: counts.enrollment_paid,
       icon: CheckCircle2,
-      color: 'text-green-600',
-      bg: 'bg-green-600/10',
+      color: toneClasses("enrolled").text,
+      bg: toneClasses("enrolled").tint,
       onClick: () => navigate('/admin/submissions'),
     },
     {
       label: t('admin.commandCenter.slaBreaches', 'SLA Breaches'),
       value: counts.sla_breaches,
       icon: Clock,
-      color: counts.sla_breaches > 0 ? 'text-amber-600' : 'text-muted-foreground',
-      bg: counts.sla_breaches > 0 ? 'bg-amber-600/10' : 'bg-muted',
+      color: counts.sla_breaches > 0 ? toneClasses("payment").text : 'text-muted-foreground',
+      bg: counts.sla_breaches > 0 ? toneClasses("payment").tint : 'bg-muted',
       onClick: () => navigate('/admin/pipeline'),
     },
     {
@@ -315,9 +316,9 @@ const AdminCommandCenter = () => {
 
       {/* SLA Breach Alert */}
       {counts.sla_breaches > 0 && (
-        <div className="flex items-center gap-3 p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors neon-badge-important neon-warning" onClick={() => navigate('/admin/pipeline')}>
-          <Clock className="h-5 w-5 text-amber-600 shrink-0" />
-          <p className="text-sm text-amber-700 font-medium">
+        <div className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors neon-badge-important neon-warning ${toneClasses("payment").tint} border-[hsl(var(--status-payment)/0.3)] hover:bg-[hsl(var(--status-payment)/0.12)]`} onClick={() => navigate('/admin/pipeline')}>
+          <Clock className={`h-5 w-5 shrink-0 ${toneClasses("payment").text}`} />
+          <p className={`text-sm font-medium ${toneClasses("payment").text}`}>
             {t('admin.commandCenter.slaAlert', '⏱️ {{count}} case(s) have breached SLA thresholds', { count: counts.sla_breaches })}
           </p>
         </div>

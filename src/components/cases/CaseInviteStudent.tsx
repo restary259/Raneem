@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Loader2, Mail } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,7 +76,7 @@ export default function CaseInviteStudent({
     <div className="rounded-lg border bg-muted/30 p-4">
       <div className="mb-2 flex items-center gap-2">
         {studentUserId ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
         ) : (
           <Mail className="h-4 w-4 text-muted-foreground" />
         )}

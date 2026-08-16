@@ -4,6 +4,7 @@ import { CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
 import { formatDateNumeric } from "@/utils/dateUtils";
 
@@ -156,7 +157,7 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
                 </span>
               </p>
               {!submission?.program_weeks && (
-                <p className="text-xs text-amber-600">{t("case.program.unverifiedTotal")}</p>
+                <p className={`text-xs ${toneClasses("payment").text}`}>{t("case.program.unverifiedTotal")}</p>
               )}
             </>
           ) : null}
@@ -210,7 +211,7 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
                 </span>
               </p>
               {!submission?.accommodation_weeks && (
-                <p className="text-xs text-amber-600">{t("case.program.unverifiedTotal")}</p>
+                <p className={`text-xs ${toneClasses("payment").text}`}>{t("case.program.unverifiedTotal")}</p>
               )}
             </>
           ) : null}

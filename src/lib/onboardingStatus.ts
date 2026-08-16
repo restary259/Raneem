@@ -5,6 +5,8 @@
  * that already exist so there is a single, consistent answer everywhere it is
  * displayed (Student Management list, student detail, case page).
  */
+import { toneClasses } from "@/lib/statusTokens";
+
 export type OnboardingStatus =
   | "no_account"
   | "invited"
@@ -54,18 +56,19 @@ export function onboardingStatusKey(status: OnboardingStatus): string {
   }
 }
 
-/** Badge tone per status — kept as semantic classes, never raw colours. */
+/** Badge tone per status — resolved through the shared semantic tone system
+ *  so it is identical in light, dark and aurora. */
 export function onboardingStatusTone(status: OnboardingStatus): string {
   switch (status) {
     case "no_account":
-      return "bg-muted text-muted-foreground";
+      return toneClasses("neutral").chip;
     case "invited":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200";
+      return toneClasses("payment").chip;
     case "activated":
     case "profile_required":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200";
+      return toneClasses("submitted").chip;
     case "profile_completed":
     case "active":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200";
+      return toneClasses("enrolled").chip;
   }
 }

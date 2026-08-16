@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bot, Loader2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toneClasses } from '@/lib/statusTokens';
 import type { ChatMessage } from '@/utils/chatCache';
 
 export type ChatSize = 'sm' | 'md';
@@ -42,9 +43,9 @@ const ChatMessageList: React.FC<Props> = ({
   messages,
   isLoading,
   size = 'md',
-  userAvatarClassName = 'bg-orange-100',
-  userIconClassName = 'text-orange-600',
-  userBubbleClassName = 'bg-orange-50',
+  userAvatarClassName = toneClasses('contacted').chip,
+  userIconClassName = toneClasses('contacted').text,
+  userBubbleClassName = toneClasses('contacted').tint,
   animate = false,
 }) => {
   const s = SIZES[size];
@@ -69,8 +70,8 @@ const ChatMessageList: React.FC<Props> = ({
             {msg.content}
           </div>
           {msg.role === 'assistant' && (
-            <Avatar size={size} className="bg-blue-100">
-              <Bot className="h-4 w-4 text-blue-600" />
+            <Avatar size={size} className={toneClasses('submitted').chip}>
+              <Bot className={`h-4 w-4 ${toneClasses('submitted').text}`} />
             </Avatar>
           )}
         </div>
@@ -81,8 +82,8 @@ const ChatMessageList: React.FC<Props> = ({
           <div className={cn(s.bubble, 'bg-secondary')}>
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
-          <Avatar size={size} className="bg-blue-100">
-            <Bot className="h-4 w-4 text-blue-600" />
+          <Avatar size={size} className={toneClasses('submitted').chip}>
+            <Bot className={`h-4 w-4 ${toneClasses('submitted').text}`} />
           </Avatar>
         </div>
       )}

@@ -20,6 +20,7 @@ import { getCaseInvoice, sendInvoiceEmail, invoiceUrl, type CaseInvoice } from "
 import CaseServices, { type CaseServicesHandle } from "./CaseServices";
 import CasePayments from "./CasePayments";
 import { formatDateTime } from "@/utils/dateUtils";
+import { toneClasses } from "@/lib/statusTokens";
 
 interface Props {
   caseId: string;
@@ -329,10 +330,10 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   const statusClass =
     status === "settled"
-      ? "bg-emerald-100 text-emerald-800"
+      ? toneClasses("paid").chip
       : status === "partial"
-        ? "bg-amber-100 text-amber-800"
-        : "bg-slate-100 text-slate-800";
+        ? toneClasses("payment").chip
+        : toneClasses("neutral").chip;
 
   /**
    * The single finance action.
@@ -476,7 +477,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   </div>
                   <div className="mt-1 flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t("finance.summary.referralDiscount", "Referral discount")}</span>
-                    <span className="font-medium text-emerald-600" dir="ltr">−{formatILS(referralDiscount)}</span>
+                    <span className={`font-medium ${toneClasses("paid").text}`} dir="ltr">−{formatILS(referralDiscount)}</span>
                   </div>
                   <div className="mt-1 flex items-center justify-between border-t pt-1 text-sm font-semibold">
                     <span>{t("finance.summary.netTotal", "Net total")}</span>
@@ -487,7 +488,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
               {referralDiscount > 0 && (
                 <div className="flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 p-3">
-                  <Badge className="bg-emerald-100 text-emerald-800">
+                  <Badge className={toneClasses("paid").chip}>
                     {t("finance.referral.applied", "Referral discount applied")}
                   </Badge>
                   <p className="text-xs text-muted-foreground">
@@ -540,17 +541,17 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
                   {profileComplete ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
                   ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
+                    <Clock3 className={`h-4 w-4 ${toneClasses("payment").text}`} />
                   )}
                   <span>{t("finance.summary.checklist.profile", "Student profile complete")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   {schoolSelected ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
                   ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
+                    <Clock3 className={`h-4 w-4 ${toneClasses("payment").text}`} />
                   )}
                   <span>{t("finance.summary.checklist.school", "School selected")}</span>
                 </li>
@@ -558,25 +559,25 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   <>
                     <li className="flex items-center gap-2">
                       {hasSchoolKind("program") ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
                       ) : (
-                        <Clock3 className="h-4 w-4 text-amber-600" />
+                        <Clock3 className={`h-4 w-4 ${toneClasses("payment").text}`} />
                       )}
                       <span>{t("finance.summary.checklist.course", "Course calculated")}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       {hasSchoolKind("accommodation") ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
                       ) : (
-                        <Clock3 className="h-4 w-4 text-amber-600" />
+                        <Clock3 className={`h-4 w-4 ${toneClasses("payment").text}`} />
                       )}
                       <span>{t("finance.summary.checklist.accommodation", "Accommodation calculated")}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       {hasSchoolKind("insurance") ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
                       ) : (
-                        <Clock3 className="h-4 w-4 text-amber-600" />
+                        <Clock3 className={`h-4 w-4 ${toneClasses("payment").text}`} />
                       )}
                       <span>{t("finance.summary.checklist.insurance", "Insurance calculated")}</span>
                     </li>
@@ -584,9 +585,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 )}
                 <li className="flex items-center gap-2">
                   {servicesSelected ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
                   ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
+                    <Clock3 className={`h-4 w-4 ${toneClasses("payment").text}`} />
                   )}
                   <span>{t("finance.summary.checklist.services", "DARB services selected")}</span>
                 </li>
@@ -594,9 +595,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
               {schoolCosts.length > 0 && (
                 <p className="flex items-center gap-2 text-sm">
                   {germanyVerified ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <CheckCircle2 className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
                   ) : (
-                    <Clock3 className="h-4 w-4 text-amber-600" />
+                    <Clock3 className={`h-4 w-4 ${toneClasses("payment").text}`} />
                   )}
                   <span>
                     {germanyVerified
@@ -646,7 +647,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                     {studentUserId && (
                       <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                         <span className="text-muted-foreground">{t("finance.invite.account", "Student account")}</span>
-                        <span className="font-medium text-emerald-700">
+                        <span className={`font-medium ${toneClasses("enrolled").text}`}>
                           {t("finance.invite.accountExists", "Already created")}
                         </span>
                       </div>
@@ -668,7 +669,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
             {canManage && !delegateActionsToTopBar && (
               <div className="space-y-2">
                 {financeComplete ? (
-                  <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50/50 p-3 text-sm font-medium text-emerald-700">
+                  <div className={`flex items-center gap-2 rounded-md border p-3 text-sm font-medium ${toneClasses("enrolled").tint} ${toneClasses("enrolled").text} border-[hsl(var(--status-enrolled)/0.28)]`}>
                     <CheckCircle2 className="h-4 w-4" />
                     {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
                   </div>
@@ -707,7 +708,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t("finance.summary.referralDiscount", "Referral discount")}</span>
-                    <span className="font-medium text-emerald-600" dir="ltr">−{formatILS(referralDiscount)}</span>
+                    <span className={`font-medium ${toneClasses("paid").text}`} dir="ltr">−{formatILS(referralDiscount)}</span>
                   </div>
                   <div className="flex items-center justify-between border-t pt-2 text-sm font-semibold">
                     <span>{t("finance.summary.netTotal", "Net total")}</span>
@@ -795,15 +796,15 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         {confirmed ? (
-                          <Badge className="bg-emerald-100 text-emerald-800">
+                          <Badge className={toneClasses("paid").chip}>
                             {t("finance.verification.confirmed", "Confirmed")}
                           </Badge>
                         ) : proof?.status === "rejected" ? (
-                          <Badge className="bg-red-100 text-red-800">
+                          <Badge className={toneClasses("danger").chip}>
                             {t("finance.verification.rejected", "Proof rejected")}
                           </Badge>
                         ) : proof?.status === "pending" || payment?.status === "submitted" ? (
-                          <Badge className="bg-amber-100 text-amber-800">
+                          <Badge className={toneClasses("payment").chip}>
                             {t("finance.verification.submitted", "Proof submitted")}
                           </Badge>
                         ) : (
@@ -815,7 +816,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                           <span className="text-muted-foreground">{formatDateTime(proof.uploaded_at, "—")}</span>
                         )}
                       </div>
-                      {proof?.rejection_reason && <p className="text-xs text-red-700">{proof.rejection_reason}</p>}
+                      {proof?.rejection_reason && <p className={`text-xs ${toneClasses("danger").text}`}>{proof.rejection_reason}</p>}
                       <div className="flex flex-wrap gap-2">
                         {proof && (
                           <Button size="sm" variant="outline" className="gap-1" onClick={() => openProof(proof)}>
@@ -893,10 +894,10 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   <Badge
                     className={
                       invoice.email_status === "sent"
-                        ? "bg-emerald-100 text-emerald-800"
+                        ? toneClasses("paid").chip
                         : invoice.email_status === "failed"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-amber-100 text-amber-800"
+                          ? toneClasses("danger").chip
+                          : toneClasses("payment").chip
                     }
                   >
                     {t(`finance.invoice.email.${invoice.email_status}`, invoice.email_status)}

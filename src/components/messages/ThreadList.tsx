@@ -2,13 +2,15 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatThreadTime, initials } from "@/lib/chatFormat";
+import { toneClasses } from "@/lib/statusTokens";
 
 /** Sidebar sections, in the order staff work through them. */
 export type ThreadCategory = "direct" | "cases" | "partners";
 
 export const THREAD_CATEGORY_ORDER: ThreadCategory[] = ["direct", "cases", "partners"];
 
-/** One restrained colour identity per section — indicators only, never fills. */
+/** One restrained colour identity per section — indicators only, never fills.
+ *  Anchored on semantic tones so avatars/badges stay legible in dark & aurora. */
 const CATEGORY_STYLE: Record<
   ThreadCategory,
   { bar: string; avatar: string; badge: string; dot: string }
@@ -20,16 +22,16 @@ const CATEGORY_STYLE: Record<
     dot: "bg-primary",
   },
   cases: {
-    bar: "bg-sky-500",
-    avatar: "bg-sky-100 text-sky-700",
-    badge: "border-sky-300 text-sky-700",
-    dot: "bg-sky-500",
+    bar: toneClasses("submitted").line,
+    avatar: toneClasses("submitted").chip,
+    badge: toneClasses("submitted").chip,
+    dot: toneClasses("submitted").dot,
   },
   partners: {
-    bar: "bg-amber-500",
-    avatar: "bg-amber-100 text-amber-800",
-    badge: "border-amber-300 text-amber-800",
-    dot: "bg-amber-500",
+    bar: toneClasses("payment").line,
+    avatar: toneClasses("payment").chip,
+    badge: toneClasses("payment").chip,
+    dot: toneClasses("payment").dot,
   },
 };
 

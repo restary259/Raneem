@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   simulateCommission,
   type AcquisitionType,
@@ -181,15 +182,15 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
         <div className="flex items-center gap-2">
           {result.negativeMargin ? (
             <>
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50">
+              <AlertTriangle className={`h-4 w-4 ${toneClasses("payment").text}`} />
+              <Badge variant="outline" className={toneClasses("payment").chip}>
                 {t("commissionHub.simNegativeMargin", "Negative margin — payouts exceed NET (a warning would be logged)")}
               </Badge>
             </>
           ) : (
             <>
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <Badge variant="outline" className="text-emerald-700 border-emerald-300 bg-emerald-50">
+              <CheckCircle2 className={`h-4 w-4 ${toneClasses("paid").text}`} />
+              <Badge variant="outline" className={toneClasses("paid").chip}>
                 {t("commissionHub.simHealthy", "Healthy margin")}
               </Badge>
             </>

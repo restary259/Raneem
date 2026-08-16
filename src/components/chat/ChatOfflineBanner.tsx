@@ -1,6 +1,7 @@
 import React from 'react';
 import { WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toneClasses } from '@/lib/statusTokens';
 
 interface Props {
   message: string;
@@ -12,8 +13,11 @@ interface Props {
 const ChatOfflineBanner: React.FC<Props> = ({ message, size = 'md', className }) => (
   <div
     className={cn(
-      'flex items-center gap-2 border-amber-200 bg-amber-50 text-amber-700',
-      size === 'sm' ? 'border-b px-3 py-1.5 text-xs' : 'border-b px-4 py-2 text-sm',
+      'flex items-center gap-2 border-b',
+      toneClasses('payment').tint,
+      toneClasses('payment').text,
+      'border-[hsl(var(--status-payment)/0.28)]',
+      size === 'sm' ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm',
       className,
     )}
   >
