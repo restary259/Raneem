@@ -231,7 +231,10 @@ const App = () => {
             <InAppBrowserBanner />
           </Suspense>
         )}
-        <Suspense fallback={<div />}>
+        {/* A layout-matched shell paints immediately while the route chunk
+            loads, instead of a blank frame that reads as a frozen app. */}
+        <Suspense fallback={isDashboardPath ? <RouteFallback /> : <div />}>
+
           <Routes>
             {/* ── Public pages ── */}
             <Route path="/" element={<Index />} />
