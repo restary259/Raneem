@@ -4606,7 +4606,7 @@
     "rateFamilyDiscount": "Family discount",
     "rateFamilyReward": "Family referrer reward",
     "teamTitle": "Team members",
-    "teamHint": "Per-team-member overrides are configured from the Team page. The global team rate is on the Global rates tab.",
+    "teamHint": "Override a team member's commission. Leave at default to use the global team rate.",
     "agentsTitle": "Agents & network overrides",
     "search": "Search…",
     "none": "None",

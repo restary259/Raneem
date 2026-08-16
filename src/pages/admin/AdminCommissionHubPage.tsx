@@ -41,7 +41,7 @@ interface GlobalRateField {
 const AdminCommissionHubPage: React.FC = () => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
-  const { overview, independent, agentList, studentConfig, loading, saving, error, setCommission, refresh } =
+  const { overview, independent, agentList, studentConfig, teamMembers, loading, saving, error, setCommission, refresh } =
     useCommissionHub();
 
   const [rateDrafts, setRateDrafts] = useState<Record<string, number>>({});
@@ -254,10 +254,26 @@ const AdminCommissionHubPage: React.FC = () => {
                 {t("commissionHub.teamTitle", "Team members")}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {t("commissionHub.teamHint", "Per-team-member overrides are configured from the Team page. The global team rate is on the Global rates tab.")}
+            <CardContent className="space-y-2">
+              <p className="text-xs text-muted-foreground mb-3">
+                {t("commissionHub.teamHint", "Override a team member's commission. Leave at default to use the global team rate.")}
               </p>
+              {teamMembers.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-3">{t("commissionHub.none", "None")}</p>
+              ) : (
+                teamMembers.map((m) => (
+                  <TeamMemberRow
+                    key={m.id}
+                    member={m}
+                    globalRate={overview?.global_rates?.team ?? 0}
+                    saving={saving}
+                    onSetCommission={setCommission}
+                    onSaved={() => toast({ description: t("commissionHub.saved", "Commission rate updated") })}
+                    onError={(msg: string) => toast({ variant: "destructive", description: msg })}
+                    t={t}
+                  />
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -357,6 +373,56 @@ const KpiCard: React.FC<{ icon: React.ElementType; label: string; value: number;
     </CardContent>
   </Card>
 );
+
+/* ── Team member row ──────────────────────────────────────────────────── */
+const TeamMemberRow: React.FC<{
+  member: { id: string; name: string; email: string; override: number | null };
+  globalRate: number;
+  saving: boolean;
+  onSetCommission: (type: string, id: string | null, kind: string, amount: number) => Promise<void>;
+  onSaved: () => void;
+  onError: (m: string) => void;
+  t: TFunction;
+}> = ({ member, globalRate, saving, onSetCommission, onSaved, onError, t }) => {
+  const [draft, setDraft] = useState<number | undefined>(undefined);
+  const display = draft !== undefined ? draft : (member.override ?? globalRate);
+
+  const save = async () => {
+    if (draft === undefined) return;
+    try {
+      await onSetCommission("team", member.id, "team_member_commission_rate", Math.max(0, Math.round(draft)));
+      onSaved();
+      setDraft(undefined);
+    } catch (err: any) {
+      onError(err.message);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card flex-wrap">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold truncate">{member.name}</p>
+        <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+      </div>
+      <Badge variant="secondary" className="font-mono text-xs">
+        {member.override === null ? t("commissionHub.default", "default") : fmtILS(member.override)}
+      </Badge>
+      <div className="relative w-32">
+        <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
+        <Input
+          type="number" min={0} inputMode="numeric"
+          className="ps-7 h-8 text-sm"
+          value={display}
+          onChange={(e) => setDraft(Number(e.target.value) || 0)}
+        />
+      </div>
+      <Button size="sm" variant="outline" disabled={draft === undefined || saving} onClick={save}>
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+        {t("common.save", "Save")}
+      </Button>
+    </div>
+  );
+};
 
 /* ── Agent section (renders the agent list from the Hub hook) ──────────── */
 const AgentSection: React.FC<{

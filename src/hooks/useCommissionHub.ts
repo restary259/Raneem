@@ -63,6 +63,13 @@ export interface AgentListItem {
   earned: number;
 }
 
+export interface TeamMemberCommission {
+  id: string;
+  name: string;
+  email: string;
+  override: number | null;
+}
+
 export interface StudentReferralConfig {
   global: {
     friend_discount: number;
@@ -105,6 +112,7 @@ export const useCommissionHub = () => {
   const [overview, setOverview] = useState<CommissionHubOverview | null>(null);
   const [independent, setIndependent] = useState<IndependentAccount[]>([]);
   const [agentList, setAgentList] = useState<AgentListItem[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberCommission[]>([]);
   const [studentConfig, setStudentConfig] = useState<StudentReferralConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -115,18 +123,20 @@ export const useCommissionHub = () => {
     setError(null);
     try {
       // Use allSettled so one failing RPC doesn't kill the entire Hub.
-      const [ovRes, indepRes, agentRes, studentRes] = await Promise.all([
+      const [ovRes, indepRes, agentRes, studentRes, teamRes] = await Promise.all([
         db.rpc("get_commission_hub_overview"),
         db.rpc("get_independent_accounts"),
         db.rpc("get_agent_list"),
         db.rpc("get_student_referral_config"),
+        db.rpc("get_team_members_commission"),
       ]);
-      const firstError = [ovRes, indepRes, agentRes, studentRes].find((r) => r?.error);
+      const firstError = [ovRes, indepRes, agentRes, studentRes, teamRes].find((r) => r?.error);
       if (firstError?.error) throw firstError.error;
       if (ovRes.data) setOverview(ovRes.data as CommissionHubOverview);
       if (indepRes.data) setIndependent((indepRes.data as IndependentAccount[]) ?? []);
       if (agentRes.data) setAgentList((agentRes.data as AgentListItem[]) ?? []);
       if (studentRes.data) setStudentConfig(studentRes.data as StudentReferralConfig);
+      if (teamRes.data) setTeamMembers((teamRes.data as TeamMemberCommission[]) ?? []);
     } catch (err: any) {
       setError(err?.message ?? "Failed to load commission data");
     } finally {
@@ -180,6 +190,7 @@ export const useCommissionHub = () => {
     overview,
     independent,
     agentList,
+    teamMembers,
     studentConfig,
     loading,
     saving,
