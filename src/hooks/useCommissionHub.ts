@@ -115,14 +115,14 @@ export const useCommissionHub = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMemberCommission[]>([]);
   const [studentConfig, setStudentConfig] = useState<StudentReferralConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
-    setLoading(true);
+    if (!initialized) setLoading(true);
     setError(null);
     try {
-      // Use allSettled so one failing RPC doesn't kill the entire Hub.
       const [ovRes, indepRes, agentRes, studentRes, teamRes] = await Promise.all([
         db.rpc("get_commission_hub_overview"),
         db.rpc("get_independent_accounts"),
@@ -141,8 +141,9 @@ export const useCommissionHub = () => {
       setError(err?.message ?? "Failed to load commission data");
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
-  }, []);
+  }, [initialized]);
 
   useEffect(() => {
     fetchAll();

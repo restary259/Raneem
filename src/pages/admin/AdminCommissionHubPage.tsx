@@ -46,6 +46,7 @@ const AdminCommissionHubPage: React.FC = () => {
 
   const [rateDrafts, setRateDrafts] = useState<Record<string, number>>({});
   const [agentFilter, setAgentFilter] = useState("");
+  const [activeTab, setActiveTab] = useState("overview");
 
   const globalRates = useMemo<GlobalRateField[]>(() => {
     const g = overview?.global_rates;
@@ -144,7 +145,7 @@ const AdminCommissionHubPage: React.FC = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <SegmentedTabs
           items={[
             { value: "overview", label: t("commissionHub.tabOverview", "Overview") },
