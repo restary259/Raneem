@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Trash2 } from "lucide-react";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Trash2, Network } from "lucide-react";
 import MasterPartnerToggle from "./MasterPartnerToggle";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
@@ -57,7 +57,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
         p_user_id: id,
       });
       if (error) throw error;
-      setBreakdown(data as CommissionBreakdown);
+      setBreakdown(data as unknown as CommissionBreakdown);
     } catch (err) {
       console.error("Failed to load commission breakdown:", err);
       setBreakdown(null);
@@ -300,6 +300,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
                   partnerId={member.requester_id}
                   isMaster={member.is_master_partner}
                   partnerName={member.full_name}
+                  onChanged={() => {}}
                   variant="plain"
                 />
               </CardContent>
@@ -367,11 +368,14 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
         </div>
 
         <DeactivateAccountDialog
-          open={showDeactivate}
+          target={showDeactivate ? {
+            id: member.requester_id,
+            full_name: member.full_name,
+            email: member.email,
+            roleLabel: roleLabel,
+          } : null}
           onOpenChange={setShowDeactivate}
-          userId={member.requester_id}
-          userEmail={member.email}
-          userName={member.full_name}
+          onDone={() => setShowDeactivate(false)}
         />
       </DrawerContent>
     </Drawer>

@@ -42,11 +42,11 @@ interface MemberRow {
 }
 
 async function fetchMembers(role?: string): Promise<MemberRow[]> {
-  const { data, error } = await supabase.rpc("get_members_directory", {
-    p_role: role as any,
+  const { data, error } = await (supabase.rpc as any)("get_members_directory", {
+    p_role: role,
   });
   if (error) throw error;
-  return (data as MemberRow[]) || [];
+  return ((data as unknown) as MemberRow[]) || [];
 }
 
 const AdminMembersPage: React.FC = () => {
