@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, CreditCard, CalendarDays } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { LoadingState } from "@/components/shell";
 import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
 import RateOfferInbox from "@/components/partner/RateOfferInbox";
@@ -219,7 +220,7 @@ export default function PartnerOverviewPage() {
             </p>
           )}
         </div>
-        <p className={`text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all ${paid > 0 ? 'neon-kpi neon-primary' : ''}`}>₪{(paid * commissionRate).toLocaleString('en-US')}</p>
+        <p className={`text-3xl sm:text-4xl font-black ${toneClasses('payment').text} truncate min-w-0 break-all ${paid > 0 ? 'neon-kpi neon-warning' : ''}`}>₪{(paid * commissionRate).toLocaleString('en-US')}</p>
       </div>
 
       {/* Pipeline breakdown */}

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Award, Clock, Lock, History, MessageSquare, ArrowRight } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import {
   getMyPayoutPreview,
@@ -76,7 +77,7 @@ export default function AgentEarningsPage() {
             {t("agent.earningsBannerHint", "Override commissions from your recruited network + self-referrals.")}
           </p>
         </div>
-        <p className="text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all">{fmt(earnings.total)}</p>
+        <p className={`text-3xl sm:text-4xl font-black ${toneClasses('payment').text} truncate min-w-0 break-all`}>{fmt(earnings.total)}</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { DollarSign, Award, Clock, Info, History, CheckCircle2, Hourglass, Send, Lock } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import { LoadingState } from "@/components/shell";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
@@ -266,10 +267,10 @@ export default function PartnerEarningsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
-              <Award className="h-4 w-4 text-primary" />
+              <Award className={`h-4 w-4 ${toneClasses('payment').text}`} />
               <span className="text-xs">{t("partner.earnings.total")}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">
+            <p className={`text-xl sm:text-2xl font-bold ${toneClasses('payment').text} truncate min-w-0`}>
               ₪{totalAmount.toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -283,7 +284,7 @@ export default function PartnerEarningsPage() {
               <Hourglass className="h-4 w-4 text-[hsl(var(--status-payment))]" />
               <span className="text-xs">{isAr ? "في الانتظار" : "Awaiting Payout"}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">
+            <p className="text-xl sm:text-2xl font-bold text-[hsl(var(--status-payment))] truncate min-w-0">
               ₪{(pendingAmount + approvedAmount).toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -297,7 +298,7 @@ export default function PartnerEarningsPage() {
               <CheckCircle2 className="h-4 w-4 text-[hsl(var(--status-enrolled))]" />
               <span className="text-xs">{isAr ? "مدفوع" : "Paid Out"}</span>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground truncate min-w-0">
+            <p className="text-xl sm:text-2xl font-bold text-[hsl(var(--status-enrolled))] truncate min-w-0">
               ₪{paidAmount.toLocaleString("en-US")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">

@@ -167,10 +167,10 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, allRows =
   };
 
   const kpis = [
-    { label: t('admin.payouts.lifetimeEarned', 'Lifetime earned'), value: fmt(row.total_earned), icon: Wallet, tone: 'bg-primary' },
+    { label: t('admin.payouts.lifetimeEarned', 'Lifetime earned'), value: fmt(row.total_earned), icon: Wallet, tone: toneClasses('payment').fill },
     { label: t('admin.payouts.colPaid', 'Paid out'), value: fmt(row.paid_amount), icon: CheckCircle, tone: toneClasses('paid').fill },
     { label: t('admin.payouts.colLocked', 'Locked (20d)'), value: fmt(row.locked_amount), icon: Clock, tone: toneClasses('payment').fill },
-    { label: t('admin.payouts.colAvailable', 'Available'), value: fmt(row.available_amount), icon: DollarSign, tone: 'bg-sky-600' },
+    { label: t('admin.payouts.colAvailable', 'Available'), value: fmt(row.available_amount), icon: DollarSign, tone: toneClasses('paid').fill },
     ...(isPartner && isMaster
       ? [{ label: t('admin.payouts.colOverride', 'Network override'), value: fmt(Number(row.earned_override || 0)), icon: Crown, tone: toneClasses('payment').fill }]
       : []),
@@ -178,7 +178,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, allRows =
       ? [{ label: t('admin.payouts.agentOverride', 'Agent override'), value: fmt(Number(row.earned_override || 0)), icon: Crown, tone: toneClasses('payment').fill }]
       : []),
     ...(isTeam
-      ? [{ label: t('admin.payouts.teamRewardTotal', 'Team rewards'), value: fmt(Number(row.team_reward_total || 0)), icon: Wallet, tone: 'bg-violet-600' }]
+      ? [{ label: t('admin.payouts.teamRewardTotal', 'Team rewards'), value: fmt(Number(row.team_reward_total || 0)), icon: Wallet, tone: toneClasses('submitted').fill }]
       : []),
   ];
 

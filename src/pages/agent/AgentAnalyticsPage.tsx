@@ -4,6 +4,7 @@ import { useDirection } from "@/hooks/useDirection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Users, Megaphone, GraduationCap, Award, BarChart2 } from "lucide-react";
+import { toneClasses } from "@/lib/statusTokens";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useAgentOverview } from "@/hooks/useAgentOverview";
 
@@ -119,7 +120,7 @@ export default function AgentAnalyticsPage() {
                     {s.students == null && t("agent.sourceSelfReferralHint", "Students from your personal apply form")}
                   </p>
                 </div>
-                <p className="text-sm font-bold text-primary shrink-0">{fmt(s.rate)}</p>
+                <p className={`text-sm font-bold ${toneClasses('payment').text} shrink-0`}>{fmt(s.rate)}</p>
               </div>
             );
           })}

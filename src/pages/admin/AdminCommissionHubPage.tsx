@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
+import { toneClasses } from "@/lib/statusTokens";
 import {
   Loader2,
   RefreshCw,
@@ -187,7 +188,7 @@ const AdminCommissionHubPage: React.FC = () => {
                       <Badge variant="outline" className="font-mono">{c.entity_type}</Badge>
                       <span className="text-muted-foreground">{c.rate_kind}</span>
                       <span className="font-mono">
-                        {fmtILS(c.old_value)} → <span className="text-primary font-semibold">{fmtILS(c.new_value)}</span>
+                        {fmtILS(c.old_value)} → <span className={`${toneClasses('payment').text} font-semibold`}>{fmtILS(c.new_value)}</span>
                       </span>
                       {c.reason && <span className="text-xs text-muted-foreground italic">“{c.reason}”</span>}
                       <span className="ms-auto text-xs text-muted-foreground">

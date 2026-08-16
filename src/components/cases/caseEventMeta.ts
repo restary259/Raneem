@@ -44,8 +44,8 @@ export const CASE_EVENT_META: Record<string, CaseEventMeta> = {
   appointment_scheduled: { icon: CalendarPlus, tone: "bg-accent/40 text-foreground", category: "appointments" },
   appointment_rescheduled: { icon: CalendarClock, tone: "bg-accent/40 text-foreground", category: "appointments" },
   appointment_outcome: { icon: CalendarCheck, tone: "bg-accent/40 text-foreground", category: "appointments" },
-  payment_received: { icon: Banknote, tone: "bg-primary/10 text-primary", category: "money" },
-  enrollment_paid: { icon: GraduationCap, tone: "bg-primary/10 text-primary", category: "money" },
+  payment_received: { icon: Banknote, tone: "bg-[hsl(var(--status-payment)/0.14)] text-[hsl(var(--status-payment))]", category: "money" },
+  enrollment_paid: { icon: GraduationCap, tone: "bg-[hsl(var(--status-paid)/0.14)] text-[hsl(var(--status-paid))]", category: "money" },
   note_added: { icon: StickyNote, tone: "bg-muted text-foreground", category: "notes" },
 };
 

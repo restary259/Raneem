@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { TrendingUp, Users, Calendar, DollarSign, BadgeDollarSign } from 'lucide-react';
+import { toneClasses } from '@/lib/statusTokens';
 import { LoadingState, EmptyState } from '@/components/shell';
 
 /* ── Chart colours — explicit HSL values for Recharts (no CSS var support in SVG) ── */
@@ -139,31 +140,31 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20">
+        <Card className={`border-[hsl(var(--status-payment)/0.25)]`}>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
-              <BadgeDollarSign className="h-4 w-4 text-primary" />
+              <BadgeDollarSign className={`h-4 w-4 ${toneClasses('payment').text}`} />
               <span className="text-xs text-muted-foreground">{t('lawyer.analytics.commissionPerCase')}</span>
             </div>
-            <div className="text-3xl font-bold tabular-nums text-primary">
+            <div className={`text-3xl font-bold tabular-nums ${toneClasses('payment').text}`}>
               {commissionPerCase !== null ? `₪${commissionPerCase.toLocaleString('en-US')}` : '—'}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20">
+        <Card className={`border-[hsl(var(--status-paid)/0.25)]`}>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-4 w-4 text-primary" />
+              <DollarSign className={`h-4 w-4 ${toneClasses('paid').text}`} />
               <span className="text-xs text-muted-foreground">{t('lawyer.analytics.availableBalance', 'Available')}</span>
             </div>
-            <div className="text-3xl font-bold tabular-nums text-primary">
+            <div className={`text-3xl font-bold tabular-nums ${toneClasses('paid').text}`}>
               ₪{Number(earnings.available).toLocaleString('en-US')}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground tabular-nums">
-              {t('lawyer.analytics.lockedBalance', 'Locked')}: ₪{Number(earnings.locked).toLocaleString('en-US')}
+              <span className={toneClasses('payment').text}>{t('lawyer.analytics.lockedBalance', 'Locked')}: ₪{Number(earnings.locked).toLocaleString('en-US')}</span>
               {' · '}
-              {t('lawyer.analytics.paidBalance', 'Paid')}: ₪{Number(earnings.paid).toLocaleString('en-US')}
+              <span className={toneClasses('paid').text}>{t('lawyer.analytics.paidBalance', 'Paid')}: ₪{Number(earnings.paid).toLocaleString('en-US')}</span>
             </div>
           </CardContent>
         </Card>
