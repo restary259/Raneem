@@ -373,12 +373,8 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
    */
   useEffect(() => {
     if (!onSelectionChange) return;
-    const total = selected.reduce((sum, item) => {
-      const service = selectableCatalog.find((s) => s.id === item.service_id);
-      return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
-    }, 0);
-    onSelectionChange(selected.length, total);
-  }, [selected, selectableCatalog, onSelectionChange]);
+    onSelectionChange(selected.length, liveTotal);
+  }, [selected, liveTotal, onSelectionChange]);
 
   /**
    * The Full Service bundle = every catalog item flagged in_full_service.
@@ -480,17 +476,20 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
    * Let the parent's single "Confirm & Save" button drive saving and read
    * the selection state without lifting the whole catalog/selection model.
    */
-  const computeLiveTotal = () =>
-    selected.reduce((sum, item) => {
-      const service = selectableCatalog.find((s) => s.id === item.service_id);
-      return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
-    }, 0);
+  const liveTotal = useMemo(
+    () =>
+      selected.reduce((sum, item) => {
+        const service = selectableCatalog.find((s) => s.id === item.service_id);
+        return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
+      }, 0),
+    [selected, selectableCatalog, services],
+  );
 
   useImperativeHandle(ref, () => ({
     save,
     isDirty: () => dirty,
     selectedCount: () => selected.length,
-    liveTotal: computeLiveTotal,
+    liveTotal: () => liveTotal,
   }));
 
   const categoryLabel = (key: string) =>
@@ -555,14 +554,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold">{t("finance.services.title")}</p>
         <span className="text-sm font-semibold">
-          {formatILS(
-            selected.length > 0
-              ? selected.reduce((sum, item) => {
-                  const service = selectableCatalog.find((s) => s.id === item.service_id);
-                  return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
-                }, 0)
-              : Number(financials?.service_total ?? 0),
-          )}
+          {formatILS(liveTotal > 0 ? liveTotal : Number(financials?.service_total ?? 0))}
         </span>
       </div>
 
@@ -702,10 +694,7 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
               </p>
             </div>
             <span className="text-sm font-semibold">
-              {formatILS(selected.reduce((sum, item) => {
-                const service = selectableCatalog.find((s) => s.id === item.service_id);
-                return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
-              }, 0))}
+              {formatILS(liveTotal)}
             </span>
           </div>
         </div>
