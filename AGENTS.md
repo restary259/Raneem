@@ -1364,3 +1364,24 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
   — no Arabic-Indic digits regardless of UI language. The popup renders all
   admin-catalog fields: name, school, room type, meals, deposit, placement
   fee, distance note, school website, description, and the full tier ladder.
+
+## CaseOverviewPanel "Referred By" — show whoever directly sent the student (2026-08-16)
+- `src/components/cases/CaseOverviewPanel.tsx` shows ONE name in "Referred By":
+  `referrerName ?? partnerName` — student referrer takes priority, otherwise the
+  partner_id holder (agent self-referral via form/link, partner/ambassador link,
+  or a partner/ambassador recruited by an agent). No `source_attribution_method`
+  branching — the fallback is unconditional (one line). The old separate
+  "Partner" row was REMOVED entirely (it was internal attribution data, not a
+  useful overview field). The orphaned `case.overview.partner` i18n key stays in
+  en/ar (the parity guard only flags missing keys, not orphans).
+- Attribution, commissions, and network KPIs are untouched — they resolve
+  server-side (`record_case_commission`, `get_my_agent_network`,
+  `get_my_agent_students`, `get_partner_pool_cases`) and render in their own
+  dashboards, never re-derived in this panel.
+- Name resolution still goes through the SECURITY DEFINER `resolve_profile_names`
+  RPC (team RLS on `profiles` would silently miss partner_id/referred_by rows on
+  a direct `.in()`).
+- Tests: `src/components/cases/__tests__/CaseOverviewPanel.test.tsx` (5 cases)
+  cover the three attribution paths: partner self-referral (form + link),
+  agent's recruited partner, student-to-student, plus no-attribution.
+- Build: `npm run build` clean; `npx vitest run` 401/401 pass (45 files).

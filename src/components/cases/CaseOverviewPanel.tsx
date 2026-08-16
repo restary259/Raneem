@@ -15,6 +15,13 @@ interface Props {
 /**
  * Collapsed-by-default summary of where the case came from and what the
  * student told us on the apply form. Read-only.
+ *
+ * The "Referred by" row shows whoever DIRECTLY sent the student: a referring
+ * student (referred_by) takes priority, otherwise it falls back to the
+ * partner_id holder (agent self-referral, partner link, ambassador, or a
+ * partner/ambassador recruited by an agent). Attribution, commissions, and
+ * network KPIs are resolved entirely server-side and rendered in their own
+ * dashboards — this panel only displays a name.
  */
 export default function CaseOverviewPanel({ caseData }: Props) {
   const { t } = useTranslation("dashboard");
@@ -61,8 +68,9 @@ export default function CaseOverviewPanel({ caseData }: Props) {
       label: t("case.overview.source"),
       value: caseData.source ? t(`case.source.${caseData.source}`, caseData.source) : null,
     },
-    { label: t("case.overview.partner"), value: partnerName },
-    { label: t("case.overview.referredBy"), value: referrerName },
+    // Show whoever directly sent the student — student referrer takes priority,
+    // falls back to partner_id (agent self-referral, partner link, ambassador, etc.)
+    { label: t("case.overview.referredBy"), value: referrerName ?? partnerName },
     { label: t("case.overview.createdAt"), value: formatDateMedium(caseData.created_at, null) },
   ];
 
