@@ -20,6 +20,8 @@ export type Database = {
           currency: string
           deposit: number | null
           description: string | null
+          description_ar: string | null
+          description_en: string | null
           distance_note: string | null
           id: string
           is_active: boolean
@@ -39,6 +41,8 @@ export type Database = {
           currency?: string
           deposit?: number | null
           description?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           distance_note?: string | null
           id?: string
           is_active?: boolean
@@ -58,6 +62,8 @@ export type Database = {
           currency?: string
           deposit?: number | null
           description?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           distance_note?: string | null
           id?: string
           is_active?: boolean
@@ -2176,6 +2182,7 @@ export type Database = {
           max_months: number | null
           min_months: number | null
           name: string
+          photos: string[]
           price: number
           provider: string | null
           terms_url: string | null
@@ -2197,6 +2204,7 @@ export type Database = {
           max_months?: number | null
           min_months?: number | null
           name: string
+          photos?: string[]
           price?: number
           provider?: string | null
           terms_url?: string | null
@@ -2218,6 +2226,7 @@ export type Database = {
           max_months?: number | null
           min_months?: number | null
           name?: string
+          photos?: string[]
           price?: number
           provider?: string | null
           terms_url?: string | null
@@ -3485,6 +3494,8 @@ export type Database = {
           created_at: string
           currency: string
           description: string | null
+          description_ar: string | null
+          description_en: string | null
           duration: string | null
           duration_in_months: number | null
           fixed_start_day_of_month: number | null
@@ -3494,6 +3505,7 @@ export type Database = {
           lessons_per_week: number | null
           name_ar: string
           name_en: string
+          photos: string[]
           price: number | null
           price_tiers: Json
           registration_fee: number | null
@@ -3507,6 +3519,8 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           duration?: string | null
           duration_in_months?: number | null
           fixed_start_day_of_month?: number | null
@@ -3516,6 +3530,7 @@ export type Database = {
           lessons_per_week?: number | null
           name_ar: string
           name_en: string
+          photos?: string[]
           price?: number | null
           price_tiers?: Json
           registration_fee?: number | null
@@ -3529,6 +3544,8 @@ export type Database = {
           created_at?: string
           currency?: string
           description?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           duration?: string | null
           duration_in_months?: number | null
           fixed_start_day_of_month?: number | null
@@ -3538,6 +3555,7 @@ export type Database = {
           lessons_per_week?: number | null
           name_ar?: string
           name_en?: string
+          photos?: string[]
           price?: number | null
           price_tiers?: Json
           registration_fee?: number | null
@@ -3841,31 +3859,46 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          description_ar: string | null
+          description_en: string | null
           id: string
           is_active: boolean
           name_ar: string
           name_en: string
+          photos: string[]
+          slug: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           city?: string | null
           country?: string | null
           created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
           id?: string
           is_active?: boolean
           name_ar: string
           name_en: string
+          photos?: string[]
+          slug?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           city?: string | null
           country?: string | null
           created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
           id?: string
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          photos?: string[]
+          slug?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }

@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
 import InsuranceRatesEditor from "@/components/admin/InsuranceRatesEditor";
+import PhotoUploader from "@/components/admin/PhotoUploader";
 import { AgePriceTier, parseAgeTiers, formatAgeLadder } from "@/lib/insurancePricing";
 
 import { toneClasses } from "@/lib/statusTokens";
@@ -85,6 +86,7 @@ interface Program {
   start_rule: string | null;
   registration_fee: number | null;
   price_tiers: unknown;
+  photos: string[] | null;
 }
 interface School {
   id: string;
@@ -94,6 +96,7 @@ interface School {
   country: string;
   is_active: boolean;
   created_at: string;
+  photos: string[] | null;
 }
 interface Accommodation {
   id: string;
@@ -110,6 +113,7 @@ interface Accommodation {
   room_type: string | null;
   distance_note: string | null;
   price_tiers: unknown;
+  photos: string[] | null;
 }
 interface Insurance {
   id: string;
@@ -128,6 +132,7 @@ interface Insurance {
   description_ar?: string | null;
   description_en?: string | null;
   age_price_tiers?: unknown;
+  photos: string[] | null;
 }
 
 
@@ -149,6 +154,7 @@ const emptyInsForm = {
   terms_url: "",
   description_ar: "",
   description_en: "",
+  photos: [] as string[],
 };
 
 // Bypass Supabase generated types for new tables/columns
@@ -192,6 +198,7 @@ const AdminProgramsPage = () => {
     hours_per_week: "",
     start_rule: "",
     registration_fee: "",
+    photos: [] as string[],
   };
   const emptyAccomForm = {
     name_ar: "",
@@ -205,10 +212,11 @@ const AdminProgramsPage = () => {
     deposit: "",
     placement_fee: "",
     distance_note: "",
+    photos: [] as string[],
   };
   const [progForm, setProgForm] = useState(emptyProgForm);
   const [progTiers, setProgTiers] = useState<PriceTier[]>([]);
-  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany" });
+  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] as string[] });
   const [accomForm, setAccomForm] = useState(emptyAccomForm);
   const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
   const [insForm, setInsForm] = useState(emptyInsForm);
@@ -266,6 +274,7 @@ const AdminProgramsPage = () => {
         start_rule: progForm.start_rule || null,
         registration_fee: progForm.registration_fee ? Number(progForm.registration_fee) : null,
         price_tiers: progTiers.filter((tier) => tier.price != null),
+        photos: progForm.photos,
       };
       const { error } = editProgId
         ? await db.from("programs").update(payload).eq("id", editProgId)
@@ -296,6 +305,7 @@ const AdminProgramsPage = () => {
         name_ar: schoolForm.name_ar,
         city: schoolForm.city || null,
         country: schoolForm.country,
+        photos: schoolForm.photos,
       };
       const { error } = editSchoolId
         ? await db.from("schools").update(payload).eq("id", editSchoolId)
@@ -333,6 +343,7 @@ const AdminProgramsPage = () => {
         placement_fee: accomForm.placement_fee ? Number(accomForm.placement_fee) : null,
         distance_note: accomForm.distance_note || null,
         price_tiers: accomTiers.filter((tier) => tier.price != null),
+        photos: accomForm.photos,
       };
       const { error } = editAccomId
         ? await db.from("accommodations").update(payload).eq("id", editAccomId)
@@ -373,6 +384,7 @@ const AdminProgramsPage = () => {
         description_ar: insForm.description_ar || null,
         description_en: insForm.description_en || null,
         age_price_tiers: insRates.filter((r) => r.price != null),
+        photos: insForm.photos,
       };
       const { error } = editInsId
         ? await db.from("insurances").update(payload).eq("id", editInsId)
@@ -425,6 +437,7 @@ const AdminProgramsPage = () => {
       hours_per_week: p.hours_per_week?.toString() ?? "",
       start_rule: p.start_rule ?? "",
       registration_fee: p.registration_fee?.toString() ?? "",
+      photos: p.photos ?? [],
     });
     setProgTiers(parseTiers(p.price_tiers));
     setProgOpen(true);
@@ -444,6 +457,7 @@ const AdminProgramsPage = () => {
       deposit: a.deposit?.toString() ?? "",
       placement_fee: a.placement_fee?.toString() ?? "",
       distance_note: a.distance_note ?? "",
+      photos: a.photos ?? [],
     });
     setAccomTiers(parseTiers(a.price_tiers));
     setAccomOpen(true);
@@ -451,7 +465,7 @@ const AdminProgramsPage = () => {
 
   const openEditSchool = (s: School) => {
     setEditSchoolId(s.id);
-    setSchoolForm({ name_en: s.name_en, name_ar: s.name_ar, city: s.city ?? "", country: s.country });
+    setSchoolForm({ name_en: s.name_en, name_ar: s.name_ar, city: s.city ?? "", country: s.country, photos: s.photos ?? [] });
     setSchoolOpen(true);
   };
 
@@ -471,6 +485,7 @@ const AdminProgramsPage = () => {
       terms_url: i.terms_url ?? "",
       description_ar: i.description_ar ?? "",
       description_en: i.description_en ?? "",
+      photos: i.photos ?? [],
     });
     setInsRates(parseAgeTiers(i.age_price_tiers));
     setInsOpen(true);
@@ -697,6 +712,12 @@ const AdminProgramsPage = () => {
                       onChange={(e) => setProgForm((f) => ({ ...f, description: e.target.value }))}
                     />
                   </div>
+                  <PhotoUploader
+                    photos={progForm.photos}
+                    onChange={(photos) => setProgForm((f) => ({ ...f, photos }))}
+                    folder="programs"
+                    label={t('admin.programs.labelPhotos')}
+                  />
                   <Button className="w-full" onClick={saveProgram} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
@@ -722,6 +743,16 @@ const AdminProgramsPage = () => {
                   className={`overflow-hidden hover:shadow-md transition-all ${!p.is_active ? "opacity-60" : ""}`}
                 >
                   <CardContent className="p-0">
+                    {p.photos && p.photos.length > 0 && (
+                      <div className="relative h-28 w-full">
+                        <img
+                          src={p.photos[0]}
+                          alt={p.name_en}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                     <div className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -835,7 +866,7 @@ const AdminProgramsPage = () => {
                 setSchoolOpen(v);
                 if (!v) {
                   setEditSchoolId(null);
-                  setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany" });
+                  setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] });
                 }
               }}
             >
@@ -884,6 +915,12 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                   </div>
+                  <PhotoUploader
+                    photos={schoolForm.photos}
+                    onChange={(photos) => setSchoolForm((f) => ({ ...f, photos }))}
+                    folder="schools"
+                    label={t('admin.programs.labelPhotos')}
+                  />
                   <Button className="w-full" onClick={saveSchool} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
@@ -898,6 +935,16 @@ const AdminProgramsPage = () => {
                 className={`overflow-hidden hover:shadow-md transition-all ${!s.is_active ? "opacity-60" : ""}`}
               >
                 <CardContent className="p-0">
+                  {s.photos && s.photos.length > 0 && (
+                    <div className="relative h-28 w-full">
+                      <img
+                        src={s.photos[0]}
+                        alt={s.name_en}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
                   <div className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-submitted)/0.12)]">
@@ -1092,6 +1139,12 @@ const AdminProgramsPage = () => {
                     />
                   </div>
                   <PriceTiersEditor tiers={accomTiers} onChange={setAccomTiers} />
+                  <PhotoUploader
+                    photos={accomForm.photos}
+                    onChange={(photos) => setAccomForm((f) => ({ ...f, photos }))}
+                    folder="accommodations"
+                    label={t('admin.programs.labelPhotos')}
+                  />
                   <Button className="w-full" onClick={saveAccom} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
@@ -1116,6 +1169,16 @@ const AdminProgramsPage = () => {
                   className={`overflow-hidden hover:shadow-md transition-all ${!a.is_active ? "opacity-60" : ""}`}
                 >
                   <CardContent className="p-0">
+                    {a.photos && a.photos.length > 0 && (
+                      <div className="relative h-28 w-full">
+                        <img
+                          src={a.photos[0]}
+                          alt={a.name_en}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
                     <div className="p-4 space-y-2">
                       <div className="flex items-center gap-2">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-payment)/0.12)]">
@@ -1376,6 +1439,12 @@ const AdminProgramsPage = () => {
                       />
                     </div>
                   </div>
+                  <PhotoUploader
+                    photos={insForm.photos}
+                    onChange={(photos) => setInsForm((f) => ({ ...f, photos }))}
+                    folder="insurance"
+                    label={t('admin.programs.labelPhotos')}
+                  />
                   <Button className="w-full" onClick={saveIns} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>
@@ -1390,6 +1459,16 @@ const AdminProgramsPage = () => {
                 className={`overflow-hidden hover:shadow-md transition-all ${!ins.is_active ? "opacity-60" : ""}`}
               >
                 <CardContent className="p-0">
+                  {ins.photos && ins.photos.length > 0 && (
+                    <div className="relative h-28 w-full">
+                      <img
+                        src={ins.photos[0]}
+                        alt={ins.name}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
                   <div className="p-4 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-enrolled)/0.12)]">

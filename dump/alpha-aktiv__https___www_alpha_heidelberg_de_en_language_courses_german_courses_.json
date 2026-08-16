@@ -1,0 +1,385 @@
+{
+ "slug": "alpha-aktiv",
+ "url": "https://www.alpha-heidelberg.de/en/language-courses/german-courses/",
+ "title": "German courses – Learn german at Alpha Aktiv Sprachschule Heidelberg",
+ "lang": "EN",
+ "cards": {
+  "images": [
+   {
+    "alt": "bkg",
+    "section": "Our German courses",
+    "width": 1366,
+    "height": 768,
+    "src": "https://www.alpha-heidelberg.de/images/UnbQslarUy-1500.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Referenzrahmen",
+    "section": "Schedule",
+    "width": 1366,
+    "height": 953,
+    "src": "https://www.alpha-heidelberg.de/images/BjPEsE1DSL-600.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "bkg",
+    "section": "",
+    "width": 1366,
+    "height": 911,
+    "src": "https://www.alpha-heidelberg.de/images/fkYlGWCADy-1500.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Im Unterricht bei Alpha Aktiv",
+    "section": "Schedule",
+    "width": 1366,
+    "height": 947,
+    "src": "https://www.alpha-heidelberg.de/images/aO06z9tK5M-600.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Superintensiv",
+    "section": "Schedule",
+    "width": 1366,
+    "height": 910,
+    "src": "https://www.alpha-heidelberg.de/images/3zyvKRkIG_-600.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Kontakt Alpha Aktiv",
+    "section": "Contact us",
+    "width": 1366,
+    "height": 1366,
+    "src": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Image",
+    "section": "",
+    "width": 1365,
+    "height": 256,
+    "src": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   }
+  ],
+  "headings": [
+   {
+    "tag": "H3",
+    "text": "Study"
+   },
+   {
+    "tag": "H3",
+    "text": "Career"
+   },
+   {
+    "tag": "H1",
+    "text": "Our German courses"
+   },
+   {
+    "tag": "H2",
+    "text": "Intensive, Intensive +, Superintensive. + Conversation"
+   },
+   {
+    "tag": "H3",
+    "text": "Overview of our German courses - from A1 to C2"
+   },
+   {
+    "tag": "H3",
+    "text": "German Intensive Course"
+   },
+   {
+    "tag": "H4",
+    "text": "Schedule"
+   },
+   {
+    "tag": "H4",
+    "text": "Prices"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German Course + One-to-One Tuition"
+   },
+   {
+    "tag": "H4",
+    "text": "Schedule"
+   },
+   {
+    "tag": "H4",
+    "text": "Prices"
+   },
+   {
+    "tag": "H3",
+    "text": "Superintensive German Course"
+   },
+   {
+    "tag": "H4",
+    "text": "Schedule"
+   },
+   {
+    "tag": "H4",
+    "text": "Prices"
+   },
+   {
+    "tag": "H3",
+    "text": "Superintensive German + Conversation Course"
+   },
+   {
+    "tag": "H4",
+    "text": "Schedule"
+   },
+   {
+    "tag": "H4",
+    "text": "Prices"
+   },
+   {
+    "tag": "H2",
+    "text": "Contact us"
+   },
+   {
+    "tag": "H3",
+    "text": "Do you wish to get more information about our programs ?"
+   }
+  ],
+  "tables": [
+   {
+    "head": [],
+    "rows": [
+     [
+      "Duration",
+      "Price per week"
+     ],
+     [
+      "1-3 weeks",
+      "€ 215"
+     ],
+     [
+      "4-12 weeks",
+      "€ 190 -12%"
+     ],
+     [
+      "13-24 weeks",
+      "€ 165 -23%"
+     ],
+     [
+      "25 weeks and more",
+      "€ 150 -30%"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Duration",
+      "Price per week"
+     ],
+     [
+      "1-3 weeks",
+      "€ 415"
+     ],
+     [
+      "4-12 weeks",
+      "€ 390 -6%"
+     ],
+     [
+      "13 weeks and more",
+      "€ 365 -12%"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Duration",
+      "Price per week"
+     ],
+     [
+      "1-3 weeks",
+      "€ 615"
+     ],
+     [
+      "4-12 weeks",
+      "€ 590 -4%"
+     ],
+     [
+      "13 weeks and more",
+      "€ 565 -8%"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Duration",
+      "Price per week"
+     ],
+     [
+      "1-3 weeks",
+      "€ 260"
+     ],
+     [
+      "4-12 weeks",
+      "€ 230 - 11%"
+     ],
+     [
+      "13-24 weeks",
+      "€ 210 -19%"
+     ],
+     [
+      "25 weeks and more",
+      "€ 195 -25%"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Duration",
+      "Price per week"
+     ],
+     [
+      "1-4 weeks",
+      "€ 280"
+     ]
+    ]
+   }
+  ]
+ },
+ "images": [
+  {
+   "alt": "bkg",
+   "section": "Our German courses",
+   "url": "https://www.alpha-heidelberg.de/images/UnbQslarUy-1500.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/UnbQslarUy-1500.webp",
+   "width": 1366,
+   "height": 768
+  },
+  {
+   "alt": "Referenzrahmen",
+   "section": "Schedule",
+   "url": "https://www.alpha-heidelberg.de/images/BjPEsE1DSL-600.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/BjPEsE1DSL-600.webp",
+   "width": 1366,
+   "height": 953
+  },
+  {
+   "alt": "bkg",
+   "section": "",
+   "url": "https://www.alpha-heidelberg.de/images/fkYlGWCADy-1500.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/fkYlGWCADy-1500.webp",
+   "width": 1366,
+   "height": 911
+  },
+  {
+   "alt": "Im Unterricht bei Alpha Aktiv",
+   "section": "Schedule",
+   "url": "https://www.alpha-heidelberg.de/images/aO06z9tK5M-600.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/aO06z9tK5M-600.webp",
+   "width": 1366,
+   "height": 947
+  },
+  {
+   "alt": "Superintensiv",
+   "section": "Schedule",
+   "url": "https://www.alpha-heidelberg.de/images/3zyvKRkIG_-600.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/3zyvKRkIG_-600.webp",
+   "width": 1366,
+   "height": 910
+  },
+  {
+   "alt": "Kontakt Alpha Aktiv",
+   "section": "Contact us",
+   "url": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+   "width": 1366,
+   "height": 1366
+  },
+  {
+   "alt": "Image",
+   "section": "",
+   "url": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+   "width": 1365,
+   "height": 256
+  }
+ ],
+ "bodyText": [
+  {
+   "heading": "Our German courses",
+   "text": "Home Language courses German courses"
+  },
+  {
+   "heading": "Overview of our German courses - from A1 to C2",
+   "text": "Intensive GermanCourse Our Intensive German Course of 20 lessons per week is our most popular German course. Intensive GermanCourse + One-to-One tuition We recommend intensive German plus one-to-one tuition for course participants who wish to make remarkably rapid progress. Superintensive German Course The Superintensive German course option includes 25 lessons per week. Superintensive German + Conversation Our Superintensive Course (+ Conversation) with 30 lessons/week is suitable for all students who primarily want to work on their language skills."
+  },
+  {
+   "heading": "German Intensive Course",
+   "text": "Whichever reasons you have for coming to Germany – studying at a university, working at your dream job, a gap year abroad, or a much deserved language-focused holiday in the summer – you’re sure to enjoy the relaxed and informal atmosphere at our language school! We offer intensive German courses at all levels, from A1 to C2, and preparatory courses for the most critical German-language exams such as telc and TestDaF & DSH. The intensive German course takes place between Monday and Friday (9 a.m. to 12.15 p.m. or 12.30 p.m. to 3.45 p.m.). To be able to complete a course level, you need: A1 8 weeks A2 8 weeks B1 8 weeks B2 9 weeks C1 9 weeks In addition to the 20 hours of face-to-face classes, you should also plan for 15 additional hours per week for homework, vocabulary, and presentation preparation."
+  },
+  {
+   "heading": "Schedule",
+   "text": "Our beginner courses always start on the first Monday of the month. For the start dates of all higher levels, please contact us here so that we can inform you of the corresponding dates."
+  },
+  {
+   "heading": "Prices",
+   "text": "Duration Price per week 1-3 weeks € 215 4-12 weeks € 190 -12% 13-24 weeks € 165 -23% 25 weeks and more € 150 -30% 20 h/week One course hour is 45 minutes. The registration fee for all courses is € 50. By the way: If you would like to join one of our German courses with previous knowledge, we recommend that you fill out our placement test. This way we can find the course that ideally suits your German level."
+  },
+  {
+   "heading": "Intensive German Course + One-to-One Tuition",
+   "text": "This course option offers an intensive course and individual tuition. We recommend this course for students who wish to make remarkably rapid progress. It is ideal for students who want to work on specific topics: grammar, reading comprehension, and more. In addition to the ordinary intensive course, you can book 5 or 10 additional lessons per week as individual lessons. The advantage is that you can consolidate what you have learned in the group lessons, and your teacher can focus on particular topics or uncertainties. This course combination, suitable for beginners and advanced learners, is also cheaper than private lessons. The intensive course takes place from Monday to Friday 9 a.m.-12.15 p.m. or 12.30 p.m. - 3.45 p.m. In addition, there are extra individual lessons per day. Are you looking for a course combination with more focus on conversations? Please take a look at our superintensive course! We also offer various accommodation options connected to our courses. These range from student residences to flats and host families. For more information, click here."
+  },
+  {
+   "heading": "Schedule",
+   "text": "The start dates of this course follow the start dates of the intensive courses. Please contact us here for more information."
+  },
+  {
+   "heading": "Prices",
+   "text": "Intensive Course 20 + 5 Duration Price per week 1-3 weeks € 415 4-12 weeks € 390 -6% 13 weeks and more € 365 -12% 20 h/week + 5 hours individual tuition/weekOne course hour is 45 minutes.The registration fee for all courses is € 50. Intensive course 20 + 10 Duration Price per week 1-3 weeks € 615 € 615 4-12 weeks € 590 -4% 13 weeks and more € 565 -8% 20 h/week + 10 hours individual tuition/weekOne course hour is 45 minutes.The registration fee for all courses is € 50."
+  },
+  {
+   "heading": "Superintensive German Course",
+   "text": "The Superintensive German Course is perfect for anyone who wants to improve and intensify their German language skills. This course is divided into two parts: in the morning you have normal group lessons and in the afternoon you practice your oral skills in a group with the support of one of our professional German teachers. In these lessons you will discuss different topics in the group, e.g. books you have read, you will discuss a topic or prepare presentations. Accordingly, you can improve your presentation skills and your cultural knowledge in this course. Success is guaranteed! We offer intensive German courses at all levels, from A1 to C2. The intensive German course takes place Monday to Friday (09:00 to 13:00 or 13:15 to 17:15). To be able to complete a course level, you need: A1 8 weeks A2 8 weeks B1 8 weeks B2 9 weeks C1 9 weeks Please note that in addition to the 25 hours of face-to-face classes, you should also plan about 15 additional hours per week for homework, vocabulary and presentation preparation."
+  },
+  {
+   "heading": "Schedule",
+   "text": "Our beginner courses always start on the first Monday of the month. For the start dates of all higher levels, please contact us here so that we can inform you of the corresponding dates."
+  },
+  {
+   "heading": "Prices",
+   "text": "Duration Price per week 1-3 weeks € 260 4-12 weeks € 230 - 11% € 230 - 11% 13-24 weeks € 210 -19% 25 weeks and more € 195 -25% 25 h/week One course hour is 45 minutes. The registration fee for all courses is € 50."
+  },
+  {
+   "heading": "Superintensive German + Conversation Course",
+   "text": "Our Superintensive Course (+ Conversation) with 30 hours per week is suitable for you if you would like to work on your language skills in particular. In addition to the usual group course in the morning, you will devote ten additional hours to discussions, presentations, and book reviews based on the respective coursebook. For example, readings about Heidelberg are read together, edited, and then presented to the class. The fastest possible learning success is guaranteed here! We recommend this course mainly to students attending our school for a shorter period of a maximum of 4 weeks, due to the high workload involved. Our Superintensive Course is also more suitable for students at A2 level and above. In addition to the 30 hours per week, you will need the same amount of follow-up time for tasks such as homework. For participants of our A1 course who also want a higher teaching load, we recommend the Intensive Course +5 / +10. We also offer you the option of booking the “Superintensive” course after starting the regular intensive course, if you notice that you still lack “that certain something”."
+  },
+  {
+   "heading": "Schedule",
+   "text": "The start dates of the superintensive courses follow the start dates of the intensive courses. Please contact us here for more information."
+  },
+  {
+   "heading": "Prices",
+   "text": "Duration Price per week 1-4 weeks € 280 30 h/weekOne course hour is 45 minutes.The registration fee for all courses is € 50."
+  },
+  {
+   "heading": "Do you wish to get more information about our programs ?",
+   "text": "We would be glad to help you!"
+  }
+ ]
+}

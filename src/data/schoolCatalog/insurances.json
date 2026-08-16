@@ -1,0 +1,19 @@
+[
+  {
+    "slug": "care-college-comfort",
+    "name": "Care College Comfort",
+    "tier": "comfort",
+    "billing_period": "monthly",
+    "price": 32,
+    "currency": "EUR",
+    "provider": "Care Concept AG",
+    "coverage_scope": "medical_care_hospital_dentist",
+    "max_age": null,
+    "min_months": null,
+    "max_months": 18,
+    "description_ar": "تأمين صحي للطلاب يقبل التقديم قبل أو حتى أسبوعين بعد دخول ألمانيا، مع تغطية العلاج الطبي والعلاج في المستشفى وعلاج الأسنان (حتى 500 يورو بنسبة 100%، وما يزيد بنسبة 50%). مدة العقد الأولى تصل إلى 18 شهرًا، ويرجع مبلغ 31 يورو إذا لم تُقدَّم أي فواتير خلال 12 شهرًا.",
+    "description_en": "Student health insurance that can be taken out before or up to two weeks after entering Germany, covering medical treatment, hospital treatment and dental care (up to €500 at 100%, above that 50%). Fees for the first 18 contract months €32.00; €31 refund if no invoices submitted within 12 months.",
+    "terms_url": "https://www.alpha-heidelberg.de/en/service/health-insurance/",
+    "is_active": true
+  }
+]

@@ -1,0 +1,538 @@
+{
+ "slug": "kapito",
+ "url": "https://www.kapito.com/en/german-intensive-course/",
+ "title": "German Intensive Course in Münster - KAPITO Sprachschule",
+ "lang": "en-GB",
+ "cards": {
+  "images": [
+   {
+    "alt": "Deutsch",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_e38d+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fde_DE.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "English",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_3dbd+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fen_GB.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "Español",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_8a25+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fes_ES.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "Français",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_195f+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Ffr_FR.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "Italiano",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_5063+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fit_IT.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "日本語",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_553a+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fja.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "한국어",
+    "section": "",
+    "width": 16,
+    "height": 11,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_984b+w_16+h_11+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fplugins%2Fpolylang%2Fflags%2Fkr.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Sprachschule",
+    "section": "",
+    "width": 199,
+    "height": 70,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_85d+w_199+h_70+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2023%2F08%2FKAPITO-Sprachschule-Logo.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-22792 fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Sprachschule",
+    "section": "",
+    "width": 199,
+    "height": 70,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_85d+w_199+h_70+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2023%2F08%2FKAPITO-Sprachschule-Logo.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-22792 fpo-lazyloaded"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 935,
+    "height": 535,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_51ff+w_935+h_535+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Standardkurs-Kursbild02.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-655 fpo-lazyloaded"
+   },
+   {
+    "alt": "Deutsch Sommerkurs Plus",
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1674"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-543"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-685"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1457"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-761"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_d127+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F07%2FKAPITO-Sommerkurs-Kursbild01.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1532 fpo-lazyloaded"
+   },
+   {
+    "alt": "Deutsch Sommerkurs Plus",
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_8a81+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Sommerintensivkurs01.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1674 fpo-lazyloaded"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_5050+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Standardkurs-Kursbild01.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-543 fpo-lazyloaded"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_bd99+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Intensivkurs-Kursbild01.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-685 fpo-lazyloaded"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_d03d+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Universitaetskurs-Kursbild02.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1457 fpo-lazyloaded"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-761"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1532"
+   },
+   {
+    "alt": "Deutsch Sommerkurs Plus",
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1674"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-543"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-685"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 453,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-medium size-medium wp-image-1457"
+   },
+   {
+    "alt": "Sprachzertifikate der Sprachschule KAPITO: TestDaF, telc, FDSV, fadaf, csn, IALC",
+    "section": "",
+    "width": 355,
+    "height": 226,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_4741+w_355+h_226+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F11%2FZertifikate2019.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-3930 fpo-lazyloaded"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://www.kapito.com/wp-content/plugins/borlabs-cookie/assets/images/borlabs-cookie-logo.svg",
+    "srcset": "https://www.kapito.com/wp-content/plugins/borlabs-cookie/assets/images/borlabs-cookie-logo.svg, https://www.kapito.com/wp-content/plugins/borlabs-cookie/assets/images/borlabs-cookie-logo.svg 2x",
+    "dataSrc": null,
+    "className": "cookie-logo brlbs-dialog-logo brlbs-mr-2"
+   }
+  ],
+  "headings": [
+   {
+    "tag": "H1",
+    "text": "German Intensive Course in Münster"
+   },
+   {
+    "tag": "H2",
+    "text": "German Intensive Course (20 lessons per week)"
+   },
+   {
+    "tag": "H2",
+    "text": "German Intensive Course*"
+   },
+   {
+    "tag": "H2",
+    "text": "Other courses"
+   },
+   {
+    "tag": "H4",
+    "text": "Summer Intensive Plus Course"
+   },
+   {
+    "tag": "H4",
+    "text": "German Intensive Course in Münster"
+   },
+   {
+    "tag": "H4",
+    "text": "Intensive Plus German Course"
+   },
+   {
+    "tag": "H4",
+    "text": "University Preparation Course"
+   },
+   {
+    "tag": "H4",
+    "text": "Compact Course / German for Work"
+   },
+   {
+    "tag": "H4",
+    "text": "Summer Intensive Course German"
+   },
+   {
+    "tag": "H4",
+    "text": "Summer Intensive Plus Course"
+   },
+   {
+    "tag": "H4",
+    "text": "German Intensive Course in Münster"
+   },
+   {
+    "tag": "H4",
+    "text": "Intensive Plus German Course"
+   },
+   {
+    "tag": "H4",
+    "text": "University Preparation Course"
+   },
+   {
+    "tag": "H4",
+    "text": "Compact Course / German for Work"
+   },
+   {
+    "tag": "H4",
+    "text": "Summer Intensive Course German"
+   },
+   {
+    "tag": "H4",
+    "text": "Summer Intensive Plus Course"
+   },
+   {
+    "tag": "H4",
+    "text": "German Intensive Course in Münster"
+   },
+   {
+    "tag": "H4",
+    "text": "Intensive Plus German Course"
+   },
+   {
+    "tag": "H4",
+    "text": "University Preparation Course"
+   },
+   {
+    "tag": "H4",
+    "text": "GET SOCIAL"
+   },
+   {
+    "tag": "H2",
+    "text": "Data protection preference"
+   }
+  ],
+  "tables": [
+   {
+    "head": [],
+    "rows": [
+     [
+      "20 lessons per week"
+     ],
+     [
+      "max. 12"
+     ],
+     [
+      "from 160 € per week"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Duration",
+      "Price"
+     ],
+     [
+      "1 - 4 weeks",
+      "210 € per week"
+     ],
+     [
+      "5 - 8 weeks",
+      "190 € per week"
+     ],
+     [
+      "9 - 16 weeks",
+      "180 € per week"
+     ],
+     [
+      "17 - 23 weeks",
+      "170 € per week"
+     ],
+     [
+      "> 23 weeks",
+      "160 € per week"
+     ],
+     [],
+     [
+      "Extension on site"
+     ],
+     [
+      "1 - 4 weeks",
+      "210 € per week"
+     ],
+     [
+      "5 - 8 weeks",
+      "200 € per week"
+     ],
+     [
+      "9 - 16 weeks",
+      "190 € per week"
+     ],
+     [
+      "17 - 23 weeks",
+      "180 € per week"
+     ],
+     [
+      "> 23 weeks",
+      "160 € per week"
+     ],
+     [],
+     [
+      "Starting dates:",
+      "every Monday"
+     ],
+     [
+      "Recommended starting dates:",
+      "05.01., 02.02., 02.03., 07.04., 04.05., 01.06., 06.07., 03.08., 31.08., 28.09., "
+     ]
+    ]
+   }
+  ]
+ },
+ "images": [
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_51ff+w_935+h_535+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Standardkurs-Kursbild02.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_51ff+w_935+h_535+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Standardkurs-Kursbild02.jpg",
+   "width": 935,
+   "height": 535
+  },
+  {
+   "alt": "Deutsch Sommerkurs Plus",
+   "section": "",
+   "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+   "thumb": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NTAgNDUzJyB3aWR0aD0nNDUwJyBoZWlnaHQ9JzQ1Myc+PC9zdmc+",
+   "width": 450,
+   "height": 453
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_d127+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F07%2FKAPITO-Sommerkurs-Kursbild01.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_d127+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F07%2FKAPITO-Sommerkurs-Kursbild01.jpg",
+   "width": 450,
+   "height": 453
+  },
+  {
+   "alt": "Deutsch Sommerkurs Plus",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_8a81+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Sommerintensivkurs01.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_8a81+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Sommerintensivkurs01.jpg",
+   "width": 450,
+   "height": 453
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_5050+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Standardkurs-Kursbild01.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_5050+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Standardkurs-Kursbild01.jpg",
+   "width": 450,
+   "height": 453
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_bd99+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Intensivkurs-Kursbild01.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_bd99+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Intensivkurs-Kursbild01.jpg",
+   "width": 450,
+   "height": 453
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_d03d+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Universitaetskurs-Kursbild02.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_d03d+w_450+h_453+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F01%2FKAPITO-Universitaetskurs-Kursbild02.jpg",
+   "width": 450,
+   "height": 453
+  },
+  {
+   "alt": "Sprachzertifikate der Sprachschule KAPITO: TestDaF, telc, FDSV, fadaf, csn, IALC",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_4741+w_355+h_226+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F11%2FZertifikate2019.png",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_4741+w_355+h_226+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F11%2FZertifikate2019.png",
+   "width": 355,
+   "height": 226
+  }
+ ],
+ "bodyText": [
+  {
+   "heading": "German Intensive Course in Münster",
+   "text": "Do you want to study in a small group, progress quickly and stay for a longer period of time? Choose our intensive german course: 20 lessons per week max. 12 from 160 € per week"
+  },
+  {
+   "heading": "German Intensive Course (20 lessons per week)",
+   "text": "all year round stars every Monday (absolute beginners see course dates) minimum age 16 years from 1 week 20 lessons per week max. 12 participants per group learning support and homework supervision in the afternoons 3 – 4 cultural or social events per week (5 in July and August) Further offersIf you want to learn even faster, we recommend the German Intensive Course Plus. As a supplement to this intensive course, you can also book individual tuition in the afternoons. This will enable you to remedy individual weaknesses, work on specific subject areas or learn special vocabulary: from 1 week 10 lessons/week in the afternoons"
+  },
+  {
+   "heading": "German Intensive Course*",
+   "text": "Duration Price 1 - 4 weeks 210 € per week 5 - 8 weeks 190 € per week 9 - 16 weeks 180 € per week 17 - 23 weeks 170 € per week > 23 weeks 160 € per week Extension on site 1 - 4 weeks 210 € per week 5 - 8 weeks 200 € per week 9 - 16 weeks 190 € per week 17 - 23 weeks 180 € per week > 23 weeks 160 € per week Starting dates: every Monday Recommended starting dates: 05.01., 02.02., 02.03., 07.04., 04.05., 01.06., 06.07., 03.08., 31.08., 28.09., 26.10., 23.11.2026 Absolute beginners can start only on these dates Summer supplement: 30 € per week (06.07. - 28.08.2026) 1 Lesson = 45 minutes Students who have participated in KAPITO courses in previous years can get a discount of € 50 (there must be a period of at least 3 months between the courses). The price of the course includes: application fee tuition course material cultural and social program certificate access to library and computers including internet access learning support and homework supervision during the afternoons advice about university admission student card support for visa applications. Lessons have a clear structure and are oriented towards the European Reference Framework. Modern media, up-to-date course material with "
+  }
+ ]
+}

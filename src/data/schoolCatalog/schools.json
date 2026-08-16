@@ -1,0 +1,64 @@
+[
+  {
+    "slug": "fu-academy",
+    "name_ar": "أكاديمية اللغات ف+يو",
+    "name_en": "F+U Academy of Languages",
+    "city": "Heidelberg",
+    "country": "Germany",
+    "website": "https://academy-languages.com/en/",
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/school/campus.jpg",
+      "/lovable-uploads/schools/fu-academy/school/classroom.jpg",
+      "/lovable-uploads/schools/fu-academy/school/hero.jpg"
+    ],
+    "description_ar": "مدرسة لغات معتمدة في هايدلبرغ تقدم دورات ألمانية مكثفة من المستوى A1 إلى C1، مع سكن جامعي قريب وأكثر من 10,000 طالب سنويًا من أكثر من 100 دولة.",
+    "description_en": "Certified language school in Heidelberg offering intensive German courses from A1 to C1, with student dormitories nearby and more than 10,000 learners a year from over 100 countries."
+  },
+  {
+    "slug": "alpha-aktiv",
+    "name_ar": "ألفا أكتيف",
+    "name_en": "Alpha Aktiv Sprachschule",
+    "city": "Heidelberg",
+    "country": "Germany",
+    "website": "https://www.alpha-heidelberg.de/en/",
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/residence.webp",
+      "/lovable-uploads/schools/alpha-aktiv/school/classroom.webp",
+      "/lovable-uploads/schools/alpha-aktiv/school/hero.webp"
+    ],
+    "description_ar": "مدرسة لغات في هايدلبرغ تقدم دورات ألمانية من A1 إلى C2، وسكن طلابي في وسط المدينة مع عائلات مضيفة أو شقق خاصة.",
+    "description_en": "Language school in Heidelberg offering German courses from A1 to C2, student residences in the city centre, apartments and host families."
+  },
+  {
+    "slug": "go-academy",
+    "name_ar": "غو أكاديمي - هاوس الدولية",
+    "name_en": "GoAcademy! International House Düsseldorf",
+    "city": "Düsseldorf",
+    "country": "Germany",
+    "website": "https://goacademy.de/en/",
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/logo.png",
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "description_ar": "مدرسة لغات في دوسلدورف منذ 1990، معتمدة وفق ISO 9001 و AZAV، عضو في International House و IALC، وتقدم دورات ألمانية مكثفة من A1 إلى C2 مع خيارات سكن متعددة.",
+    "description_en": "Language school in Düsseldorf since 1990, ISO 9001 and AZAV certified, member of International House and IALC, offering intensive German courses from A1 to C2 with various accommodation options."
+  },
+  {
+    "slug": "kapito",
+    "name_ar": "كابيتو",
+    "name_en": "KAPITO Sprachschule",
+    "city": "Münster",
+    "country": "Germany",
+    "website": "https://www.kapito.com/en/",
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/kapito/school/standard-course.jpg",
+      "/lovable-uploads/schools/kapito/programs/intensive-course.jpg"
+    ],
+    "description_ar": "مدرسة لغات في وسط مونستر تقدم دورات ألمانية مكثفة للبالغين من عمر 16 عامًا، مع عائلات مضيفة وشقق وستوديوهات مفروشة بالكامل.",
+    "description_en": "Language school in central Münster offering German intensive courses for adults from age 16, with host families, apartments and fully-furnished studios."
+  }
+]

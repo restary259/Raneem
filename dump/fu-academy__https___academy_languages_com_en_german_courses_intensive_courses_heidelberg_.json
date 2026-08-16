@@ -1,0 +1,1761 @@
+{
+ "slug": "fu-academy",
+ "url": "https://academy-languages.com/en/german-courses/intensive-courses-heidelberg/",
+ "title": "Intensive German Course Heidelberg | Learn German A1–C1",
+ "lang": "en-GB",
+ "cards": {
+  "images": [
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/en_GB.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/en_GB.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/de_DE.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/fr_FR.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/zh_CN.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/ar.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/es_ES.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/ru_RU.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 200,
+    "height": 150,
+    "src": "https://academy-languages.com/wp-content/plugins/translatepress-multilingual/assets/flags/4x3/ko_KR.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "trp-flag-image"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 264,
+    "height": 69,
+    "src": "https://academy-languages.com/wp-content/uploads/2023/10/unnamed.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-698"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 600,
+    "height": 200,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png 600w, https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte-300x100.png 300w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-9157"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1280,
+    "height": 854,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg.jpg",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg.jpg 1280w, https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg-300x200.jpg 300w, https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg-1024x683.jpg 1024w, https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg-768x512.jpg 768w, https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg-600x400.jpg 600w",
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-9213"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1280,
+    "height": 854,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg.jpg",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg.jpg 1280w, https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg-300x200.jpg 300w, https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg-1024x683.jpg 1024w, https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg-768x512.jpg 768w, https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg-600x400.jpg 600w",
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-9212"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1280,
+    "height": 854,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/b1-sprachkurs-in-heidelberg-englisch-und-deutsch-studentengruppe.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-9217"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1280,
+    "height": 854,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion.jpg",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion.jpg 1280w, https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion-300x200.jpg 300w, https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion-1024x683.jpg 1024w, https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion-768x512.jpg 768w, https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion-600x400.jpg 600w",
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-9218"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1280,
+    "height": 854,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten.jpg",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten.jpg 1280w, https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten-300x200.jpg 300w, https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten-1024x683.jpg 1024w, https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten-768x512.jpg 768w, https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten-600x400.jpg 600w",
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-9215"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1280,
+    "height": 854,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/c2-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-studentin-haelt-buecher.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-9216"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 600,
+    "height": 200,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png 600w, https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte-300x100.png 300w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-9157"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 600,
+    "height": 400,
+    "src": "https://academy-languages.com/wp-content/uploads/2026/04/Grafik-1_gelb_V2.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2026/04/Grafik-1_gelb_V2.png 600w, https://academy-languages.com/wp-content/uploads/2026/04/Grafik-1_gelb_V2-300x200.png 300w, https://academy-languages.com/wp-content/uploads/2026/04/Grafik-1_gelb_V2-18x12.png 18w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-17509"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1024,
+    "height": 683,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/10/sprachkurse-in-heidelberg-klassenzimmer-auf-dem-campus-aussenansicht-1024x683.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-10668"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1024,
+    "height": 1024,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-1024x1024.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-1024x1024.png 1024w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-100x100.png 100w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-600x600.png 600w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-300x300.png 300w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-150x150.png 150w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-768x768.png 768w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6.png 1313w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-5831"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1024,
+    "height": 1024,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-1024x1024.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-1024x1024.png 1024w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-100x100.png 100w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-600x600.png 600w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-300x300.png 300w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-150x150.png 150w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-768x768.png 768w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7.png 1313w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-5832"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1024,
+    "height": 1024,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-1024x1024.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-1024x1024.png 1024w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-100x100.png 100w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-600x600.png 600w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-300x300.png 300w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-150x150.png 150w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-768x768.png 768w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8.png 1313w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-5828"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1024,
+    "height": 1024,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/11/4-1024x1024.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/11/4-1024x1024.png 1024w, https://academy-languages.com/wp-content/uploads/2024/11/4-100x100.png 100w, https://academy-languages.com/wp-content/uploads/2024/11/4-600x600.png 600w, https://academy-languages.com/wp-content/uploads/2024/11/4-300x300.png 300w, https://academy-languages.com/wp-content/uploads/2024/11/4-150x150.png 150w, https://academy-languages.com/wp-content/uploads/2024/11/4-768x768.png 768w, https://academy-languages.com/wp-content/uploads/2024/11/4.png 1313w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-5829"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1024,
+    "height": 1024,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-1024x1024.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-1024x1024.png 1024w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-100x100.png 100w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-600x600.png 600w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-300x300.png 300w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-150x150.png 150w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-768x768.png 768w, https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5.png 1313w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-5830"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 500,
+    "height": 500,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/12/Award-Badge_Language-Schools_transparent.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/12/Award-Badge_Language-Schools_transparent.png 500w, https://academy-languages.com/wp-content/uploads/2024/12/Award-Badge_Language-Schools_transparent-300x300.png 300w, https://academy-languages.com/wp-content/uploads/2024/12/Award-Badge_Language-Schools_transparent-150x150.png 150w, https://academy-languages.com/wp-content/uploads/2024/12/Award-Badge_Language-Schools_transparent-100x100.png 100w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-6940"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 215,
+    "height": 176,
+    "src": "https://academy-languages.com/wp-content/uploads/2023/11/excellence-award-2018-Academy-of-Languages-Heidelberg.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-820"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 215,
+    "height": 176,
+    "src": "https://academy-languages.com/wp-content/uploads/2023/11/excellence-award-2019-Academy-of-Languages-Heidelberg.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-821"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 750,
+    "height": 500,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/language-courses-in-heidelberg-abstract-red-shapes.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/language-courses-in-heidelberg-abstract-red-shapes.png 750w, https://academy-languages.com/wp-content/uploads/2025/08/language-courses-in-heidelberg-abstract-red-shapes-300x200.png 300w, https://academy-languages.com/wp-content/uploads/2025/08/language-courses-in-heidelberg-abstract-red-shapes-600x400.png 600w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-9159"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 600,
+    "height": 200,
+    "src": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png 600w, https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte-300x100.png 300w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-9157"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 1024,
+    "height": 565,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne-1024x565.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne-1024x565.png 1024w, https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne-600x331.png 600w, https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne-300x165.png 300w, https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne-768x424.png 768w, https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne.png 1300w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-4851"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": "⭐",
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://s.w.org/images/core/emoji/17.0.2/svg/2b50.svg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "emoji"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 450,
+    "height": 140,
+    "src": "https://academy-languages.com/wp-content/uploads/2024/02/Untitled-design-62.png",
+    "srcset": "https://academy-languages.com/wp-content/uploads/2024/02/Untitled-design-62.png 450w, https://academy-languages.com/wp-content/uploads/2024/02/Untitled-design-62-300x93.png 300w, https://academy-languages.com/wp-content/uploads/2024/02/Untitled-design-62-18x6.png 18w",
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-2966"
+   }
+  ],
+  "headings": [
+   {
+    "tag": "H1",
+    "text": "Intensive German course in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Learn German quickly and effectively - with our intensive course in Heidelberg"
+   },
+   {
+    "tag": "H2",
+    "text": "Main course"
+   },
+   {
+    "tag": "H4",
+    "text": "Course times"
+   },
+   {
+    "tag": "H4",
+    "text": "Flexible course duration"
+   },
+   {
+    "tag": "H4",
+    "text": "Perfect for:"
+   },
+   {
+    "tag": "H4",
+    "text": "Course formats"
+   },
+   {
+    "tag": "H4",
+    "text": "Course start"
+   },
+   {
+    "tag": "H2",
+    "text": "Which intensive German course suits your goal?"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German courses and modular courses in Heidelberg"
+   },
+   {
+    "tag": "H2",
+    "text": "MODULAR COURSES – GREATER LEARNING SUCCESS THROUGH TARGETED TRAINING"
+   },
+   {
+    "tag": "H2",
+    "text": "Intensive course 20"
+   },
+   {
+    "tag": "H3",
+    "text": "Course times and description"
+   },
+   {
+    "tag": "H3",
+    "text": "Period"
+   },
+   {
+    "tag": "H3",
+    "text": "Services"
+   },
+   {
+    "tag": "H3",
+    "text": "Start date"
+   },
+   {
+    "tag": "H2",
+    "text": "Intensive course 20 + module course 10"
+   },
+   {
+    "tag": "H3",
+    "text": "Course times and description"
+   },
+   {
+    "tag": "H3",
+    "text": "Period"
+   },
+   {
+    "tag": "H3",
+    "text": "Services"
+   },
+   {
+    "tag": "H3",
+    "text": "Start date"
+   },
+   {
+    "tag": "H2",
+    "text": "Intensive course 20 + job coaching"
+   },
+   {
+    "tag": "H3",
+    "text": "Course times and description"
+   },
+   {
+    "tag": "H3",
+    "text": "Period"
+   },
+   {
+    "tag": "H3",
+    "text": "Services"
+   },
+   {
+    "tag": "H3",
+    "text": "Start date"
+   },
+   {
+    "tag": "H2",
+    "text": "Intensive course 30"
+   },
+   {
+    "tag": "H3",
+    "text": "Course times and description"
+   },
+   {
+    "tag": "H3",
+    "text": "Period"
+   },
+   {
+    "tag": "H3",
+    "text": "Services"
+   },
+   {
+    "tag": "H3",
+    "text": "Start date"
+   },
+   {
+    "tag": "H2",
+    "text": "Superintensive course 30+5"
+   },
+   {
+    "tag": "H3",
+    "text": "Course times and description"
+   },
+   {
+    "tag": "H3",
+    "text": "Period"
+   },
+   {
+    "tag": "H3",
+    "text": "Services"
+   },
+   {
+    "tag": "H3",
+    "text": "Start date"
+   },
+   {
+    "tag": "H2",
+    "text": "Module course 10"
+   },
+   {
+    "tag": "H3",
+    "text": "Course times and description"
+   },
+   {
+    "tag": "H3",
+    "text": "Period"
+   },
+   {
+    "tag": "H3",
+    "text": "Services"
+   },
+   {
+    "tag": "H3",
+    "text": "Start date"
+   },
+   {
+    "tag": "H2",
+    "text": "German courses in Heidelberg for every language level"
+   },
+   {
+    "tag": "H3",
+    "text": "You can find all information about the courses here:"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German A1 course in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German A2 course in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German B1 course in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German B2 Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German C1 course in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German C2 course"
+   },
+   {
+    "tag": "H2",
+    "text": "Not sure whether A1, A2 or B1?"
+   },
+   {
+    "tag": "H2",
+    "text": "Not sure whether A1, A2 or B1?"
+   },
+   {
+    "tag": "H2",
+    "text": "German intensive courses in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "INTENSIVE GERMAN COURSES AT THE ACADEMY OF LANGUAGES"
+   },
+   {
+    "tag": "H2",
+    "text": "Excellent language school in Heidelberg - certified intensive German courses"
+   },
+   {
+    "tag": "H2",
+    "text": "Excellent language school in Heidelberg"
+   },
+   {
+    "tag": "H2",
+    "text": "Your advantages in the German intensive course in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "✓ Rapid learning progress through intensive training"
+   },
+   {
+    "tag": "H3",
+    "text": "✓ German courses A1–C1 according to CEFR"
+   },
+   {
+    "tag": "H3",
+    "text": "✓ Small groups & personal support"
+   },
+   {
+    "tag": "H3",
+    "text": "✓ Flexible course models for your goals"
+   },
+   {
+    "tag": "H3",
+    "text": "✓ International Language School in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": ""
+   },
+   {
+    "tag": "H2",
+    "text": "How do I register for the intensive course?"
+   },
+   {
+    "tag": "H3",
+    "text": "1. take a free placement test"
+   },
+   {
+    "tag": "H3",
+    "text": "2. select course and start date"
+   },
+   {
+    "tag": "H3",
+    "text": "3. register online or reserve a place"
+   },
+   {
+    "tag": "H3",
+    "text": "4. learn German with success and fun!"
+   },
+   {
+    "tag": "H2",
+    "text": "Your benefits of an intensive German course at our language school in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Graduate voices - Happy certificate holders of the intensive German course in Heidelberg"
+   },
+   {
+    "tag": "H2",
+    "text": "Not looking for an intensive German course in Heidelberg?"
+   },
+   {
+    "tag": "H2",
+    "text": "Intensive German Course in Heidelberg: Answers to the Most Important Questions"
+   },
+   {
+    "tag": "H3",
+    "text": "Any questions about intensive German courses or module courses?"
+   },
+   {
+    "tag": "H2",
+    "text": "Further information about the intensive course and our offers"
+   },
+   {
+    "tag": "H3",
+    "text": "Are intensive German courses worthwhile?"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German course in Heidelberg for children"
+   },
+   {
+    "tag": "H2",
+    "text": "Intensive German course in Heidelberg for foreigners"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German course in Heidelberg for the visa"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German course in Heidelberg for work and study"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German course in Heidelberg for Ukrainians"
+   },
+   {
+    "tag": "H3",
+    "text": "What does an intensive German course cost?"
+   },
+   {
+    "tag": "H3",
+    "text": "Intensive German courses nearby"
+   },
+   {
+    "tag": "H3",
+    "text": "Support options for the intensive German course"
+   },
+   {
+    "tag": "H3",
+    "text": "German intensive course like at the adult education centre (VHS)"
+   },
+   {
+    "tag": "H3",
+    "text": "German intensive course with certificate"
+   },
+   {
+    "tag": "H3",
+    "text": "German intensive course A1 - The perfect start"
+   },
+   {
+    "tag": "H2",
+    "text": "Further courses and offers from the Academy of Languages"
+   },
+   {
+    "tag": "H5",
+    "text": "Exam preparation"
+   },
+   {
+    "tag": "H5",
+    "text": "Language tests"
+   },
+   {
+    "tag": "H5",
+    "text": "English courses"
+   },
+   {
+    "tag": "H5",
+    "text": "Online German courses"
+   },
+   {
+    "tag": "H2",
+    "text": "REVIEWS FROM OUR PARTICIPANTS"
+   },
+   {
+    "tag": "H2",
+    "text": "Enquire about intensive German course in Heidelberg"
+   }
+  ],
+  "tables": []
+ },
+ "images": [
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2023/10/unnamed.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2023/10/unnamed.png",
+   "width": 264,
+   "height": 69
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/sprachkurse-in-heidelberg-rote-punkte.png",
+   "width": 600,
+   "height": 200
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg.jpg",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/a1-sprachkurs-fuer-zwei-studierende-am-campus-heidelberg.jpg",
+   "width": 1280,
+   "height": 854
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg.jpg",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/a2-sprachkurs-viele-teilnehmer-am-campus-heidelberg.jpg",
+   "width": 1280,
+   "height": 854
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/b1-sprachkurs-in-heidelberg-englisch-und-deutsch-studentengruppe.jpg",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/b1-sprachkurs-in-heidelberg-englisch-und-deutsch-studentengruppe.jpg",
+   "width": 1280,
+   "height": 854
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion.jpg",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/b2-sprachkurs-in-heidelberg-englisch-und-deutsch-gruppendiskussion.jpg",
+   "width": 1280,
+   "height": 854
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten.jpg",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/c1-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-gruppe-energiegeladener-studenten.jpg",
+   "width": 1280,
+   "height": 854
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/c2-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-studentin-haelt-buecher.jpg",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/c2-sprachkurs-in-heidelberg-englisch-und-deutsch-eine-studentin-haelt-buecher.jpg",
+   "width": 1280,
+   "height": 854
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2026/04/Grafik-1_gelb_V2.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2026/04/Grafik-1_gelb_V2.png",
+   "width": 600,
+   "height": 400
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/10/sprachkurse-in-heidelberg-klassenzimmer-auf-dem-campus-aussenansicht-1024x683.jpg",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/10/sprachkurse-in-heidelberg-klassenzimmer-auf-dem-campus-aussenansicht-1024x683.jpg",
+   "width": 1024,
+   "height": 683
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg6-1024x1024.png",
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg7-1024x1024.png",
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg8-1024x1024.png",
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/11/4.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/11/4-1024x1024.png",
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/11/zertifikat-fuer-sprachkurse-in-heidelberg5-1024x1024.png",
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/12/Award-Badge_Language-Schools_transparent.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/12/Award-Badge_Language-Schools_transparent.png",
+   "width": 500,
+   "height": 500
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2023/11/excellence-award-2018-Academy-of-Languages-Heidelberg.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2023/11/excellence-award-2018-Academy-of-Languages-Heidelberg.png",
+   "width": 215,
+   "height": 176
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2023/11/excellence-award-2019-Academy-of-Languages-Heidelberg.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2023/11/excellence-award-2019-Academy-of-Languages-Heidelberg.png",
+   "width": 215,
+   "height": 176
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2025/08/language-courses-in-heidelberg-abstract-red-shapes.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2025/08/language-courses-in-heidelberg-abstract-red-shapes.png",
+   "width": 750,
+   "height": 500
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/07/deutsch-und-englischkurse-in-heidelberg-google-fuenf-sterne-1024x565.png",
+   "width": 1024,
+   "height": 565
+  },
+  {
+   "alt": null,
+   "section": "",
+   "url": "https://academy-languages.com/wp-content/uploads/2024/02/Untitled-design-62.png",
+   "thumb": "https://academy-languages.com/wp-content/uploads/2024/02/Untitled-design-62.png",
+   "width": 450,
+   "height": 140
+  }
+ ],
+ "bodyText": [
+  {
+   "heading": "Learn German quickly and effectively - with our intensive course in Heidelberg",
+   "text": "Learn German quickly and effectively - with our intensive course in Heidelberg Learn German quickly and effectively ✓ Individual support from experienced teachers ✓ German courses from A1 to C1 ✓ Ideal for students and those interested in studying A2 | B1 | B2 | C1 | C2"
+  },
+  {
+   "heading": "Main course",
+   "text": "Price from 155,00 €"
+  },
+  {
+   "heading": "Course times",
+   "text": "Monday - Friday 09:00 to 12:15"
+  },
+  {
+   "heading": "Flexible course duration",
+   "text": "1-6 weeks or up to more than 30 weeks"
+  },
+  {
+   "heading": "Perfect for:",
+   "text": "Students and prospective students"
+  },
+  {
+   "heading": "Course formats",
+   "text": "Intensive course 20, Intensive course 20 + module course 10, Intensive course 30, Intensive course 35"
+  },
+  {
+   "heading": "Course start",
+   "text": "See table below. Price from 155,00 € Rapid progress in a short time Learn intensively and with purpose – with structured preparation for German levels A1 to C1. Our language school in Heidelberg will help you reach the next language level in just a few weeks. Communicative learning in small groups Improve your targeted oral expression, Your Listening comprehension and your Grammar skills - with practical exercises and plenty of room to speak."
+  },
+  {
+   "heading": "Intensive German courses and modular courses in Heidelberg",
+   "text": "Whether you want to reach a new language level quickly, prepare specifically for an exam, or improve your German skills for study or work – at Academy of Languages you’ll find the right course format. Our German courses range from intensive courses for rapid progress to flexible modular courses designed to help you deepen your language skills at your own pace. All courses are based on the Common European Framework of Reference for Languages (CEFR) and are suitable for levels A1 to C1."
+  },
+  {
+   "heading": "MODULAR COURSES – GREATER LEARNING SUCCESS THROUGH TARGETED TRAINING",
+   "text": "Our modular courses are the perfect supplement to the intensive German course in the mornings and offer you the opportunity to specifically work on the language areas you wish to improve. This allows you to deepen your German language skills efficiently and achieve your learning goals faster. Clear learning objectives to build upon and complement the morning course Targeted compensation of deficits at the current language level ✓ Training of all language skills appropriate to the respective level ✓ Structured preparation for internal exams ✓ Small groups with individual support ✓ Stress-free communication and active language training"
+  },
+  {
+   "heading": "Course times and description",
+   "text": "Lesson times: 09:00 - 12:15 Breaks: 10:30 - 10:45 The classic course for beginners with 20 lessons per week. Compact, communicative and structured: ideal for making rapid progress."
+  },
+  {
+   "heading": "Period",
+   "text": "(weeks) 1-6 7-16 17-29 from 30 225 € per week 195 € per week 170 € per week 155 € per week"
+  },
+  {
+   "heading": "Services",
+   "text": "Free final level tests Free certificates of participation Internal language tests from 80 € Internationally recognised language exams from 180 € You can join the group courses from the age of 16. We do not have an upper age limit."
+  },
+  {
+   "heading": "Start date",
+   "text": "Lateral entry possible all year round for participants with previous knowledge every Monday"
+  },
+  {
+   "heading": "Course times and description",
+   "text": "Lesson times: 09:00 - 12:15; 13:00 - 14:30 Breaks: 10:30 - 10:45, 12:15 - 13:00 20 intensive course units per week for fast and confident progress - plus 10 units in the special module: either conversation, grammar or job coaching."
+  },
+  {
+   "heading": "Period",
+   "text": "(weeks) 1-6 7-16 17-29 from 30 280 € per week 250 € per week 225 € per week 210 € per week"
+  },
+  {
+   "heading": "Services",
+   "text": "Free final level tests Free certificates of participation Internal language tests from 80 € Internationally recognised language exams from 180 € You can join the group courses from the age of 16. We do not have an upper age limit."
+  },
+  {
+   "heading": "Start date",
+   "text": "Lateral entry possible all year round for participants with previous knowledge every Monday"
+  },
+  {
+   "heading": "Course times and description",
+   "text": "Lesson times: 09:00 - 12:15; 13:00 - 14:30 Breaks: 10:30 - 10:45, 12:15 - 13:00 Learn German quickly and effectively in 20 lessons per week and successfully enter the German labour market at the same time.For all those who are looking for work in Germany and do not yet have a contract - e.g. with an opportunity card."
+  },
+  {
+   "heading": "Period",
+   "text": "(weeks) 1-6 7-16 17-29 from 30 265 € per week"
+  },
+  {
+   "heading": "Services",
+   "text": "Free final level tests Free certificates of participation Internal language tests from 80 € Internationally recognised language exams from 180 € You can join the group courses from the age of 16. We do not have an upper age limit."
+  },
+  {
+   "heading": "Start date",
+   "text": "from 8 participants, from level B2;12.01. - 03.04., 07.04.- 26.06, 29.06. - 11.09., 14.09. - 04.12.(can only be booked as a 12-week package)"
+  },
+  {
+   "heading": "Course times and description",
+   "text": "Lesson times: 09:00 - 12:15; 13:00 - 14:30 Breaks: 10:30 - 10:45, 12:15 - 13:00 More lessons, more progress - with 30 lessons per week. You can improve your language skills with additional input."
+  },
+  {
+   "heading": "Period",
+   "text": "(weeks) 1-6 7-16 17-29 from 30 280 € per week 250 € per week 225 € per week 210 € per week"
+  },
+  {
+   "heading": "Services",
+   "text": "Free final level tests Free certificates of participation Internal language tests from 80 € Internationally recognised language exams from 180 € You can join the group courses from the age of 16. We do not have an upper age limit."
+  },
+  {
+   "heading": "Start date",
+   "text": "Lateral entry possible all year round for participants with previous knowledge every Monday"
+  },
+  {
+   "heading": "Course times and description",
+   "text": "Lesson times Superintensive course 30 + 5 lessons Individual lessons: 09:00 - 12:15; 13:00 - 14:30 Breaks: 10:30 - 10:45, 12:15 - 13:00 The plus for maximum effect. Combine your language course with customised individual tuition - for quick and lasting success. Individual lessons are organised on a one-to-one basis."
+  },
+  {
+   "heading": "Period",
+   "text": "(weeks) 1-6 7-16 17-29 450 € per week 420 € per week 395 € a week"
+  },
+  {
+   "heading": "Services",
+   "text": "Free final level tests Free certificates of participation Internal language tests from 80 € Internationally recognised language exams from 180 € You can join the group courses from the age of 16. We do not have an upper age limit."
+  },
+  {
+   "heading": "Start date",
+   "text": "Lateral entry possible all year round for participants with previous knowledge every Monday"
+  },
+  {
+   "heading": "Course times and description",
+   "text": "Lesson times: 13:00 - 14:30 Make targeted progress with 10 units in the special module: choose either Conversation + Grammar or Job Coaching."
+  },
+  {
+   "heading": "Period",
+   "text": "(weeks) 1-6 7-16 17-29 from 30 110 € per week 100 € per week 90 € per week 80 € per week"
+  },
+  {
+   "heading": "Services",
+   "text": "Free final level tests Free certificates of participation Internal language tests from 80 € Internationally recognised language exams from 180 € You can join the group courses from the age of 16. We do not have an upper age limit."
+  },
+  {
+   "heading": "Start date",
+   "text": "Entry for beginners: 05.01., 02.02., 02.03., 07.04., 04.05., 01.06., 06.07., 03.08., 07.09., 05.10., 02.11., 07.12. Lateral entry possible all year round for participants with previous knowledge every Monday"
+  },
+  {
+   "heading": "German courses in Heidelberg for every language level",
+   "text": "We offer our intensive German course in Heidelberg at all levels from A1 to C1, in accordance with the Common European Framework of Reference for Languages (CEFR). You can easily find out which level is right for you with our free placement test."
+  },
+  {
+   "heading": "Intensive German A1 course in Heidelberg",
+   "text": "Are you a beginner and want to learn the basics of the German language quickly? Our German A1 intensive course will teach you how to speak, listen, read and write step by step - perfect for your start in Germany."
+  },
+  {
+   "heading": "Intensive German A2 course in Heidelberg",
+   "text": "Do you already have some basic knowledge? In the German A2 course you will improve your grammar and vocabulary so that you can move more confidently in everyday life and in simple conversations."
+  },
+  {
+   "heading": "Intensive German B1 course in Heidelberg",
+   "text": "This course is ideal if you are preparing for university, an internship or everyday life in Germany. With the German B1 intensive course, you will practise speaking freely, understanding texts and writing your first longer texts."
+  },
+  {
+   "heading": "Intensive German B2 Heidelberg",
+   "text": "This course is ideal if you want to improve your German language skills to an advanced level and prepare yourself specifically for studying, working or everyday life in Germany. With the German B2 intensive course, you will practise speaking fluently, complex text comprehension and writing more demanding texts."
+  },
+  {
+   "heading": "Intensive German C1 course in Heidelberg",
+   "text": "This course is aimed at anyone who wants to perfect their language skills - e.g. for university entrance, a job or an official language certificate. In the C1 Intensive German course, you will work at an almost native speaker level."
+  },
+  {
+   "heading": "Intensive German C2 course",
+   "text": "C2 courses are available on request. Feel free to contact us for advice without obligation!"
+  },
+  {
+   "heading": "Not sure whether A1, A2 or B1?",
+   "text": "Take our free German placement test now!"
+  },
+  {
+   "heading": "Not sure whether A1, A2 or B1?",
+   "text": "Find out your language level quickly and easily - from A1 to C2. Our German placement test helps you to find the right course for your individual learning needs. You will receive immediate feedback on your current language level so that you can start your intensive course in a targeted manner. Take our free German placement test now!"
+  },
+  {
+   "heading": "German intensive courses in Heidelberg",
+   "text": "Every year, more than 10,000 language learners and exam candidates from over 100 countries put their trust in Academy of Languages. Learn German in Heidelberg in an international environment and benefit from professional German courses at levels A1–C1 at a well-established language school in Heidelberg. Our intensive courses will help you achieve your language goals more quickly and successfully."
+  },
+  {
+   "heading": "INTENSIVE GERMAN COURSES AT THE ACADEMY OF LANGUAGES",
+   "text": "✓ Learn German in Heidelberg ✓ German courses for levels A1–C1 ✓ Heidelberg language school with many years of experience ✓ Small groups and personal attention ✓ Year-round start dates"
+  },
+  {
+   "heading": "Excellent language school in Heidelberg - certified intensive German courses",
+   "text": "As part of the renowned Academy of Languages Our language school in Heidelberg stands for the highest quality, modern teaching methods, and measurable learning success. Our German intensive courses from A1 to C1 are multiple certified and are based on the Common European Framework of Reference for Languages (CEFR). As well as satisfying thousands of learners from around the world, we have been recognised with various awards and accreditations over the years - a testament to our ongoing commitment to combining effective teaching with enjoyment and structure. Whether you are learning German for work, study or everyday life - with us you benefit from a learning environment that not only motivates you, but also has a lasting effect."
+  },
+  {
+   "heading": "Excellent language school in Heidelberg",
+   "text": "Academy of Languages is synonymous with quality: we have received the ST Star Award, the iStudy Award and the Excellence Award on several occasions."
+  },
+  {
+   "heading": "Your advantages in the German intensive course in Heidelberg",
+   "text": "With an intensive German course at Academy of Languages, you’ll benefit from an effective learning method, personalised support and an international learning environment. Our German courses (A1–C1) will help you achieve your language goals for study, work or everyday life in Germany more quickly."
+  },
+  {
+   "heading": "",
+   "text": "✓ Rapid learning progress through intensive training ✓ German courses A1–C1 according to CEFR ✓ Small groups and personal attention ✓ Flexible course models for your goals ✓ International Language School in Heidelberg"
+  },
+  {
+   "heading": "1. take a free placement test",
+   "text": "To ensure that you start at the right level (e.g. A1, A2, B1, B2 or C1), take our short placement test online or on site. This will ensure that the course is perfectly suited to your language level."
+  },
+  {
+   "heading": "2. select course and start date",
+   "text": "Choose your suitable course start: Our intensive courses start regularly, mostly on Mondays. You can join at any time on a Monday."
+  },
+  {
+   "heading": "3. register online or reserve a place",
+   "text": "Use our registration form or contact us directly to secure your place. Registration is non-binding - we will be happy to answer any questions you may have."
+  },
+  {
+   "heading": "4. learn German with success and fun!",
+   "text": "Once you have successfully registered, you will receive all the information about the course programme. Then it's time to learn German in Heidelberg - intensively, interactively and successfully!"
+  },
+  {
+   "heading": "Your benefits of an intensive German course at our language school in Heidelberg",
+   "text": "If you opt for our intensive German course in Heidelberg, you will benefit from numerous advantages that will support your learning success and help you achieve your goals more quickly: Certified quality according to GEROur courses correspond to the Common European Framework of Reference for Languages (CEFR) - from A1 to C1. You will receive an official certificate of attendance at the end of the course. Fast learning success through intensive trainingDaily lessons in small groups ensure maximum language practice and rapid progress - especially in grammar, speaking, listening and writing. Professional, trained teachersOur experienced teachers are pedagogically trained and teach using modern, communicative methods - for lively, practical lessons. Flexible learning on site in Heidelberg or onlineLearn German directly at our centrally located language school in Heidelberg - or choose the German online course if you want to stay independent of location. Customised course formats & professional relevance possibleDo you have specific learning goals? In our specialised courses and business courses you can learn job-specific German - tailored to your requirements. Language diversity & inte"
+  },
+  {
+   "heading": "Not looking for an intensive German course in Heidelberg?",
+   "text": "Here you can find more offers from the Academy of Languages. In addition to our intensive German course in Heidelberg, we offer a wide range of other language programmes and services to meet your individual needs: Accommodation & summer camp in Heidelberg - Ideal for language courses and an intensive learning environment in the summery atmosphere of Heidelberg. Examinations and Exam preparation - Preparation for important language examinations such as TOEFL, TOEIC, IELTS, onSET, TestDaF, telc, TestAS, WiDaF and ECL. Online German course - Learn German flexibly and from anywhere with our professional online courses.English courses - Whether on site in Heidelberg or online, we offer courses for all levels. German evening course - For anyone who wants to learn German in a relaxed and flexible way while working or studying."
+  },
+  {
+   "heading": "Any questions about intensive German courses or module courses?",
+   "text": "Would you like to book an intensive German course at Academy of Languages in Heidelberg and need information about registration, dates, costs or preparation? Our team will be happy to help with any questions you may have about intensive German courses in Heidelberg."
+  },
+  {
+   "heading": "Are intensive German courses worthwhile?",
+   "text": "A German intensive course is particularly worthwhile if you want to learn German quickly and effectively. With daily lessons lasting several hours, you can significantly improve your language skills in a short space of time - whether for work, study or everyday life in Germany. Intensive courses also offer small groups and qualified teachers who provide you with individualised support. This allows you to achieve your learning goals quickly and sustainably."
+  },
+  {
+   "heading": "Intensive German course in Heidelberg for children",
+   "text": "Children also benefit from special German intensive courses in Heidelberg. Our child-friendly learning programmes promote listening comprehension, speaking and reading in a playful way. This enables young learners to quickly make connections at school and in their free time. The courses are age-appropriate and help children to feel confident in their new environment and to cope well linguistically."
+  },
+  {
+   "heading": "Intensive German course in Heidelberg for foreigners",
+   "text": "For foreigners Intensive German course in Heidelberg ideal for rapid linguistic integration. Our courses cover all levels from A1 to C1 and are specially tailored to the needs of learners from abroad. Our free placement test will help you find the perfect course to improve your German language skills in a targeted manner."
+  },
+  {
+   "heading": "Intensive German course in Heidelberg for the visa",
+   "text": "If you would like to apply for a visa for Germany, you will often need proof of German language skills. Our German intensive courses in Heidelberg meet the requirements of many visa programmes. With a certificate of attendance at the end of the course, you can officially prove your language competence - an important requirement for your visa."
+  },
+  {
+   "heading": "Intensive German course in Heidelberg for work and study",
+   "text": "For working people and students, our German intensive courses in Heidelberg the perfect preparation. The courses provide practical training in all relevant language skills and promote specialised vocabulary. This means you are ideally equipped for everyday working life or studying at a German university."
+  },
+  {
+   "heading": "Intensive German course in Heidelberg for Ukrainians",
+   "text": "Especially for refugees and new arrivals from Ukraine, we offer customised German intensive courses in Heidelberg courses. These courses provide special support for the rapid acquisition of the German language in order to facilitate integration, career entry and social participation."
+  },
+  {
+   "heading": "What does an intensive German course cost?",
+   "text": "Our prices for the Intensive German course in Heidelberg are transparent and staggered according to course duration: Intensive course 20 (Monday - Friday 9:00 - 12:15): 215 EUR/week (1-6 weeks), 190 EUR/week (7-16 weeks), 165 EUR/week (17-29 weeks), 150 EUR/week (from 30 weeks) Intensive course 30 (Monday - Friday 9:00 - 14:30): 270 EUR/week (1-6 weeks), 245 EUR/week (7-16 weeks), 220 EUR/week (17-29 weeks), 205 EUR/week (from 30 weeks) Superintensive course 35 (Monday - Friday 9:00 - 14:30): 435 EUR/week (1-6 weeks), 410 EUR/week (7-16 weeks), 385 EUR/week (17-29 weeks). Private lessons by arrangement."
+  },
+  {
+   "heading": "Intensive German courses nearby",
+   "text": "Our language school in Heidelberg is centrally located and easy to reach - ideal if you are looking for a Intensive German course nearby search. Travelling by public transport is also uncomplicated. We also offer online intensive courses for those who want to stay flexible."
+  },
+  {
+   "heading": "Support options for the intensive German course",
+   "text": "Many of our intensive German courses can be supported by various funding programmes, for example by employment agencies or education grants. You can often receive financial help for your course in Heidelberg. Please contact us to discuss individual funding options."
+  },
+  {
+   "heading": "German intensive course like at the adult education centre (VHS)",
+   "text": "Our intensive German courses in Heidelberg offer you the same high quality as at the adult education centre (VHS), but with even more flexibility and individual support. Benefit from small learning groups, modern teaching methods and personal counselling - for your rapid learning success."
+  },
+  {
+   "heading": "German intensive course with certificate",
+   "text": "At the end of your course, you will receive an official certificate of attendance documenting your language skills at the appropriate level (A1, A2, B1, B2, C1). This certificate is important for job applications, studies and work and is recognised by many institutions."
+  },
+  {
+   "heading": "German intensive course A1 - The perfect start",
+   "text": "For beginners we offer the German intensive course A1 in Heidelberg. Here you will learn the basics of the German language so that you can find your way around in everyday life. The course is ideal for anyone who wants to start without prior knowledge and achieve initial success quickly."
+  },
+  {
+   "heading": "Exam preparation",
+   "text": "Prepare specifically for important language examinations such as TOEFL, IELTS, TestDaF or telc. Our specialised courses will give you the knowledge and confidence you need to succeed in the exam."
+  },
+  {
+   "heading": "Language tests",
+   "text": "We offer certified language examinations. Whether TestDaF, onSET or TOEFL. Find out more about dates for 2025 here."
+  },
+  {
+   "heading": "English courses",
+   "text": "Improve your English skills - on site in Heidelberg or conveniently online. Our courses are practice-orientated and suitable for all levels so that you can achieve your language goals quickly."
+  },
+  {
+   "heading": "Online German courses",
+   "text": "Learn German flexibly, effectively and from anywhere - with our professional online German courses. Ideal if you don't have time for face-to-face courses but don't want to compromise on quality."
+  },
+  {
+   "heading": "Enquire about intensive German course in Heidelberg",
+   "text": "Do you want to learn German quickly and effectively? Our intensive German courses in Heidelberg will help you achieve your language goals for studying, work, training, or everyday life in Germany. Together, we'll find the right German course for your current language level – from A1 to C1. Use our enquiry form and receive free advice on course content, start dates, intensive courses, modular courses, and exam preparation. We would also be happy to help you choose the right course and inform you about current availability. ✓ Free✓ non-binding✓ Personalised consultation I accept the Privacy policy ."
+  }
+ ]
+}

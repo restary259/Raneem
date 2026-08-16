@@ -1,0 +1,1027 @@
+[
+  {
+    "slug": "fu-cat-e-bergheim",
+    "school": "fu-academy",
+    "name_ar": "الفئة E - سكن حرم ف+يو التعليمي في بيرغهايم",
+    "name_en": "Category E - F+U Bildungscampus Bergheim",
+    "room_type": "single_double",
+    "meals": "self_catering",
+    "price": 240,
+    "currency": "EUR",
+    "distance_note": "0.5-1.7 km from school, 8-20 min walk or ~8 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مستقلة في سكن جامعي ضمن حرم ف+يو التعليمي، مع مطبخ صغير وحمام خاص لكل غرفة (دوش، مرحاض، مغسلة)، سرير وخزانة ومكتب وكرسي.",
+    "description_en": "Private room in the F+U Bildungscampus residence with own kitchenette and private bathroom (shower, WC, washbasin), bed, wardrobe, desk and chair.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 355 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 305 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 250 },
+      { "from_weeks": 30, "to_weeks": null, "price": 240 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-4.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-5.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-e-bergheim-double",
+    "school": "fu-academy",
+    "name_ar": "الفئة E (غرفة مزدوجة) - سكن حرم ف+يو التعليمي في بيرغهايم",
+    "name_en": "Category E (Double room) - F+U Bildungscampus Bergheim",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 370,
+    "currency": "EUR",
+    "distance_note": "0.5-1.7 km from school, 8-20 min walk or ~8 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مزدوجة في سكن جامعي ضمن حرم ف+يو التعليمي، مع مطبخ صغير وحمام خاص لكل غرفة (دوش، مرحاض، مغسلة). السعر للشخص الواحد في الأسبوع.",
+    "description_en": "Double room in the F+U Bildungscampus residence with own kitchenette and private bathroom (shower, WC, washbasin). Price per person per week.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 565 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 480 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 390 },
+      { "from_weeks": 30, "to_weeks": null, "price": 370 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-4.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-5.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-e-maerzgasse",
+    "school": "fu-academy",
+    "name_ar": "الفئة E - سكن وسط المدينة التاريخي (ميرغاسه)",
+    "name_en": "Category E - Märzgasse Heidelberg Old Town",
+    "room_type": "single_double",
+    "meals": "self_catering",
+    "price": 240,
+    "currency": "EUR",
+    "distance_note": "In the old town centre, ~8-20 min from school",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "سكن جامعي في وسط المدينة التاريخي، كل غرفة بمطبخ صغير وحمام خاص (دوش، مرحاض، مغسلة). الصور نموذجية للسكن.",
+    "description_en": "Residence in the old town centre; each room has its own kitchenette and private bathroom (shower, WC, washbasin). Sample pictures.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 355 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 305 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 250 },
+      { "from_weeks": 30, "to_weeks": null, "price": 240 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-4.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-e-maerzgasse-double",
+    "school": "fu-academy",
+    "name_ar": "الفئة E (غرفة مزدوجة) - سكن وسط المدينة التاريخي (ميرغاسه)",
+    "name_en": "Category E (Double room) - Märzgasse Heidelberg Old Town",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 370,
+    "currency": "EUR",
+    "distance_note": "In the old town centre, ~8-20 min from school",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مزدوجة في سكن جامعي وسط المدينة التاريخي، كل غرفة بمطبخ صغير وحمام خاص. السعر للشخص الواحد في الأسبوع. الصور نموذجية للسكن.",
+    "description_en": "Double room in the old town residence; each room has its own kitchenette and private bathroom. Price per person per week. Sample pictures.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 565 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 480 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 390 },
+      { "from_weeks": 30, "to_weeks": null, "price": 370 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-4.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-d",
+    "school": "fu-academy",
+    "name_ar": "الفئة D - شقق غرفة واحدة في بيرغهايم",
+    "name_en": "Category D - One-bedroom flats Bergheim",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 225,
+    "currency": "EUR",
+    "distance_note": "Bergheim, 1.7 km from school, 8-20 min walk or ~8 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة من غرفة واحدة مع حمام خاص (دوش، مرحاض، مغسلة) ومطبخ مشترك مع طلاب لغة آخرين.",
+    "description_en": "One-bedroom flat with private bathroom (shower, WC, sink) and a kitchen shared with other language students.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 320 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 285 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 240 },
+      { "from_weeks": 30, "to_weeks": null, "price": 225 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-d-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-d-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-d-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-d-4.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-d-5.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-c",
+    "school": "fu-academy",
+    "name_ar": "الفئة C - شقق من غرفتين في ميرغاسه",
+    "name_en": "Category C - Two-room flats Märzgasse",
+    "room_type": "single_double",
+    "meals": "self_catering",
+    "price": 210,
+    "currency": "EUR",
+    "distance_note": "Directly in the old town, ~500 m / 8-10 min walk from school",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقق صغيرة من غرفتين في سكن الجامعة في ميرغاسه، يتشارك سكان كل شقة في مطبخ صغير وحمام حديث (مغسلة، دوش، مرحاض).",
+    "description_en": "Small two-room flats in the Märzgasse residence; residents of each flat share a pantry kitchen and a modern bathroom with washbasin, shower and WC.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 315 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 270 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 220 },
+      { "from_weeks": 30, "to_weeks": null, "price": 210 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-4.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-5.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-c-double",
+    "school": "fu-academy",
+    "name_ar": "الفئة C (غرفة مزدوجة) - شقق من غرفتين في ميرغاسه",
+    "name_en": "Category C (Double room) - Two-room flats Märzgasse",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 305,
+    "currency": "EUR",
+    "distance_note": "Directly in the old town, ~500 m / 8-10 min walk from school",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مزدوجة في شقة من غرفتين ضمن سكن الجامعة في ميرغاسه، يتشارك السكان في مطبخ صغير وحمام حديث. السعر للشخص الواحد في الأسبوع.",
+    "description_en": "Double room in a two-room flat in the Märzgasse residence; residents share a pantry kitchen and a modern bathroom. Price per person per week.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 470 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 405 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 315 },
+      { "from_weeks": 30, "to_weeks": null, "price": 305 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-4.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-c-5.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-bplus",
+    "school": "fu-academy",
+    "name_ar": "الفئة B+ - حمام خاص مع مطبخ مشترك",
+    "name_en": "Category B+ - Private bathroom, shared kitchen",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 210,
+    "currency": "EUR",
+    "distance_note": "Franz-Marc-Strasse 19; ~18 min by tram from Bismarckplatz",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مفردة في سكن بفرع مارك شتراسه 19 مع حمام خاص، مطبخ مشترك مع طلاب آخرين، وتتوفر غسالات ومجففات.",
+    "description_en": "Single room in the Franz-Marc-Strasse 19 residence with private bathroom; kitchen shared with other students; washing machines and dryers available.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 265 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 245 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 210 },
+      { "from_weeks": 30, "to_weeks": null, "price": 210 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-bplus-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-bplus-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-bplus-3.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-b-schmitt",
+    "school": "fu-academy",
+    "name_ar": "الفئة B - سكن شميت في كيرشهايم",
+    "name_en": "Category B - Schmitt hall of residence Kirchheim",
+    "room_type": "single_double",
+    "meals": "self_catering",
+    "price": 180,
+    "currency": "EUR",
+    "distance_note": "5 km from school, ~15-25 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "سكن جامعي على بُعد 5 كم. المطبخ المشترك نقطة التقاء الطلاب، المرحاض في نفس الطابق، كل غرفة مجهزة بسرير وخزانة ومكتب وكرسي وواي فاي وثلاجة ودوش ومغسلة.",
+    "description_en": "Residence 5 km away. The communal kitchen is a central meeting point; toilet on the same floor. Each room has a bed, wardrobe, desk, chair, Wi-Fi, refrigerator, shower and sink.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 215 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 205 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 190 },
+      { "from_weeks": 30, "to_weeks": null, "price": 180 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-b-schmitt-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-b-schmitt-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-b-schmitt-3.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-b-schmitt-double",
+    "school": "fu-academy",
+    "name_ar": "الفئة B (غرفة مزدوجة) - سكن شميت في كيرشهايم",
+    "name_en": "Category B (Double room) - Schmitt hall of residence Kirchheim",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 245,
+    "currency": "EUR",
+    "distance_note": "5 km from school, ~15-25 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مزدوجة في سكن شميت. المطبخ المشترك نقطة التقاء الطلاب، المرحاض في نفس الطابق، كل غرفة مجهزة بسرير وخزانة ومكتب وكرسي وواي فاي وثلاجة ودوش ومغسلة. السعر للشخص الواحد في الأسبوع.",
+    "description_en": "Double room at the Schmitt residence. The communal kitchen is a central meeting point; toilet on the same floor. Each room has a bed, wardrobe, desk, chair, Wi-Fi, refrigerator, shower and sink. Price per person per week.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 300 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 290 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 265 },
+      { "from_weeks": 30, "to_weeks": null, "price": 245 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-b-schmitt-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-b-schmitt-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-b-schmitt-3.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-a-schmitt",
+    "school": "fu-academy",
+    "name_ar": "الفئة A - سكن شميت (شقة مشتركة)",
+    "name_en": "Category A - Schmitt hall of residence (shared flat)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 155,
+    "currency": "EUR",
+    "distance_note": "5-7 km from school, ~25-30 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "في سكن الفئة A يتشارك السكان في المطبخ والحمامات والمراحيض المشتركة. الغرف مجهزة بخزانة وسرير وكرسي ومكتب وثلاجة ومغسلة.",
+    "description_en": "In Category A residences residents share the communal kitchen, showers and toilets. Rooms have a wardrobe, bed, chair, desk, refrigerator and sink.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 200 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 185 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 165 },
+      { "from_weeks": 30, "to_weeks": null, "price": 155 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-schmitt-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-schmitt-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-schmitt-3.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-a-concordia",
+    "school": "fu-academy",
+    "name_ar": "الفئة A - سكن كونكورديا (شقة مشتركة)",
+    "name_en": "Category A - Concordia hall of residence (shared flat)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 155,
+    "currency": "EUR",
+    "distance_note": "5-7 km from school, Rohrbacher-Strasse 126",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة مشتركة في سكن كونكورديا: مطبخ مشترك قاعة مركزية، ومراحيض ودُش مشتركة، غرف مجهزة بالكامل.",
+    "description_en": "Shared flat at the Concordia residence: communal kitchen as a central meeting point, shared showers and toilets, fully furnished rooms.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 200 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 185 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 165 },
+      { "from_weeks": 30, "to_weeks": null, "price": 155 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-concordia-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-concordia-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-concordia-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-concordia-4.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-a-turnerstrasse",
+    "school": "fu-academy",
+    "name_ar": "الفئة A - سكن تورنرشتراسه في رودباخ (شقة مشتركة)",
+    "name_en": "Category A - Turnerstrasse Rohrbach (shared flat)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 155,
+    "currency": "EUR",
+    "distance_note": "Turnerstrasse, ~25-30 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة مشتركة في حي رودباخ مع مطبخ مشترك وحمامات مشتركة وغرف مجهزة بسرير وخزانة ومكتب وثلاجة ومغسلة.",
+    "description_en": "Shared flat in Rohrbach with communal kitchen, shared bathrooms and rooms furnished with a bed, wardrobe, desk, refrigerator and sink.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 200 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 185 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 165 },
+      { "from_weeks": 30, "to_weeks": null, "price": 155 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-turner-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-turner-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-turner-3.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "fu-cat-a-franzmarc",
+    "school": "fu-academy",
+    "name_ar": "الفئة A - سكن فرانتس مارك شتراسه (شقة مشتركة)",
+    "name_en": "Category A - Franz-Marc-Strasse (shared flat)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 155,
+    "currency": "EUR",
+    "distance_note": "Franz-Marc-Strasse, ~25-30 min by public transport",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة مشتركة في سكن فرانتس مارك مع مطبخ مشترك ومراحيض ودش مشتركة وغرف مفروشة.",
+    "description_en": "Shared flat at the Franz-Marc-Strasse residence with communal kitchen, shared showers and toilets and furnished rooms.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 200 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 185 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 165 },
+      { "from_weeks": 30, "to_weeks": null, "price": 155 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-franzmarc-1.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-franzmarc-2.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-franzmarc-3.jpg",
+      "/lovable-uploads/schools/fu-academy/accommodations/category-a-franzmarc-4.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-res-single-central-a",
+    "school": "alpha-aktiv",
+    "name_ar": "سكن الطلاب - غرفة مفردة وسط النوع A",
+    "name_en": "Student Residence - Single Central A",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 190,
+    "currency": "EUR",
+    "distance_note": "City centre of Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مفردة في سكن طلابي وسط مدينة هايدلبرغ، تتشارك الحمام والمطبخ مع سكان الطابق.",
+    "description_en": "Single room in a student residence in central Heidelberg, sharing bathroom and kitchen with other residents on the same floor.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 300 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 245 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 230 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 215 },
+      { "from_weeks": 27, "to_weeks": null, "price": 190 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/residence.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-res-single-central-b",
+    "school": "alpha-aktiv",
+    "name_ar": "سكن الطلاب - غرفة مفردة وسط النوع B",
+    "name_en": "Student Residence - Single Central B",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 170,
+    "currency": "EUR",
+    "distance_note": "City centre of Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مفردة في سكن طلابي وسط المدينة مع حمام ومطبخ مشتركين مع سكان الطابق.",
+    "description_en": "Single room in a central student residence with shared bathroom and kitchen on the floor.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 280 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 220 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 190 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 175 },
+      { "from_weeks": 27, "to_weeks": null, "price": 170 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/residence.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-res-single-not-central",
+    "school": "alpha-aktiv",
+    "name_ar": "سكن الطلاب - غرفة مفردة خارج المركز",
+    "name_en": "Student Residence - Single Not Central",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 155,
+    "currency": "EUR",
+    "distance_note": "Ziegelhausen district",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مفردة في سكن الطلاب بحي زيغلهاوزن الهادئ، مطبخ وحمام مشتركان مع سكان الطابق.",
+    "description_en": "Single room in the student residence in the idyllic Ziegelhausen district, sharing kitchen and bathroom with residents on the floor.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 230 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 190 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 165 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 160 },
+      { "from_weeks": 27, "to_weeks": null, "price": 155 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/residence.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-res-double-central-a",
+    "school": "alpha-aktiv",
+    "name_ar": "سكن الطلاب - غرفة مزدوجة وسط النوع A",
+    "name_en": "Student Residence - Double Central A",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 160,
+    "currency": "EUR",
+    "distance_note": "City centre of Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مزدوجة في سكن طلابي وسط المدينة، سعر للشخص الواحد في الأسبوع، حمام ومطبخ مشتركان.",
+    "description_en": "Double room in a central student residence, price per person per week, shared bathroom and kitchen.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 240 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 200 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 180 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 170 },
+      { "from_weeks": 27, "to_weeks": null, "price": 160 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/residence.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-res-double-central-b",
+    "school": "alpha-aktiv",
+    "name_ar": "سكن الطلاب - غرفة مزدوجة وسط النوع B",
+    "name_en": "Student Residence - Double Central B",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 140,
+    "currency": "EUR",
+    "distance_note": "City centre of Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مزدوجة في سكن طلابي وسط المدينة، سعر للشخص الواحد في الأسبوع.",
+    "description_en": "Double room in a central student residence, price per person per week.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 225 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 170 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 160 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 150 },
+      { "from_weeks": 27, "to_weeks": null, "price": 140 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/residence.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-res-double-not-central",
+    "school": "alpha-aktiv",
+    "name_ar": "سكن الطلاب - غرفة مزدوجة خارج المركز",
+    "name_en": "Student Residence - Double Not Central",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 140,
+    "currency": "EUR",
+    "distance_note": "Ziegelhausen district",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "غرفة مزدوجة في سكن الطلاب بحي زيغلهاوزن، سعر للشخص الواحد في الأسبوع.",
+    "description_en": "Double room in the Ziegelhausen student residence, price per person per week.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 215 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 160 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 145 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 140 },
+      { "from_weeks": 27, "to_weeks": null, "price": 140 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/residence.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-apt-single-1room",
+    "school": "alpha-aktiv",
+    "name_ar": "شقة مفردة - غرفة واحدة (بسماركبلاتس)",
+    "name_en": "Apartment - Single 1 room (Bismarckplatz)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 240,
+    "currency": "EUR",
+    "distance_note": "Bismarckplatz, Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة من غرفة واحدة مع حمام ومطبخ صغير خاص داخل الشقة.",
+    "description_en": "One-room apartment with its own bathroom and kitchenette inside.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 370 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 305 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 295 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 265 },
+      { "from_weeks": 27, "to_weeks": null, "price": 240 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/hero.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-apt-single-2room",
+    "school": "alpha-aktiv",
+    "name_ar": "شقة مفردة - غرفتان (بسماركبلاتس)",
+    "name_en": "Apartment - Single 2 rooms (Bismarckplatz)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 295,
+    "currency": "EUR",
+    "distance_note": "Bismarckplatz, Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة من غرفتين مع حمام ومطبخ صغير خاص.",
+    "description_en": "Two-room apartment with its own bathroom and kitchenette.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 440 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 360 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 325 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 305 },
+      { "from_weeks": 27, "to_weeks": null, "price": 295 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/hero.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-apt-double-2room",
+    "school": "alpha-aktiv",
+    "name_ar": "شقة مزدوجة - غرفتان (بسماركبلاتس)",
+    "name_en": "Apartment - Double 2 rooms (Bismarckplatz)",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 215,
+    "currency": "EUR",
+    "distance_note": "Bismarckplatz, Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة من غرفتين لشخصين مع حمام ومطبخ صغير خاص.",
+    "description_en": "Two-room apartment for two people with its own bathroom and kitchenette.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 335 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 285 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 260 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 240 },
+      { "from_weeks": 27, "to_weeks": null, "price": 215 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/hero.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-apt-double-studio",
+    "school": "alpha-aktiv",
+    "name_ar": "شقة مزدوجة - استوديو (بسماركبلاتس)",
+    "name_en": "Apartment - Double Studio (Bismarckplatz)",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 200,
+    "currency": "EUR",
+    "distance_note": "Bismarckplatz, Heidelberg",
+    "deposit": null,
+    "placement_fee": null,
+    "description_ar": "شقة استوديو لشخصين مع حمام ومطبخ صغير خاص.",
+    "description_en": "Studio apartment for two with its own bathroom and kitchenette.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 350 },
+      { "from_weeks": 3, "to_weeks": 4, "price": 275 },
+      { "from_weeks": 5, "to_weeks": 12, "price": 250 },
+      { "from_weeks": 13, "to_weeks": 26, "price": 235 },
+      { "from_weeks": 27, "to_weeks": null, "price": 200 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/hero.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "alpha-host-family",
+    "school": "alpha-aktiv",
+    "name_ar": "عائلة مضيفة",
+    "name_en": "Host Family",
+    "room_type": "single",
+    "meals": "half_board",
+    "price": 320,
+    "currency": "EUR",
+    "distance_note": "Various locations in Heidelberg",
+    "deposit": 200,
+    "placement_fee": 100,
+    "description_ar": "الإقامة مع عائلة ألمانية مختارة بنظام نصف إقامة (فطور وعشاء) للتعرف على نمط الحياة الألمانية وممارسة اللغة يوميًا.",
+    "description_en": "Stay with a selected German family on half board (breakfast and dinner) to experience German life and practise the language daily.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 320 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/hero.webp"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "go-standard-twn",
+    "school": "go-academy",
+    "name_ar": "شقة قياسية - غرفة مزدوجة (TWN)",
+    "name_en": "Standard Apartment (TWN)",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 130,
+    "currency": "EUR",
+    "distance_note": "20-35 min from school on foot or by public transport",
+    "deposit": null,
+    "placement_fee": 90,
+    "description_ar": "غرفة مزدوجة في شقة مشتركة قياسية مع حمام ومطبخ مجهز بالكامل مشتركين.",
+    "description_en": "Twin room in a standard shared apartment with shared bathroom and fully equipped kitchen.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 165 },
+      { "from_weeks": 5, "to_weeks": 23, "price": 145 },
+      { "from_weeks": 24, "to_weeks": null, "price": 130 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "go-standard-sgl",
+    "school": "go-academy",
+    "name_ar": "شقة قياسية - غرفة مفردة (SGL)",
+    "name_en": "Standard Apartment (SGL)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 180,
+    "currency": "EUR",
+    "distance_note": "20-35 min from school on foot or by public transport",
+    "deposit": null,
+    "placement_fee": 90,
+    "description_ar": "غرفة مفردة في شقة مشتركة قياسية مع حمام ومطبخ مجهز بالكامل مشتركين.",
+    "description_en": "Single room in a standard shared apartment with shared bathroom and fully equipped kitchen.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 220 },
+      { "from_weeks": 5, "to_weeks": 23, "price": 195 },
+      { "from_weeks": 24, "to_weeks": null, "price": 180 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "go-comfort-twn",
+    "school": "go-academy",
+    "name_ar": "شقة كومفورت - غرفة مزدوجة (TWN)",
+    "name_en": "Comfort Apartment (TWN)",
+    "room_type": "double",
+    "meals": "self_catering",
+    "price": 150,
+    "currency": "EUR",
+    "distance_note": "5-10 min from school on foot",
+    "deposit": null,
+    "placement_fee": 90,
+    "description_ar": "غرفة مزدوجة في شقة كومفورت على بُعد 5-10 دقائق من المدرسة، مع خدمة غسيل في المبنى.",
+    "description_en": "Twin room in a Comfort apartment 5-10 min from school; washing machines always available.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 185 },
+      { "from_weeks": 5, "to_weeks": 23, "price": 165 },
+      { "from_weeks": 24, "to_weeks": null, "price": 150 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "go-comfort-sgl",
+    "school": "go-academy",
+    "name_ar": "شقة كومفورت - غرفة مفردة (SGL)",
+    "name_en": "Comfort Apartment (SGL)",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 210,
+    "currency": "EUR",
+    "distance_note": "5-10 min from school on foot",
+    "deposit": null,
+    "placement_fee": 90,
+    "description_ar": "غرفة مفردة في شقة كومفورت قريبة من المدرسة، مع خدمة غسيل في المبنى.",
+    "description_en": "Single room in a Comfort apartment close to the school, with in-building laundry service.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 245 },
+      { "from_weeks": 5, "to_weeks": 23, "price": 225 },
+      { "from_weeks": 24, "to_weeks": null, "price": 210 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "go-studio",
+    "school": "go-academy",
+    "name_ar": "استوديو خاص (SGL)",
+    "name_en": "Studio",
+    "room_type": "studio",
+    "meals": "self_catering",
+    "price": 270,
+    "currency": "EUR",
+    "distance_note": "10-25 min from school on foot",
+    "deposit": null,
+    "placement_fee": 90,
+    "description_ar": "شقة استوديو خاصة من غرفة نوم واحدة مع حمام ومطبخ خاصين، لخصوصية واستقلالية كاملة.",
+    "description_en": "Private one-bedroom studio with its own bathroom and kitchen, perfect for maximum privacy and independence.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 360 },
+      { "from_weeks": 5, "to_weeks": 23, "price": 310 },
+      { "from_weeks": 24, "to_weeks": null, "price": 270 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "go-family-bb",
+    "school": "go-academy",
+    "name_ar": "عائلة مضيفة - فطور فقط (B&B)",
+    "name_en": "Host Family (B&B)",
+    "room_type": "single",
+    "meals": "breakfast",
+    "price": 250,
+    "currency": "EUR",
+    "distance_note": "Various locations in Düsseldorf",
+    "deposit": null,
+    "placement_fee": 90,
+    "description_ar": "غرفة مفردة مع فطور في عائلة مضيفة.",
+    "description_en": "Single room with breakfast in a host family.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 310 },
+      { "from_weeks": 5, "to_weeks": 23, "price": 270 },
+      { "from_weeks": 24, "to_weeks": null, "price": 250 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "go-family-hb",
+    "school": "go-academy",
+    "name_ar": "عائلة مضيفة - نصف إقامة",
+    "name_en": "Host Family (Half board)",
+    "room_type": "single",
+    "meals": "half_board",
+    "price": 300,
+    "currency": "EUR",
+    "distance_note": "Various locations in Düsseldorf",
+    "deposit": null,
+    "placement_fee": 90,
+    "description_ar": "غرفة مفردة بنظام نصف إقامة (فطور وعشاء) في عائلة مضيفة.",
+    "description_en": "Single room on half board (breakfast and dinner) in a host family.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 390 },
+      { "from_weeks": 5, "to_weeks": 23, "price": 320 },
+      { "from_weeks": 24, "to_weeks": null, "price": 300 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/go-academy/school/accommodation-hero.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-room-no-meals",
+    "school": "kapito",
+    "name_ar": "غرفة مفردة بدون وجبات",
+    "name_en": "Single room, no meals included",
+    "room_type": "single",
+    "meals": "self_catering",
+    "price": 110,
+    "currency": "EUR",
+    "distance_note": "City centre of Münster, most under 30 min by bus/bike",
+    "deposit": 400,
+    "placement_fee": 150,
+    "description_ar": "غرفة مفردة في شقة مشتركة مع 1-3 سكان ألمان (عائلة أو زملاء شقة)، مشاركة المطبخ والحمام. الإقامة متاحة لفترة الدورة فقط.",
+    "description_en": "Single room in a shared flat with 1-3 German occupants (family, flatmates or a single person), sharing kitchen and bathroom. Rooms available for the course period only.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 110 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/homestay-1.jpg",
+      "/lovable-uploads/schools/kapito/accommodations/homestay-2.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-room-breakfast",
+    "school": "kapito",
+    "name_ar": "غرفة مفردة مع فطور",
+    "name_en": "Single room with breakfast",
+    "room_type": "single",
+    "meals": "breakfast",
+    "price": 135,
+    "currency": "EUR",
+    "distance_note": "City centre of Münster, most under 30 min by bus/bike",
+    "deposit": 400,
+    "placement_fee": 150,
+    "description_ar": "غرفة مفردة مع عائلة أو شخص بمفرده، الفطور مشمول وفي معظم الحالات يمكن استخدام المطبخ أيضًا.",
+    "description_en": "Single room with a family or single person; breakfast included and in most cases kitchen use is possible.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 135 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/homestay-2.jpg",
+      "/lovable-uploads/schools/kapito/accommodations/homestay-3.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-room-halfboard",
+    "school": "kapito",
+    "name_ar": "غرفة مفردة بنصف إقامة",
+    "name_en": "Single room with half-board",
+    "room_type": "single",
+    "meals": "half_board",
+    "price": 195,
+    "currency": "EUR",
+    "distance_note": "City centre of Münster, most under 30 min by bus/bike",
+    "deposit": 400,
+    "placement_fee": 150,
+    "description_ar": "غرفة مفردة مع عائلة أو شخص بمفرده، الفطور والعشاء مشمولان، ونظام إقامة كامل في عطلات نهاية الأسبوع.",
+    "description_en": "Single room with a family or single person; breakfast and evening meals included; full board at weekends.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 195 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/homestay-3.jpg",
+      "/lovable-uploads/schools/kapito/accommodations/homestay-1.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-apartment",
+    "school": "kapito",
+    "name_ar": "شقة خاصة بدون وجبات",
+    "name_en": "Private apartment (self-catering)",
+    "room_type": "apartment",
+    "meals": "self_catering",
+    "price": 200,
+    "currency": "EUR",
+    "distance_note": "City centre of Münster",
+    "deposit": 600,
+    "placement_fee": 150,
+    "description_ar": "شقة خاصة مع مطبخ وأدوات طهي وحمام، الإقامة الذاتية. الحد الأدنى للعمر: 23 عامًا.",
+    "description_en": "Private apartment with kitchen/cooking facilities and a bathroom. Self-catering. Minimum age: 23.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 200 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/studio-generic.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-studio-1",
+    "school": "kapito",
+    "name_ar": "استوديو كابيتو 1",
+    "name_en": "KAPITO Studio 1",
+    "room_type": "studio",
+    "meals": "self_catering",
+    "price": 225,
+    "currency": "EUR",
+    "distance_note": "Germania Campus, ~3 km from KAPITO (bus)",
+    "deposit": 600,
+    "placement_fee": 150,
+    "description_ar": "استوديو مفروش بالكامل (21 م²) مع مطبخ مجهز بالكامل وحمام، شرفة صغيرة، واي فاي، تلفاز، حوالي 3 كم من المدرسة. الحد الأدنى للعمر: 18 عامًا.",
+    "description_en": "Fully furnished studio (21 m²) with fully equipped kitchen and bathroom, small balcony, Wi-Fi, TV, ~3 km from school. Minimum age: 18. 4-week all-inclusive from €850.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 225 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/studio1-1.jpg",
+      "/lovable-uploads/schools/kapito/accommodations/studio1-2.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-studio-2",
+    "school": "kapito",
+    "name_ar": "استوديو كابيتو 2",
+    "name_en": "KAPITO Studio 2",
+    "room_type": "studio",
+    "meals": "self_catering",
+    "price": 225,
+    "currency": "EUR",
+    "distance_note": "Germania Campus, ~3 km from KAPITO (bus)",
+    "deposit": 600,
+    "placement_fee": 150,
+    "description_ar": "استوديو مفروش بالكامل (22 م²) مع مطبخ وحمام مجهزين بالكامل، شرفة، واي فاي، تلفاز. الحد الأدنى للعمر: 18 عامًا.",
+    "description_en": "Fully furnished studio (22 m²) with fully equipped kitchen and bathroom, balcony, Wi-Fi, TV. Minimum age: 18.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 225 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/studio2-1.jpg",
+      "/lovable-uploads/schools/kapito/accommodations/studio2-2.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-studio-3",
+    "school": "kapito",
+    "name_ar": "استوديو كابيتو 3",
+    "name_en": "KAPITO Studio 3",
+    "room_type": "studio",
+    "meals": "self_catering",
+    "price": 225,
+    "currency": "EUR",
+    "distance_note": "Germania Campus, ~3 km from KAPITO (bus)",
+    "deposit": 600,
+    "placement_fee": 150,
+    "description_ar": "استوديو مفروش بالكامل (22 م²) مع مطبخ وحمام مجهزين بالكامل، شرفة، واي فاي، تلفاز. الحد الأدنى للعمر: 18 عامًا.",
+    "description_en": "Fully furnished studio (22 m²) with fully equipped kitchen and bathroom, balcony, Wi-Fi, TV. Minimum age: 18.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 225 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/studio3-1.jpg",
+      "/lovable-uploads/schools/kapito/accommodations/studio3-2.jpg"
+    ],
+    "is_active": true
+  },
+  {
+    "slug": "kapito-studio-4",
+    "school": "kapito",
+    "name_ar": "استوديو كابيتو 4",
+    "name_en": "KAPITO Studio 4",
+    "room_type": "studio",
+    "meals": "self_catering",
+    "price": 225,
+    "currency": "EUR",
+    "distance_note": "Germania Campus, ~3 km from KAPITO (bus)",
+    "deposit": 600,
+    "placement_fee": 150,
+    "description_ar": "استوديو مفروش بالكامل (23 م²) مع مطبخ وحمام مجهزين بالكامل، شرفة، واي فاي، تلفاز. الحد الأدنى للعمر: 18 عامًا.",
+    "description_en": "Fully furnished studio (23 m²) with fully equipped kitchen and bathroom, balcony, Wi-Fi, TV. Minimum age: 18.",
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 225 }
+    ],
+    "photos": [
+      "/lovable-uploads/schools/kapito/accommodations/studio4-1.jpg",
+      "/lovable-uploads/schools/kapito/accommodations/studio4-2.jpg"
+    ],
+    "is_active": true
+  }
+]

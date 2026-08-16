@@ -1,0 +1,400 @@
+[
+  {
+    "slug": "fu-intensive-20",
+    "school": "fu-academy",
+    "name_ar": "دورة ألمانية مكثفة - 20 درس",
+    "name_en": "Intensive Course 20",
+    "type": "language_school",
+    "price": 155,
+    "currency": "EUR",
+    "duration": "1-30+ weeks",
+    "description_ar": "20 درسًا أسبوعيًا من الاثنين إلى الجمعة 09:00-12:15، منهجية تواصلية في مجموعات صغيرة، مناسب للطلاب.",
+    "description_en": "20 lessons/week Mon-Fri 09:00-12:15, communicative teaching in small groups, ideal for students.",
+    "cefr_range": "A1-C1",
+    "hours_per_week": 15,
+    "lessons_per_week": 20,
+    "start_rule": "Every Monday, year round",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 225 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 195 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 170 },
+      { "from_weeks": 30, "to_weeks": null, "price": 155 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/school/classroom.jpg",
+      "/lovable-uploads/schools/fu-academy/programs/intensive-course.jpg"
+    ]
+  },
+  {
+    "slug": "fu-intensive-20-module",
+    "school": "fu-academy",
+    "name_ar": "دورة ألمانية مكثفة 20 + دورة تخصصية 10",
+    "name_en": "Intensive Course 20 + Module Course 10",
+    "type": "language_school",
+    "price": 210,
+    "currency": "EUR",
+    "duration": "1-30+ weeks",
+    "description_ar": "20 درسًا أساسيًا صباحًا بالإضافة إلى 10 دروس تخصصية بعد الظهر (محادثة، قواعد، أو تدريب مهني) لتقدم أسرع وأكثر ثقة.",
+    "description_en": "20 core lessons in the morning plus 10 module lessons in the afternoon (conversation, grammar or job coaching) for faster, more confident progress.",
+    "cefr_range": "A1-C1",
+    "hours_per_week": 22.5,
+    "lessons_per_week": 30,
+    "start_rule": "Every Monday, year round",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 280 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 250 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 225 },
+      { "from_weeks": 30, "to_weeks": null, "price": 210 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/school/classroom.jpg",
+      "/lovable-uploads/schools/fu-academy/programs/intensive-course.jpg"
+    ]
+  },
+  {
+    "slug": "fu-intensive-30",
+    "school": "fu-academy",
+    "name_ar": "دورة ألمانية مكثفة 30 درس",
+    "name_en": "Intensive Course 30",
+    "type": "language_school",
+    "price": 210,
+    "currency": "EUR",
+    "duration": "1-30+ weeks",
+    "description_ar": "30 درسًا أسبوعيًا (09:00-14:30) معوقات إضافية لتحسين مهاراتك وتعلم أسرع.",
+    "description_en": "30 lessons/week (09:00-14:30) with additional lessons to improve your skills and learn faster.",
+    "cefr_range": "A1-C1",
+    "hours_per_week": 22.5,
+    "lessons_per_week": 30,
+    "start_rule": "Every Monday, year round",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 280 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 250 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 225 },
+      { "from_weeks": 30, "to_weeks": null, "price": 210 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/school/classroom.jpg",
+      "/lovable-uploads/schools/fu-academy/programs/intensive-course.jpg"
+    ]
+  },
+  {
+    "slug": "fu-superintensive-35",
+    "school": "fu-academy",
+    "name_ar": "دورة مكثفة فائقة 35 درس",
+    "name_en": "Superintensive Course 35",
+    "type": "language_school",
+    "price": 395,
+    "currency": "EUR",
+    "duration": "1-29 weeks",
+    "description_ar": "30 درسًا جماعيًا بالاضافة إلى 5 دروس فردية لتحقيق أقصى تقدم سريع ودائم.",
+    "description_en": "30 group lessons plus 5 individual lessons for maximum, lasting progress.",
+    "cefr_range": "A1-C1",
+    "hours_per_week": 26.25,
+    "lessons_per_week": 35,
+    "start_rule": "Every Monday, year round",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 450 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 420 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 395 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/school/classroom.jpg",
+      "/lovable-uploads/schools/fu-academy/programs/intensive-course.jpg"
+    ]
+  },
+  {
+    "slug": "fu-module-10",
+    "school": "fu-academy",
+    "name_ar": "دورة تخصصية 10 دروس",
+    "name_en": "Module Course 10",
+    "type": "language_school",
+    "price": 80,
+    "currency": "EUR",
+    "duration": "1-30+ weeks",
+    "description_ar": "10 دروس تخصصية بعد الظهر: اختر المحادثة + القواعد أو التدريب المهني.",
+    "description_en": "10 module lessons in the afternoon: choose Conversation + Grammar or Job Coaching.",
+    "cefr_range": "A1-C1",
+    "hours_per_week": 7.5,
+    "lessons_per_week": 10,
+    "start_rule": "Beginner starts monthly; lateral entry every Monday",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 6, "price": 110 },
+      { "from_weeks": 7, "to_weeks": 16, "price": 100 },
+      { "from_weeks": 17, "to_weeks": 29, "price": 90 },
+      { "from_weeks": 30, "to_weeks": null, "price": 80 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/school/classroom.jpg"
+    ]
+  },
+  {
+    "slug": "fu-job-module",
+    "school": "fu-academy",
+    "name_ar": "دورة ألمانية مكثفة + تدريب مهني لدخول سوق العمل",
+    "name_en": "Intensive 20 + Job Coaching for work",
+    "type": "language_school",
+    "price": 265,
+    "currency": "EUR",
+    "duration": "12-week packages",
+    "description_ar": "20 درسًا أسبوعيًا مع تدريب مهني للراغبين في العمل في ألمانيا (مثل بطاقة الفرصة), ابتداءً من المستوى B2.",
+    "description_en": "20 lessons/week plus job coaching for those seeking work in Germany (e.g. Opportunity Card), from level B2.",
+    "cefr_range": "B2-C1",
+    "hours_per_week": 22.5,
+    "lessons_per_week": 30,
+    "start_rule": "12-week packages: Jan 12, Apr 07, Jun 29, Sep 14",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": null, "price": 265 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/fu-academy/school/classroom.jpg"
+    ]
+  },
+  {
+    "slug": "alpha-intensive-20",
+    "school": "alpha-aktiv",
+    "name_ar": "دورة ألمانية مكثفة 20 ساعة",
+    "name_en": "Intensive German Course 20h",
+    "type": "language_school",
+    "price": 150,
+    "currency": "EUR",
+    "duration": "1-25+ weeks",
+    "description_ar": "الدورة الأشهر لدينا: 20 ساعة أسبوعيًا من الاثنين إلى الجمعة، من المستوى A1 إلى C2.",
+    "description_en": "Our most popular course: 20 hours/week Mon-Fri, levels A1 to C2.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 20,
+    "lessons_per_week": 20,
+    "start_rule": "Beginners start first Monday of the month",
+    "registration_fee": 50,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 3, "price": 215 },
+      { "from_weeks": 4, "to_weeks": 12, "price": 190 },
+      { "from_weeks": 13, "to_weeks": 24, "price": 165 },
+      { "from_weeks": 25, "to_weeks": null, "price": 150 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/classroom.webp"
+    ]
+  },
+  {
+    "slug": "alpha-intensive-20-plus5",
+    "school": "alpha-aktiv",
+    "name_ar": "دورة مكثفة 20 + 5 دروس فردية",
+    "name_en": "Intensive 20 + One-to-One Tuition 5",
+    "type": "language_school",
+    "price": 365,
+    "currency": "EUR",
+    "duration": "1-13+ weeks",
+    "description_ar": "الدورة المكثفة مع 5 دروس فردية أسبوعيًا للتقدم السريع والتركيز على نقاط محددة.",
+    "description_en": "Intensive course plus 5 individual lessons/week for remarkably rapid progress.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 23.75,
+    "lessons_per_week": 25,
+    "start_rule": "Follows intensive course start dates",
+    "registration_fee": 50,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 3, "price": 415 },
+      { "from_weeks": 4, "to_weeks": 12, "price": 390 },
+      { "from_weeks": 13, "to_weeks": null, "price": 365 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/classroom.webp"
+    ]
+  },
+  {
+    "slug": "alpha-intensive-20-plus10",
+    "school": "alpha-aktiv",
+    "name_ar": "دورة مكثفة 20 + 10 دروس فردية",
+    "name_en": "Intensive 20 + One-to-One Tuition 10",
+    "type": "language_school",
+    "price": 565,
+    "currency": "EUR",
+    "duration": "1-13+ weeks",
+    "description_ar": "الدورة المكثفة مع 10 دروس فردية أسبوعيًا لأقصى تقدم الشخصي.",
+    "description_en": "Intensive course plus 10 individual lessons/week for maximum personal progress.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 27.5,
+    "lessons_per_week": 30,
+    "start_rule": "Follows intensive course start dates",
+    "registration_fee": 50,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 3, "price": 615 },
+      { "from_weeks": 4, "to_weeks": 12, "price": 590 },
+      { "from_weeks": 13, "to_weeks": null, "price": 565 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/classroom.webp"
+    ]
+  },
+  {
+    "slug": "alpha-superintensive-25",
+    "school": "alpha-aktiv",
+    "name_ar": "دورة ألمانية مكثفة فائقة 25 ساعة",
+    "name_en": "Superintensive German Course 25h",
+    "type": "language_school",
+    "price": 195,
+    "currency": "EUR",
+    "duration": "1-25+ weeks",
+    "description_ar": "25 ساعة أسبوعيًا: دروس جماعية صباحًا والممارسة الشفهية بعد الظهر.",
+    "description_en": "25 hours/week: group lessons in the morning and oral practice in the afternoon.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 25,
+    "lessons_per_week": 25,
+    "start_rule": "Beginners start first Monday of the month",
+    "registration_fee": 50,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 3, "price": 260 },
+      { "from_weeks": 4, "to_weeks": 12, "price": 230 },
+      { "from_weeks": 13, "to_weeks": 24, "price": 210 },
+      { "from_weeks": 25, "to_weeks": null, "price": 195 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/classroom.webp"
+    ]
+  },
+  {
+    "slug": "alpha-superintensive-conv-30",
+    "school": "alpha-aktiv",
+    "name_ar": "دورة مكثفة فائقة + محادثة 30 ساعة",
+    "name_en": "Superintensive German + Conversation 30h",
+    "type": "language_school",
+    "price": 280,
+    "currency": "EUR",
+    "duration": "1-4 weeks",
+    "description_ar": "30 ساعة أسبوعيًا: الدورة الجماعية الصباحية مع 10 ساعات إضافية للمحادثة والعروض ومراجعة الكتب.",
+    "description_en": "30 hours/week: group course in the morning plus 10 extra hours of conversation, presentations and book reviews.",
+    "cefr_range": "A2-C2",
+    "hours_per_week": 30,
+    "lessons_per_week": 30,
+    "start_rule": "Follows intensive course start dates",
+    "registration_fee": 50,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 280 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/alpha-aktiv/school/classroom.webp"
+    ]
+  },
+  {
+    "slug": "go-standard-intensive",
+    "school": "go-academy",
+    "name_ar": "دورة ألمانية مكثفة قياسية",
+    "name_en": "German Intensive Standard Course",
+    "type": "language_school",
+    "price": 165,
+    "currency": "EUR",
+    "duration": "1-25+ weeks",
+    "description_ar": "20 درسًا أسبوعيًا من الاثنين إلى الجمعة 09:00-12:15 + 5 دروس إلكترونية عبر نظام التعليم LMS.",
+    "description_en": "20 lessons/week Mon-Fri 09:00-12:15 + 5 LMS online lessons.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 15,
+    "lessons_per_week": 20,
+    "start_rule": "Every Monday, year round",
+    "registration_fee": 60,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 190 },
+      { "from_weeks": 5, "to_weeks": 24, "price": 175 },
+      { "from_weeks": 25, "to_weeks": null, "price": 165 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/go-academy/programs/intensive-course.jpeg"
+    ]
+  },
+  {
+    "slug": "go-high-intensive",
+    "school": "go-academy",
+    "name_ar": "دورة ألمانية مكثفة عالية / إجازة تعليمية",
+    "name_en": "German High Intensive Course / Educational Leave",
+    "type": "language_school",
+    "price": 315,
+    "currency": "EUR",
+    "duration": "1-2 weeks",
+    "description_ar": "30 درسًا أسبوعيًا معترف بها كإجازة تعليمية في العديد من الولايات الاتحادية، في الأسبوعين الثاني والثالث من الشهر.",
+    "description_en": "30 lessons/week, recognized as educational leave in many federal states, in the 2nd and 3rd week of the month.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 22.5,
+    "lessons_per_week": 30,
+    "start_rule": "2nd and 3rd week of each month",
+    "registration_fee": 60,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 2, "price": 315 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/go-academy/programs/intensive-course.jpeg"
+    ]
+  },
+  {
+    "slug": "kapito-intensive-20",
+    "school": "kapito",
+    "name_ar": "دورة ألمانية مكثفة 20 درس",
+    "name_en": "German Intensive Course 20",
+    "type": "language_school",
+    "price": 160,
+    "currency": "EUR",
+    "duration": "1-23+ weeks",
+    "description_ar": "20 درسًا أسبوعيًا، مجموعات صغيرة بحد أقصى 12 مشاركًا، أنشطة ثقافية واجتماعية، دعم للغة الواجبات، من عمر 16 عامًا.",
+    "description_en": "20 lessons/week, max 12 participants per group, cultural and social activities, homework supervision, from age 16.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 15,
+    "lessons_per_week": 20,
+    "start_rule": "Every Monday; beginners on recommended start dates",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 210 },
+      { "from_weeks": 5, "to_weeks": 8, "price": 190 },
+      { "from_weeks": 9, "to_weeks": 16, "price": 180 },
+      { "from_weeks": 17, "to_weeks": 23, "price": 170 },
+      { "from_weeks": 24, "to_weeks": null, "price": 160 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/kapito/programs/intensive-course.jpg"
+    ]
+  },
+  {
+    "slug": "kapito-intensive-plus-24",
+    "school": "kapito",
+    "name_ar": "دورة ألمانية مكثفة بلس 24 درس",
+    "name_en": "Intensive Plus German Course 24",
+    "type": "language_school",
+    "price": 190,
+    "currency": "EUR",
+    "duration": "1-23+ weeks",
+    "description_ar": "24 درسًا أسبوعيًا: 20 درسًا في الدورة المكثفة + درسان إضافيان مرتين أسبوعيًا (المحادثة، القواعد، التحضير للامتحانات).",
+    "description_en": "24 lessons/week: 20 in the intensive course + 2x2 afternoon lessons (conversation, grammar, exam preparation).",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 18,
+    "lessons_per_week": 24,
+    "start_rule": "Every Monday; beginners on recommended start dates",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 4, "price": 250 },
+      { "from_weeks": 5, "to_weeks": 8, "price": 230 },
+      { "from_weeks": 9, "to_weeks": 16, "price": 210 },
+      { "from_weeks": 17, "to_weeks": 23, "price": 200 },
+      { "from_weeks": 24, "to_weeks": null, "price": 190 }
+    ],
+    "is_active": true,
+    "photos": [
+      "/lovable-uploads/schools/kapito/programs/intensive-plus.jpg"
+    ]
+  }
+]

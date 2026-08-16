@@ -1,0 +1,1232 @@
+{
+ "slug": "kapito",
+ "url": "https://www.kapito.com/en/accommodation/",
+ "title": "Accommodation - KAPITO Sprachschule",
+ "lang": "en-GB",
+ "cards": {
+  "images": [
+   {
+    "alt": "Deutsch",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_e38d+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fde_DE.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "English",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_3dbd+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fen_GB.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "Español",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_8a25+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fes_ES.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "Français",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_195f+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Ffr_FR.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "Italiano",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_5063+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fit_IT.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "日本語",
+    "section": "",
+    "width": 52,
+    "height": 31,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_553a+w_52+h_31+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fthemes%2Fkapito-neve%2Fpolylang%2Fja.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "한국어",
+    "section": "",
+    "width": 16,
+    "height": 11,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_984b+w_16+h_11+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fplugins%2Fpolylang%2Fflags%2Fkr.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": " fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Sprachschule",
+    "section": "",
+    "width": 199,
+    "height": 70,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_85d+w_199+h_70+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2023%2F08%2FKAPITO-Sprachschule-Logo.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-22792 fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Sprachschule",
+    "section": "",
+    "width": 199,
+    "height": 70,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_85d+w_199+h_70+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2023%2F08%2FKAPITO-Sprachschule-Logo.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-full size-full wp-image-22792 fpo-lazyloaded"
+   },
+   {
+    "alt": "Unterkunft bei Familie",
+    "section": "",
+    "width": 935,
+    "height": 600,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_4f7b+w_935+h_600+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F07%2FKAPITO-Unterkunft-Slide03.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Unterkunft bei Gastgeber/innen",
+    "section": "",
+    "width": 800,
+    "height": 533,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_b4e3+w_800+h_533+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F11%2Funterkunft03-800.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Unterkunft Zwei Frauen am Tisch mit Pflanzen.",
+    "section": "",
+    "width": 800,
+    "height": 533,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_a1f2+w_800+h_533+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F11%2Funterkunft04-800.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "Unterkunft bei Familie",
+    "section": "",
+    "width": 935,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA5MzUgNjAwJyB3aWR0aD0nOTM1JyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Unterkunft bei Gastgeber/innen",
+    "section": "",
+    "width": 800,
+    "height": 533,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_b4e3+w_800+h_533+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F11%2Funterkunft03-800.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 1: Bad",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_c6e0+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio1-06-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 1: Bett",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_a60f+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio1-01-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 1: Flur",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 1: Tisch",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 1: Küchenzeile",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 1: Bad",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 1: Bad",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 1: Bett",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 2: Tisch und Bett",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_7e16+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2023%2F08%2FKAPITO-Studio2-01-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 2 Zimmer",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_8b4+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio2-43-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "Kapito Studio 2 Raum",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 2: Tisch und Bett",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 2 Zimmer",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 3 Tisch mit Stuehlen",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_1d51+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio3-60-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 3 Kuechenzeile",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_50ef+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio3-72-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 3 Zimmer mit Stühlen, Bett, Fenster",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 3 TV",
+    "section": "",
+    "width": 1920,
+    "height": 2560,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIwIDI1NjAnIHdpZHRoPScxOTIwJyBoZWlnaHQ9JzI1NjAnPjwvc3ZnPg==",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 3 Tisch mit Stuehlen",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 3 Kuechenzeile",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 TV, Tisch",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_7b1d+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio4-21-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 4 Bad",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_d4aa+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio4-02-300.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio 4 Zimmer",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 Ausblick",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 Bad",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 Zimmer",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 Kuechenzeile",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 Bett",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 Kuechenzeile",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 TV, Tisch",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 4 Bad",
+    "section": "",
+    "width": 300,
+    "height": 400,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_6d15+w_480+h_600+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2024%2F02%2Fstudio02-600pxh.jpg",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image fpo-lazyloaded"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio 1 Küchenzeile",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 479,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NzkgNjAwJyB3aWR0aD0nNDc5JyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "KAPITO Studio",
+    "section": "",
+    "width": 480,
+    "height": 600,
+    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "swiper-slide-image"
+   },
+   {
+    "alt": "Sprachzertifikate der Sprachschule KAPITO: TestDaF, telc, FDSV, fadaf, csn, IALC",
+    "section": "",
+    "width": 355,
+    "height": 226,
+    "src": "https://cdn.fastpixel.io/fp/ret_img+v_4741+w_355+h_226+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F11%2FZertifikate2019.png",
+    "srcset": null,
+    "dataSrc": null,
+    "className": "attachment-large size-large wp-image-3930 fpo-lazyloaded"
+   },
+   {
+    "alt": null,
+    "section": "",
+    "width": 150,
+    "height": 150,
+    "src": "https://www.kapito.com/wp-content/plugins/borlabs-cookie/assets/images/borlabs-cookie-logo.svg",
+    "srcset": "https://www.kapito.com/wp-content/plugins/borlabs-cookie/assets/images/borlabs-cookie-logo.svg, https://www.kapito.com/wp-content/plugins/borlabs-cookie/assets/images/borlabs-cookie-logo.svg 2x",
+    "dataSrc": null,
+    "className": "cookie-logo brlbs-dialog-logo brlbs-mr-2"
+   }
+  ],
+  "headings": [
+   {
+    "tag": "H1",
+    "text": "Accommodation for your language course in Münster"
+   },
+   {
+    "tag": "H2",
+    "text": "Accommodations"
+   },
+   {
+    "tag": "H3",
+    "text": "Single room, no meals included"
+   },
+   {
+    "tag": "H3",
+    "text": "Single room with breakfast"
+   },
+   {
+    "tag": "H3",
+    "text": "Single room with half-board"
+   },
+   {
+    "tag": "H3",
+    "text": "Flat/studio"
+   },
+   {
+    "tag": "H2",
+    "text": "Living independently in our KAPITO Studio"
+   },
+   {
+    "tag": "H3",
+    "text": "Studio 1"
+   },
+   {
+    "tag": "H3",
+    "text": "Studio 2"
+   },
+   {
+    "tag": "H3",
+    "text": "Studio 3"
+   },
+   {
+    "tag": "H3",
+    "text": "Studio 4"
+   },
+   {
+    "tag": "H2",
+    "text": "Prices"
+   },
+   {
+    "tag": "H3",
+    "text": "Prices 2026"
+   },
+   {
+    "tag": "H2",
+    "text": "How to find us"
+   },
+   {
+    "tag": "H2",
+    "text": "FAQ: Arrival and accommodation"
+   },
+   {
+    "tag": "H4",
+    "text": "Where is Münster?"
+   },
+   {
+    "tag": "H4",
+    "text": "How do I get to Münster?"
+   },
+   {
+    "tag": "H4",
+    "text": "How do I find KAPITO when I’m in Münster?"
+   },
+   {
+    "tag": "H4",
+    "text": "How do I get to my accommodation?"
+   },
+   {
+    "tag": "H4",
+    "text": "Can I order a transfer?"
+   },
+   {
+    "tag": "H4",
+    "text": "When do I need to arrive?"
+   },
+   {
+    "tag": "H4",
+    "text": "I will be in Münster a few days before the start of my course. Where can I stay?"
+   },
+   {
+    "tag": "H4",
+    "text": "When will I get the address for my accommodation?"
+   },
+   {
+    "tag": "H4",
+    "text": "Which accommodation can I book?"
+   },
+   {
+    "tag": "H4",
+    "text": "What do “family”, “single person” and “flatshare” mean?"
+   },
+   {
+    "tag": "H4",
+    "text": "How far is my accommodation from the school?"
+   },
+   {
+    "tag": "H4",
+    "text": "I would like stay in a room with half-board at first, then change to self-catering. Is that possible?"
+   },
+   {
+    "tag": "H4",
+    "text": "My boyfriend/girlfriend/parents want to visit me. Where can they stay?"
+   },
+   {
+    "tag": "H4",
+    "text": "Important information about accommodation"
+   },
+   {
+    "tag": "H4",
+    "text": "After my course I want to stay for longer in Münster. Can I keep my room?"
+   },
+   {
+    "tag": "H4",
+    "text": "GET SOCIAL"
+   },
+   {
+    "tag": "H2",
+    "text": "Data protection preference"
+   }
+  ],
+  "tables": [
+   {
+    "head": [],
+    "rows": [
+     [
+      "max. 1"
+     ],
+     [
+      "from 110 € per week"
+     ],
+     [
+      "InfoAccommodation in a single room in a shared flat (sharing kitchen and bathroo"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "max. 1"
+     ],
+     [
+      "from 135 € per week"
+     ],
+     [
+      "InfoKAPITO will arrange a single room for you with a family or a single person. "
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "max. 1"
+     ],
+     [
+      "from 195 € per week"
+     ],
+     [
+      "InfoKAPITO will arrange a single room for you with a family or a single person. "
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "max. 1"
+     ],
+     [
+      "from 200 € per week"
+     ],
+     [
+      "InfoKAPITO will arrange an apartment for you with a kitchen/cooking facilities a"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Preis/Woche",
+      "ab 225 €"
+     ],
+     [
+      "Größe",
+      "21 m²"
+     ],
+     [
+      "Etage",
+      "3."
+     ],
+     [
+      "Balkon",
+      "ja"
+     ],
+     [
+      "WLAN",
+      "ja"
+     ],
+     [
+      "Ausstattung",
+      "Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Preis/Woche",
+      "ab 225 €"
+     ],
+     [
+      "Größe",
+      "22 m²"
+     ],
+     [
+      "Etage",
+      "2."
+     ],
+     [
+      "Balkon",
+      "Ja"
+     ],
+     [
+      "WLAN",
+      "Ja"
+     ],
+     [
+      "Ausstattung",
+      "Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Preis/Woche",
+      "ab 225 €"
+     ],
+     [
+      "Größe",
+      "22 m²"
+     ],
+     [
+      "Etage",
+      "2."
+     ],
+     [
+      "Balkon",
+      "Ja"
+     ],
+     [
+      "WLAN",
+      "Ja"
+     ],
+     [
+      "Ausstattung",
+      "Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "Preis/Woche",
+      "ab 225 €"
+     ],
+     [
+      "Größe",
+      "23 m²"
+     ],
+     [
+      "Etage",
+      "3."
+     ],
+     [
+      "Balkon",
+      "Ja"
+     ],
+     [
+      "WLAN",
+      "Ja"
+     ],
+     [
+      "Ausstattung",
+      "Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer"
+     ]
+    ]
+   },
+   {
+    "head": [],
+    "rows": [
+     [
+      "HomestayAll rooms are single rooms with families or individual persons, flatshar"
+     ],
+     [
+      "Single room, no meals* with shared kitchen:"
+     ],
+     [
+      "1 week",
+      "140 €"
+     ],
+     [
+      "2 weeks",
+      "240 €"
+     ],
+     [
+      "3 weeks",
+      "330 €"
+     ],
+     [
+      "4 weeks",
+      "440 €"
+     ],
+     [
+      "from 5th week per week",
+      "110 €"
+     ],
+     [
+      "Single room with breakfast:"
+     ],
+     [
+      "1 week",
+      "185 €"
+     ],
+     [
+      "2 weeks",
+      "295 €"
+     ],
+     [
+      "3 weeks",
+      "405 €"
+     ],
+     [
+      "4 weeks",
+      "540 €"
+     ],
+     [
+      "from 5th week per week",
+      "135 €"
+     ],
+     [
+      "Single room with half-board: **"
+     ],
+     [
+      "1 week",
+      "245 €"
+     ],
+     [
+      "2 weeks",
+      "415 €"
+     ],
+     [
+      "3 weeks",
+      "585 €"
+     ],
+     [
+      "4 weeks",
+      "780 €"
+     ],
+     [
+      "from 5th week per week",
+      "195 €"
+     ],
+     [],
+     [
+      "Private apartment"
+     ],
+     [
+      "Apartment with self-catering with private bathroom (Minimum age: 23 years)",
+      "from 200 €/week Price for 1 person plus deposit"
+     ],
+     [],
+     [
+      "KAPITO Studio*"
+     ],
+     [
+      "Studio with self-catering* with bathroom and kitchenette",
+      "from 225 €/week Price for 1 person plus deposit"
+     ],
+     [],
+     [
+      "Fee for arranging the accommodation:",
+      "150 € for 1 person"
+     ],
+     [],
+     [
+      "* Minimum age: 18 years. ** Full board at the weekends. Deposit For stays of 12 "
+     ]
+    ]
+   }
+  ]
+ },
+ "images": [
+  {
+   "alt": "Unterkunft bei Familie",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_4f7b+w_935+h_600+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F07%2FKAPITO-Unterkunft-Slide03.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_4f7b+w_935+h_600+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F07%2FKAPITO-Unterkunft-Slide03.jpg",
+   "width": 935,
+   "height": 600
+  },
+  {
+   "alt": "KAPITO Unterkunft bei Gastgeber/innen",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_b4e3+w_800+h_533+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F11%2Funterkunft03-800.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_b4e3+w_800+h_533+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F11%2Funterkunft03-800.jpg",
+   "width": 800,
+   "height": 533
+  },
+  {
+   "alt": "KAPITO Unterkunft Zwei Frauen am Tisch mit Pflanzen.",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_a1f2+w_800+h_533+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F11%2Funterkunft04-800.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_a1f2+w_800+h_533+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F11%2Funterkunft04-800.jpg",
+   "width": 800,
+   "height": 533
+  },
+  {
+   "alt": "Unterkunft bei Familie",
+   "section": "",
+   "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA5MzUgNjAwJyB3aWR0aD0nOTM1JyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+   "thumb": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA5MzUgNjAwJyB3aWR0aD0nOTM1JyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+   "width": 935,
+   "height": 600
+  },
+  {
+   "alt": "KAPITO Studio 1: Bad",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_c6e0+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio1-06-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_c6e0+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio1-06-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 1: Bett",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_a60f+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio1-01-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_a60f+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio1-01-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 1: Flur",
+   "section": "",
+   "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+   "thumb": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgNDAwJyB3aWR0aD0nMzAwJyBoZWlnaHQ9JzQwMCc+PC9zdmc+",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 2: Tisch und Bett",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_7e16+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2023%2F08%2FKAPITO-Studio2-01-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_7e16+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2023%2F08%2FKAPITO-Studio2-01-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 2 Zimmer",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_8b4+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio2-43-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_8b4+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio2-43-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 3 Tisch mit Stuehlen",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_1d51+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio3-60-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_1d51+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio3-60-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 3 Kuechenzeile",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_50ef+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio3-72-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_50ef+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio3-72-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 3 TV",
+   "section": "",
+   "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIwIDI1NjAnIHdpZHRoPScxOTIwJyBoZWlnaHQ9JzI1NjAnPjwvc3ZnPg==",
+   "thumb": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIwIDI1NjAnIHdpZHRoPScxOTIwJyBoZWlnaHQ9JzI1NjAnPjwvc3ZnPg==",
+   "width": 1920,
+   "height": 2560
+  },
+  {
+   "alt": "KAPITO Studio 4 TV, Tisch",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_7b1d+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio4-21-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_7b1d+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio4-21-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio 4 Bad",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_d4aa+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio4-02-300.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_d4aa+w_300+h_400+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2025%2F05%2FKAPITO-Studio4-02-300.jpg",
+   "width": 300,
+   "height": 400
+  },
+  {
+   "alt": "KAPITO Studio",
+   "section": "",
+   "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+   "thumb": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0ODAgNjAwJyB3aWR0aD0nNDgwJyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+   "width": 480,
+   "height": 600
+  },
+  {
+   "alt": "KAPITO Studio",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_6d15+w_480+h_600+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2024%2F02%2Fstudio02-600pxh.jpg",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_6d15+w_480+h_600+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2024%2F02%2Fstudio02-600pxh.jpg",
+   "width": 480,
+   "height": 600
+  },
+  {
+   "alt": "KAPITO Studio",
+   "section": "",
+   "url": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NzkgNjAwJyB3aWR0aD0nNDc5JyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+   "thumb": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA0NzkgNjAwJyB3aWR0aD0nNDc5JyBoZWlnaHQ9JzYwMCc+PC9zdmc+",
+   "width": 479,
+   "height": 600
+  },
+  {
+   "alt": "Sprachzertifikate der Sprachschule KAPITO: TestDaF, telc, FDSV, fadaf, csn, IALC",
+   "section": "",
+   "url": "https://cdn.fastpixel.io/fp/ret_img+v_4741+w_355+h_226+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F11%2FZertifikate2019.png",
+   "thumb": "https://cdn.fastpixel.io/fp/ret_img+v_4741+w_355+h_226+q_lossy+to_webp/www.kapito.com%2Fwp-content%2Fuploads%2F2019%2F11%2FZertifikate2019.png",
+   "width": 355,
+   "height": 226
+  }
+ ],
+ "bodyText": [
+  {
+   "heading": "Accommodation for your language course in Münster",
+   "text": "For the duration of the language course, you can book a room with breakfast or half board through KAPITO. Or you can rent a room without meals and share the kitchen with your hosts. You can also book a flat or a KAPITO studio, in which case you have your own bathroom and cooking facilities. All accommodations are single rooms. Most of the rooms are in the center of town. The rooms that are further away can easily be reached by bus, train or e-scooter. The most popular option, however, is the bicycle! They can be rented in Münster very inexpensively on a monthly basis (Swapfiets). Our office will be happy to help you with any questions you may have about means of transport. Rooms are only available for the period of the course (from Sunday to Saturday). Any other times must be agreed on in advance with KAPITO. If you wish to stay in a hotel, we will be happy to send you a list of recommendations."
+  },
+  {
+   "heading": "Single room, no meals included",
+   "text": "max. 1 from 110 € per week InfoAccommodation in a single room in a shared flat (sharing kitchen and bathroom) with 1 to 3 other German occupants (a family, flatmates or a single person)."
+  },
+  {
+   "heading": "Single room with breakfast",
+   "text": "max. 1 from 135 € per week InfoKAPITO will arrange a single room for you with a family or a single person. Breakfast is included and in most cases it is also possible to use the kitchen."
+  },
+  {
+   "heading": "Single room with half-board",
+   "text": "max. 1 from 195 € per week InfoKAPITO will arrange a single room for you with a family or a single person. Breakfast and evening meals are included and it is sometimes also possible to use the kitchen. Weekends are full-board."
+  },
+  {
+   "heading": "Flat/studio",
+   "text": "max. 1 from 200 € per week InfoKAPITO will arrange an apartment for you with a kitchen/cooking facilities and a bathroom."
+  },
+  {
+   "heading": "Studio 1",
+   "text": "Preis/Woche ab 225 € Größe 21 m² Etage Balkon WLAN Ausstattung Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer Möbel"
+  },
+  {
+   "heading": "Studio 2",
+   "text": "Preis/Woche ab 225 € Größe 22 m² Etage Balkon WLAN Ausstattung Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer Möbel"
+  },
+  {
+   "heading": "Studio 3",
+   "text": "Preis/Woche ab 225 € Größe 22 m² Etage Balkon WLAN Ausstattung Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer Möbel"
+  },
+  {
+   "heading": "Studio 4",
+   "text": "Preis/Woche ab 225 € Größe 23 m² Etage Balkon WLAN Ausstattung Bettwäsche Handtücher TV Voll ausgestattete Küche Voll ausgestattetes Badezimmer Möbel Our fully furnished studios are located in a modern apartment building (new construction from 2023) in a central location on Germania Campus, a newly designed, lively neighbourhood with numerous shopping and entertainment options. A gym, hairdresser, doctors and pharmacies are also within walking distance. The studio is approx. 3 km from KAPITO and can be reached easily by bus. The studio measures approx. 21 square metres and consists of a large room with a kitchenette and a bathroom with shower/WC. The furniture is in light wood and the kitchen in grey and there is a living room corner with a large window and a TV. The studio can have a small balcony or a small terrace. The studio has its own internet connection with Wi-Fi, please pay attention to the regulations for internet use in Germany. The 4-week all-inclusive rent starts at €850 including all utilities and additional costs such as electricity, heating, TV, internet, radio licence fees etc.. The rent may vary depending on the size and location of the studio. The move-in date is"
+  },
+  {
+   "heading": "Prices",
+   "text": "Single room, no meals included (with use of kitchen and bathroom) Single room with breakfast or half-board (with family or single person) KAPITO Studio (limited number - minimum age 18 years Apartment (limited numbers available - minimum age 23 years) Hotels arranged on request"
+  },
+  {
+   "heading": "Prices 2026",
+   "text": "HomestayAll rooms are single rooms with families or individual persons, flatshare. For long term accommodation bookings we charge a security deposit. Single room, no meals* with shared kitchen: 1 week 140 € 2 weeks 240 € 3 weeks 330 € 4 weeks 440 € from 5th week per week 110 € Single room with breakfast: 1 week 185 € 2 weeks 295 € 3 weeks 405 € 4 weeks 540 € from 5th week per week 135 € Single room with half-board: ** 1 week 245 € 2 weeks 415 € 3 weeks 585 € 4 weeks 780 € from 5th week per week 195 € Private apartment Apartment with self-catering with private bathroom (Minimum age: 23 years) from 200 €/week Price for 1 person plus deposit KAPITO Studio* Studio with self-catering* with bathroom and kitchenette from 225 €/week Price for 1 person plus deposit Fee for arranging the accommodation: 150 € for 1 person * Minimum age: 18 years. ** Full board at the weekends. Deposit For stays of 12 weeks or more, the guest pays a one-off deposit of €400 for the room. The money will be refunded after moving out. Any damage or necessary cleaning costs will be charged. For flats and KAPITO studios, the deposit is a one-off €600 from the first week."
+  },
+  {
+   "heading": "How to find us",
+   "text": "Münster is easily reached by air, rail or road."
+  },
+  {
+   "heading": "Where is Münster?",
+   "text": "Münster is located in Northwest Germany, about 170 km north of Cologne."
+  },
+  {
+   "heading": "How do I get to Münster?",
+   "text": "You can fly to Münster: Flughafen Münster/Osnabrück (FMO). You can also fly to Düsseldorf, Dortmund, Cologne or Frankfurt and then travel to Münster by train. We can book all airport transfers for you. You can of course also come by car or train (Münster/Westfalen, Hauptbahnhof). See also Travel to Münster"
+  },
+  {
+   "heading": "How do I find KAPITO when I’m in Münster?",
+   "text": "KAPITO is in the city centre (Servatiiplatz), a few minutes away from the station. You can travel with almost any bus to Servatiiplatz. Ask your host about the best way to get here."
+  },
+  {
+   "heading": "How do I get to my accommodation?",
+   "text": "If you arrive at Münster Airport: there are regular buses to the centre (to the Hauptbahnhof). From there you can get a taxi. You can also take a taxi directly from the airport to your accommodation. If you arrive at another airport: take a train to Münster. At Münster station get a taxi or a bus. If you arrive by train: take a taxi from the station. A journey from the station to addresses in the city centre will cost about € 12 – 20. You can of course take a bus instead."
+  },
+  {
+   "heading": "Can I order a transfer?",
+   "text": "Yes. We can organize for you to be picked up at the airport. The taxi will then bring you straight to your accommodation. Please ask us at least 1 week before your arrival (the earlier the better) and send us your exact flight details. If you also need a transfer for your return, you can arrange this in our office."
+  },
+  {
+   "heading": "When do I need to arrive?",
+   "text": "Students should arrive the day before the course begins, i.e. on a Sunday. Your host will be expecting you. Please tell your host or KAPITO the approximate time of your arrival as soon as you can. If you can’t travel on Sunday but will arrive later, please let KAPITO and your host know."
+  },
+  {
+   "heading": "I will be in Münster a few days before the start of my course. Where can I stay?",
+   "text": "If you will be in Münster one or two days early, we can ask your host if you can already move in. If you will be in Münster a lot earlier and your room isn’t free, we can recommend some reasonably priced hotels."
+  },
+  {
+   "heading": "When will I get the address for my accommodation?",
+   "text": "We send the accommodation address about 2 weeks before the start of the course. We send this the fastest way, i.e. if we have your email address, we will send you an email, so please check your mailbox regularly and send us your new email address if it changes. If you haven’t heard anything a week before your course starts, please contact us. The message could have got lost."
+  },
+  {
+   "heading": "Which accommodation can I book?",
+   "text": "All the available rooms are single rooms in an accommodation with one or more hosts (except for in apartments, where you live alone). You can book a room with breakfast included, half-board or self-catering. Bathrooms are shared and, if self-catering, you share a kitchen with the hosts. You will be sharing with a family, flatmates or a single person. We can recommend reasonably-priced good local hotels on request."
+  },
+  {
+   "heading": "What do “family”, “single person” and “flatshare” mean?",
+   "text": "A family consists of married or unmarried couples with children, some of whom may have moved out, or older couples or single mothers and fathers. Living with a family is usually more comfortable and more spacious than living in a flatshare; however, the homes are not always very central. A “single person” refers to someone who lives alone and has a room available in their home. A “flatshare” (Wohngemenschaft) refers to a small community of people who live together. In Münster this usually consists of students but older professionals living together is also common."
+  },
+  {
+   "heading": "How far is my accommodation from the school?",
+   "text": "Many of the rooms are in the center of town. The rooms that are further away can easily be reached by bus, train or bicycle (most in under 30 minutes). Some hosts provide bicycles free of charge or for a small fee."
+  },
+  {
+   "heading": "I would like stay in a room with half-board at first, then change to self-catering. Is that possible?",
+   "text": "That’s not a problem. State your accommodation preferences when you register on the course so that we can take them into consideration. Please note that you will need to pay an administration fee every time we arrange a new accommodation for you (150 €)."
+  },
+  {
+   "heading": "My boyfriend/girlfriend/parents want to visit me. Where can they stay?",
+   "text": "In the KAPITO office you can get information about hotels of different price categories."
+  },
+  {
+   "heading": "Important information about accommodation",
+   "text": "The room is only available for the period of the course (from Sunday to Saturday). Any other times must be agreed on in advance with KAPITO. You are obliged to look after your room, to clean it before you leave and to cover the cost of any damage that may occur. There will be a handover with your hosts on the day you leave. Things can easily get broken from time to time so we recommend taking out liability insurance. Follow this link to our insurance partners Care Concept AG: Online application for liability insurance for language students more information about liability insurance KAPITO can organize all these insurances for you to cover even short-time courses. Please let us know if you need some help."
+  },
+  {
+   "heading": "After my course I want to stay for longer in Münster. Can I keep my room?",
+   "text": "Normally students travel back on the Saturday after the end of their course. If your return flight is one or two days later, or if you want to stay longer, please let our accommodation office know when you register for your course."
+  }
+ ]
+}

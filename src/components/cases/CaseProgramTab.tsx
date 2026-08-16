@@ -26,6 +26,7 @@ interface InsuranceInfo {
   terms_url: string | null;
   description_ar: string | null;
   description_en: string | null;
+  photos?: string[] | null;
 }
 
 
@@ -36,8 +37,10 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   const { t, i18n } = useTranslation("dashboard");
   const isAr = i18n.language?.startsWith("ar");
   const [programName, setProgramName] = useState<string | null>(null);
+  const [programPhoto, setProgramPhoto] = useState<string | null>(null);
   const [schoolName, setSchoolName] = useState<string | null>(null);
   const [accommodationName, setAccommodationName] = useState<string | null>(null);
+  const [accommodationPhoto, setAccommodationPhoto] = useState<string | null>(null);
   const [insurance, setInsurance] = useState<InsuranceInfo | null>(null);
   const [studentDob, setStudentDob] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,10 +56,10 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
       try {
         const [progRes, accomRes, insRes] = await Promise.all([
           submission.program_id
-            ? supabase.from("programs").select("name_ar, name_en, school_id").eq("id", submission.program_id).maybeSingle()
+            ? supabase.from("programs").select("name_ar, name_en, school_id, photos").eq("id", submission.program_id).maybeSingle()
             : Promise.resolve({ data: null } as any),
           submission.accommodation_id
-            ? supabase.from("accommodations").select("name_ar, name_en").eq("id", submission.accommodation_id).maybeSingle()
+            ? supabase.from("accommodations").select("name_ar, name_en, photos").eq("id", submission.accommodation_id).maybeSingle()
             : Promise.resolve({ data: null } as any),
           submission.insurance_id
             ? (supabase as any).from("insurances").select("*").eq("id", submission.insurance_id).maybeSingle()
@@ -65,6 +68,7 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
 
         if (progRes.data) {
           setProgramName((isAr ? progRes.data.name_ar : progRes.data.name_en) ?? progRes.data.name_en);
+          setProgramPhoto(progRes.data.photos?.[0] ?? null);
           if (progRes.data.school_id) {
             const schoolRes = await supabase
               .from("schools")
@@ -79,6 +83,7 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
 
         if (accomRes.data) {
           setAccommodationName((isAr ? accomRes.data.name_ar : accomRes.data.name_en) ?? accomRes.data.name_en);
+          setAccommodationPhoto(accomRes.data.photos?.[0] ?? null);
         }
 
         if (insRes.data) setInsurance(insRes.data as InsuranceInfo);
@@ -128,7 +133,15 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
   return (
     <CardContent className="space-y-6 pt-6">
       {programName && (
-        <div className="border-s-4 border-blue-500 ps-4 py-2">
+        <div className="border-s-4 border-blue-500 ps-4 py-2 space-y-2">
+          {programPhoto && (
+            <img
+              src={programPhoto}
+              alt={programName}
+              className="h-32 w-full rounded-lg object-cover"
+              loading="lazy"
+            />
+          )}
           <p className="text-xs text-muted-foreground font-semibold uppercase">{t("case.program.program")}</p>
           <p className="text-lg font-semibold text-foreground">{programName}</p>
           {schoolName && <p className="text-sm text-muted-foreground mt-1">{schoolName}</p>}
@@ -173,10 +186,18 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
       )}
 
       {accommodationName && (
-        <div className="border-t pt-4">
-          <p className="text-xs text-muted-foreground font-semibold uppercase mb-2">
+        <div className="border-t pt-4 space-y-2">
+          <p className="text-xs text-muted-foreground font-semibold uppercase mb-1">
             {t("case.program.accommodation")}
           </p>
+          {accommodationPhoto && (
+            <img
+              src={accommodationPhoto}
+              alt={accommodationName}
+              className="h-32 w-full rounded-lg object-cover"
+              loading="lazy"
+            />
+          )}
           <p className="text-sm font-medium">{accommodationName}</p>
           {submission?.accommodation_price ? (
             <>
@@ -201,6 +222,14 @@ export default function CaseProgramTab({ submission }: CaseProgramTabProps) {
       {(insurance || submission?.insurance_price) && (
         <div className="border-t pt-4 space-y-2">
           <p className="text-xs text-muted-foreground font-semibold uppercase">{t("case.program.insurance")}</p>
+          {insurance?.photos?.[0] && (
+            <img
+              src={insurance.photos[0]}
+              alt={insurance.name}
+              className="h-32 w-full rounded-lg object-cover"
+              loading="lazy"
+            />
+          )}
           <p className="text-sm font-medium">
             {insurance?.name ?? t("case.program.insurance")}
             {insurance?.provider ? ` — ${insurance.provider}` : ""}

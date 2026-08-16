@@ -1,0 +1,154 @@
+{
+ "slug": "alpha-aktiv",
+ "url": "https://www.alpha-heidelberg.de/en/service/health-insurance/",
+ "title": "Health insurance for students – Alpha Aktiv Sprachschule Heidelberg",
+ "lang": "EN",
+ "cards": {
+  "images": [
+   {
+    "alt": "bkg",
+    "section": "Health insurance for Germany",
+    "width": 1366,
+    "height": 910,
+    "src": "https://www.alpha-heidelberg.de/images/p2tmEOVhN0-1500.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Kontakt Alpha Aktiv",
+    "section": "Contact us",
+    "width": 1366,
+    "height": 1366,
+    "src": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Image",
+    "section": "",
+    "width": 1365,
+    "height": 256,
+    "src": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   }
+  ],
+  "headings": [
+   {
+    "tag": "H3",
+    "text": "Study"
+   },
+   {
+    "tag": "H3",
+    "text": "Career"
+   },
+   {
+    "tag": "H1",
+    "text": "Health insurance for Germany"
+   },
+   {
+    "tag": "H2",
+    "text": "Insurances"
+   },
+   {
+    "tag": "H3",
+    "text": "Do I need health insurance in Germany?"
+   },
+   {
+    "tag": "H2",
+    "text": "Contact us"
+   },
+   {
+    "tag": "H3",
+    "text": "Do you wish to get more information about our programs ?"
+   }
+  ],
+  "tables": [
+   {
+    "head": [
+     "The following treatments are included:"
+    ],
+    "rows": [
+     [
+      "Insurance Care College Comfort"
+     ],
+     [
+      "Definition",
+      "Care College Comfort"
+     ],
+     [
+      "Fees for the first 18 contract months",
+      "32,00 €"
+     ],
+     [
+      "Cost sharing",
+      "25,00 € (only for the visit to the gynecologist)"
+     ],
+     [
+      "Medical care/treatment",
+      "yes"
+     ],
+     [
+      "Hospital treatment",
+      "yes"
+     ],
+     [
+      "Dentist",
+      "up to 500€ : 100%higher than 500€ : 50%"
+     ],
+     [
+      "Dentures",
+      "up to 500€ : 50%"
+     ],
+     [
+      "Refund (if no invoices have been submitted within 12 months)",
+      "31€"
+     ]
+    ]
+   }
+  ]
+ },
+ "images": [
+  {
+   "alt": "bkg",
+   "section": "Health insurance for Germany",
+   "url": "https://www.alpha-heidelberg.de/images/p2tmEOVhN0-1500.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/p2tmEOVhN0-1500.webp",
+   "width": 1366,
+   "height": 910
+  },
+  {
+   "alt": "Kontakt Alpha Aktiv",
+   "section": "Contact us",
+   "url": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+   "width": 1366,
+   "height": 1366
+  },
+  {
+   "alt": "Image",
+   "section": "",
+   "url": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+   "width": 1365,
+   "height": 256
+  }
+ ],
+ "bodyText": [
+  {
+   "heading": "Health insurance for Germany",
+   "text": "Home Service Health insurance"
+  },
+  {
+   "heading": "Do I need health insurance in Germany?",
+   "text": "Every person staying in Germany is obliged to have health insurance. You must have coverage beyond travel insurance in the case of a longer stay. In cooperation with our partner Care Concept AG, we are happy to offer you reasonably priced health insurance. We recommend the tariff “Care College Comfort” with a monthly premium of 32€. Insurance can be taken out either before or two weeks after entering Germany. We will gladly inform you about the contents and conditions of the health insurance. The following treatments are included: Insurance Care College Comfort Insurance Care College Comfort Definition Care College Comfort Fees for the first 18 contract months 32,00 € Cost sharing 25,00 € (only for the visit to the gynecologist) Medical care/treatment yes Hospital treatment yes Dentist up to 500€ : 100%higher than 500€ : 50% Dentures up to 500€ : 50% Refund (if no invoices have been submitted within 12 months) 31€ The insurance can be taken out either before, or up to 2 weeks after entering Germany. We will gladly inform you about the contents and conditions of the health insurance."
+  },
+  {
+   "heading": "Do you wish to get more information about our programs ?",
+   "text": "We would be glad to help you!"
+  }
+ ]
+}

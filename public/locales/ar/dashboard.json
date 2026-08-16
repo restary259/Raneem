@@ -604,6 +604,7 @@
       "labelTermsUrl": "رابط شروط الوثيقة",
       "labelDescAr": "الوصف (عربي)",
       "labelDescEn": "الوصف (إنجليزي)",
+      "labelPhotos": "الصور",
       "viewTerms": "عرض الشروط",
       "termRange": "المدة: {{min}}–{{max}} شهرًا",
       "maxAgeShort": "حتى سن {{age}}",

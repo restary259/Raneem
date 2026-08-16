@@ -1,0 +1,336 @@
+{
+ "slug": "alpha-aktiv",
+ "url": "https://www.alpha-heidelberg.de/en/service/accommodation/",
+ "title": "Accommodation in Germany – Alpha Aktiv Sprachschule Heidelberg",
+ "lang": "EN",
+ "cards": {
+  "images": [
+   {
+    "alt": "bkg",
+    "section": "Accommodations from Alpha Aktiv",
+    "width": 1366,
+    "height": 910,
+    "src": "https://www.alpha-heidelberg.de/images/vD0WeBOcXF-1500.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Students",
+    "section": "Alpha Aktiv Student Residence Heidelberg",
+    "width": 1366,
+    "height": 910,
+    "src": "https://www.alpha-heidelberg.de/images/SjTPabqImX-600.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Kontakt Alpha Aktiv",
+    "section": "Contact us",
+    "width": 1366,
+    "height": 1366,
+    "src": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   },
+   {
+    "alt": "Image",
+    "section": "",
+    "width": 1365,
+    "height": 256,
+    "src": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+    "srcset": null,
+    "dataSrc": null,
+    "className": ""
+   }
+  ],
+  "headings": [
+   {
+    "tag": "H3",
+    "text": "Study"
+   },
+   {
+    "tag": "H3",
+    "text": "Career"
+   },
+   {
+    "tag": "H1",
+    "text": "Accommodations from Alpha Aktiv"
+   },
+   {
+    "tag": "H2",
+    "text": "Our accommodations in Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Looking for Accommodation in Heidelberg?"
+   },
+   {
+    "tag": "H3",
+    "text": "Alpha Aktiv Student Residence Heidelberg"
+   },
+   {
+    "tag": "H4",
+    "text": "Prices Student Residences Heidelberg"
+   },
+   {
+    "tag": "H3",
+    "text": "Alpha Aktiv Apartments Heidelberg"
+   },
+   {
+    "tag": "H4",
+    "text": "Prices accommodation in apartments"
+   },
+   {
+    "tag": "H3",
+    "text": "Alpha Aktiv Host Families"
+   },
+   {
+    "tag": "H4",
+    "text": "Host family prices (per week)"
+   },
+   {
+    "tag": "H2",
+    "text": "Contact us"
+   },
+   {
+    "tag": "H3",
+    "text": "Do you wish to get more information about our programs ?"
+   }
+  ],
+  "tables": [
+   {
+    "head": [],
+    "rows": [
+     [
+      "Accommodation (prices per person / per week)",
+      "1 night",
+      "1 - 2 weeks",
+      "3 - 4 weeks",
+      "5 - 12 weeks",
+      "13-26 weeks",
+      "27+ weeks"
+     ],
+     [
+      "Single room - Central A",
+      "€ 85",
+      "€ 300",
+      "€ 245",
+      "€ 230",
+      "€ 215",
+      "€ 190"
+     ],
+     [
+      "Single room - Central B",
+      "€ 75",
+      "€ 280",
+      "€ 220",
+      "€ 190",
+      "€ 175",
+      "€ 170"
+     ],
+     [
+      "Single room - Not Central",
+      "€ 75",
+      "€ 230",
+      "€ 190",
+      "€ 165",
+      "€ 160",
+      "€ 155"
+     ],
+     [
+      "Double room - Central A",
+      "€ 65",
+      "€240",
+      "€200",
+      "€180",
+      "€170",
+      "€160"
+     ],
+     [
+      "Double room - Central B",
+      "€ 55",
+      "€ 225",
+      "€ 170",
+      "€ 160",
+      "€ 150",
+      "€ 140"
+     ],
+     [
+      "Double room - Not Central",
+      "€ 55",
+      "€ 215",
+      "€ 160",
+      "€ 145",
+      "€ 140",
+      "€130"
+     ]
+    ]
+   },
+   {
+    "head": [
+     "Prices accommodation in apartments"
+    ],
+    "rows": [
+     [
+      "Accommodation (prices per person / per week)",
+      "1 night",
+      "1 - 2 week",
+      "3 - 4 weeks",
+      "5 - 12 weeks",
+      "13 - 26 weeks",
+      "27 + weeks"
+     ],
+     [
+      "Single apartment 1 room (Bismarckplatz)",
+      "€ 100",
+      "€ 370",
+      "€ 305",
+      "€ 295",
+      "€ 265",
+      "€ 240"
+     ],
+     [
+      "Single apartment 2 rooms (Bismarckplatz)",
+      "€ 120",
+      "€ 440",
+      "€ 360",
+      "€ 325",
+      "€ 305",
+      "€ 295"
+     ],
+     [
+      "Double apartment (A) 2 rooms (Bismarckplatz)",
+      "€ 100",
+      "€ 360",
+      "€ 295",
+      "€ 275",
+      "€ 250",
+      "€ 225"
+     ],
+     [
+      "Double apartment 2 rooms (Bismarckplatz)",
+      "€ 95",
+      "€ 335",
+      "€ 285",
+      "€ 260",
+      "€ 240",
+      "€ 215"
+     ],
+     [
+      "Double apartment 1 studio room (Bismarckplatz)",
+      "€ 95",
+      "€ 350",
+      "€ 275",
+      "€ 250",
+      "€ 235",
+      "€ 200"
+     ],
+     [
+      "Tripple apartment 3 seperate rooms (Bismarckplatz)",
+      "€ 95",
+      "€ 350",
+      "€ 285",
+      "€ 260",
+      "€ 240",
+      "€ 205"
+     ],
+     [
+      "Tripple apartment 2 rooms (Bismarckplatz)",
+      "€ 95",
+      "€ 310",
+      "€ 260",
+      "€ 240",
+      "€ 230",
+      "€ 195"
+     ]
+    ]
+   },
+   {
+    "head": [
+     "Host family prices (per week)"
+    ],
+    "rows": [
+     [
+      "Host family",
+      "per week"
+     ],
+     [
+      "Overnight stay with half board",
+      "€ 320 + € 200 Deposit + €100 Housing Placement Fee"
+     ]
+    ]
+   }
+  ]
+ },
+ "images": [
+  {
+   "alt": "bkg",
+   "section": "Accommodations from Alpha Aktiv",
+   "url": "https://www.alpha-heidelberg.de/images/vD0WeBOcXF-1500.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/vD0WeBOcXF-1500.webp",
+   "width": 1366,
+   "height": 910
+  },
+  {
+   "alt": "Students",
+   "section": "Alpha Aktiv Student Residence Heidelberg",
+   "url": "https://www.alpha-heidelberg.de/images/SjTPabqImX-600.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/SjTPabqImX-600.webp",
+   "width": 1366,
+   "height": 910
+  },
+  {
+   "alt": "Kontakt Alpha Aktiv",
+   "section": "Contact us",
+   "url": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/TOsoEhHbnO-150.webp",
+   "width": 1366,
+   "height": 1366
+  },
+  {
+   "alt": "Image",
+   "section": "",
+   "url": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+   "thumb": "https://www.alpha-heidelberg.de/images/MXZf0YZQ-Y-500.webp",
+   "width": 1365,
+   "height": 256
+  }
+ ],
+ "bodyText": [
+  {
+   "heading": "Looking for Accommodation in Heidelberg?",
+   "text": "At Alpha Aktiv, we strive to be your first point of contact when it comes to accommodation. We help you finding an accommodation. You can choose from student dormitories and apartments in Heidelberg, or we can arrange host families. We have successfully worked together with our host families for many years."
+  },
+  {
+   "heading": "Alpha Aktiv Student Residence Heidelberg",
+   "text": "We offer our students different accommodation options in Heidelberg. There are three buildings in the city center of Heidelberg and one in the idyllic district of Ziegelhausen, in which single and double rooms are available for our students. In the dormitory, we give you a couple of options. You can either live alone or with another student in a room and share the bathroom and kitchen with the other residents on the same floor. In the dormitory, you will quickly make friends with other international students and you can use this opportunity to directly apply the German language skills you have learned in class."
+  },
+  {
+   "heading": "Prices Student Residences Heidelberg",
+   "text": "Accommodation (prices per person / per week) 1 night 1 - 2 weeks 3 - 4 weeks 5 - 12 weeks 13-26 weeks 27+ weeks Single room - Central A € 85 € 300 € 245 € 230 € 215 € 190 Single room - Central B € 75 € 280 € 220 € 190 € 175 € 170 Single room - Not Central € 75 € 230 € 190 € 165 € 160 € 155 Double room - Central A € 65 €240 €200 €180 €170 €160 Double room - Central B € 55 € 225 € 170 € 160 € 150 € 140 Double room - Not Central € 55 € 215 € 215 € 160 € 145 € 140 €130 the prices are subject to change during summer (June, July, August)"
+  },
+  {
+   "heading": "Alpha Aktiv Apartments Heidelberg",
+   "text": "Aside from the student dormitories, there is also the possibility of staying in apartments. Each apartment has its own bathroom and kitchenette inside. In addition to the one-room apartments, used as single or double-room apartments, we also offer two-room flats."
+  },
+  {
+   "heading": "Prices accommodation in apartments",
+   "text": "Accommodation (prices per person / per week) 1 night 1 - 2 week 3 - 4 weeks 5 - 12 weeks 13 - 26 weeks 27 + weeks Single apartment 1 room (Bismarckplatz) € 100 € 370 € 305 € 295 € 265 € 240 Single apartment 2 rooms (Bismarckplatz) € 120 € 440 € 360 € 325 € 305 € 295 Double apartment (A) 2 rooms (Bismarckplatz) € 100 € 360 € 295 € 275 € 250 € 225 Double apartment 2 rooms (Bismarckplatz) € 95 € 335 € 285 € 260 € 240 € 215 Double apartment 1 studio room (Bismarckplatz) € 95 € 350 € 275 € 250 € 235 € 200 Tripple apartment 3 seperate rooms (Bismarckplatz) € 95 € 350 € 285 € 260 € 240 € 205 Tripple apartment 2 rooms (Bismarckplatz) € 95 € 310 € 260 € 240 € 230 € 195 the prices are subject to change during summer (June, July, August)"
+  },
+  {
+   "heading": "Alpha Aktiv Host Families",
+   "text": "Our host families are an alternative to accommodation in a student dormitory or an apartment. Living with a host family selected by us offers the best opportunity to get to know the German way of life and hospitality and improve your language skills by practicing everyday phrases in exchange with native speakers. Accommodation is usually half board (breakfast and dinner) but can be adjusted according to your wishes."
+  },
+  {
+   "heading": "Host family prices (per week)",
+   "text": "Host family per week Overnight stay with half board € 320 + € 200 Deposit + €100 Housing Placement Fee € 320 + € 200 Deposit + €100 Housing Placement Fee the price is subject to change during summer (June, July, August)"
+  },
+  {
+   "heading": "Do you wish to get more information about our programs ?",
+   "text": "We would be glad to help you!"
+  }
+ ]
+}

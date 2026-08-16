@@ -604,6 +604,7 @@
       "labelTermsUrl": "Terms document link",
       "labelDescAr": "Description (Arabic)",
       "labelDescEn": "Description (English)",
+      "labelPhotos": "Photos",
       "viewTerms": "View terms",
       "termRange": "Term: {{min}}–{{max}} months",
       "maxAgeShort": "up to age {{age}}",
