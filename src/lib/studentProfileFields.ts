@@ -117,27 +117,6 @@ export const PROFILE_FIELD_LABEL_KEYS: Record<keyof StudentProfileValues, string
   start_month: "case.fields.startMonth",
 };
 
-/** Every language course runs for exactly this many weeks. */
-export const COURSE_DURATION_WEEKS = 40;
-
-/**
- * The only course-end calculation in the system: start + 40 weeks.
- * Date-only arithmetic — parsed and returned in UTC so the calendar day never
- * shifts with the viewer's timezone. Returns "" when the start date is missing
- * or unparseable.
- */
-export function courseEndFrom(courseStart: string): string {
-  if (!courseStart) return "";
-
-  const start = new Date(`${courseStart}T00:00:00Z`);
-
-  if (Number.isNaN(start.getTime())) return "";
-
-  const end = new Date(start.getTime() + COURSE_DURATION_WEEKS * 7 * 24 * 60 * 60 * 1000);
-
-  return end.toISOString().slice(0, 10);
-}
-
 /** Trim + lowercase so the same address is never stored two ways. */
 export function normalizeEmail(email: string): string {
   return (email ?? "").trim().toLowerCase();

@@ -1,11 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
-  COURSE_DURATION_WEEKS,
   EMPTY_STUDENT_PROFILE,
   PROFILE_FIELD_LABEL_KEYS,
   REQUIRED_PROFILE_FIELDS,
   StudentProfileValues,
-  courseEndFrom,
   fullNameOf,
   isProfileComplete,
   isValidEmail,
@@ -28,21 +26,6 @@ const completeProfile: StudentProfileValues = {
   accommodation_id: "acc-1",
   insurance_id: "ins-1",
 };
-
-describe("courseEndFrom", () => {
-  it("adds exactly forty weeks to the start date", () => {
-    expect(courseEndFrom("2026-09-01")).toBe("2027-06-08");
-  });
-
-  it("returns an empty string for a missing or unparseable start", () => {
-    expect(courseEndFrom("")).toBe("");
-    expect(courseEndFrom("not-a-date")).toBe("");
-  });
-
-  it("keeps the documented course length", () => {
-    expect(COURSE_DURATION_WEEKS).toBe(40);
-  });
-});
 
 describe("normalizeEmail / isValidEmail", () => {
   it("trims and lowercases", () => {

@@ -101,4 +101,37 @@ describe("computeInsuranceCost", () => {
   it("reports null total when no price is configured", () => {
     expect(computeInsuranceCost({ price: 0, age_price_tiers: [] }, 20, "2026-01-01", "2026-05-01").total).toBeNull();
   });
+
+  it("uses overrideMonths instead of start/end dates", () => {
+    const cost = computeInsuranceCost(
+      { price: 0, billing_period: "monthly", age_price_tiers: tiers },
+      35,
+      "2026-01-01",
+      "2026-05-01",
+      10,
+    );
+    expect(cost.months).toBe(10);
+    expect(cost.total).toBe(98 * 10);
+  });
+
+  it("treats overrideMonths of 0 as 0 months, not null", () => {
+    const cost = computeInsuranceCost(
+      { price: 0, billing_period: "monthly", age_price_tiers: tiers },
+      35,
+      "2026-01-01",
+      "2026-05-01",
+      0,
+    );
+    expect(cost.months).toBe(0);
+  });
+
+  it("falls back to monthsBetween when overrideMonths is omitted", () => {
+    const cost = computeInsuranceCost(
+      { price: 0, billing_period: "monthly", age_price_tiers: tiers },
+      35,
+      "2026-01-01",
+      "2026-05-01",
+    );
+    expect(cost.months).toBe(4);
+  });
 });
