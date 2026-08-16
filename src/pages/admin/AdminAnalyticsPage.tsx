@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Clock } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { LoadingState, ErrorState } from '@/components/shell';
 
 // Charts pull in the recharts vendor chunk. Deferring them keeps the KPI row
@@ -146,11 +146,11 @@ const AdminAnalyticsPage = () => {
           { label: t('admin.analytics.kpiActive'), value: kpi.active },
           { label: t('admin.analytics.kpiEnrolled'), value: kpi.enrolled },
           { label: t('admin.analytics.kpiConversion'), value: `${kpi.conversion}%` },
-        ].map((kpi, i) => (
+        ].map((card, i) => (
           <Card key={i}>
             <CardContent className="p-4 min-h-[80px]">
-              <p className="text-xs text-muted-foreground mb-1 line-clamp-2 leading-tight">{kpi.label}</p>
-              <p className="text-xl font-bold truncate min-w-0">{kpi.value}</p>
+              <p className="text-xs text-muted-foreground mb-1 line-clamp-2 leading-tight">{card.label}</p>
+              <p className="text-xl font-bold truncate min-w-0">{card.value}</p>
             </CardContent>
           </Card>
         ))}
