@@ -2,7 +2,7 @@
   {
     "slug": "care-college-comfort",
     "name": "Care College Comfort",
-    "tier": "comfort",
+    "tier": "standard",
     "billing_period": "monthly",
     "price": 32,
     "currency": "EUR",
