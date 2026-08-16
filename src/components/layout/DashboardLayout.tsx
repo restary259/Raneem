@@ -135,6 +135,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     // action inside that page, not a separate destination.
     { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
     { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
+    { key: "nav.catalog", icon: BookOpen, href: "/team/catalog", group: "nav.group.work" },
 
     // Reports hub: analytics + spreadsheet.
     { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },

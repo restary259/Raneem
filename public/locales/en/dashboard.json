@@ -589,6 +589,15 @@
       "insUpdated": "Insurance updated",
       "loading": "Loading…",
       "accommodationsLinked": "{{count}} accommodation(s) linked",
+      "photosSection": "Photos",
+      "photosHint": "Upload, reorder, and delete photos shown on the team catalog.",
+      "photosUpload": "Upload photos",
+      "photosEmpty": "No photos yet",
+      "photosUploaded": "Photo added",
+      "photosDeleted": "Photo deleted",
+      "photosReordered": "Order updated",
+      "photosUploadFailed": "Upload failed",
+      "photosDeleteFailed": "Delete failed",
       "tierBasic": "Basic",
       "tierStandard": "Standard",
       "tierPremium": "Premium",
@@ -2267,6 +2276,19 @@
       "openCase": "Open case",
       "upcoming": "Upcoming",
       "staleDays": "{{days}} days without activity"
+    },
+    "catalog": {
+      "title": "School Catalog",
+      "programsTab": "Programs",
+      "accommodationsTab": "Accommodation",
+      "noPrograms": "No programs linked to this school",
+      "noAccommodations": "No accommodation linked to this school",
+      "noPhotos": "No photos for this accommodation",
+      "noSchools": "No schools available",
+      "perWeek": "Price per week",
+      "openEnded": "{{from}}+ wks",
+      "weekRange": "{{from}}-{{to}} wks",
+      "flatPrice": "Flat rate"
     }
   },
   "application": {
@@ -2415,6 +2437,7 @@
     "today": "Today",
     "cases": "Cases",
     "appointments": "Appts",
+    "catalog": "Catalog",
     "todayAppts": "Today",
     "submitNew": "New",
     "students": "Students",

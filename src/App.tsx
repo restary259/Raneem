@@ -79,6 +79,7 @@ const TeamWorkPage = lazy(() => import("./pages/team/TeamWorkPage"));
 const TeamCasesHubPage = lazy(() => import("./pages/team/TeamCasesHubPage"));
 const CaseDetailPage = lazy(() => import("./pages/team/CaseDetailPage"));
 const TeamAppointmentsPage = lazy(() => import("./pages/team/TeamAppointmentsPage"));
+const TeamCatalogPage = lazy(() => import("./pages/team/TeamCatalogPage"));
 const SubmitNewStudentPage = lazy(() => import("./pages/team/SubmitNewStudentPage"));
 const TeamStudentProfilePage = lazy(() => import("./pages/team/TeamStudentProfilePage"));
 const TeamReportsPage = lazy(() => import("./pages/team/TeamReportsPage"));
@@ -311,6 +312,7 @@ const App = () => {
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
               <Route path="appointments" element={<TeamAppointmentsPage />} />
+              <Route path="catalog" element={<TeamCatalogPage />} />
 
               <Route path="appointments/today" element={<Navigate to="/team" replace />} />
               <Route path="submit" element={<SubmitNewStudentPage />} />

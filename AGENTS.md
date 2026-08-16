@@ -1298,3 +1298,53 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
 - Build/test: `npm run build` clean; `npx vitest run` green (i18n parity guard
   included).
 
+## Team Catalog + accommodation photos (2026-08-20)
+- **Read-only Team Catalog page** (`/team/catalog`, `src/pages/team/TeamCatalogPage.tsx`)
+  presents schools, their programs, and accommodations to team members during
+  live consultations. Batch-loads schools/programs/accommodations in ONE
+  `Promise.all` and groups by `school_id` in memory (no N+1). School card grid
+  (no footer actions — read-only) → right-side `Sheet` (`sm:max-w-xl w-full
+  sm:w-[36rem]`) with Programs/Accommodations `Tabs`. Nav entry `nav.catalog`
+  (`BookOpen`) in `NAV_CONFIG.team_member` after `nav.appointments`; route
+  `<Route path="catalog">` in the `/team` block. Team view has ZERO
+  edit/upload/delete affordances (RLS also gates writes).
+- **Photo slideshow**: clicking an accommodation card opens a `Dialog`
+  (`max-w-3xl`) that lazy-loads `accommodation_photos` + signed URLs (private
+  `accommodation-photos` bucket) only on open. Cyclic prev/next via overlay
+  arrows, dot indicators, keyboard `ArrowLeft`/`ArrowRight`, and touch swipe
+  (|deltaX|>50). 0 photos → `ImageOff` + `noPhotos`; 1 photo → no arrows/dots;
+  loading → `Skeleton` (no blank flash). Pure React, no new dependency.
+- **Price-tier chips** (`PriceTierBlock`): on each accommodation card AND in the
+  slideshow dialog footer. Uses `parseTiers` from `PriceTiersEditor`; first tier
+  pre-selected (`useState(0)`); selected chip = `Badge variant="default"`
+  (brand/primary — the app's "selected" idiom, NOT red `destructive` which means
+  danger); unselected = `variant="secondary"`. Open-ended tiers
+  (`to_weeks===null`) → `{{from}}+ wks`; flat-price (`tiers.length===0`) →
+  `flatPrice` label, no empty chip row. `displayPrice` = active tier price or
+  flat `accom.price`.
+- **Admin photo management** (`AccommodationPhotosEditor.tsx`): a `Collapsible`
+  "Photos" section rendered inside the `AdminProgramsPage` accommodation dialog
+  ONLY when `editAccomId` is set (existing accommodation), below
+  `<PriceTiersEditor>`, above Save. Upload (hidden `<input type=file multiple
+  accept=image/*>`, `crypto.randomUUID()` path), thumbnail grid with signed-URL
+  previews, up/down reorder (swap `display_order` via two UPDATEs), delete
+  (storage `remove` + DB delete). Admin-only by RLS + by location (lives only in
+  `AdminProgramsPage`; `TeamCatalogPage` has none of these affordances).
+- **Migration** `20260820000000_accommodation_photos.sql`: `accommodation_photos`
+  table (`id, accommodation_id FK→accommodations ON DELETE CASCADE,
+  storage_path, display_order, created_at`) + private `accommodation-photos`
+  bucket. RLS: authenticated SELECT (team reads), admin INSERT/UPDATE/DELETE
+  via `has_role(auth.uid(),'admin'::app_role)`; storage SELECT for authenticated
+  + admin INSERT/DELETE. Requires Supabase admin/service-role DDL — NOT applied
+  by Vercel build or `ci.yml`; run via `supabase db push` or dashboard SQL editor.
+- **i18n**: `nav.catalog` + `team.catalog.*` (title/programsTab/
+  accommodationsTab/noPrograms/noAccommodations/noPhotos/perWeek/openEnded/
+  weekRange/flatPrice) + `admin.programs.photos*` added to en + ar together
+  (parity guarded by `src/lib/i18nKeys.test.ts`). `{{from}}`/`{{to}}`
+  interpolation placeholders kept intact.
+- **DB access**: new `accommodation_photos` table accessed via the `const db: any
+  = supabase as unknown as any` escape hatch (matches `AdminProgramsPage`),
+  avoiding `types.ts` regeneration (requires Supabase CLI + live DB).
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 360/360 pass
+  incl. i18n parity guard.
+

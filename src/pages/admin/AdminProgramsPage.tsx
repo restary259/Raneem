@@ -27,6 +27,7 @@ import {
   GraduationCap as School,
 } from "lucide-react";
 import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
+import AccommodationPhotosEditor from "@/components/admin/AccommodationPhotosEditor";
 import InsuranceRatesEditor from "@/components/admin/InsuranceRatesEditor";
 import { AgePriceTier, parseAgeTiers, formatAgeLadder } from "@/lib/insurancePricing";
 
@@ -1092,6 +1093,7 @@ const AdminProgramsPage = () => {
                     />
                   </div>
                   <PriceTiersEditor tiers={accomTiers} onChange={setAccomTiers} />
+                  {editAccomId && <AccommodationPhotosEditor accommodationId={editAccomId} />}
                   <Button className="w-full" onClick={saveAccom} disabled={saving}>
                     {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                   </Button>

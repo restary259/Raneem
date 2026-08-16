@@ -589,6 +589,15 @@
       "insUpdated": "تم تحديث التأمين",
       "loading": "جارٍ التحميل…",
       "accommodationsLinked": "{{count}} سكن مرتبط",
+      "photosSection": "الصور",
+      "photosHint": "ارفع وأعد ترتيب واحذف الصور الظاهرة في كتالوج الفريق.",
+      "photosUpload": "رفع صور",
+      "photosEmpty": "لا توجد صور بعد",
+      "photosUploaded": "تمت إضافة الصورة",
+      "photosDeleted": "تم حذف الصورة",
+      "photosReordered": "تم تحديث الترتيب",
+      "photosUploadFailed": "فشل الرفع",
+      "photosDeleteFailed": "فشل الحذف",
       "tierBasic": "أساسي",
       "tierStandard": "معياري",
       "tierPremium": "مميز",
@@ -2285,6 +2294,19 @@
       "openCase": "فتح الملف",
       "upcoming": "قادم",
       "staleDays": "{{days}} يوم بدون نشاط"
+    },
+    "catalog": {
+      "title": "كتالوج المدارس",
+      "programsTab": "البرامج",
+      "accommodationsTab": "السكن",
+      "noPrograms": "لا توجد برامج مرتبطة بهذه المدرسة",
+      "noAccommodations": "لا يوجد سكن مرتبط بهذه المدرسة",
+      "noPhotos": "لا توجد صور لهذا السكن",
+      "noSchools": "لا توجد مدارس متاحة",
+      "perWeek": "السعر للأسبوع",
+      "openEnded": "{{from}}+ أسبوع",
+      "weekRange": "{{from}}-{{to}} أسبوع",
+      "flatPrice": "سعر ثابت"
     }
   },
   "application": {
@@ -2435,6 +2457,7 @@
     "today": "اليوم",
     "cases": "الحالات",
     "appointments": "المواعيد",
+    "catalog": "الكتالوج",
     "todayAppts": "اليوم",
     "submitNew": "جديد",
     "students": "الطلاب",
