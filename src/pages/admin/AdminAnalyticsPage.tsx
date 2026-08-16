@@ -55,7 +55,7 @@ const AdminAnalyticsPage = () => {
   const refresh = useCallback(() => { void refetch(); }, [refetch]);
 
 
-  const statusLabels: Record<string, string> = {
+  const statusLabels: Record<string, string> = useMemo(() => ({
     new: t('admin.analytics.statusNew'),
     contacted: t('admin.analytics.statusContacted'),
     appointment_scheduled: t('admin.analytics.statusAppointment'),
@@ -65,41 +65,64 @@ const AdminAnalyticsPage = () => {
     enrollment_paid: t('admin.analytics.statusEnrolled'),
     forgotten: t('admin.analytics.statusForgotten'),
     cancelled: t('admin.analytics.statusCancelled'),
-  };
+  }), [t]);
 
-  const funnelData = STATUSES.map((s, i) => ({
+  // One pass over the rows instead of a full .filter() scan per status/source.
+  const { statusCounts, sourceCounts, stageMs, kpi } = useMemo(() => {
+    const status: Record<string, number> = {};
+    const source: Record<string, number> = {};
+    const ms: Record<string, { sum: number; n: number }> = {};
+    const now = Date.now();
+    let enrolled = 0;
+    let active = 0;
+    for (const c of cases) {
+      status[c.status] = (status[c.status] ?? 0) + 1;
+      if (c.source) source[c.source] = (source[c.source] ?? 0) + 1;
+      const slot = (ms[c.status] ??= { sum: 0, n: 0 });
+      slot.sum += Math.max(0, now - new Date(c.last_activity_at).getTime());
+      slot.n += 1;
+      if (c.status === 'enrollment_paid') enrolled += 1;
+      if (!['enrollment_paid', 'cancelled', 'forgotten'].includes(c.status)) active += 1;
+    }
+    return {
+      statusCounts: status,
+      sourceCounts: source,
+      stageMs: ms,
+      kpi: {
+        total: cases.length,
+        active,
+        enrolled,
+        conversion: cases.length ? Math.round((enrolled / cases.length) * 100) : 0,
+      },
+    };
+  }, [cases]);
+
+  const funnelData = useMemo(() => STATUSES.map((s, i) => ({
     name: statusLabels[s] || s,
-    count: cases.filter(c => c.status === s).length,
+    count: statusCounts[s] ?? 0,
     fill: STATUS_COLORS[i],
-  }));
+  })), [statusCounts, statusLabels]);
 
-  const sourceData = SOURCES.map(s => ({
+  const sourceData = useMemo(() => SOURCES.map(s => ({
     name: s === 'apply_page' ? t('admin.analytics.sourceApplyPage')
         : s === 'manual' ? t('admin.analytics.sourceManual')
         : s === 'submit_new_student' ? t('admin.analytics.sourceDirect')
         : t('admin.analytics.sourcePartner'),
-    count: cases.filter(c => c.source === s).length,
-  })).filter(s => s.count > 0);
+    count: sourceCounts[s] ?? 0,
+  })).filter(s => s.count > 0), [sourceCounts, t]);
 
   // Avg days in current stage (time since last_activity_at as proxy for stage entry)
-  const avgDays = STATUSES.slice(0, 7).map(s => {
-    const group = cases.filter(c => c.status === s);
-    if (group.length === 0) return { name: statusLabels[s], avg: 0, hours: 0 };
-    const avgMs = group.reduce((sum, c) => {
-      const base = new Date(c.last_activity_at).getTime();
-      return sum + Math.max(0, Date.now() - base);
-    }, 0) / group.length;
-    const days = avgMs / 86400000;
+  const avgDays = useMemo(() => STATUSES.slice(0, 7).map(s => {
+    const slot = stageMs[s];
+    if (!slot || slot.n === 0) return { name: statusLabels[s], avg: 0, hours: 0 };
+    const avgMs = slot.sum / slot.n;
     return {
       name: statusLabels[s],
-      avg: Math.round(days * 10) / 10,
+      avg: Math.round((avgMs / 86400000) * 10) / 10,
       hours: Math.round(avgMs / 3600000),
     };
-  });
+  }), [stageMs, statusLabels]);
 
-  const allZero = avgDays.every(d => d.avg === 0);
-
-  const yAxisWidth = isRtl ? 130 : 110;
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
