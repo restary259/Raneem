@@ -1,5 +1,5 @@
 
-import { Instagram, Facebook } from "lucide-react";
+import { InstagramIcon, FacebookIcon } from "@/components/landing/BrandIcons";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TikTokIcon from "../icons/TikTokIcon";
@@ -19,9 +19,9 @@ const Footer = () => {
           </p>
         </div>
         <div className="flex justify-center items-center gap-4 sm:gap-6 mb-8 flex-wrap">
-          <a href="https://www.instagram.com/darb_studyingermany/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.instagram')} <Instagram size={24} /></a>
+          <a href="https://www.instagram.com/darb_studyingermany/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.instagram')} <InstagramIcon size={24} /></a>
           <a href="https://www.tiktok.com/@darb_studyingrmany" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.tiktok')} <TikTokIcon className="h-6 w-6" /></a>
-          <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.facebook', 'فيسبوك')} <Facebook size={24} /></a>
+          <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors flex items-center gap-2">{t('footer.facebook', 'فيسبوك')} <FacebookIcon size={24} /></a>
         </div>
         <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mb-6">
           <Link to="/faq" className="hover:text-accent transition-colors underline underline-offset-4">

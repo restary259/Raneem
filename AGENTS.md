@@ -259,9 +259,51 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
   via `review_case_payment_proof`.
 
 ## Build / test
-- `npm run build` ŌåÆ `tsc && vite build` (this is the real gate; eslint is not part of build).
-- `npm test` ŌåÆ vitest (unit tests).
-- `npm run test:e2e` ŌåÆ Playwright.
+- `npm run build` → `tsc && vite build` (this is the real gate; eslint is not part of build).
+- `npm test` → vitest (unit tests).
+- `npm run test:e2e` → Playwright.
+
+## Dependency stack (upgraded 2026-08-16)
+- **React 19** + `@types/react`/`@types/react-dom` 19; `createRoot` (not legacy
+  `render`), no `defaultProps`, no `useRef()` without arg. Radix-ui v1.1.x,
+  react-hook-form 7, react-i18next 17, recharts 3, react-router-dom 7 all
+  support React 19. `npm install` peer-dep warnings for radix-ui's transitive
+  `react-dom@^18.3.1` are benign (packages work with 19); do NOT downgrade.
+- **Vite 8** (rolldown-based). `vite.config.ts` uses `import.meta.dirname` (not
+  `__dirname`, which warns under the native config loader). `build.minify` is
+  `'esbuild'`; `esbuild` is a direct devDep because Vite 8 no longer bundles it
+  (rolldown is the default bundler, but esbuild minifier is still supported and
+  requires the package present). `@vitejs/plugin-react-swc` 4 is the React
+  plugin (Vite 8 prints a "consider @vitejs/plugin-react" hint when no SWC
+  plugins are used — this is advisory, not an error; swc works fine).
+- **Tailwind CSS v4** (CSS-first config). `tailwind.config.ts` was DELETED —
+  config lives in `src/index.css` via `@theme inline` (color tokens mapped as
+  `--color-*: hsl(var(--*))` so the shadcn CSS-variable pattern is preserved).
+  `postcss.config.js` uses `@tailwindcss/postcss` (not `tailwindcss`). The
+  `dark:` variant covers BOTH `.dark` and `.aurora` themes via
+  `@custom-variant dark (&:is(.dark, .dark *, .aurora, .aurora *))`.
+  `tailwindcss-animate` was replaced by `tw-animate-css` (imported in index.css).
+  Container utility redefined via `@utility container` + media queries.
+- **TypeScript 6** (NOT 7). `typescript-eslint@8.67` peer-depends on
+  `typescript >=4.8.4 <6.1.0` — TS 7 triggers an ERESOLVE conflict and, with
+  `--legacy-peer-deps`, prunes legitimate transitive deps (`@testing-library/dom`,
+  `react-is`, `esbuild`). Upgrade to TS 7 only after typescript-eslint adds
+  `^7` to its peer range.
+- **uuid override**: `package.json` `overrides` forces `uuid@^11.1.1` to clear
+  the moderate advisory (GHSA-w5hq-g745-h8pq) that `exceljs@4.4.0` pulls in via
+  `uuid@8.3.2`. exceljs uses `const { v4 } = require('uuid')` (named export),
+  which is compatible with uuid v11. The advisory affects v3/v5/v6 with a `buf`
+  arg; exceljs only uses v4, so the override is safe.
+- `lucide-react` v1 removed brand icons (Instagram, Facebook, Linkedin, etc.).
+  `src/components/landing/BrandIcons.tsx` holds inline SVG replacements; landing
+  `Footer.tsx`/`Contact.tsx` import from it. `WhoWeArePage.tsx` dropped the
+  unused `Linkedin` import.
+- `react-day-picker` v10: `src/components/ui/calendar.tsx` uses the v10
+  classNames API (`month_caption`, `button_previous`/`button_next`, `weekdays`,
+  `selected`, etc.). Usage in `TeamAppointmentsPage.tsx` (`mode="single"`,
+  `selected`, `onSelect`, `initialFocus`) is v10-compatible.
+- 0 `npm audit` vulnerabilities. Build clean; 370/370 vitest tests pass.
+
 
 ## i18n
 - Namespaced under `dashboard` in `public/locales/{en,ar}/dashboard.json`. The Finance
