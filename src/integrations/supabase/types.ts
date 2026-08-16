@@ -5347,6 +5347,18 @@ export type Database = {
         Args: { p_accept: boolean; p_offer_id: string }
         Returns: undefined
       }
+      profile_agent_fields_unchanged: {
+        Args: {
+          _agent_can_create_accounts: boolean
+          _agent_can_invite_directly: boolean
+          _agent_id: string
+          _case_id: string
+          _id: string
+          _linked_case_id: string
+          _student_status: string
+        }
+        Returns: boolean
+      }
       profile_privileged_unchanged: {
         Args: {
           _commission_amount: number
