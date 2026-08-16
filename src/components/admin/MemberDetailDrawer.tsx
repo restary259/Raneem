@@ -1,26 +1,24 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerClose,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Trash2 } from "lucide-react";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Trash2, AlertCircle } from "lucide-react";
 import MasterPartnerToggle from "./MasterPartnerToggle";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
 import DeactivateAccountDialog from "./DeactivateAccountDialog";
-import { cn } from "@/lib/utils";
 
 interface MemberDetailDrawerProps {
   member: import("./MemberList").MemberRow | null;
@@ -48,29 +46,45 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
   const { t } = useTranslation("dashboard");
   const [breakdown, setBreakdown] = useState<CommissionBreakdown | null>(null);
   const [loadingBreakdown, setLoadingBreakdown] = useState(false);
+  const [breakdownError, setBreakdownError] = useState(false);
   const [showDeactivate, setShowDeactivate] = useState(false);
 
+  // Track the latest requested id so a slow response from a previous member
+  // can't overwrite the currently-open member's breakdown (stale-data race).
+  const latestIdRef = useRef<string | null>(null);
+
   const loadBreakdown = useCallback(async (id: string) => {
+    latestIdRef.current = id;
     setLoadingBreakdown(true);
+    setBreakdownError(false);
     try {
       const { data, error } = await supabase.rpc("get_account_commission_history", {
         p_user_id: id,
       });
+      // A later request may have started; discard this stale response.
+      if (latestIdRef.current !== id) return;
       if (error) throw error;
       setBreakdown(data as CommissionBreakdown);
     } catch (err) {
+      if (latestIdRef.current !== id) return;
       console.error("Failed to load commission breakdown:", err);
       setBreakdown(null);
+      setBreakdownError(true);
     } finally {
-      setLoadingBreakdown(false);
+      if (latestIdRef.current === id) setLoadingBreakdown(false);
     }
   }, []);
 
   useEffect(() => {
     if (member?.requester_id) {
+      setBreakdown(null);
+      setBreakdownError(false);
       loadBreakdown(member.requester_id);
     } else {
+      latestIdRef.current = null;
       setBreakdown(null);
+      setBreakdownError(false);
+      setLoadingBreakdown(false);
     }
   }, [member?.requester_id, loadBreakdown]);
 
@@ -105,15 +119,12 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
       case "agent":
         return [
           { label: t("admin.members.kpiRecruits", "Recruits"), value: String(member.recruited_count), icon: Users },
-          { label: t("admin.members.kpiDirectEnrolled", "Direct Enrolled"), value: String(member.enrolled_cases || 0), icon: Award },
-          { label: t("admin.members.kpiNetworkEnrolled", "Network Enrolled"), value: String(member.enrolled_cases || 0), icon: Network },
           { label: t("admin.members.kpiOverrideEarned", "Override Earned"), value: formatILS(member.earned_override), icon: Crown },
         ];
       case "social_media_partner":
       case "ambassador":
         return [
           { label: t("admin.members.kpiReferred", "Referred"), value: String(member.students_count), icon: Users },
-          { label: t("admin.members.kpiEnrolled", "Enrolled"), value: String(member.students_count > 0 ? Math.round(member.students_count * 0.3) : 0), icon: Award },
           { label: t("admin.members.kpiEarnedReferral", "Earned (Referral)"), value: formatILS(member.earned_referral), icon: DollarSign },
           { label: t("admin.members.kpiEarnedOverride", "Earned (Master)"), value: formatILS(member.earned_master_override), icon: Crown },
         ];
@@ -130,30 +141,25 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
   ];
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className="w-full sm:max-w-2xl lg:max-w-3xl">
-        <DrawerHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-xl lg:max-w-2xl flex flex-col p-0 gap-0"
+      >
+        <SheetHeader className="flex flex-col gap-3 p-4 border-b shrink-0 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <DrawerClose className="shrink-0" asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </Button>
-            </DrawerClose>
             <div className="h-12 w-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
               <RoleIcon className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <DrawerTitle className="flex items-center gap-2">
+              <SheetTitle className="flex items-center gap-2">
                 {member.full_name}
                 <Badge variant="secondary" className="text-xs gap-1">
                   <RoleIcon className="h-3 w-3" />
                   {roleLabel}
                 </Badge>
-              </DrawerTitle>
-              <DrawerDescription className="flex items-center gap-2 text-xs">
+              </SheetTitle>
+              <SheetDescription className="flex items-center gap-2 text-xs">
                 {member.email}
                 {member.phone_number && (
                   <>
@@ -161,7 +167,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
                     {member.phone_number}
                   </>
                 )}
-              </DrawerDescription>
+              </SheetDescription>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -189,16 +195,16 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
               {t("admin.members.deactivate", "Deactivate")}
             </Button>
           </div>
-        </DrawerHeader>
+        </SheetHeader>
 
-        <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Primary KPIs */}
           <Card>
             <CardContent className="p-4">
               <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
                 {t("admin.members.sectionPerformance", "Performance")}
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {primaryStats.map((stat, i) => (
                   <div key={i} className="rounded-xl border border-border bg-card p-3">
                     <div className="flex items-center gap-2 mb-1">
@@ -233,6 +239,19 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
                   {Array.from({ length: 3 }).map((_, i) => (
                     <Skeleton key={i} className="h-10 w-full" />
                   ))}
+                </div>
+              ) : breakdownError ? (
+                <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{t("admin.members.commissionLoadError", "Failed to load commission data")}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7"
+                    onClick={() => member?.requester_id && loadBreakdown(member.requester_id)}
+                  >
+                    {t("admin.members.retry", "Retry")}
+                  </Button>
                 </div>
               ) : breakdown ? (
                 <div className="mt-4 space-y-3">
@@ -373,7 +392,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
           userEmail={member.email}
           userName={member.full_name}
         />
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 }

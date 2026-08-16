@@ -503,6 +503,7 @@
       "commissionByType": "حسب نوع المكافأة",
       "recentRateChanges": "تغييرات السعر الأخيرة",
       "noCommissionData": "لا توجد بيانات عمولات",
+      "commissionLoadError": "فشل تحميل بيانات العمولات",
       "joined": "تاريخ الانضمام",
       "referralCode": "كود الإحالة",
       "agentId": "معرف الوكيل",

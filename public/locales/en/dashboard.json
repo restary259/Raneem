@@ -503,6 +503,7 @@
       "commissionByType": "By Reward Type",
       "recentRateChanges": "Recent Rate Changes",
       "noCommissionData": "No commission data available",
+      "commissionLoadError": "Failed to load commission data",
       "joined": "Joined",
       "referralCode": "Referral Code",
       "agentId": "Agent ID",
