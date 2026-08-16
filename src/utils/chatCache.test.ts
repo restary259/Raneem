@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from "vitest";
-import { webcrypto } from "node:crypto";
+import * as nodeCrypto from "node:crypto";
+const webcrypto = (nodeCrypto as unknown as { webcrypto: Crypto }).webcrypto;
 import { ChatMessage, OFFLINE_FAQ, clearChatHistory, loadChatHistory, saveChatHistory } from "./chatCache";
 
 // jsdom does not implement crypto.subtle, so provide a real AES-GCM
