@@ -6,6 +6,8 @@ import {
   roomTypeLabel,
   mealsLabel,
   formatWeeklyPrice,
+  formatMoney,
+  priceTierOptions,
   cheapestWeeklyRate,
   weeklyPriceRange,
   displayWeeklyRate,
@@ -157,13 +159,70 @@ describe("catalogDisplay", () => {
         price: 245,
         price_tiers: [{ from_weeks: 1, to_weeks: 4, price: 245 }, { from_weeks: 5, to_weeks: null, price: 210 }],
       });
-      expect(formatWeeklyPrice(a, "en")).toBe("€210");
+      expect(formatWeeklyPrice(a)).toBe("€210");
       expect(displayWeeklyRate(a)).toBe(210);
       // The range still reports both bounds for the "€210 – €245 per week" sub-line.
       expect(weeklyPriceRange(a)).toEqual([210, 245]);
     });
     it("displayWeeklyRate returns null when no price", () => {
       expect(displayWeeklyRate(acc({ price: null, price_tiers: [] }))).toBeNull();
+    });
+    it("formatWeeklyPrice always uses Western numerals (never Arabic-Indic)", () => {
+      // Even if the value were rendered with ar-EG it would use ٢١٠; assert 0-9 only.
+      const a = acc({ price: 2100, currency: "EUR" });
+      expect(formatWeeklyPrice(a)).toBe("€2,100");
+      expect(formatWeeklyPrice(a)).toMatch(/^[€₪$£][0-9,]+$/);
+    });
+    it("formatMoney formats with the currency symbol and Western numerals", () => {
+      expect(formatMoney(210, "EUR")).toBe("€210");
+      expect(formatMoney(1500, "ILS")).toBe("₪1,500");
+      expect(formatMoney(null, "EUR")).toBeNull();
+    });
+  });
+
+  describe("priceTierOptions", () => {
+    it("builds ordered tier options with week-range labels", () => {
+      const a = acc({
+        price: 245,
+        price_tiers: [
+          { from_weeks: 5, to_weeks: null, price: 210 },
+          { from_weeks: 1, to_weeks: 4, price: 245 },
+        ],
+      });
+      const opts = priceTierOptions(a);
+      expect(opts).toHaveLength(2);
+      // Sorted by from_weeks ascending: entry tier first.
+      expect(opts[0].label).toBe("1-4 weeks");
+      expect(opts[0].price).toBe(245);
+      expect(opts[1].label).toBe("5+ weeks");
+      expect(opts[1].price).toBe(210);
+    });
+    it("labels an open-ended tier starting at week 1 as 'All weeks'", () => {
+      const a = acc({
+        price: 200,
+        price_tiers: [{ from_weeks: 1, to_weeks: null, price: 200 }],
+      });
+      expect(priceTierOptions(a)[0].label).toBe("All weeks");
+    });
+    it("labels a single-week tier as 'N week'", () => {
+      const a = acc({
+        price: 250,
+        price_tiers: [{ from_weeks: 3, to_weeks: 3, price: 250 }],
+      });
+      expect(priceTierOptions(a)[0].label).toBe("3 week");
+    });
+    it("returns a single 'Flat' option at the base price when there are no tiers", () => {
+      const a = acc({ price: 200, price_tiers: [] });
+      const opts = priceTierOptions(a);
+      expect(opts).toHaveLength(1);
+      expect(opts[0].label).toBe("Flat");
+      expect(opts[0].price).toBe(200);
+    });
+    it("returns a single 'Flat' option (null price) when no price and no tiers", () => {
+      const a = acc({ price: null, price_tiers: [] });
+      const opts = priceTierOptions(a);
+      expect(opts).toHaveLength(1);
+      expect(opts[0].price).toBeNull();
     });
   });
 

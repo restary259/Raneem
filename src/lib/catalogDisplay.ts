@@ -162,14 +162,13 @@ export function displayWeeklyRate(accommodation: CatalogAccommodation): number |
 /** Format a weekly price, e.g. "€210". Returns null when no price. */
 export function formatWeeklyPrice(
   accommodation: CatalogAccommodation,
-  locale: "en" | "ar" = "en",
 ): string | null {
   const rate = displayWeeklyRate(accommodation);
   if (rate == null) return null;
   const currency = accommodation.currency || "EUR";
   const symbol = CURRENCY_SYMBOLS[currency] ?? currency;
-  const num = rate.toLocaleString(locale === "ar" ? "ar-EG" : "en-US");
-  return `${symbol}${num}`;
+  // Always Western numerals (0-9) regardless of UI language.
+  return `${symbol}${rate.toLocaleString("en-US")}`;
 }
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -198,6 +197,52 @@ export function weeklyPriceRange(accommodation: CatalogAccommodation): [number, 
   }
   const base = resolveWeeklyRate(accommodation, null);
   return base != null ? [base, base] : null;
+}
+
+/** A price tier prepared for display: a label and the weekly price. */
+export interface PriceTierOption {
+  /** Stable key for React lists / selection. */
+  key: string;
+  /** Human label, e.g. "1-4 weeks", "5+ weeks", "Flat". Western numerals only. */
+  label: string;
+  /** Weekly price for this tier (null when unknown). */
+  price: number | null;
+}
+
+/**
+ * Build the list of selectable price tiers for an accommodation, ordered by
+ * the tier's `from_weeks` ascending (entry tier first). When there are no
+ * tiers, returns a single "Flat" option at the base price. Numerals are always
+ * Western (0-9).
+ */
+export function priceTierOptions(accommodation: CatalogAccommodation): PriceTierOption[] {
+  const tiers = parseWeekTiers(accommodation.price_tiers)
+    .filter((t) => t.price != null)
+    .sort((a, b) => (a.from_weeks ?? 1) - (b.from_weeks ?? 1));
+  if (tiers.length) {
+    return tiers.map((t, i) => {
+      const from = t.from_weeks ?? 1;
+      const to = t.to_weeks;
+      let label: string;
+      if (to == null) {
+        label = from <= 1 ? "All weeks" : `${from}+ weeks`;
+      } else if (from === to) {
+        label = `${from} week`;
+      } else {
+        label = `${from}-${to} weeks`;
+      }
+      return { key: `tier-${i}`, label, price: t.price };
+    });
+  }
+  const base = resolveWeeklyRate(accommodation, null);
+  return [{ key: "flat", label: "Flat", price: base }];
+}
+
+/** Format a numeric amount with the accommodation's currency symbol (Western numerals). */
+export function formatMoney(rate: number | null, currency: string | null | undefined): string | null {
+  if (rate == null) return null;
+  const symbol = CURRENCY_SYMBOLS[currency || "EUR"] ?? (currency || "EUR");
+  return `${symbol}${rate.toLocaleString("en-US")}`;
 }
 
 /**

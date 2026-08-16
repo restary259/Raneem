@@ -2271,7 +2271,7 @@
     }
   },
   "catalog": {
-    "pageDesc": "Browse schools and accommodations. Switch to presentation mode for the office TV.",
+    "pageDesc": "Browse schools and accommodations. Click a photo to see details and pricing tiers.",
     "searchPlaceholder": "Search accommodations or schools…",
     "clearSearch": "Clear search",
     "filterCity": "City",
@@ -2281,6 +2281,7 @@
     "allSchools": "All schools",
     "allTypes": "All types",
     "clearFilters": "Clear filters",
+    "selectTierHint": "Select a duration to see the weekly price for that tier.",
     "presentationMode": "Presentation mode",
     "exitPresentation": "Exit presentation",
     "play": "Play",

@@ -19,7 +19,7 @@ import {
 interface AccommodationCardProps {
   accommodation: CatalogAccommodation;
   school: CatalogSchool | null;
-  /** Bigger card for large screens / presentation preview. */
+  /** Bigger card for the detail/preview grid. */
   size?: "default" | "large";
   onSelect: (accommodation: CatalogAccommodation) => void;
 }
@@ -33,7 +33,7 @@ export function AccommodationCard({
   const { t } = useTranslation("dashboard");
   const lang = useLang();
   const photo = primaryPhoto(accommodation.photos);
-  const price = formatWeeklyPrice(accommodation, lang);
+  const price = formatWeeklyPrice(accommodation);
   const range = weeklyPriceRange(accommodation);
   const showFrom = range && range[0] !== range[1];
   const roomType = roomTypeLabel(accommodation.room_type, lang);

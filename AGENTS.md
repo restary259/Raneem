@@ -1348,13 +1348,19 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
   `t("key", "fallback")`. RTL-aware (logical properties, `rtl:rotate-180`).
 - **No DB/RLS/storage changes.** No new tables, no migrations, no RLS weakening.
   The Team page is purely additive frontend over existing read-accessible data.
-- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 395/395 pass
-  (+20 new `catalogDisplay.test.ts` cases incl. the from-price invariant +
-  `filterCatalog` pipeline; +6 `PresentationMode.test.tsx` slideshow cases).
-  ESLint 0 errors on all new files. Review fixes applied: the prominent "from"
-  price now shows the *cheapest* weekly rate (long-stay tier), not the entry
-  rate; the room-type filter dropdown shows localized labels (not raw
-  snake_case); filter logic extracted to a single-pass pure `filterCatalog`;
-  `useLang` hook removes 6x language-derivation duplication; the synthetic
-  "Other" group uses an `isOther` flag (no sentinel-string check in UI); the
-  next-slide preload no longer mutates a ref during render.
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 396/396 pass
+  (+26 `catalogDisplay.test.ts` cases incl. the from-price invariant,
+  `filterCatalog` pipeline, `priceTierOptions` labels, Western-numeral guard;
+  `PresentationMode.test.tsx` removed with the component). ESLint 0 errors on
+  all new files.
+- **Redesign (per user feedback):** the TV slideshow/presentation mode was
+  REMOVED entirely (PresentationMode.tsx + test deleted, button + state gone
+  from TeamCatalogPage). Clicking a card's photo now opens a detail popup
+  (AccommodationDetail) with the photo gallery on top (prev/next + dots to
+  slide through that house's photos) and the info below. Price tier buttons
+  ("1-4 weeks: €245", "5+ weeks: €210") let the team pick a duration; the
+  displayed weekly price updates to the selected tier. All money numerals are
+  forced Western (0-9) via `en-US` locale in `formatWeeklyPrice`/`formatMoney`
+  — no Arabic-Indic digits regardless of UI language. The popup renders all
+  admin-catalog fields: name, school, room type, meals, deposit, placement
+  fee, distance note, school website, description, and the full tier ladder.

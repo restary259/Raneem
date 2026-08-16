@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MonitorPlay, RefreshCw, Building2 } from "lucide-react";
+import { RefreshCw, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingState, ErrorState } from "@/components/shell";
 import { useTeamCatalog } from "@/hooks/useTeamCatalog";
@@ -12,7 +12,6 @@ import {
 import { CatalogFilters, type CatalogFilterValues } from "@/components/team/catalog/CatalogFilters";
 import { SchoolCatalogSection } from "@/components/team/catalog/SchoolCatalogSection";
 import { AccommodationDetail } from "@/components/team/catalog/AccommodationDetail";
-import { PresentationMode } from "@/components/team/catalog/PresentationMode";
 
 const EMPTY_FILTERS: CatalogFilterValues = { search: "", city: "", schoolId: "", roomType: "" };
 
@@ -21,7 +20,6 @@ export default function TeamCatalogPage() {
   const { data, loading, error, refetch } = useTeamCatalog();
   const [filters, setFilters] = useState<CatalogFilterValues>(EMPTY_FILTERS);
   const [selected, setSelected] = useState<CatalogAccommodation | null>(null);
-  const [presentation, setPresentation] = useState(false);
 
   const cities = useMemo(() => (data ? distinctCities(data.schools) : []), [data]);
 
@@ -52,18 +50,9 @@ export default function TeamCatalogPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t("nav.catalog", "Catalog")}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {t("catalog.pageDesc", "Browse schools and accommodations. Switch to presentation mode for the office TV.")}
+            {t("catalog.pageDesc", "Browse schools and accommodations. Click a photo to see details and pricing tiers.")}
           </p>
         </div>
-        <Button
-          size="lg"
-          onClick={() => setPresentation(true)}
-          disabled={loading || !!error || totalAccommodations === 0}
-          className="shrink-0"
-        >
-          <MonitorPlay className="me-2 h-5 w-5" />
-          {t("catalog.presentationMode", "Presentation mode")}
-        </Button>
       </div>
 
       {/* Body */}
@@ -119,10 +108,6 @@ export default function TeamCatalogPage() {
         open={!!selected}
         onOpenChange={(o) => !o && setSelected(null)}
       />
-
-      {presentation && filteredGroups.length > 0 && (
-        <PresentationMode groups={filteredGroups} onExit={() => setPresentation(false)} />
-      )}
     </div>
   );
 }
