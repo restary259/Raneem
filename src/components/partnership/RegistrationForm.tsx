@@ -32,14 +32,14 @@ const RegistrationForm = () => {
     countryCity: z.string().min(2, { message: t('registrationForm.validation.countryCityMin') }),
     email: z.string().email({ message: t('registrationForm.validation.emailInvalid') }),
     phone: z.string().min(9, { message: t('registrationForm.validation.phoneMin') }),
-    preferredContact: z.string({ error: t('registrationForm.validation.contactRequired') }),
+    preferredContact: z.string({ required_error: t('registrationForm.validation.contactRequired') }),
     aboutYou: z.string().optional(),
     instagramLink: z.string().optional(),
     socialLinks: z.string().optional(),
-    previousExperience: z.enum(["yes", "no"], { error: t('registrationForm.validation.experienceRequired') }),
+    previousExperience: z.enum(["yes", "no"], { required_error: t('registrationForm.validation.experienceRequired') }),
     whyDarb: z.string().min(10, { message: t('registrationForm.validation.whyDarbMin') }),
     consent: z.literal(true, {
-      error: t('registrationForm.validation.consentRequired'),
+      required_error: t('registrationForm.validation.consentRequired'),
     }),
   });
 

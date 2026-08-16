@@ -1,5 +1,7 @@
 
-@reference "../index.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer utilities {
   @media (prefers-contrast: high) {
