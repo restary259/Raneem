@@ -1,16 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useCallback, lazy, Suspense } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { RefreshCw, Clock } from 'lucide-react';
 import { LoadingState, ErrorState } from '@/components/shell';
+
+// Charts pull in the recharts vendor chunk. Deferring them keeps the KPI row
+// as the first meaningful paint instead of waiting on chart parse/render.
+const AnalyticsCharts = lazy(() => import('@/components/admin/AnalyticsCharts'));
 
 const STATUSES = ['new', 'contacted', 'appointment_scheduled', 'profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid', 'forgotten', 'cancelled'];
 const STATUS_COLORS = ['#6366f1', '#f59e0b', '#8b5cf6', '#f97316', '#14b8a6', '#3b82f6', '#22c55e', '#ef4444', '#94a3b8'];
 const SOURCES = ['apply_page', 'manual', 'submit_new_student', 'social_media_partner'];
+
 
 const AdminAnalyticsPage = () => {
   const { t, i18n } = useTranslation('dashboard');
