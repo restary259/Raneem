@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Download, Save, Upload, Trash2, FileText, Eye } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Download, Save, Upload, Trash2, FileText, Eye, ChevronDown, CircleHelp } from "lucide-react";
 import CVForm from "./CVForm";
 import CVPreview from "./CVPreview";
 import { useLebenslauf } from "./useLebenslauf";
@@ -40,6 +41,7 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
   const { t } = useTranslation("resources");
   const { data, setData, updateData, updatePersonal, updateDesign, updateSignature, saveDraft, loadDraft, clearAll, downloadPdf, generating } = useLebenslauf();
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
+  const [faqOpen, setFaqOpen] = useState(false);
 
   const errors = useMemo(() => validate(data, (k, fb) => t(k, fb) as string), [data, t]);
 
@@ -64,15 +66,23 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
 
   return (
     <div className={rootCls}>
-      {/* FAQ-Style Description */}
-      <div className={`mb-8 p-6 bg-accent/5 border border-accent/20 rounded-lg ${headerCls}`}>
-        <h3 className="text-lg font-semibold mb-3">{t("lebenslaufBuilder.faqTitle")}</h3>
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p><strong>{t("lebenslaufBuilder.faqQ1")}</strong> {t("lebenslaufBuilder.faqA1")}</p>
-          <p><strong>{t("lebenslaufBuilder.faqQ2")}</strong> {t("lebenslaufBuilder.faqA2")}</p>
-          <p><strong>{t("lebenslaufBuilder.faqQ3")}</strong> {t("lebenslaufBuilder.faqA3")}</p>
-        </div>
-      </div>
+      {/* FAQ-Style Description (collapsible to save screen space) */}
+      <Collapsible open={faqOpen} onOpenChange={setFaqOpen} className={`mb-4 bg-accent/5 border border-accent/20 rounded-lg ${headerCls}`}>
+        <CollapsibleTrigger asChild>
+          <button type="button" className="flex w-full items-center gap-2 px-4 py-2 text-left">
+            <CircleHelp className="h-4 w-4 shrink-0 text-accent-foreground/70" />
+            <span className="text-sm font-medium flex-1">{t("lebenslaufBuilder.faqTitle")}</span>
+            <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${faqOpen ? "rotate-180" : ""}`} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="space-y-2 text-sm text-muted-foreground px-4 pb-4 pt-1">
+            <p><strong>{t("lebenslaufBuilder.faqQ1")}</strong> {t("lebenslaufBuilder.faqA1")}</p>
+            <p><strong>{t("lebenslaufBuilder.faqQ2")}</strong> {t("lebenslaufBuilder.faqA2")}</p>
+            <p><strong>{t("lebenslaufBuilder.faqQ3")}</strong> {t("lebenslaufBuilder.faqA3")}</p>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Toolbar */}
       <div className={`flex flex-wrap gap-2 mb-6 print:hidden ${headerCls}`}>
