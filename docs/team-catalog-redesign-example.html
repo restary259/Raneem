@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DARB Team Catalog — UX Example</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--text:#202124;--muted:#737373;--line:#e7e5e1;--accent:#e97827;--soft:#fff1e6;--radius:16px}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,sans-serif}.wrap{max-width:1180px;margin:auto;padding:28px}.top{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:22px}.title h1{margin:0 0 4px;font-size:26px}.title p{margin:0;color:var(--muted)}.search{width:min(360px,100%);padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:white}.filters{display:flex;gap:8px;overflow:auto;padding-bottom:4px;margin-bottom:20px}.filter{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 14px;white-space:nowrap;cursor:pointer}.filter.active{background:var(--text);color:#fff;border-color:var(--text)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.school{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;cursor:pointer;transition:.15s}.school:hover{transform:translateY(-2px);box-shadow:0 8px 24px #0000000b}.schoolhead{display:flex;align-items:center;gap:12px}.icon{width:42px;height:42px;border-radius:12px;background:var(--soft);display:grid;place-items:center;color:var(--accent);font-size:20px}.school h3{margin:0;font-size:16px}.school small{color:var(--muted)}.stats{display:flex;gap:18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.stats b{display:block;font-size:18px}.stats span{font-size:12px;color:var(--muted)}.panel{margin-top:22px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:none}.panel.open{display:block}.paneltop{display:flex;align-items:center;justify-content:space-between}.panel h2{margin:0}.close{border:0;background:#f1f1ef;border-radius:10px;padding:8px 12px;cursor:pointer}.tabs{display:flex;gap:6px;margin:18px 0;border-bottom:1px solid var(--line);padding-bottom:8px}.tab{border:0;background:none;padding:8px 12px;cursor:pointer;color:var(--muted)}.tab.active{color:var(--text);font-weight:700;border-bottom:2px solid var(--accent)}.items{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.item{border:1px solid var(--line);border-radius:14px;padding:14px}.item h4{margin:0 0 5px}.item p{margin:4px 0;color:var(--muted);font-size:13px}.price{margin-top:10px;font-weight:700}.badge{display:inline-block;background:#f2f2f0;border-radius:999px;padding:4px 8px;font-size:11px;margin:2px}.cta{margin-top:12px;width:100%;padding:10px;border:1px solid var(--line);background:white;border-radius:10px;cursor:pointer}.cta:hover{border-color:var(--accent);color:var(--accent)}@media(max-width:800px){.top{align-items:stretch;flex-direction:column}.search{width:100%}.grid{grid-template-columns:1fr 1fr}.items{grid-template-columns:1fr}}@media(max-width:520px){.wrap{padding:16px}.grid{grid-template-columns:1fr}.title h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title"><h1>Service Catalog</h1><p>Find schools, programs and accommodation quickly.</p></div>
+    <input id="search" class="search" placeholder="Search school, city or program…">
+  </div>
+  <div class="filters"><button class="filter active">All schools</button><button class="filter">Language schools</button><button class="filter">University programs</button><button class="filter">Accommodation</button></div>
+  <div id="grid" class="grid"></div>
+  <section id="panel" class="panel">
+    <div class="paneltop"><div><h2 id="schoolName"></h2><span id="schoolMeta"></span></div><button class="close" onclick="closePanel()">Close</button></div>
+    <div class="tabs"><button class="tab active" onclick="showTab('programs',this)">Programs</button><button class="tab" onclick="showTab('accom',this)">Accommodation</button></div>
+    <div id="content"></div>
+  </section>
+</div>
+<script>
+const data=[
+{name:'Berlin Language Center',city:'Berlin',programs:[['Intensive German','20 lessons/week','€390 / 4 weeks'],['German + Exam Prep','25 lessons/week','€520 / 4 weeks']],accom:[['Host Family','Single room · Breakfast','€290 / week'],['Student Residence','Single room','€350 / week']]},
+{name:'Hamburg Sprachschule',city:'Hamburg',programs:[['Standard German','15 lessons/week','€320 / 4 weeks'],['Intensive German','25 lessons/week','€480 / 4 weeks']],accom:[['Host Family','Single room · Half board','€330 / week']]},
+{name:'Munich Study Center',city:'Munich',programs:[['German A1–C1','20 lessons/week','€410 / 4 weeks'],['University Preparation','30 lessons/week','€620 / 4 weeks']],accom:[['Residence','Single room · Shared kitchen','€390 / week'],['Host Family','Single room · Breakfast','€360 / week']]}
+];
+const grid=document.getElementById('grid');const search=document.getElementById('search');let selected=0;let active='programs';
+function render(){const q=search.value.toLowerCase();grid.innerHTML=data.map((s,i)=>({...s,i})).filter(s=>(s.name+' '+s.city).toLowerCase().includes(q)).map(s=>`<article class="school" onclick="openPanel(${s.i})"><div class="schoolhead"><div class="icon">⌂</div><div><h3>${s.name}</h3><small>${s.city}, Germany</small></div></div><div class="stats"><div><b>${s.programs.length}</b><span>Programs</span></div><div><b>${s.accom.length}</b><span>Accommodation</span></div></div></article>`).join('')||'<p>No matching schools.</p>'}
+function openPanel(i){selected=i;document.getElementById('panel').classList.add('open');document.getElementById('schoolName').textContent=data[i].name;document.getElementById('schoolMeta').textContent=data[i].city+', Germany';showTab(active,document.querySelector('.tab.active'))}
+function closePanel(){document.getElementById('panel').classList.remove('open')}
+function showTab(tab,el){active=tab;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');const list=data[selected][tab==='programs'?'programs':'accom'];document.getElementById('content').innerHTML='<div class="items">'+list.map(x=>`<div class="item"><h4>${x[0]}</h4><p>${x[1]}</p><div class="price">${x[2]}</div><button class="cta">View details</button></div>`).join('')+'</div>'}
+search.addEventListener('input',render);render();
+</script>
+</body>
+</html>
