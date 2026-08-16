@@ -20,7 +20,7 @@ const FieldGroup = ({ label, children, className }: FieldGroupProps) => {
     if (!assigned && React.isValidElement(child)) {
       assigned = true;
       const props = child.props as Record<string, unknown>;
-      return React.cloneElement(child as React.ReactElement, {
+      return React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
         id: (props.id as string) ?? controlId,
         "aria-labelledby": (props["aria-labelledby"] as string) ?? labelId,
       });

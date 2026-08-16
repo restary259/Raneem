@@ -927,7 +927,6 @@ export default function TeamAppointmentsPage() {
                       mode="single"
                       selected={newDate}
                       onSelect={setNewDate}
-                      initialFocus
                       className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { formSchema, Result, FormValues, countries, banksByCountry, timeToSortValue } from "./data";
@@ -32,7 +32,7 @@ export const useCurrencyComparator = () => {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as Resolver<FormValues>,
     defaultValues: {
       amount: 1000,
       targetCountry: 'DE',

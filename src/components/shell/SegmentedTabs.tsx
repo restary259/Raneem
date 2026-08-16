@@ -6,6 +6,8 @@ export interface SegmentItem {
   value: string;
   label: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
+  /** Optional badge count rendered after the label. */
+  count?: number;
 }
 
 interface SegmentedTabsProps {
@@ -39,6 +41,11 @@ export default function SegmentedTabs({ items, className }: SegmentedTabsProps) 
           >
             {item.icon && <item.icon className="hidden h-4 w-4 sm:block" aria-hidden />}
             {item.label}
+            {typeof item.count === "number" && (
+              <span className="ms-1 rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground">
+                {item.count.toLocaleString("en-US")}
+              </span>
+            )}
           </TabsTrigger>
         ))}
       </TabsList>

@@ -64,7 +64,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
       // A later request may have started; discard this stale response.
       if (latestIdRef.current !== id) return;
       if (error) throw error;
-      setBreakdown(data as CommissionBreakdown);
+      setBreakdown(data as unknown as CommissionBreakdown);
     } catch (err) {
       if (latestIdRef.current !== id) return;
       console.error("Failed to load commission breakdown:", err);
@@ -319,6 +319,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
                   partnerId={member.requester_id}
                   isMaster={member.is_master_partner}
                   partnerName={member.full_name}
+                  onChanged={() => {}}
                   variant="plain"
                 />
               </CardContent>
@@ -386,11 +387,18 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
         </div>
 
         <DeactivateAccountDialog
-          open={showDeactivate}
+          target={
+            showDeactivate
+              ? {
+                  id: member.requester_id,
+                  full_name: member.full_name,
+                  email: member.email,
+                  roleLabel,
+                }
+              : null
+          }
           onOpenChange={setShowDeactivate}
-          userId={member.requester_id}
-          userEmail={member.email}
-          userName={member.full_name}
+          onDone={() => setShowDeactivate(false)}
         />
       </SheetContent>
     </Sheet>

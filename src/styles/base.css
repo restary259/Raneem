@@ -1,7 +1,5 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@reference "../index.css";
 
 @layer base {
   :root {

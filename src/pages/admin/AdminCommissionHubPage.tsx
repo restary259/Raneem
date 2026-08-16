@@ -371,7 +371,8 @@ const AgentSection: React.FC<{
   onError: (m: string) => void;
   filter: string;
   setFilter: (s: string) => void;
-  t: (k: string, fallback?: string, opts?: any) => string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
 }> = ({ agents, saving, onSetCommission, onSaved, onError, filter, setFilter, t }) => {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
@@ -473,7 +474,8 @@ const StudentReferralSection: React.FC<{
   ) => Promise<unknown>;
   onSaved: () => void;
   onError: (m: string) => void;
-  t: (k: string, fallback?: string, opts?: any) => string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
 }> = ({ config, saving, onSetCommission, onSaved, onError, t }) => {
   const [drafts, setDrafts] = useState<Record<string, number>>({});
   const [newStudentId, setNewStudentId] = useState("");
