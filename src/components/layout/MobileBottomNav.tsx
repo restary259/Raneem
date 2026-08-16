@@ -11,6 +11,7 @@ import {
   TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
   Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
+  Hotel,
 } from 'lucide-react';
 
 interface NavItem {
@@ -78,6 +79,7 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   ],
   team_member: [
     { key: 'nav.submitNew', icon: UserPlus, href: '/team/submit' },
+    { key: 'nav.catalog', icon: Hotel, href: '/team/catalog' },
     { key: 'nav.reports', icon: BarChart2, href: '/team/analytics' },
     { key: 'nav.bagrut', icon: Calculator, href: '/team/bagrut' },
     { key: 'nav.cvBuilder', icon: FileText, href: '/team/tools/cv' },

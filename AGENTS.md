@@ -1298,3 +1298,63 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
 - Build/test: `npm run build` clean; `npx vitest run` green (i18n parity guard
   included).
 
+
+## Team Catalog / TV Presentation page (2026-08-16)
+
+- **Read-only presentation layer over the existing Admin Catalog.** The Admin
+  Catalog (AdminProgramsPage -> `schools` / `accommodations` / `programs` tables)
+  remains the single source of truth. The Team page only *consumes* catalog data;
+  it never writes it (RLS gives `team_member` SELECT-only on all three tables;
+  no INSERT/UPDATE/DELETE policies exist for team, so it is read-only by
+  construction, not just by UI convention).
+- Route: `/team/catalog` (`TeamCatalogPage`), lazy-loaded, behind the existing
+  `ProtectedRoute allowedRoles={["team_member"]}` + `DashboardLayout
+  role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
+  mobile "More" sheet (`MobileBottomNav` `MOBILE_MORE_CONFIG.team_member`).
+- **Data**: `useTeamCatalog` does ONE `Promise.all` fetch on mount
+  (`schools` + `accommodations`, both `.eq('is_active', true)`, ordered by
+  `name_en`). No per-keystroke refetch; search/filter are client-side over the
+  fetched set. Matches the TeamWorkPage fetch-returns-cleanup pattern; `cancelled`
+  flag prevents state updates after unmount.
+- **Pricing is WEEKLY** (the catalog `price` column is the weekly rate; tiers in
+  `price_tiers` are weekly discounts by `from_weeks`/`to_weeks`). The Team page
+  reuses the authoritative `src/lib/programPricing.ts` helpers
+  (`resolveWeeklyRate`, `parseWeekTiers`) -- the SAME lib the case forms use -- so
+  prices always reconcile. Displays the correct weekly unit (the admin card's
+  `/mo` label is misleading; admin left unchanged -- out of scope).
+- **Images**: `photos text[]` entries are either Vite public paths
+  (`/lovable-uploads/...`, bundled into the build) or full Supabase storage URLs
+  (`school-assets` public bucket). Both render directly as `<img src>`. The Team
+  page reuses the existing `ImageWithSkeleton` for load states. No new bucket.
+- **Components** (`src/components/team/catalog/`): `TeamCatalogPage`
+  (orchestrator), `CatalogFilters` (debounced search + city/school/room-type
+  selects), `SchoolCatalogSection` (school-first grouping -- each school only
+  shows ITS accommodations via the `school_id` FK, never a flat list),
+  `AccommodationCard` (large image + prominent price overlay), `AccommodationDetail`
+  (Dialog gallery with prev/next/thumbnails + all fields), `PresentationMode`.
+- **Presentation/TV mode**: a `createPortal(..., document.body)` fixed overlay
+  (not a Dialog -- avoids scroll constraints), Netflix-style showcase. Slideshow
+  cycles school -> its accommodations -> next school. Single `setInterval`
+  (re-armed only on playing/duration/count change; cleared on unmount/exit/pause --
+  never multiple timers). Keyboard: ArrowLeft/Right = prev/next, Space = play/pause,
+  Escape = exit (no text inputs in presentation mode to protect). Next slide's image
+  preloaded via `new Image()`. Body scroll locked while open. Configurable slide
+  duration (5/10/15s). TV-safe typography (text-4xl to 7xl), works at 1080p/4K.
+- **Empty/error states**: uses the shared `@/components/shell` `LoadingState`/
+  `EmptyState`/`ErrorState`. Handles no-schools, no-matches, no-photos, and
+  load-error with retry. Presentation mode has its own empty state.
+- **i18n**: `nav.catalog` + a `catalog.*` section added to en + ar `dashboard.json`
+  (parity-guarded by `src/lib/i18nKeys.test.ts`). Inline English fallbacks via
+  `t("key", "fallback")`. RTL-aware (logical properties, `rtl:rotate-180`).
+- **No DB/RLS/storage changes.** No new tables, no migrations, no RLS weakening.
+  The Team page is purely additive frontend over existing read-accessible data.
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 395/395 pass
+  (+20 new `catalogDisplay.test.ts` cases incl. the from-price invariant +
+  `filterCatalog` pipeline; +6 `PresentationMode.test.tsx` slideshow cases).
+  ESLint 0 errors on all new files. Review fixes applied: the prominent "from"
+  price now shows the *cheapest* weekly rate (long-stay tier), not the entry
+  rate; the room-type filter dropdown shows localized labels (not raw
+  snake_case); filter logic extracted to a single-pass pure `filterCatalog`;
+  `useLang` hook removes 6x language-derivation duplication; the synthetic
+  "Other" group uses an `isOther` flag (no sentinel-string check in UI); the
+  next-slide preload no longer mutates a ref during render.
