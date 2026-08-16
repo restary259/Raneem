@@ -153,7 +153,7 @@ const NotificationBell: React.FC = () => {
         <Button variant="ghost" size="sm" aria-label={t('notifications.title')} className="relative text-muted-foreground hover:text-foreground h-9 w-9 p-0">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -end-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1">
+            <span className="absolute -top-0.5 -end-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1 neon-dot neon-danger">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -191,7 +191,7 @@ const NotificationBell: React.FC = () => {
                   className={`w-full text-start px-4 py-3 hover:bg-muted/50 transition-colors ${!n.is_read ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-start gap-2">
-                    {!n.is_read && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary shrink-0" />}
+                    {!n.is_read && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary shrink-0 neon-dot neon-primary" />}
                     <div className={!n.is_read ? '' : 'ps-4'}>
                       <p className="text-sm font-medium leading-tight">{n.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>

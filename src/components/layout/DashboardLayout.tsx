@@ -300,7 +300,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                           className={cn(
                             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors w-full",
                             "hover:bg-accent hover:text-accent-foreground",
-                            parentActive && "bg-primary/10 text-primary font-medium",
+                            parentActive && "bg-primary/10 text-primary font-medium neon-active neon-primary",
                             collapsed && "justify-center px-2",
                           )}
                           title={collapsed ? t(item.key, item.key) : undefined}
@@ -331,13 +331,13 @@ function SidebarNav({ role }: { role: AppRole }) {
                                     className={cn(
                                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
                                       "hover:bg-accent hover:text-accent-foreground",
-                                      childActive && "bg-primary/10 text-primary font-medium",
+                                      childActive && "bg-primary/10 text-primary font-medium neon-active neon-primary",
                                     )}
                                   >
                                     <child.icon className="h-4 w-4 shrink-0" />
                                     <span>{t(child.key, child.key)}</span>
                                     {child.key === "nav.messages" && unreadMessages > 0 && (
-                                      <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                                      <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
                                         {unreadMessages}
                                       </span>
                                     )}
@@ -369,7 +369,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                       "hover:bg-accent hover:text-accent-foreground",
-                      isActive && "bg-primary/10 text-primary font-medium",
+                      isActive && "bg-primary/10 text-primary font-medium neon-active neon-primary",
                       collapsed && "justify-center px-2",
                     )}
                     title={collapsed ? t(item.key, item.key) : undefined}
@@ -377,7 +377,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                     <item.icon className="h-4 w-4 shrink-0" />
                     {!collapsed && <span>{t(item.key, item.key)}</span>}
                     {item.key === "nav.messages" && unreadMessages > 0 && (
-                      <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                      <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
                         {unreadMessages}
                       </span>
                     )}
@@ -466,7 +466,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                         <MessageSquare className="h-4 w-4" />
                         <span className="hidden sm:inline text-xs">{t("nav.messages")}</span>
                         {headerUnread > 0 && (
-                          <span className="absolute -top-1 -end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                          <span className="absolute -top-1 -end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
                             {headerUnread}
                           </span>
                         )}

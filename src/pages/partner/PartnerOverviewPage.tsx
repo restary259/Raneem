@@ -219,7 +219,7 @@ export default function PartnerOverviewPage() {
             </p>
           )}
         </div>
-        <p className="text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all">₪{(paid * commissionRate).toLocaleString('en-US')}</p>
+        <p className={`text-3xl sm:text-4xl font-black text-primary truncate min-w-0 break-all ${paid > 0 ? 'neon-kpi neon-primary' : ''}`}>₪{(paid * commissionRate).toLocaleString('en-US')}</p>
       </div>
 
       {/* Pipeline breakdown */}

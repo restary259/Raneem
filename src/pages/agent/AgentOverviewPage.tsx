@@ -242,7 +242,7 @@ export default function AgentOverviewPage() {
                 </p>
               )}
             </div>
-            <p className="min-w-0 truncate text-2xl font-bold tabular-nums text-primary sm:text-3xl">
+            <p className={`min-w-0 truncate text-2xl font-bold tabular-nums text-primary sm:text-3xl ${earnings.total ? 'neon-kpi neon-primary' : ''}`}>
               {fmt(earnings.total)}
             </p>
           </div>

@@ -303,7 +303,7 @@ const AdminCommandCenter = () => {
       {/* Forgotten Cases Alert */}
       {counts.forgotten > 0 && (
         <div
-          className="flex items-center gap-3 p-4 rounded-lg border border-destructive/30 bg-destructive/5 cursor-pointer hover:bg-destructive/10 transition-colors"
+          className="flex items-center gap-3 p-4 rounded-lg border border-destructive/30 bg-destructive/5 cursor-pointer hover:bg-destructive/10 transition-colors neon-critical neon-danger"
           onClick={() => navigate('/admin/pipeline')}
         >
           <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
@@ -315,7 +315,7 @@ const AdminCommandCenter = () => {
 
       {/* SLA Breach Alert */}
       {counts.sla_breaches > 0 && (
-        <div className="flex items-center gap-3 p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors" onClick={() => navigate('/admin/pipeline')}>
+        <div className="flex items-center gap-3 p-4 rounded-lg border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors neon-badge-important neon-warning" onClick={() => navigate('/admin/pipeline')}>
           <Clock className="h-5 w-5 text-amber-600 shrink-0" />
           <p className="text-sm text-amber-700 font-medium">
             {t('admin.commandCenter.slaAlert', '⏱️ {{count}} case(s) have breached SLA thresholds', { count: counts.sla_breaches })}
@@ -338,7 +338,7 @@ const AdminCommandCenter = () => {
               {loading ? (
                 <div className="h-8 w-16 bg-muted rounded animate-pulse mb-1" />
               ) : (
-                <p className="text-3xl font-bold text-foreground">{countsError ? '—' : kpi.value ?? 0}</p>
+                <p className={`text-3xl font-bold text-foreground ${kpi.value ? 'neon-kpi neon-primary' : ''}`}>{countsError ? '—' : kpi.value ?? 0}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
             </CardContent>

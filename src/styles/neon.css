@@ -1,0 +1,108 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Neon highlight indicators — dark-mode-only ("premium SaaS + subtle
+   futuristic illumination"). Imported by src/index.css.
+
+   Design rules (see .agents_tmp/PLAN.md):
+   - Scoped to `:is(.dark, .aurora)` so light mode gets ZERO changes.
+   - Mapped to the existing semantic vars (`--brand`, `--destructive`,
+     `--status-*`, `--primary`, `--ring`) — no new palette, no hardcoded
+     dozens of colors.
+   - Three intensity levels: 1 = subtle (active/hover/focus/selected),
+     2 = noticeable (KPIs, dots, active stage, important badges), 3 = strong
+     (critical/error states only).
+   - Performance: each glow is a single-layer `box-shadow` with a small
+     (≤8px) blur. No `filter`, no stacked shadows, no animated gradients.
+   - No meaning by glow alone — every glowing element already carries a
+     label/icon/text; the glow is redundant reinforcement.
+   - `prefers-reduced-motion` collapses transitions; glow stays as a static
+     state (the global rule already handles this — this is belt-and-suspenders).
+   ───────────────────────────────────────────────────────────────────────── */
+
+:is(.dark, .aurora) {
+  /* Default tint = brand so a bare `.neon-*` shape class (no color variant)
+     glows in the DARB brand color. Color-variant classes override this.
+     NOTE: the glow color is read via `hsl(var(--neon-color) / α)` directly in
+     each shape class's box-shadow (NOT via a `--neon-glow-*` token), because a
+     custom property that embeds `var(--neon-color)` resolves that reference at
+     the declaring element (root ⇒ always brand), which would defeat the
+     per-element color override. Declaring the shadow on the element itself
+     makes `var(--neon-color)` resolve at the element that carries the
+     color-variant class. */
+  --neon-color: var(--brand);
+}
+
+/* ── Semantic color-variant classes (set --neon-color only) ────────────
+   Apply a color variant alongside a shape class, e.g.
+   `neon-active neon-success` or `neon-critical neon-danger`. */
+:is(.dark, .aurora) .neon-brand { --neon-color: var(--brand); }
+:is(.dark, .aurora) .neon-primary { --neon-color: var(--primary); }
+:is(.dark, .aurora) .neon-danger { --neon-color: var(--destructive); }
+:is(.dark, .aurora) .neon-success { --neon-color: var(--status-enrolled); }
+:is(.dark, .aurora) .neon-warning { --neon-color: var(--status-payment); }
+:is(.dark, .aurora) .neon-ring { --neon-color: var(--ring); }
+
+/* ── Level 1 — subtle ────────────────────────────────────────────────── */
+/* Soft edge + faint glow on an active/selected surface (nav item, tab). */
+:is(.dark, .aurora) .neon-active {
+  box-shadow: 0 0 0 1px hsl(var(--neon-color) / 0.30), 0 0 6px hsl(var(--neon-color) / 0.18);
+}
+
+/* Focus-visible glow ring (additive to existing focus rings). */
+:is(.dark, .aurora) .neon-focus:focus-visible {
+  box-shadow: 0 0 0 1px hsl(var(--neon-color) / 0.30), 0 0 6px hsl(var(--neon-color) / 0.18);
+}
+
+/* State-conditional variants for components driven by Radix `data-state`
+   (so the glow only appears on the active tab / selected row, not every
+   instance). Pair with a color-variant class to tint. */
+:is(.dark, .aurora) [data-state="active"].neon-when-active {
+  box-shadow: 0 0 0 1px hsl(var(--neon-color) / 0.30), 0 0 6px hsl(var(--neon-color) / 0.18);
+}
+:is(.dark, .aurora) [data-state="selected"].neon-when-selected {
+  box-shadow: 0 0 0 1px hsl(var(--neon-color) / 0.30), 0 0 6px hsl(var(--neon-color) / 0.18);
+}
+
+/* ── Level 2 — noticeable ────────────────────────────────────────────── */
+/* Neon text accent on key numeric values (KPIs). */
+:is(.dark, .aurora) .neon-kpi {
+  text-shadow: 0 0 8px hsl(var(--neon-color) / 0.35);
+}
+
+/* Small luminous status dot (notification unread badge, status dot). */
+:is(.dark, .aurora) .neon-dot {
+  box-shadow: 0 0 6px hsl(var(--neon-color) / 0.55);
+}
+
+/* Active pipeline stage ring + glow. */
+:is(.dark, .aurora) .neon-stage {
+  box-shadow: 0 0 0 1px hsl(var(--neon-color) / 0.45), 0 0 8px hsl(var(--neon-color) / 0.28);
+}
+
+/* Important status badge / banner edge glow (Level 2). */
+:is(.dark, .aurora) .neon-badge-important {
+  box-shadow: 0 0 0 1px hsl(var(--neon-color) / 0.45), 0 0 8px hsl(var(--neon-color) / 0.28);
+}
+
+/* ── Level 3 — strong (critical/error only) ──────────────────────────── */
+/* Strong danger glow for destructive alert / critical banners. */
+:is(.dark, .aurora) .neon-critical {
+  box-shadow: 0 0 0 1px hsl(var(--neon-color) / 0.55), 0 0 10px hsl(var(--neon-color) / 0.40);
+}
+
+/* ── Reduced motion: keep glow as a static state, no animation ──────────
+   The global rule in index.css already collapses transitions; this
+   guarantees neon classes never animate even if a component adds its own
+   transition on box-shadow/text-shadow. */
+@media (prefers-reduced-motion: reduce) {
+  :is(.dark, .aurora) .neon-active,
+  :is(.dark, .aurora) .neon-focus,
+  :is(.dark, .aurora) .neon-when-active,
+  :is(.dark, .aurora) .neon-when-selected,
+  :is(.dark, .aurora) .neon-dot,
+  :is(.dark, .aurora) .neon-stage,
+  :is(.dark, .aurora) .neon-badge-important,
+  :is(.dark, .aurora) .neon-critical,
+  :is(.dark, .aurora) .neon-kpi {
+    transition: none;
+  }
+}

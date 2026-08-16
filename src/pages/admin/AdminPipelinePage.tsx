@@ -508,9 +508,9 @@ const AdminPipelinePage = () => {
                           (status === "appointment_scheduled" && days >= SLA_DAYS[CaseStatus.APPT_SCHEDULED]) ||
                           (status === "profile_completion" && days >= SLA_DAYS[CaseStatus.PROFILE_COMPLETION]));
                       const borderClass = isRedStale
-                        ? "border-destructive/60"
+                        ? "border-destructive/60 neon-critical neon-danger"
                         : isOrangeStale
-                          ? "border-orange-400/60"
+                          ? "border-orange-400/60 neon-badge-important neon-warning"
                           : "border-border";
                       const src = sourceMeta[c.source] ?? { label: c.source, cls: "bg-muted text-muted-foreground" };
 

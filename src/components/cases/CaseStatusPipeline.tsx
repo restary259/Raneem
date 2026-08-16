@@ -2,7 +2,20 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toneClasses, toneForStatus } from "@/lib/statusTokens";
+import { StatusTone, toneClasses, toneForStatus } from "@/lib/statusTokens";
+
+/** Pipeline tone → the `--status-*` CSS var that supplies the neon glow color. */
+const NEON_VAR_BY_TONE: Record<StatusTone, string> = {
+  new: "var(--status-new)",
+  contacted: "var(--status-contacted)",
+  appointment: "var(--status-appointment)",
+  profile: "var(--status-profile)",
+  payment: "var(--status-payment)",
+  submitted: "var(--status-submitted)",
+  enrolled: "var(--status-enrolled)",
+  danger: "var(--status-danger)",
+  neutral: "var(--ring)",
+};
 
 interface CaseStatusPipelineProps {
   currentStatus: string;
@@ -25,6 +38,7 @@ export default function CaseStatusPipeline({
           const isDone = idx < currentIndex;
           const isCurrent = idx === currentIndex;
           const isFuture = idx > currentIndex;
+          const tone = toneForStatus(stage);
 
           return (
             <React.Fragment key={stage}>
@@ -45,15 +59,20 @@ export default function CaseStatusPipeline({
                 <div
                   className={cn(
                     "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors",
-                    isDone ? cn(toneClasses(toneForStatus(stage)).chip, "border") : "",
+                    isDone ? cn(toneClasses(tone).chip, "border") : "",
                     isCurrent
                       ? cn(
-                          toneClasses(toneForStatus(stage)).chip,
-                          "border ring-2 ring-current/30",
+                          toneClasses(tone).chip,
+                          "border ring-2 ring-current/30 neon-stage",
                         )
                       : "",
                     isFuture ? "bg-muted border-border text-muted-foreground" : ""
                   )}
+                  style={
+                    isCurrent
+                      ? ({ "--neon-color": NEON_VAR_BY_TONE[tone] } as React.CSSProperties)
+                      : undefined
+                  }
                 >
                   {isDone ? (
                     <Check className="h-3.5 w-3.5" />
