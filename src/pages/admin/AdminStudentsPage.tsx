@@ -358,35 +358,50 @@ export default function AdminStudentsPage() {
       const profs = (profileData as StudentRecord[]) ?? [];
       setStudents(profs);
 
+      // Creators, case summaries and pending invitations all depend only on
+      // `profs`, so they run in one parallel batch instead of a waterfall.
       const creatorIds = [...new Set(profs.map((p) => p.created_by).filter(Boolean) as string[])];
+      const caseIds = [
+        ...new Set(profs.map((p) => p.case_id || p.linked_case_id).filter(Boolean) as string[]),
+      ];
+      const emails = profs.map((p) => p.email).filter(Boolean);
+
+      const [creatorRes, caseRes, subRes, inviteRes] = await Promise.all([
+        creatorIds.length
+          ? supabase.from("profiles").select("id, full_name, email").in("id", creatorIds)
+          : Promise.resolve({ data: [] as any[] }),
+        caseIds.length
+          ? supabase.from("cases").select("id, case_reference, status").in("id", caseIds)
+          : Promise.resolve({ data: [] as any[] }),
+        caseIds.length
+          ? (supabase as any)
+              .from("case_submissions")
+              .select("case_id, profile_completed_at")
+              .in("case_id", caseIds)
+          : Promise.resolve({ data: [] as any[] }),
+        emails.length
+          ? (supabase as any)
+              .from("user_invitations")
+              .select("email, status")
+              .in("email", emails)
+              .eq("status", "pending")
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
       if (creatorIds.length > 0) {
-        const { data: creatorProfs } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .in("id", creatorIds);
         const map: CreatorInfo = {};
-        (creatorProfs || []).forEach((p: any) => { map[p.id] = p.full_name || p.email; });
+        (creatorRes.data || []).forEach((p: any) => { map[p.id] = p.full_name || p.email; });
         setCreatorNames(map);
       }
 
       // Case reference + profile completion, so a case-linked student can be
       // recognised (and opened) straight from this list.
-      const caseIds = [
-        ...new Set(profs.map((p) => p.case_id || p.linked_case_id).filter(Boolean) as string[]),
-      ];
       if (caseIds.length > 0) {
-        const [{ data: caseRows }, { data: subRows }] = await Promise.all([
-          supabase.from("cases").select("id, case_reference, status").in("id", caseIds),
-          (supabase as any)
-            .from("case_submissions")
-            .select("case_id, profile_completed_at")
-            .in("case_id", caseIds),
-        ]);
         const completed = new Map<string, string | null>(
-          (subRows || []).map((r: any) => [r.case_id, r.profile_completed_at]),
+          (subRes.data || []).map((r: any) => [r.case_id, r.profile_completed_at]),
         );
         const map: Record<string, CaseSummary> = {};
-        (caseRows || []).forEach((c: any) => {
+        (caseRes.data || []).forEach((c: any) => {
           map[c.id] = {
             id: c.id,
             reference: c.case_reference,
@@ -401,17 +416,10 @@ export default function AdminStudentsPage() {
 
       // A durable invitation that has not been accepted means the account
       // exists but the student has never signed in.
-      const emails = profs.map((p) => p.email).filter(Boolean);
-      if (emails.length > 0) {
-        const { data: invites } = await (supabase as any)
-          .from("user_invitations")
-          .select("email, status")
-          .in("email", emails)
-          .eq("status", "pending");
-        setPendingInvites(new Set((invites || []).map((i: any) => (i.email || "").toLowerCase())));
-      } else {
-        setPendingInvites(new Set());
-      }
+      setPendingInvites(
+        new Set(((inviteRes.data || []) as any[]).map((i: any) => (i.email || "").toLowerCase())),
+      );
+
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
