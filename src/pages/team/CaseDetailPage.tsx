@@ -53,9 +53,6 @@ interface CaseRow {
   [key: string]: unknown;
 }
 
-/** Stages where scheduling another appointment still makes sense. */
-const SCHEDULE_STAGES = ["contacted", "appointment_scheduled"];
-
 /** Active view inside the tabbed profile-completion layout. */
 type WorkflowView = "overview" | "profile" | "finance";
 
@@ -458,7 +455,7 @@ export default function CaseDetailPage() {
               </div>
             )}
 
-            {canManage && SCHEDULE_STAGES.includes(caseData.status) && (
+            {canManage && caseData.status === "contacted" && (
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("case.header.schedule")}</span>
