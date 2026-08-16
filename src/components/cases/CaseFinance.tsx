@@ -447,7 +447,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
           </TabsList>
 
           {/* ══ SUMMARY TAB — DARB services only (ILS). No Germany costs. ══ */}
-          <TabsContent value="summary" className="space-y-5">
+          <TabsContent value="summary" className="space-y-5 data-[state=inactive]:hidden" forceMount>
             <div className="space-y-3">
               <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
