@@ -171,7 +171,8 @@ const PhotoSlideshow: React.FC<{
   accom: Accommodation | null;
   onOpenChange: (open: boolean) => void;
 }> = ({ accom, onOpenChange }) => {
-  const { t } = useTranslation("dashboard");
+  const { t, i18n } = useTranslation("dashboard");
+  const isRtl = i18n.dir() === "rtl";
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
   const [current, setCurrent] = useState(0);
@@ -225,7 +226,7 @@ const PhotoSlideshow: React.FC<{
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStart == null) return;
     const delta = e.changedTouches[0].clientX - touchStart;
-    if (Math.abs(delta) > 50) go(delta > 0 ? -1 : 1);
+    if (Math.abs(delta) > 50) go(isRtl ? (delta > 0 ? 1 : -1) : delta > 0 ? -1 : 1);
     setTouchStart(null);
   };
 
@@ -234,8 +235,8 @@ const PhotoSlideshow: React.FC<{
       <DialogContent
         className="max-w-3xl w-full"
         onKeyDown={(e) => {
-          if (e.key === "ArrowLeft") go(-1);
-          else if (e.key === "ArrowRight") go(1);
+          if (e.key === "ArrowLeft") go(isRtl ? 1 : -1);
+          else if (e.key === "ArrowRight") go(isRtl ? -1 : 1);
         }}
       >
         <DialogHeader>
@@ -273,18 +274,18 @@ const PhotoSlideshow: React.FC<{
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute left-2 rounded-full"
-                    onClick={() => go(-1)}
+                    className="absolute start-2 rounded-full"
+                    onClick={() => go(isRtl ? 1 : -1)}
                   >
-                    <ChevronLeft className="h-6 w-6" />
+                    <ChevronLeft className="h-6 w-6 rtl:rotate-180" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 rounded-full"
-                    onClick={() => go(1)}
+                    className="absolute end-2 rounded-full"
+                    onClick={() => go(isRtl ? -1 : 1)}
                   >
-                    <ChevronRight className="h-6 w-6" />
+                    <ChevronRight className="h-6 w-6 rtl:rotate-180" />
                   </Button>
                 </>
               )}
