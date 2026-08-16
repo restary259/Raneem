@@ -142,10 +142,10 @@ const AdminAnalyticsPage = () => {
       {(!loading || cases.length > 0) && !error && (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: t('admin.analytics.kpiTotalCases'), value: cases.length },
-          { label: t('admin.analytics.kpiActive'), value: cases.filter(c => !['enrollment_paid','cancelled','forgotten'].includes(c.status)).length },
-          { label: t('admin.analytics.kpiEnrolled'), value: cases.filter(c => c.status === 'enrollment_paid').length },
-          { label: t('admin.analytics.kpiConversion'), value: `${cases.length ? Math.round(cases.filter(c => c.status === 'enrollment_paid').length / cases.length * 100) : 0}%` },
+          { label: t('admin.analytics.kpiTotalCases'), value: kpi.total },
+          { label: t('admin.analytics.kpiActive'), value: kpi.active },
+          { label: t('admin.analytics.kpiEnrolled'), value: kpi.enrolled },
+          { label: t('admin.analytics.kpiConversion'), value: `${kpi.conversion}%` },
         ].map((kpi, i) => (
           <Card key={i}>
             <CardContent className="p-4 min-h-[80px]">
@@ -159,117 +159,15 @@ const AdminAnalyticsPage = () => {
 
 
       {(!loading || cases.length > 0) && !error && (
-      <div className="grid md:grid-cols-2 gap-6" dir="ltr">
-        {/* Funnel */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t('admin.analytics.conversionFunnel')}</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={500} style={{ overflow: 'visible' }}>
-              <BarChart
-                data={funnelData}
-                layout="vertical"
-                barCategoryGap="40%"
-                barSize={20}
-                margin={{ top: 4, bottom: 4, left: 0, right: 4 }}
-              >
-                <XAxis type="number" hide />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={yAxisWidth}
-                  tick={{ fontSize: 11, fill: 'currentColor' }}
-                  tickMargin={6}
-                />
-                <Tooltip
-                  formatter={(v) => [v, t('admin.analytics.tooltipCases')]}
-                  contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                />
-                <Bar dataKey="count" radius={4} minPointSize={4}>
-                  {funnelData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Source breakdown */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t('admin.analytics.sourceBreakdown')}</CardTitle></CardHeader>
-          <CardContent>
-            {sourceData.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-8">{t('admin.analytics.noData')}</p>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={sourceData}
-                      dataKey="count"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={false}
-                    >
-                      {sourceData.map((_, i) => <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v, name) => [v, name]}
-                      contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Legend */}
-                <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center mt-2">
-                  {sourceData.map((s, i) => (
-                    <div key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: STATUS_COLORS[i % STATUS_COLORS.length] }} />
-                      {s.name}: <span className="font-medium text-foreground">{s.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Avg days in current stage */}
-        <Card className="md:col-span-2">
-          <CardHeader><CardTitle className="text-base">{t('admin.analytics.avgDaysPerStage')}</CardTitle></CardHeader>
-          <CardContent>
-            {allZero ? (
-              <div className="h-[260px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                <Clock className="h-8 w-8 opacity-30" />
-                <p className="text-sm">{t('admin.analytics.noStageData', 'Not enough time has passed to calculate stage durations')}</p>
-                <p className="text-xs opacity-70">{t('admin.analytics.noStageDataSub', 'This chart populates as cases progress through the pipeline over days')}</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={avgDays} margin={{ top: 4, bottom: 50, left: 0, right: 0 }}>
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: isRtl ? 9 : 10, fill: 'currentColor' }}
-                    angle={-35}
-                    textAnchor="middle"
-                    height={80}
-                    interval={0}
-                  />
-                  <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
-                  <Tooltip
-                    formatter={(v: any, _: any, props: any) => {
-                      const hours = props?.payload?.hours;
-                      if ((v as number) < 1 && hours) return [`${hours}h`, ''];
-                      return [`${v} ${t('admin.analytics.tooltipDays')}`, ''];
-                    }}
-                    contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                  />
-                  <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} minPointSize={4} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+        <Suspense fallback={<LoadingState rows={3} />}>
+          <AnalyticsCharts
+            funnelData={funnelData}
+            sourceData={sourceData}
+            avgDays={avgDays}
+            colors={STATUS_COLORS}
+            isRtl={isRtl}
+          />
+        </Suspense>
       )}
     </div>
   );
