@@ -32,12 +32,14 @@ const AdminAnalyticsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      // Exclude archived cases so analytics reflect the active pipeline,
-      // matching the universe shown on the Pipeline board and Command Center.
+      // Exclude archived + soft-deleted cases so analytics reflect the active
+      // pipeline, matching the universe shown on the Pipeline board and Command
+      // Center (both filter on archived=false AND deleted_at IS NULL).
       const { data, error: fetchError } = await supabase
         .from('cases')
         .select('status, source, created_at, last_activity_at')
-        .eq('archived', false);
+        .eq('archived', false)
+        .is('deleted_at', null);
       if (fetchError) throw fetchError;
       return data || [];
     } catch (err: any) {

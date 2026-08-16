@@ -145,7 +145,9 @@ const AdminMembersPage: React.FC = () => {
       value: "team",
       label: t("admin.members.tabTeam", "Team"),
       icon: Users,
-      count: teamMembers.length,
+      // Badge counts only ACTIVE members; the list still renders deactivated
+      // rows so an admin can see/reactivate them.
+      count: teamMembers.filter((m) => !m.is_deactivated).length,
       render: () => (
         <MemberList
           members={teamMembers}
@@ -162,7 +164,7 @@ const AdminMembersPage: React.FC = () => {
       value: "agents",
       label: t("admin.members.tabAgents", "Agents"),
       icon: Shield,
-      count: agentMembers.length,
+      count: agentMembers.filter((m) => !m.is_deactivated).length,
       render: () => (
         <MemberList
           members={agentMembers}
@@ -179,7 +181,7 @@ const AdminMembersPage: React.FC = () => {
       value: "partners",
       label: t("admin.members.tabPartners", "Partners"),
       icon: Handshake,
-      count: partnerMembers.length,
+      count: partnerMembers.filter((m) => !m.is_deactivated).length,
       render: () => (
         <MemberList
           members={partnerMembers}
@@ -196,7 +198,7 @@ const AdminMembersPage: React.FC = () => {
       value: "ambassadors",
       label: t("admin.members.tabAmbassadors", "Ambassadors"),
       icon: UserCheck,
-      count: ambassadorMembers.length,
+      count: ambassadorMembers.filter((m) => !m.is_deactivated).length,
       render: () => (
         <MemberList
           members={ambassadorMembers}

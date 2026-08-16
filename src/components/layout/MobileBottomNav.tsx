@@ -70,7 +70,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
 const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
-    { key: 'nav.team', icon: Users, href: '/admin/members' },
+    { key: 'nav.members', icon: Users, href: '/admin/members' },
     { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },
     { key: 'nav.programs', icon: BookOpen, href: '/admin/programs' },
     { key: 'nav.activity', icon: Activity, href: '/admin/activity' },
@@ -125,7 +125,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const shortLabel: Record<string, string> = {
     'nav.overview': t('nav.overview', 'Home'),
     'nav.pipeline': t('nav.pipeline', 'Pipeline'),
-    'nav.team': t('nav.team', 'Team'),
+    'nav.members': t('nav.members', 'Members'),
     'nav.financials': t('nav.financials', 'Finance'),
     'nav.settings': t('nav.settings', 'Settings'),
     'nav.analytics': t('nav.analytics', 'Analytics'),

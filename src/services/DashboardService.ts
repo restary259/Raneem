@@ -12,7 +12,7 @@ export interface FinancialOverview {
   referralDiscounts: number;
   /** Global default partner commission (flat ILS amount per student). */
   partnerCommissionRate: number;
-  /** Total team-member commissions (flat ILS, all statuses). */
+  /** Team-member commissions actually PAID OUT (cash-out view, status='paid'). */
   teamCommissionsTotal: number;
   submissions: any[];
 }
@@ -20,10 +20,17 @@ export interface FinancialOverview {
 export const DashboardService = {
   /**
    * Admin financial overview. All amounts are ILS.
-   * Service fees come from confirmed agency-service payments in case_payments
-   * (the authoritative source, matching get_monthly_tax_report). Legacy cases
-   * that predate the finance workflow fall back to platform_revenue_ils plus
-   * recorded commissions.
+   *
+   * Service fees are computed PER enrolled case: a confirmed agency-service
+   * payment is authoritative; a legacy case without a payment row falls back to
+   * platform_revenue_ils + recorded commissions for that case (reconstructs the
+   * historical gross). Both contribute, so a mix of paid + legacy enrolled cases
+   * no longer zeroes the legacy half (the old all-or-nothing switch did).
+   *
+   * KPI accounting (per the operator's decision) is the CASH-OUT view:
+   *   - Team Commissions / Platform Net Revenue count only PAID rewards.
+   *   - Partner Pending keeps pending + approved together.
+   * A case "finishes" at enrollment_paid (the only terminal success status).
    */
   async financialOverview(): Promise<FinancialOverview> {
     const [payRes, allRewardsRes, casesRes, settingsRes] = await Promise.all([
@@ -36,8 +43,11 @@ export const DashboardService = {
       db.from('rewards').select('amount, status, admin_notes, case_id, reward_type'),
       db
         .from('cases')
-        .select('id, referral_discount, platform_revenue_ils, status')
-        .eq('status', 'enrollment_paid'),
+        .select('id, referral_discount, platform_revenue_ils, status, created_at')
+        .eq('status', 'enrollment_paid')
+        .eq('archived', false)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
       // Global default commission rates (flat ILS amounts, not percentages).
       db.from('platform_settings').select('partner_commission_rate').maybeSingle(),
     ]);
@@ -61,31 +71,20 @@ export const DashboardService = {
       .filter((r) => r.status === 'paid')
       .reduce((s, r) => s + (r.amount || 0), 0);
 
-    const teamCommissionsTotal = allRewards.filter(isTeam).reduce((s, r) => s + (r.amount || 0), 0);
-    const partnerCommissionsTotal = partnerRewards.reduce((s, r) => s + (r.amount || 0), 0);
-    const studentReferralTotal = allRewards.filter(isStudentReferral).reduce((s, r) => s + (r.amount || 0), 0);
+    // PAID-only totals (cash-out view).
+    const teamCommissionsPaid = allRewards
+      .filter((r) => isTeam(r) && r.status === 'paid')
+      .reduce((s, r) => s + (r.amount || 0), 0);
+    const studentReferralPaid = allRewards
+      .filter((r) => isStudentReferral(r) && r.status === 'paid')
+      .reduce((s, r) => s + (r.amount || 0), 0);
 
-    // Authoritative: confirmed agency-service payments from case_payments.
-    const serviceFeesFromPayments = payments.reduce((s, p) => s + (p.amount || 0), 0);
-
-    // Legacy fallback: reconstruct gross from platform revenue + commissions
-    // for deployments that predate the case_payments finance flow.
-    const serviceFeesFromCases =
-      cases.reduce((s, c) => s + (c.platform_revenue_ils || 0), 0) +
-      teamCommissionsTotal +
-      partnerCommissionsTotal +
-      studentReferralTotal;
-
-    const serviceFees = serviceFeesFromPayments > 0 ? serviceFeesFromPayments : serviceFeesFromCases;
-
-    const platformNetRevenue = Math.max(
-      0,
-      serviceFees - teamCommissionsTotal - partnerCommissionsTotal - studentReferralTotal
-    );
-
-    // Per-case effective service fee for the recent-enrolled list. Each
-    // confirmed payment is authoritative; legacy cases without a payment row
-    // fall back to platform revenue + commissions for that case.
+    // All-status per-case commission maps, used to reconstruct the historical
+    // GROSS service fee for legacy cases without a payment row. These are
+    // intentionally NOT the paid-only totals — using those here would understate
+    // legacy service fees (a pending/approved commission is still part of the
+    // gross the case earned). Student-referral rewards are deliberately excluded
+    // from the gross: they are paid from Darb's margin, not part of the case fee.
     const teamCommByCase: Record<string, number> = {};
     const partnerCommByCase: Record<string, number> = {};
     for (const r of allRewards) {
@@ -102,20 +101,49 @@ export const DashboardService = {
       platformRevenueByCase[c.id] = c.platform_revenue_ils || 0;
     }
 
-    const enrichedSubmissions = payments.map((p) => {
+    // Per-case confirmed payment: authoritative service fee when present.
+    const paymentByCase: Record<string, { amount: number; confirmedAt: string | null }> = {};
+    for (const p of payments) {
+      const cid = p.case_id;
+      if (!cid) continue;
+      const prev = paymentByCase[cid];
+      const amt = p.amount || 0;
+      if (!prev) {
+        paymentByCase[cid] = { amount: amt, confirmedAt: p.confirmed_at ?? null };
+      } else {
+        prev.amount += amt;
+        // Keep the earliest confirmed date as the enrollment anchor.
+        if (p.confirmed_at && (!prev.confirmedAt || p.confirmed_at < prev.confirmedAt)) {
+          prev.confirmedAt = p.confirmed_at;
+        }
+      }
+    }
+
+    // Service-fee aggregate = sum over EVERY enrolled case of its per-case fee
+    // (confirmed payment if any, else the platform-revenue + commission
+    // reconstruction). This reconciles exactly with the recent-enrolled list,
+    // which is now built from the same per-case computation.
+    const enrichedSubmissions = cases.map((c) => {
+      const pay = paymentByCase[c.id];
       const fallback =
-        (platformRevenueByCase[p.case_id] || 0) +
-        (teamCommByCase[p.case_id] || 0) +
-        (partnerCommByCase[p.case_id] || 0);
+        (platformRevenueByCase[c.id] || 0) +
+        (teamCommByCase[c.id] || 0) +
+        (partnerCommByCase[c.id] || 0);
+      const effectiveServiceFee = pay && pay.amount > 0 ? pay.amount : fallback;
       return {
-        ...p,
-        // case_payments.amount is the authoritative fee; fall back to the
-        // reconstruction only if the payment row has no amount (shouldn't happen).
-        service_fee: p.amount,
-        enrollment_paid_at: p.confirmed_at,
-        effective_service_fee: p.amount > 0 ? p.amount : fallback,
+        case_id: c.id,
+        enrollment_paid_at: pay?.confirmedAt ?? c.created_at ?? null,
+        effective_service_fee: effectiveServiceFee,
       };
     });
+
+    const serviceFees = enrichedSubmissions.reduce((s, e) => s + e.effective_service_fee, 0);
+
+    // Net revenue = service fees − commissions actually PAID OUT (cash-out view).
+    const platformNetRevenue = Math.max(
+      0,
+      serviceFees - teamCommissionsPaid - partnerCommissionPaid - studentReferralPaid
+    );
 
     return {
       serviceFees,
@@ -125,7 +153,7 @@ export const DashboardService = {
       enrolledCount,
       referralDiscounts,
       partnerCommissionRate,
-      teamCommissionsTotal,
+      teamCommissionsTotal: teamCommissionsPaid,
       submissions: enrichedSubmissions,
     };
   },
