@@ -2,7 +2,7 @@
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, ShieldCheck, Lightbulb, TrendingUp } from "lucide-react";
+import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, Linkedin, ShieldCheck, Lightbulb, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ServiceProcess from "@/components/services/ServiceProcess";
 import SEOHead from "@/components/common/SEOHead";

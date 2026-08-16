@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
     ].filter(Boolean),
     resolve: {
       alias: {
-        "@": path.resolve(import.meta.dirname, "./src"),
+        "@": path.resolve(__dirname, "./src"),
       },
     },
     build: {
