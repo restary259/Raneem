@@ -29,14 +29,11 @@ const AdminAnalyticsPage = () => {
     last_activity_at: string;
   }
 
-  const [cases, setCases] = useState<CaseRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  // Cached under a stable key so switching Finance-hub tabs (Financials ↔
+  // Spreadsheet ↔ Analytics) is served from cache instead of refetching.
+  const { data: cases = [], isPending: loading, error: queryError, refetch } = useQuery<CaseRow[]>({
+    queryKey: ['admin', 'analytics', 'cases'],
+    queryFn: async () => {
       // Exclude archived cases so analytics reflect the active pipeline,
       // matching the universe shown on the Pipeline board and Command Center.
       const { data, error: fetchError } = await supabase
@@ -44,27 +41,19 @@ const AdminAnalyticsPage = () => {
         .select('status, source, created_at, last_activity_at')
         .eq('archived', false);
       if (fetchError) throw fetchError;
-      return data || [];
-    } catch (err: any) {
-      setError(err.message);
-      toast({ variant: 'destructive', description: err.message });
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+      return (data ?? []) as CaseRow[];
+    },
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    let ignore = false;
-    fetchData().then(data => {
-      if (!ignore && data) setCases(data as CaseRow[]);
-    });
-    return () => { ignore = true; };
-  }, [fetchData]);
+  const error = queryError ? (queryError as Error).message : null;
 
-  const refresh = useCallback(() => {
-    fetchData().then(data => { if (data) setCases(data as CaseRow[]); });
-  }, [fetchData]);
+  React.useEffect(() => {
+    if (error) toast({ variant: 'destructive', description: error });
+  }, [error, toast]);
+
+  const refresh = useCallback(() => { void refetch(); }, [refetch]);
+
 
   const statusLabels: Record<string, string> = {
     new: t('admin.analytics.statusNew'),
