@@ -554,7 +554,16 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold">{t("finance.services.title")}</p>
-        <span className="text-sm font-semibold">{formatILS(Number(financials?.service_total ?? 0))}</span>
+        <span className="text-sm font-semibold">
+          {formatILS(
+            selected.length > 0
+              ? selected.reduce((sum, item) => {
+                  const service = selectableCatalog.find((s) => s.id === item.service_id);
+                  return sum + (service ? priceFor(service) * Math.max(1, item.quantity) : 0);
+                }, 0)
+              : Number(financials?.service_total ?? 0),
+          )}
+        </span>
       </div>
 
       {catalogError && (
