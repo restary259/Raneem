@@ -600,6 +600,7 @@
       "photosUploadFailed": "Upload failed",
       "photosDeleteFailed": "Delete failed",
       "photosAddHint": "No photos",
+      "photosExternal": "ext",
       "tierBasic": "Basic",
       "tierStandard": "Standard",
       "tierPremium": "Premium",

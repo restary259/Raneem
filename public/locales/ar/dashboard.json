@@ -600,6 +600,7 @@
       "photosUploadFailed": "فشل الرفع",
       "photosDeleteFailed": "فشل الحذف",
       "photosAddHint": "لا توجد صور",
+      "photosExternal": "خارجية",
       "tierBasic": "أساسي",
       "tierStandard": "معياري",
       "tierPremium": "مميز",

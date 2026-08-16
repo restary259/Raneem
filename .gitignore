@@ -30,3 +30,4 @@ dist-ssr
 playwright-report/
 test-results/
 .agents_tmp/
+scraped/

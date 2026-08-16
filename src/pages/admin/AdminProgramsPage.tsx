@@ -113,6 +113,7 @@ interface Accommodation {
   room_type: string | null;
   distance_note: string | null;
   price_tiers: unknown;
+  photos?: string[] | null;
 }
 interface Insurance {
   id: string;
@@ -1187,6 +1188,11 @@ const AdminProgramsPage = () => {
                           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${TONE.enrolled}`}>
                             <ImageIcon className="h-3 w-3" />
                             {photoCounts[a.id]}
+                          </span>
+                        ) : (a.photos?.length ?? 0) > 0 ? (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
+                            <ImageIcon className="h-3 w-3" />
+                            {a.photos?.length ?? 0} {t('admin.programs.photosExternal')}
                           </span>
                         ) : (
                           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${TONE.danger}`}>

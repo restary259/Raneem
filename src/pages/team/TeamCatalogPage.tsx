@@ -64,6 +64,7 @@ interface Accommodation {
   room_type: string | null;
   distance_note: string | null;
   price_tiers: unknown;
+  photos?: string[] | null;
 }
 
 interface Photo {
@@ -82,6 +83,26 @@ export function groupBySchoolId<T extends { school_id: string | null }>(
     (map[item.school_id] ??= []).push(item);
   }
   return map;
+}
+
+/**
+ * Pure photo-source resolver: if bucket rows exist, use them (signed URLs
+ * are attached later by the effect); otherwise fall back to the external
+ * reference URLs in `accom.photos[]`. Returns an empty array when neither
+ * source is available.
+ */
+export function resolvePhotoSources(
+  bucketRows: Pick<Photo, "id" | "storage_path" | "display_order">[],
+  externalUrls?: string[] | null,
+): Photo[] {
+  if (bucketRows.length > 0) return bucketRows;
+  if (!externalUrls || externalUrls.length === 0) return [];
+  return externalUrls.map((url, idx) => ({
+    id: `ext-${idx}`,
+    storage_path: url,
+    display_order: idx,
+    url,
+  }));
 }
 
 /** Price-tier chips + displayed price for an accommodation (read-only). */
@@ -145,11 +166,25 @@ const AccommodationCard: React.FC<{
   accom: Accommodation;
   onOpen: (a: Accommodation) => void;
 }> = ({ accom, onOpen }) => {
+  const firstPhoto = accom.photos?.[0] ?? null;
   return (
     <Card
       className="overflow-hidden hover:shadow-md transition-all cursor-pointer"
       onClick={() => onOpen(accom)}
     >
+      {firstPhoto ? (
+        <div className="aspect-[3/2] w-full overflow-hidden bg-muted/30">
+          <img
+            src={firstPhoto}
+            alt={accom.name_en}
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+      ) : null}
       <CardContent className="p-4 space-y-2">
         <p className="text-sm font-semibold">{accom.name_en}</p>
         {accom.room_type || accom.meals ? (
@@ -190,21 +225,27 @@ const PhotoSlideshow: React.FC<{
     setCurrent(0);
     (async () => {
       try {
-        const { data, error } = await db
+        const { data } = await db
           .from("accommodation_photos")
           .select("id, storage_path, display_order")
           .eq("accommodation_id", accom.id)
           .order("display_order");
-        if (error || cancelled) return;
-        const rows: Photo[] = data ?? [];
-        const withUrls = await Promise.all(
-          rows.map(async (p) => {
-            const { data: signed, error: urlErr } = await supabase.storage
-              .from("accommodation-photos")
-              .createSignedUrl(p.storage_path, 3600);
-            return { ...p, url: urlErr ? undefined : signed?.signedUrl };
-          }),
-        );
+        if (cancelled) return;
+        const rows = data ?? [];
+        const resolved = resolvePhotoSources(rows, accom.photos);
+        if (resolved.length === 0) return;
+        // Bucket photos need signed URLs; external fallback photos already carry a url.
+        const needsSignedUrls = rows.length > 0;
+        const withUrls = needsSignedUrls
+          ? await Promise.all(
+              resolved.map(async (p) => {
+                const { data: signed, error: urlErr } = await supabase.storage
+                  .from("accommodation-photos")
+                  .createSignedUrl(p.storage_path, 3600);
+                return { ...p, url: urlErr ? undefined : signed?.signedUrl };
+              }),
+            )
+          : resolved;
         if (!cancelled) {
           setPhotos(withUrls);
           setCurrent(0);

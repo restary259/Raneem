@@ -1348,3 +1348,37 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 360/360 pass
   incl. i18n parity guard.
 
+## Scraped Heidelberg accommodations seed + external photo URL fallback (2026-08-21)
+- Source: `academy-languages.com/en/accommodation-heidelberg/dormitories-apartments-heidelberg/`
+  (SiteGround anti-bot captcha blocks all automated image downloads — curl,
+  Playwright browser, and Wayback Machine all fail except 3 images Wayback
+  had cached). The page *content* (text, prices, image URLs) was extracted
+  via the Tavily extract service, which uses different infrastructure.
+- Migration `20260821000000_seed_heidelberg_accommodations.sql` (idempotent):
+  creates UNIQUE indexes `idx_schools_name_en` on `schools(name_en)` and
+  `idx_accommodations_school_name_en` on `accommodations(school_id, name_en)`
+  first, then seeds the `Academy of Languages (F+U)` school + 10
+  accommodations across 6 categories (E, D, C, B+, B, A×4) with weekly
+  `price_tiers` (1-6 / 7-16 / 17-29 / 30+ weeks), `room_type`, `distance_note`,
+  `deposit` (200), `placement_fee` (130), full `description`, and the original
+  image URLs stored in the legacy `photos TEXT[]` column as reference/fallback.
+  All INSERTs use targeted `ON CONFLICT (name_en)` / `ON CONFLICT (school_id,
+  name_en) DO NOTHING` so re-running the migration never creates duplicates.
+  Requires Supabase admin/service-role DDL — NOT applied by Vercel build or
+  `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
+- **External photo URL fallback**: the `photos TEXT[]` column on
+  `accommodations` existed since the base migration but was unused by the UI.
+  Now both catalog surfaces use it as a fallback when no `accommodation_photos`
+  bucket rows exist. The decision logic lives in a single pure exported
+  function `resolvePhotoSources(bucketRows, externalUrls)` in
+  `TeamCatalogPage.tsx` — returns bucket rows if any, else maps external URLs
+  to `Photo[]` with `url` already set, else `[]`. Unit-tested (5 cases).
+- Both `Accommodation` interfaces (`TeamCatalogPage`, `AdminProgramsPage`)
+  gained `photos?: string[] | null`; both queries already use `select("*")`.
+- i18n: `admin.programs.photosExternal` ("ext" / "خارجية") added to en + ar
+  (parity-guarded).
+- Scraped data is NOT committed to the repo (`scraped/` is git-ignored).
+  The structured accommodation data lives in the SQL migration itself.
+- Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 382/382 pass
+  incl. i18n parity guard + 5 new `resolvePhotoSources` tests.
+
