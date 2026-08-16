@@ -370,29 +370,6 @@ export default function CaseDetailPage() {
     financeReadiness.serviceTotal > 0;
   const waHref = whatsappUrl(caseData.phone_number);
   const phoneUsable = isLinkablePhone(caseData.phone_number);
-  const contactHref = isMobile ? `tel:+${normalizePhone(caseData.phone_number)}` : (waHref ?? "#");
-  const ContactIcon = isMobile ? Phone : MessageCircle;
-
-  /**
-   * The dashboard often runs inside a preview iframe where a plain
-   * `target="_blank"` anchor is silently swallowed by the sandbox. Open the
-   * link programmatically and, when the popup is blocked, fall back to the
-   * current tab so the button always does something visible.
-   */
-  const handleContactClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (!phoneUsable) {
-      e.preventDefault();
-      toast({
-        variant: "destructive",
-        description: t("case.header.noPhone", "No valid phone number on this case"),
-      });
-      return;
-    }
-    if (isMobile) return; // tel: links work natively
-    e.preventDefault();
-    const opened = window.open(contactHref, "_blank", "noopener,noreferrer");
-    if (!opened) window.location.href = contactHref;
-  };
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-6">
@@ -419,18 +396,67 @@ export default function CaseDetailPage() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <Button asChild size="sm" variant="outline" className="gap-1.5">
-              <a
-                href={contactHref}
-                onClick={handleContactClick}
-                aria-disabled={!phoneUsable}
-                target={isMobile ? undefined : "_blank"}
-                rel={isMobile ? undefined : "noreferrer"}
-              >
-                <ContactIcon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{isMobile ? t("case.header.call") : t("case.header.whatsapp")}</span>
-              </a>
-            </Button>
+            {/* Desktop: WhatsApp only */}
+            {!isMobile && (
+              <Button asChild size="sm" variant="outline" className="gap-1.5">
+                <a
+                  href={waHref ?? "#"}
+                  onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                    if (!phoneUsable) {
+                      e.preventDefault();
+                      toast({ variant: "destructive", description: t("case.header.noPhone", "No valid phone number on this case") });
+                      return;
+                    }
+                    e.preventDefault();
+                    const opened = window.open(waHref!, "_blank", "noopener,noreferrer");
+                    if (!opened) window.location.href = waHref!;
+                  }}
+                  aria-disabled={!phoneUsable}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t("case.header.whatsapp")}</span>
+                </a>
+              </Button>
+            )}
+
+            {/* Mobile: WhatsApp + Call side by side */}
+            {isMobile && (
+              <div className="flex items-center gap-1.5">
+                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                  <a
+                    href={waHref ?? "#"}
+                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                      if (!phoneUsable || !waHref) {
+                        e.preventDefault();
+                        toast({ variant: "destructive", description: t("case.header.noPhone", "No valid phone number on this case") });
+                      }
+                    }}
+                    aria-disabled={!phoneUsable}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{t("case.header.whatsapp")}</span>
+                  </a>
+                </Button>
+
+                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                  <a
+                    href={phoneUsable ? `tel:+${normalizePhone(caseData.phone_number)}` : "#"}
+                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                      if (!phoneUsable) {
+                        e.preventDefault();
+                        toast({ variant: "destructive", description: t("case.header.noPhone", "No valid phone number on this case") });
+                      }
+                    }}
+                    aria-disabled={!phoneUsable}
+                  >
+                    <Phone className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{t("case.header.call")}</span>
+                  </a>
+                </Button>
+              </div>
+            )}
 
             {canManage && SCHEDULE_STAGES.includes(caseData.status) && (
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
