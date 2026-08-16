@@ -37,9 +37,6 @@ export interface StudentProfileValues {
   accommodation_weeks: string;
 
   start_month: string;
-  arrival_date: string;
-  course_start: string;
-  course_end: string;
 }
 
 export const EMPTY_STUDENT_PROFILE: StudentProfileValues = {
@@ -72,9 +69,6 @@ export const EMPTY_STUDENT_PROFILE: StudentProfileValues = {
   accommodation_weeks: "",
 
   start_month: "",
-  arrival_date: "",
-  course_start: "",
-  course_end: "",
 };
 
 /** Fields a profile must carry before the case can move on to payment. */
@@ -88,7 +82,6 @@ export const REQUIRED_PROFILE_FIELDS: (keyof StudentProfileValues)[] = [
   "program_id",
   "accommodation_id",
   "insurance_id",
-  "course_start",
 ];
 
 /** i18n key (namespace `dashboard`) used to name a field in error messages. */
@@ -122,9 +115,6 @@ export const PROFILE_FIELD_LABEL_KEYS: Record<keyof StudentProfileValues, string
   accommodation_weeks: "case.profile.accommodationWeeks",
 
   start_month: "case.fields.startMonth",
-  arrival_date: "case.fields.arrivalDate",
-  course_start: "case.fields.courseStart",
-  course_end: "case.fields.courseEnd",
 };
 
 /** Every language course runs for exactly this many weeks. */
@@ -243,12 +233,6 @@ export function readStudentProfile(
     accommodation_weeks: str(submission?.accommodation_weeks) || str(extra.accommodation_weeks),
 
     start_month: str(extra.start_month),
-
-    arrival_date: str(extra.arrival_date),
-
-    course_start: str(submission?.program_start_date) || str(extra.course_start),
-
-    course_end: str(submission?.program_end_date) || str(extra.course_end),
   };
 }
 

@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { format, differenceInYears } from "date-fns";
+import { differenceInYears } from "date-fns";
 import { ArrowLeft, Loader2, Upload, X, Check, ChevronRight, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ import { generateIntakeMonths } from "@/utils/intakeMonths";
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 import { validateUploadFile } from "@/lib/uploadRules";
 import { isLinkablePhone } from "@/lib/phone";
-import { computeWeeklyCost, endDateForWeeks, formatMoney } from "@/lib/programPricing";
+import { computeWeeklyCost, formatMoney } from "@/lib/programPricing";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
 import { EDUCATION_LEVEL_VALUES, PASSPORT_TYPE_VALUES } from "@/lib/intakeOptions";
 import { useDefaultCourseWeeks } from "@/hooks/useCaseServices";
@@ -183,24 +183,6 @@ const BirthdayPicker = ({ value, onChange, t }: { value: string; onChange: (iso:
   );
 };
 
-/**
- * SimpleDateField — plain <input type="date">, renders natively everywhere.
- */
-const SimpleDateField = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string; // ISO "YYYY-MM-DD" or ""
-  onChange: (iso: string) => void;
-}) => (
-  <div>
-    <Label>{label}</Label>
-    <Input type="date" className="mt-1" value={value} onChange={(e) => onChange(e.target.value)} />
-  </div>
-);
-
 const StepBar = ({ step, t }: { step: StepNum; t: TFunction }) => (
   <div className="flex items-center gap-1 mb-6">
     {STEP_KEYS.map((key, i) => {
@@ -288,9 +270,6 @@ export default function SubmitNewStudentPage() {
   const [programId, setProgramId] = useState("");
   const [programWeeks, setProgramWeeks] = useState("");
   const [startMonth, setStartMonth] = useState("");
-  const [arrivalDate, setArrivalDate] = useState("");
-  const [courseStart, setCourseStart] = useState("");
-  const [courseEnd, setCourseEnd] = useState("");
   const [accommodationId, setAccommodationId] = useState("");
   const [accommodationWeeks, setAccommodationWeeks] = useState("");
   const [insuranceId, setInsuranceId] = useState("");
@@ -325,9 +304,6 @@ export default function SubmitNewStudentPage() {
     programId,
     schoolId,
     startMonth,
-    arrivalDate,
-    courseStart,
-    courseEnd,
     accommodationId,
     programWeeks,
     accommodationWeeks,
@@ -362,9 +338,6 @@ export default function SubmitNewStudentPage() {
     setSchoolId(d.schoolId ?? "");
     setProgramId(d.programId ?? "");
     setStartMonth(d.startMonth ?? "");
-    setArrivalDate(d.arrivalDate ?? "");
-    setCourseStart(d.courseStart ?? "");
-    setCourseEnd(d.courseEnd ?? "");
     setAccommodationId(d.accommodationId ?? "");
     setProgramWeeks(d.programWeeks ?? "");
     setAccommodationWeeks(d.accommodationWeeks ?? "");
@@ -407,27 +380,12 @@ export default function SubmitNewStudentPage() {
     () => computeWeeklyCost(selectedAccom, parseInt(accommodationWeeks) || 0),
     [selectedAccom, accommodationWeeks],
   );
-  const insuranceCost = useMemo(
-    () => computeInsuranceCost(selectedInsurance ?? null, ageFromDob(dob), courseStart || null, courseEnd || null),
-    [selectedInsurance, dob, courseStart, courseEnd],
-  );
+  const insuranceCost = useMemo(() => {
+    const approxMonths = Math.ceil((parseInt(programWeeks) || 0) / 4.33);
+    return computeInsuranceCost(selectedInsurance ?? null, ageFromDob(dob), null, null, approxMonths);
+  }, [selectedInsurance, dob, programWeeks]);
   const eurTotal = programCost.total + accomCost.total + (insuranceCost.total ?? 0);
   const monthOptions = generateIntakeMonths(24);
-
-  // Course end is derived from the number of weeks the student is enrolled for.
-  useEffect(() => {
-    const end = endDateForWeeks(courseStart, parseInt(programWeeks) || 0);
-    if (end) setCourseEnd(end);
-  }, [courseStart, programWeeks]);
-
-  // Auto course start from the program's fixed monthly start day
-  useEffect(() => {
-    if (selectedProgram?.fixed_start_day_of_month && startMonth) {
-      const [y, m] = startMonth.split("-").map(Number);
-      const d = selectedProgram.fixed_start_day_of_month;
-      setCourseStart(`${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
-    }
-  }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
   // Changing the school invalidates every school-bound selection, including the
   // durations and derived dates that belonged to the previous school's program.
@@ -437,8 +395,6 @@ export default function SubmitNewStudentPage() {
     setProgramWeeks("");
     setAccommodationWeeks("");
     setStartMonth("");
-    setCourseStart("");
-    setCourseEnd("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
 
@@ -654,8 +610,8 @@ export default function SubmitNewStudentPage() {
         program_id: programId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
-        program_start_date: courseStart || null,
-        program_end_date: courseEnd || null,
+        program_start_date: null,
+        program_end_date: null,
         profile_completed_at: now,
         // Weekly rate × weeks — `*_price` columns always hold the TOTAL.
         program_weeks: programCost.weeks || null,
@@ -693,9 +649,6 @@ export default function SubmitNewStudentPage() {
           program_id: programId || null,
           school_id: schoolId || null,
           start_month: startMonth || null,
-          arrival_date: arrivalDate || null,
-          course_start: courseStart || null,
-          course_end: courseEnd || null,
           accommodation_id: accommodationId || null,
           insurance_id: insuranceId || null,
           documents_skipped: skipDocuments,
@@ -1078,22 +1031,6 @@ export default function SubmitNewStudentPage() {
               </Select>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <SimpleDateField label={ss("arrivalDate")} value={arrivalDate} onChange={setArrivalDate} />
-              <SimpleDateField label={ss("courseStart")} value={courseStart} onChange={setCourseStart} />
-              <div>
-                <Label>{ss("courseEnd")}</Label>
-                <div
-                  className={cn(
-                    "mt-1 flex items-center h-10 px-3 rounded-md border text-sm bg-muted/30",
-                    courseEnd ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {courseEnd ? format(new Date(courseEnd), "PP") : ss("autoCalc")}
-                </div>
-              </div>
-            </div>
-
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>
@@ -1308,8 +1245,6 @@ export default function SubmitNewStudentPage() {
                       : "—"
                   }
                 />
-                <ReviewRow label={ss("courseStart")} value={courseStart || "—"} />
-                <ReviewRow label={ss("courseEnd")} value={courseEnd || "—"} />
                 <ReviewRow label={ss("accommodation")} value={selectedAccom ? nameOf(selectedAccom) : ss("noAccom")} />
                 <ReviewRow
                   label={ss("accommodationWeeks")}

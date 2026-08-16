@@ -88,9 +88,10 @@ export function computeInsuranceCost(
   age: number | null,
   start?: string | null,
   end?: string | null,
+  overrideMonths?: number,
 ): InsuranceCost {
   const monthly = resolveMonthlyRate(insurance, age);
-  const months = monthsBetween(start, end);
+  const months = overrideMonths ?? monthsBetween(start, end);
   const perMonth = (insurance?.billing_period ?? "monthly") === "monthly";
   const total = monthly === null ? null : perMonth && months ? monthly * months : monthly;
   return {

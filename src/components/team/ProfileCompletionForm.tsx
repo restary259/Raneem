@@ -186,27 +186,6 @@ const BirthdayPicker = ({
   );
 };
 
-/** Simple date input using native <input type="date"> — no pointer-event issues in modals */
-const DateField = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string; // ISO "YYYY-MM-DD" or ""
-  onChange: (iso: string) => void;
-}) => (
-  <div>
-    <Label>{label}</Label>
-    <Input
-      type="date"
-      className="mt-1"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  </div>
-);
-
 /* ══════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════════════ */
@@ -262,9 +241,6 @@ export default function ProfileCompletionForm({
   const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
   const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
   const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
-  const [arrivalDate, setArrivalDate] = useState<string>((ex.arrival_date as string) ?? "");
-  const [courseStart, setCourseStart] = useState<string>((ex.course_start as string) ?? "");
-  const [courseEnd, setCourseEnd] = useState<string>((ex.course_end as string) ?? "");
 
   // Accommodation
   const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
@@ -274,7 +250,7 @@ export default function ProfileCompletionForm({
   const draftValue = {
     firstName, middleName, lastName, dob, gender, cityOfBirth,
     email, phone, emergencyName, emergencyPhone, street, houseNo, postcode, city,
-    programId, schoolId, startMonth, arrivalDate, courseStart, courseEnd,
+    programId, schoolId, startMonth,
     accommodationId, insuranceId,
   };
   const { restoredDraft, savedAt, expiresAt, expired, clearDraft, acknowledgeRestore, acknowledgeExpired } = useFormDraft({
@@ -292,7 +268,6 @@ export default function ProfileCompletionForm({
     setEmergencyName(d.emergencyName ?? ""); setEmergencyPhone(d.emergencyPhone ?? "");
     setStreet(d.street ?? ""); setHouseNo(d.houseNo ?? ""); setPostcode(d.postcode ?? ""); setCity(d.city ?? "");
     setProgramId(d.programId ?? ""); setSchoolId(d.schoolId ?? ""); setStartMonth(d.startMonth ?? "");
-    setArrivalDate(d.arrivalDate ?? ""); setCourseStart(d.courseStart ?? ""); setCourseEnd(d.courseEnd ?? "");
     setAccommodationId(d.accommodationId ?? ""); setInsuranceId(d.insuranceId ?? "");
     acknowledgeRestore();
     toast({ title: t("common.draft.restoredTitle"), description: t("common.draft.restoredBody") });
@@ -315,25 +290,6 @@ export default function ProfileCompletionForm({
   const filteredAccoms = accommodations.filter((a) => !schoolId || a.school_id === schoolId);
   const selectedAccom = accommodations.find((a) => a.id === accommodationId);
   const selectedIns = insurances.find((i) => i.id === insuranceId);
-
-  useEffect(() => {
-    if (selectedProgram?.duration_in_months && courseStart) {
-      // courseStart is ISO string; add months and format back to ISO
-      const startDate = new Date(courseStart);
-      if (!isNaN(startDate.getTime())) {
-        const endDate = addMonths(startDate, selectedProgram.duration_in_months);
-        setCourseEnd(format(endDate, "yyyy-MM-dd"));
-      }
-    }
-  }, [selectedProgram?.duration_in_months, courseStart]);
-
-  useEffect(() => {
-    if (selectedProgram?.fixed_start_day_of_month && startMonth) {
-      const [y, m] = startMonth.split("-").map(Number);
-      const d = String(selectedProgram.fixed_start_day_of_month).padStart(2, "0");
-      setCourseStart(`${y}-${String(m).padStart(2, "0")}-${d}`);
-    }
-  }, [selectedProgram?.fixed_start_day_of_month, startMonth]);
 
   useEffect(() => {
     setAccommodationId("");
@@ -467,17 +423,14 @@ export default function ProfileCompletionForm({
         school_id: schoolId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
-        arrival_date: arrivalDate || null,
-        course_start: courseStart || null,
-        course_end: courseEnd || null,
         start_month: startMonth || null,
       };
       const upsertPayload: any = {
         case_id: caseId,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
-        program_start_date: courseStart || null,
-        program_end_date: courseEnd || null,
+        program_start_date: null,
+        program_end_date: null,
         service_fee: 0,
         program_price: selectedProgram?.price ?? 0,
         accommodation_price: selectedAccom?.price ?? 0,
@@ -795,25 +748,6 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <DateField label={t("case.profileForm.courseStart")} value={courseStart} onChange={setCourseStart} />
-            <div>
-              <Label>{t("case.profileForm.courseEnd")}</Label>
-              <div
-                className={cn(
-                  "mt-1 flex items-center h-10 px-3 rounded-md border text-sm bg-muted/30",
-                  courseEnd ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {courseEnd || t("case.profileForm.ph.autoCalculated")}
-              </div>
-              {selectedProgram?.duration_in_months && courseEnd && (
-                <p className={`text-xs mt-1 ${toneClasses("enrolled").text}`}>
-                  ✓ {t("case.profileForm.autoFrom", { count: selectedProgram.duration_in_months })}
-                </p>
-              )}
-            </div>
-          </div>
           <div>
             <Label>{t("case.profileForm.school")}</Label>
             <Select value={schoolId} onValueChange={setSchoolId}>
@@ -830,7 +764,6 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
-          <DateField label={t("case.profileForm.arrivalDate")} value={arrivalDate} onChange={setArrivalDate} />
         </div>
       )}
 
@@ -950,9 +883,6 @@ export default function ProfileCompletionForm({
                 [t("case.profileForm.address"), [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
                 [t("case.profileForm.languageProgram"), nameOf(selectedProgram) || "—"],
                 [t("case.profileForm.school"), nameOf(schools.find((s) => s.id === schoolId)) || "—"],
-                [t("case.profileForm.courseStart"), courseStart || "—"],
-                [t("case.profileForm.courseEnd"), courseEnd || "—"],
-                [t("case.profileForm.arrivalDate"), arrivalDate || "—"],
                 [t("case.profileForm.accommodation"), nameOf(selectedAccom) || "—"],
                 [t("case.profileForm.insurance"), selectedIns?.name || "—"],
               ] as [string, string][]

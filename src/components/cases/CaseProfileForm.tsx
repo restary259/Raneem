@@ -23,7 +23,7 @@ import {
   toExtraData,
   type StudentProfileValues,
 } from "@/lib/studentProfileFields";
-import { computeWeeklyCost, endDateForWeeks, formatMoney } from "@/lib/programPricing";
+import { computeWeeklyCost, formatMoney } from "@/lib/programPricing";
 import { ageFromDob, computeInsuranceCost } from "@/lib/insurancePricing";
 import { EDUCATION_LEVEL_VALUES, PASSPORT_TYPE_VALUES } from "@/lib/intakeOptions";
 import { cn } from "@/lib/utils";
@@ -312,42 +312,16 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
     [selectedAccom, values.accommodation_weeks],
   );
 
-  const insuranceCost = useMemo(
-    () =>
-      computeInsuranceCost(
-        selectedInsurance as any,
-        ageFromDob(values.date_of_birth),
-        values.course_start || null,
-        values.course_end || null,
-      ),
-    [selectedInsurance, values.date_of_birth, values.course_start, values.course_end],
-  );
-
-  /*
-   * Programme start follows the programme's fixed start day.
-   */
-  useEffect(() => {
-    if (!selectedProgram?.fixed_start_day_of_month || !values.start_month) {
-      return;
-    }
-
-    const [y, m] = values.start_month.split("-").map(Number);
-
-    const d = selectedProgram.fixed_start_day_of_month;
-
-    set("course_start", `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
-  }, [selectedProgram?.fixed_start_day_of_month, values.start_month, set]);
-
-  /*
-   * Course end is derived from the number of weeks.
-   */
-  useEffect(() => {
-    const end = endDateForWeeks(values.course_start, parseInt(values.program_weeks) || 0);
-
-    if (end && end !== values.course_end) {
-      set("course_end", end);
-    }
-  }, [values.course_start, values.program_weeks, values.course_end, set]);
+  const insuranceCost = useMemo(() => {
+    const approxMonths = Math.ceil((parseInt(values.program_weeks) || 0) / 4.33);
+    return computeInsuranceCost(
+      selectedInsurance as any,
+      ageFromDob(values.date_of_birth),
+      null,
+      null,
+      approxMonths,
+    );
+  }, [selectedInsurance, values.date_of_birth, values.program_weeks]);
 
   /*
    * ----------------------------------------------------------------------
@@ -373,8 +347,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       const insCost = computeInsuranceCost(
         selectedInsurance as any,
         ageFromDob(vals.date_of_birth),
-        vals.course_start || null,
-        vals.course_end || null,
+        null,
+        null,
+        Math.ceil(weeks / 4.33),
       );
 
       const payload: Record<string, unknown> = {
@@ -395,9 +370,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
         insurance_price: vals.insurance_id ? (insCost.total ?? 0) : 0,
 
-        program_start_date: vals.course_start || null,
+        program_start_date: null,
 
-        program_end_date: endDateForWeeks(vals.course_start, weeks) || null,
+        program_end_date: null,
 
         program_weeks: progCost.weeks || null,
 
@@ -628,10 +603,6 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       if (!values.insurance_id) {
         missing.push("insurance_id");
       }
-
-      if (!values.course_start.trim()) {
-        missing.push("course_start");
-      }
     }
 
     return missing;
@@ -811,8 +782,6 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
             emergency_contact_name: values.emergency_contact_name?.trim() || undefined,
 
             emergency_contact_phone: values.emergency_contact_phone?.trim() || undefined,
-
-            arrival_date: values.arrival_date || undefined,
 
             intake_month: values.start_month || undefined,
           })
@@ -1243,10 +1212,6 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                       accommodation_weeks: "",
 
                       start_month: "",
-
-                      course_start: "",
-
-                      course_end: "",
                     }));
                   }}
                 >
@@ -1349,45 +1314,6 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <Label>{ss("arrivalDate")}</Label>
-
-                <Input
-                  type="date"
-                  className="mt-0.5 h-9"
-                  value={values.arrival_date}
-                  onChange={(e) => handleChange("arrival_date", e.target.value)}
-                />
-              </div>
-
-              <div data-field="course_start">
-                <Label className={invalid("course_start") ? "text-destructive" : ""}>{`${ss("courseStart")} *`}</Label>
-
-                <Input
-                  type="date"
-                  className={cn("mt-0.5 h-9", invalid("course_start") && "border-destructive")}
-                  value={values.course_start}
-                  onChange={(e) => handleChange("course_start", e.target.value)}
-                />
-
-                {invalid("course_start") && (
-                  <p className="mt-0.5 text-xs text-destructive">{errText("course_start")}</p>
-                )}
-              </div>
-
-              <div>
-                <Label>{ss("courseEnd")}</Label>
-
-                <div
-                  className={cn(
-                    "mt-0.5 flex items-center h-9 px-3 rounded-md border text-sm bg-muted/30",
-                    values.course_end ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {values.course_end || ss("autoCalc")}
-                </div>
               </div>
             </div>
 

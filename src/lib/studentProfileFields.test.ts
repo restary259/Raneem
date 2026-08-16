@@ -27,7 +27,6 @@ const completeProfile: StudentProfileValues = {
   program_id: "program-1",
   accommodation_id: "acc-1",
   insurance_id: "ins-1",
-  course_start: "2026-09-01",
 };
 
 describe("courseEndFrom", () => {
@@ -87,7 +86,6 @@ describe("readStudentProfile", () => {
           education_level: "old",
           student_email: "stale@example.com",
           program_id: "program-stale",
-          course_start: "2020-01-01",
         },
       },
     );
@@ -95,8 +93,6 @@ describe("readStudentProfile", () => {
     expect(values.education_level).toBe("bagrut");
     expect(values.student_email).toBe("canonical@example.com");
     expect(values.program_id).toBe("program-canonical");
-    expect(values.course_start).toBe("2026-09-01");
-    expect(values.course_end).toBe("2027-06-08");
     expect(values.city).toBe("Haifa");
     expect(values.student_phone).toBe("0500000000");
   });
