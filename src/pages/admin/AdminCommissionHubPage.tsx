@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -372,7 +371,7 @@ const AgentSection: React.FC<{
   onError: (m: string) => void;
   filter: string;
   setFilter: (s: string) => void;
-  t: TFunction<"dashboard">;
+  t: (k: string, fallback?: string, opts?: any) => string;
 }> = ({ agents, saving, onSetCommission, onSaved, onError, filter, setFilter, t }) => {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
@@ -474,7 +473,7 @@ const StudentReferralSection: React.FC<{
   ) => Promise<unknown>;
   onSaved: () => void;
   onError: (m: string) => void;
-  t: TFunction<"dashboard">;
+  t: (k: string, fallback?: string, opts?: any) => string;
 }> = ({ config, saving, onSetCommission, onSaved, onError, t }) => {
   const [drafts, setDrafts] = useState<Record<string, number>>({});
   const [newStudentId, setNewStudentId] = useState("");

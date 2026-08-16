@@ -313,7 +313,7 @@ const AdminProgramsPage = () => {
       if (error) throw error;
       setSchoolOpen(false);
       setEditSchoolId(null);
-      setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] });
+      setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany" });
       await fetchAll();
       toast({ description: editSchoolId ? t('admin.programs.schoolUpdated') : t('admin.programs.schoolCreated') });
     } catch (err: any) {

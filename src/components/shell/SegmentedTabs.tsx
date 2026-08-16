@@ -6,8 +6,6 @@ export interface SegmentItem {
   value: string;
   label: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
-  /** Optional badge count shown by consumers. */
-  count?: number;
 }
 
 interface SegmentedTabsProps {
