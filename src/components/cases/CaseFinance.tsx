@@ -500,15 +500,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 </div>
               )}
 
-              <div className="flex items-start gap-2 rounded-md border border-dashed p-3">
-                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    "finance.notes.priceControl",
-                    "Prices are controlled by the Admin service catalogue. DARB fees are calculated automatically from the selected services and cannot be edited manually.",
-                  )}
-                </p>
-              </div>
             </div>
 
             <Separator />
