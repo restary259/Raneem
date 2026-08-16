@@ -777,7 +777,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
         casePatch.full_name = name;
       }
 
-      const { error: caseError } = await supabase.from("cases").update(casePatch).eq("id", caseData.id);
+      const { error: caseError } = await supabase.from("cases").update(casePatch as never).eq("id", caseData.id);
 
       if (caseError) {
         throw caseError;
