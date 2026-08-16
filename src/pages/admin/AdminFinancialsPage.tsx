@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { DashboardService } from "@/services";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +15,20 @@ const OverviewTab = () => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
 
-  const [data, setData] = useState({
+  // Cached under a stable key so switching Finance-hub tabs no longer
+  // refetches the whole financial overview on every round-trip.
+  const { data: overview, isPending: loading, error, refetch } = useQuery({
+    queryKey: ["admin", "financials", "overview"],
+    queryFn: () => DashboardService.financialOverview(),
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (error) toast({ variant: "destructive", description: (error as Error).message });
+  }, [error, toast]);
+
+  const { submissions = [], ...kpiData } = overview ?? {};
+  const data = {
     serviceFees: 0,
     partnerCommissionPending: 0,
     partnerCommissionPaid: 0,
@@ -23,27 +37,11 @@ const OverviewTab = () => {
     referralDiscounts: 0,
     partnerCommissionRate: 0,
     teamCommissionsTotal: 0,
-  });
-  const [submissions, setSubmissions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+    ...kpiData,
+  };
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const overview = await DashboardService.financialOverview();
-      const { submissions: subs, ...kpiData } = overview;
-      setData(kpiData);
-      setSubmissions(subs);
-    } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+  const fetchData = useCallback(() => { void refetch(); }, [refetch]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   const fmt = (n: number) => n.toLocaleString("en-US");
 

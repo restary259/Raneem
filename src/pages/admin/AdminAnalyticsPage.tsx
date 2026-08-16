@@ -1,16 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useCallback, lazy, Suspense } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { RefreshCw, Clock } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { LoadingState, ErrorState } from '@/components/shell';
+
+// Charts pull in the recharts vendor chunk. Deferring them keeps the KPI row
+// as the first meaningful paint instead of waiting on chart parse/render.
+const AnalyticsCharts = lazy(() => import('@/components/admin/AnalyticsCharts'));
 
 const STATUSES = ['new', 'contacted', 'appointment_scheduled', 'profile_completion', 'payment_confirmed', 'submitted', 'enrollment_paid', 'forgotten', 'cancelled'];
 const STATUS_COLORS = ['#6366f1', '#f59e0b', '#8b5cf6', '#f97316', '#14b8a6', '#3b82f6', '#22c55e', '#ef4444', '#94a3b8'];
 const SOURCES = ['apply_page', 'manual', 'submit_new_student', 'social_media_partner'];
+
 
 const AdminAnalyticsPage = () => {
   const { t, i18n } = useTranslation('dashboard');
@@ -24,14 +29,11 @@ const AdminAnalyticsPage = () => {
     last_activity_at: string;
   }
 
-  const [cases, setCases] = useState<CaseRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  // Cached under a stable key so switching Finance-hub tabs (Financials ↔
+  // Spreadsheet ↔ Analytics) is served from cache instead of refetching.
+  const { data: cases = [], isPending: loading, error: queryError, refetch } = useQuery<CaseRow[]>({
+    queryKey: ['admin', 'analytics', 'cases'],
+    queryFn: async () => {
       // Exclude archived cases so analytics reflect the active pipeline,
       // matching the universe shown on the Pipeline board and Command Center.
       const { data, error: fetchError } = await supabase
@@ -39,29 +41,21 @@ const AdminAnalyticsPage = () => {
         .select('status, source, created_at, last_activity_at')
         .eq('archived', false);
       if (fetchError) throw fetchError;
-      return data || [];
-    } catch (err: any) {
-      setError(err.message);
-      toast({ variant: 'destructive', description: err.message });
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+      return (data ?? []) as CaseRow[];
+    },
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    let ignore = false;
-    fetchData().then(data => {
-      if (!ignore && data) setCases(data as CaseRow[]);
-    });
-    return () => { ignore = true; };
-  }, [fetchData]);
+  const error = queryError ? (queryError as Error).message : null;
 
-  const refresh = useCallback(() => {
-    fetchData().then(data => { if (data) setCases(data as CaseRow[]); });
-  }, [fetchData]);
+  React.useEffect(() => {
+    if (error) toast({ variant: 'destructive', description: error });
+  }, [error, toast]);
 
-  const statusLabels: Record<string, string> = {
+  const refresh = useCallback(() => { void refetch(); }, [refetch]);
+
+
+  const statusLabels: Record<string, string> = useMemo(() => ({
     new: t('admin.analytics.statusNew'),
     contacted: t('admin.analytics.statusContacted'),
     appointment_scheduled: t('admin.analytics.statusAppointment'),
@@ -71,41 +65,64 @@ const AdminAnalyticsPage = () => {
     enrollment_paid: t('admin.analytics.statusEnrolled'),
     forgotten: t('admin.analytics.statusForgotten'),
     cancelled: t('admin.analytics.statusCancelled'),
-  };
+  }), [t]);
 
-  const funnelData = STATUSES.map((s, i) => ({
+  // One pass over the rows instead of a full .filter() scan per status/source.
+  const { statusCounts, sourceCounts, stageMs, kpi } = useMemo(() => {
+    const status: Record<string, number> = {};
+    const source: Record<string, number> = {};
+    const ms: Record<string, { sum: number; n: number }> = {};
+    const now = Date.now();
+    let enrolled = 0;
+    let active = 0;
+    for (const c of cases) {
+      status[c.status] = (status[c.status] ?? 0) + 1;
+      if (c.source) source[c.source] = (source[c.source] ?? 0) + 1;
+      const slot = (ms[c.status] ??= { sum: 0, n: 0 });
+      slot.sum += Math.max(0, now - new Date(c.last_activity_at).getTime());
+      slot.n += 1;
+      if (c.status === 'enrollment_paid') enrolled += 1;
+      if (!['enrollment_paid', 'cancelled', 'forgotten'].includes(c.status)) active += 1;
+    }
+    return {
+      statusCounts: status,
+      sourceCounts: source,
+      stageMs: ms,
+      kpi: {
+        total: cases.length,
+        active,
+        enrolled,
+        conversion: cases.length ? Math.round((enrolled / cases.length) * 100) : 0,
+      },
+    };
+  }, [cases]);
+
+  const funnelData = useMemo(() => STATUSES.map((s, i) => ({
     name: statusLabels[s] || s,
-    count: cases.filter(c => c.status === s).length,
+    count: statusCounts[s] ?? 0,
     fill: STATUS_COLORS[i],
-  }));
+  })), [statusCounts, statusLabels]);
 
-  const sourceData = SOURCES.map(s => ({
+  const sourceData = useMemo(() => SOURCES.map(s => ({
     name: s === 'apply_page' ? t('admin.analytics.sourceApplyPage')
         : s === 'manual' ? t('admin.analytics.sourceManual')
         : s === 'submit_new_student' ? t('admin.analytics.sourceDirect')
         : t('admin.analytics.sourcePartner'),
-    count: cases.filter(c => c.source === s).length,
-  })).filter(s => s.count > 0);
+    count: sourceCounts[s] ?? 0,
+  })).filter(s => s.count > 0), [sourceCounts, t]);
 
   // Avg days in current stage (time since last_activity_at as proxy for stage entry)
-  const avgDays = STATUSES.slice(0, 7).map(s => {
-    const group = cases.filter(c => c.status === s);
-    if (group.length === 0) return { name: statusLabels[s], avg: 0, hours: 0 };
-    const avgMs = group.reduce((sum, c) => {
-      const base = new Date(c.last_activity_at).getTime();
-      return sum + Math.max(0, Date.now() - base);
-    }, 0) / group.length;
-    const days = avgMs / 86400000;
+  const avgDays = useMemo(() => STATUSES.slice(0, 7).map(s => {
+    const slot = stageMs[s];
+    if (!slot || slot.n === 0) return { name: statusLabels[s], avg: 0, hours: 0 };
+    const avgMs = slot.sum / slot.n;
     return {
       name: statusLabels[s],
-      avg: Math.round(days * 10) / 10,
+      avg: Math.round((avgMs / 86400000) * 10) / 10,
       hours: Math.round(avgMs / 3600000),
     };
-  });
+  }), [stageMs, statusLabels]);
 
-  const allZero = avgDays.every(d => d.avg === 0);
-
-  const yAxisWidth = isRtl ? 130 : 110;
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
@@ -125,15 +142,15 @@ const AdminAnalyticsPage = () => {
       {(!loading || cases.length > 0) && !error && (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: t('admin.analytics.kpiTotalCases'), value: cases.length },
-          { label: t('admin.analytics.kpiActive'), value: cases.filter(c => !['enrollment_paid','cancelled','forgotten'].includes(c.status)).length },
-          { label: t('admin.analytics.kpiEnrolled'), value: cases.filter(c => c.status === 'enrollment_paid').length },
-          { label: t('admin.analytics.kpiConversion'), value: `${cases.length ? Math.round(cases.filter(c => c.status === 'enrollment_paid').length / cases.length * 100) : 0}%` },
-        ].map((kpi, i) => (
+          { label: t('admin.analytics.kpiTotalCases'), value: kpi.total },
+          { label: t('admin.analytics.kpiActive'), value: kpi.active },
+          { label: t('admin.analytics.kpiEnrolled'), value: kpi.enrolled },
+          { label: t('admin.analytics.kpiConversion'), value: `${kpi.conversion}%` },
+        ].map((card, i) => (
           <Card key={i}>
             <CardContent className="p-4 min-h-[80px]">
-              <p className="text-xs text-muted-foreground mb-1 line-clamp-2 leading-tight">{kpi.label}</p>
-              <p className="text-xl font-bold truncate min-w-0">{kpi.value}</p>
+              <p className="text-xs text-muted-foreground mb-1 line-clamp-2 leading-tight">{card.label}</p>
+              <p className="text-xl font-bold truncate min-w-0">{card.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -142,117 +159,15 @@ const AdminAnalyticsPage = () => {
 
 
       {(!loading || cases.length > 0) && !error && (
-      <div className="grid md:grid-cols-2 gap-6" dir="ltr">
-        {/* Funnel */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t('admin.analytics.conversionFunnel')}</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={500} style={{ overflow: 'visible' }}>
-              <BarChart
-                data={funnelData}
-                layout="vertical"
-                barCategoryGap="40%"
-                barSize={20}
-                margin={{ top: 4, bottom: 4, left: 0, right: 4 }}
-              >
-                <XAxis type="number" hide />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={yAxisWidth}
-                  tick={{ fontSize: 11, fill: 'currentColor' }}
-                  tickMargin={6}
-                />
-                <Tooltip
-                  formatter={(v) => [v, t('admin.analytics.tooltipCases')]}
-                  contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                />
-                <Bar dataKey="count" radius={4} minPointSize={4}>
-                  {funnelData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Source breakdown */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t('admin.analytics.sourceBreakdown')}</CardTitle></CardHeader>
-          <CardContent>
-            {sourceData.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-8">{t('admin.analytics.noData')}</p>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={sourceData}
-                      dataKey="count"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={false}
-                    >
-                      {sourceData.map((_, i) => <Cell key={i} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v, name) => [v, name]}
-                      contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Legend */}
-                <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center mt-2">
-                  {sourceData.map((s, i) => (
-                    <div key={i} className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: STATUS_COLORS[i % STATUS_COLORS.length] }} />
-                      {s.name}: <span className="font-medium text-foreground">{s.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Avg days in current stage */}
-        <Card className="md:col-span-2">
-          <CardHeader><CardTitle className="text-base">{t('admin.analytics.avgDaysPerStage')}</CardTitle></CardHeader>
-          <CardContent>
-            {allZero ? (
-              <div className="h-[260px] flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                <Clock className="h-8 w-8 opacity-30" />
-                <p className="text-sm">{t('admin.analytics.noStageData', 'Not enough time has passed to calculate stage durations')}</p>
-                <p className="text-xs opacity-70">{t('admin.analytics.noStageDataSub', 'This chart populates as cases progress through the pipeline over days')}</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={avgDays} margin={{ top: 4, bottom: 50, left: 0, right: 0 }}>
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: isRtl ? 9 : 10, fill: 'currentColor' }}
-                    angle={-35}
-                    textAnchor="middle"
-                    height={80}
-                    interval={0}
-                  />
-                  <YAxis tick={{ fontSize: 10, fill: 'currentColor' }} />
-                  <Tooltip
-                    formatter={(v: any, _: any, props: any) => {
-                      const hours = props?.payload?.hours;
-                      if ((v as number) < 1 && hours) return [`${hours}h`, ''];
-                      return [`${v} ${t('admin.analytics.tooltipDays')}`, ''];
-                    }}
-                    contentStyle={{ background: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
-                  />
-                  <Bar dataKey="avg" fill="hsl(var(--primary))" radius={4} minPointSize={4} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+        <Suspense fallback={<LoadingState rows={3} />}>
+          <AnalyticsCharts
+            funnelData={funnelData}
+            sourceData={sourceData}
+            avgDays={avgDays}
+            colors={STATUS_COLORS}
+            isRtl={isRtl}
+          />
+        </Suspense>
       )}
     </div>
   );

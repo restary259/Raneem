@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,166 +40,139 @@ const AdminCommandCenter = () => {
   const navigate = useNavigate();
   const isRtl = i18n.language === 'ar';
 
-  const [counts, setCounts] = useState<CaseCounts>({ total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0, sla_breaches: 0 });
-  const [activity, setActivity] = useState<ActivityEntry[]>([]);
-  const [awaitingReview, setAwaitingReview] = useState<QueueRow[]>([]);
-  const [unassigned, setUnassigned] = useState<QueueRow[]>([]);
-  const [outstanding, setOutstanding] = useState<QueueRow[]>([]);
-  const [authFailures, setAuthFailures] = useState<QueueRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  // Distinguish "failed to load" from "genuinely empty" so a DB error never
-  // renders as an empty queue or a zeroed KPI.
-  const [countsError, setCountsError] = useState(false);
-  const [activityError, setActivityError] = useState(false);
-  const [queueErrors, setQueueErrors] = useState<Record<string, boolean>>({});
-
-  const fetchData = useCallback(async () => {
-    setCountsError(false);
-    setActivityError(false);
-    setQueueErrors({});
-    // Use Promise.allSettled so a single query failure doesn't blank the whole page
-    const [casesResult, activityResult, forgottenResult] = await Promise.allSettled([
-      supabase
-        .from('cases')
-        .select('status, last_activity_at, created_at')
-        .is('deleted_at', null)
-        .eq('archived', false),
-      supabase
-        .from('activity_log')
-        .select('id, actor_name, action, entity_type, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10),
-      supabase.rpc('get_forgotten_cases'),
-    ]);
-
-    const cases =
-      casesResult.status === 'fulfilled' && !casesResult.value.error
-        ? casesResult.value.data ?? []
-        : [];
-
-    const activityData =
-      activityResult.status === 'fulfilled' && !activityResult.value.error
-        ? activityResult.value.data ?? []
-        : [];
-
-    const forgottenData =
-      forgottenResult.status === 'fulfilled' && !forgottenResult.value.error
-        ? forgottenResult.value.data ?? []
-        : [];
-
-    const failed = (r: PromiseSettledResult<{ error: unknown }>): string | null =>
-      r.status === 'rejected'
-        ? String(r.reason)
-        : r.value.error
-          ? String(r.value.error)
-          : null;
-
-    setCountsError(failed(casesResult) !== null || failed(forgottenResult) !== null);
-    setActivityError(failed(activityResult) !== null);
-
-    // SLA breach detection — central policy, not page-local thresholds
-    const slaBreaches = cases.filter((c) =>
-      isSlaBreached(c.status, c.last_activity_at)
-    );
-
-    setCounts({
-      total: cases.filter((c) => isActiveStatus(c.status)).length || 0,
-      submitted: cases.filter((c) => c.status === 'submitted').length || 0,
-      enrollment_paid: cases.filter((c) => c.status === 'enrollment_paid').length || 0,
-      forgotten: forgottenData.length || 0,
-      sla_breaches: slaBreaches.length || 0,
-    });
-
-    setActivity(activityData);
-
-    // ── Action queues ──────────────────────────────────────────────
+  // One parallel batch. The four queue queries do not depend on the three
+  // summary queries, so they all fire together instead of in two waves.
+  const fetchAll = useCallback(async () => {
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
-    const [reviewRes, unassignedRes, balanceRes, failRes] = await Promise.allSettled([
-      supabase
-        .from('cases')
-        .select('id, full_name, case_reference, last_activity_at')
-        .eq('status', 'submitted')
-        .is('deleted_at', null)
-        .order('last_activity_at')
-        .limit(6),
-      supabase
-        .from('cases')
-        .select('id, full_name, case_reference, created_at')
-        .is('assigned_to', null)
-        .is('deleted_at', null)
-        .eq('archived', false)
-        .order('created_at', { ascending: false })
-        .limit(6),
-      supabase
-        .from('case_submissions')
-        .select('id, case_id, remaining_balance, case:cases(full_name, case_reference)')
-        .gt('remaining_balance', 0)
-        .is('deleted_at', null)
-        .order('remaining_balance', { ascending: false })
-        .limit(6),
-      supabase
-        .from('auth_failure_log')
-        .select('id, target, source, status_code, created_at')
-        .gte('created_at', dayAgo)
-        .order('created_at', { ascending: false })
-        .limit(6),
-    ]);
+    const [casesResult, activityResult, forgottenResult, reviewRes, unassignedRes, balanceRes, failRes] =
+      await Promise.allSettled([
+        supabase
+          .from('cases')
+          .select('status, last_activity_at, created_at')
+          .is('deleted_at', null)
+          .eq('archived', false),
+        supabase
+          .from('activity_log')
+          .select('id, actor_name, action, entity_type, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase.rpc('get_forgotten_cases'),
+        supabase
+          .from('cases')
+          .select('id, full_name, case_reference, last_activity_at')
+          .eq('status', 'submitted')
+          .is('deleted_at', null)
+          .order('last_activity_at')
+          .limit(6),
+        supabase
+          .from('cases')
+          .select('id, full_name, case_reference, created_at')
+          .is('assigned_to', null)
+          .is('deleted_at', null)
+          .eq('archived', false)
+          .order('created_at', { ascending: false })
+          .limit(6),
+        supabase
+          .from('case_submissions')
+          .select('id, case_id, remaining_balance, case:cases(full_name, case_reference)')
+          .gt('remaining_balance', 0)
+          .is('deleted_at', null)
+          .order('remaining_balance', { ascending: false })
+          .limit(6),
+        supabase
+          .from('auth_failure_log')
+          .select('id, target, source, status_code, created_at')
+          .gte('created_at', dayAgo)
+          .order('created_at', { ascending: false })
+          .limit(6),
+      ]);
 
     const val = <T,>(r: PromiseSettledResult<{ data: T[] | null; error: unknown }>): T[] =>
       r.status === 'fulfilled' && !r.value.error ? (r.value.data ?? []) : [];
 
-    const markQueueError = (key: string, r: PromiseSettledResult<{ error: unknown }>) => {
-      if (r.status === 'rejected' || r.value.error) {
-        setQueueErrors((prev) => ({ ...prev, [key]: true }));
-      }
-    };
+    const failed = (r: PromiseSettledResult<{ error: unknown }>): boolean =>
+      r.status === 'rejected' ? true : Boolean(r.value.error);
+
+    const cases = val<any>(casesResult as PromiseSettledResult<{ data: any[] | null; error: unknown }>);
+    const activityData = val<ActivityEntry>(activityResult as PromiseSettledResult<{ data: ActivityEntry[] | null; error: unknown }>);
+    const forgottenData = val<any>(forgottenResult as PromiseSettledResult<{ data: any[] | null; error: unknown }>);
+
+    // SLA breach detection — central policy, not page-local thresholds
+    const slaBreaches = cases.filter((c) => isSlaBreached(c.status, c.last_activity_at));
 
     const shortDate = (iso: string) =>
       new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-    setAwaitingReview(
-      val<any>(reviewRes).map((c) => ({
+    return {
+      counts: {
+        total: cases.filter((c) => isActiveStatus(c.status)).length || 0,
+        submitted: cases.filter((c) => c.status === 'submitted').length || 0,
+        enrollment_paid: cases.filter((c) => c.status === 'enrollment_paid').length || 0,
+        forgotten: forgottenData.length || 0,
+        sla_breaches: slaBreaches.length || 0,
+      } as CaseCounts,
+      activity: activityData,
+      // Distinguish "failed to load" from "genuinely empty" so a DB error never
+      // renders as an empty queue or a zeroed KPI.
+      countsError: failed(casesResult as PromiseSettledResult<{ error: unknown }>) || failed(forgottenResult as PromiseSettledResult<{ error: unknown }>),
+      activityError: failed(activityResult as PromiseSettledResult<{ error: unknown }>),
+      queueErrors: {
+        review: failed(reviewRes as PromiseSettledResult<{ error: unknown }>),
+        unassigned: failed(unassignedRes as PromiseSettledResult<{ error: unknown }>),
+        payments: failed(balanceRes as PromiseSettledResult<{ error: unknown }>),
+        auth: failed(failRes as PromiseSettledResult<{ error: unknown }>),
+      } as Record<string, boolean>,
+      awaitingReview: val<any>(reviewRes as PromiseSettledResult<{ data: any[] | null; error: unknown }>).map((c) => ({
         id: c.id,
         title: c.full_name,
         subtitle: `${c.case_reference ?? c.id.slice(0, 8)} · ${shortDate(c.last_activity_at)}`,
         href: '/admin/submissions',
-      })),
-    );
-    markQueueError('review', reviewRes);
-    setUnassigned(
-      val<any>(unassignedRes).map((c) => ({
+      })) as QueueRow[],
+      unassigned: val<any>(unassignedRes as PromiseSettledResult<{ data: any[] | null; error: unknown }>).map((c) => ({
         id: c.id,
         title: c.full_name,
         subtitle: `${c.case_reference ?? c.id.slice(0, 8)} · ${shortDate(c.created_at)}`,
         href: `/admin/cases/${c.id}`,
-      })),
-    );
-    markQueueError('unassigned', unassignedRes);
-    setOutstanding(
-      val<any>(balanceRes).map((s) => ({
+      })) as QueueRow[],
+      outstanding: val<any>(balanceRes as PromiseSettledResult<{ data: any[] | null; error: unknown }>).map((s) => ({
         id: s.id,
         title: s.case?.full_name ?? '—',
         subtitle: `₪${Number(s.remaining_balance).toLocaleString('en-US')}`,
         href: `/admin/cases/${s.case_id}`,
-      })),
-    );
-    markQueueError('payments', balanceRes);
-    setAuthFailures(
-      val<any>(failRes).map((f) => ({
+      })) as QueueRow[],
+      authFailures: val<any>(failRes as PromiseSettledResult<{ data: any[] | null; error: unknown }>).map((f) => ({
         id: f.id,
         title: `${f.source} · ${f.target}`,
         subtitle: `${f.status_code ?? ''} ${new Date(f.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`.trim(),
         href: '/admin/settings',
-      })),
-    );
-    markQueueError('auth', failRes);
-
-    setLoading(false);
+      })) as QueueRow[],
+    };
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // Cached across navigation so returning to the Command Center paints
+  // instantly from cache instead of refetching seven queries.
+  const { data, isPending, refetch } = useQuery({
+    queryKey: ['admin', 'command-center'],
+    queryFn: fetchAll,
+    staleTime: 30_000,
+  });
+
+  const counts: CaseCounts = data?.counts ?? { total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0, sla_breaches: 0 };
+  const activity: ActivityEntry[] = data?.activity ?? [];
+  const awaitingReview = data?.awaitingReview ?? [];
+  const unassigned = data?.unassigned ?? [];
+  const outstanding = data?.outstanding ?? [];
+  const authFailures = data?.authFailures ?? [];
+  const countsError = data?.countsError ?? false;
+  const activityError = data?.activityError ?? false;
+  const queueErrors = data?.queueErrors ?? {};
+  const loading = isPending;
+
+  const fetchData = useCallback(() => { void refetch(); }, [refetch]);
+
   useRealtimeSubscription('cases', fetchData, true);
   useRealtimeSubscription('activity_log', fetchData, true);
+
 
   const queues = [
     {

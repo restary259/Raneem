@@ -120,6 +120,22 @@ const StudentCvBuilderPage = lazy(() => import("./pages/student/StudentCvBuilder
 const StudentOnboardingGate = lazy(() => import("./components/student/StudentOnboardingGate"));
 
 /** Permanent failures (auth/permission/not-found/validation) must never be retried. */
+/**
+ * Route-transition placeholder for dashboard paths. Cheap, static markup —
+ * it must not import page code, or it would defeat the lazy split.
+ */
+const RouteFallback = () => (
+  <div className="p-4 sm:p-6 space-y-4 max-w-7xl mx-auto animate-pulse" aria-hidden>
+    <div className="h-7 w-48 rounded-md bg-muted" />
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="h-20 rounded-lg border border-border bg-muted/40" />
+      ))}
+    </div>
+    <div className="h-64 rounded-lg border border-border bg-muted/30" />
+  </div>
+);
+
 const isPermanentError = (error: unknown): boolean => {
   const e = error as { status?: number; code?: string; message?: string } | null;
   if (!e) return false;
@@ -231,7 +247,10 @@ const App = () => {
             <InAppBrowserBanner />
           </Suspense>
         )}
-        <Suspense fallback={<div />}>
+        {/* A layout-matched shell paints immediately while the route chunk
+            loads, instead of a blank frame that reads as a frozen app. */}
+        <Suspense fallback={isDashboardPath ? <RouteFallback /> : <div />}>
+
           <Routes>
             {/* ── Public pages ── */}
             <Route path="/" element={<Index />} />
