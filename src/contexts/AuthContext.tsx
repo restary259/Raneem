@@ -1,17 +1,17 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { unsubscribeFromPush } from '@/lib/webPush';
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { subscribeToPush, unsubscribeFromPush } from "@/lib/webPush";
 
-export type AppRole = 'admin' | 'team_member' | 'social_media_partner' | 'ambassador' | 'student' | 'agent';
+export type AppRole = "admin" | "team_member" | "social_media_partner" | "ambassador" | "student" | "agent";
 
 export const ROLE_TO_PATH: Record<AppRole, string> = {
-  admin: '/admin',
-  team_member: '/team',
-  social_media_partner: '/partner',
-  ambassador: '/partner',
-  student: '/student/checklist',
-  agent: '/agent',
+  admin: "/admin",
+  team_member: "/team",
+  social_media_partner: "/partner",
+  ambassador: "/partner",
+  student: "/student/checklist",
+  agent: "/agent",
 };
 
 interface AuthState {
@@ -42,15 +42,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchRole = async (userId: string): Promise<AppRole | null> => {
     try {
-      const { data, error } = await supabase.rpc('get_my_role');
+      const { data, error } = await supabase.rpc("get_my_role");
       if (error) {
-        console.error('[auth] role lookup failed:', error);
+        console.error("[auth] role lookup failed:", error);
         return null;
       }
       if (!data) return null;
       return data as AppRole;
     } catch (err) {
-      console.error('[auth] role lookup threw:', err);
+      console.error("[auth] role lookup threw:", err);
       return null;
     }
   };
@@ -58,14 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchMustChangePassword = async (userId: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('must_change_password')
-        .eq('id', userId)
+        .from("profiles")
+        .select("must_change_password")
+        .eq("id", userId)
         .maybeSingle();
-      if (error) console.error('[auth] must_change_password lookup failed:', error);
+      if (error) console.error("[auth] must_change_password lookup failed:", error);
       return data?.must_change_password ?? false;
     } catch (err) {
-      console.error('[auth] must_change_password lookup threw:', err);
+      console.error("[auth] must_change_password lookup threw:", err);
       return false;
     }
   };
@@ -76,8 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Trust the session provided by onAuthStateChange / getSession — no extra getUser call
-    // (getUser(token) causes 401s for newly-set sessions and is redundant here)
     const [role, mustChangePassword] = await Promise.all([
       fetchRole(session.user.id),
       fetchMustChangePassword(session.user.id),
@@ -95,38 +93,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Safety net: mark initialized after 6s even if auth hangs
     safetyTimer.current = setTimeout(() => {
-      setState(prev => ({ ...prev, initialized: true }));
+      setState((prev) => ({ ...prev, initialized: true }));
     }, 6000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (safetyTimer.current) {
         clearTimeout(safetyTimer.current);
         safetyTimer.current = null;
       }
 
-      if (event === 'SIGNED_OUT') {
+      if (event === "SIGNED_OUT") {
         setState({ user: null, session: null, role: null, mustChangePassword: false, initialized: true });
         return;
       }
 
-      // USER_UPDATED fires after updateUser() — re-initialize to pick up fresh session
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
         // Fire-and-forget: never await inside onAuthStateChange to avoid Supabase internal lock deadlocks
         initializeAuth(session);
+
+        // ── Push re-subscription after login ──────────────────────────────
+        // signOut() revokes the browser/phone push endpoint (security: a shared
+        // device must not keep receiving the previous user's notifications).
+        // On the next SIGNED_IN we silently re-create the subscription so the
+        // user doesn't have to manually toggle it back on every session.
+        // - We only do this when permission is already 'granted' — never prompt
+        //   the OS dialog without an explicit user gesture.
+        // - subscribeToPush re-uses the existing browser endpoint if the OS
+        //   already has one (fast path), or asks the push service for a new one.
+        if (
+          event === "SIGNED_IN" &&
+          session?.user?.id &&
+          typeof Notification !== "undefined" &&
+          Notification.permission === "granted"
+        ) {
+          subscribeToPush(session.user.id).catch((err) => {
+            console.warn("[auth] push re-subscribe after login failed:", err);
+          });
+        }
       }
     });
 
     // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (safetyTimer.current) {
-        clearTimeout(safetyTimer.current);
-        safetyTimer.current = null;
-      }
-      initializeAuth(session);
-    }).catch((err) => {
-      console.error('[auth] initial getSession failed:', err);
-      setState(prev => ({ ...prev, initialized: true }));
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (safetyTimer.current) {
+          clearTimeout(safetyTimer.current);
+          safetyTimer.current = null;
+        }
+        initializeAuth(session);
+      })
+      .catch((err) => {
+        console.error("[auth] initial getSession failed:", err);
+        setState((prev) => ({ ...prev, initialized: true }));
+      });
 
     return () => {
       subscription.unsubscribe();
@@ -144,15 +166,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await unsubscribeFromPush(currentUserId);
       } catch (err) {
         /* never block sign-out on push cleanup */
-        console.warn('[auth] push unsubscribe failed during sign-out:', err);
+        console.warn("[auth] push unsubscribe failed during sign-out:", err);
       }
     }
     await supabase.auth.signOut();
   };
 
   const refreshRole = async () => {
-    // Fall back to the live session: right after signInWithPassword the context
-    // state may not have been updated by onAuthStateChange yet.
     let currentUser = state.user;
     let currentSession = state.session;
     if (!currentUser) {
@@ -165,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       fetchRole(currentUser.id),
       fetchMustChangePassword(currentUser.id),
     ]);
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       user: prev.user ?? currentUser,
       session: prev.session ?? currentSession,
@@ -175,15 +195,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  return (
-    <AuthContext.Provider value={{ ...state, signOut, refreshRole }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ ...state, signOut, refreshRole }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
