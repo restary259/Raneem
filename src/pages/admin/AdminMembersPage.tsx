@@ -254,7 +254,7 @@ const AdminMembersPage: React.FC = () => {
 
       <PendingInvitations refreshKey={invitesRefreshKey} />
       <TabHub tabs={tabs} param="tab" />
-      <MemberDetailDrawer member={selectedMember} open={drawerOpen} onOpenChange={handleCloseDrawer} />
+      <MemberDetailDrawer member={selectedMember} open={drawerOpen} onOpenChange={handleCloseDrawer} onChanged={refetchTeam} />
       <CreateMemberDialog
         open={createOpen}
         onOpenChange={setCreateOpen}

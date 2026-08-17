@@ -108,6 +108,8 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'status', label: c('status'), type: 'enum', enumGroup: 'rewardStatus' },
         { key: 'unlock_date', label: c('unlockDate'), type: 'date' },
         { key: 'paid_at', label: c('paidAt'), type: 'date' },
+        { key: 'payment_method', label: c('paymentMethod'), type: 'enum', enumGroup: 'method' },
+        { key: 'cash_settled', label: c('cashSettled'), type: 'enum', enumGroup: 'bool' },
       ],
     };
 

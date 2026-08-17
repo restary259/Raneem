@@ -35,14 +35,19 @@ interface MemberDetailDrawerProps {
   member: import("./MemberList").MemberRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onChanged?: () => void;
 }
 
 interface CommissionBreakdown {
-  totalEarned: number;
-  paid: number;
-  pending: number;
-  byType: Record<string, number>;
-  rateChanges: Array<{
+  account: { id: string; name: string; email: string; role: string; agent_id: string | null } | null;
+  rewards: unknown[];
+  totals: {
+    total: number;
+    pending: number;
+    paid: number;
+    by_type: Record<string, number>;
+  };
+  rate_changes: Array<{
     entity_type: string;
     rate_kind: string;
     old_value: number;
@@ -215,7 +220,7 @@ function MemberDetailPanel({
                   {t("admin.members.commissionByType", "By Reward Type")}
                 </h4>
                 <div className="space-y-2">
-                  {Object.entries(breakdown.byType || {}).map(([type, amount]) => (
+                  {Object.entries(breakdown.totals?.by_type || {}).map(([type, amount]) => (
                     <div key={type} className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground capitalize">{type.replace(/_/g, " ")}</span>
                       <span className="font-mono tabular-nums">{formatILS(amount)}</span>
@@ -223,14 +228,14 @@ function MemberDetailPanel({
                   ))}
                 </div>
 
-                {breakdown.rateChanges && breakdown.rateChanges.length > 0 && (
+                {breakdown.rate_changes && breakdown.rate_changes.length > 0 && (
                   <>
                     <Separator />
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       {t("admin.members.recentRateChanges", "Recent Rate Changes")}
                     </h4>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {breakdown.rateChanges.slice(0, 8).map((change) => (
+                      {breakdown.rate_changes.slice(0, 8).map((change) => (
                         <div
                           key={change.changed_at}
                           className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card text-xs flex-wrap"
@@ -265,7 +270,7 @@ function MemberDetailPanel({
 
         {/* Cash Collection Debts — team members only */}
         {member.role === "team_member" && (
-          <CashDebtsCard teamMemberId={member.requester_id} t={t} />
+          <CashDebtsCard teamMemberId={member.requester_id} t={t} onChanged={onChanged} />
         )}
 
         {/* Role-specific Actions */}
@@ -346,7 +351,7 @@ interface CashDebt {
   debt_status: string;
 }
 
-function CashDebtsCard({ teamMemberId, t }: { teamMemberId: string; t: TFunction }) {
+function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t: TFunction; onChanged?: () => void }) {
   const [debts, setDebts] = useState<CashDebt[]>([]);
   const [loading, setLoading] = useState(true);
   const [settlingId, setSettlingId] = useState<string | null>(null);
@@ -375,6 +380,7 @@ function CashDebtsCard({ teamMemberId, t }: { teamMemberId: string; t: TFunction
       const { error } = await supabase.rpc("settle_cash_collection", { p_case_id: caseId });
       if (error) throw error;
       await fetchDebts();
+      onChanged?.();
     } catch (err) {
       console.error("Failed to settle cash collection:", err);
     } finally {
@@ -451,7 +457,7 @@ function CashDebtsCard({ teamMemberId, t }: { teamMemberId: string; t: TFunction
   );
 }
 
-export default function MemberDetailDrawer({ member, open, onOpenChange }: MemberDetailDrawerProps) {
+export default function MemberDetailDrawer({ member, open, onOpenChange, onChanged }: MemberDetailDrawerProps) {
   const { t } = useTranslation("dashboard");
   const isMobile = useIsMobile();
   const [breakdown, setBreakdown] = useState<CommissionBreakdown | null>(null);
@@ -465,7 +471,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
         p_user_id: id,
       });
       if (error) throw error;
-      setBreakdown(data as unknown as CommissionBreakdown);
+      setBreakdown(data as CommissionBreakdown);
     } catch (err) {
       console.error("Failed to load commission breakdown:", err);
       setBreakdown(null);

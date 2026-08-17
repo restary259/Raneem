@@ -3367,6 +3367,7 @@
       "remaining": "Remaining Balance",
       "confirmedBy": "Confirmed By",
       "paymentMethod": "Payment Method",
+      "cashSettled": "Cash Settled",
       "requested": "Requested",
       "paidAt": "Date Paid",
       "person": "Person",

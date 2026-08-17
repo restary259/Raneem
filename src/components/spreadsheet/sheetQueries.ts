@@ -281,9 +281,22 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
     staff,
   );
 
+  const caseIds = [...new Set((data || []).map((r: any) => r.case_id).filter(Boolean))];
+  let pmByCase = new Map<string, { payment_method: string | null; cash_settled_at: string | null }>();
+  if (caseIds.length > 0) {
+    const { data: pmData } = await (supabase as any)
+      .from('case_payments')
+      .select('case_id, payment_method, cash_settled_at')
+      .in('case_id', caseIds)
+      .eq('payment_type', 'agency_service')
+      .eq('status', 'confirmed');
+    pmByCase = new Map((pmData || []).map((p: any) => [p.case_id, p]));
+  }
+
   return (data || []).map((r: any) => {
     const kind = classifyReward(r as any);
     const unlock = new Date(new Date(r.created_at).getTime() + LOCK_DAYS * 86400000);
+    const pm = r.case_id ? pmByCase.get(r.case_id) : undefined;
     return {
       id: r.id,
       created_at: r.created_at,
@@ -294,6 +307,8 @@ export const fetchCommissionsSheet = async ({ scope, userId }: SheetScope) => {
       status: r.status,
       unlock_date: unlock.toISOString(),
       paid_at: r.paid_at,
+      payment_method: pm?.payment_method ?? null,
+      cash_settled: pm?.cash_settled_at ? 'yes' : 'no',
     };
   });
 };
