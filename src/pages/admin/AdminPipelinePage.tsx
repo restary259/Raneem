@@ -389,7 +389,6 @@ const AdminPipelinePage = () => {
     }
   };
 
-  /* ── cancel case (admin) — side-exit, not a pipeline transition ── */
   const cancelSelectedCase = async () => {
     if (!selectedCase) return;
     setCancelling(true);

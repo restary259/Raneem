@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getNextSteps, canTransition } from "@/lib/caseTransitions";
-import { TERMINAL_STATUSES } from "@/lib/caseStatus";
-import type { CaseStatus } from "@/lib/caseStatus";
+import { isTerminalStatus, type CaseStatus } from "@/lib/caseStatus";
 
 /** Stages that are only reached through another flow, never by a manual click. */
 export const AUTOMATED_STAGES: string[] = ["payment_confirmed", "submitted", "enrollment_paid"];
@@ -64,10 +63,13 @@ export async function advanceCaseStage(
  * Permanently cancel a case. A side-exit, not a pipeline transition — it
  * bypasses the transition graph intentionally (cancelled is terminal), so
  * "Cancel" never surfaces as a suggested next step in the pipeline UI.
- * Records a `case_cancelled` timeline event carrying the current status and
- * the optional reason.
+ *
+ * Idempotent: a no-op when the case is already terminal, so a retry/double
+ * submit can't re-cancel or log a second event with a stale `from`.
  */
 export async function cancelCase(caseId: string, reason: string, currentStatus: string): Promise<void> {
+  if (isTerminalStatus(currentStatus)) return;
+
   const { error } = await supabase.from("cases").update({ status: "cancelled" }).eq("id", caseId);
   if (error) throw error;
 
