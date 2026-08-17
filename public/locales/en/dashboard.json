@@ -2814,6 +2814,12 @@
       "pending": "Cancelling…",
       "success": "Case cancelled"
     },
+    "restore": {
+      "title": "Case Cancelled",
+      "desc": "This case was cancelled. You can restore it to the Contacted stage to re-engage the student.",
+      "action": "Restore Case",
+      "success": "Case restored to Contacted."
+    },
     "overview": {
       "notSet": "Not set yet",
       "paymentConfirmed": "Confirmed",

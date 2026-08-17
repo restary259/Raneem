@@ -14,7 +14,7 @@ export const ALLOWED_TRANSITIONS: Record<CaseStatus, CaseStatus[]> = {
   [CaseStatus.SUBMITTED]:         [CaseStatus.ENROLLMENT_PAID],
   [CaseStatus.ENROLLMENT_PAID]:   [],  // Terminal state — set via admin-mark-paid
   [CaseStatus.FORGOTTEN]:         [CaseStatus.CONTACTED],  // Can be re-engaged
-  [CaseStatus.CANCELLED]:         [],  // Terminal state
+  [CaseStatus.CANCELLED]:         [CaseStatus.CONTACTED],  // Restorable to Contacted
 };
 
 /** Check if transitioning from `current` to `next` is allowed */

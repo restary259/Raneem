@@ -31,8 +31,9 @@ describe("stageBlockReason", () => {
     expect(stageBlockReason("enrollment_paid")).toEqual({ kind: "terminal" });
   });
 
-  it("asks to reopen a cancelled case", () => {
-    expect(stageBlockReason("cancelled")).toEqual({ kind: "inactive" });
+  it("allows restoring a cancelled case (not blocked)", () => {
+    expect(stageBlockReason("cancelled")).toBeNull();
+    expect(manualNextStages("cancelled")).toContain("contacted");
   });
 
   it("treats a forgotten case as reopenable, not blocked", () => {

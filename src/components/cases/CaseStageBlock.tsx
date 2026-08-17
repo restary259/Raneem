@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarPlus, PhoneCall } from "lucide-react";
+import { CalendarPlus, PhoneCall, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateTime } from "@/utils/dateUtils";
@@ -116,6 +116,26 @@ export default function CaseStageBlock(props: Props) {
             </Button>
           )}
         </div>
+      </Shell>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <Shell title={t("case.restore.title", "Case Cancelled")}>
+        <p className="text-sm text-muted-foreground">
+          {t("case.restore.desc", "This case was cancelled. You can restore it to the Contacted stage to re-engage the student.")}
+        </p>
+        {canManage && (
+          <Button
+            variant="outline"
+            className="gap-1.5 border-emerald-500/50 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+            onClick={() => props.onAdvance("contacted")}
+          >
+            <RotateCcw className="h-4 w-4" />
+            {t("case.restore.action", "Restore Case")}
+          </Button>
+        )}
       </Shell>
     );
   }

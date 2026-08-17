@@ -22,7 +22,10 @@ describe("canTransition", () => {
 
   it("leaves terminal states closed", () => {
     expect(canTransition(CaseStatus.ENROLLMENT_PAID, CaseStatus.SUBMITTED)).toBe(false);
-    expect(canTransition(CaseStatus.CANCELLED, CaseStatus.CONTACTED)).toBe(false);
+  });
+
+  it("allows restoring a cancelled case to contacted", () => {
+    expect(canTransition(CaseStatus.CANCELLED, CaseStatus.CONTACTED)).toBe(true);
   });
 
   it("resolves unknown statuses instead of throwing", () => {
@@ -40,6 +43,9 @@ describe("getNextSteps", () => {
 
   it("returns nothing for terminal statuses", () => {
     expect(getNextSteps(CaseStatus.ENROLLMENT_PAID)).toEqual([]);
-    expect(getNextSteps(CaseStatus.CANCELLED)).toEqual([]);
+  });
+
+  it("returns contacted for cancelled (restorable)", () => {
+    expect(getNextSteps(CaseStatus.CANCELLED)).toEqual([CaseStatus.CONTACTED]);
   });
 });

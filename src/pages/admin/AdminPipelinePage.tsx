@@ -31,6 +31,7 @@ import {
   ExternalLink,
   XCircle,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -49,7 +50,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { matchesRef } from "@/lib/reference";
 import { CaseStatus, isTerminalStatus } from "@/lib/caseStatus";
-import { cancelCase } from "@/services/CaseStageService";
+import { cancelCase, advanceCaseStage } from "@/services/CaseStageService";
 import { SLA_DAYS } from "@/lib/slaPolicy";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { toneClasses } from "@/lib/statusTokens";
@@ -1073,6 +1074,24 @@ const AdminPipelinePage = () => {
                   >
                     <XCircle className="h-3.5 w-3.5" />
                     {t("case.cancel.button", "Cancel Case")}
+                  </Button>
+                )}
+
+                {/* ── Restore cancelled case ── */}
+                {selectedCase && selectedCase.status === "cancelled" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 border-emerald-500/50 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 w-full h-10"
+                    onClick={async () => {
+                      await advanceCaseStage(selectedCase.id, "cancelled", "contacted");
+                      toast({ description: t("case.restore.success", "Case restored to Contacted.") });
+                      setSelectedCase({ ...selectedCase, status: "contacted" });
+                      fetchData();
+                    }}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    {t("case.restore.action", "Restore Case")}
                   </Button>
                 )}
 
