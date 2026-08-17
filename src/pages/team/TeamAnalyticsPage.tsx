@@ -120,15 +120,13 @@ export default function TeamAnalyticsPage() {
   const totalCases = Object.values(caseCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="p-6 space-y-6 max-w-7xl mx-auto" dir={isRtl ? 'rtl' : 'ltr'}>
       <h1 className="text-2xl font-bold text-foreground">
         {t('lawyer.analytics.pageTitle', t('lawyer.tabs.analytics', 'Analytics'))}
       </h1>
 
-      {/* KPI cards */}
+      {/* KPI cards: 7 across on xl+, else wrap. Container is wide enough to fit them. */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-
-        {/* Closed this month */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -139,7 +137,6 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Total cases */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -150,7 +147,6 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Today's appointments */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -161,7 +157,6 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Commission per case */}
         <Card className="border-[hsl(var(--status-payment)/0.25)]">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -174,7 +169,6 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Locked */}
         <Card className="border-[hsl(var(--status-payment)/0.25)]">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -185,14 +179,13 @@ export default function TeamAnalyticsPage() {
               ₪{Number(earnings.locked).toLocaleString('en-US')}
             </div>
             {earnings.next_unlock_at && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {t('lawyer.analytics.nextUnlock', 'Unlocks')} {new Date(earnings.next_unlock_at).toLocaleDateString()}
+              <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+                {t('lawyer.analytics.nextUnlock', 'Unlocks')} {new Date(earnings.next_unlock_at).toLocaleDateString(isRtl ? 'ar' : 'en-GB')}
               </p>
             )}
           </CardContent>
         </Card>
 
-        {/* Available */}
         <Card className="border-[hsl(var(--status-paid)/0.25)]">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -205,7 +198,6 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Paid */}
         <Card className="border-[hsl(var(--status-enrolled)/0.25)]">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
