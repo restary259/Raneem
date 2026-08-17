@@ -1491,3 +1491,25 @@ execution (NOT applied by the Vercel build or `ci.yml` — run via
   incl. i18n parity guard. `commissionSimulator.test.ts` lost the two master-carve
   cases (replaced by a "partner keeps full pool" case, net −1).
 
+
+## Code-review patterns (skill)
+
+Recurring review findings are distilled into a skill at
+`.agents/skills/trust-boundary-guards/SKILL.md`. Read it before opening a PR
+with a state-changing feature. The three patterns that keep surfacing:
+
+- **Guard irreversible actions at the service/RPC layer, not just the UI.**
+  The UI hides the button for UX; the service function must be idempotent
+  (no-op on retry) because it is the trust boundary every caller passes
+  through. Mirror the `commission_split_done` + `pg_advisory_xact_lock`
+  pattern in TS service functions.
+- **Detect "new item arrived" via identity (id), not array length.** Stores
+  that cap and replace in place (shadcn `useToast`, `TOAST_LIMIT=1`) make a
+  length check silently miss rapid successive items. Track the newest id.
+- **Reuse expensive browser resources; reset UI state after terminal actions.**
+  Hoist `AudioContext`/workers/etc. to a lazy singleton (browsers cap
+  concurrent instances). Clear in-flight flags + close dialogs on success so
+  the user isn't locked into a "processing" state.
+
+The skill includes a pre-review checklist and before/after code snippets.
+
