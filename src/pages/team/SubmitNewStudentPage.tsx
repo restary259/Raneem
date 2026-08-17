@@ -755,7 +755,6 @@ export default function SubmitNewStudentPage() {
     setEmergencyName(""); setEmergencyPhone("");
     setStreet(""); setHouseNo(""); setPostcode(""); setCity("");
     setSchoolId(""); setProgramId(""); setStartMonth("");
-    setArrivalDate(""); setCourseStart(""); setCourseEnd("");
     setAccommodationId(""); setProgramWeeks(""); setAccommodationWeeks(""); setInsuranceId("");
     setReviewConfirmed(false);
   };

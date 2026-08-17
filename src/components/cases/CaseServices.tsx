@@ -367,14 +367,8 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
 
   const dirty = selectedKey !== existingKey;
 
-  /**
-   * Notify the parent of the live (unsaved) selection so the summary and
-   * checklist can reflect pending changes before "Confirm & Save" persists.
-   */
-  useEffect(() => {
-    if (!onSelectionChange) return;
-    onSelectionChange(selected.length, liveTotal);
-  }, [selected, liveTotal, onSelectionChange]);
+
+
 
   /**
    * The Full Service bundle = every catalog item flagged in_full_service.
@@ -484,6 +478,17 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
       }, 0),
     [selected, selectableCatalog, services],
   );
+
+  /**
+   * Notify the parent of the live (unsaved) selection so the summary and
+   * checklist can reflect pending changes before "Confirm & Save" persists.
+   */
+  useEffect(() => {
+    if (!onSelectionChange) return;
+    onSelectionChange(selected.length, liveTotal);
+  }, [selected, liveTotal, onSelectionChange]);
+
+
 
   useImperativeHandle(ref, () => ({
     save,

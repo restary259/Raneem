@@ -5097,6 +5097,7 @@ export type Database = {
         Returns: number
       }
       get_team_member_commission_rate: { Args: never; Returns: number }
+      get_team_members_commission: { Args: never; Returns: Json }
       get_thread_read_state: {
         Args: { p_id: string; p_kind: string }
         Returns: {
