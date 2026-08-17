@@ -479,6 +479,17 @@ const CaseServices = forwardRef<CaseServicesHandle, Props>(
     [selected, selectableCatalog, services],
   );
 
+  /**
+   * Notify the parent of the live (unsaved) selection so the summary and
+   * checklist can reflect pending changes before "Confirm & Save" persists.
+   */
+  useEffect(() => {
+    if (!onSelectionChange) return;
+    onSelectionChange(selected.length, liveTotal);
+  }, [selected, liveTotal, onSelectionChange]);
+
+
+
   useImperativeHandle(ref, () => ({
     save,
     isDirty: () => dirty,
