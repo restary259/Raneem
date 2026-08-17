@@ -234,7 +234,7 @@ function AttributionBadge({
 }: {
   partnerId: string | null | undefined;
   attribution: Record<string, AttributionInfo> | null;
-  t: (key: string, fallback?: string, opts?: any) => string;
+  t: TFunction;
 }) {
   if (!partnerId) return null;
   const info = attribution?.[partnerId];
