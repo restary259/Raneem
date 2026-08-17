@@ -209,7 +209,11 @@ const AppointmentPicker: React.FC<AppointmentPickerProps> = ({
           variant="ghost"
           size="icon"
           className="h-8 w-8 shrink-0"
-          onClick={() => setRangeStart((date) => addDays(date, -DAY_WINDOW))}
+          disabled={addDays(rangeStart, -DAY_WINDOW) < startOfDay(new Date())}
+          onClick={() => setRangeStart((date) => {
+            const prev = addDays(date, -DAY_WINDOW);
+            return prev < startOfDay(new Date()) ? startOfDay(new Date()) : prev;
+          })}
           aria-label={t("lawyer.picker.previousDays", "Previous days")}
         >
           <ChevronLeft className="h-4 w-4 rtl:rotate-180" />

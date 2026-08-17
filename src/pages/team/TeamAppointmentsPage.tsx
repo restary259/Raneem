@@ -170,10 +170,14 @@ export default function TeamAppointmentsPage() {
     if (!user) return;
     setLoading(true);
     try {
+      const cutoff = subDays(new Date(), 1).toISOString(); // keep yesterday visible, hide older
       const { data, error } = await supabase
         .from("appointments")
         .select("*, case:cases(full_name, phone_number, status)")
         .eq("team_member_id", user.id)
+        // future/recent OR still pending an outcome (safety net so a missed
+        // outcome never disappears just because the slot has passed)
+        .or(`scheduled_at.gte.${cutoff},outcome.is.null`)
         .order("scheduled_at");
       if (error) throw error;
       setAppts((data as any[]) ?? []);
