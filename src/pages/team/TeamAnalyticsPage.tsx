@@ -35,7 +35,7 @@ export default function TeamAnalyticsPage() {
   const { summary: earnings } = useEarningsSummary(!!user);
   const [loading, setLoading] = useState(true);
   /** Cash collection debts owed by this team member (service_fee − commission). */
-  const [cashDebts, setCashDebts] = useState<{ case_reference: string | null; full_name: string; amount_ils: number }[]>([]);
+  const [cashDebts, setCashDebts] = useState<{ case_reference: string | null; student_name: string; amount_owed_to_admin: number }[]>([]);
   const [cashDebtTotal, setCashDebtTotal] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -89,11 +89,11 @@ export default function TeamAnalyticsPage() {
     try {
       const { data: debts } = await (supabase as any)
         .from("v_cash_debts")
-        .select("case_reference, full_name, amount_ils")
-        .eq("collected_by", user.id);
+        .select("case_reference, student_name, amount_owed_to_admin")
+        .eq("team_member_id", user.id);
       if (debts) {
         setCashDebts(debts);
-        setCashDebtTotal(debts.reduce((sum: number, d: any) => sum + Number(d.amount_ils ?? 0), 0));
+        setCashDebtTotal(debts.reduce((sum: number, d: any) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
       }
     } catch {
       // v_cash_debts may not exist yet — gracefully ignore
@@ -207,8 +207,8 @@ export default function TeamAnalyticsPage() {
             <div className="space-y-1">
               {cashDebts.map((d, i) => (
                 <div key={i} className="flex justify-between text-xs text-muted-foreground">
-                  <span>{d.full_name}{d.case_reference ? ` (${d.case_reference})` : ''}</span>
-                  <span className="font-medium text-foreground tabular-nums">₪{Number(d.amount_ils).toLocaleString('en-US')}</span>
+                  <span>{d.student_name}{d.case_reference ? ` (${d.case_reference})` : ''}</span>
+                  <span className="font-medium text-foreground tabular-nums">₪{Number(d.amount_owed_to_admin).toLocaleString('en-US')}</span>
                 </div>
               ))}
             </div>
