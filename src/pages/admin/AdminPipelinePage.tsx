@@ -407,6 +407,17 @@ const AdminPipelinePage = () => {
     }
   };
 
+  const handleRestoreCase = async () => {
+    if (!selectedCase) return;
+    try {
+      await advanceCaseStage(selectedCase.id, "cancelled", "contacted");
+      toast({ description: t("case.restore.success", "Case restored to Contacted.") });
+      await fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err?.message ?? t("common.actionFailed") });
+    }
+  };
+
 
   /* ── duplicate phone detection ── */
   const phoneCount = cases.reduce<Record<string, number>>((acc, c) => {
@@ -1083,12 +1094,7 @@ const AdminPipelinePage = () => {
                     variant="outline"
                     size="sm"
                     className="gap-1.5 border-emerald-500/50 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 w-full h-10"
-                    onClick={async () => {
-                      await advanceCaseStage(selectedCase.id, "cancelled", "contacted");
-                      toast({ description: t("case.restore.success", "Case restored to Contacted.") });
-                      setSelectedCase({ ...selectedCase, status: "contacted" });
-                      fetchData();
-                    }}
+                    onClick={handleRestoreCase}
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     {t("case.restore.action", "Restore Case")}

@@ -13,8 +13,6 @@ export function manualNextStages(current: string): CaseStatus[] {
 export type StageBlockReason =
   /** Pipeline is finished — nothing comes after this stage. */
   | { kind: "terminal" }
-  /** Case is cancelled/forgotten and must be reopened first. */
-  | { kind: "inactive" }
   /** A next stage exists but another flow sets it. */
   | { kind: "automated"; stage: string };
 
@@ -24,8 +22,6 @@ export type StageBlockReason =
  */
 export function stageBlockReason(current: string): StageBlockReason | null {
   if (manualNextStages(current).length > 0) return null;
-
-  if (current === "cancelled" || current === "forgotten") return { kind: "inactive" };
 
   const automated = getNextSteps(current).find((s) => AUTOMATED_STAGES.includes(s));
   if (automated) return { kind: "automated", stage: automated };
