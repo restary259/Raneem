@@ -929,6 +929,7 @@ export type Database = {
           note: string | null
           paid_date: string | null
           paid_status: string
+          payment_method: string | null
           payment_type: string
           recorded_by: string | null
           rejected_reason: string | null
@@ -948,6 +949,7 @@ export type Database = {
           note?: string | null
           paid_date?: string | null
           paid_status?: string
+          payment_method?: string | null
           payment_type?: string
           recorded_by?: string | null
           rejected_reason?: string | null
@@ -967,6 +969,7 @@ export type Database = {
           note?: string | null
           paid_date?: string | null
           paid_status?: string
+          payment_method?: string | null
           payment_type?: string
           recorded_by?: string | null
           rejected_reason?: string | null
@@ -4557,10 +4560,12 @@ export type Database = {
       clear_case_thread: { Args: { p_case_id: string }; Returns: number }
       clear_must_change_password: { Args: never; Returns: undefined }
       confirm_agency_service_fee: { Args: { p_case_id: string }; Returns: Json }
-      confirm_agency_service_payment: {
-        Args: { p_case_id: string }
-        Returns: Json
-      }
+      confirm_agency_service_payment:
+        | { Args: { p_case_id: string }; Returns: Json }
+        | {
+            Args: { p_case_id: string; p_payment_method?: string }
+            Returns: Json
+          }
       confirm_case_payment: {
         Args: { p_payment_id: string }
         Returns: undefined
@@ -4630,13 +4635,6 @@ export type Database = {
       ensure_case_finance_confirmations: {
         Args: { p_case_id: string }
         Returns: undefined
-      }
-      ensure_master_recruit_link: {
-        Args: never
-        Returns: {
-          code: string
-          target_path: string
-        }[]
       }
       fulfil_document_request: {
         Args: { p_attachment: Json; p_message_id: string }
@@ -5202,7 +5200,6 @@ export type Database = {
         Args: { p_error?: string; p_invoice_id: string; p_status: string }
         Returns: undefined
       }
-      master_announce_to_network: { Args: { p_body: string }; Returns: number }
       move_to_dlq: {
         Args: {
           dlq_name: string
