@@ -303,3 +303,18 @@ textarea {
 @container (min-width: 30rem) { .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
 @container (min-width: 48rem) { .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
 @container (min-width: 64rem) { .kpi-grid { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; } }
+
+/* Hide Lovable platform badge/watermark — DARB-branded app only.
+   Mirrors the print-only rule in src/styles/cv-print.css so the badge is
+   hidden on-screen everywhere, not just when printing. The iframe selector
+   is scoped to the platform's domains (not a bare "lovable" substring) so a
+   Supabase storage attachment preview whose filename happens to contain
+   "lovable" is never hidden. */
+[data-lovable-badge],
+#lovable-badge,
+iframe[src*="lovable.dev"],
+iframe[src*="lovable.app"],
+div[class*="lovable-badge"],
+a[href*="lovable.dev"] {
+  display: none !important;
+}
