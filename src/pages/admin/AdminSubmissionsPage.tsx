@@ -5,10 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import {
   RefreshCw,
   ChevronRight,
@@ -21,6 +22,8 @@ import {
   CheckCircle2,
   Landmark,
   Banknote,
+  Loader2,
+  RotateCcw,
 } from "lucide-react";
 import { toneClasses } from "@/lib/statusTokens";
 import { useAuth } from "@/contexts/AuthContext";
@@ -132,6 +135,12 @@ const AdminSubmissionsPage = () => {
   // the enroll panel must NOT re-ask for the student's email or re-send an
   // invite — it only needs the admin password confirmation.
   const [hasPendingInvitation, setHasPendingInvitation] = useState(false);
+
+  // "Return for changes" dialog state — lets an admin send a submitted case
+  // back to the team member with a note (request_case_changes RPC).
+  const [returnCaseId, setReturnCaseId] = useState<string | null>(null);
+  const [returnNote, setReturnNote] = useState("");
+  const [returning, setReturning] = useState(false);
 
   const enrichCases = useCallback(async (ids: string[], rawCases: any[]) => {
     if (ids.length === 0) return [];
@@ -363,6 +372,30 @@ const AdminSubmissionsPage = () => {
       setSplitPreview({ serviceFee: fee, referralDiscount, partners: [], partnerCommission: 0, teamCommission: 0, agent: null, platformRevenue: fee });
     }
   }, []);
+
+  /** Return the selected case to the team member with a change-request note.
+   *  request_case_changes sets review_status='changes_requested' and moves the
+   *  case back to profile_completion so the team can fix & resubmit. */
+  const handleReturnCase = async () => {
+    if (!returnCaseId || !returnNote.trim()) return;
+    setReturning(true);
+    try {
+      const { error } = await supabase.rpc("request_case_changes" as any, {
+        p_case_id: returnCaseId,
+        p_note: returnNote.trim(),
+      });
+      if (error) throw error;
+      toast({ description: t("admin.submissions.returnedSuccess", "Case returned to team for changes") });
+      setSelected(null);
+      setReturnCaseId(null);
+      setReturnNote("");
+      await fetchCases();
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
+    } finally {
+      setReturning(false);
+    }
+  };
 
   const openSplitPanel = async () => {
     if (!selected) return;
@@ -941,9 +974,53 @@ const AdminSubmissionsPage = () => {
                     {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                  onClick={() => {
+                    setReturnCaseId(selected.id);
+                    setReturnNote("");
+                  }}
+                  disabled={returning}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {t("admin.submissions.returnForChanges", "Return for changes")}
+                </Button>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Return-for-changes dialog */}
+      <Dialog open={!!returnCaseId} onOpenChange={(o) => !o && setReturnCaseId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("admin.submissions.returnDialog.title", "Return case for changes")}</DialogTitle>
+            <DialogDescription>
+              {t("admin.submissions.returnDialog.body", "Explain what the team member needs to fix. This note will be shown to them.")}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={returnNote}
+            onChange={(e) => setReturnNote(e.target.value)}
+            placeholder={t("admin.submissions.returnDialog.placeholder", "e.g. Missing passport copy, incorrect enrollment date…")}
+            rows={4}
+            maxLength={2000}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setReturnCaseId(null)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              disabled={!returnNote.trim() || returning}
+              onClick={handleReturnCase}
+              className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {returning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+              {t("admin.submissions.returnDialog.confirm", "Return for changes")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

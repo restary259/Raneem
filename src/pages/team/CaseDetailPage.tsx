@@ -10,7 +10,7 @@ import { statusColorClasses } from "@/lib/caseStatus";
 import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet, Landmark, Banknote, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet, Landmark, Banknote, XCircle, RotateCcw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -529,9 +529,24 @@ export default function CaseDetailPage() {
       </div>
 
       {canManage && submission?.review_status === "changes_requested" && (
-        <div className="rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
+        <div className="space-y-3 rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
           <p className="text-sm font-medium text-amber-700">{t("case.submit.changesRequested")}</p>
           {submission.review_note && <p className="mt-1 text-sm text-muted-foreground">{submission.review_note}</p>}
+          {reopenedResend ? (
+            <Button
+              size="sm"
+              disabled={submitting}
+              onClick={() => void handleResubmit()}
+              className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+              {t("case.submit.resubmit", "Resubmit to admin")}
+            </Button>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {t("case.submit.resubmitHint", "Complete the student profile and confirm payment to resubmit.")}
+            </p>
+          )}
         </div>
       )}
 

@@ -643,6 +643,14 @@
       "subtitle": "Cases awaiting enrollment confirmation",
       "empty": "No submitted cases yet",
       "markEnrolled": "Mark as Enrolled & Paid",
+      "returnedSuccess": "Case returned to team for changes",
+      "returnForChanges": "Return for changes",
+      "returnDialog": {
+        "title": "Return case for changes",
+        "body": "Explain what the team member needs to fix. This note will be shown to them.",
+        "placeholder": "e.g. Missing passport copy, incorrect enrollment date…",
+        "confirm": "Return for changes"
+      },
       "basicInfo": "Basic Information",
       "phone": "Phone",
       "city": "City",
@@ -2902,6 +2910,8 @@
       "confirmAction": "Submit to Admin",
       "fixAndResend": "Make the requested change below, save the file, then send it back to admin.",
       "resend": "Send back to admin",
+      "resubmit": "Resubmit to admin",
+      "resubmitHint": "Complete the student profile and confirm payment to resubmit.",
       "checklist": {
         "profile": "Student profile is complete",
         "services": "All DARB services have been provided/collected",
