@@ -12,11 +12,12 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { CatalogSchool, CatalogAccommodation } from "@/lib/catalogDisplay";
+import type { CatalogSchool, CatalogAccommodation, CatalogProgram } from "@/lib/catalogDisplay";
 
 export interface TeamCatalogData {
   schools: CatalogSchool[];
   accommodations: CatalogAccommodation[];
+  programs: CatalogProgram[];
 }
 
 interface UseTeamCatalogState {
@@ -41,7 +42,7 @@ export function useTeamCatalog(): UseTeamCatalogState {
 
     (async () => {
       try {
-        const [schoolsRes, accommodationsRes] = await Promise.all([
+        const [schoolsRes, accommodationsRes, programsRes] = await Promise.all([
           supabase
             .from("schools")
             .select("*")
@@ -52,13 +53,20 @@ export function useTeamCatalog(): UseTeamCatalogState {
             .select("*")
             .eq("is_active", true)
             .order("name_en", { ascending: true }),
+          supabase
+            .from("programs")
+            .select("*")
+            .eq("is_active", true)
+            .order("name_en", { ascending: true }),
         ]);
         if (cancelled) return;
         if (schoolsRes.error) throw schoolsRes.error;
         if (accommodationsRes.error) throw accommodationsRes.error;
+        if (programsRes.error) throw programsRes.error;
         setData({
           schools: (schoolsRes.data ?? []) as CatalogSchool[],
           accommodations: (accommodationsRes.data ?? []) as CatalogAccommodation[],
+          programs: (programsRes.data ?? []) as CatalogProgram[],
         });
       } catch (err) {
         if (cancelled) return;
