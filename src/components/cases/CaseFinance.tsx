@@ -500,6 +500,44 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
             </div>
 
+            {/* ── Payment method field — always visible to staff (a data field,
+                not a duplicate of the top-bar action). Before confirmation it's
+                an editable radio; after, a locked badge. ── */}
+            {canManage && (
+              agencyConfirmed ? (
+                <div className={`flex items-center gap-2 rounded-md border p-3 text-sm font-medium ${toneClasses("enrolled").tint} ${toneClasses("enrolled").text} border-[hsl(var(--status-enrolled)/0.28)]`}>
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
+                  {confirmedPaymentMethod && (
+                    <Badge variant="secondary" className="ms-auto gap-1">
+                      {confirmedPaymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
+                      {t(`finance.paymentMethod.${confirmedPaymentMethod}`, confirmedPaymentMethod === "cash" ? "Cash" : "Bank Transfer")}
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-md border p-3 space-y-2">
+                  <p className="text-sm font-semibold">{t("finance.paymentMethod.label", "Payment method")}</p>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="flex gap-4">
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="bank_transfer" id="pm-bank" />
+                      <label htmlFor="pm-bank" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                        <Landmark className="h-3.5 w-3.5" />
+                        {t("finance.paymentMethod.bank_transfer", "Bank Transfer")}
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="cash" id="pm-cash" />
+                      <label htmlFor="pm-cash" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                        <Banknote className="h-3.5 w-3.5" />
+                        {t("finance.paymentMethod.cash", "Cash")}
+                      </label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )
+            )}
+
             <Separator />
 
             {/* DARB SERVICES — single service-package selector. */}
@@ -653,44 +691,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   </Button>
                 </div>
               )}
-
-            {/* ── Payment method field — always visible to staff (a data field,
-                not a duplicate of the top-bar action). Before confirmation it's
-                an editable radio; after, a locked badge. ── */}
-            {canManage && (
-              agencyConfirmed ? (
-                <div className={`flex items-center gap-2 rounded-md border p-3 text-sm font-medium ${toneClasses("enrolled").tint} ${toneClasses("enrolled").text} border-[hsl(var(--status-enrolled)/0.28)]`}>
-                  <CheckCircle2 className="h-4 w-4" />
-                  {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
-                  {confirmedPaymentMethod && (
-                    <Badge variant="secondary" className="ms-auto gap-1">
-                      {confirmedPaymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
-                      {t(`finance.paymentMethod.${confirmedPaymentMethod}`, confirmedPaymentMethod === "cash" ? "Cash" : "Bank Transfer")}
-                    </Badge>
-                  )}
-                </div>
-              ) : (
-                <div className="rounded-md border p-3 space-y-2">
-                  <p className="text-sm font-semibold">{t("finance.paymentMethod.label", "Payment method")}</p>
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="flex gap-4">
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="bank_transfer" id="pm-bank" />
-                      <label htmlFor="pm-bank" className="flex items-center gap-1.5 text-sm cursor-pointer">
-                        <Landmark className="h-3.5 w-3.5" />
-                        {t("finance.paymentMethod.bank_transfer", "Bank Transfer")}
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="cash" id="pm-cash" />
-                      <label htmlFor="pm-cash" className="flex items-center gap-1.5 text-sm cursor-pointer">
-                        <Banknote className="h-3.5 w-3.5" />
-                        {t("finance.paymentMethod.cash", "Cash")}
-                      </label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              )
-            )}
 
             {/* ── Confirm & Save button — gated so it never duplicates the
                 page's top-bar action in the tabbed layout. ── */}
