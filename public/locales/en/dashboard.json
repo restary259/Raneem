@@ -1688,7 +1688,9 @@
       "noData": "No data yet",
       "caseCount": "Cases",
       "commissionPerCase": "Commission Per Case",
-      "earnedThisMonth": "Earned This Month"
+      "earnedThisMonth": "Earned This Month",
+      "cashDebtTitle": "Cash Collection Debt",
+      "cashDebtHint": "You owe DARB for the following cash-collected cases (service fee minus your commission)."
     },
     "submitStudent": {
       "title": "Submit New Student",
@@ -3349,6 +3351,7 @@
       "totalPaid": "Total Paid",
       "remaining": "Remaining Balance",
       "confirmedBy": "Confirmed By",
+      "paymentMethod": "Payment Method",
       "requested": "Requested",
       "paidAt": "Date Paid",
       "person": "Person",
@@ -3780,6 +3783,11 @@
       "confirmed": "DARB service payment confirmed",
       "confirmFailed": "Unable to confirm the DARB payment.",
       "needServices": "Select DARB services before confirming the payment."
+    },
+    "paymentMethod": {
+      "label": "Payment method",
+      "bank_transfer": "Bank Transfer",
+      "cash": "Cash"
     },
     "notes": {
       "priceControl": "Prices are controlled by the Admin service catalogue. DARB fees are calculated automatically from the selected services and cannot be edited manually.",

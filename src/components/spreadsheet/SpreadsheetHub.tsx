@@ -90,6 +90,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'total_paid', label: c('totalPaid'), type: 'currency', total: true },
         { key: 'remaining_balance', label: c('remaining'), type: 'currency', total: true },
         { key: 'confirmed_by', label: c('confirmedBy') },
+        { key: 'payment_method', label: c('paymentMethod'), type: 'enum', enumGroup: 'method' },
         { key: 'status', label: c('status'), type: 'enum', enumGroup: 'status' },
       ],
     };

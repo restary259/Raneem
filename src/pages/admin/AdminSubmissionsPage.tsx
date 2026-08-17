@@ -19,6 +19,8 @@ import {
   ExternalLink,
   SplitSquareHorizontal,
   CheckCircle2,
+  Landmark,
+  Banknote,
 } from "lucide-react";
 import { toneClasses } from "@/lib/statusTokens";
 import { useAuth } from "@/contexts/AuthContext";
@@ -102,6 +104,8 @@ const AdminSubmissionsPage = () => {
   const [programNames, setProgramNames] = useState<Record<string, string>>({});
   const [accommodationNames, setAccommodationNames] = useState<Record<string, string>>({});
   const [financialsMap, setFinancialsMap] = useState<Record<string, { service_total: number }>>({});
+  /** payment_method per case, keyed by case_id (from confirmed agency_service payment). */
+  const [paymentMethodMap, setPaymentMethodMap] = useState<Record<string, string>>({});
 
   // Split panel state
   const [showSplitPanel, setShowSplitPanel] = useState(false);
@@ -206,6 +210,19 @@ const AdminSubmissionsPage = () => {
           finMap[caseId] = { service_total };
         });
         setFinancialsMap(finMap);
+
+        // Fetch payment_method from confirmed agency_service payments
+        const { data: pmData } = await (supabase as any)
+          .from("case_payments")
+          .select("case_id, payment_method")
+          .in("case_id", allCaseIds)
+          .eq("payment_type", "agency_service")
+          .eq("status", "confirmed");
+        const pmMap: Record<string, string> = {};
+        (pmData || []).forEach((p: any) => {
+          if (p.payment_method) pmMap[p.case_id] = p.payment_method;
+        });
+        setPaymentMethodMap(pmMap);
       }
 
       if (programIds.length > 0) {
@@ -726,6 +743,17 @@ const AdminSubmissionsPage = () => {
                         : t("admin.submissions.paymentPending")}
                     </Badge>
                   </div>
+                  {paymentMethodMap[selected.id] && (
+                    <div>
+                      <span className="text-muted-foreground">{t("finance.paymentMethod.label", "Payment method")}:</span>
+                      <div className="flex items-center gap-1">
+                        {paymentMethodMap[selected.id] === "cash" ? <Banknote className="h-3.5 w-3.5" /> : <Landmark className="h-3.5 w-3.5" />}
+                        <p className="font-medium">
+                          {t(`finance.paymentMethod.${paymentMethodMap[selected.id]}`, paymentMethodMap[selected.id] === "cash" ? "Cash" : "Bank Transfer")}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

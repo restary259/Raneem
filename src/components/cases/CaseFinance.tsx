@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send, Receipt } from "lucide-react";
+import { CheckCircle2, Clock3, Info, Loader2, Wallet, ExternalLink, XCircle, Mail, Send, Receipt, Landmark, Banknote } from "lucide-react";
 import { formatCurrencyAmount, formatILS } from "@/lib/money";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -112,6 +113,9 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
   const [confirmingAgency, setConfirmingAgency] = useState(false);
 
+  /** Payment method selected by the team before confirming the DARB agency payment. */
+  const [paymentMethod, setPaymentMethod] = useState<string>("bank_transfer");
+
   /** Live (unsaved) service selection from CaseServices, used to show the
    *  pending total in the summary before "Confirm & Save" persists it. */
   const [liveCount, setLiveCount] = useState(0);
@@ -168,6 +172,8 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   const agencyPayment = payments.find((p) => p.payment_type === "agency_service" && p.status === "confirmed");
   const agencyConfirmed = !!agencyPayment;
+  /** The payment method stored at confirmation time (bank_transfer / cash / other). */
+  const confirmedPaymentMethod = (agencyPayment as any)?.payment_method as string | undefined;
 
   const loadProofs = useCallback(async () => {
     const { data, error } = await (supabase as any)
@@ -362,6 +368,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       if (!agencyConfirmed && canManage && serviceTotal > 0) {
         const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
           p_case_id: caseId,
+          p_payment_method: paymentMethod || "bank_transfer",
         });
         if (error) throw error;
         toast({
@@ -450,7 +457,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
           <TabsContent value="summary" className="space-y-5 data-[state=inactive]:hidden" forceMount>
             <div className="space-y-3">
               <p className="text-sm font-semibold">{t("finance.summary.agencyBlock", "DARB Services · ILS")}</p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-md border p-3">
                   <p className="text-xs text-muted-foreground">{t("finance.summary.services", "Service total")}</p>
                   <p className="mt-1 text-lg font-semibold">{formatILS(serviceTotal)}</p>
@@ -458,14 +465,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 <div className="rounded-md border p-3">
                   <p className="text-xs text-muted-foreground">{t("finance.summary.paid", "Paid")}</p>
                   <p className="mt-1 text-lg font-semibold">{formatILS(paid)}</p>
-                </div>
-                <div className="rounded-md border p-3">
-                  <p className="text-xs text-muted-foreground">{t("finance.summary.pendingReview", "Pending")}</p>
-                  <p className="mt-1 text-lg font-semibold">{formatILS(pendingReview)}</p>
-                </div>
-                <div className="rounded-md border p-3">
-                  <p className="text-xs text-muted-foreground">{t("finance.summary.remaining", "Remaining")}</p>
-                  <p className="mt-1 text-lg font-semibold">{formatILS(remaining)}</p>
                 </div>
               </div>
 
@@ -658,14 +657,41 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
             {/* Single confirmation action — delegated to the page's top bar in the tabbed layout. */}
             {canManage && !delegateActionsToTopBar && (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {financeComplete ? (
                   <div className={`flex items-center gap-2 rounded-md border p-3 text-sm font-medium ${toneClasses("enrolled").tint} ${toneClasses("enrolled").text} border-[hsl(var(--status-enrolled)/0.28)]`}>
                     <CheckCircle2 className="h-4 w-4" />
                     {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
+                    {confirmedPaymentMethod && (
+                      <Badge variant="secondary" className="ms-auto gap-1">
+                        {confirmedPaymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
+                        {t(`finance.paymentMethod.${confirmedPaymentMethod}`, confirmedPaymentMethod === "cash" ? "Cash" : "Bank Transfer")}
+                      </Badge>
+                    )}
                   </div>
                 ) : (
                   <>
+                    {/* Payment method selector — only before confirmation */}
+                    <div className="rounded-md border p-3 space-y-2">
+                      <p className="text-sm font-semibold">{t("finance.paymentMethod.label", "Payment method")}</p>
+                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="bank_transfer" id="pm-bank" />
+                          <label htmlFor="pm-bank" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                            <Landmark className="h-3.5 w-3.5" />
+                            {t("finance.paymentMethod.bank_transfer", "Bank Transfer")}
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="cash" id="pm-cash" />
+                          <label htmlFor="pm-cash" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                            <Banknote className="h-3.5 w-3.5" />
+                            {t("finance.paymentMethod.cash", "Cash")}
+                          </label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
                     <Button
                       type="button"
                       className="w-full sm:w-auto"

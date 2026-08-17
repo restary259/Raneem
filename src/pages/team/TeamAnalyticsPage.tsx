@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { TrendingUp, Users, Calendar, DollarSign, BadgeDollarSign } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, BadgeDollarSign, AlertTriangle } from 'lucide-react';
 import { toneClasses } from '@/lib/statusTokens';
 import { LoadingState, EmptyState } from '@/components/shell';
 
@@ -34,6 +34,9 @@ export default function TeamAnalyticsPage() {
   const [commissionPerCase, setCommissionPerCase] = useState<number | null>(null);
   const { summary: earnings } = useEarningsSummary(!!user);
   const [loading, setLoading] = useState(true);
+  /** Cash collection debts owed by this team member (service_fee − commission). */
+  const [cashDebts, setCashDebts] = useState<{ case_reference: string | null; full_name: string; amount_ils: number }[]>([]);
+  const [cashDebtTotal, setCashDebtTotal] = useState(0);
 
   const fetchData = useCallback(async () => {
     if (!user) return () => {};
@@ -81,6 +84,20 @@ export default function TeamAnalyticsPage() {
     setCommissionPerCase(
       overrideRes.data?.commission_amount ?? settingsRes.data?.team_member_commission_rate ?? 100,
     );
+
+    // Fetch cash collection debts for this team member
+    try {
+      const { data: debts } = await (supabase as any)
+        .from("v_cash_debts")
+        .select("case_reference, full_name, amount_ils")
+        .eq("collected_by", user.id);
+      if (debts) {
+        setCashDebts(debts);
+        setCashDebtTotal(debts.reduce((sum: number, d: any) => sum + Number(d.amount_ils ?? 0), 0));
+      }
+    } catch {
+      // v_cash_debts may not exist yet — gracefully ignore
+    }
 
 
     setLoading(false);
@@ -170,6 +187,34 @@ export default function TeamAnalyticsPage() {
         </Card>
 
       </div>
+
+      {/* Cash debt warning — team members who collected cash owe DARB the service fee minus their commission */}
+      {cashDebtTotal > 0 && (
+        <Card className="border-amber-500/40 bg-amber-500/5">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <span className="text-sm font-semibold text-amber-700">
+                {t('lawyer.analytics.cashDebtTitle', 'Cash Collection Debt')}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t('lawyer.analytics.cashDebtHint', 'You owe DARB for the following cash-collected cases (service fee minus your commission).')}
+            </p>
+            <div className="text-2xl font-bold tabular-nums text-amber-700">
+              ₪{cashDebtTotal.toLocaleString('en-US')}
+            </div>
+            <div className="space-y-1">
+              {cashDebts.map((d, i) => (
+                <div key={i} className="flex justify-between text-xs text-muted-foreground">
+                  <span>{d.full_name}{d.case_reference ? ` (${d.case_reference})` : ''}</span>
+                  <span className="font-medium text-foreground tabular-nums">₪{Number(d.amount_ils).toLocaleString('en-US')}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Cases by status chart */}
       <Card>

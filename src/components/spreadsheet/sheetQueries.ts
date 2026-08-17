@@ -181,7 +181,7 @@ export const fetchPaymentsSheet = async () => {
   // client-side filter is needed here.
   const { data: payments, error } = await (supabase as any)
     .from('case_payments')
-    .select('case_id, amount, confirmed_at, confirmed_by')
+    .select('case_id, amount, confirmed_at, confirmed_by, payment_method, cash_settled_at')
     .eq('payment_type', 'agency_service')
     .eq('status', 'confirmed')
     .order('confirmed_at', { ascending: false });
@@ -223,6 +223,8 @@ export const fetchPaymentsSheet = async () => {
       remaining_balance: Math.max(fee - paid, 0),
       confirmed_by: names[p.confirmed_by] ?? null,
       status: s?.case?.status ?? null,
+      payment_method: p.payment_method ?? null,
+      cash_settled_at: p.cash_settled_at ?? null,
     };
   });
 };

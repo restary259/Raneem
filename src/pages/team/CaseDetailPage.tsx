@@ -10,7 +10,7 @@ import { statusColorClasses } from "@/lib/caseStatus";
 import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet, Landmark, Banknote } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -73,6 +73,7 @@ export default function CaseDetailPage() {
   const [assigneeName, setAssigneeName] = useState<string | null>(null);
   const [forgottenDays, setForgottenDays] = useState(7);
   const [loading, setLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
 
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
@@ -165,6 +166,16 @@ export default function CaseDetailPage() {
       } else {
         setAssigneeName(null);
       }
+
+      // Fetch payment method from confirmed agency_service payment
+      const { data: pmRow } = await (supabase as any)
+        .from("case_payments")
+        .select("payment_method")
+        .eq("case_id", id)
+        .eq("payment_type", "agency_service")
+        .eq("status", "confirmed")
+        .maybeSingle();
+      setPaymentMethod(pmRow?.payment_method ?? null);
     } catch {
       if (!ignore) toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
     } finally {
@@ -471,6 +482,12 @@ export default function CaseDetailPage() {
           >
             {t(`case.status.${caseData.status}`, statusMeta?.label_en ?? caseData.status)}
           </Badge>
+          {paymentMethod && (
+            <Badge variant="secondary" className="shrink-0 gap-1">
+              {paymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
+              {t(`finance.paymentMethod.${paymentMethod}`, paymentMethod === "cash" ? "Cash" : "Bank Transfer")}
+            </Badge>
+          )}
           <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
         </div>
       </div>
