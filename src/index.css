@@ -293,3 +293,13 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* KPI grid in TeamAnalytics — container-query based so the column count tracks
+   the grid's own available width (after the sidebar takes its 16rem), not the
+   viewport. 7 across only when the grid actually has room for readable cards. */
+.kpi-grid {
+  container-type: inline-size;
+}
+@container (min-width: 30rem) { .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
+@container (min-width: 48rem) { .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
+@container (min-width: 64rem) { .kpi-grid { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; } }

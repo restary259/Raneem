@@ -125,8 +125,13 @@ export default function TeamAnalyticsPage() {
         {t('lawyer.analytics.pageTitle', t('lawyer.tabs.analytics', 'Analytics'))}
       </h1>
 
-      {/* KPI cards: 7 across on xl+, else wrap. Container is wide enough to fit them. */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+      {/* KPI cards — container-query based so the column count tracks the grid's
+          own width (after the sidebar takes its cut), not the viewport. 7 across
+          only when the grid actually has room; otherwise wraps gracefully. */}
+      <div
+        className="grid gap-4 kpi-grid"
+        style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}
+      >
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
