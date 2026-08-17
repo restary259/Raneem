@@ -368,7 +368,9 @@
       "sourceLabelForm": "Form",
       "sourceLabelManual": "Manual",
       "sourceLabelEnroll": "Enroll",
-      "sourceLabelReferral": "Referral"
+      "sourceLabelReferral": "Referral",
+      "attributionAgent": "Agent: {{name}}",
+      "attributionPartner": "Partner: {{name}}"
     },
     "team": {
       "title": "Team Members",

@@ -14,6 +14,24 @@ export interface TeamMemberSummary {
   email: string;
 }
 
+/** Display attribution for a partner/agent id: resolved name + primary role. */
+export interface AttributionInfo {
+  name: string;
+  role: string | null;
+}
+
+/**
+ * Role precedence when a user holds several roles. The first match here wins;
+ * admin/team_member are fallbacks so a staff-created case still resolves.
+ */
+const ATTRIBUTION_ROLE_PRIORITY = [
+  'agent',
+  'social_media_partner',
+  'ambassador',
+  'admin',
+  'team_member',
+] as const;
+
 export const CaseService = {
   /** Active board cases (archived and terminal-noise statuses excluded). */
   async listActive(): Promise<any[]> {
@@ -42,6 +60,42 @@ export const CaseService = {
       await db.from('profiles').select('id, full_name, email').in('id', ids)
     );
     return profiles.map((p) => ({ id: p.id, full_name: p.full_name, email: p.email || '' }));
+  },
+
+  /**
+   * Resolve display attribution (name + primary role) for a set of partner/agent
+   * ids. Names come from the SECURITY DEFINER `resolve_profile_names` RPC: there
+   * is NO foreign key from cases.partner_id → profiles, and team RLS on profiles
+   * would silently drop partner rows on a direct select, so the RPC is the only
+   * reliable resolver. Roles come from a direct user_roles read (admin-visible).
+   * A user may hold several roles; the first per ATTRIBUTION_ROLE_PRIORITY wins.
+   */
+  async resolveAttribution(ids: (string | null | undefined)[]): Promise<Record<string, AttributionInfo>> {
+    const unique = Array.from(new Set((ids.filter(Boolean) as string[])));
+    if (unique.length === 0) return {};
+    const [nameRes, roleRes] = await Promise.all([
+      db.rpc('resolve_profile_names', { p_ids: unique }),
+      db.from('user_roles').select('user_id, role').in('user_id', unique),
+    ]);
+    if (nameRes.error) throw nameRes.error;
+    if (roleRes.error) throw roleRes.error;
+    const out: Record<string, AttributionInfo> = {};
+    for (const id of unique) out[id] = { name: '—', role: null };
+    (nameRes.data ?? []).forEach((p: any) => {
+      if (out[p.id]) out[p.id].name = p.full_name ?? '—';
+    });
+    (roleRes.data ?? []).forEach((r: any) => {
+      const cur = out[r.user_id];
+      if (!cur) return;
+      const pri = ATTRIBUTION_ROLE_PRIORITY.indexOf(r.role);
+      if (pri !== -1) {
+        const curPri = cur.role == null ? Infinity : ATTRIBUTION_ROLE_PRIORITY.indexOf(cur.role);
+        if (pri < curPri) cur.role = r.role;
+      } else if (cur.role == null) {
+        cur.role = r.role;
+      }
+    });
+    return out;
   },
 
   async assign(caseId: string, userId: string | null): Promise<void> {

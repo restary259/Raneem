@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { CaseService } from "@/services";
+import type { AttributionInfo } from "@/services/CaseService";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -119,6 +120,7 @@ interface Case {
   degree_interest: string | null;
   intake_notes: string | null;
   referred_by: string | null;
+  partner_id: string | null;
   referral_discount: number;
   discount_amount: number;
 }
@@ -223,6 +225,37 @@ function ChipBtn({ active, onClick, children }: { active: boolean; onClick: () =
 
 const COLUMN_PAGE_SIZE = 25;
 
+/* ── Attribution badge: "Agent: <name>" (violet) when partner_id holder has the
+   agent role, else "Partner: <name>" (blue). No partner_id → renders nothing. ── */
+function AttributionBadge({
+  partnerId,
+  attribution,
+  t,
+}: {
+  partnerId: string | null | undefined;
+  attribution: Record<string, AttributionInfo> | null;
+  t: (key: string, fallback?: string, opts?: any) => string;
+}) {
+  if (!partnerId) return null;
+  const info = attribution?.[partnerId];
+  if (!info) return null;
+  const isAgent = info.role === "agent";
+  const label = isAgent
+    ? t("admin.pipeline.attributionAgent", "Agent: {{name}}", { name: info.name })
+    : t("admin.pipeline.attributionPartner", "Partner: {{name}}", { name: info.name });
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+        isAgent
+          ? "bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300"
+          : "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
 /* ─────────────────────────── main component ─────────────────────────── */
 
 
@@ -258,6 +291,7 @@ const AdminPipelinePage = () => {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [colLimits, setColLimits] = useState<Record<string, number>>({});
+  const [attribution, setAttribution] = useState<Record<string, AttributionInfo> | null>(null);
 
 
   /* ── fetch data ── */
@@ -277,6 +311,12 @@ const AdminPipelinePage = () => {
       }));
       setCases(enriched);
       setTeamMembers(members);
+      // Resolve partner/agent attribution (name + role) for the attribution badge.
+      // Fetched in parallel with enrichment above; failures are non-fatal (badge
+      // simply stays hidden) so a transient RPC error never breaks the board.
+      CaseService.resolveAttribution(caseRows.map((c: any) => c.partner_id))
+        .then(setAttribution)
+        .catch(() => setAttribution(null));
       // keep sheet in sync after refresh
       setSelectedCase((prev) => (prev ? (enriched.find((c) => c.id === prev.id) ?? null) : null));
     } catch (err: any) {
@@ -575,6 +615,9 @@ const AdminPipelinePage = () => {
 
                             <p className="text-xs text-muted-foreground">{c.phone_number}</p>
 
+                            {/* Attribution badge — partner / agent referral */}
+                            <AttributionBadge partnerId={c.partner_id} attribution={attribution} t={t} />
+
                             {/* Duplicate phone warning */}
                             {hasDuplicatePhone(c) && (
                               <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded border w-fit ${toneClasses("payment").chip}`}>
@@ -722,6 +765,12 @@ const AdminPipelinePage = () => {
                             </span>
                           ) : null;
                         })()}
+                      </div>
+                    )}
+                    {/* Attribution badge — partner / agent referral */}
+                    {selectedCase.partner_id && (
+                      <div className="mt-1">
+                        <AttributionBadge partnerId={selectedCase.partner_id} attribution={attribution} t={t} />
                       </div>
                     )}
                   </div>

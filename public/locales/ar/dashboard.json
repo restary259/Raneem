@@ -368,7 +368,9 @@
       "sourceLabelForm": "نموذج",
       "sourceLabelManual": "يدوي",
       "sourceLabelEnroll": "تسجيل",
-      "sourceLabelReferral": "إحالة"
+      "sourceLabelReferral": "إحالة",
+      "attributionAgent": "الوكيل: {{name}}",
+      "attributionPartner": "الشريك: {{name}}"
     },
     "team": {
       "title": "أعضاء الفريق",
