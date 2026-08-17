@@ -32,6 +32,7 @@ function builder(table: string): QueryResult & PromiseLike<QueryResult> {
     select: () => chain,
     not: () => chain,
     eq: () => chain,
+    in: () => chain,
     order: () => chain,
     maybeSingle: () => Promise.resolve(result),
     then: (resolve: (v: QueryResult) => void) => Promise.resolve(result).then(resolve),

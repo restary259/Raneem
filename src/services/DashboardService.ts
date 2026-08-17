@@ -29,10 +29,11 @@ export const DashboardService = {
     const [payRes, allRewardsRes, casesRes, settingsRes] = await Promise.all([
       db
         .from('case_payments')
-        .select('amount, case_id, confirmed_at')
+        .select('amount, case_id, confirmed_at, cases!inner(status)')
         .eq('payment_type', 'agency_service')
         .eq('status', 'confirmed')
-        .not('confirmed_at', 'is', null),
+        .not('confirmed_at', 'is', null)
+        .in('cases.status', ['submitted', 'enrollment_paid']),
       db.from('rewards').select('amount, status, admin_notes, case_id, reward_type'),
       db
         .from('cases')
