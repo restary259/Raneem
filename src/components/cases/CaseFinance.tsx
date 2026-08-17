@@ -397,7 +397,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
    * When the payment has already been confirmed, the button shows a success state.
    */
   const servicesSelected = services.length > 0 || liveCount > 0 || (servicesRef.current?.selectedCount() ?? 0) > 0;
-  const financeComplete = agencyConfirmed && serviceTotal > 0;
   // The button is enabled once services are selected and the total is positive.
   // No manual checkbox — selecting services and saving is sufficient.
   const canConfirmNow = canManage && servicesSelected && serviceTotal > 0;
@@ -655,58 +654,61 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                 </div>
               )}
 
-            {/* Single confirmation action — delegated to the page's top bar in the tabbed layout. */}
-            {canManage && !delegateActionsToTopBar && (
-              <div className="space-y-3">
-                {financeComplete ? (
-                  <div className={`flex items-center gap-2 rounded-md border p-3 text-sm font-medium ${toneClasses("enrolled").tint} ${toneClasses("enrolled").text} border-[hsl(var(--status-enrolled)/0.28)]`}>
-                    <CheckCircle2 className="h-4 w-4" />
-                    {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
-                    {confirmedPaymentMethod && (
-                      <Badge variant="secondary" className="ms-auto gap-1">
-                        {confirmedPaymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
-                        {t(`finance.paymentMethod.${confirmedPaymentMethod}`, confirmedPaymentMethod === "cash" ? "Cash" : "Bank Transfer")}
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    {/* Payment method selector — only before confirmation */}
-                    <div className="rounded-md border p-3 space-y-2">
-                      <p className="text-sm font-semibold">{t("finance.paymentMethod.label", "Payment method")}</p>
-                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="flex gap-4">
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="bank_transfer" id="pm-bank" />
-                          <label htmlFor="pm-bank" className="flex items-center gap-1.5 text-sm cursor-pointer">
-                            <Landmark className="h-3.5 w-3.5" />
-                            {t("finance.paymentMethod.bank_transfer", "Bank Transfer")}
-                          </label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="cash" id="pm-cash" />
-                          <label htmlFor="pm-cash" className="flex items-center gap-1.5 text-sm cursor-pointer">
-                            <Banknote className="h-3.5 w-3.5" />
-                            {t("finance.paymentMethod.cash", "Cash")}
-                          </label>
-                        </div>
-                      </RadioGroup>
+            {/* ── Payment method field — always visible to staff (a data field,
+                not a duplicate of the top-bar action). Before confirmation it's
+                an editable radio; after, a locked badge. ── */}
+            {canManage && (
+              agencyConfirmed ? (
+                <div className={`flex items-center gap-2 rounded-md border p-3 text-sm font-medium ${toneClasses("enrolled").tint} ${toneClasses("enrolled").text} border-[hsl(var(--status-enrolled)/0.28)]`}>
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t("finance.confirmAndSave.complete", "Finance confirmed and saved")}
+                  {confirmedPaymentMethod && (
+                    <Badge variant="secondary" className="ms-auto gap-1">
+                      {confirmedPaymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
+                      {t(`finance.paymentMethod.${confirmedPaymentMethod}`, confirmedPaymentMethod === "cash" ? "Cash" : "Bank Transfer")}
+                    </Badge>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-md border p-3 space-y-2">
+                  <p className="text-sm font-semibold">{t("finance.paymentMethod.label", "Payment method")}</p>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="flex gap-4">
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="bank_transfer" id="pm-bank" />
+                      <label htmlFor="pm-bank" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                        <Landmark className="h-3.5 w-3.5" />
+                        {t("finance.paymentMethod.bank_transfer", "Bank Transfer")}
+                      </label>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="cash" id="pm-cash" />
+                      <label htmlFor="pm-cash" className="flex items-center gap-1.5 text-sm cursor-pointer">
+                        <Banknote className="h-3.5 w-3.5" />
+                        {t("finance.paymentMethod.cash", "Cash")}
+                      </label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )
+            )}
 
-                    <Button
-                      type="button"
-                      className="w-full sm:w-auto"
-                      disabled={buttonDisabled}
-                      onClick={handleConfirmAndSave}
-                    >
-                      {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-                      {t("finance.confirmAndSave.action", "Confirm & Save")}
-                    </Button>
-                    {serviceTotal <= 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
-                      </p>
-                    )}
-                  </>
+            {/* ── Confirm & Save button — gated so it never duplicates the
+                page's top-bar action in the tabbed layout. ── */}
+            {canManage && !delegateActionsToTopBar && !agencyConfirmed && (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  className="w-full sm:w-auto"
+                  disabled={buttonDisabled}
+                  onClick={handleConfirmAndSave}
+                >
+                  {confirmingAgency && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                  {t("finance.confirmAndSave.action", "Confirm & Save")}
+                </Button>
+                {serviceTotal <= 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("finance.agency.needServices", "Select DARB services before confirming the payment.")}
+                  </p>
                 )}
               </div>
             )}
