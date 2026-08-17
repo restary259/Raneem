@@ -160,7 +160,7 @@ const AdminSubmissionsPage = () => {
           .select(
             "id, full_name, phone_number, status, source, created_at, education_level, city, passport_type, student_user_id, partner_id, referred_by, assigned_to",
           )
-          .in("status", ["submitted", "payment_confirmed"])
+          .eq("status", "submitted")
           .is("deleted_at", null)
           .order("created_at", { ascending: false }),
         supabase
