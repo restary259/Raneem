@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   RefreshCw,
   Search,
@@ -27,6 +29,8 @@ import {
   X,
   Trash2,
   ExternalLink,
+  XCircle,
+  Loader2,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -38,12 +42,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { matchesRef } from "@/lib/reference";
-import { CaseStatus } from "@/lib/caseStatus";
+import { CaseStatus, isTerminalStatus } from "@/lib/caseStatus";
+import { cancelCase } from "@/services/CaseStageService";
 import { SLA_DAYS } from "@/lib/slaPolicy";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { toneClasses } from "@/lib/statusTokens";
@@ -247,6 +253,9 @@ const AdminPipelinePage = () => {
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [adminCancelOpen, setAdminCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   const [colLimits, setColLimits] = useState<Record<string, number>>({});
 
 
@@ -377,6 +386,24 @@ const AdminPipelinePage = () => {
       toast({ variant: "destructive", description: err.message });
     } finally {
       setDeleting(false);
+    }
+  };
+
+  /* ── cancel case (admin) — side-exit, not a pipeline transition ── */
+  const cancelSelectedCase = async () => {
+    if (!selectedCase) return;
+    setCancelling(true);
+    try {
+      await cancelCase(selectedCase.id, cancelReason, selectedCase.status);
+      toast({ description: t("case.cancel.success") });
+      setAdminCancelOpen(false);
+      setCancelReason("");
+      setSelectedCase(null);
+      await fetchData();
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -1037,6 +1064,19 @@ const AdminPipelinePage = () => {
                   </section>
                 )}
 
+                {/* ── Cancel case — available in both read and edit mode ── */}
+                {selectedCase && !isTerminalStatus(selectedCase.status) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 border-destructive/50 text-destructive hover:bg-destructive/10 w-full h-10"
+                    onClick={() => setAdminCancelOpen(true)}
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    {t("case.cancel.button", "Cancel Case")}
+                  </Button>
+                )}
+
                 <Separator />
 
                 {/* ── Assign team member ── */}
@@ -1134,6 +1174,40 @@ const AdminPipelinePage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Cancel Case Confirmation Dialog ── */}
+      <Dialog open={adminCancelOpen} onOpenChange={(open) => { setAdminCancelOpen(open); if (!open) setCancelReason(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="h-5 w-5" />
+              {t("case.cancel.title", "Cancel Case")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("case.cancel.desc", "This will permanently mark the case as cancelled. You can view it later in the Cancelled tab.")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-sm">{t("case.cancel.reasonLabel", "Reason (optional)")}</Label>
+            <Textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder={t("case.cancel.reasonPlaceholder", "Why is this case being cancelled?")}
+              rows={3}
+              disabled={cancelling}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setAdminCancelOpen(false); setCancelReason(""); }} disabled={cancelling}>
+              {t("common.back", "Back")}
+            </Button>
+            <Button variant="destructive" onClick={cancelSelectedCase} disabled={cancelling}>
+              {cancelling && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+              {t("case.cancel.confirm", "Yes, Cancel Case")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

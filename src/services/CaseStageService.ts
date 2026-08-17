@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getNextSteps, canTransition } from "@/lib/caseTransitions";
+import { TERMINAL_STATUSES } from "@/lib/caseStatus";
 import type { CaseStatus } from "@/lib/caseStatus";
 
 /** Stages that are only reached through another flow, never by a manual click. */
@@ -54,6 +55,26 @@ export async function advanceCaseStage(
     p_case_id: caseId,
     p_event_type: "stage_advanced",
     p_payload: { from, to },
+    p_is_internal: false,
+  });
+  if (logError) throw logError;
+}
+
+/**
+ * Permanently cancel a case. A side-exit, not a pipeline transition — it
+ * bypasses the transition graph intentionally (cancelled is terminal), so
+ * "Cancel" never surfaces as a suggested next step in the pipeline UI.
+ * Records a `case_cancelled` timeline event carrying the current status and
+ * the optional reason.
+ */
+export async function cancelCase(caseId: string, reason: string, currentStatus: string): Promise<void> {
+  const { error } = await supabase.from("cases").update({ status: "cancelled" }).eq("id", caseId);
+  if (error) throw error;
+
+  const { error: logError } = await supabase.rpc("log_case_event", {
+    p_case_id: caseId,
+    p_event_type: "case_cancelled",
+    p_payload: { from: currentStatus, reason: reason.trim() || null },
     p_is_internal: false,
   });
   if (logError) throw logError;

@@ -10,11 +10,14 @@ import { statusColorClasses } from "@/lib/caseStatus";
 import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet, Landmark, Banknote } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet, Landmark, Banknote, XCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
-import { advanceCaseStage } from "@/services/CaseStageService";
+import { advanceCaseStage, cancelCase } from "@/services/CaseStageService";
+import { isTerminalStatus } from "@/lib/caseStatus";
 import { submitCaseForReview, sendInvoiceEmail } from "@/services/CaseInvoiceService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
@@ -80,6 +83,9 @@ export default function CaseDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [pendingStage, setPendingStage] = useState<string | null>(null);
   const [advancing, setAdvancing] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   /** Tabbed layout (profile_completion / payment_confirmed) active view. */
   const [activeView, setActiveView] = useState<WorkflowView>("overview");
@@ -239,6 +245,24 @@ export default function CaseDetailPage() {
   };
 
   const canSubmitToAdmin = canManage && caseData?.status === "payment_confirmed";
+
+  const handleCancelCase = async () => {
+    if (!caseData) return;
+    setCancelling(true);
+    try {
+      await cancelCase(caseData.id, cancelReason, caseData.status);
+      toast({ description: t("case.cancel.success") });
+      setCancelDialogOpen(false);
+      setCancelReason("");
+      await fetchData();
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const canCancelCase = canManage && caseData != null && !isTerminalStatus(caseData.status);
 
   // Student contact details surfaced inside the Finance tab's invite block.
   const studentInvite = useMemo(() => {
@@ -470,6 +494,18 @@ export default function CaseDetailPage() {
               <Button size="sm" className="gap-1.5" onClick={() => setSchedulerOpen(true)}>
                 <CalendarPlus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("case.header.schedule")}</span>
+              </Button>
+            )}
+
+            {canCancelCase && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-destructive/50 text-destructive hover:bg-destructive/10"
+                onClick={() => setCancelDialogOpen(true)}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t("case.cancel.button")}</span>
               </Button>
             )}
           </div>
@@ -761,6 +797,39 @@ export default function CaseDetailPage() {
             </Button>
             <Button onClick={handleAdvance} disabled={advancing}>
               {advancing ? t("case.stage.confirmPending") : t("case.stage.confirmAction")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={cancelDialogOpen} onOpenChange={(open) => { setCancelDialogOpen(open); if (!open) setCancelReason(""); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="h-5 w-5" />
+              {t("case.cancel.title", "Cancel Case")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("case.cancel.desc", "This will permanently mark the case as cancelled. You can view it later in the Cancelled tab.")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label className="text-sm">{t("case.cancel.reasonLabel", "Reason (optional)")}</Label>
+            <Textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder={t("case.cancel.reasonPlaceholder", "Why is this case being cancelled?")}
+              rows={3}
+              disabled={cancelling}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setCancelDialogOpen(false); setCancelReason(""); }} disabled={cancelling}>
+              {t("common.back", "Back")}
+            </Button>
+            <Button variant="destructive" onClick={handleCancelCase} disabled={cancelling}>
+              {cancelling && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+              {t("case.cancel.confirm", "Yes, Cancel Case")}
             </Button>
           </div>
         </DialogContent>

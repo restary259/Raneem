@@ -2804,6 +2804,16 @@
         "enrollment_paid": "the enrollment payment is confirmed"
       }
     },
+    "cancel": {
+      "button": "Cancel Case",
+      "title": "Cancel Case",
+      "desc": "This will permanently mark the case as cancelled. You can view it later in the Cancelled tab.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "Why is this case being cancelled?",
+      "confirm": "Yes, Cancel Case",
+      "pending": "Cancelling…",
+      "success": "Case cancelled"
+    },
     "overview": {
       "notSet": "Not set yet",
       "paymentConfirmed": "Confirmed",
