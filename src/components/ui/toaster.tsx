@@ -9,11 +9,27 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 
-// Tiny inline AudioContext beep — no external file needed.
-// Plays a short soft chime on every new toast.
-function playNotificationSound(variant?: string) {
+// Single reused AudioContext — browsers cap concurrent contexts (~6 in Chrome),
+// so creating one per toast would exhaust the pool and silently kill later beeps.
+let audioCtx: AudioContext | null = null;
+function getAudioCtx(): AudioContext | null {
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    if (!audioCtx) {
+      const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      audioCtx = new Ctor();
+    }
+    return audioCtx;
+  } catch {
+    // AudioContext blocked (user hasn't interacted yet) — silent fail.
+    return null;
+  }
+}
+
+// Tiny inline beep — no external file needed. Plays a short soft chime on every new toast.
+function playNotificationSound(variant?: string) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -30,21 +46,23 @@ function playNotificationSound(variant?: string) {
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.35);
   } catch {
-    // AudioContext blocked (user hasn't interacted yet) — silent fail.
+    // Suspended/blocked context — silent fail.
   }
 }
 
 export function Toaster() {
   const { toasts } = useToast();
-  const prevCountRef = useRef(0);
+  const prevIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (toasts.length > prevCountRef.current) {
-      // A new toast was added — play sound for it.
-      const newest = toasts[toasts.length - 1];
-      playNotificationSound(newest?.variant);
+    // ADD_TOAST prepends, so index 0 is the newest. Track the id (not the
+    // count) because the store caps at TOAST_LIMIT=1 and replaces in place —
+    // a length check would miss rapid successive toasts.
+    const newest = toasts[0];
+    if (newest && newest.id !== prevIdRef.current) {
+      playNotificationSound(newest.variant);
     }
-    prevCountRef.current = toasts.length;
+    prevIdRef.current = newest?.id ?? null;
   }, [toasts]);
 
   return (
