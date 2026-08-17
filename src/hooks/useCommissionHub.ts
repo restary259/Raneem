@@ -14,15 +14,12 @@ export interface CommissionHubOverview {
   students_total: number;
   student_overrides: number;
   independent_partners: number;
-  master_partners: number;
   global_rates: {
     partner: number;
     ambassador: number;
     team: number;
-    master_share: number;
     agent: number;
     agent_self_referral: number;
-    referral_discount: number;
     student_friend_discount: number;
     student_friend_reward: number;
     student_family_discount: number;
@@ -95,8 +92,6 @@ export interface AccountCommissionHistory {
     email: string;
     role: string;
     agent_id: string | null;
-    master_partner_id: string | null;
-    is_master_partner: boolean;
   };
   rewards: Array<Record<string, unknown>>;
   totals: {

@@ -5,7 +5,6 @@ const base = {
   grossTotal: 5000,
   referralDiscount: 0,
   partnerPool: 1000,
-  masterShare: 0,
   agentShare: 500,
   teamRate: 100,
   studentReward: 200,
@@ -30,18 +29,11 @@ describe("simulateCommission — partner (additive)", () => {
     expect(r.totalPayouts).toBe(1600); // payouts unchanged by discount
   });
 
-  it("deducts the master carve from the partner share, not the margin", () => {
-    const r = simulateCommission({ ...base, acquisitionType: "partner", masterShare: 300 });
-    expect(r.masterShare).toBe(300);
-    expect(r.partnerShare).toBe(700); // 1000 pool - 300 master
-    expect(r.darbMargin).toBe(3400); // margin unaffected: master comes from pool
+  it("partner keeps the full pool (no master carve)", () => {
+    const r = simulateCommission({ ...base, acquisitionType: "partner" });
+    expect(r.partnerShare).toBe(1000); // full pool
+    expect(r.darbMargin).toBe(3400); // 5000 - 100 - 1000 - 500
     expect(r.totalPayouts).toBe(1600);
-  });
-
-  it("clamps the master carve to the pool", () => {
-    const r = simulateCommission({ ...base, acquisitionType: "partner", masterShare: 9999 });
-    expect(r.masterShare).toBe(1000);
-    expect(r.partnerShare).toBe(0);
   });
 });
 

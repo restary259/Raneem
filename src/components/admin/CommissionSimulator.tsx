@@ -37,7 +37,6 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
   const [grossTotal, setGrossTotal] = useState(5000);
   const [referralDiscount, setReferralDiscount] = useState(0);
   const [partnerPool, setPartnerPool] = useState(1000);
-  const [masterShare, setMasterShare] = useState(0);
   const [agentShare, setAgentShare] = useState(500);
   const [teamRate, setTeamRate] = useState(100);
   const [studentReward, setStudentReward] = useState(200);
@@ -49,12 +48,11 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
         grossTotal,
         referralDiscount,
         partnerPool,
-        masterShare,
         agentShare,
         teamRate,
         studentReward,
       }),
-    [acquisitionType, grossTotal, referralDiscount, partnerPool, masterShare, agentShare, teamRate, studentReward],
+    [acquisitionType, grossTotal, referralDiscount, partnerPool, agentShare, teamRate, studentReward],
   );
 
   const isPartner = acquisitionType === "partner";
@@ -69,7 +67,6 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
   if (isPartner) {
     fields.push(
       { key: "pool", labelKey: "commissionHub.simPool", fallback: "Partner pool", value: partnerPool },
-      { key: "master", labelKey: "commissionHub.simMaster", fallback: "Master carve (from pool)", value: masterShare },
       { key: "agent", labelKey: "commissionHub.simAgent", fallback: "Agent override (additive)", value: agentShare },
     );
   }
@@ -85,7 +82,6 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
     discount: setReferralDiscount,
     team: setTeamRate,
     pool: setPartnerPool,
-    master: setMasterShare,
     agent: setAgentShare,
     agentSelf: setAgentShare,
     student: setStudentReward,
@@ -97,8 +93,7 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
   ];
   if (isPartner) {
     rows.push(
-      { label: t("commissionHub.simPartnerShare", "Partner share (net of master)"), value: result.partnerShare },
-      { label: t("commissionHub.simMasterOut", "Master carve"), value: result.masterShare, muted: true },
+      { label: t("commissionHub.simPartnerShare", "Partner share"), value: result.partnerShare },
       { label: t("commissionHub.simAgentOut", "Agent override (additive)"), value: result.agentShare },
     );
   }

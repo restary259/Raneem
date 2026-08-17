@@ -20,8 +20,6 @@ interface MemberRow {
   created_at: string;
   role: string;
   referral_code: string | null;
-  is_master_partner: boolean;
-  master_partner_id: string | null;
   agent_id: string | null;
   is_deactivated: boolean;
   assigned_cases: number;
@@ -31,7 +29,6 @@ interface MemberRow {
   earned_override: number;
   students_count: number;
   earned_referral: number;
-  earned_master_override: number;
   total_earned: number;
   paid_amount: number;
   locked_amount: number;

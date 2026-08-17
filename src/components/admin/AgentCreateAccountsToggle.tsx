@@ -25,9 +25,8 @@ interface Props {
  * enabled, the agent can create partner & ambassador accounts directly from
  * their own dashboard and receive a temp password to share. The flag is
  * admin-only settable via restrict_profiles_write (exactly like
- * agent_can_invite_directly / is_master_partner). Mirrors AgentInviteToggle:
- * it only flips the permission — it never touches earnings, referral codes
- * or payout history.
+ * agent_can_invite_directly). Mirrors AgentInviteToggle: it only flips the
+ * permission — it never touches earnings, referral codes or payout history.
  */
 const AgentCreateAccountsToggle: React.FC<Props> = ({
   agentId, agentName, canCreateAccounts, onChanged, variant = 'chip',

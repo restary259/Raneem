@@ -23,10 +23,9 @@ interface Props {
 /**
  * Grants / revokes an Agent's direct-invite permission. When enabled, the
  * agent can invite partners & ambassadors from their own dashboard. The flag
- * is admin-only settable via restrict_profiles_write (exactly like
- * is_master_partner), and the confirmation step mirrors MasterPartnerToggle:
- * it only flips the permission — it never touches earnings, referral codes or
- * payout history.
+ * is admin-only settable via restrict_profiles_write, and the confirmation
+ * step only flips the permission — it never touches earnings, referral codes
+ * or payout history.
  */
 const AgentInviteToggle: React.FC<Props> = ({
   agentId, agentName, canInvite, onChanged, variant = 'chip',

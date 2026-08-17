@@ -3413,6 +3413,9 @@
       "kind": {
         "team": "Team commission",
         "partner": "Partner commission",
+        "ambassador": "Ambassador commission",
+        "agent_self_referral": "Agent self-referral",
+        "agent_recruitment": "Agent recruitment",
         "other": "Other",
         "program": "Program",
         "accommodation": "Accommodation",

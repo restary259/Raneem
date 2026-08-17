@@ -13,7 +13,7 @@ import { Loader2, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react"
 import { toast } from "sonner";
 
 /**
- * Streamlined recruit signup for a master partner's dedicated link (/join/MP-XXXX).
+ * Streamlined recruit signup for a recruiter's dedicated link (/join/MP-XXXX).
  * Attribution is resolved server-side from the code — it is never typed by the applicant.
  */
 export default function JoinPartnerPage() {

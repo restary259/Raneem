@@ -20,7 +20,6 @@ import {
   GraduationCap,
   DollarSign,
   Save,
-  Crown,
   Heart,
   Users2,
   AlertCircle,
@@ -52,13 +51,11 @@ const AdminCommissionHubPage: React.FC = () => {
     const g = overview?.global_rates;
     if (!g) return [];
     return [
-      { key: "partner_commission_rate", label: t("commissionHub.ratePartner", "Partner pool"), value: g.partner },
+      { key: "partner_commission_rate", label: t("commissionHub.ratePartner", "Partner"), value: g.partner },
       { key: "ambassador_commission_rate", label: t("commissionHub.rateAmbassador", "Ambassador"), value: g.ambassador },
       { key: "team_member_commission_rate", label: t("commissionHub.rateTeam", "Team"), value: g.team },
-      { key: "master_partner_override_rate", label: t("commissionHub.rateMaster", "Master share"), value: g.master_share },
-      { key: "agent_commission_rate", label: t("commissionHub.rateAgent", "Agent (additive)"), value: g.agent },
+      { key: "agent_commission_rate", label: t("commissionHub.rateAgent", "Agent recruitment"), value: g.agent },
       { key: "agent_self_referral_rate", label: t("commissionHub.rateAgentSelf", "Agent self-referral"), value: g.agent_self_referral },
-      { key: "referral_discount_amount", label: t("commissionHub.rateReferralDiscount", "Referral discount"), value: g.referral_discount },
       { key: "student_refer_friend_discount", label: t("commissionHub.rateFriendDiscount", "Friend discount"), value: g.student_friend_discount },
       { key: "student_refer_friend_reward", label: t("commissionHub.rateFriendReward", "Friend referrer reward"), value: g.student_friend_reward },
       { key: "student_refer_family_discount", label: t("commissionHub.rateFamilyDiscount", "Family discount"), value: g.student_family_discount },
@@ -168,9 +165,8 @@ const AdminCommissionHubPage: React.FC = () => {
             <KpiCard icon={Network} label={t("commissionHub.kpiAgents", "Agents")} value={overview?.agents_total ?? 0}
               sub={t("commissionHub.kpiCustom", "{{count}} custom", { count: overview?.agents_custom ?? 0 })} />
             <KpiCard icon={GraduationCap} label={t("commissionHub.kpiStudents", "Students")} value={overview?.students_total ?? 0} />
-            <KpiCard icon={Crown} label={t("commissionHub.kpiMasters", "Master partners")} value={overview?.master_partners ?? 0} />
             <KpiCard icon={Users} label={t("commissionHub.kpiIndependent", "Direct (no recruiter)")} value={overview?.independent_partners ?? 0}
-              sub={t("commissionHub.kpiIndependentSub", "No agent, no master")} />
+              sub={t("commissionHub.kpiIndependentSub", "No agent")} />
             <KpiCard icon={DollarSign} label={t("commissionHub.kpiAtZero", "Partners at ₪0")} value={overview?.partners_at_zero ?? 0} />
           </div>
 
@@ -304,7 +300,7 @@ const AdminCommissionHubPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground mb-3">
-                {t("commissionHub.independentHint", "Recruited directly by Admin — no agent, no master partner.")}
+                {t("commissionHub.independentHint", "Recruited directly by Admin — no agent.")}
               </p>
               {independent.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-3">{t("commissionHub.none", "None")}</p>

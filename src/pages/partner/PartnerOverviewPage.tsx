@@ -8,7 +8,6 @@ import { Users, DollarSign, TrendingUp, Award, CheckCircle, FileCheck, Clock, Cr
 import { toneClasses } from "@/lib/statusTokens";
 import { LoadingState } from "@/components/shell";
 import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
-import RateOfferInbox from "@/components/partner/RateOfferInbox";
 
 
 import { useDirection } from "@/hooks/useDirection";
@@ -197,9 +196,6 @@ export default function PartnerOverviewPage() {
           {t("partner.partnerDashboard")}
         </p>
       </div>
-
-      {/* Pending commission agreement offers from my master partner */}
-      <RateOfferInbox />
 
       {/* My referral link — the single link every partner shares */}
       <ReferralLinkCard userId={userId} />

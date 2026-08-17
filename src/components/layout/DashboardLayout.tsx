@@ -24,7 +24,6 @@ import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemePicker from "@/components/common/ThemePicker";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
-import { useIsMasterPartner } from "@/hooks/useIsMasterPartner";
 
 import {
   LayoutDashboard,
@@ -57,7 +56,6 @@ import {
   Table,
   Calculator,
   Sparkles,
-  Crown,
   ShieldCheck,
   Receipt,
   Wrench,
@@ -220,16 +218,8 @@ function SidebarNav({ role }: { role: AppRole }) {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
-  const { isMaster } = useIsMasterPartner();
   const baseItems = NAV_CONFIG[role] ?? [];
-  const isPartnerRole = role === "social_media_partner" || role === "ambassador";
-  const items: NavItem[] = isMaster && isPartnerRole
-    ? [
-        ...baseItems,
-        // Network hub also holds the per-partner performance tab.
-        { key: "nav.network", icon: Crown, href: "/partner/network", group: "nav.group.work" },
-      ]
-    : baseItems;
+  const items: NavItem[] = baseItems;
 
   const unreadMessages = useUnreadCaseMessages(true);
 

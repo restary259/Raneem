@@ -91,7 +91,6 @@ const TeamCatalogPage = lazy(() => import("./pages/team/TeamCatalogPage"));
 const PartnerOverviewPage = lazy(() => import("./pages/partner/PartnerOverviewPage"));
 const PartnerStudentsPage = lazy(() => import("./pages/partner/PartnerStudentsPage"));
 const PartnerEarningsPage = lazy(() => import("./pages/partner/PartnerEarningsPage"));
-const PartnerNetworkHubPage = lazy(() => import("./pages/partner/PartnerNetworkHubPage"));
 const PartnerProfilePage = lazy(() => import("./pages/partner/PartnerProfilePage"));
 const PartnerApplyPage = lazy(() => import("./pages/partner/PartnerApplyPage"));
 
@@ -358,8 +357,6 @@ const App = () => {
               <Route path="messages" element={<PartnerMessagesPage />} />
               <Route path="students" element={<PartnerStudentsPage />} />
               <Route path="earnings" element={<PartnerEarningsPage />} />
-              <Route path="network" element={<PartnerNetworkHubPage />} />
-              <Route path="performance" element={<Navigate to="/partner/network?tab=performance" replace />} />
 
               <Route path="profile" element={<PartnerProfilePage />} />
               <Route path="apply" element={<PartnerApplyPage />} />

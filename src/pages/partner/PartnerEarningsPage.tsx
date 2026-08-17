@@ -25,7 +25,6 @@ export default function PartnerEarningsPage() {
   const [isPoolMode, setIsPoolMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
-  const [overrideRewards, setOverrideRewards] = useState<any[]>([]);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
   const [payoutPreview, setPayoutPreview] = useState<any>(null);
@@ -98,16 +97,6 @@ export default function PartnerEarningsPage() {
       .eq("user_id", uid)
       .like("admin_notes", "Partner commission from case%")
       .order("created_at", { ascending: false });
-
-    // Master-partner network override earnings are tracked separately so they
-    // are never mixed with the partner's own referral commissions.
-    const { data: overrideRows } = await (supabase as any)
-      .from("rewards")
-      .select("id,amount,status,created_at")
-      .eq("user_id", uid)
-      .eq("reward_type", "master_override")
-      .order("created_at", { ascending: false });
-    setOverrideRewards(overrideRows || []);
 
     // Payout requests carry the reference number the partner quotes to Darb.
     const { data: requestRows } = await (supabase as any)
@@ -333,27 +322,6 @@ export default function PartnerEarningsPage() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Network override earnings — master partners only, kept apart from referral earnings */}
-      {overrideRewards.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">
-              {isAr ? "أرباح الشبكة (عمولة إضافية)" : "Network override earnings"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-2xl font-bold">
-              ₪{overrideRewards.reduce((s: number, r: any) => s + Number(r.amount), 0).toLocaleString("en-US")}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isAr
-                ? `${overrideRewards.length.toLocaleString("en-US")} عمولة من شركاء شبكتك — منفصلة عن إحالاتك المباشرة.`
-                : `${overrideRewards.length.toLocaleString("en-US")} overrides from partners you recruited — separate from your own referrals.`}
-            </p>
           </CardContent>
         </Card>
       )}

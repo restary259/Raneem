@@ -26,7 +26,6 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
 import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2 } from "lucide-react";
-import MasterPartnerToggle from "./MasterPartnerToggle";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
@@ -265,23 +264,6 @@ function MemberDetailPanel({
         </Card>
 
         {/* Role-specific Actions */}
-        {(member.role === "social_media_partner" || member.role === "ambassador") && (
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                {t("admin.members.sectionActions", "Actions")}
-              </h3>
-              <MasterPartnerToggle
-                partnerId={member.requester_id}
-                isMaster={member.is_master_partner}
-                partnerName={member.full_name}
-                variant="plain"
-                onChanged={() => {}}
-              />
-            </CardContent>
-          </Card>
-        )}
-
         {member.role === "agent" && (
           <Card>
             <CardContent className="p-4">
@@ -329,12 +311,6 @@ function MemberDetailPanel({
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{t("admin.members.agentId", "Agent ID")}</span>
                   <span className="font-mono text-xs">{member.agent_id.slice(0, 8)}…</span>
-                </div>
-              )}
-              {member.master_partner_id && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">{t("admin.members.masterPartnerId", "Master Partner ID")}</span>
-                  <span className="font-mono text-xs">{member.master_partner_id.slice(0, 8)}…</span>
                 </div>
               )}
             </div>
@@ -428,7 +404,6 @@ export default function MemberDetailDrawer({ member, open, onOpenChange }: Membe
           { label: t("admin.members.kpiReferred", "Referred"), value: String(member.students_count), icon: Users },
           { label: t("admin.members.kpiEnrolled", "Enrolled"), value: String(member.students_count > 0 ? Math.round(member.students_count * 0.3) : 0), icon: Award },
           { label: t("admin.members.kpiEarnedReferral", "Earned (Referral)"), value: formatILS(member.earned_referral), icon: DollarSign },
-          { label: t("admin.members.kpiEarnedOverride", "Earned (Master)"), value: formatILS(member.earned_master_override), icon: Crown },
         ];
       default:
         return [];

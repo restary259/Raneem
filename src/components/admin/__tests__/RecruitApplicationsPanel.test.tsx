@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 /**
  * Contract under test: approving a partner recruit is a single, retry-safe
  * admin action that creates (or reuses) the account, links it to the recruiting
- * master partner and sends the branded activation email. The panel must:
+ * agent and sends the branded activation email. The panel must:
  *  - call the edge function with the application id and `approve`
  *  - surface a clear success/failure state for the activation email
  *  - expose "Resend invite" once the row is approved
@@ -27,7 +27,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 const APPLICATION_ID = '11111111-1111-4111-8111-111111111111';
-const MASTER_ID = '22222222-2222-4222-8222-222222222222';
+const AGENT_ID = '22222222-2222-4222-8222-222222222222';
 const RECRUIT_EMAIL = 'tsukuyomidomain00@gmail.com';
 
 /** Server-side truth for the application row. */
@@ -67,7 +67,7 @@ beforeEach(() => {
   row = {
     id: APPLICATION_ID,
     recruit_code: 'MP-DCAF',
-    master_partner_id: MASTER_ID,
+    agent_id: AGENT_ID,
     full_name: 'Nadeem Recruit',
     email: RECRUIT_EMAIL,
     phone: '0500000000',
@@ -76,7 +76,7 @@ beforeEach(() => {
     note: null,
     status: 'pending',
     created_at: new Date().toISOString(),
-    master: { full_name: 'Master Partner' },
+    agent: { full_name: 'Recruiting Agent' },
   };
   invokeResult = { data: { success: true, emailed: true, user_id: 'user-1' }, error: null };
 });
@@ -87,9 +87,9 @@ const renderPanel = async () => {
 };
 
 describe('RecruitApplicationsPanel — approve recruit → account → invite', () => {
-  it('shows the recruiting master partner and the recruit code', async () => {
+  it('shows the recruiting agent and the recruit code', async () => {
     await renderPanel();
-    expect(screen.getByText('Master Partner')).toBeInTheDocument();
+    expect(screen.getByText('Recruiting Agent')).toBeInTheDocument();
     expect(screen.getByText('(MP-DCAF)')).toBeInTheDocument();
     expect(screen.getByText(new RegExp(RECRUIT_EMAIL))).toBeInTheDocument();
   });

@@ -48,10 +48,14 @@ describe("commissionClassifier — isPartnerPool", () => {
   it("includes the referral reward_type (partner/ambassador)", () => {
     expect(isPartnerPool(r("referral"))).toBe(true);
   });
-  it("includes master_partner, master_override, agent_override", () => {
+  it("includes master_partner, master_override, agent_override (historical)", () => {
     expect(isPartnerPool(r("master_partner"))).toBe(true);
     expect(isPartnerPool(r("master_override"))).toBe(true);
     expect(isPartnerPool(r("agent_override"))).toBe(true);
+  });
+  it("includes ambassador and agent_recruitment", () => {
+    expect(isPartnerPool(r("ambassador"))).toBe(true);
+    expect(isPartnerPool(r("agent_recruitment"))).toBe(true);
   });
   it("excludes team and student_referral (margin-funded, separate)", () => {
     expect(isPartnerPool(r("team"))).toBe(false);
@@ -83,15 +87,19 @@ describe("commissionClassifier — classifyReward", () => {
     expect(classifyReward(r("referral", "Partner commission from case X"))).toBe("partner");
     expect(classifyReward(r("referral", "Agent self-referral from case X"))).toBe("agent_self_referral");
   });
-  it("classifies master_partner + master_override as master_override", () => {
-    expect(classifyReward(r("master_partner"))).toBe("master_override");
-    expect(classifyReward(r("master_override"))).toBe("master_override");
+  it("classifies historical master_partner/master_override/network_split as 'other' (legacy display)", () => {
+    expect(classifyReward(r("master_partner"))).toBe("other");
+    expect(classifyReward(r("master_override"))).toBe("other");
+    expect(classifyReward(r("network_split"))).toBe("other");
   });
-  it("classifies legacy network_split as master_override", () => {
-    expect(classifyReward(r("network_split"))).toBe("master_override");
+  it("classifies agent_override as agent_recruitment", () => {
+    expect(classifyReward(r("agent_override"))).toBe("agent_recruitment");
   });
-  it("classifies agent_override and student_referral", () => {
-    expect(classifyReward(r("agent_override"))).toBe("agent_override");
+  it("classifies ambassador and agent_recruitment", () => {
+    expect(classifyReward(r("ambassador", "Ambassador commission from case X"))).toBe("ambassador");
+    expect(classifyReward(r("agent_recruitment"))).toBe("agent_recruitment");
+  });
+  it("classifies student_referral", () => {
     expect(classifyReward(r("student_referral"))).toBe("student_referral");
   });
   it("classifies team", () => {

@@ -1385,3 +1385,109 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
   cover the three attribution paths: partner self-referral (form + link),
   agent's recruited partner, student-to-student, plus no-attribution.
 - Build: `npm run build` clean; `npx vitest run` 401/401 pass (45 files).
+
+## Commission simplification — flat additive architecture (2026-08-17)
+
+Removed the **Master Partner** concept from the active app + commission engine,
+wired the **Ambassador** rate correctly (was silently reusing the Partner rate),
+and removed the obsolete generic `referral_discount_amount` from the active UI.
+The project is preproduction; the SQL migration is prepared for **manual**
+execution (NOT applied by the Vercel build or `ci.yml` — run via
+`supabase db push` or the dashboard SQL editor).
+
+### SQL migration (manual)
+- `supabase/migrations/20260818000000_commission_simplification.sql`:
+  1. `partner_base_pool(p_partner_id)` is now **role-aware**: ambassadors
+     resolve `platform_settings.ambassador_commission_rate`, partners resolve
+     `partner_commission_rate`. This is the ambassador-wiring fix (the old body
+     read ONLY `partner_commission_rate` regardless of role). Per-partner /
+     per-ambassador overrides still win via the existing override tables.
+  2. `record_case_commission` rebuilt as the **simplified flat engine**: NO
+     master branch, NO `get_effective_partner_split` call. The referrer keeps
+     the FULL pool (no master carve). PRESERVES the `case_financial_snapshots`
+     INSERT (from `20260817040000`) and the `log_case_event` audit call (from
+     `20260817010000`) — these audit/determinism guardrails must not regress.
+     Agent self-referral + student-referral branches unchanged (additive,
+     margin-funded). `pg_advisory_xact_lock` + `commission_split_done` +
+     `ON CONFLICT` + 20-day `unlock_at` all preserved.
+  3. `get_commission_hub_overview` drops `master_partners` and
+     `master_share` from the response; KEEPS `partners_at_zero` (unrelated).
+  4. `admin_set_commission` rejects the now-obsolete rate kinds
+     (`master_partner_override_rate`, `referral_discount_amount`).
+  5. NEW `get_student_referral_discount_by_type(p_referral_type text)` —
+     student-readable RPC returning the friend/family discount (replaces the
+     generic `get_referral_discount_amount`). Granted to `authenticated` only.
+  6. OPTIONAL CLEANUP section drops `platform_settings.master_partner_override_rate`
+     + `referral_discount_amount` columns, the `get_referral_discount_amount()`
+     function, `profiles.is_master_partner` + `profiles.master_partner_id`
+     columns, `partner_recruit_applications.master_partner_id` + FK, and the
+     `rate_offers` table + the three rate-offer RPCs
+     (`master_send_rate_offer`, `partner_respond_rate_offer`, `get_my_rate_offers`).
+- The `get_effective_partner_split` function is NO LONGER CALLED by the engine;
+  its generated `types.ts` entry is left in place (harmless — mirrors retained
+  DB columns; removing is non-durable).
+
+### Frontend — Master Partner fully removed from active UI
+- DELETED: `src/hooks/useIsMasterPartner.ts`, `src/components/admin/MasterPartnerToggle.tsx`
+  (+ test), `src/pages/partner/PartnerPerformancePage.tsx`,
+  `src/pages/partner/PartnerNetworkPage.tsx`, `src/pages/partner/PartnerNetworkHubPage.tsx`,
+  `src/components/partner/RateOfferInbox.tsx`, `src/components/partner/RateOfferDialog.tsx`.
+  The `/partner/network` route removed from `App.tsx`; the Crown nav injection +
+  `useIsMasterPartner` import removed from `DashboardLayout.tsx`; `/partner/network`
+  removed from `MOBILE_MORE_CONFIG` in `MobileBottomNav.tsx`. `<RateOfferInbox />`
+  import + usage removed from `PartnerOverviewPage.tsx`.
+- `AdminCommissionHubPage.tsx`: removed `master_partner_override_rate` +
+  `referral_discount_amount` from `globalRates`, the Master KPI card (Crown),
+  the Crown lucide import. Renamed "Partner pool"→"Partner", "Agent (additive)"→"Agent recruitment".
+  `independentHint` + `kpiIndependentSub` fallbacks updated to drop "no master partner".
+- `useCommissionHub.ts`: removed `master_partners` from `CommissionHubOverview`,
+  `master_share` + `referral_discount` from `global_rates`, `master_partner_id`
+  + `is_master_partner` from `AccountCommissionHistory.account`.
+- `commissionSimulator.ts` + `CommissionSimulator.tsx`: removed `masterShare`
+  from input/result interfaces, the "Master carve" field, and the masterShare
+  result rows. `partnerShare = partnerPool` (full pool, no carve). The pure
+  simulator now mirrors the simplified engine.
+- `PartnerEarningsPage.tsx`: removed the `overrideRewards` state, the
+  `.eq("reward_type", "master_override")` query, and the "Network override
+  earnings" Card.
+- `PartnerProfilePage.tsx`: removed `is_master_partner` from the select +
+  interface, the master Crown badge, the `Badge` + `Crown` imports.
+- `RecruitApplicationsPanel.tsx`: removed `master_partner_id` from `AppRow`,
+  the `master:profiles!...` join from the select, the `r.master?.full_name`
+  fallback. The DB column stays (not dropped by the REQUIRED SQL — only the
+  OPTIONAL cleanup touches it).
+- `MemberList.tsx` / `AdminMembersPage.tsx` / `MemberDetailDrawer.tsx` /
+  `RoleDirectory.tsx` / `RequesterProfilePanel.tsx`: master fields, toggle,
+  Crown badge, master filter, network-membership UI all removed (MemberDetailDrawer
+  keeps its `Crown` lucide import — still used for the agent `kpiOverrideEarned` KPI).
+- `ReferralForm.tsx`: replaced the `get_referral_discount_amount` RPC with
+  `get_student_referral_discount_by_type({ p_referral_type })`, re-running on
+  `referralType` change so a friend vs family referral can carry different
+  discounts. Default 0 (was hardcoded 500).
+- Cosmetic: `JoinPartnerPage`, `AgentInviteToggle`, `AgentCreateAccountsToggle`
+  JSDoc comments de-"master partner"-ed.
+
+### Historical reward classification (backward compat — DO NOT re-remove)
+- `commissionClassifier.ts` KEEPS `master_partner`, `master_override`,
+  `network_split`, `agent_override` in `PARTNER_POOL_REWARD_TYPES` so
+  already-paid historical rewards still bucket into the partner pool for
+  dashboard financials. They are mapped to `"other"` in `classifyReward`
+  (legacy display only — the engine no longer creates them). `DashboardService`
+  + `sheetQueries` classifiers are unchanged (they already use the set).
+- `RewardKind` gained `"ambassador"` + `"agent_recruitment"`; `"master_override"`
+  was removed from the union (legacy types map to `"other"`).
+
+### i18n
+- Orphaned locale keys (`commissionHub.rateMaster`, `rateReferralDiscount`,
+  `kpiMasters`, `simMaster`, `simMasterOut`, `partner.profile.masterBadge`)
+  are LEFT in en/ar — the `i18nKeys.test.ts` parity guard only flags MISSING
+  keys, not orphans, so leaving them is non-breaking and avoids churn. No
+  `t()` call references them anymore.
+- `sheets.value.kind.ambassador` + `.agent_self_referral` added to en + ar
+  (the spreadsheet value-kind column).
+
+### Build/test
+- `npm run build` (tsc+vite) clean; `npx vitest run` 395/395 pass (44 files),
+  incl. i18n parity guard. `commissionSimulator.test.ts` lost the two master-carve
+  cases (replaced by a "partner keeps full pool" case, net −1).
+

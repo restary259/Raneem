@@ -3431,6 +3431,9 @@
       "kind": {
         "team": "عمولة فريق",
         "partner": "عمولة وكيل",
+        "ambassador": "عمولة سفير",
+        "agent_self_referral": "إحالة الوكيل الذاتية",
+        "agent_recruitment": "عمولة تجنيد الوكيل",
         "other": "أخرى",
         "program": "برنامج",
         "accommodation": "سكن",

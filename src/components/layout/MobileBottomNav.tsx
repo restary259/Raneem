@@ -87,11 +87,9 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   ],
   social_media_partner: [
     { key: 'nav.apply', icon: ClipboardEdit, href: '/partner/apply' },
-    { key: 'nav.network', icon: Users, href: '/partner/network' },
     { key: 'nav.account', icon: User, href: '/partner/profile' },
   ],
   ambassador: [
-    { key: 'nav.network', icon: Users, href: '/partner/network' },
     { key: 'nav.account', icon: User, href: '/partner/profile' },
   ],
   agent: [

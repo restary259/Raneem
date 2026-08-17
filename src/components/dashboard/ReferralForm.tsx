@@ -29,19 +29,21 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
   useEffect(() => {
     let active = true;
     // platform_settings RLS is staff/partner only, so the amount comes from a
-    // SECURITY DEFINER RPC that exposes just this one value to students.
+    // SECURITY DEFINER RPC that exposes just this one value to students. The
+    // type-aware RPC lets a friend and a family referral carry different
+    // discounts.
     (supabase as any)
-      .rpc("get_referral_discount_amount")
+      .rpc("get_student_referral_discount_by_type", { p_referral_type: referralType })
       .then(({ data }: any) => {
         if (!active) return;
-        const amount = Number(data ?? 500);
+        const amount = Number(data ?? 0);
         if (Number.isFinite(amount) && amount > 0) setDiscountAmount(amount);
       })
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, []);
+  }, [referralType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

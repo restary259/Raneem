@@ -27,10 +27,9 @@ const mockRpc = vi.fn().mockImplementation((name: string) => {
         students_total: 50,
         student_overrides: 0,
         independent_partners: 2,
-        master_partners: 1,
         global_rates: {
-          partner: 1000, ambassador: 800, team: 100, master_share: 200,
-          agent: 500, agent_self_referral: 300, referral_discount: 500,
+          partner: 1000, ambassador: 800, team: 100,
+          agent: 500, agent_self_referral: 300,
           student_friend_discount: 500, student_friend_reward: 200,
           student_family_discount: 700, student_family_reward: 300,
         },

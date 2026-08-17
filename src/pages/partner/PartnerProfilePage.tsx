@@ -8,11 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { validatePassword } from "@/components/auth/PasswordStrength";
 import { buildReferralUrl } from "@/lib/referral";
-import { User, Lock, Link2, Copy, Check, Crown, ChevronRight } from "lucide-react";
+import { User, Lock, Link2, Copy, Check, ChevronRight } from "lucide-react";
 
 interface PartnerProfile {
   id: string;
@@ -22,7 +21,6 @@ interface PartnerProfile {
   city: string | null;
   referral_code: string | null;
   referral_code_enabled: boolean | null;
-  is_master_partner: boolean | null;
 }
 
 /** Partner / ambassador account surface: personal details, referral link and password. */
@@ -49,7 +47,7 @@ export default function PartnerProfilePage() {
     if (!user) return;
     const { data } = await (supabase as any)
       .from("profiles")
-      .select("id, full_name, email, phone_number, city, referral_code, referral_code_enabled, is_master_partner")
+      .select("id, full_name, email, phone_number, city, referral_code, referral_code_enabled")
       .eq("id", user.id)
       .maybeSingle();
     if (data) {
@@ -145,12 +143,6 @@ export default function PartnerProfilePage() {
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <User className="h-6 w-6 text-primary" />
           {t("partner.profile.title")}
-          {profile?.is_master_partner && (
-            <Badge variant="secondary" className="gap-1">
-              <Crown className="h-3 w-3" />
-              {t("partner.profile.masterBadge")}
-            </Badge>
-          )}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">{t("partner.profile.subtitle")}</p>
       </div>

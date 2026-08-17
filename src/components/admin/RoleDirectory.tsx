@@ -8,17 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, RefreshCw, ChevronRight, Users, Crown } from 'lucide-react';
-import { toneClasses } from '@/lib/statusTokens';
+import { Search, RefreshCw, ChevronRight, Users } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { matchesRef } from '@/lib/reference';
 import RequesterProfilePanel, { DirectoryRow, PayoutRole } from './RequesterProfilePanel';
-import MasterPartnerToggle from './MasterPartnerToggle';
 
 
 const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
 
-type Filter = 'all' | 'open' | 'balance' | 'settled' | 'master';
+type Filter = 'all' | 'open' | 'balance' | 'settled';
 
 const ROLE_RPC: Record<PayoutRole, string> = {
   team_member: 'list_team_directory',
@@ -74,12 +72,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
 
   const refreshAll = useCallback(() => { fetchRows(); onRefresh(); }, [fetchRows, onRefresh]);
 
-  /** Optimistic local flag update after a confirmed master upgrade/downgrade. */
-  const applyMaster = useCallback((requesterId: string, next: boolean) => {
-    setRows(prev => prev.map(p => (p.requester_id === requesterId ? { ...p, is_master_partner: next } : p)));
-    refreshAll();
-  }, [refreshAll]);
-
   const requestsByRequester = useMemo(() => {
     const map: Record<string, any[]> = {};
     requests
@@ -98,13 +90,11 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
       if (filter === 'open') return Number(p.open_requests) > 0;
       if (filter === 'balance') return Number(p.available_amount) > 0 || Number(p.locked_amount) > 0;
       if (filter === 'settled') return Number(p.open_requests) === 0 && Number(p.available_amount) === 0;
-      if (filter === 'master') return !!p.is_master_partner;
       return true;
     });
   }, [rows, search, filter, requestsByRequester]);
 
   const openCount = rows.filter(p => Number(p.open_requests) > 0).length;
-  const masterCount = rows.filter(p => !!p.is_master_partner).length;
 
   const selected = rows.find(p => p.requester_id === selectedId) || null;
   if (selected) {
@@ -113,7 +103,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
         role={role}
         row={selected}
         requests={requestsByRequester[selected.requester_id] || []}
-        allRows={rows}
         onBack={() => setSelectedId(null)}
         onRefresh={refreshAll}
       />
@@ -131,15 +120,9 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
     <div className="min-w-0">
       <p className="font-medium truncate flex items-center gap-1.5">
         {p.full_name}
-        {isPartner && p.is_master_partner && (
-          <Badge variant="outline" className={`gap-1 ${toneClasses("payment").chip}`}>
-            <Crown className="h-3 w-3" />{t('admin.payouts.masterBadge', 'Master')}
-          </Badge>
-        )}
       </p>
       <p className="text-xs text-muted-foreground truncate">
         {p.email}{p.city ? ` · ${p.city}` : ''}
-        {isPartner && p.master_partner_name ? ` · ${t('admin.payouts.recruitedBy', 'Recruited by')} ${p.master_partner_name}` : ''}
       </p>
     </div>
   );
@@ -149,7 +132,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
     if (isPartner) {
       cells.push(
         <th key="students" className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colStudents', 'Students')}</th>,
-        <th key="recruited" className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colRecruited', 'Recruited')}</th>,
       );
     } else if (isAgent) {
       cells.push(
@@ -178,7 +160,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
     if (isPartner) {
       cells.push(
         <td key="students" className="px-4 py-3">{Number(p.students_count || 0).toLocaleString('en-US')}</td>,
-        <td key="recruited" className="px-4 py-3">{p.is_master_partner ? Number(p.recruited_count || 0).toLocaleString('en-US') : '—'}</td>,
       );
     } else if (isAgent) {
       cells.push(
@@ -245,9 +226,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
             <SelectItem value="open">{t('admin.payouts.filterOpen', 'Pending requests')} ({openCount})</SelectItem>
             <SelectItem value="balance">{t('admin.payouts.filterBalance', 'Has balance')}</SelectItem>
             <SelectItem value="settled">{t('admin.payouts.filterSettled', 'Settled')}</SelectItem>
-            {isPartner && (
-              <SelectItem value="master">{t('admin.payouts.filterMaster', 'Master partners')} ({masterCount})</SelectItem>
-            )}
           </SelectContent>
         </Select>
         <Button variant="outline" size="sm" onClick={refreshAll}><RefreshCw className="h-4 w-4" /></Button>
@@ -267,14 +245,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
                   <div className="flex items-center gap-2">
                     {Number(p.open_requests) > 0 && (
                       <Badge variant="secondary">{p.open_requests}</Badge>
-                    )}
-                    {isPartner && (
-                      <MasterPartnerToggle
-                        partnerId={p.requester_id}
-                        partnerName={p.full_name}
-                        isMaster={!!p.is_master_partner}
-                        onChanged={(next) => applyMaster(p.requester_id, next)}
-                      />
                     )}
                   </div>
                 </div>
@@ -300,9 +270,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colLocked', 'Locked (20d)')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colAvailable', 'Available')}</th>
                   <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colOpen', 'Open requests')}</th>
-                  {isPartner && (
-                    <th className="px-4 py-3 text-start font-semibold">{t('admin.payouts.colMaster', 'Master partner')}</th>
-                  )}
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -324,16 +291,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
                         <Badge variant="secondary">{p.open_requests} · {fmt(p.open_request_amount)}</Badge>
                       ) : '—'}
                     </td>
-                    {isPartner && (
-                      <td className="px-4 py-3">
-                        <MasterPartnerToggle
-                          partnerId={p.requester_id}
-                          partnerName={p.full_name}
-                          isMaster={!!p.is_master_partner}
-                          onChanged={(next) => applyMaster(p.requester_id, next)}
-                        />
-                      </td>
-                    )}
                     <td className="px-4 py-3 text-end"><ChevronRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 inline" /></td>
                   </tr>
                 ))}
