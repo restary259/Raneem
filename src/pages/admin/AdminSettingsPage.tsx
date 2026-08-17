@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import PipelineStatusesPanel from "@/components/admin/PipelineStatusesPanel";
 import ServiceCatalogPanel from "@/components/admin/ServiceCatalogPanel";
+import AuthFailuresPanel from "@/components/admin/AuthFailuresPanel";
 
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -559,6 +560,10 @@ const AdminSettingsPage = () => {
           <TabsTrigger value="reset" className="text-destructive data-[state=active]:text-destructive">
             {t('admin.settings.resetTabLabel', '⚠️ Data Reset')}
           </TabsTrigger>
+          <TabsTrigger value="security" className="text-destructive data-[state=active]:text-destructive">
+            <ShieldAlert className="h-3.5 w-3.5 me-1" />
+            {t("admin.settings.security", "Security")}
+          </TabsTrigger>
         </TabsList>
 
         {/* ── Platform Settings ── */}
@@ -1051,6 +1056,11 @@ const AdminSettingsPage = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Security / Auth Failures ── */}
+        <TabsContent value="security" className="mt-4">
+          <AuthFailuresPanel />
         </TabsContent>
       </Tabs>
 
