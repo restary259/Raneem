@@ -2845,69 +2845,6 @@ export type Database = {
         }
         Relationships: []
       }
-      partner_rate_offers: {
-        Row: {
-          created_at: string
-          id: string
-          master_amount: number
-          master_partner_id: string
-          note: string | null
-          offered_at: string
-          partner_amount: number
-          partner_id: string
-          pool_amount: number
-          responded_at: string | null
-          status: string
-          updated_at: string
-          version: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          master_amount: number
-          master_partner_id: string
-          note?: string | null
-          offered_at?: string
-          partner_amount: number
-          partner_id: string
-          pool_amount: number
-          responded_at?: string | null
-          status?: string
-          updated_at?: string
-          version?: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          master_amount?: number
-          master_partner_id?: string
-          note?: string | null
-          offered_at?: string
-          partner_amount?: number
-          partner_id?: string
-          pool_amount?: number
-          responded_at?: string | null
-          status?: string
-          updated_at?: string
-          version?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "partner_rate_offers_master_partner_id_fkey"
-            columns: ["master_partner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "partner_rate_offers_partner_id_fkey"
-            columns: ["partner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       partner_recruit_applications: {
         Row: {
           agent_id: string | null
@@ -2917,7 +2854,6 @@ export type Database = {
           email: string
           full_name: string
           id: string
-          master_partner_id: string | null
           note: string | null
           phone: string
           recruit_code: string
@@ -2935,7 +2871,6 @@ export type Database = {
           email: string
           full_name: string
           id?: string
-          master_partner_id?: string | null
           note?: string | null
           phone: string
           recruit_code: string
@@ -2953,7 +2888,6 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
-          master_partner_id?: string | null
           note?: string | null
           phone?: string
           recruit_code?: string
@@ -2974,13 +2908,6 @@ export type Database = {
           {
             foreignKeyName: "partner_recruit_applications_created_user_id_fkey"
             columns: ["created_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "partner_recruit_applications_master_partner_id_fkey"
-            columns: ["master_partner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3187,10 +3114,8 @@ export type Database = {
           forgotten_contacted_days: number
           forgotten_new_case_days: number
           id: string
-          master_partner_override_rate: number
           partner_commission_rate: number
           partner_dashboard_show_all_cases: boolean
-          referral_discount_amount: number
           student_refer_family_discount: number
           student_refer_family_reward: number
           student_refer_friend_discount: number
@@ -3208,10 +3133,8 @@ export type Database = {
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
-          master_partner_override_rate?: number
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
-          referral_discount_amount?: number
           student_refer_family_discount?: number
           student_refer_family_reward?: number
           student_refer_friend_discount?: number
@@ -3229,10 +3152,8 @@ export type Database = {
           forgotten_contacted_days?: number
           forgotten_new_case_days?: number
           id?: string
-          master_partner_override_rate?: number
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
-          referral_discount_amount?: number
           student_refer_family_discount?: number
           student_refer_family_reward?: number
           student_refer_friend_discount?: number
@@ -3288,10 +3209,8 @@ export type Database = {
           influencer_id: string | null
           intake_month: string | null
           is_manager: boolean
-          is_master_partner: boolean
           language_school_id: string | null
           linked_case_id: string | null
-          master_partner_id: string | null
           must_change_password: boolean
           nationality: string | null
           notes: string | null
@@ -3357,10 +3276,8 @@ export type Database = {
           influencer_id?: string | null
           intake_month?: string | null
           is_manager?: boolean
-          is_master_partner?: boolean
           language_school_id?: string | null
           linked_case_id?: string | null
-          master_partner_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
@@ -3426,10 +3343,8 @@ export type Database = {
           influencer_id?: string | null
           intake_month?: string | null
           is_manager?: boolean
-          is_master_partner?: boolean
           language_school_id?: string | null
           linked_case_id?: string | null
-          master_partner_id?: string | null
           must_change_password?: boolean
           nationality?: string | null
           notes?: string | null
@@ -3479,13 +3394,6 @@ export type Database = {
             columns: ["linked_case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_master_partner_id_fkey"
-            columns: ["master_partner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -4790,18 +4698,6 @@ export type Database = {
           pool_amount: number
         }[]
       }
-      get_effective_partner_split: {
-        Args: { p_partner_id: string }
-        Returns: {
-          master_partner_id: string
-          master_share: number
-          offer_id: string
-          offer_version: number
-          partner_amount: number
-          pool_amount: number
-          responded_at: string
-        }[]
-      }
       get_forgotten_cases: {
         Args: never
         Returns: {
@@ -4997,24 +4893,6 @@ export type Database = {
       }
       get_my_payout_preview: { Args: never; Returns: Json }
       get_my_permissions: { Args: never; Returns: string[] }
-      get_my_rate_offers: {
-        Args: never
-        Returns: {
-          id: string
-          master_amount: number
-          master_name: string
-          master_partner_id: string
-          note: string
-          offered_at: string
-          partner_amount: number
-          partner_id: string
-          partner_name: string
-          pool_amount: number
-          responded_at: string
-          status: string
-          version: number
-        }[]
-      }
       get_my_role: { Args: never; Returns: string }
       get_partner_commission_rate: {
         Args: { p_user_id: string }
@@ -5037,7 +4915,6 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Json
       }
-      get_referral_discount_amount: { Args: never; Returns: number }
       get_school_important_contacts: {
         Args: { p_city?: string; p_school_id: string }
         Returns: {
@@ -5092,6 +4969,10 @@ export type Database = {
         }[]
       }
       get_student_referral_config: { Args: never; Returns: Json }
+      get_student_referral_discount_by_type: {
+        Args: { p_referral_type: string }
+        Returns: number
+      }
       get_student_referral_reward: {
         Args: { p_referral_type: string; p_student_id: string }
         Returns: number
@@ -5322,14 +5203,6 @@ export type Database = {
         Returns: undefined
       }
       master_announce_to_network: { Args: { p_body: string }; Returns: number }
-      master_send_rate_offer: {
-        Args: {
-          p_note?: string
-          p_partner_amount: number
-          p_partner_id: string
-        }
-        Returns: string
-      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -5344,10 +5217,6 @@ export type Database = {
         Returns: string
       }
       partner_base_pool: { Args: { p_partner_id: string }; Returns: number }
-      partner_respond_rate_offer: {
-        Args: { p_accept: boolean; p_offer_id: string }
-        Returns: undefined
-      }
       profile_agent_fields_unchanged: {
         Args: {
           _agent_can_create_accounts: boolean
