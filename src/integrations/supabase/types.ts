@@ -920,6 +920,7 @@ export type Database = {
         Row: {
           amount: number
           case_id: string
+          cash_settled_at: string | null
           confirmed_at: string | null
           confirmed_by: string | null
           created_at: string
@@ -940,6 +941,7 @@ export type Database = {
         Insert: {
           amount?: number
           case_id: string
+          cash_settled_at?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
@@ -960,6 +962,7 @@ export type Database = {
         Update: {
           amount?: number
           case_id?: string
+          cash_settled_at?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
@@ -4772,17 +4775,14 @@ export type Database = {
           available_amount: number
           city: string
           created_at: string
-          earned_master_override: number
           earned_override: number
           earned_referral: number
           email: string
           enrolled_cases: number
           full_name: string
           is_deactivated: boolean
-          is_master_partner: boolean
           last_request_at: string
           locked_amount: number
-          master_partner_id: string
           open_request_amount: number
           open_requests: number
           paid_amount: number
