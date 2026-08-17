@@ -1690,7 +1690,8 @@
       "commissionPerCase": "Commission Per Case",
       "earnedThisMonth": "Earned This Month",
       "cashDebtTitle": "Cash Collection Debt",
-      "cashDebtHint": "You owe DARB for the following cash-collected cases (service fee minus your commission)."
+      "cashDebtHint": "You owe DARB for the following cash-collected cases (service fee minus your commission).",
+      "nextUnlock": "Unlocks"
     },
     "submitStudent": {
       "title": "Submit New Student",

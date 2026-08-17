@@ -8,7 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { startOfMonth, endOfMonth } from 'date-fns';
-import { TrendingUp, Users, Calendar, DollarSign, BadgeDollarSign, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Users, Calendar, DollarSign, BadgeDollarSign, AlertTriangle, Clock3, Wallet } from 'lucide-react';
 import { toneClasses } from '@/lib/statusTokens';
 import { LoadingState, EmptyState } from '@/components/shell';
 
@@ -126,7 +126,9 @@ export default function TeamAnalyticsPage() {
       </h1>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+
+        {/* Closed this month */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -137,6 +139,7 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
+        {/* Total cases */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -147,6 +150,7 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
+        {/* Today's appointments */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -157,7 +161,8 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className={`border-[hsl(var(--status-payment)/0.25)]`}>
+        {/* Commission per case */}
+        <Card className="border-[hsl(var(--status-payment)/0.25)]">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
               <BadgeDollarSign className={`h-4 w-4 ${toneClasses('payment').text}`} />
@@ -169,7 +174,26 @@ export default function TeamAnalyticsPage() {
           </CardContent>
         </Card>
 
-        <Card className={`border-[hsl(var(--status-paid)/0.25)]`}>
+        {/* Locked */}
+        <Card className="border-[hsl(var(--status-payment)/0.25)]">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock3 className={`h-4 w-4 ${toneClasses('payment').text}`} />
+              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.lockedBalance', 'Locked')}</span>
+            </div>
+            <div className={`text-3xl font-bold tabular-nums ${toneClasses('payment').text}`}>
+              ₪{Number(earnings.locked).toLocaleString('en-US')}
+            </div>
+            {earnings.next_unlock_at && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {t('lawyer.analytics.nextUnlock', 'Unlocks')} {new Date(earnings.next_unlock_at).toLocaleDateString()}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Available */}
+        <Card className="border-[hsl(var(--status-paid)/0.25)]">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className={`h-4 w-4 ${toneClasses('paid').text}`} />
@@ -178,10 +202,18 @@ export default function TeamAnalyticsPage() {
             <div className={`text-3xl font-bold tabular-nums ${toneClasses('paid').text}`}>
               ₪{Number(earnings.available).toLocaleString('en-US')}
             </div>
-            <div className="mt-1 text-[11px] text-muted-foreground tabular-nums">
-              <span className={toneClasses('payment').text}>{t('lawyer.analytics.lockedBalance', 'Locked')}: ₪{Number(earnings.locked).toLocaleString('en-US')}</span>
-              {' · '}
-              <span className={toneClasses('paid').text}>{t('lawyer.analytics.paidBalance', 'Paid')}: ₪{Number(earnings.paid).toLocaleString('en-US')}</span>
+          </CardContent>
+        </Card>
+
+        {/* Paid */}
+        <Card className="border-[hsl(var(--status-enrolled)/0.25)]">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Wallet className={`h-4 w-4 ${toneClasses('enrolled').text}`} />
+              <span className="text-xs text-muted-foreground">{t('lawyer.analytics.paidBalance', 'Paid')}</span>
+            </div>
+            <div className={`text-3xl font-bold tabular-nums ${toneClasses('enrolled').text}`}>
+              ₪{Number(earnings.paid).toLocaleString('en-US')}
             </div>
           </CardContent>
         </Card>
