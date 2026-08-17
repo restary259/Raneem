@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { CaseService } from "@/services";
 import type { AttributionInfo } from "@/services/CaseService";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -234,7 +235,7 @@ function AttributionBadge({
 }: {
   partnerId: string | null | undefined;
   attribution: Record<string, AttributionInfo> | null;
-  t: (key: string, fallback?: string, opts?: any) => string;
+  t: TFunction;
 }) {
   if (!partnerId) return null;
   const info = attribution?.[partnerId];

@@ -11,6 +11,79 @@ import { resolveWeeklyRate, parseWeekTiers, type WeekPriceTier } from "@/lib/pro
 
 export type CatalogSchool = Database["public"]["Tables"]["schools"]["Row"];
 export type CatalogAccommodation = Database["public"]["Tables"]["accommodations"]["Row"];
+export type CatalogProgram = Database["public"]["Tables"]["programs"]["Row"];
+
+/** Schools grouped under their country (the top level of the catalog hierarchy). */
+export interface CountryGroup {
+  /** Country name as stored, or "" when the school has none. */
+  country: string;
+  schools: CatalogSchool[];
+}
+
+/**
+ * Group schools by country, countries sorted alphabetically and schools kept in
+ * the order they arrive (server-ordered by name_en). Schools with no country
+ * land in a trailing group keyed by "".
+ */
+export function groupByCountry(schools: CatalogSchool[]): CountryGroup[] {
+  const map = new Map<string, CatalogSchool[]>();
+  for (const s of schools) {
+    const key = s.country?.trim() || "";
+    const list = map.get(key);
+    if (list) list.push(s);
+    else map.set(key, [s]);
+  }
+  return Array.from(map.entries())
+    .sort(([a], [b]) => {
+      if (a === "") return 1;
+      if (b === "") return -1;
+      return a.localeCompare(b);
+    })
+    .map(([country, list]) => ({ country, schools: list }));
+}
+
+/** How many programs / accommodations hang off a school. */
+export function schoolStats(
+  schoolId: string,
+  programs: CatalogProgram[],
+  accommodations: CatalogAccommodation[],
+): { programs: number; accommodations: number } {
+  return {
+    programs: programs.filter((p) => p.school_id === schoolId).length,
+    accommodations: accommodations.filter((a) => a.school_id === schoolId).length,
+  };
+}
+
+/** All usable photo entries (trimmed, empties dropped). Never null. */
+export function allPhotos(photos: string[] | null | undefined): string[] {
+  if (!photos) return [];
+  return photos.filter((p) => typeof p === "string" && p.trim().length > 0);
+}
+
+/** Count of usable photos. */
+export function photoCount(photos: string[] | null | undefined): number {
+  return allPhotos(photos).length;
+}
+
+/**
+ * Short factual summary chips for a program: CEFR range, lessons/week,
+ * hours/week, duration. Empty values are dropped; numerals stay Western.
+ */
+export function programSummary(
+  program: CatalogProgram,
+  labels: { lessons: string; hours: string },
+): string[] {
+  const out: string[] = [];
+  if (program.cefr_range) out.push(program.cefr_range);
+  if (program.lessons_per_week != null) {
+    out.push(`${program.lessons_per_week.toLocaleString("en-US")} ${labels.lessons}`);
+  }
+  if (program.hours_per_week != null) {
+    out.push(`${program.hours_per_week.toLocaleString("en-US")} ${labels.hours}`);
+  }
+  if (program.duration) out.push(program.duration);
+  return out;
+}
 
 /** Accommodation grouped under its owning school (school_id FK). */
 export interface SchoolGroup {
@@ -253,6 +326,33 @@ export function formatMoney(rate: number | null, currency: string | null | undef
 export function primaryPhoto(photos: string[] | null | undefined): string | null {
   if (!photos || photos.length === 0) return null;
   return photos.find((p) => p && p.trim()) ?? null;
+}
+
+/**
+ * Filter schools for the hierarchy view: city + free-text search over the
+ * school's own fields. Search also matches a school whose programs or
+ * accommodations match, so a query like "studio" still surfaces its school.
+ */
+export function filterSchools(
+  schools: CatalogSchool[],
+  programs: CatalogProgram[],
+  accommodations: CatalogAccommodation[],
+  filter: { search: string; city: string; country?: string },
+): CatalogSchool[] {
+  const q = filter.search.trim().toLowerCase();
+  return schools.filter((s) => {
+    if (filter.city && s.city !== filter.city) return false;
+    if (filter.country && (s.country?.trim() || "") !== filter.country) return false;
+    if (!q) return true;
+    const own = [s.name_en, s.name_ar, s.city, s.country, s.description_en, s.description_ar]
+      .filter(Boolean).join(" ").toLowerCase();
+    if (own.includes(q)) return true;
+    const kids = [
+      ...programs.filter((p) => p.school_id === s.id).map((p) => `${p.name_en} ${p.name_ar} ${p.type}`),
+      ...accommodations.filter((a) => a.school_id === s.id).map((a) => `${a.name_en} ${a.name_ar} ${a.room_type ?? ""}`),
+    ].join(" ").toLowerCase();
+    return kids.includes(q);
+  });
 }
 
 /** Localized name for a school/accommodation given the active language. */

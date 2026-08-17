@@ -74,6 +74,7 @@ interface PanelProps {
   roleLabel: string;
   RoleIcon: React.ComponentType<{ className?: string }>;
   t: TFunction;
+  onChanged?: () => void;
   onOpenChange: (open: boolean) => void;
   deactivateTarget: DeactivateTarget | null;
   setDeactivateTarget: React.Dispatch<React.SetStateAction<DeactivateTarget | null>>;
@@ -90,6 +91,7 @@ function MemberDetailPanel({
   roleLabel,
   RoleIcon,
   t,
+  onChanged,
   onOpenChange,
   deactivateTarget,
   setDeactivateTarget,
@@ -377,7 +379,7 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
   const handleSettle = async (caseId: string) => {
     setSettlingId(caseId);
     try {
-      const { error } = await supabase.rpc("settle_cash_collection", { p_case_id: caseId });
+      const { error } = await (supabase as any).rpc("settle_cash_collection", { p_case_id: caseId });
       if (error) throw error;
       await fetchDebts();
       onChanged?.();
@@ -471,7 +473,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
         p_user_id: id,
       });
       if (error) throw error;
-      setBreakdown(data as CommissionBreakdown);
+      setBreakdown(data as unknown as CommissionBreakdown);
     } catch (err) {
       console.error("Failed to load commission breakdown:", err);
       setBreakdown(null);
@@ -551,6 +553,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     roleLabel,
     RoleIcon,
     t,
+    onChanged,
     onOpenChange,
     deactivateTarget,
     setDeactivateTarget,

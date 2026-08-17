@@ -87,9 +87,9 @@ export const CaseService = {
     (roleRes.data ?? []).forEach((r: any) => {
       const cur = out[r.user_id];
       if (!cur) return;
-      const pri = ATTRIBUTION_ROLE_PRIORITY.indexOf(r.role);
+      const pri = (ATTRIBUTION_ROLE_PRIORITY as readonly string[]).indexOf(r.role);
       if (pri !== -1) {
-        const curPri = cur.role == null ? Infinity : ATTRIBUTION_ROLE_PRIORITY.indexOf(cur.role);
+        const curPri = cur.role == null ? Infinity : (ATTRIBUTION_ROLE_PRIORITY as readonly string[]).indexOf(cur.role);
         if (pri < curPri) cur.role = r.role;
       } else if (cur.role == null) {
         cur.role = r.role;
