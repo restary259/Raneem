@@ -507,7 +507,11 @@
       "referralCode": "Referral Code",
       "agentId": "Agent ID",
       "masterPartnerId": "Master Partner ID",
-      "deactivate": "Deactivate"
+      "deactivate": "Deactivate",
+      "cashDebtTitle": "Cash Collection Debts",
+      "cashDebtHint": "Pending cash collections this member owes to DARB (service fee minus commission).",
+      "settle": "Settle",
+      "settling": "Settling…"
     },
     "programs": {
       "title": "Programs & Accommodations",

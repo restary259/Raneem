@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2 } from "lucide-react";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark } from "lucide-react";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
@@ -263,6 +263,11 @@ function MemberDetailPanel({
           </CardContent>
         </Card>
 
+        {/* Cash Collection Debts — team members only */}
+        {member.role === "team_member" && (
+          <CashDebtsCard teamMemberId={member.requester_id} t={t} />
+        )}
+
         {/* Role-specific Actions */}
         {member.role === "agent" && (
           <Card>
@@ -329,6 +334,120 @@ function MemberDetailPanel({
         }}
       />
     </>
+  );
+}
+
+interface CashDebt {
+  payment_id: string;
+  case_id: string;
+  case_reference: string | null;
+  student_name: string;
+  amount_owed_to_admin: number;
+  debt_status: string;
+}
+
+function CashDebtsCard({ teamMemberId, t }: { teamMemberId: string; t: TFunction }) {
+  const [debts, setDebts] = useState<CashDebt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [settlingId, setSettlingId] = useState<string | null>(null);
+
+  const fetchDebts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await (supabase as any)
+        .from("v_cash_debts")
+        .select("payment_id, case_id, case_reference, student_name, amount_owed_to_admin, debt_status")
+        .eq("team_member_id", teamMemberId)
+        .eq("debt_status", "pending");
+      setDebts(data ?? []);
+    } catch {
+      setDebts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [teamMemberId]);
+
+  useEffect(() => { fetchDebts(); }, [fetchDebts]);
+
+  const handleSettle = async (caseId: string) => {
+    setSettlingId(caseId);
+    try {
+      const { error } = await supabase.rpc("settle_cash_collection", { p_case_id: caseId });
+      if (error) throw error;
+      await fetchDebts();
+    } catch (err) {
+      console.error("Failed to settle cash collection:", err);
+    } finally {
+      setSettlingId(null);
+    }
+  };
+
+  const total = debts.reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (debts.length === 0) return null;
+
+  return (
+    <Card className="border-amber-500/40 bg-amber-500/5">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Banknote className="h-4 w-4 text-amber-600" />
+          <h3 className="text-sm font-semibold text-amber-700">
+            {t("admin.members.cashDebtTitle", "Cash Collection Debts")}
+          </h3>
+          <Badge variant="outline" className="ml-auto text-amber-700 border-amber-500/40">
+            {debts.length}
+          </Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t("admin.members.cashDebtHint", "Pending cash collections this member owes to DARB (service fee minus commission).")}
+        </p>
+        <div className="text-xl font-bold tabular-nums text-amber-700">
+          {formatILS(total)}
+        </div>
+        <div className="space-y-2">
+          {debts.map((d) => (
+            <div
+              key={d.payment_id}
+              className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card text-sm"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="font-medium truncate">{d.student_name}</div>
+                {d.case_reference && (
+                  <div className="text-xs text-muted-foreground font-mono">{d.case_reference}</div>
+                )}
+              </div>
+              <span className="font-mono tabular-nums text-sm whitespace-nowrap">
+                {formatILS(d.amount_owed_to_admin)}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                disabled={settlingId === d.case_id}
+                onClick={() => handleSettle(d.case_id)}
+              >
+                <Landmark className="h-3.5 w-3.5" />
+                {settlingId === d.case_id
+                  ? t("admin.members.settling", "Settling…")
+                  : t("admin.members.settle", "Settle")}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
