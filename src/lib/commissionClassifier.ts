@@ -44,17 +44,28 @@ const PARTNER_POOL_REWARD_TYPES = new Set([
   "network_split",
 ]);
 
-export const isPartnerPool = (r: ClassifiableReward): boolean => {
-  if (r.reward_type) return PARTNER_POOL_REWARD_TYPES.has(r.reward_type);
-  // Legacy fallback: match the exact note prefixes the canonical engine writes.
-  const notes = r.admin_notes ?? "";
-  return (
-    notes.startsWith("Partner commission") ||
-    notes.startsWith("Ambassador commission") ||
-    notes.startsWith("Recruitment share") ||
-    notes.startsWith("Agent recruitment share")
-  );
-};
+// ── Single source for the legacy note-prefix fallback ──────────────────────
+// These prefixes are what the canonical engine writes into admin_notes. The
+// list is shared by isPartnerPool (financial totals) and classifyReward
+// (display kind) so the two cannot drift. A prefix maps to a display kind;
+// "Recruitment share" is a legacy master-era note that is intentionally
+// partner-pool for financials (it reduced platform margin) but displays as
+// "other" (no active master tier is implied) — so it appears in the
+// pool-prefix set but not in the kind table.
+const NOTE_PREFIX_TO_KIND: ReadonlyArray<[string, RewardKind]> = [
+  ["Agent self-referral", "agent_self_referral"],
+  ["Agent recruitment share", "agent_recruitment"],
+  ["Ambassador commission", "ambassador"],
+  ["Partner commission", "partner"],
+  ["Team commission", "team"],
+];
+
+const PARTNER_POOL_NOTE_PREFIXES: ReadonlyArray<string> = [
+  "Partner commission",
+  "Ambassador commission",
+  "Recruitment share",
+  "Agent recruitment share",
+];
 
 const KIND_BY_REWARD_TYPE = (notes: string): Record<string, RewardKind> => ({
   team: "team",
@@ -71,15 +82,20 @@ const KIND_BY_REWARD_TYPE = (notes: string): Record<string, RewardKind> => ({
   partner: "partner",
 });
 
+export const isPartnerPool = (r: ClassifiableReward): boolean => {
+  if (r.reward_type) return PARTNER_POOL_REWARD_TYPES.has(r.reward_type);
+  // Legacy fallback (rows without reward_type): match the engine's note prefixes.
+  const notes = r.admin_notes ?? "";
+  return PARTNER_POOL_NOTE_PREFIXES.some((p) => notes.startsWith(p));
+};
+
 export const classifyReward = (r: ClassifiableReward): RewardKind => {
   const notes = r.admin_notes ?? "";
   const byType = KIND_BY_REWARD_TYPE(notes);
   const mapped = r.reward_type ? byType[r.reward_type] : undefined;
   if (mapped) return mapped;
-  if (notes.startsWith("Partner commission")) return "partner";
-  if (notes.startsWith("Ambassador commission")) return "ambassador";
-  if (notes.startsWith("Team commission")) return "team";
-  if (notes.startsWith("Agent self-referral")) return "agent_self_referral";
-  if (notes.startsWith("Agent recruitment share")) return "agent_recruitment";
+  for (const [prefix, kind] of NOTE_PREFIX_TO_KIND) {
+    if (notes.startsWith(prefix)) return kind;
+  }
   return "other";
 };
