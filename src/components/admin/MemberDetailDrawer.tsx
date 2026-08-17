@@ -74,6 +74,7 @@ interface PanelProps {
   roleLabel: string;
   RoleIcon: React.ComponentType<{ className?: string }>;
   t: TFunction;
+  onChanged?: () => void;
   onOpenChange: (open: boolean) => void;
   deactivateTarget: DeactivateTarget | null;
   setDeactivateTarget: React.Dispatch<React.SetStateAction<DeactivateTarget | null>>;
