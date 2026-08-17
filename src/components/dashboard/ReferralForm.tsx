@@ -20,7 +20,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
   const { t } = useTranslation("dashboard");
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [discountAmount, setDiscountAmount] = useState<number>(500);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [referralType, setReferralType] = useState<ReferralType>("friend");
   const [form, setForm] = useState({ referred_name: "", referred_phone: "" });
 
@@ -37,7 +37,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
       .then(({ data }: any) => {
         if (!active) return;
         const amount = Number(data ?? 0);
-        if (Number.isFinite(amount) && amount > 0) setDiscountAmount(amount);
+        if (Number.isFinite(amount) && amount >= 0) setDiscountAmount(amount);
       })
       .catch(() => {});
     return () => {
@@ -119,17 +119,21 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
 
   return (
     <div className="space-y-4">
-      {/* Discount banner */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
-        <Gift className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-        <p className="text-sm text-foreground">
-          {t(
-            "student.refer.discount_message",
-            "Referring a friend or family member will give them a {{amount}} shekel discount on their registration.",
-            { amount: discountAmount.toLocaleString("en-US") },
-          )}
-        </p>
-      </div>
+      {/* Discount banner — only when the platform has configured a non-zero
+          discount for this referral type. The applied discount is always
+          re-derived server-side at case creation; this is a display hint. */}
+      {discountAmount > 0 && (
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+          <Gift className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+          <p className="text-sm text-foreground">
+            {t(
+              "student.refer.discount_message",
+              "Referring a friend or family member will give them a {{amount}} shekel discount on their registration.",
+              { amount: discountAmount.toLocaleString("en-US") },
+            )}
+          </p>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
