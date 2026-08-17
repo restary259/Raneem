@@ -485,7 +485,6 @@ export default function ProfileCompletionForm({
     setEmergencyName(""); setEmergencyPhone("");
     setStreet(""); setHouseNo(""); setPostcode(""); setCity("");
     setProgramId(""); setSchoolId(""); setStartMonth("");
-    setArrivalDate(""); setCourseStart(""); setCourseEnd("");
     setAccommodationId(""); setInsuranceId("");
     setErrors({});
   };
