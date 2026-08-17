@@ -43,7 +43,7 @@ import AuthFailuresPanel from "@/components/admin/AuthFailuresPanel";
 
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface PlatformSettings {
   id: string;
@@ -131,7 +131,12 @@ const AdminSettingsPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isRtl = i18n.language === "ar";
+  // Active settings tab: query param `tab` wins (lets other pages deep-link to a
+  // specific tab, e.g. the Command Center "View all" auth-failures button →
+  // /admin/settings?tab=security); falls back to "platform".
+  const activeTab = searchParams.get("tab") ?? "platform";
 
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -544,7 +549,12 @@ const AdminSettingsPage = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="platform">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) =>
+          setSearchParams(value === "platform" ? {} : { tab: value }, { replace: true })
+        }
+      >
         <TabsList className="flex-wrap w-full h-auto">
           <TabsTrigger value="platform">{t("admin.settings.platform", "Platform")}</TabsTrigger>
           <TabsTrigger value="commissions">

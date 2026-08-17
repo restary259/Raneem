@@ -144,7 +144,7 @@ const AdminCommandCenter = () => {
         id: f.id,
         title: `${f.source} · ${f.target}`,
         subtitle: `${f.status_code ?? ''} ${new Date(f.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`.trim(),
-        href: '/admin/settings',
+        href: '/admin/settings?tab=security',
       })) as QueueRow[],
     };
   }, []);
@@ -208,7 +208,7 @@ const AdminCommandCenter = () => {
       empty: t('admin.commandCenter.queueAuthEmpty', 'No authorization failures'),
       icon: AlertTriangle,
       tone: 'text-destructive',
-      href: '/admin/settings',
+      href: '/admin/settings?tab=security',
       rows: authFailures,
     },
   ];
