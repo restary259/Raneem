@@ -96,7 +96,9 @@ export default function TeamAnalyticsPage() {
         setCashDebtTotal(debts.reduce((sum: number, d: any) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
       }
     } catch {
-      // v_cash_debts may not exist yet — gracefully ignore
+      // v_cash_debts is granted to authenticated and enforces the viewer's own
+      // RLS — if the grant is ever revoked again this silently returns empty
+      // (the KPI disappears). See migration 20260821000000_restore_cash_debts_view_grant.sql.
     }
 
 

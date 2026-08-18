@@ -1521,3 +1521,10 @@ The skill includes a pre-review checklist and before/after code snippets.
 - **Best-effort, non-blocking**: the chat post runs AFTER the state RPC (`request_case_changes` / `resubmit_case_for_review`) already succeeded and is wrapped in its own try/catch. A chat hiccup must NOT roll back an already-completed return/resubmit — the banner + Work page still show the note from `case_submissions.review_note`. The state transition is the source of truth; the chat echo is the audit trail.
 - i18n keys (en + ar, parity-guarded): `admin.submissions.returnChatPrefix` and `case.submit.resubmitChatNote`.
 - Build clean; `npx vitest run` 414/414 pass (i18n parity guard green).
+
+## v_cash_debts view grant regression (2026-08-21)
+- `v_cash_debts` (and the `settle_cash_collection` RPC) were created on the live DB out-of-band and are NOT in VCS — generated `src/integrations/supabase/types.ts` has neither, so the two frontend readers (`src/components/admin/MemberDetailDrawer.tsx`, `src/pages/team/TeamAnalyticsPage.tsx`) use `(supabase as any)` casts.
+- A security hardening correctly switched the view from running with its creator's privileges (bypassing RLS on cases/case_payments/rewards — a real leak) to enforcing the VIEWER's own RLS. But it ALSO revoked the `authenticated` SELECT grant (direct access to backend services only), which silently broke the "Cash Collection Debt" KPI in both readers (they do a direct `.from('v_cash_debts').select()`).
+- Fix (migration `20260821000000_restore_cash_debts_view_grant.sql`): re-grant SELECT on `v_cash_debts` to `authenticated`. This is SAFE now that the view enforces the viewer's RLS — RLS (not the grant) is the trust boundary; a team member only reaches debts for cases their `cases` RLS lets them read (assigned_to = self), admin sees all. The view no longer runs as its creator, so the leak the hardening closed is NOT re-opened.
+- The `settle_cash_collection` RPC is unaffected (it is an RPC, not a view read) — only the read broke.
+- DDL is NOT applied by the Vercel build or `ci.yml`; apply via `supabase db push` or the dashboard SQL editor (admin/service-role only). Until applied, the KPI stays empty.
