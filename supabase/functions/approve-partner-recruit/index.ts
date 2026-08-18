@@ -8,7 +8,8 @@ import { resolveIdentity } from "../_shared/identity.ts";
 
 
 /**
- * Single, retry-safe entry point for approving a partner recruit application.
+ * Single, retry-safe entry point for approving a partner/ambassador recruit
+ * application.
  *
  * Everything the approval needs happens server-side and is derived from the
  * application row itself (never from the client body): the durable invitation,
@@ -16,10 +17,10 @@ import { resolveIdentity } from "../_shared/identity.ts";
  *
  * The auth account is intentionally NOT created here. The invite-mode pattern
  * (mirroring create-student-from-case) lets accept-invitation be the single
- * point that creates the identity, assigns the social_media_partner role,
- * links the master partner and closes the invitation at activation. Pre-creating
- * the account here produced a dead activation link — accept-invitation rejected
- * the email with "already belongs to an account".
+ * point that creates the identity, assigns the intended role, links the
+ * recruiting agent and closes the invitation at activation. Pre-creating the
+ * account here produced a dead activation link — accept-invitation rejected the
+ * email with "already belongs to an account".
  */
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
@@ -70,11 +71,23 @@ serve(async (req) => {
     // the agent (profiles.agent_id) at activation.
     const { data: app, error: appError } = await admin
       .from("partner_recruit_applications")
-      .select("id, full_name, email, status, agent_id, intended_role, created_user_id")
+      .select("id, full_name, email, status, agent_id, created_user_id")
       .eq("id", applicationId)
       .maybeSingle();
     if (appError) return json({ error: serverError(appError, "Failed to load application") }, 500);
     if (!app) return json({ error: "Application not found" }, 404);
+
+    // Read intended_role separately so the main select never breaks on a
+    // missing column (the migration that adds it may not have run yet).
+    let intendedRole: "social_media_partner" | "ambassador" = "social_media_partner";
+    try {
+      const { data: roleRow } = await admin
+        .from("partner_recruit_applications")
+        .select("intended_role")
+        .eq("id", applicationId)
+        .maybeSingle();
+      if (roleRow?.intended_role === "ambassador") intendedRole = "ambassador";
+    } catch { /* column may not exist yet */ }
 
     const email = String(app.email ?? "").trim().toLowerCase();
     const fullName = String(app.full_name ?? "").trim();
@@ -114,7 +127,7 @@ serve(async (req) => {
         activationUrl = await createInvitation(admin, {
           invitedEmail: targetEmail,
           invitationType: "partner",
-          intendedRole: (app.intended_role as "social_media_partner" | "ambassador") ?? "social_media_partner",
+          intendedRole,
           inviterId: adminId,
           agentId: agentId ?? undefined,
           recruitApplicationId: applicationId,
@@ -157,7 +170,7 @@ serve(async (req) => {
         return json({ error: "Only approved applications can be re-invited" }, 409);
       }
       const identity = await resolveIdentity(admin, email);
-      if (identity.exists && identity.role === "social_media_partner") {
+      if (identity.exists && identity.role === intendedRole) {
         return json({ success: true, emailed: false, already_activated: true, email });
       }
       const emailed = await sendInvite(email);
@@ -198,7 +211,7 @@ serve(async (req) => {
         409,
       );
     }
-    if (identity.exists && identity.role && identity.role !== "social_media_partner") {
+    if (identity.exists && identity.role && identity.role !== intendedRole) {
       return json(
         {
           error:
@@ -212,7 +225,7 @@ serve(async (req) => {
     }
 
     const alreadyActivated =
-      identity.exists && identity.role === "social_media_partner";
+      identity.exists && identity.role === intendedRole;
 
     // ---- Flip the application (no account is created here) -----------------
     // created_user_id is set to the recruit's existing identity when there is

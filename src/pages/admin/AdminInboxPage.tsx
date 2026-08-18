@@ -170,7 +170,7 @@ const AdminInboxPage = () => {
 
         {loading ? (
           <LoadingState variant="table" rows={6} />
-        ) : searched.length === 0 ? (
+        ) : searched.length === 0 && tab !== "recruits" && tab !== "dataRequests" ? (
           <EmptyState
             icon={Inbox}
             title={t("admin.inbox.empty", "No submissions found")}
