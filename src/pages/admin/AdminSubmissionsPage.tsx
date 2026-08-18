@@ -37,6 +37,7 @@ import CaseFinance from "@/components/cases/CaseFinance";
 import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
+import { sendCaseMessage } from "@/services/CaseMessageService";
 
 interface SubmittedCase {
   id: string;
@@ -374,16 +375,33 @@ const AdminSubmissionsPage = () => {
 
   /** Return the selected case to the team member with a change-request note.
    *  request_case_changes sets review_status='changes_requested' and moves the
-   *  case back to profile_completion so the team can fix & resubmit. */
+   *  case back to profile_completion so the team can fix & resubmit. The note
+   *  is also posted to the case chat (internal) so it lands in the thread the
+   *  team already watches — best-effort, never undoes a completed return. */
   const handleReturnCase = async () => {
     if (!returnCaseId || !returnNote.trim()) return;
+    const note = returnNote.trim();
     setReturning(true);
     try {
       const { error } = await supabase.rpc("request_case_changes", {
         p_case_id: returnCaseId,
-        p_note: returnNote.trim(),
+        p_note: note,
       });
       if (error) throw error;
+      // Mirror the note into the case chat thread. Non-blocking: a chat hiccup
+      // must not roll back an already-completed return (the banner + Work page
+      // still show the note from review_note). The server stamps the admin as
+      // author and 'internal' visibility keeps it staff-visible only.
+      try {
+        await sendCaseMessage(
+          returnCaseId,
+          `${t("admin.submissions.returnChatPrefix", "Admin returned this case for changes:")}\n\n${note}`,
+          "internal",
+        );
+      } catch (err) {
+        // Best-effort: a chat hiccup must not roll back the completed return.
+        console.warn("postReturnChatNote failed", err);
+      }
       toast({ description: t("admin.submissions.returnedSuccess", "Case returned to team for changes") });
       setSelected(null);
       setReturnCaseId(null);

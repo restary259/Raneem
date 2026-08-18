@@ -651,6 +651,7 @@
         "placeholder": "e.g. Missing passport copy, incorrect enrollment date…",
         "confirm": "Return for changes"
       },
+      "returnChatPrefix": "Admin returned this case for changes:",
       "basicInfo": "Basic Information",
       "phone": "Phone",
       "city": "City",
@@ -2912,6 +2913,7 @@
       "resend": "Send back to admin",
       "resubmit": "Resubmit to admin",
       "resubmitHint": "Complete the student profile and confirm payment to resubmit.",
+      "resubmitChatNote": "The team member resubmitted this case for admin review.",
       "checklist": {
         "profile": "Student profile is complete",
         "services": "All DARB services have been provided/collected",

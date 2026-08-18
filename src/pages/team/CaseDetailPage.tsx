@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { advanceCaseStage, cancelCase } from "@/services/CaseStageService";
 import { isTerminalStatus } from "@/lib/caseStatus";
 import { submitCaseForReview, sendInvoiceEmail } from "@/services/CaseInvoiceService";
+import { sendCaseMessage } from "@/services/CaseMessageService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
 import { deriveCaseTasks, type CaseTask } from "@/components/cases/caseTasks";
@@ -334,6 +335,8 @@ export default function CaseDetailPage() {
   /**
    * Admin sent the file back for a change: the case sits in profile_completion
    * again, so put it back through payment_confirmed before resubmitting.
+   * A short system-style note is posted to the case chat (internal) so the
+   * admin reviewer sees the resubmit in the same thread — best-effort.
    */
   const handleResubmit = async () => {
     if (!caseData || !submission) return;
@@ -343,6 +346,16 @@ export default function CaseDetailPage() {
         p_case_id: caseData.id,
       });
       if (error) throw error;
+      try {
+        await sendCaseMessage(
+          caseData.id,
+          t("case.submit.resubmitChatNote", "The team member resubmitted this case for admin review."),
+          "internal",
+        );
+      } catch (err) {
+        // Best-effort: a chat hiccup must not roll back the completed resubmit.
+        console.warn("postResubmitChatNote failed", err);
+      }
       toast({ description: t("case.submit.success") });
       await fetchData();
     } catch {

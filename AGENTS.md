@@ -1513,3 +1513,11 @@ with a state-changing feature. The three patterns that keep surfacing:
 
 The skill includes a pre-review checklist and before/after code snippets.
 
+
+## Returned-by-Admin flow — chat echo of the return/resubmit (2026-08-18)
+- The "Return for changes" (admin -> team) and "Resubmit to admin" (team -> admin) loop was already wired (commits 325d4e1/0dd80ae). This adds the **chat echo**: the same note is auto-posted to the case chat thread so it surfaces in the conversation the team/admin already watch, not only in the amber banner + Work-page card.
+- **RLS gotcha (do NOT raw-insert)**: `case_messages` has NO INSERT policy for `authenticated` — only `service_role` has INSERT. The conversation thread's suggested `supabase.from('case_messages').insert(...)` snippet would be rejected by RLS. The ONLY client path is the SECURITY DEFINER RPC `send_case_message` (wrapped by `sendCaseMessage` in `src/services/CaseMessageService.ts`), which stamps the real author/role server-side, marks the thread read, fires notifications, and logs a `message_sent` case event.
+- Both echoes use **`visibility: "internal"`** (staff-only) — the return note and the resubmit notice are internal workflow, not student-facing.
+- **Best-effort, non-blocking**: the chat post runs AFTER the state RPC (`request_case_changes` / `resubmit_case_for_review`) already succeeded and is wrapped in its own try/catch. A chat hiccup must NOT roll back an already-completed return/resubmit — the banner + Work page still show the note from `case_submissions.review_note`. The state transition is the source of truth; the chat echo is the audit trail.
+- i18n keys (en + ar, parity-guarded): `admin.submissions.returnChatPrefix` and `case.submit.resubmitChatNote`.
+- Build clean; `npx vitest run` 414/414 pass (i18n parity guard green).
