@@ -136,8 +136,7 @@ const AdminSubmissionsPage = () => {
   // invite — it only needs the admin password confirmation.
   const [hasPendingInvitation, setHasPendingInvitation] = useState(false);
 
-  // "Return for changes" dialog state — lets an admin send a submitted case
-  // back to the team member with a note (request_case_changes RPC).
+  // "Return for changes" dialog state.
   const [returnCaseId, setReturnCaseId] = useState<string | null>(null);
   const [returnNote, setReturnNote] = useState("");
   const [returning, setReturning] = useState(false);
@@ -380,7 +379,7 @@ const AdminSubmissionsPage = () => {
     if (!returnCaseId || !returnNote.trim()) return;
     setReturning(true);
     try {
-      const { error } = await supabase.rpc("request_case_changes" as any, {
+      const { error } = await supabase.rpc("request_case_changes", {
         p_case_id: returnCaseId,
         p_note: returnNote.trim(),
       });

@@ -624,13 +624,11 @@ export default function CaseDetailPage() {
 
               {canManage &&
                 (() => {
+                  // The amber "changes_requested" banner owns the resubmit CTA
+                  // when a case is returned — skip the header resubmit branch
+                  // so the action isn't rendered in two places at once.
                   if (caseData.status === "profile_completion" && reopenedResend) {
-                    return (
-                      <Button className="gap-1.5" disabled={submitting} onClick={() => void handleResubmit()}>
-                        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                        {t("case.submit.resend")}
-                      </Button>
-                    );
+                    return null;
                   }
                   if (!savedComplete) {
                     return (
@@ -666,10 +664,9 @@ export default function CaseDetailPage() {
 
             {canManage &&
               (() => {
+                // Banner owns the returned-case guidance too.
                 if (caseData.status === "profile_completion" && reopenedResend) {
-                  return t("case.actionHint.resend", {
-                    defaultValue: "Save the requested change, then send the file back to admin.",
-                  });
+                  return null;
                 }
                 if (!savedComplete) {
                   return missingFields.length > 0
