@@ -115,15 +115,14 @@ SET status = 'accepted',
     accepted_at = now(),
     accepted_user_id = p.id
 FROM public.profiles AS p
-JOIN public.user_roles AS ur
-  ON ur.user_id = p.id
- AND ur.role = CASE i.invitation_type
-                 WHEN 'partner' THEN 'social_media_partner'
-                 WHEN 'ambassador' THEN 'ambassador'
-                 WHEN 'agent' THEN 'agent'
-                 WHEN 'team' THEN 'team_member'
-               END
+JOIN public.user_roles AS ur ON ur.user_id = p.id
 WHERE lower(i.invited_email) = lower(p.email)
+  AND ur.role = CASE i.invitation_type
+                  WHEN 'partner' THEN 'social_media_partner'
+                  WHEN 'ambassador' THEN 'ambassador'
+                  WHEN 'agent' THEN 'agent'
+                  WHEN 'team' THEN 'team_member'
+                END
   AND i.invitation_type IN ('partner', 'ambassador', 'agent', 'team')
   AND i.status = 'pending'
   AND p.deleted_at IS NULL;
