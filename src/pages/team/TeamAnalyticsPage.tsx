@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEarningsSummary } from '@/hooks/useEarningsSummary';
 import { useTranslation } from 'react-i18next';
@@ -34,8 +35,9 @@ export default function TeamAnalyticsPage() {
   const [commissionPerCase, setCommissionPerCase] = useState<number | null>(null);
   const { summary: earnings } = useEarningsSummary(!!user);
   const [loading, setLoading] = useState(true);
+  type CashDebt = Database['public']['Functions']['get_my_cash_debts']['Returns'][number];
   /** Cash collection debts owed by this team member (service_fee − commission). */
-  const [cashDebts, setCashDebts] = useState<{ case_reference: string | null; student_name: string; amount_owed_to_admin: number }[]>([]);
+  const [cashDebts, setCashDebts] = useState<CashDebt[]>([]);
   const [cashDebtTotal, setCashDebtTotal] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -92,9 +94,10 @@ export default function TeamAnalyticsPage() {
       const { data: debts } = await supabase.rpc("get_my_cash_debts");
       if (debts) {
         setCashDebts(debts);
-        setCashDebtTotal(debts.reduce((sum: number, d: any) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
+        setCashDebtTotal(debts.reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
       }
-    } catch {
+    } catch (err) {
+      console.warn("get_my_cash_debts failed:", err);
       // RPC missing/unavailable — gracefully ignore (KPI stays 0).
     }
 
@@ -234,9 +237,9 @@ export default function TeamAnalyticsPage() {
             </div>
             <div className="space-y-1">
               {cashDebts.map((d, i) => (
-                <div key={i} className="flex justify-between text-xs text-muted-foreground">
-                  <span>{d.student_name}{d.case_reference ? ` (${d.case_reference})` : ''}</span>
-                  <span className="font-medium text-foreground tabular-nums">₪{Number(d.amount_owed_to_admin).toLocaleString('en-US')}</span>
+                <div key={d.payment_id ?? `idx-${i}`} className="flex justify-between text-xs text-muted-foreground">
+                  <span>{d.student_name ?? "—"}{d.case_reference ? ` (${d.case_reference})` : ''}</span>
+                  <span className="font-medium text-foreground tabular-nums">₪{Number(d.amount_owed_to_admin ?? 0).toLocaleString('en-US')}</span>
                 </div>
               ))}
             </div>

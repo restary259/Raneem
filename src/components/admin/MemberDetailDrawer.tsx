@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import {
   Drawer,
   DrawerContent,
@@ -344,14 +345,7 @@ function MemberDetailPanel({
   );
 }
 
-interface CashDebt {
-  payment_id: string;
-  case_id: string;
-  case_reference: string | null;
-  student_name: string;
-  amount_owed_to_admin: number;
-  debt_status: string;
-}
+type CashDebt = Database["public"]["Functions"]["get_member_cash_debts"]["Returns"][number];
 
 function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t: TFunction; onChanged?: () => void }) {
   const [debts, setDebts] = useState<CashDebt[]>([]);
@@ -368,7 +362,8 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
       const { data: rawDebts } = await supabase.rpc("get_member_cash_debts", { p_member_id: teamMemberId });
       const data = (rawDebts ?? []).filter((d) => d.debt_status === "pending");
       setDebts(data);
-    } catch {
+    } catch (err) {
+      console.warn("get_member_cash_debts failed:", err);
       setDebts([]);
     } finally {
       setLoading(false);
@@ -380,7 +375,7 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
   const handleSettle = async (caseId: string) => {
     setSettlingId(caseId);
     try {
-      const { error } = await (supabase as any).rpc("settle_cash_collection", { p_case_id: caseId });
+      const { error } = await supabase.rpc("settle_cash_collection", { p_case_id: caseId });
       if (error) throw error;
       await fetchDebts();
       onChanged?.();
@@ -426,13 +421,13 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
           {formatILS(total)}
         </div>
         <div className="space-y-2">
-          {debts.map((d) => (
+          {debts.map((d, i) => (
             <div
-              key={d.payment_id}
+              key={d.payment_id ?? `idx-${i}`}
               className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card text-sm"
             >
               <div className="min-w-0 flex-1">
-                <div className="font-medium truncate">{d.student_name}</div>
+                <div className="font-medium truncate">{d.student_name ?? "—"}</div>
                 {d.case_reference && (
                   <div className="text-xs text-muted-foreground font-mono">{d.case_reference}</div>
                 )}
@@ -444,8 +439,8 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
                 variant="outline"
                 size="sm"
                 className="shrink-0 gap-1.5"
-                disabled={settlingId === d.case_id}
-                onClick={() => handleSettle(d.case_id)}
+                disabled={!d.case_id || settlingId === d.case_id}
+                onClick={() => d.case_id && handleSettle(d.case_id)}
               >
                 <Landmark className="h-3.5 w-3.5" />
                 {settlingId === d.case_id
