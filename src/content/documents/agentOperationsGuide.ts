@@ -9,6 +9,7 @@
  * `legal` callouts instead of invented contractual language.
  */
 import type { DocBlock } from "@/lib/documentBlocks";
+import { blockIdFactory } from "./seedBlockHelpers";
 
 interface GuideStrings {
   coverTitle: string;
@@ -65,12 +66,9 @@ interface GuideStrings {
   legalTitle: string;
 }
 
-let n = 0;
-const id = (lang: string) => `ag_${lang}_${(n++).toString(36)}`;
 
 function build(lang: string, s: GuideStrings): DocBlock[] {
-  n = 0;
-  const B = () => id(lang);
+  const B = blockIdFactory("ag", lang);
   return [
     { id: B(), type: "cover", title: s.coverTitle, subtitle: s.coverSubtitle, note: s.coverNote },
 

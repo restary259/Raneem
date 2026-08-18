@@ -1530,3 +1530,182 @@ The skill includes a pre-review checklist and before/after code snippets.
 - The earlier `20260821000000_restore_cash_debts_view_grant.sql` (Option A: re-grant the view to authenticated) was REMOVED — it contradicted the "direct view access stays revoked" posture. It was never applied to the live DB, so removing it is non-breaking.
 - The `settle_cash_collection` RPC is unaffected (RPC, not a view read) — only the read broke.
 - DDL is NOT applied by the Vercel build or `ci.yml`; apply via `supabase db push` or the dashboard SQL editor (admin/service-role only). Until `20260821120000` is applied, the KPI stays empty.
+
+## DARB Document Center (2026-08-18)
+
+Two-stage admin feature for managing official DARB documents (contracts,
+guides, forms) as **typed block arrays** (`DocBlock[]`). Stage 1 = admin
+library page; Stage 2 = block-based editor with drag-drop + PDF export. Plan
+in `.agents_tmp/PLAN.md`.
+
+### Schema (already existed in VCS — NOT created by this work)
+- `documents_library` (migration `20260818143621`) — one row per document:
+  `slug`, `title`, `subtitle`, `description`, `category`, `doc_kind`
+  (guide|contract|form), `language` (ar|he|en|de), `status`
+  (draft|published|archived), `current_version`, `effective_date`,
+  `created_by`/`updated_by` (FK profiles), `created_at`/`updated_at`.
+- `document_versions` (migration `20260818143644`) — immutable content
+  snapshots: `document_id` FK, `version` (semver-ish "1.0"→"1.1"…),
+  `content` jsonb (the `DocBlock[]`), `change_note`, `pdf_path` (storage path
+  in the `darb-documents` bucket), `published_at`, `created_by`,
+  `created_at`. A trigger syncs `documents_library.current_version` to the
+  newest version row.
+- Generated `types.ts` already had both tables.
+- `20260822000000_documents_center_extras.sql` (NEW, manual DDL): creates the
+  `darb-documents` storage bucket (private), a `current_version` sync trigger,
+  and the `seed_starter_documents(p_docs jsonb)` SECURITY DEFINER RPC (idempotent
+  upsert by slug, creates library row + initial version row, copies
+  `content`/`change_note` from the payload). `types.ts` gained the RPC signature.
+- `20260824000000_seed_agent_operations_guide.sql` + `20260825000000_seed_new_document_templates.sql`
+  (NEW, manual): one-line `SELECT seed_starter_documents('<json>'::jsonb)`
+  migrations that serialize the TS-authored block arrays so they stand alone at
+  apply time (no TS eval). Generated from the TS via esbuild→CJS (see the seed
+  generation pattern below).
+
+### Block model (`src/lib/documentBlocks.ts`, pure TS — no DB)
+- `DocBlock` discriminated union: `cover | heading | paragraph | list | table |
+  callout | flow | signature | disclaimer | pagebreak`. Each block has a unique
+  `id` (prefixed `b_`/`pg_`/etc.) and type-specific fields.
+- `VARIABLE_KEYS` is the authoritative `{{token}}` list:
+  `partner_amount`, `ambassador_amount`, `agent_recruitment_amount`,
+  `agent_self_referral_amount`, `lock_days`, `recipient_name`, `partner_name`,
+  `agent_name`, `student_name`, `date`, `version`, `effective_date`. Money
+  tokens are FLAT ₪ amounts (DARB commissions are never percentages). NO
+  `service_fee`/`commission_rate` tokens (those are per-case, never document-wide).
+- `resolveText(text, vars)` / `resolveBlocks(blocks, vars)` substitute known
+  tokens; unknown tokens stay as `{{name}}` and render highlighted in amber in
+  the preview. `splitTokens` separates plain runs from `{{token}}` fragments.
+  `collectVariables(blocks)` dedupes tokens across a document.
+- `isRtlLanguage(lang)` → ar/he are RTL. `formatIls(n)` formats ₪ amounts.
+- `nextVersion("1.0")` → `"1.1"`, `nextVersion("1.9")` → `"1.10"` (never regresses).
+
+### Stage 1 — library page (`src/pages/admin/AdminDocumentsPage.tsx`)
+- Card grid + `SegmentedTabs` category filter (`all` + `DOC_CATEGORIES` +
+  `archived`) + debounced search. `PageHeader` + `EmptyState`/`LoadingState`/
+  `ErrorState` shell components.
+- Fetches `documents_library` joined to `document_versions` (versions array)
+  in one query; resolves `created_by`/`updated_by` → `profiles.full_name` in a
+  second query. Real-time: a single Supabase channel subscribes to BOTH tables
+  and refetches on any change.
+- **New Document modal**: title/subtitle/description/category/doc_kind/
+  language/effective-date; inserts a library row (status `draft`, v`1.0`) AND
+  an initial empty `document_versions` row (content `[]`) in one flow.
+- **Archive/Restore**: `AlertDialog` escalation (a published doc requires a
+  confirming dialog with a stronger body). Toggles `status` draft↔archived,
+  stamps `updated_by`. Archive confirm body escalates when the doc is
+  `published` (warns it hides a published doc).
+- **Seed starter** button: dynamically imports all `*_SEED` arrays from
+  `src/content/documents/*` and calls `seed_starter_documents` (idempotent).
+  Preview/Edit/Generate-PDF all navigate to the editor route.
+
+### Stage 2 — editor (`src/pages/admin/AdminDocumentEditorPage.tsx`)
+- 3-pane `ResizablePanelGroup` (palette | sortable block list | inspector +
+  variables) on desktop; `Tabs` (palette/edit/inspector) on mobile.
+- **Block palette**: one button per `BLOCK_TYPES`; inserts the new block AFTER
+  the selected block (or appends), then auto-selects it.
+- **Drag-drop**: `@dnd-kit/core` + `@dnd-kit/sortable` (`PointerSensor` distance
+  5 + `KeyboardSensor`). `SortableContext`/`verticalListSortingStrategy`;
+  `arrayMove` on drag-end. Drag handle is the `GripVertical` (the whole row
+  is a select button; the handle is the only drag affordance).
+- **Block list preview** (`blockPreview`): a compact per-block summary (no
+  translation needed — type label is rendered above; `pagebreak` is a dashed
+  rule). Each row has a delete button (`AlertDialog` confirm).
+- **Inspector** (`BlockInspector`): type-specific field editors. `list`/
+  `flow`/`signature` use a `StringListEditor` (add/remove items). `table` has
+  row/column add/remove + per-cell inputs. `callout` has a tone
+  Select (info/warning/legal). `heading` has a level Select (1 section / 2
+  sub). `cover` has title/subtitle/note.
+- **Variables panel**: clickable `{{token}}` chips → copy to clipboard. Amber
+  notice explains unresolved tokens are highlighted in the preview.
+- **Debounced autosave** (`src/hooks/useDebouncedDocumentSave.ts`): 500ms
+  debounce; writes `document_versions.content` (+ syncs `documents_library.title`
+  + `updated_by` via a separate update). `dirty` reflects REAL divergence vs
+  the last persisted snapshot (drag-to-same-order doesn't mark dirty). On mount
+  the initial blocks are adopted as the baseline (a freshly-loaded doc isn't
+  dirty). `flush()` fires immediately (manual "Save draft"); unmount flushes
+  pending edits so a fast back-click never loses work. `errMsg` extracts
+  `.message` from PostgrestError-shaped objects (not just `Error`).
+- **Publish**: flush → set `status='published'` on the library row + stamp
+  `published_at` on the version. Confirms via `AlertDialog`.
+- **Generate PDF**: flush → `generateDocumentPdf` → upload the blob to the
+  `darb-documents` bucket at `<slug>/v<version>.pdf` (upsert) → set
+  `pdf_path` on the version → reload. Download via signed URL.
+- **Versions panel** (Sheet, right side): lists every version with
+  author/date/change-note/PDF-stored badge. "Load into editor" (restore) loads
+  an old version's content into the CURRENT version (confirm dialog — it does
+  NOT create a new version; saving persists). "New version" dialog creates a
+  new `document_versions` row from current content with a change note + bumps
+  the version (`nextVersion`); the sync trigger sets it as current.
+- **Preview modal**: `DocumentPreview` A4 sheet + Generate PDF / Print buttons.
+
+### DocumentPreview (`src/components/documents/DocumentPreview.tsx`)
+- A4 sheet renderer (794px wide, 60×72px padding, RTL aware via `dir`).
+- L1 headings auto-numbered (`1.`, `2.`…) across the document. Cover block
+  shows the DARB logo + brand divider. Callouts: info/warning/legal tones
+  (legal auto-shows a "LEGAL REVIEW REQUIRED" footnote when untitled). Flow
+  blocks are numbered orange circles. Signature block renders a signature
+  line + date per party. Unresolved `{{tokens}}` are highlighted amber.
+
+### PDF generation (`src/utils/documentPdf.ts`)
+- `generateDocumentPdf(document, version, variables)` → `jsPDF` (A4, mm).
+  Block-by-block: cover (no header/footer), headings (L1 orange + rule),
+  paragraphs (RTL right-aligned for ar/he), lists, tables (via `jspdf-autotable`,
+  orange header row, zebra rows), callouts (tinted box + colored left bar),
+  flow (orange numbered circles), signature (signature/date lines),
+  disclaimer (bordered), pagebreak (new page). Header (DARB brand +
+  "Confidential") + footer (page X of Y) from page 2 onward.
+- RTL text uses the bundled Noto fonts via `registerPdfFonts` (`src/utils/pdfFonts.ts`);
+  Latin uses Helvetica. `fontForText` picks the family per text run.
+- `DARB_ACCENT = [249,115,22]` (the `--brand` orange). `downloadDocumentPdf`
+  saves to the browser.
+
+### Variable resolution (`src/hooks/useDocumentVariables.ts`)
+- Resolves the commission money tokens from `platform_settings`
+  (`agent_commission_rate`, `agent_self_referral_rate`,
+  `ambassador_commission_rate`, `partner_commission_rate`) via `formatIls`,
+  plus `lock_days: "20"` (the business rule) + `version`/`effective_date` from
+  the document meta. Contextual tokens (`recipient_name`/`partner_name`/
+  `agent_name`/`student_name`/`date`) are left unresolved on purpose — they're
+  per-recipient at preview/print time, never from platform_settings. Falls
+  back to just `lock_days` if the settings read fails (the guide stays readable).
+
+### Seed content (`src/content/documents/*.ts`)
+- `agentOperationsGuide.ts` (pre-existing): `AGENT_GUIDE_SEED` — AR + HE.
+- `partnerOperationsGuide.ts` (NEW): `PARTNER_GUIDE_SEED` — AR partner guide.
+- `ambassadorGuide.ts` (NEW): `AMBASSADOR_GUIDE_SEED` — AR ambassador guide.
+- `studentServiceAgreement.ts` (NEW): `STUDENT_AGREEMENT_SEED` — AR contract.
+- Each `*_SEED` is `{ slug, title, subtitle, description, category, doc_kind,
+  language, content: DocBlock[] }[]`. Money figures are `{{tokens}}`; legal
+  exposure is `legal` callouts (NO invented clauses — always flagged for
+  legal review). The library page's seed button concatenates all of them.
+
+### Seed-migration generation pattern
+- The block arrays are authored in TS (typed, in the repo) but the seed
+  migrations must stand alone at SQL-apply time (no TS eval). The bridge:
+  write a tiny TS entry that imports the `*_SEED` arrays and
+  `process.stdout.write(JSON.stringify(all))`, bundle it with
+  `npx esbuild <entry> --bundle --platform=node --format=cjs --outfile=/tmp/x.cjs
+  --alias:@=./src`, run with `node`, then a Python one-liner writes the migration
+  as `SELECT * FROM public.seed_starter_documents('<json>'::jsonb);` with
+  single-quotes doubled. The generator TS file is deleted after (not committed).
+
+### i18n + nav
+- All UI keys live under `admin.documents.*` (NOT the existing top-level
+  `documents.*` which is the student Documents page) in `dashboard.json`.
+  35 keys per locale (en + ar), parity-guarded by `src/__tests__/i18nParity.test.ts`.
+- Nav key `nav.docCenter` ("Documents" / "المستندات") — DISTINCT from
+  `nav.documents` (the student "Docs" item). Added to admin sidebar
+  (`DashboardLayout.tsx` setup group) + admin mobile "More" sheet
+  (`MobileBottomNav.tsx`).
+- Routes: `/admin/documents` (library) + `/admin/documents/:id/edit` (editor),
+  both lazy-loaded, behind `ProtectedRoute allowedRoles={["admin"]}`.
+
+### DDL reminder
+- All Document Center migrations are **manual DDL** (NOT applied by the Vercel
+  build or `ci.yml`). Apply via `supabase db push` or the dashboard SQL editor
+  (admin/service-role only). The anon/authenticated JWT cannot run DDL.
+
+### Build/test status
+- `npm run build` (tsc+vite) clean. `npx vitest run` 443/443 pass (+17 new:
+  `documentBlocks.test.ts` editor-ops + token-resolution 13 cases, and
+  `useDebouncedDocumentSave.test.ts` 4 fake-timer cases). i18n parity guard green.

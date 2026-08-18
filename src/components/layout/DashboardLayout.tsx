@@ -121,6 +121,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
       href: "",
       children: [
         { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },
+        { key: "nav.docCenter", icon: FileText, href: "/admin/documents" },
         { key: "nav.activity", icon: Activity, href: "/admin/activity" },
         { key: "nav.settings", icon: Settings, href: "/admin/settings" },
       ],

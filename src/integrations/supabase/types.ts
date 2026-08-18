@@ -5520,6 +5520,14 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: undefined
       }
+      seed_starter_documents: {
+        Args: { p_docs: Json }
+        Returns: {
+          slug: string
+          version: string
+          action: string
+        }[]
+      }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       start_student_team_member_thread: { Args: never; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
