@@ -4796,6 +4796,17 @@ export type Database = {
       }
       get_invoice_by_token: { Args: { p_token: string }; Returns: Json }
       get_master_partner_override_rate: { Args: never; Returns: number }
+      get_member_cash_debts: {
+        Args: { p_member_id: string }
+        Returns: {
+          payment_id: string | null
+          case_id: string | null
+          case_reference: string | null
+          student_name: string | null
+          amount_owed_to_admin: number | null
+          debt_status: string | null
+        }[]
+      }
       get_members_directory: {
         Args: { p_role?: Database["public"]["Enums"]["app_role"] }
         Returns: {
@@ -4903,6 +4914,17 @@ export type Database = {
         }[]
       }
       get_my_earnings_summary: { Args: never; Returns: Json }
+      get_my_cash_debts: {
+        Args: never
+        Returns: {
+          payment_id: string | null
+          case_id: string | null
+          case_reference: string | null
+          student_name: string | null
+          amount_owed_to_admin: number | null
+          debt_status: string | null
+        }[]
+      }
       get_my_network: {
         Args: never
         Returns: {

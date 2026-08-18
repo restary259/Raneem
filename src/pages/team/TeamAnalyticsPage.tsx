@@ -85,20 +85,17 @@ export default function TeamAnalyticsPage() {
       overrideRes.data?.commission_amount ?? settingsRes.data?.team_member_commission_rate ?? 100,
     );
 
-    // Fetch cash collection debts for this team member
+    // Fetch cash collection debts for this team member via the SECURITY DEFINER
+    // RPC (direct view access is revoked from authenticated). The RPC scopes to
+    // auth.uid() server-side, so no .eq("team_member_id", user.id) is needed.
     try {
-      const { data: debts } = await (supabase as any)
-        .from("v_cash_debts")
-        .select("case_reference, student_name, amount_owed_to_admin")
-        .eq("team_member_id", user.id);
+      const { data: debts } = await (supabase as any).rpc("get_my_cash_debts");
       if (debts) {
         setCashDebts(debts);
         setCashDebtTotal(debts.reduce((sum: number, d: any) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
       }
     } catch {
-      // v_cash_debts is granted to authenticated and enforces the viewer's own
-      // RLS — if the grant is ever revoked again this silently returns empty
-      // (the KPI disappears). See migration 20260821000000_restore_cash_debts_view_grant.sql.
+      // RPC missing/unavailable — gracefully ignore (KPI stays 0).
     }
 
 

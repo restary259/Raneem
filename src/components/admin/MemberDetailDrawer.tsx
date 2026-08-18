@@ -361,12 +361,13 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
   const fetchDebts = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await (supabase as any)
-        .from("v_cash_debts")
-        .select("payment_id, case_id, case_reference, student_name, amount_owed_to_admin, debt_status")
-        .eq("team_member_id", teamMemberId)
-        .eq("debt_status", "pending");
-      setDebts(data ?? []);
+      // Admin path: SECURITY DEFINER RPC gates on has_role('admin') and scopes
+      // to the requested member server-side. Direct view access is revoked from
+      // authenticated, so the RPC is the only path. It returns all statuses; we
+      // filter pending client-side (matches the previous .eq("debt_status","pending")).
+      const { data: rawDebts } = await (supabase as any).rpc("get_member_cash_debts", { p_member_id: teamMemberId });
+      const data = (rawDebts ?? []).filter((d: any) => d.debt_status === "pending");
+      setDebts(data);
     } catch {
       setDebts([]);
     } finally {
