@@ -1330,7 +1330,11 @@
       "createGrantTitle": "Allow manual account creation?",
       "createRevokeTitle": "Disable manual account creation?",
       "createGrantBody": "{{name}} will be able to create partner & ambassador accounts directly from their own dashboard and receive a temporary password to share with the recruit. Their earnings, referral code and payout history are not affected.",
-      "createRevokeBody": "{{name}} will no longer be able to create accounts manually (direct invites remain available if enabled). Nothing is deleted — existing recruits, earnings and payout history stay."
+      "createRevokeBody": "{{name}} will no longer be able to create accounts manually (direct invites remain available if enabled). Nothing is deleted — existing recruits, earnings and payout history stay.",
+      "inviteRowTitle": "Direct invites",
+      "inviteRowDesc": "Send partner/ambassador invites from the agent dashboard",
+      "createRowTitle": "Manual account creation",
+      "createRowDesc": "Create partner/ambassador accounts with a temp password"
     },
     "authFailures": {
       "title": "Authorization Failures",

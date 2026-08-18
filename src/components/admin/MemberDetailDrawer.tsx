@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark } from "lucide-react";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound } from "lucide-react";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
@@ -67,6 +67,11 @@ interface PanelSlot {
   Close: React.ElementType;
 }
 
+interface AgentFlags {
+  invite: boolean;
+  create: boolean;
+}
+
 interface PanelProps {
   member: import("./MemberList").MemberRow;
   breakdown: CommissionBreakdown | null;
@@ -80,8 +85,35 @@ interface PanelProps {
   onOpenChange: (open: boolean) => void;
   deactivateTarget: DeactivateTarget | null;
   setDeactivateTarget: React.Dispatch<React.SetStateAction<DeactivateTarget | null>>;
+  agentFlags: AgentFlags | null;
+  setAgentFlags: React.Dispatch<React.SetStateAction<AgentFlags | null>>;
   slots: PanelSlot;
   bodyClassName: string;
+}
+
+function AgentActionRow({
+  icon: Icon,
+  title,
+  description,
+  control,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  control: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border p-3">
+      <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium leading-tight">{title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+      </div>
+      {control}
+    </div>
+  );
 }
 
 function MemberDetailPanel({
@@ -97,6 +129,8 @@ function MemberDetailPanel({
   onOpenChange,
   deactivateTarget,
   setDeactivateTarget,
+  agentFlags,
+  setAgentFlags,
   slots,
   bodyClassName,
 }: PanelProps) {
@@ -284,22 +318,43 @@ function MemberDetailPanel({
               <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
                 {t("admin.members.sectionActions", "Actions")}
               </h3>
-              <div className="space-y-3">
-                <AgentInviteToggle
-                  agentId={member.requester_id}
-                  agentName={member.full_name}
-                  canInvite={false}
-                  onChanged={() => {}}
-                  variant="plain"
-                />
-                <AgentCreateAccountsToggle
-                  agentId={member.requester_id}
-                  agentName={member.full_name}
-                  canCreateAccounts={false}
-                  onChanged={() => {}}
-                  variant="plain"
-                />
-              </div>
+              {agentFlags === null ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <AgentActionRow
+                    icon={Send}
+                    title={t("admin.agents.inviteRowTitle", "Direct invites")}
+                    description={t("admin.agents.inviteRowDesc", "Send partner/ambassador invites from the agent dashboard")}
+                    control={
+                      <AgentInviteToggle
+                        agentId={member.requester_id}
+                        agentName={member.full_name}
+                        canInvite={agentFlags.invite}
+                        onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, invite: next })}
+                        variant="plain"
+                      />
+                    }
+                  />
+                  <AgentActionRow
+                    icon={KeyRound}
+                    title={t("admin.agents.createRowTitle", "Manual account creation")}
+                    description={t("admin.agents.createRowDesc", "Create partner/ambassador accounts with a temp password")}
+                    control={
+                      <AgentCreateAccountsToggle
+                        agentId={member.requester_id}
+                        agentName={member.full_name}
+                        canCreateAccounts={agentFlags.create}
+                        onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, create: next })}
+                        variant="plain"
+                      />
+                    }
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -462,6 +517,30 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   const [breakdown, setBreakdown] = useState<CommissionBreakdown | null>(null);
   const [loadingBreakdown, setLoadingBreakdown] = useState(false);
   const [deactivateTarget, setDeactivateTarget] = useState<DeactivateTarget | null>(null);
+  const [agentFlags, setAgentFlags] = useState<AgentFlags | null>(null);
+
+  const loadAgentFlags = useCallback(async (id: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("agent_can_invite_directly, agent_can_create_accounts")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) {
+      console.error("Failed to load agent permission flags:", error);
+      return;
+    }
+    setAgentFlags({
+      invite: !!data?.agent_can_invite_directly,
+      create: !!data?.agent_can_create_accounts,
+    });
+  }, []);
+
+  useEffect(() => {
+    setAgentFlags(null);
+    if (member?.role === "agent" && member.requester_id) {
+      loadAgentFlags(member.requester_id);
+    }
+  }, [member?.requester_id, member?.role, loadAgentFlags]);
 
   const loadBreakdown = useCallback(async (id: string) => {
     setLoadingBreakdown(true);
@@ -549,6 +628,8 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     onOpenChange,
     deactivateTarget,
     setDeactivateTarget,
+    agentFlags,
+    setAgentFlags,
   };
 
   if (isMobile) {

@@ -208,6 +208,14 @@ const AdminMembersPage: React.FC = () => {
     },
   ];
 
+  const handleDrawerChanged = useCallback(() => {
+    const role = selectedMember?.role;
+    if (role === "agent") refetchAgents();
+    else if (role === "social_media_partner") refetchPartners();
+    else if (role === "ambassador") refetchAmbassadors();
+    else refetchTeam();
+  }, [selectedMember?.role, refetchAgents, refetchPartners, refetchAmbassadors, refetchTeam]);
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
@@ -254,7 +262,7 @@ const AdminMembersPage: React.FC = () => {
 
       <PendingInvitations refreshKey={invitesRefreshKey} />
       <TabHub tabs={tabs} param="tab" />
-      <MemberDetailDrawer member={selectedMember} open={drawerOpen} onOpenChange={handleCloseDrawer} onChanged={refetchTeam} />
+      <MemberDetailDrawer member={selectedMember} open={drawerOpen} onOpenChange={handleCloseDrawer} onChanged={handleDrawerChanged} />
       <CreateMemberDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
