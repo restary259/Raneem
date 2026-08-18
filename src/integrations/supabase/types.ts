@@ -1832,6 +1832,7 @@ export type Database = {
           created_by: string
           id: string
           last_message_at: string
+          purpose: string | null
           updated_at: string
         }
         Insert: {
@@ -1839,6 +1840,7 @@ export type Database = {
           created_by: string
           id?: string
           last_message_at?: string
+          purpose?: string | null
           updated_at?: string
         }
         Update: {
@@ -1846,6 +1848,7 @@ export type Database = {
           created_by?: string
           id?: string
           last_message_at?: string
+          purpose?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -4799,12 +4802,12 @@ export type Database = {
       get_member_cash_debts: {
         Args: { p_member_id: string }
         Returns: {
-          payment_id: string | null
-          case_id: string | null
-          case_reference: string | null
-          student_name: string | null
-          amount_owed_to_admin: number | null
-          debt_status: string | null
+          amount_owed_to_admin: number
+          case_id: string
+          case_reference: string
+          debt_status: string
+          payment_id: string
+          student_name: string
         }[]
       }
       get_members_directory: {
@@ -4913,18 +4916,18 @@ export type Database = {
           updated_at: string
         }[]
       }
-      get_my_earnings_summary: { Args: never; Returns: Json }
       get_my_cash_debts: {
         Args: never
         Returns: {
-          payment_id: string | null
-          case_id: string | null
-          case_reference: string | null
-          student_name: string | null
-          amount_owed_to_admin: number | null
-          debt_status: string | null
+          amount_owed_to_admin: number
+          case_id: string
+          case_reference: string
+          debt_status: string
+          payment_id: string
+          student_name: string
         }[]
       }
+      get_my_earnings_summary: { Args: never; Returns: Json }
       get_my_network: {
         Args: never
         Returns: {
@@ -5119,6 +5122,7 @@ export type Database = {
       list_partner_directory: {
         Args: never
         Returns: {
+          agent_id: string
           available_amount: number
           city: string
           created_at: string
@@ -5126,10 +5130,8 @@ export type Database = {
           earned_referral: number
           email: string
           full_name: string
-          is_master_partner: boolean
           last_request_at: string
           locked_amount: number
-          master_partner_name: string
           open_request_amount: number
           open_requests: number
           paid_amount: number
@@ -5418,6 +5420,7 @@ export type Database = {
         Returns: undefined
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
+      start_student_team_member_thread: { Args: never; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
       submit_case_payment: {
         Args: {
