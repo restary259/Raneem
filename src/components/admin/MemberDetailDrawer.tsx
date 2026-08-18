@@ -365,8 +365,8 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
       // to the requested member server-side. Direct view access is revoked from
       // authenticated, so the RPC is the only path. It returns all statuses; we
       // filter pending client-side (matches the previous .eq("debt_status","pending")).
-      const { data: rawDebts } = await (supabase as any).rpc("get_member_cash_debts", { p_member_id: teamMemberId });
-      const data = (rawDebts ?? []).filter((d: any) => d.debt_status === "pending");
+      const { data: rawDebts } = await supabase.rpc("get_member_cash_debts", { p_member_id: teamMemberId });
+      const data = (rawDebts ?? []).filter((d) => d.debt_status === "pending");
       setDebts(data);
     } catch {
       setDebts([]);

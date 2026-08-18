@@ -89,7 +89,7 @@ export default function TeamAnalyticsPage() {
     // RPC (direct view access is revoked from authenticated). The RPC scopes to
     // auth.uid() server-side, so no .eq("team_member_id", user.id) is needed.
     try {
-      const { data: debts } = await (supabase as any).rpc("get_my_cash_debts");
+      const { data: debts } = await supabase.rpc("get_my_cash_debts");
       if (debts) {
         setCashDebts(debts);
         setCashDebtTotal(debts.reduce((sum: number, d: any) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
