@@ -67,8 +67,6 @@ const AdminFinanceHubPage = lazy(() => import("./pages/admin/AdminFinanceHubPage
 const AdminActivityPage = lazy(() => import("./pages/admin/AdminActivityPage"));
 const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminCommissionHubPage = lazy(() => import("./pages/admin/AdminCommissionHubPage"));
-const AdminDocumentsPage = lazy(() => import("./pages/admin/AdminDocumentsPage"));
-const AdminDocumentEditorPage = lazy(() => import("./pages/admin/AdminDocumentEditorPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
 const CaseMessagesInboxPage = lazy(() => import("./pages/messages/CaseMessagesInboxPage"));
 const StudentMessagesPage = lazy(() => import("./pages/messages/StudentMessagesPage"));
@@ -313,8 +311,6 @@ const App = () => {
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="commission" element={<AdminCommissionHubPage />} />
               <Route path="referrals" element={<Navigate to="/admin/commission" replace />} />
-              <Route path="documents" element={<AdminDocumentsPage />} />
-              <Route path="documents/:id/edit" element={<AdminDocumentEditorPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="spreadsheet" element={<Navigate to="/admin/financials?tab=spreadsheet" replace />} />
 

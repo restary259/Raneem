@@ -74,7 +74,6 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.team', icon: Users, href: '/admin/members' },
     { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },
     { key: 'nav.programs', icon: BookOpen, href: '/admin/programs' },
-    { key: 'nav.docCenter', icon: FileText, href: '/admin/documents' },
     { key: 'nav.activity', icon: Activity, href: '/admin/activity' },
     { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
   ],
