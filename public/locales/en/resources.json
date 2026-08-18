@@ -265,7 +265,8 @@
     },
     "pdfGenerating": "Generating…",
     "pdfFailed": "Could not generate the PDF. Please try again.",
-    "pdfReady": "PDF downloaded"
+    "pdfReady": "PDF downloaded",
+    "pageLabel": "Page"
   },
   "universityFinder": {
     "title": "Tools & Calculators",

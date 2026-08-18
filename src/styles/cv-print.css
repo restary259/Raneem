@@ -28,6 +28,23 @@
     border-radius: 0;
     overflow: visible !important;
     max-height: none !important;
+    /* The on-screen copy is visually scaled (CSS transform) to fit the column;
+       in print the transform must be neutralized so the CV is not shrunk or
+       shifted. The inline style attribute still carries `transform`, so the
+       !important is required to override it. */
+    transform: none !important;
+  }
+
+  /* The scaled-preview wrappers reserve a scaled height inline and apply a
+     width/transform on the container; both must be reset in print so the CV
+     flows at the @page A4 width instead of a fixed 794px scaled box. */
+  .cv-scale-wrapper {
+    height: auto !important;
+    width: 100% !important;
+  }
+  .cv-scale-container {
+    width: 100% !important;
+    transform: none !important;
   }
 
   /* Force all inner scroll containers open */
@@ -64,8 +81,12 @@
   }
 
   @page {
-    size: A4;
-    margin: 10mm;
+    /* Full-bleed A4: the templates carry their own --cv-spacing-root padding,
+       so a non-zero @page margin would double-pad. margin: 0 matches the
+       html2canvas full-bleed capture so browser-print (Ctrl+P) and the
+       Download-PDF path reproduce identically. */
+    size: A4 portrait;
+    margin: 0;
   }
 
   /*

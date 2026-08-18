@@ -114,14 +114,16 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
       {/* Off-screen, always-mounted capture copy. This is what the PDF path
           rasterizes so generation works regardless of the mobile edit/preview
           toggle (html2canvas cannot capture a display:none element). It is
-          positioned off-canvas and sized to the A4 print width so the layout
-          matches the printed PDF; it is excluded from the print stylesheet. */}
+          positioned off-canvas and rendered at native A4 width (scaled=false
+          → 794px, no transform) so html2canvas captures the unscaled sheet
+          and the jsPDF A4 slices align to real page boundaries; it is excluded
+          from the print stylesheet. */}
       <div
         aria-hidden="true"
-        className="fixed -left-[10000px] top-0 w-[210mm] pointer-events-none print:hidden"
-        style={{ zIndex: -1 }}
+        className="fixed -left-[10000px] top-0 pointer-events-none print:hidden"
+        style={{ zIndex: -1, width: "210mm" }}
       >
-        <CVPreview data={data} id="cv-capture" />
+        <CVPreview data={data} id="cv-capture" scaled={false} />
       </div>
     </div>
   );

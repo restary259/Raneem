@@ -265,7 +265,8 @@
     },
     "pdfGenerating": "جارٍ الإنشاء…",
     "pdfFailed": "تعذر إنشاء ملف PDF. حاول مرة أخرى.",
-    "pdfReady": "تم تنزيل ملف PDF"
+    "pdfReady": "تم تنزيل ملف PDF",
+    "pageLabel": "صفحة"
   },
   "universityFinder": {
     "title": "الأدوات والحاسبات",
