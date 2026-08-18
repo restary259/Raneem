@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/components/ui/switch';
-import { KeyRound } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -16,8 +15,6 @@ interface Props {
   canCreateAccounts: boolean;
   /** Called after the flag was persisted, with the new value. */
   onChanged: (next: boolean) => void;
-  /** Compact inline chip (directory rows) vs. plain switch (profile panel). */
-  variant?: 'chip' | 'plain';
 }
 
 /**
@@ -29,7 +26,7 @@ interface Props {
  * permission — it never touches earnings, referral codes or payout history.
  */
 const AgentCreateAccountsToggle: React.FC<Props> = ({
-  agentId, agentName, canCreateAccounts, onChanged, variant = 'chip',
+  agentId, agentName, canCreateAccounts, onChanged,
 }) => {
   const { t } = useTranslation('dashboard');
   const { toast } = useToast();
@@ -66,19 +63,7 @@ const AgentCreateAccountsToggle: React.FC<Props> = ({
 
   return (
     <>
-      {variant === 'chip' ? (
-        <label
-          className="flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
-          onClick={stop}
-          title={t('admin.agents.createToggleHint', 'Permission only — lets this agent create partner/ambassador accounts manually and receive a temp password. Nothing else changes.')}
-        >
-          <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>{t('admin.agents.createBadge', 'Manual')}</span>
-          <Switch checked={canCreateAccounts} disabled={saving} onCheckedChange={(v) => setPending(v)} />
-        </label>
-      ) : (
-        <Switch checked={canCreateAccounts} disabled={saving} onCheckedChange={(v) => setPending(v)} />
-      )}
+      <Switch checked={canCreateAccounts} disabled={saving} onCheckedChange={(v) => setPending(v)} />
 
       <AlertDialog open={pending !== null} onOpenChange={(v) => { if (!v) setPending(null); }}>
         <AlertDialogContent onClick={stop}>

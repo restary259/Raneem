@@ -87,6 +87,8 @@ interface PanelProps {
   setDeactivateTarget: React.Dispatch<React.SetStateAction<DeactivateTarget | null>>;
   agentFlags: AgentFlags | null;
   setAgentFlags: React.Dispatch<React.SetStateAction<AgentFlags | null>>;
+  agentFlagsError: boolean;
+  onRetryAgentFlags: () => void;
   slots: PanelSlot;
   bodyClassName: string;
 }
@@ -131,6 +133,8 @@ function MemberDetailPanel({
   setDeactivateTarget,
   agentFlags,
   setAgentFlags,
+  agentFlagsError,
+  onRetryAgentFlags,
   slots,
   bodyClassName,
 }: PanelProps) {
@@ -318,7 +322,16 @@ function MemberDetailPanel({
               <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
                 {t("admin.members.sectionActions", "Actions")}
               </h3>
-              {agentFlags === null ? (
+              {agentFlagsError ? (
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                  <p className="text-xs text-destructive">
+                    {t("admin.agents.flagsLoadError", "Couldn't load this agent's permissions.")}
+                  </p>
+                  <Button variant="outline" size="sm" onClick={onRetryAgentFlags}>
+                    {t("common.retry", "Retry")}
+                  </Button>
+                </div>
+              ) : agentFlags === null ? (
                 <div className="space-y-3">
                   <Skeleton className="h-14 w-full" />
                   <Skeleton className="h-14 w-full" />
@@ -335,7 +348,6 @@ function MemberDetailPanel({
                         agentName={member.full_name}
                         canInvite={agentFlags.invite}
                         onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, invite: next })}
-                        variant="plain"
                       />
                     }
                   />
@@ -349,7 +361,6 @@ function MemberDetailPanel({
                         agentName={member.full_name}
                         canCreateAccounts={agentFlags.create}
                         onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, create: next })}
-                        variant="plain"
                       />
                     }
                   />
@@ -518,29 +529,35 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   const [loadingBreakdown, setLoadingBreakdown] = useState(false);
   const [deactivateTarget, setDeactivateTarget] = useState<DeactivateTarget | null>(null);
   const [agentFlags, setAgentFlags] = useState<AgentFlags | null>(null);
-
-  const loadAgentFlags = useCallback(async (id: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("agent_can_invite_directly, agent_can_create_accounts")
-      .eq("id", id)
-      .maybeSingle();
-    if (error) {
-      console.error("Failed to load agent permission flags:", error);
-      return;
-    }
-    setAgentFlags({
-      invite: !!data?.agent_can_invite_directly,
-      create: !!data?.agent_can_create_accounts,
-    });
-  }, []);
+  const [agentFlagsError, setAgentFlagsError] = useState(false);
+  const [agentFlagsRetry, setAgentFlagsRetry] = useState(0);
 
   useEffect(() => {
     setAgentFlags(null);
-    if (member?.role === "agent" && member.requester_id) {
-      loadAgentFlags(member.requester_id);
-    }
-  }, [member?.requester_id, member?.role, loadAgentFlags]);
+    setAgentFlagsError(false);
+    if (member?.role !== "agent" || !member.requester_id) return;
+    let stale = false;
+    supabase
+      .from("profiles")
+      .select("agent_can_invite_directly, agent_can_create_accounts")
+      .eq("id", member.requester_id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (stale) return;
+        if (error) {
+          console.error("Failed to load agent permission flags:", error);
+          setAgentFlagsError(true);
+          return;
+        }
+        setAgentFlags({
+          invite: !!data?.agent_can_invite_directly,
+          create: !!data?.agent_can_create_accounts,
+        });
+      });
+    return () => {
+      stale = true;
+    };
+  }, [member?.requester_id, member?.role, agentFlagsRetry]);
 
   const loadBreakdown = useCallback(async (id: string) => {
     setLoadingBreakdown(true);
@@ -630,6 +647,8 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     setDeactivateTarget,
     agentFlags,
     setAgentFlags,
+    agentFlagsError,
+    onRetryAgentFlags: () => setAgentFlagsRetry((n) => n + 1),
   };
 
   if (isMobile) {

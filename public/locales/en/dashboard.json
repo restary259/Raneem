@@ -1334,7 +1334,8 @@
       "inviteRowTitle": "Direct invites",
       "inviteRowDesc": "Send partner/ambassador invites from the agent dashboard",
       "createRowTitle": "Manual account creation",
-      "createRowDesc": "Create partner/ambassador accounts with a temp password"
+      "createRowDesc": "Create partner/ambassador accounts with a temp password",
+      "flagsLoadError": "Couldn't load this agent's permissions."
     },
     "authFailures": {
       "title": "Authorization Failures",

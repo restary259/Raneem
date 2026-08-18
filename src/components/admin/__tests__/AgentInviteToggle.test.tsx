@@ -6,10 +6,10 @@ import AgentInviteToggle from '../AgentInviteToggle';
 
 /**
  * Contract under test: the admin can BOTH grant and revoke the agent's
- * direct-invite permission. Regression: when the switch was already ON,
- * clicking it must open the REVOKE dialog (never the grant dialog) and the
- * confirm must persist false — the reported bug was that an enabled toggle
- * could not be disabled.
+ * direct-invite permission from this component — the switch must open the
+ * REVOKE dialog when ON and the GRANT dialog when OFF, confirm must persist
+ * the requested value, and cancel must write nothing. (The end-to-end drawer
+ * wiring is covered separately in MemberDetailDrawer.agentFlags.test.tsx.)
  */
 
 const toast = vi.fn();
@@ -64,7 +64,6 @@ describe('AgentInviteToggle', () => {
         agentName="Agent Adam"
         canInvite={false}
         onChanged={onChanged}
-        variant="plain"
       />,
     );
 
@@ -84,7 +83,6 @@ describe('AgentInviteToggle', () => {
         agentName="Agent Adam"
         canInvite={true}
         onChanged={onChanged}
-        variant="plain"
       />,
     );
 
@@ -105,7 +103,6 @@ describe('AgentInviteToggle', () => {
         agentName="Agent Adam"
         canInvite={true}
         onChanged={onChanged}
-        variant="plain"
       />,
     );
 
