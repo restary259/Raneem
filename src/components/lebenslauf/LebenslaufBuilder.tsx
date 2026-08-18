@@ -5,6 +5,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Download, Save, Upload, Trash2, FileText, Eye, ChevronDown, CircleHelp } from "lucide-react";
 import CVForm from "./CVForm";
 import CVPreview from "./CVPreview";
+import { CvCaptureSheet } from "./CvSheet";
 import { useLebenslauf } from "./useLebenslauf";
 import { CVData } from "./types";
 
@@ -114,16 +115,16 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
       {/* Off-screen, always-mounted capture copy. This is what the PDF path
           rasterizes so generation works regardless of the mobile edit/preview
           toggle (html2canvas cannot capture a display:none element). It is
-          positioned off-canvas and rendered at native A4 width (scaled=false
-          → 794px, no transform) so html2canvas captures the unscaled sheet
-          and the jsPDF A4 slices align to real page boundaries; it is excluded
-          from the print stylesheet. */}
+          positioned off-canvas and rendered at native A4 width (794px, no
+          transform) so html2canvas captures the unscaled sheet and the jsPDF
+          A4 slices align to real page boundaries; it is excluded from the
+          print stylesheet. */}
       <div
         aria-hidden="true"
         className="fixed -left-[10000px] top-0 pointer-events-none print:hidden"
         style={{ zIndex: -1, width: "210mm" }}
       >
-        <CVPreview data={data} id="cv-capture" scaled={false} />
+        <CvCaptureSheet data={data} id="cv-capture" />
       </div>
     </div>
   );
