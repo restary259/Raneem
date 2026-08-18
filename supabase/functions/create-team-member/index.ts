@@ -55,17 +55,15 @@ serve(async (req) => {
       full_name: personName,
       role: z.enum(["team_member", "admin", "social_media_partner", "ambassador", "agent"]),
       commission_amount: z.number().int().min(0).max(1000000).optional().nullable(),
-      // Set when the new partner was recruited by a master partner.
-      master_partner_id: z.string().uuid().optional().nullable(),
-      // Set when the new partner/ambassador was recruited by an Agent (mirrors
-      // master_partner_id), or when creating the Agent's own account under one.
+      // Set when the new partner/ambassador was recruited by an Agent, or when
+      // creating the Agent's own account under one.
       agent_id: z.string().uuid().optional().nullable(),
     }));
     if (!parsed.ok) {
       return new Response(JSON.stringify({ error: parsed.error }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const body = parsed.data;
-    const { email, full_name, role, commission_amount, master_partner_id, agent_id } = body;
+    const { email, full_name, role, commission_amount, agent_id } = body;
 
     if (!email || !full_name || !role) {
       return new Response(JSON.stringify({ error: "Email, full_name, and role required" }), {
@@ -138,15 +136,12 @@ serve(async (req) => {
       // Existing accounts keep their current password state.
       must_change_password: reusedExisting ? undefined : true,
       commission_amount: typeof commission_amount === "number" ? commission_amount : 0,
-      // Only partners can belong to a master partner's network.
-      master_partner_id:
-        dbRole === "social_media_partner" && master_partner_id ? master_partner_id : null,
-      // Agent link only makes sense for a partner/ambassador recruited by an
-      // Agent (mirrors master_partner_id). An agent can never sit under another
-      // agent (enforce_agent_graph forbids multi-level chaining), and a
+      // Agent link: partners/ambassadors recruited by an Agent, or the
+      // Agent's own account. An agent can never sit under another agent
+      // (enforce_agent_graph forbids multi-level chaining), and a
       // team_member belongs to no recruitment network.
       agent_id:
-        (dbRole === "social_media_partner" || dbRole === "ambassador") && agent_id
+        (dbRole === "social_media_partner" || dbRole === "ambassador" || dbRole === "agent") && agent_id
           ? agent_id
           : null,
     });

@@ -31,6 +31,7 @@ import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
 import { cn } from "@/lib/utils";
+import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
 
 interface MemberDetailDrawerProps {
   member: import("./MemberList").MemberRow | null;
@@ -119,7 +120,7 @@ function MemberDetailPanel({
           <div>
             <Title className="flex items-center gap-2">
               {member.full_name}
-              <Badge variant="secondary" className="text-xs gap-1">
+              <Badge variant="secondary" className={`text-xs gap-1 ${getRoleColors(member.role)}`}>
                 <RoleIcon className="h-3 w-3" />
                 {roleLabel}
               </Badge>
@@ -499,12 +500,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     ambassador: UserCheck,
   }[member.role] || Users;
 
-  const roleLabel = t({
-    team_member: "admin.members.roleTeamMember",
-    agent: "admin.members.roleAgent",
-    social_media_partner: "admin.members.rolePartner",
-    ambassador: "admin.members.roleAmbassador",
-  }[member.role] || member.role);
+  const roleLabel = getRoleLabel(member.role);
 
   const primaryStats = (() => {
     switch (member.role) {

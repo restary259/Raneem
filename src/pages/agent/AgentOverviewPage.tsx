@@ -49,21 +49,28 @@ export default function AgentOverviewPage() {
   useRealtimeSubscription("profiles", () => refetch(), !!profile);
 
   const [copiedRecruit, setCopiedRecruit] = React.useState(false);
+  const [copiedAmbassador, setCopiedAmbassador] = React.useState(false);
   const [copiedApply, setCopiedApply] = React.useState(false);
   const recruitUrl = profile?.recruit_code
     ? `${window.location.origin}/join/${profile.recruit_code}`
+    : "";
+  const ambassadorUrl = profile?.ambassador_recruit_code
+    ? `${window.location.origin}/join/${profile.ambassador_recruit_code}`
     : "";
   const applyUrl = profile?.referral_code
     ? `${window.location.origin}/apply?ref=${encodeURIComponent(profile.referral_code)}`
     : "";
 
-  const copyLink = async (url: string, which: "recruit" | "apply") => {
+  const copyLink = async (url: string, which: "recruit" | "ambassador" | "apply") => {
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
       if (which === "recruit") {
         setCopiedRecruit(true);
         setTimeout(() => setCopiedRecruit(false), 1500);
+      } else if (which === "ambassador") {
+        setCopiedAmbassador(true);
+        setTimeout(() => setCopiedAmbassador(false), 1500);
       } else {
         setCopiedApply(true);
         setTimeout(() => setCopiedApply(false), 1500);
@@ -307,16 +314,16 @@ export default function AgentOverviewPage() {
           {/* Your links */}
           <SectionCard title={t("agent.yourLinks", "Your links")} icon={Link2}>
             <p className="text-xs text-muted-foreground">
-              {t("agent.yourLinksHint", "Share these links to recruit partners or to refer students.")}
+              {t("agent.yourLinksHint", "Share these links to recruit partners, ambassadors, or to refer students.")}
             </p>
 
-            {/* Recruiting link */}
+            {/* Partner recruiting link */}
             <div className="mt-3 space-y-1.5">
               <p className="text-xs font-medium text-foreground">
-                {t("agent.recruitLink", "Recruiting link")}
+                {t("agent.recruitPartnerLink", "Partner recruiting link")}
               </p>
               <p className="text-xs text-muted-foreground">
-                {t("agent.recruitLinkHint", "Share this link to recruit partners or ambassadors into your network.")}
+                {t("agent.recruitPartnerLinkHint", "Share this link to recruit partners into your network.")}
               </p>
               {recruitUrl ? (
                 <div className="flex gap-2">
@@ -324,7 +331,7 @@ export default function AgentOverviewPage() {
                     readOnly
                     value={recruitUrl}
                     dir="ltr"
-                    aria-label={t("agent.recruitLink", "Recruiting link")}
+                    aria-label={t("agent.recruitPartnerLink", "Partner recruiting link")}
                     className="min-w-0 flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs text-muted-foreground"
                   />
                   <Button
@@ -343,6 +350,43 @@ export default function AgentOverviewPage() {
               ) : (
                 <p className="text-xs text-muted-foreground">
                   {t("agent.inviteMissing", "No recruiting link yet.")}
+                </p>
+              )}
+            </div>
+
+            {/* Ambassador recruiting link */}
+            <div className="mt-4 space-y-1.5">
+              <p className="text-xs font-medium text-foreground">
+                {t("agent.recruitAmbassadorLink", "Ambassador recruiting link")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("agent.recruitAmbassadorLinkHint", "Share this link to recruit ambassadors into your network.")}
+              </p>
+              {ambassadorUrl ? (
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={ambassadorUrl}
+                    dir="ltr"
+                    aria-label={t("agent.recruitAmbassadorLink", "Ambassador recruiting link")}
+                    className="min-w-0 flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs text-muted-foreground"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyLink(ambassadorUrl, "ambassador")}
+                    aria-label={t("common.copy", "Copy")}
+                  >
+                    {copiedAmbassador ? (
+                      <Check className={`h-4 w-4 ${toneClasses("enrolled").text}`} />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t("agent.ambassadorLinkMissing", "No ambassador link yet.")}
                 </p>
               )}
             </div>

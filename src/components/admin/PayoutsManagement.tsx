@@ -12,6 +12,7 @@ import SegmentedTabs, { type SegmentItem } from '@/components/shell/SegmentedTab
 import { useTranslation } from 'react-i18next';
 import RoleDirectory from './RoleDirectory';
 import type { PayoutRole } from './RequesterProfilePanel';
+import { getRoleLabel } from '@/lib/roleLabels';
 
 /**
  * Admin payout surface — five role-segmented directories.
@@ -50,17 +51,6 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
 
   const getName = (r: any) => r?.requestor_name || t('admin.payouts.unknownRequester');
 
-  const roleLabel = (role: string) =>
-    role === 'team_member'
-      ? t('admin.payouts.roleTeamMember')
-      : role === 'agent'
-        ? t('admin.payouts.roleAgent')
-        : role === 'ambassador'
-          ? t('admin.payouts.roleAmbassador')
-          : role === 'social_media_partner'
-            ? t('admin.referralsMgmt.agent')
-            : t('admin.referralsMgmt.student');
-
   // Exports intentionally cover ALL payout requests (every role), not just the
   // active tab — this is a complete payouts report by design (see AGENTS.md).
   const exportExcel = () =>
@@ -87,7 +77,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         rows: requests.map(r => [
           r.id.slice(0, 8),
           getName(r),
-          roleLabel(r.requestor_role),
+          getRoleLabel(r.requestor_role),
           (r.linked_student_names || []).join('; '),
           Number(r.amount) || 0,
           String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),
@@ -110,7 +100,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     const pdfRows = requests.map(r => [
       r.id.slice(0, 8),
       getName(r) || dash,
-      roleLabel(r.requestor_role),
+      getRoleLabel(r.requestor_role),
       (r.linked_student_names || []).join('; ') || dash,
       `${(Number(r.amount) || 0).toLocaleString('en-US')} ₪`,
       String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),

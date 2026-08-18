@@ -23,6 +23,7 @@ export default function JoinPartnerPage() {
 
   const [checking, setChecking] = useState(true);
   const [recruiter, setRecruiter] = useState<string | null>(null);
+  const [targetRole, setTargetRole] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [form, setForm] = useState({
@@ -41,6 +42,7 @@ export default function JoinPartnerPage() {
       const row = Array.isArray(data) ? data[0] : null;
       if (!alive) return;
       setRecruiter(row?.valid ? row.recruiter_name : null);
+      setTargetRole(row?.target_role ?? null);
       setChecking(false);
     })();
     return () => {
@@ -62,6 +64,7 @@ export default function JoinPartnerPage() {
       p_city: form.city || null,
       p_social_link: form.social_link || null,
       p_note: form.note || null,
+      p_target_role: targetRole || null,
     });
     setSubmitting(false);
     if (error) {

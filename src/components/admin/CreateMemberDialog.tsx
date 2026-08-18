@@ -21,6 +21,7 @@ import {
 import { CheckCheck, Copy, Link2, Mail, UserPlus } from "lucide-react";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
+import { getRoleLabel } from "@/lib/roleLabels";
 
 interface CreateMemberDialogProps {
   open: boolean;
@@ -30,13 +31,6 @@ interface CreateMemberDialogProps {
 }
 
 const STAFF_ROLES = ["team_member", "social_media_partner", "ambassador", "agent"];
-
-const ROLE_LABEL_KEYS: Record<string, string> = {
-  team_member: "admin.members.roleTeamMember",
-  agent: "admin.members.roleAgent",
-  social_media_partner: "admin.members.rolePartner",
-  ambassador: "admin.members.roleAmbassador",
-};
 
 const CreateMemberDialog: React.FC<CreateMemberDialogProps> = ({
   open,
@@ -308,7 +302,7 @@ const CreateMemberDialog: React.FC<CreateMemberDialogProps> = ({
                 <SelectContent>
                   {STAFF_ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
-                      {t(ROLE_LABEL_KEYS[role], role)}
+                      {getRoleLabel(role)}
                     </SelectItem>
                   ))}
                 </SelectContent>

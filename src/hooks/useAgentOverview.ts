@@ -19,6 +19,19 @@ export interface AgentRecruit {
   role?: string;
 }
 
+/** A pending/recruited application that hasn't activated yet. */
+export interface PendingApplication {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  city: string | null;
+  social_link: string | null;
+  status: string;
+  intended_role: string | null;
+  created_at: string;
+}
+
 export interface AgentSelfReferralRate {
   /** Global default self-referral rate from platform_settings. */
   global: number;
@@ -42,6 +55,7 @@ export interface AgentProfile {
   email: string | null;
   agent_can_invite_directly: boolean;
   recruit_code: string | null;
+  ambassador_recruit_code: string | null;
   referral_code: string | null;
 }
 
@@ -72,6 +86,7 @@ export interface AgentStats {
 export interface AgentOverviewData {
   profile: AgentProfile | null;
   recruits: AgentRecruit[];
+  pendingApps: PendingApplication[];
   stats: AgentStats;
   rates: AgentCommissionRates;
   earnings: EarningsSummary;
@@ -91,6 +106,7 @@ const fmt0 = (n: unknown) => Number(n || 0);
 export function useAgentOverview(): AgentOverviewData {
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const [recruits, setRecruits] = useState<AgentRecruit[]>([]);
+  const [pendingApps, setPendingApps] = useState<PendingApplication[]>([]);
   const [rates, setRates] = useState<AgentCommissionRates>({
     perRecruit: 0,
     selfReferral: { global: 1000, override: null, effective: 1000 },
@@ -102,7 +118,7 @@ export function useAgentOverview(): AgentOverviewData {
   const [kpis, setKpis] = useState<Record<string, number> | null>(null);
 
   const load = useCallback(async (uid: string) => {
-    const [profRes, netRes, linkRes, settingsRes, overrideRes, selfRefRes, kpiRes] = await Promise.all([
+    const [profRes, netRes, linkRes, settingsRes, overrideRes, selfRefRes, kpiRes, pendingRes] = await Promise.all([
       (supabase as any)
         .from("profiles")
         .select("full_name, email, agent_can_invite_directly, referral_code")
@@ -127,19 +143,25 @@ export function useAgentOverview(): AgentOverviewData {
         .maybeSingle(),
       // Authoritative, server-side network KPIs (no client aggregation).
       (supabase as any).rpc("get_my_agent_kpis"),
+      // Pending recruit applications for this agent.
+      (supabase as any).rpc("get_my_pending_applications"),
     ]);
 
     const prof = profRes.data;
-    const linkRow = Array.isArray(linkRes.data) ? linkRes.data[0] : linkRes.data;
+    const linkRows = Array.isArray(linkRes.data) ? linkRes.data : linkRes.data ? [linkRes.data] : [];
+    const partnerLink = linkRows.find((r: { target_role?: string | null }) => !r.target_role || r.target_role === "social_media_partner");
+    const ambassadorLink = linkRows.find((r: { target_role?: string | null }) => r.target_role === "ambassador");
     setProfile({
       full_name: prof?.full_name ?? null,
       email: prof?.email ?? null,
       agent_can_invite_directly: prof?.agent_can_invite_directly ?? false,
-      recruit_code: linkRow?.code ?? null,
+      recruit_code: partnerLink?.code ?? linkRows[0]?.code ?? null,
+      ambassador_recruit_code: ambassadorLink?.code ?? null,
       referral_code: prof?.referral_code ?? null,
     });
 
     setRecruits((netRes.data ?? []) as AgentRecruit[]);
+    setPendingApps((pendingRes.data ?? []) as PendingApplication[]);
     setKpis((kpiRes?.data ?? null) as Record<string, number> | null);
 
     const globalPerRecruit = Number(settingsRes.data?.agent_commission_rate ?? 0);
@@ -201,6 +223,6 @@ export function useAgentOverview(): AgentOverviewData {
     commissionSelf: fmt0(kpis?.commission_self),
   };
 
-  return { profile, recruits, stats, rates, earnings, loading, refetch };
+  return { profile, recruits, pendingApps, stats, rates, earnings, loading, refetch };
 }
 

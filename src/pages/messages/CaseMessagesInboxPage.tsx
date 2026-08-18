@@ -41,6 +41,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
+import { getRoleLabel } from "@/lib/roleLabels";
 import {
   getNotificationPrefs,
   sendTestNotificationEmail,

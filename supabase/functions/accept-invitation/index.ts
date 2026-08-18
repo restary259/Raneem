@@ -182,13 +182,10 @@ serve(async (req) => {
     // Only seed the name for a brand-new account — never overwrite one the
     // person already set on an existing profile.
     if (created && inv.invited_name) profilePatch.full_name = inv.invited_name;
-    if (inv.invitation_type === "partner" && inv.master_partner_id) {
-      profilePatch.master_partner_id = inv.master_partner_id;
-    }
     // An Agent who recruits a partner/ambassador (or is invited as one
-    // themselves) is linked through profiles.agent_id — the exact mirror of
-    // master_partner_id. Applies to partner/ambassador recruits carrying an
-    // agent_id, and to a direct "agent" invitation (the agent's own account).
+    // themselves) is linked through profiles.agent_id. Applies to
+    // partner/ambassador recruits carrying an agent_id, and to a direct
+    // "agent" invitation (the agent's own account).
     if (inv.agent_id) {
       profilePatch.agent_id = inv.agent_id;
     }

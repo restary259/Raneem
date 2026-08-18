@@ -20,6 +20,7 @@ import { UserPlus, Send, Loader2, Mail, KeyRound, CheckCircle2, Link2, Copy, Che
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { readFunctionError, readFunctionErrorBody } from "@/lib/functionError";
+import { getRoleLabel } from "@/lib/roleLabels";
 
 type RecruitRole = "social_media_partner" | "ambassador";
 type DeliveryMode = "invite" | "manual";
@@ -54,8 +55,10 @@ export default function AgentRecruitPage() {
 
   const [canInvite, setCanInvite] = useState(false);
   const [canCreateManual, setCanCreateManual] = useState(false);
-  const [recruitCode, setRecruitCode] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [partnerRecruitCode, setPartnerRecruitCode] = useState<string | null>(null);
+  const [ambassadorRecruitCode, setAmbassadorRecruitCode] = useState<string | null>(null);
+  const [copiedPartner, setCopiedPartner] = useState(false);
+  const [copiedAmbassador, setCopiedAmbassador] = useState(false);
   const [loading, setLoading] = useState(true);
   const [perRecruitRate, setPerRecruitRate] = useState(0);
 
@@ -80,8 +83,11 @@ export default function AgentRecruitPage() {
     ]);
     setCanInvite(profRes.data?.agent_can_invite_directly ?? false);
     setCanCreateManual(profRes.data?.agent_can_create_accounts ?? false);
-    const linkRow = Array.isArray(linkRes.data) ? linkRes.data[0] : linkRes.data;
-    setRecruitCode(linkRow?.code ?? null);
+    const linkRows = Array.isArray(linkRes.data) ? linkRes.data : linkRes.data ? [linkRes.data] : [];
+    const partnerLink = linkRows.find((r: { target_role?: string | null }) => !r.target_role || r.target_role === "social_media_partner");
+    const ambassadorLink = linkRows.find((r: { target_role?: string | null }) => r.target_role === "ambassador");
+    setPartnerRecruitCode(partnerLink?.code ?? linkRows[0]?.code ?? null);
+    setAmbassadorRecruitCode(ambassadorLink?.code ?? null);
     const global = Number(settingsRes.data?.agent_commission_rate ?? 0);
     setPerRecruitRate(Number(overrideRes.data?.commission_amount ?? global));
     setLoading(false);
@@ -97,14 +103,24 @@ export default function AgentRecruitPage() {
 
   // If manual isn't permitted, force invite mode.
   const effectiveMode: DeliveryMode = mode === "manual" && !canCreateManual ? "invite" : mode;
+  const partnerRecruitUrl = partnerRecruitCode ? `${window.location.origin}/join/${partnerRecruitCode}` : "";
+  const ambassadorRecruitUrl = ambassadorRecruitCode ? `${window.location.origin}/join/${ambassadorRecruitCode}` : "";
 
-  const recruitUrl = recruitCode ? `${window.location.origin}/join/${recruitCode}` : "";
-  const copyLink = async () => {
-    if (!recruitUrl) return;
+  const copyPartnerLink = async () => {
+    if (!partnerRecruitUrl) return;
     try {
-      await navigator.clipboard.writeText(recruitUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(partnerRecruitUrl);
+      setCopiedPartner(true);
+      setTimeout(() => setCopiedPartner(false), 1500);
+    } catch { /* clipboard may be unavailable */ }
+  };
+
+  const copyAmbassadorLink = async () => {
+    if (!ambassadorRecruitUrl) return;
+    try {
+      await navigator.clipboard.writeText(ambassadorRecruitUrl);
+      setCopiedAmbassador(true);
+      setTimeout(() => setCopiedAmbassador(false), 1500);
     } catch { /* clipboard may be unavailable */ }
   };
 
@@ -215,14 +231,14 @@ export default function AgentRecruitPage() {
                     active={role === "social_media_partner"}
                     onClick={() => setRole("social_media_partner")}
                     icon={Users}
-                    title={t("agent.rolePartner", "Partner")}
+                    title={getRoleLabel("social_media_partner")}
                     desc={t("agent.rolePartnerDesc", "Lawyer / agency partner")}
                   />
                   <RoleCard
                     active={role === "ambassador"}
                     onClick={() => setRole("ambassador")}
                     icon={Megaphone}
-                    title={t("agent.roleAmbassador", "Ambassador")}
+                    title={getRoleLabel("ambassador")}
                     desc={t("agent.roleAmbassadorDesc", "Influencer / referrer")}
                   />
                 </div>
@@ -329,28 +345,57 @@ export default function AgentRecruitPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Link2 className="h-4 w-4 text-primary" />
-            {t("agent.inviteTitle", "Recruiting link")}
+            {t("agent.recruitLinks", "Recruiting links")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            {t("agent.inviteHint", "Share this link with partners or ambassadors you want to recruit. Applications through it are attached to your network after Darb approves them.")}
+            {t("agent.recruitLinksHint", "Share these links to recruit partners or ambassadors. Applications through them are attached to your network after Darb approves them.")}
           </p>
-          {recruitUrl ? (
-            <div className="flex gap-2">
-              <input
-                readOnly
-                value={recruitUrl}
-                dir="ltr"
-                className="flex-1 min-w-0 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs font-mono text-muted-foreground"
-              />
-              <Button variant="outline" size="icon" onClick={copyLink} aria-label={t("common.copy", "Copy")}>
-                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">{t("agent.inviteMissing", "No recruiting link yet.")}</p>
-          )}
+
+          {/* Partner link */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-foreground">
+              {t("agent.recruitPartnerLink", "Partner recruiting link")}
+            </p>
+            {partnerRecruitUrl ? (
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={partnerRecruitUrl}
+                  dir="ltr"
+                  className="flex-1 min-w-0 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs font-mono text-muted-foreground"
+                />
+                <Button variant="outline" size="icon" onClick={copyPartnerLink} aria-label={t("common.copy", "Copy")}>
+                  {copiedPartner ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("agent.inviteMissing", "No recruiting link yet.")}</p>
+            )}
+          </div>
+
+          {/* Ambassador link */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-foreground">
+              {t("agent.recruitAmbassadorLink", "Ambassador recruiting link")}
+            </p>
+            {ambassadorRecruitUrl ? (
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={ambassadorRecruitUrl}
+                  dir="ltr"
+                  className="flex-1 min-w-0 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs font-mono text-muted-foreground"
+                />
+                <Button variant="outline" size="icon" onClick={copyAmbassadorLink} aria-label={t("common.copy", "Copy")}>
+                  {copiedAmbassador ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("agent.ambassadorLinkMissing", "No ambassador link yet.")}</p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

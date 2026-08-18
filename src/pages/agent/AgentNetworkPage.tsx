@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Users, Search, UserPlus, ChevronRight, Award, GraduationCap, TrendingUp, Mail, MapPin } from "lucide-react";
 import { LoadingState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 import { useAgentOverview, type AgentRecruit } from "@/hooks/useAgentOverview";
+import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
 
@@ -24,7 +25,7 @@ export default function AgentNetworkPage() {
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const locale = i18n.language === "ar" ? "ar" : "en-US";
-  const { recruits, loading, refetch } = useAgentOverview();
+  const { recruits, pendingApps, loading, refetch } = useAgentOverview();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
   const [tab, setTab] = useState<Tab>("all");
@@ -38,8 +39,8 @@ export default function AgentNetworkPage() {
     partners: recruits.filter((r) => !r.role || r.role === "social_media_partner").length,
     ambassadors: recruits.filter((r) => r.role === "ambassador").length,
     active: recruits.filter((r) => r.status === "active").length,
-    pending: recruits.filter((r) => r.status !== "active").length,
-  }), [recruits]);
+    pending: recruits.filter((r) => r.status !== "active").length + pendingApps.length,
+  }), [recruits, pendingApps]);
 
   const filtered = useMemo(() => recruits.filter((r) => {
     const matchSearch = !debouncedSearch || r.full_name.toLowerCase().includes(debouncedSearch.toLowerCase());
@@ -118,6 +119,32 @@ export default function AgentNetworkPage() {
         />
       </div>
 
+      {/* Pending applications (before the recruit table) */}
+      {tab === "pending" && pendingApps.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t("agent.pendingApplications", "Pending Applications")}
+            </h3>
+            <div className="divide-y divide-border/50">
+              {pendingApps.map((app) => (
+                <div key={app.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{app.full_name}</p>
+                    <p className="text-xs text-muted-foreground truncate" dir="ltr">{app.email}</p>
+                  </div>
+                  <Badge variant={app.status === "approved" ? "default" : "secondary"} className="text-xs shrink-0">
+                    {app.status === "approved"
+                      ? t("agent.statusInviteSent", "Invite Sent")
+                      : t("agent.statusPendingReview", "Pending Review")}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recruit list */}
       {filtered.length === 0 ? (
         <Card>
@@ -162,8 +189,8 @@ export default function AgentNetworkPage() {
                     >
                       <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap max-w-[160px] truncate">{r.full_name}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <Badge variant="outline" className="text-xs">
-                          {r.role === "ambassador" ? t("agent.roleAmbassador", "Ambassador") : t("agent.rolePartner", "Partner")}
+                        <Badge variant="outline" className={`text-xs ${getRoleColors(r.role)}`}>
+                          {getRoleLabel(r.role)}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{Number(r.students_count)}</td>
@@ -192,7 +219,7 @@ export default function AgentNetworkPage() {
                   </div>
                   <div className="flex items-center justify-between gap-2 mt-1">
                     <span className="text-xs text-muted-foreground">
-                      {r.role === "ambassador" ? t("agent.roleAmbassador", "Ambassador") : t("agent.rolePartner", "Partner")}
+                      {getRoleLabel(r.role)}
                       {" · "}{t("agent.colStudents", "Students")}: {Number(r.students_count)}
                     </span>
                     <span className="text-xs font-semibold text-[hsl(var(--status-enrolled))]">{fmt(r.override_earned)}</span>
@@ -232,8 +259,8 @@ function RecruitDetailSheet({ recruit, onClose, locale }: { recruit: AgentRecrui
             <div className="px-4 pb-6 space-y-4">
               {/* Badges */}
               <div className="flex items-center gap-2">
-                <Badge variant="outline">
-                  {recruit.role === "ambassador" ? t("agent.roleAmbassador", "Ambassador") : t("agent.rolePartner", "Partner")}
+                <Badge variant="outline" className={getRoleColors(recruit.role)}>
+                  {getRoleLabel(recruit.role)}
                 </Badge>
                 <Badge variant={recruit.status === "active" ? "default" : "secondary"}>{recruit.status}</Badge>
               </div>

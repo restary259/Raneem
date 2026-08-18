@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Users, Shield, Handshake, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatILS } from "@/lib/money";
+import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
 
 export interface MemberRow {
   requester_id: string;
@@ -50,13 +51,6 @@ const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   agent: Shield,
   social_media_partner: Handshake,
   ambassador: UserCheck,
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  team_member: "admin.members.roleTeamMember",
-  agent: "admin.members.roleAgent",
-  social_media_partner: "admin.members.rolePartner",
-  ambassador: "admin.members.roleAmbassador",
 };
 
 function getPrimaryKPI(member: MemberRow): { label: string; value: string } {
@@ -202,7 +196,7 @@ export default function MemberList({
             {filtered.map((member) => {
               const primaryKPI = getPrimaryKPI(member);
               const RoleIcon = ROLE_ICONS[member.role] || Users;
-              const roleLabel = t(ROLE_LABELS[member.role] || member.role);
+              const roleLabel = getRoleLabel(member.role);
 
               return (
                 <TableRow
@@ -225,7 +219,7 @@ export default function MemberList({
                     </div>
                   </TableCell>
                   <TableCell className="hidden px-4 py-3 sm:table-cell">
-                    <Badge variant="secondary" className="text-xs gap-1">
+                    <Badge variant="secondary" className={`text-xs gap-1 ${getRoleColors(member.role)}`}>
                       <RoleIcon className="h-3 w-3" />
                       {roleLabel}
                     </Badge>

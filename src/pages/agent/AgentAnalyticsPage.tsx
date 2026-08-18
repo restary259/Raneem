@@ -7,6 +7,7 @@ import { TrendingUp, Users, Megaphone, GraduationCap, Award, BarChart2 } from "l
 import { toneClasses } from "@/lib/statusTokens";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { useAgentOverview } from "@/hooks/useAgentOverview";
+import { getRoleLabel } from "@/lib/roleLabels";
 
 const fmt = (n: number) => `₪${Number(n || 0).toLocaleString("en-US")}`;
 
@@ -152,7 +153,7 @@ export default function AgentAnalyticsPage() {
                       </span>
                       <p className="font-medium text-sm truncate">{r.full_name}</p>
                       {r.role === "ambassador" && (
-                        <Badge variant="secondary" className="text-xs shrink-0">{t("agent.roleAmbassador", "Ambassador")}</Badge>
+                        <Badge variant="secondary" className="text-xs shrink-0">{getRoleLabel(r.role)}</Badge>
                       )}
                     </div>
                     <span className="text-sm font-bold text-emerald-600 shrink-0">{fmt(r.override_earned)}</span>

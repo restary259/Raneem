@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Send, X } from "lucide-react";
 import { identityConflictMessage } from "@/lib/identityConflict";
+import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
 
 interface PendingInvitation {
   id: string;
@@ -22,13 +23,6 @@ interface PendingInvitation {
 interface PendingInvitationsProps {
   refreshKey?: number;
 }
-
-const ROLE_LABEL_KEYS: Record<string, string> = {
-  team_member: "admin.members.roleTeamMember",
-  agent: "admin.members.roleAgent",
-  social_media_partner: "admin.members.rolePartner",
-  ambassador: "admin.members.roleAmbassador",
-};
 
 const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0 }) => {
   const { t, i18n } = useTranslation("dashboard");
@@ -149,7 +143,7 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0 
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary">{t(ROLE_LABEL_KEYS[inv.intended_role] || "admin.members.roleTeamMember", inv.intended_role)}</Badge>
+                <Badge variant="secondary" className={getRoleColors(inv.intended_role)}>{getRoleLabel(inv.intended_role)}</Badge>
                 <Badge variant="outline">{t("admin.team.invited", "Invited")}</Badge>
                 <Button
                   variant="ghost"

@@ -12,6 +12,7 @@ import { Search, RefreshCw, ChevronRight, Users } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { matchesRef } from '@/lib/reference';
 import RequesterProfilePanel, { DirectoryRow, PayoutRole } from './RequesterProfilePanel';
+import { getRoleLabel } from '@/lib/roleLabels';
 
 
 const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
@@ -108,13 +109,6 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
       />
     );
   }
-
-  const roleLabel = () =>
-    isPartner ? t('admin.referralsMgmt.agent')
-      : isAgent ? t('admin.payouts.roleAgent')
-      : isTeam ? t('admin.payouts.roleTeamMember')
-      : isAmbassador ? t('admin.payouts.roleAmbassador')
-      : t('admin.referralsMgmt.student');
 
   const RowCell = ({ p }: { p: DirectoryRow }) => (
     <div className="min-w-0">
@@ -222,7 +216,7 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
         <Select value={filter} onValueChange={v => setFilter(v as Filter)}>
           <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('admin.payouts.filterAllRole', { role: roleLabel(), defaultValue: 'All {{role}}' })} ({rows.length})</SelectItem>
+            <SelectItem value="all">{t('admin.payouts.filterAllRole', { role: getRoleLabel(role), defaultValue: 'All {{role}}' })} ({rows.length})</SelectItem>
             <SelectItem value="open">{t('admin.payouts.filterOpen', 'Pending requests')} ({openCount})</SelectItem>
             <SelectItem value="balance">{t('admin.payouts.filterBalance', 'Has balance')}</SelectItem>
             <SelectItem value="settled">{t('admin.payouts.filterSettled', 'Settled')}</SelectItem>

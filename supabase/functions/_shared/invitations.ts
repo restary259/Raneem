@@ -3,7 +3,7 @@
  *
  * An invitation is a real database row, not a Supabase auth token. That makes
  * the activation link re-openable, device independent and survivable across
- * refreshes, while the master-partner / case attribution stays server side.
+ * refreshes, while the agent / case attribution stays server side.
  */
 
 export const APP_URL = "https://darb.agency";
@@ -17,7 +17,6 @@ export interface CreateInvitationInput {
   /** Shown in the account once the invitation is accepted. */
   invitedName?: string | null;
   inviterId?: string | null;
-  masterPartnerId?: string | null;
   agentId?: string | null;
   caseId?: string | null;
   recruitApplicationId?: string | null;
@@ -43,16 +42,15 @@ export async function hashToken(token: string): Promise<string> {
 
 /**
  * Thrown when a live invitation already exists for the same email + type under
- * a DIFFERENT recruiter (a different master_partner_id or agent_id). The recruit
- * belongs to the recruiter who first invited them, so the conflict surfaces as a
- * 409 instead of silently revoking and re-attributing the original invitation.
+ * a DIFFERENT recruiter (a different agent_id). The recruit belongs to the
+ * recruiter who first invited them, so the conflict surfaces as a 409 instead
+ * of silently revoking and re-attributing the original invitation.
  */
 export class InvitationConflictError extends Error {
   constructor(
     message: string,
     public readonly details: {
       invitation_type: InvitationType;
-      master_partner_id: string | null;
       agent_id: string | null;
     },
   ) {
@@ -82,7 +80,7 @@ export async function createInvitation(
 
   let query = admin
     .from("user_invitations")
-    .select("id, master_partner_id, agent_id")
+    .select("id, agent_id")
     .eq("status", "pending")
     .ilike("invited_email", email)
     .eq("invitation_type", input.invitationType);
@@ -101,7 +99,7 @@ export async function createInvitation(
   // (e.g. re-invites across cases) are still refreshed below.
   let siblingsQuery = admin
     .from("user_invitations")
-    .select("id, master_partner_id, agent_id")
+    .select("id, agent_id")
     .eq("status", "pending")
     .ilike("invited_email", email)
     .eq("invitation_type", input.invitationType);
@@ -109,17 +107,16 @@ export async function createInvitation(
   const { data: siblings, error: siblingsError } = await siblingsQuery;
   if (siblingsError) throw new Error(siblingsError.message);
 
-  const myAttribution = `${input.masterPartnerId ?? "none"}:${input.agentId ?? "none"}`;
+  const myAttribution = input.agentId ?? "none";
   const conflicting = siblings?.find(
-    (s: { master_partner_id: string | null; agent_id: string | null }) =>
-      `${s.master_partner_id ?? "none"}:${s.agent_id ?? "none"}` !== myAttribution,
+    (s: { agent_id: string | null }) =>
+      (s.agent_id ?? "none") !== myAttribution,
   );
   if (conflicting) {
     throw new InvitationConflictError(
       `An active ${input.invitationType} invitation already exists for this email under a different recruiter`,
       {
         invitation_type: input.invitationType,
-        master_partner_id: conflicting.master_partner_id ?? null,
         agent_id: conflicting.agent_id ?? null,
       },
     );
@@ -132,9 +129,8 @@ export async function createInvitation(
     intended_role: input.intendedRole,
     token_hash,
     inviter_id: input.inviterId ?? null,
-    // Attribution is preserved across resends: a null incoming value keeps the
-    // original recruiter instead of wiping it.
-    master_partner_id: input.masterPartnerId ?? existing?.master_partner_id ?? null,
+    // Attribution is preserved across resends: a null incoming agent_id keeps
+    // the original recruiter instead of wiping it.
     agent_id: input.agentId ?? existing?.agent_id ?? null,
     case_id: input.caseId ?? null,
     recruit_application_id: input.recruitApplicationId ?? null,
