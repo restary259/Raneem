@@ -13,8 +13,8 @@
    * IMPORTANT: do NOT use position: fixed here — it truncates the document to a
    * single printed page in several browsers. Instead let the preview flow in
    * normal document flow so long CVs paginate naturally across multiple A4
-   * pages. The container's own padding provides the page margins; @page adds a
-   * small safety margin for printers that ignore the box padding.
+   * pages. @page margin is 0 (full-bleed); the templates' own --cv-spacing-root
+   * padding provides the page margins, matching the html2canvas capture.
    */
   #cv-preview {
     position: static;
