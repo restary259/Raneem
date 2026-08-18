@@ -1853,6 +1853,53 @@ export type Database = {
         }
         Relationships: []
       }
+      document_versions: {
+        Row: {
+          change_note: string | null
+          content: Json
+          created_at: string
+          created_by: string | null
+          document_id: string
+          id: string
+          pdf_path: string | null
+          published_at: string | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          change_note?: string | null
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          id?: string
+          pdf_path?: string | null
+          published_at?: string | null
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          change_note?: string | null
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          id?: string
+          pdf_path?: string | null
+          published_at?: string | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           case_id: string | null
@@ -1924,6 +1971,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      documents_library: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          current_version: string
+          description: string | null
+          doc_kind: string
+          effective_date: string | null
+          id: string
+          language: string
+          slug: string
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version?: string
+          description?: string | null
+          doc_kind?: string
+          effective_date?: string | null
+          id?: string
+          language?: string
+          slug: string
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_version?: string
+          description?: string | null
+          doc_kind?: string
+          effective_date?: string | null
+          id?: string
+          language?: string
+          slug?: string
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       eligibility_config: {
         Row: {
