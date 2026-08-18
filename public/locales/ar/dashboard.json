@@ -3953,7 +3953,11 @@
     "partnerSubtitle": "محادثاتك المباشرة مع فريق درب.",
     "studentSubtitle": "تواصل مباشرة مع مستشارك.",
     "caseTab": "الملف",
-    "payoutTab": "الدفعة"
+    "payoutTab": "الدفعة",
+    "teamThreadNoCase": "المحادثة مع عضو الفريق متاحة بعد اكتمال ملفك.",
+    "teamMemberTab": "عضو الفريق",
+    "noConversationYet": "لا توجد محادثة بعد",
+    "contactTeamMember": "تواصل مع عضو الفريق"
   },
   "chat": {
     "day": {

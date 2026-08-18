@@ -3935,7 +3935,11 @@
     "partnerSubtitle": "Your direct chats with the Darb team.",
     "studentSubtitle": "Talk directly with your advisor.",
     "caseTab": "Case",
-    "payoutTab": "Payout"
+    "payoutTab": "Payout",
+    "teamThreadNoCase": "Chat with your team member is available once your case is completed.",
+    "teamMemberTab": "Team Member",
+    "noConversationYet": "No conversation yet",
+    "contactTeamMember": "Contact My Team Member"
   },
   "chat": {
     "day": {
