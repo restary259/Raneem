@@ -992,9 +992,10 @@ export default function SubmitNewStudentPage() {
                   type="number"
                   min="1"
                   max="104"
-                  value={programWeeks || String(defaultCourseWeeks)}
-                  readOnly
+                  value={programWeeks}
+                  onChange={(e) => setProgramWeeks(e.target.value)}
                   disabled={!programId}
+                  placeholder={String(defaultCourseWeeks)}
                 />
               </FieldWrap>
             </div>
@@ -1068,9 +1069,10 @@ export default function SubmitNewStudentPage() {
                   type="number"
                   min="1"
                   max="104"
-                  value={accommodationWeeks || String(defaultCourseWeeks)}
-                  readOnly
+                  value={accommodationWeeks}
+                  onChange={(e) => setAccommodationWeeks(e.target.value)}
                   disabled={!accommodationId}
+                  placeholder={String(defaultCourseWeeks)}
                 />
               </FieldWrap>
             </div>
