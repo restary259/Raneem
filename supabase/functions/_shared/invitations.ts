@@ -8,6 +8,13 @@
 
 export const APP_URL = "https://darb.agency";
 
+/** Mask an email for log lines (same pattern as get_invitation_preview). */
+export function maskEmail(email: string): string {
+  return /^(.).*(.)@/.test(email)
+    ? email.replace(/^(.).*(.)@/, "$1***$2@")
+    : "***@" + (email.split("@")[1] ?? "");
+}
+
 export type InvitationType = "student" | "partner" | "team" | "ambassador" | "agent";
 
 export interface CreateInvitationInput {
@@ -215,7 +222,7 @@ export async function reconcilePendingInvitations(
     // same transition, so a failed helper update must never break account
     // creation. Surface the error in logs (no secrets) for diagnosis.
     console.warn("reconcilePendingInvitations: update failed", {
-      email,
+      email: maskEmail(email),
       invitation_type: input.invitationType,
       user_id: userId,
       error,
@@ -226,7 +233,7 @@ export async function reconcilePendingInvitations(
   const closed = data?.length ?? 0;
   if (closed > 0) {
     console.info("student_invitation_reconciled", {
-      email,
+      email: maskEmail(email),
       invitation_type: input.invitationType,
       user_id: userId,
       closed,

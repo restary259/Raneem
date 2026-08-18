@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { serverError } from "../_shared/errors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
-import { hashToken } from "../_shared/invitations.ts";
+import { hashToken, maskEmail, reconcilePendingInvitations } from "../_shared/invitations.ts";
 import { resolveIdentity } from "../_shared/identity.ts";
 
 /**
@@ -71,6 +71,18 @@ serve(async (req) => {
       return json({ error: "Email does not match this invitation", code: "email_mismatch" }, 403);
     }
 
+    // Labeled per-step logging: each phase reports success/failure under its
+    // own label so a failed activation pinpoints the exact step in the edge
+    // function logs. Never log the token or password. The email is masked via
+    // the shared maskEmail helper to keep PII out of log lines.
+    const logStep = (step: string, meta: Record<string, unknown> = {}) =>
+      console.info(`accept-invitation:${step}`, {
+        invitation_id: inv.id,
+        invitation_type: inv.invitation_type,
+        email: maskEmail(email),
+        ...meta,
+      });
+
     // ── Resolve the identity ──────────────────────────────────────────────
     // One identity = one role. The invitation may never take over an email
     // that already belongs to a DIFFERENT role: doing so would reset that
@@ -121,11 +133,13 @@ serve(async (req) => {
         email_confirm: true,
       });
       if (adoptError) {
+        logStep("adopt_or_create_failed", { mode: "adopt", error: adoptError.message });
         return json(
           { error: adoptError.message ?? "Account could not be updated", code: "server_error" },
           400,
         );
       }
+      logStep("adopt_or_create", { mode: "adopt", user_id: userId });
     } else {
       const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
         email,
@@ -133,6 +147,7 @@ serve(async (req) => {
         email_confirm: true,
       });
       if (createError || !createdUser?.user) {
+        logStep("adopt_or_create_failed", { mode: "create", error: createError?.message });
         return json(
           { error: createError?.message ?? "Account could not be created", code: "server_error" },
           400,
@@ -140,6 +155,7 @@ serve(async (req) => {
       }
       userId = createdUser.user.id;
       created = true;
+      logStep("adopt_or_create", { mode: "create", user_id: userId });
     }
 
     // ── Role (idempotent; one role per user) ──────────────────────────────
@@ -150,7 +166,11 @@ serve(async (req) => {
         { user_id: userId, role: inv.intended_role },
         { onConflict: "user_id", ignoreDuplicates: true },
       );
-    if (roleError) return json({ error: serverError(roleError, "Failed to assign role"), code: "server_error" }, 500);
+    if (roleError) {
+      logStep("role_upsert_failed", { user_id: userId, error: roleError.message });
+      return json({ error: serverError(roleError, "Failed to assign role"), code: "server_error" }, 500);
+    }
+    logStep("role_upsert", { user_id: userId, role: inv.intended_role });
 
     // A concurrent accept for the same identity with a different role could
     // have won the arbiter — surface it instead of silently continuing.
@@ -161,6 +181,7 @@ serve(async (req) => {
         .eq("user_id", userId)
         .maybeSingle();
       if (now && now.role !== inv.intended_role) {
+        logStep("concurrent_role_check_failed", { user_id: userId, found_role: now.role });
         return json(
           {
             error:
@@ -172,8 +193,44 @@ serve(async (req) => {
         );
       }
     }
+    logStep("concurrent_role_check", { user_id: userId });
 
-    // ── Profile: only the columns this flow owns ──────────────────────────
+    // ── Close the invitation ──────────────────────────────────────────────
+    // The identity + role are now authoritative — this is the point of no
+    // return. Close the invitation HERE, before any peripheral step, so the
+    // invitation row and the account state can never disagree again, no
+    // matter which later step fails. Guarded by status='pending' so a
+    // concurrent activation is a no-op.
+    const { error: closeError } = await admin
+      .from("user_invitations")
+      .update({
+        status: "accepted",
+        accepted_at: new Date().toISOString(),
+        accepted_user_id: userId,
+      })
+      .eq("id", inv.id)
+      .eq("status", "pending");
+    if (closeError) {
+      logStep("close_invitation_failed", { user_id: userId, error: closeError.message });
+      return json({ error: serverError(closeError, "Failed to close invitation"), code: "server_error" }, 500);
+    }
+    logStep("close_invitation", { user_id: userId });
+
+    // Close any sibling pending invitations of the same type for this email
+    // (idempotent, non-fatal; the just-closed row is already accepted so only
+    // genuine siblings are touched).
+    await reconcilePendingInvitations(admin, {
+      email,
+      userId,
+      invitationType: inv.invitation_type,
+    });
+
+    // ── Profile: only the columns this flow owns (non-fatal) ──────────────
+    // The base profile row already exists (handle_new_user creates it the
+    // instant the auth user exists). The columns patched here — display name,
+    // agent link, case link — are reconcilable details, so a failure must
+    // degrade to a logged warning instead of a 500 that leaves the account
+    // active with the activation reporting failure.
     const profilePatch: Record<string, unknown> = {
       id: userId,
       email,
@@ -192,35 +249,47 @@ serve(async (req) => {
     if (inv.invitation_type === "student" && inv.case_id) {
       profilePatch.case_id = inv.case_id;
     }
-    const { error: profileError } = await admin.from("profiles").upsert(profilePatch);
-    if (profileError) return json({ error: serverError(profileError, "Failed to create profile"), code: "server_error" }, 500);
+    try {
+      const { error: profileError } = await admin.from("profiles").upsert(profilePatch);
+      if (profileError) {
+        // The warn includes the full intended patch (no secrets — the columns
+        // this flow owns are name/agent_id/case_id) because the invitation is
+        // already closed and there is no client-side retry path left: this log
+        // line is the only recovery handle for an operator to re-patch by hand.
+        console.warn("accept_invitation_profile_patch_failed", {
+          invitation_id: inv.id,
+          user_id: userId,
+          patch: { ...profilePatch, email: maskEmail(email) },
+          error: profileError.message,
+        });
+      } else {
+        logStep("profile_patch", { user_id: userId });
+      }
+    } catch (e) {
+      console.warn("accept_invitation_profile_patch_failed", {
+        invitation_id: inv.id,
+        user_id: userId,
+        patch: { ...profilePatch, email: maskEmail(email) },
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
 
-    // ── Link the originating case to this exact user ──────────────────────
+    // ── Link the originating case to this exact user (best-effort) ────────
     if (inv.invitation_type === "student" && inv.case_id) {
       await admin
         .from("cases")
         .update({ student_user_id: userId })
         .eq("id", inv.case_id)
         .is("student_user_id", null);
+      logStep("case_link", { user_id: userId, case_id: inv.case_id });
     }
-
-    // ── Close the invitation ──────────────────────────────────────────────
-    const { error: closeError } = await admin
-      .from("user_invitations")
-      .update({
-        status: "accepted",
-        accepted_at: new Date().toISOString(),
-        accepted_user_id: userId,
-      })
-      .eq("id", inv.id)
-      .eq("status", "pending");
-    if (closeError) return json({ error: serverError(closeError, "Failed to close invitation"), code: "server_error" }, 500);
 
     if (inv.recruit_application_id) {
       await admin
         .from("partner_recruit_applications")
         .update({ created_user_id: userId })
         .eq("id", inv.recruit_application_id);
+      logStep("recruit_application", { user_id: userId, recruit_application_id: inv.recruit_application_id });
     }
 
     await admin.from("admin_audit_log").insert({
@@ -231,6 +300,7 @@ serve(async (req) => {
         created ? " (new account)" : " (existing account)"
       }`,
     });
+    logStep("audit_log", { user_id: userId });
 
     return json({
       success: true,

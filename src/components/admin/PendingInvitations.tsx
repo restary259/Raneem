@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, X } from "lucide-react";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
+import { filterActiveInvitations } from "@/lib/studentInvitations";
 
 interface PendingInvitation {
   id: string;
@@ -22,14 +23,27 @@ interface PendingInvitation {
 
 interface PendingInvitationsProps {
   refreshKey?: number;
+  /**
+   * Emails of active (non-deactivated) member accounts. A pending invitation
+   * whose email already belongs to an active account is not genuinely pending
+   * — the DB reconciliation trigger closes it, and this prop is the
+   * defense-in-depth that hides it here before that runs (replication lag,
+   * a missed path, etc.).
+   */
+  activeEmails?: string[];
 }
 
-const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0 }) => {
+const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0, activeEmails = [] }) => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
 
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [busyInvite, setBusyInvite] = useState<string | null>(null);
+
+  const visibleInvitations = useMemo(
+    () => filterActiveInvitations(invitations, activeEmails.map((e) => ({ id: e, email: e }))),
+    [invitations, activeEmails],
+  );
 
   const conflictMessage = useCallback(
     (result: any) => identityConflictMessage(result, t),
@@ -121,7 +135,7 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0 
     }
   };
 
-  if (invitations.length === 0) return null;
+  if (visibleInvitations.length === 0) return null;
 
   return (
     <Card>
@@ -130,7 +144,7 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0 
           {t("admin.team.pendingInvites", "Pending invitations")}
         </div>
         <div className="divide-y divide-border">
-          {invitations.map((inv) => (
+          {visibleInvitations.map((inv) => (
             <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">

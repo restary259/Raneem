@@ -1,14 +1,18 @@
 /**
- * Student invitation / account-lifecycle reconciliation (frontend safeguard).
+ * Invitation / account-lifecycle reconciliation (frontend safeguard).
  *
  * The database is the source of truth for invitation state: a pending
  * user_invitations row is closed (status → accepted) by the
- * `reconcile_student_invitations` trigger + the edge-function
- * `reconcilePendingInvitations` helper whenever the corresponding student
- * account becomes active. This module is a *defensive* second line of defence
- * — it hides any invitation whose email already belongs to an active student
- * even if the DB reconciliation has not yet run (replication lag, a missed
- * path, etc.). It never mutates server state.
+ * `reconcile_student_invitations` / `reconcile_staff_invitations` triggers +
+ * the edge-function `reconcilePendingInvitations` helper whenever the
+ * corresponding account becomes active. This module is a *defensive* second
+ * line of defence — it hides any invitation whose email already belongs to an
+ * active account even if the DB reconciliation has not yet run (replication
+ * lag, a missed path, etc.). It never mutates server state.
+ *
+ * Despite the file name, the helpers are type-generic and serve ALL member
+ * types (students in TeamStudentsPage; team/partner/ambassador/agent members
+ * in the admin PendingInvitations list).
  */
 
 export interface ActiveStudent {

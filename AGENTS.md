@@ -1547,3 +1547,54 @@ What REMAINS (intentional, out of removal scope):
   entries (mirrors the live schema — do not hand-edit).
 - No migration/RLS/storage changes were made; all Document Center DDL stays
   manual (apply via `supabase db push` or the dashboard SQL editor).
+
+## Invitation reconciliation generalized to staff roles (2026-08-18)
+- **Bug**: `accept-invitation` had a non-atomic sequence — role upsert → concurrent-role
+  check → profile upsert (fatal) → case link → close invitation. Any throw after the
+  role upsert left `user_invitations.status='pending'` while the account was already
+  live (`handle_new_user` auto-creates the base `profiles` row, so
+  `get_members_directory` showed the partner while Pending Invitations still listed
+  the invite; every retry re-failed).
+- **Edge fix** (`supabase/functions/accept-invitation/index.ts`): the invitation is
+  now closed (pending→accepted, `accepted_user_id`) IMMEDIATELY AFTER the
+  concurrent-role check, BEFORE the profile upsert/case link — identity+role is the
+  commit point, peripherals can't block. The `profiles` upsert is wrapped in try/catch
+  logging `accept_invitation_profile_patch_failed` (warning) and execution continues —
+  the warn carries the full intended patch payload (email masked) because the closed
+  invitation means no client retry path, so the log line is the operator's recovery
+  handle. A `logStep(step, meta)` helper labels each phase
+  (`adopt_or_create`, `role_upsert`, `concurrent_role_check`, `close_invitation`,
+  `profile_patch`, `case_link`, `recruit_application`, `audit_log`) — never logs token
+  or password, and masks emails (same regex as `get_invitation_preview`). After the
+  close succeeds it calls the generic
+  `reconcilePendingInvitations` helper to close sibling pending rows of the same type.
+- **Migration `20260826000000_reconcile_staff_invitations.sql`** (MANUAL APPLY —
+  not applied by Vercel build or CI; run via `supabase db push` or the dashboard SQL
+  editor. Until then stuck invitations stay stuck; the frontend filter mitigates the
+  display only):
+  1. `reconcile_staff_invitations()` SECURITY DEFINER trigger `AFTER INSERT ON
+     user_roles` maps role→invitation_type (social_media_partner→'partner',
+     ambassador→'ambassador', agent→'agent', team_member→'team') and closes pending
+     invites of that type for the profile email. Student stays owned by
+     `trg_reconcile_student_invitations` (untouched). Idempotent, no recursion
+     (updates a different table), no RLS change.
+  2. One-time idempotent cleanup UPDATE joins `profiles` × `user_roles` with the
+     CASE-mapped role, `deleted_at IS NULL`, pending→accepted only (never DELETE).
+     This automatically closes the currently-stuck partner invitation.
+  3. `get_invitation_preview` `recruiter_name` now resolves
+     `COALESCE(master_partner_id, agent_id, inviter_id)` — current code never sets
+     `master_partner_id`, so agent-invited recruits previously saw no recruiter name
+     on /activate. Grants re-asserted (anon, authenticated, service_role).
+- **Frontend defense-in-depth**: `AdminMembersPage` derives `activeMemberEmails`
+  (all four member queries minus `is_deactivated`, normalized+deduped) and passes
+  it to `PendingInvitations` as `activeEmails`; the component filters with the
+  (already type-generic) `filterActiveInvitations` from `src/lib/studentInvitations.ts`
+  via `useMemo`. Hides invites whose email belongs to an active member even before
+  the migration runs.
+- **Diagnostics**: `supabase/diagnostics/invitation_reconciliation_audit.sql` — read-only
+  SELECT listing pending invites of ALL types whose email matches an active profile
+  with the mapped role; commented aggregate + deactivated-account variants.
+- Tests: `src/components/admin/__tests__/PendingInvitations.test.tsx` (5 cases —
+  hide matched, case-insensitive, show unmatched, mixed list, deactivated-member
+  emails not passed). Build clean; `npx vitest run` 438/438 pass.
+

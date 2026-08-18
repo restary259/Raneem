@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -10,6 +10,7 @@ import MemberList from "@/components/admin/MemberList";
 import MemberDetailDrawer from "@/components/admin/MemberDetailDrawer";
 import CreateMemberDialog from "@/components/admin/CreateMemberDialog";
 import PendingInvitations from "@/components/admin/PendingInvitations";
+import { normalizeEmail } from "@/lib/studentInvitations";
 
 interface MemberRow {
   requester_id: string;
@@ -106,6 +107,19 @@ const AdminMembersPage: React.FC = () => {
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
+
+  // Active member emails across all staff roles — a pending invitation whose
+  // email matches one of these is not genuinely pending (its account is
+  // already live) and is hidden from the Pending Invitations list.
+  const activeMemberEmails = useMemo(() => {
+    const emails = new Set<string>();
+    for (const member of [...teamMembers, ...agentMembers, ...partnerMembers, ...ambassadorMembers]) {
+      if (member.is_deactivated) continue;
+      const email = normalizeEmail(member.email);
+      if (email) emails.add(email);
+    }
+    return [...emails];
+  }, [teamMembers, agentMembers, partnerMembers, ambassadorMembers]);
 
   const handleOpenDrawer = useCallback((member: MemberRow) => {
     setSelectedMember(member);
@@ -260,7 +274,7 @@ const AdminMembersPage: React.FC = () => {
         </div>
       )}
 
-      <PendingInvitations refreshKey={invitesRefreshKey} />
+      <PendingInvitations refreshKey={invitesRefreshKey} activeEmails={activeMemberEmails} />
       <TabHub tabs={tabs} param="tab" />
       <MemberDetailDrawer member={selectedMember} open={drawerOpen} onOpenChange={handleCloseDrawer} onChanged={handleDrawerChanged} />
       <CreateMemberDialog
