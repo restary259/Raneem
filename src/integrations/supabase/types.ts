@@ -908,6 +908,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "case_payment_proofs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "v_cash_debts"
+            referencedColumns: ["payment_id"]
+          },
+          {
             foreignKeyName: "case_payment_proofs_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
@@ -4472,6 +4479,28 @@ export type Database = {
           },
         ]
       }
+      v_cash_debts: {
+        Row: {
+          amount_owed_to_admin: number | null
+          case_id: string | null
+          case_reference: string | null
+          debt_status: string | null
+          payment_id: string | null
+          service_fee: number | null
+          student_name: string | null
+          team_commission: number | null
+          team_member_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_adjust_case_service: {
@@ -5361,6 +5390,10 @@ export type Database = {
       set_case_services: {
         Args: { p_case_id: string; p_items: Json }
         Returns: Json
+      }
+      settle_cash_collection: {
+        Args: { p_case_id: string }
+        Returns: undefined
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
