@@ -12,6 +12,12 @@
 -- latest-timestamped migration touching the function, it guarantees the RPC
 -- still exists even if an older migration is re-run out of order and drops it
 -- while the trigger stays strict.
+--
+-- Deliberate scope: only the RPC is re-asserted here, not
+-- restrict_profiles_write(). An out-of-order re-run could still overwrite the
+-- trigger, but duplicating its full ~120-line body would create a two-copies
+-- drift hazard; the trigger's latest definition stays owned by
+-- 20260827000000_apply_form_enabled_flag.sql.
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION public.clear_must_change_password()

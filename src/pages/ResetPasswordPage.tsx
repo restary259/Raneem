@@ -70,9 +70,9 @@ const ResetPasswordPage = () => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
-      // A retry after an already-successful change reports "same password" — that is
-      // not a failure here; the flag below still needs clearing.
-      if (error && !/same[_ ]password|different from the old/i.test(error.message)) throw error;
+      // A retry after an already-successful change fails with code "same_password" —
+      // that is not a failure here; the flag below still needs clearing.
+      if (error && error.code !== 'same_password') throw error;
 
       // Clear the temporary-password flag via the security-definer RPC. A direct
       // profiles update is blocked by restrict_profiles_write for non-admins.
