@@ -35,6 +35,15 @@ interface QueueRow {
   href: string;
 }
 
+interface AttributionIssue {
+  issue_type: string;
+  case_id: string;
+  full_name: string | null;
+  source: string | null;
+  confidence: string;
+  cluster_size: number | null;
+}
+
 const AdminCommandCenter = () => {
   const { t, i18n } = useTranslation('dashboard');
   const navigate = useNavigate();
@@ -44,7 +53,7 @@ const AdminCommandCenter = () => {
   // summary queries, so they all fire together instead of in two waves.
   const fetchAll = useCallback(async () => {
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
-    const [casesResult, activityResult, forgottenResult, reviewRes, unassignedRes, balanceRes, failRes] =
+    const [casesResult, activityResult, forgottenResult, reviewRes, unassignedRes, balanceRes, failRes, attributionRes] =
       await Promise.allSettled([
         supabase
           .from('cases')
@@ -85,6 +94,9 @@ const AdminCommandCenter = () => {
           .gte('created_at', dayAgo)
           .order('created_at', { ascending: false })
           .limit(6),
+        supabase
+          .rpc('list_attribution_integrity_issues')
+          .limit(6),
       ]);
 
     const val = <T,>(r: PromiseSettledResult<{ data: T[] | null; error: unknown }>): T[] =>
@@ -121,6 +133,7 @@ const AdminCommandCenter = () => {
         unassigned: failed(unassignedRes as PromiseSettledResult<{ error: unknown }>),
         payments: failed(balanceRes as PromiseSettledResult<{ error: unknown }>),
         auth: failed(failRes as PromiseSettledResult<{ error: unknown }>),
+        attribution: failed(attributionRes as PromiseSettledResult<{ error: unknown }>),
       } as Record<string, boolean>,
       awaitingReview: val<any>(reviewRes as PromiseSettledResult<{ data: any[] | null; error: unknown }>).map((c) => ({
         id: c.id,
@@ -146,6 +159,14 @@ const AdminCommandCenter = () => {
         subtitle: `${f.status_code ?? ''} ${new Date(f.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`.trim(),
         href: '/admin/settings?tab=security',
       })) as QueueRow[],
+      attributionIssues: val<AttributionIssue>(attributionRes as PromiseSettledResult<{ data: AttributionIssue[] | null; error: unknown }>).map((issue) => ({
+        id: `${issue.issue_type}-${issue.case_id}`,
+        title: issue.full_name ?? '—',
+        subtitle: issue.issue_type === 'duplicate_phone_cluster'
+          ? `${issue.cluster_size ?? 0} rows · split attribution`
+          : `${issue.confidence} · ${issue.source ?? 'unknown source'}`,
+        href: `/admin/cases/${issue.case_id}`,
+      })) as QueueRow[],
     };
   }, []);
 
@@ -163,6 +184,7 @@ const AdminCommandCenter = () => {
   const unassigned = data?.unassigned ?? [];
   const outstanding = data?.outstanding ?? [];
   const authFailures = data?.authFailures ?? [];
+  const attributionIssues = data?.attributionIssues ?? [];
   const countsError = data?.countsError ?? false;
   const activityError = data?.activityError ?? false;
   const queueErrors = data?.queueErrors ?? {};
@@ -210,6 +232,15 @@ const AdminCommandCenter = () => {
       tone: 'text-destructive',
       href: '/admin/settings?tab=security',
       rows: authFailures,
+    },
+    {
+      key: 'attribution',
+      title: t('admin.commandCenter.queueAttribution', 'Attribution integrity'),
+      empty: t('admin.commandCenter.queueAttributionEmpty', 'No attribution issues detected'),
+      icon: AlertTriangle,
+      tone: toneClasses('payment').text,
+      href: '/admin/pipeline',
+      rows: attributionIssues,
     },
   ];
 

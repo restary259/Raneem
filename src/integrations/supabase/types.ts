@@ -2903,6 +2903,7 @@ export type Database = {
           partner_id: string
           show_all_cases: boolean | null
           updated_at: string
+          visibility_mode: string
         }
         Insert: {
           commission_amount?: number
@@ -2913,6 +2914,7 @@ export type Database = {
           partner_id: string
           show_all_cases?: boolean | null
           updated_at?: string
+          visibility_mode?: string
         }
         Update: {
           commission_amount?: number
@@ -2923,6 +2925,7 @@ export type Database = {
           partner_id?: string
           show_all_cases?: boolean | null
           updated_at?: string
+          visibility_mode?: string
         }
         Relationships: []
       }
@@ -5208,6 +5211,22 @@ export type Database = {
         Returns: boolean
       }
       issue_case_invoice: { Args: { p_case_id: string }; Returns: Json }
+      list_attribution_integrity_issues: {
+        Args: never
+        Returns: {
+          case_id: string
+          cluster_size: number
+          confidence: string
+          created_at: string
+          evidence: string
+          full_name: string
+          issue_type: string
+          phone_number: string
+          source: string
+          suggested_partner_id: string
+          suggested_referred_by: string
+        }[]
+      }
       list_agent_directory: {
         Args: never
         Returns: {

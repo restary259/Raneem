@@ -310,6 +310,8 @@
       "queuePaymentsEmpty": "لا توجد أرصدة مستحقة",
       "queueAuth": "محاولات وصول مرفوضة (24 ساعة)",
       "queueAuthEmpty": "لا توجد محاولات مرفوضة",
+      "queueAttribution": "سلامة الإحالة",
+      "queueAttributionEmpty": "لا توجد مشاكل في الإحالة",
       "viewAll": "عرض الكل",
       "open": "فتح",
       "activityLoadError": "تعذر تحميل النشاط الأخير",
@@ -3107,6 +3109,9 @@
       "noQualifying": "لم يصل أي طالب لمرحلة التقديم بعد.",
       "pending": "قيد الإجراء (لم يتأهل بعد)",
       "studentCount": "{{count}} طالب"
+    },
+    "visibility": {
+      "referralOnlyHint": "وضع الإحالة فقط: حالات التقديم والتواصل مخفية."
     },
     "status": {
       "new": "جديد",

@@ -10,6 +10,12 @@ import { LoadingState, usePagination, TablePagination, useDebouncedValue } from 
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { STATUS_COLORS } from "@/lib/caseStatus";
+import {
+  fetchPartnerVisibilityOverride,
+  resolvePartnerVisibilityMode,
+  resolveVisibilitySources,
+  type ResolvedPartnerVisibilityMode,
+} from "@/lib/partnerVisibility";
 
 export default function PartnerStudentsPage() {
   const [cases, setCases] = useState<any[]>([]);
@@ -17,43 +23,26 @@ export default function PartnerStudentsPage() {
   const debouncedSearch = useDebouncedValue(search, 250);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [visibilityMode, setVisibilityMode] = useState<ResolvedPartnerVisibilityMode>('partner_sources');
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    // Visibility follows the same rules as the overview page: a per-partner
-    // override wins, otherwise the global platform setting decides whether the
-    // partner sees the agency pool or only their own attributed cases.
     const [settingsRes, overrideRes] = await Promise.all([
       (supabase as any)
         .from("platform_settings")
         .select("partner_dashboard_show_all_cases")
         .limit(1)
         .maybeSingle(),
-      (supabase as any)
-        .from("partner_commission_overrides")
-        .select("show_all_cases")
-        .eq("partner_id", uid)
-        .maybeSingle(),
+      fetchPartnerVisibilityOverride(uid),
     ]);
 
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
-    const override = overrideRes.data;
-
-    // Agency-generated sources (excludes "referral" = peer student-to-student referrals)
-    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
-
-    let sources: string[] | null = null;
-    if (override !== null && override !== undefined) {
-      if (override.show_all_cases === false) {
-        sources = PARTNER_SOURCES;
-      } else if (override.show_all_cases === null) {
-        sources = ["referral"];
-      }
-    } else if (!globalShowAll) {
-      sources = PARTNER_SOURCES;
-    }
+    const override = overrideRes;
+    const mode = resolvePartnerVisibilityMode(override, globalShowAll);
+    const sources = resolveVisibilitySources(override, globalShowAll);
+    setVisibilityMode(mode);
 
     // Cases are read through the partner reader so the row set and the reduced
     // column set are enforced server-side (no phone, no internal notes).
@@ -139,7 +128,12 @@ export default function PartnerStudentsPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            {t("partner.noMatchingStudents")}
+            <p>{t("partner.noMatchingStudents")}</p>
+            {visibilityMode === 'referral_only' && (
+              <p className="mt-2 text-xs">
+                {t('partner.visibility.referralOnlyHint', 'Referral-only mode: apply/contact cases are hidden.')}
+              </p>
+            )}
           </CardContent>
         </Card>
       ) : (

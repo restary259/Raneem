@@ -310,6 +310,8 @@
       "queuePaymentsEmpty": "No outstanding balances",
       "queueAuth": "Authorization failures (24h)",
       "queueAuthEmpty": "No authorization failures",
+      "queueAttribution": "Attribution integrity",
+      "queueAttributionEmpty": "No attribution issues detected",
       "viewAll": "View all",
       "open": "Open",
       "activityLoadError": "Unable to load recent activity",
@@ -3089,6 +3091,9 @@
       "noQualifying": "No students have reached submission stage yet.",
       "pending": "In Pipeline (not yet qualifying)",
       "studentCount": "{{count}} students"
+    },
+    "visibility": {
+      "referralOnlyHint": "Referral-only mode: apply/contact cases are hidden."
     },
     "status": {
       "new": "New",

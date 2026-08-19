@@ -12,6 +12,12 @@ import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
 
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import {
+  fetchPartnerVisibilityOverride,
+  resolvePartnerVisibilityMode,
+  resolveVisibilitySources,
+  type ResolvedPartnerVisibilityMode,
+} from "@/lib/partnerVisibility";
 
 const STATUS_COLOR: Record<string, string> = {
   new: "bg-[hsl(var(--status-new)/0.14)] text-[hsl(var(--status-new))]",
@@ -46,6 +52,7 @@ export default function PartnerOverviewPage() {
   const isAr = i18n.language === "ar";
 
   const [isPoolMode, setIsPoolMode] = useState(false);
+  const [visibilityMode, setVisibilityMode] = useState<ResolvedPartnerVisibilityMode>('partner_sources');
 
   const load = useCallback(async (uid: string) => {
     const [profRes, settingsRes, overrideRes, roleRes] = await Promise.all([
@@ -55,11 +62,7 @@ export default function PartnerOverviewPage() {
         .select("partner_commission_rate,ambassador_commission_rate,partner_dashboard_show_all_cases")
         .limit(1)
         .maybeSingle(),
-      (supabase as any)
-        .from("partner_commission_overrides")
-        .select("commission_amount,show_all_cases")
-        .eq("partner_id", uid)
-        .maybeSingle(),
+      fetchPartnerVisibilityOverride(uid),
       (supabase as any).rpc("get_my_role"),
     ]);
 
@@ -70,16 +73,13 @@ export default function PartnerOverviewPage() {
       ? (settingsRes.data?.ambassador_commission_rate ?? 300)
       : (settingsRes.data?.partner_commission_rate ?? 500);
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
-    const override = overrideRes.data;
+    const override = overrideRes;
     setCommissionRate(Number(override?.commission_amount ?? rate));
 
-    let poolMode = false;
-    if (override === null || override === undefined) {
-      poolMode = !globalShowAll;
-    } else {
-      poolMode = override.show_all_cases === false;
-    }
-    setIsPoolMode(poolMode);
+    const mode = resolvePartnerVisibilityMode(override, globalShowAll);
+    const sources = resolveVisibilitySources(override, globalShowAll);
+    setIsPoolMode(mode === 'partner_sources');
+    setVisibilityMode(mode);
 
     // Fetch actual paid rewards from rewards table
     const { data: rewardsData } = await (supabase as any)
@@ -91,19 +91,6 @@ export default function PartnerOverviewPage() {
     setPaidRewards(rewardsData || []);
 
     // Fetch cases through the partner reader (reduced columns — no phone/notes)
-    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
-
-    let sources: string[] | null = null;
-    if (override !== null && override !== undefined) {
-      if (override.show_all_cases === false) {
-        sources = PARTNER_SOURCES;
-      } else if (override.show_all_cases === null) {
-        sources = ["referral"];
-      }
-    } else if (!globalShowAll) {
-      sources = PARTNER_SOURCES;
-    }
-
     const { data: casesData, error: casesErr } = await (supabase as any).rpc(
       "get_partner_pool_cases",
       { p_sources: sources }
@@ -229,9 +216,16 @@ export default function PartnerOverviewPage() {
         </CardHeader>
         <CardContent>
           {total === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              {t('partner.pipeline.empty', 'No cases yet')}
-            </p>
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground">
+                {t('partner.pipeline.empty', 'No cases yet')}
+              </p>
+              {visibilityMode === 'referral_only' && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t('partner.visibility.referralOnlyHint', 'Referral-only mode: apply/contact cases are hidden.')}
+                </p>
+              )}
+            </div>
           ) : (
             <div className="space-y-2">
               {(Object.entries(

@@ -14,6 +14,12 @@ import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { useEarningsSummary } from "@/hooks/useEarningsSummary";
+import {
+  fetchPartnerVisibilityOverride,
+  resolvePartnerVisibilityMode,
+  resolveVisibilitySources,
+  type ResolvedPartnerVisibilityMode,
+} from "@/lib/partnerVisibility";
 
 // Cases at these statuses generate a partner earning
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
@@ -23,6 +29,7 @@ export default function PartnerEarningsPage() {
   const [cases, setCases] = useState<any[]>([]);
   const [commissionRate, setCommissionRate] = useState<number>(0);
   const [isPoolMode, setIsPoolMode] = useState(false);
+  const [visibilityMode, setVisibilityMode] = useState<ResolvedPartnerVisibilityMode>('partner_sources');
   const [isLoading, setIsLoading] = useState(true);
   const [rewards, setRewards] = useState<any[]>([]);
   const [myRequests, setMyRequests] = useState<any[]>([]);
@@ -38,11 +45,7 @@ export default function PartnerEarningsPage() {
 
   const load = useCallback(async (uid: string) => {
     const [overrideRes, settingsRes, roleRes] = await Promise.all([
-      (supabase as any)
-        .from("partner_commission_overrides")
-        .select("commission_amount,show_all_cases")
-        .eq("partner_id", uid)
-        .maybeSingle(),
+      fetchPartnerVisibilityOverride(uid),
       (supabase as any)
         .from("platform_settings")
         .select("partner_commission_rate,ambassador_commission_rate,partner_dashboard_show_all_cases")
@@ -55,29 +58,13 @@ export default function PartnerEarningsPage() {
       ? Number(settingsRes.data?.ambassador_commission_rate ?? 0)
       : Number(settingsRes.data?.partner_commission_rate ?? 0);
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
-    const override = overrideRes.data;
+    const override = overrideRes;
     setCommissionRate(Number(override?.commission_amount ?? globalRate));
 
-    let poolMode = false;
-    if (override === null || override === undefined) {
-      poolMode = !globalShowAll;
-    } else {
-      poolMode = override.show_all_cases === false;
-    }
-    setIsPoolMode(poolMode);
-
-    const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
-
-    let sources: string[] | null = null;
-    if (override !== null && override !== undefined) {
-      if (override.show_all_cases === false) {
-        sources = PARTNER_SOURCES;
-      } else if (override.show_all_cases === null || override.show_all_cases === undefined) {
-        sources = ["referral"];
-      }
-    } else if (!globalShowAll) {
-      sources = PARTNER_SOURCES;
-    }
+    const mode = resolvePartnerVisibilityMode(override, globalShowAll);
+    const sources = resolveVisibilitySources(override, globalShowAll);
+    setIsPoolMode(mode === 'partner_sources');
+    setVisibilityMode(mode);
 
     const { data: casesData, error } = await (supabase as any).rpc(
       "get_partner_pool_cases",
@@ -333,9 +320,16 @@ export default function PartnerEarningsPage() {
         </CardHeader>
         <CardContent>
           {earningCases.length === 0 ? (
-            <p className="text-center text-muted-foreground py-6 text-sm">
-              {t("partner.earnings.noQualifying")}
-            </p>
+            <div className="text-center py-6">
+              <p className="text-muted-foreground text-sm">
+                {t("partner.earnings.noQualifying")}
+              </p>
+              {visibilityMode === 'referral_only' && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t('partner.visibility.referralOnlyHint', 'Referral-only mode: apply/contact cases are hidden.')}
+                </p>
+              )}
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">

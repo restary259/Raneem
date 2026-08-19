@@ -38,6 +38,7 @@ import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 import { sendCaseMessage } from "@/services/CaseMessageService";
+import { fetchPartnerVisibilityOverride, resolveVisibilitySources } from "@/lib/partnerVisibility";
 
 interface SubmittedCase {
   id: string;
@@ -283,16 +284,12 @@ const AdminSubmissionsPage = () => {
       const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
         (supabase as any)
           .from("platform_settings")
-          .select("partner_commission_rate, team_member_commission_rate")
+          .select("partner_commission_rate, team_member_commission_rate, partner_dashboard_show_all_cases")
           .limit(1)
           .single(),
         linkedPartnerId
-          ? (supabase as any)
-              .from("partner_commission_overrides")
-              .select("partner_id, commission_amount, show_all_cases")
-              .eq("partner_id", linkedPartnerId)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
+          ? fetchPartnerVisibilityOverride(linkedPartnerId)
+          : Promise.resolve(null),
         c.assigned_to
           ? (supabase as any)
               .from("team_member_commission_overrides")
@@ -305,30 +302,28 @@ const AdminSubmissionsPage = () => {
       const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 100;
       const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
 
-      const PARTNER_SOURCES = ["apply_page", "contact_form", "submit_new_student", "manual"];
       const caseSource = c.source || "";
-      const po = partnerOvRes.data as any;
+      const po = partnerOvRes;
+      const globalShowAll = (settRes.data as any)?.partner_dashboard_show_all_cases ?? false;
 
       const qualifyingPartners: { partnerId: string; name: string; amount: number }[] = [];
       let totalPartner = 0;
 
-      if (po && Number(po.commission_amount) > 0) {
-        const qualifies =
-          po.show_all_cases === true ||
-          (po.show_all_cases === false && PARTNER_SOURCES.includes(caseSource)) ||
-          (po.show_all_cases === null && caseSource === "referral");
+      if (po && linkedPartnerId && Number(po.commission_amount) > 0) {
+        const sources = resolveVisibilitySources(po, globalShowAll);
+        const qualifies = sources === null || sources.includes(caseSource);
 
         if (qualifies) {
-          let name = po.partner_id.slice(0, 8);
+          let name = linkedPartnerId.slice(0, 8);
           const { data: pProfile } = await (supabase as any)
             .from("profiles")
             .select("full_name")
-            .eq("id", po.partner_id)
+            .eq("id", linkedPartnerId)
             .maybeSingle();
           if (pProfile?.full_name) name = pProfile.full_name;
 
           totalPartner = Number(po.commission_amount);
-          qualifyingPartners.push({ partnerId: po.partner_id, name, amount: totalPartner });
+          qualifyingPartners.push({ partnerId: linkedPartnerId, name, amount: totalPartner });
         }
       }
 
