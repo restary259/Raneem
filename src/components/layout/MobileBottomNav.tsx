@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { AppRole } from '@/contexts/AuthContext';
+import { useApplyFormEnabled } from '@/hooks/useApplyFormEnabled';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   LayoutDashboard, GitBranch, Users, BookOpen,
@@ -85,11 +86,14 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.cvBuilder', icon: FileText, href: '/team/tools/cv' },
     { key: 'nav.currency', icon: DollarSign, href: '/team/tools/currency' },
   ],
+  // Both roles share both features; nav.apply is filtered out at render time
+  // when the member's apply_form_enabled admin toggle is off.
   social_media_partner: [
     { key: 'nav.apply', icon: ClipboardEdit, href: '/partner/apply' },
     { key: 'nav.account', icon: User, href: '/partner/profile' },
   ],
   ambassador: [
+    { key: 'nav.apply', icon: ClipboardEdit, href: '/partner/apply' },
     { key: 'nav.account', icon: User, href: '/partner/profile' },
   ],
   agent: [
@@ -119,7 +123,13 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const { t } = useTranslation('dashboard');
   const [moreOpen, setMoreOpen] = useState(false);
   const items = MOBILE_NAV_CONFIG[role] ?? [];
-  const moreItems = MOBILE_MORE_CONFIG[role] ?? [];
+  // Mirror the sidebar: hide Apply when the member's apply_form_enabled admin
+  // toggle is off (partner/ambassador only).
+  const isPartnerRole = role === 'social_media_partner' || role === 'ambassador';
+  const applyFormEnabled = useApplyFormEnabled(isPartnerRole);
+  const moreItems = (MOBILE_MORE_CONFIG[role] ?? []).filter(
+    (item) => !(isPartnerRole && !applyFormEnabled && item.key === 'nav.apply'),
+  );
 
   // Shorten keys for label display
   const shortLabel: Record<string, string> = {

@@ -13,6 +13,8 @@ import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import { toneClasses } from '@/lib/statusTokens';
 import LinkedStudentsModal from './LinkedStudentsModal';
 import AgentParentToggle from './AgentParentToggle';
+import ReferralLinkToggle from './ReferralLinkToggle';
+import ApplyFormToggle from './ApplyFormToggle';
 
 import { usePayoutActions } from '@/hooks/usePayoutActions';
 import { useDirection } from '@/hooks/useDirection';
@@ -75,14 +77,36 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
   const [studentsModal, setStudentsModal] = useState<string[] | null>(null);
   const [agentId, setAgentId] = useState<string | null>(row.agent_id ?? null);
   const [agentNetwork, setAgentNetwork] = useState<any[]>([]);
+  const [referralEnabled, setReferralEnabled] = useState(false);
+  const [applyFormEnabled, setApplyFormEnabled] = useState(false);
 
   const isPartner = role === 'social_media_partner';
   const isAgent = role === 'agent';
   const isTeam = role === 'team_member';
   const isAmbassador = role === 'ambassador';
   const isStudent = role === 'student';
+  /** Both partner-family roles share the referral-link + apply-form features. */
+  const hasMemberFeatures = isPartner || isAmbassador;
 
   useEffect(() => { setAgentId(row.agent_id ?? null); }, [row.agent_id, row.requester_id]);
+
+  // Fetch the member's two feature flags when the panel opens (admin SELECT
+  // on profiles is allowed; the directory RPC does not return these columns).
+  useEffect(() => {
+    if (!hasMemberFeatures) return;
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('referral_code_enabled, apply_form_enabled')
+      .eq('id', row.requester_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setReferralEnabled(!!data.referral_code_enabled);
+        setApplyFormEnabled(!!data.apply_form_enabled);
+      });
+    return () => { cancelled = true; };
+  }, [hasMemberFeatures, row.requester_id]);
 
   /** An agent's recruited partners/ambassadors (profiles.agent_id = this agent). */
   const loadAgentNetwork = useCallback(async () => {
@@ -237,7 +261,41 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
             {contactSpans}
           </div>
 
-          {isPartner && (
+          {hasMemberFeatures && (
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="text-sm font-medium">{t('admin.features.sectionTitle', 'Features')}</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">{t('admin.features.referralLink', 'Referral link')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('admin.features.referralLinkHint', 'Shows a shareable referral link on the member’s dashboard.')}
+                  </p>
+                </div>
+                <ReferralLinkToggle
+                  userId={row.requester_id}
+                  userName={row.full_name}
+                  value={referralEnabled}
+                  onChanged={setReferralEnabled}
+                />
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">{t('admin.features.applyForm', 'Built-in apply form')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('admin.features.applyFormHint', 'Adds the Apply page to the member’s dashboard.')}
+                  </p>
+                </div>
+                <ApplyFormToggle
+                  userId={row.requester_id}
+                  userName={row.full_name}
+                  value={applyFormEnabled}
+                  onChanged={setApplyFormEnabled}
+                />
+              </div>
+            </div>
+          )}
+
+          {hasMemberFeatures && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
               <div>
                 <p className="text-sm font-medium">{t('agent.parentSection', 'Agent (recruiter)')}</p>

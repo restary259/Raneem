@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,7 @@ import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemePicker from "@/components/common/ThemePicker";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
+import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
 
 import {
   LayoutDashboard,
@@ -79,11 +80,13 @@ interface NavItem {
 }
 
 /**
- * Shared partner/ambassador sidebar items. Both roles share the base nav so the
- * two dashboards stay in sync; `social_media_partner` (lawyers) appends the
- * in-dashboard "Apply" item, while `ambassador` (influencers) keeps the
- * referral-link-only feature set. Declared as a const so the per-role arrays
- * can still diverge without duplicating the common entries.
+ * Shared partner/ambassador sidebar items. Both roles are functionally
+ * identical — each gets the referral link AND the built-in apply form, each
+ * gated by an admin per-profile toggle (`referral_code_enabled` /
+ * `apply_form_enabled`). The Apply entry is shared here and filtered out at
+ * render time in `SidebarNav` when the member's flag is off. Declared as
+ * consts so the per-role arrays can still diverge without duplicating the
+ * common entries.
  */
 const PARTNER_BASE_NAV: NavItem[] = [
   { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
@@ -92,6 +95,13 @@ const PARTNER_BASE_NAV: NavItem[] = [
   { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
   { key: "nav.account", icon: User, href: "/partner/profile" },
 ];
+
+const PARTNER_APPLY_NAV_ITEM: NavItem = {
+  key: "nav.apply",
+  icon: ClipboardEdit,
+  href: "/partner/apply",
+  group: "nav.group.work",
+};
 
 /**
  * Sidebar destinations per role.
@@ -151,11 +161,8 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     },
   ],
 
-  social_media_partner: [
-    ...PARTNER_BASE_NAV,
-    { key: "nav.apply", icon: ClipboardEdit, href: "/partner/apply", group: "nav.group.work" },
-  ],
-  ambassador: [...PARTNER_BASE_NAV],
+  social_media_partner: [...PARTNER_BASE_NAV, PARTNER_APPLY_NAV_ITEM],
+  ambassador: [...PARTNER_BASE_NAV, PARTNER_APPLY_NAV_ITEM],
   agent: [
     { key: "nav.overview", icon: LayoutDashboard, href: "/agent", group: "nav.group.work" },
     // Network hub: network + recruit + performance.
@@ -219,7 +226,16 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const baseItems = NAV_CONFIG[role] ?? [];
-  const items: NavItem[] = baseItems;
+  // Partner/ambassador: hide the built-in Apply form when the admin toggle
+  // (profiles.apply_form_enabled) is off for this member.
+  const isPartnerRole = role === "social_media_partner" || role === "ambassador";
+  const applyFormEnabled = useApplyFormEnabled(isPartnerRole);
+  const items: NavItem[] = useMemo(
+    () => (isPartnerRole && !applyFormEnabled
+      ? baseItems.filter((item) => item.key !== "nav.apply")
+      : baseItems),
+    [baseItems, isPartnerRole, applyFormEnabled],
+  );
 
   const unreadMessages = useUnreadCaseMessages(true);
 

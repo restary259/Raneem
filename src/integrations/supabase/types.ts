@@ -3293,6 +3293,7 @@ export type Database = {
           agent_can_create_accounts: boolean
           agent_can_invite_directly: boolean
           agent_id: string | null
+          apply_form_enabled: boolean
           arrival_date: string | null
           bank_account_number: string | null
           bank_branch: string | null
@@ -3360,6 +3361,7 @@ export type Database = {
           agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
+          apply_form_enabled?: boolean
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
@@ -3427,6 +3429,7 @@ export type Database = {
           agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
+          apply_form_enabled?: boolean
           arrival_date?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null

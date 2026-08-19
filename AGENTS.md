@@ -1598,3 +1598,42 @@ What REMAINS (intentional, out of removal scope):
   hide matched, case-insensitive, show unmatched, mixed list, deactivated-member
   emails not passed). Build clean; `npx vitest run` 438/438 pass.
 
+
+
+## Unified partner/ambassador features — per-profile admin toggles (2026-08-19)
+- `social_media_partner` and `ambassador` are now functionally identical: BOTH
+  get the referral link AND the built-in apply form, each independently gated
+  by an admin-only per-profile toggle. The role enum is unchanged.
+- **Flags**: `profiles.referral_code_enabled` (existing) +
+  `profiles.apply_form_enabled` (new, `NOT NULL DEFAULT true` — every existing
+  and future profile starts enabled). Migration
+  `20260827000000_apply_form_enabled_flag.sql` adds the column and recreates
+  `restrict_profiles_write()` (verbatim from the live 20260818000000 def) with
+  the new guard: INSERT forces `apply_form_enabled := false` for non-admin
+  self-inserts; UPDATE rejects non-admin changes. **Timestamp must stay newer
+  than 20260818000000** — re-running the older file would drop the guard.
+  Generated `types.ts` gained the column (Row/Insert/Update).
+- **Gating surfaces** (all read the flag live from `profiles`):
+  - `src/hooks/useApplyFormEnabled.ts(active)` — shared hook, defaults `true`
+    while loading (page guard is the real gate; cosmetic flash only), `active`
+    skips the profiles read for non-partner roles.
+  - `DashboardLayout.tsx` — `PARTNER_APPLY_NAV_ITEM` shared by both roles;
+    `SidebarNav` filters `nav.apply` out when the flag is false.
+  - `MobileBottomNav.tsx` — ambassador's "More" sheet gained the Apply entry;
+    same filter.
+  - `PartnerApplyPage.tsx` — guard is now flag-based (both roles allowed;
+    `apply_form_enabled === false` redirects to `/partner`). Role-only guard
+    removed.
+  - Referral link needs no new gating — `ReferralLinkCard` already self-hides
+    when `referral_code_enabled === false` and the shared
+    `PartnerOverviewPage` renders it for both roles.
+- **Admin toggles**: `ProfileFeatureToggle.tsx` (generic switch + confirm
+  dialog + persisted-value report, mirrors `AgentInviteToggle`) with thin
+  wrappers `ReferralLinkToggle.tsx` / `ApplyFormToggle.tsx` (literal i18n keys
+  `admin.features.*`). `RequesterProfilePanel.tsx` renders both for
+  `isPartner || isAmbassador` (`hasMemberFeatures`), fetching the two flags by
+  `requester_id` (the directory RPC does not return them). The
+  `AgentParentToggle` (agent recruiter link) is now shown for ambassadors too
+  — `enforce_agent_graph` permits partner/ambassador recruits.
+- i18n: `admin.features.*` (18 keys) in en + ar (parity-guarded). MANUAL DEPLOY:
+  migration via `supabase db push` / dashboard SQL editor.

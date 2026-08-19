@@ -1314,6 +1314,25 @@
       "referralsMade": "Referrals made",
       "linkedCases": "Linked cases"
     },
+    "features": {
+      "sectionTitle": "Features",
+      "referralLink": "Referral link",
+      "referralLinkHint": "Shows a shareable referral link on the member’s dashboard.",
+      "applyForm": "Built-in apply form",
+      "applyFormHint": "Adds the Apply page to the member’s dashboard.",
+      "referralEnableTitle": "Enable referral link?",
+      "referralEnableBody": "{{name}} will see a shareable referral link on their dashboard. Applications through it are attributed to them.",
+      "referralDisableTitle": "Disable referral link?",
+      "referralDisableBody": "{{name}} will no longer see a referral link. Existing referrals, earnings and payout history are not affected.",
+      "referralEnabled": "Referral link enabled",
+      "referralDisabled": "Referral link disabled",
+      "applyEnableTitle": "Enable apply form?",
+      "applyEnableBody": "{{name}} will get the built-in Apply form in their dashboard. Applications through it are attributed to them.",
+      "applyDisableTitle": "Disable apply form?",
+      "applyDisableBody": "The Apply form will disappear from the sidebar for {{name}} and the page will be blocked. Their existing cases and earnings are not affected.",
+      "applyEnabled": "Apply form enabled",
+      "applyDisabled": "Apply form disabled"
+    },
     "agents": {
       "badge": "Invite",
       "toggleHint": "Permission only — lets this agent send partner/ambassador invites directly. Nothing else changes.",
