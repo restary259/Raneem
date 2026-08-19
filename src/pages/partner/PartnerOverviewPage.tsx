@@ -291,14 +291,11 @@ export default function PartnerOverviewPage() {
             </div>
           ) : (
             <div className="overflow-x-auto -mx-0">
-              <table className="w-full text-sm min-w-[540px]">
+              <table className="w-full text-sm min-w-[400px]">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
                       {t("partner.col.name")}
-                    </th>
-                    <th className="hidden sm:table-cell text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
-                      {t("partner.col.major")}
                     </th>
                     <th className="text-start text-xs font-semibold text-muted-foreground px-4 py-2.5 whitespace-nowrap">
                       {t("partner.col.status")}
@@ -319,7 +316,6 @@ export default function PartnerOverviewPage() {
                     return (
                       <tr key={c.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                         <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap max-w-[140px] truncate">{c.full_name}</td>
-                        <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground text-xs whitespace-nowrap max-w-[100px] truncate">{c.degree_interest || "—"}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}`}>
                             {t(`partner.status.${c.status}`, { defaultValue: c.status })}

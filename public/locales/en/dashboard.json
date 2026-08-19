@@ -3151,7 +3151,6 @@
     "caseList": "Case List",
     "col": {
       "name": "Name",
-      "major": "Major",
       "status": "Status",
       "commission": "Commission",
       "date": "Date"
