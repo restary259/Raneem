@@ -232,14 +232,14 @@ export default function AgentRecruitPage() {
                     onClick={() => setRole("social_media_partner")}
                     icon={Users}
                     title={getRoleLabel("social_media_partner")}
-                    desc={t("agent.rolePartnerDesc", "Lawyer / agency partner")}
+                    desc={t("agent.rolePartnerDesc", "Influencer / referrer")}
                   />
                   <RoleCard
                     active={role === "ambassador"}
                     onClick={() => setRole("ambassador")}
                     icon={Megaphone}
                     title={getRoleLabel("ambassador")}
-                    desc={t("agent.roleAmbassadorDesc", "Influencer / referrer")}
+                    desc={t("agent.roleAmbassadorDesc", "Lawyer / agency partner")}
                   />
                 </div>
               </div>
