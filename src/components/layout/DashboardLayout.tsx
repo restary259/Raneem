@@ -25,6 +25,7 @@ import ThemePicker from "@/components/common/ThemePicker";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
+import { filterApplyNavItem } from "@/lib/partnerNav";
 
 import {
   LayoutDashboard,
@@ -231,9 +232,7 @@ function SidebarNav({ role }: { role: AppRole }) {
   const isPartnerRole = role === "social_media_partner" || role === "ambassador";
   const applyFormEnabled = useApplyFormEnabled(isPartnerRole);
   const items: NavItem[] = useMemo(
-    () => (isPartnerRole && !applyFormEnabled
-      ? baseItems.filter((item) => item.key !== "nav.apply")
-      : baseItems),
+    () => filterApplyNavItem(baseItems, isPartnerRole, applyFormEnabled),
     [baseItems, isPartnerRole, applyFormEnabled],
   );
 

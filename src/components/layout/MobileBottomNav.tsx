@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { AppRole } from '@/contexts/AuthContext';
 import { useApplyFormEnabled } from '@/hooks/useApplyFormEnabled';
+import { filterApplyNavItem } from '@/lib/partnerNav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   LayoutDashboard, GitBranch, Users, BookOpen,
@@ -127,9 +128,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   // toggle is off (partner/ambassador only).
   const isPartnerRole = role === 'social_media_partner' || role === 'ambassador';
   const applyFormEnabled = useApplyFormEnabled(isPartnerRole);
-  const moreItems = (MOBILE_MORE_CONFIG[role] ?? []).filter(
-    (item) => !(isPartnerRole && !applyFormEnabled && item.key === 'nav.apply'),
-  );
+  const moreItems = filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], isPartnerRole, applyFormEnabled);
 
   // Shorten keys for label display
   const shortLabel: Record<string, string> = {

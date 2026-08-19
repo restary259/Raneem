@@ -11,15 +11,16 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function useApplyFormEnabled(active = true): boolean {
   const { user, initialized } = useAuth();
+  const userId = user?.id;
   const [enabled, setEnabled] = useState(true);
 
   useEffect(() => {
-    if (!active || !initialized || !user) return;
+    if (!active || !initialized || !userId) return;
     let cancelled = false;
     supabase
       .from("profiles")
       .select("apply_form_enabled")
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle()
       .then(({ data }) => {
         if (!cancelled && data) setEnabled(data.apply_form_enabled);
@@ -27,7 +28,7 @@ export function useApplyFormEnabled(active = true): boolean {
     return () => {
       cancelled = true;
     };
-  }, [active, initialized, user]);
+  }, [active, initialized, userId]);
 
   return enabled;
 }
