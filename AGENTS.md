@@ -1637,3 +1637,41 @@ What REMAINS (intentional, out of removal scope):
   — `enforce_agent_graph` permits partner/ambassador recruits.
 - i18n: `admin.features.*` (18 keys) in en + ar (parity-guarded). MANUAL DEPLOY:
   migration via `supabase db push` / dashboard SQL editor.
+
+
+## Commission Hub rebuild — single production resolution path (2026-08-19)
+- Migration `20260828000000_commission_hub_rebuild.sql`: every Hub surface +
+  the simulator reads effective rates server-side from the SAME resolver
+  functions the commission engine calls (override-if-exists-else-global;
+  dynamic-at-enrollment semantics preserved). MANUAL DEPLOY required.
+  - `get_commission_hub_overview` + 4 recruited/direct counts (user_roles ×
+    profiles, deleted_at IS NULL).
+  - `get_agent_list` + self_referral_override/global + status (deactivated_at).
+  - `get_team_members_commission` captured into VCS (was out-of-band on the
+    live DB) + is_manager + global_rate.
+  - NEW `get_partner_list` / `get_ambassador_list` (all accounts incl. recruited,
+    agent_name JOIN; ambassadors resolve `ambassador_commission_rate` default).
+  - NEW `get_commission_simulation_inputs(p_user_id)` — resolves effective
+    rates by CALLING the production resolvers (`partner_base_pool`,
+    `get_effective_agent_split` under the `app.internal_commission_split` GUC,
+    `get_effective_agent_self_referral`, `get_student_referral_reward`). The
+    simulator never re-implements rate resolution in TS.
+- `useCommissionHub.ts`: +4 overview fields, +3 agent fields, +2 team fields,
+  new `PartnerListItem` interface, `fetchSimulationInputs()` (lazy, not in
+  fetchAll), partner/ambassador lists in fetchAll (7 RPCs).
+- `AdminCommissionHubPage.tsx`: tabs Overview / Global rates (reordered +
+  explainer) / Team Members (manager + default/custom badges) / Agents (status
+  badge + 2 independent rate rows) / Partners / Ambassadors (shared
+  `PartnerFamilySection` + `CommissionAccountRow`, recruited badges with agent
+  name) / Students / Simulator. Old "Direct (no recruiter)" tab removed.
+- `CommissionSimulator.tsx`: pure `simulateCommission` math UNCHANGED (verified
+  vs engine); inputs resolved server-side via `get_commission_simulation_inputs`
+  with a person picker + relationship-chain line + "Reset to configured".
+- Ambassadors intentionally share `partner_commission_overrides`
+  (entity_type='partner'); only the global default differs — preserved.
+- i18n: `commissionHub.*` +30 keys (en+ar parity).
+- Test updated: `AdminCommissionHubPage.test.tsx` asserts the recruited/direct
+  KPI grid. `commissionSimulator.test.ts` untouched (pure math unchanged).
+- NOTE: pre-existing `get_independent_accounts` still filters on
+  `master_partner_id` and breaks IF the simplification's OPTIONAL CLEANUP was
+  applied; the new Partners/Ambassadors tabs supersede it in the UI.

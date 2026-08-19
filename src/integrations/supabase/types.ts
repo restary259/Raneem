@@ -4796,6 +4796,7 @@ export type Database = {
         Returns: number
       }
       get_agent_list: { Args: never; Returns: Json }
+      get_ambassador_list: { Args: never; Returns: Json }
       get_agent_network_detail: { Args: { p_agent_id: string }; Returns: Json }
       get_agent_self_referral_rate: {
         Args: { p_agent_id: string }
@@ -4818,6 +4819,10 @@ export type Database = {
       }
       get_case_financials: { Args: { p_case_id: string }; Returns: Json }
       get_commission_hub_overview: { Args: never; Returns: Json }
+      get_commission_simulation_inputs: {
+        Args: { p_user_id?: string }
+        Returns: Json
+      }
       get_document_activity_spikes: {
         Args: { p_threshold?: number; p_window?: string }
         Returns: {
@@ -4893,6 +4898,7 @@ export type Database = {
         }
       }
       get_independent_accounts: { Args: never; Returns: Json }
+      get_partner_list: { Args: never; Returns: Json }
       get_influencer_lead_ids: {
         Args: { _influencer_id: string }
         Returns: string[]

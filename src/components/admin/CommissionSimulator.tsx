@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+import React, { useEffect, useMemo, useState } from "react";
+import type { TFunction } from "i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import {
   simulateCommission,
   type AcquisitionType,
 } from "@/lib/commissionSimulator";
+import type { SimulationInputs } from "@/hooks/useCommissionHub";
 
 const fmtILS = (n: number) => `₪${Math.round(n).toLocaleString("en-US")}`;
 
@@ -27,12 +29,27 @@ interface NumberField {
   value: number;
 }
 
+interface PickerPerson {
+  id: string;
+  name: string;
+  role: "partner" | "ambassador" | "agent";
+}
+
+interface Props {
+  t: TFunction;
+  fetchSimulationInputs: (userId?: string) => Promise<SimulationInputs>;
+  people: PickerPerson[];
+  /** Changes whenever the Hub refetches (after a rate save) → inputs refetch. */
+  refreshKey: unknown;
+}
+
 /**
- * Pure-frontend "what-if" commission calculator. No Supabase calls, no DB
- * writes — mirrors the ADDITIVE engine formula in commissionSimulator.ts so
- * admins can preview a case's commission split before configuring rates.
+ * "What-if" commission calculator. The pure arithmetic (simulateCommission)
+ * is display math only; every rate VALUE is resolved server-side by
+ * get_commission_simulation_inputs — which calls the SAME resolver functions
+ * the commission engine calls. The frontend never recalculates rates.
  */
-const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
+const CommissionSimulator: React.FC<Props> = ({ t, fetchSimulationInputs, people, refreshKey }) => {
   const [acquisitionType, setAcquisitionType] = useState<AcquisitionType>("partner");
   const [grossTotal, setGrossTotal] = useState(5000);
   const [referralDiscount, setReferralDiscount] = useState(0);
@@ -40,6 +57,72 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
   const [agentShare, setAgentShare] = useState(500);
   const [teamRate, setTeamRate] = useState(100);
   const [studentReward, setStudentReward] = useState(200);
+
+  const [inputs, setInputs] = useState<SimulationInputs | null>(null);
+  const [selectedId, setSelectedId] = useState("");
+  const [loadingInputs, setLoadingInputs] = useState(false);
+
+  const person = inputs?.person ?? null;
+  const globals = inputs?.globals ?? null;
+
+  // Load (and reload on Hub refresh) the server-resolved inputs.
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingInputs(true);
+    fetchSimulationInputs(selectedId || undefined)
+      .then((data) => {
+        if (cancelled) return;
+        setInputs(data);
+        const g = data.globals;
+        setTeamRate(data.person?.effective.team ?? g.team);
+        if (data.person) {
+          const p = data.person;
+          if (p.role === "social_media_partner" || p.role === "ambassador") {
+            setAcquisitionType("partner");
+            setPartnerPool(p.effective.partner ?? g.partner);
+            setAgentShare(p.recruiter?.agent_effective ?? g.agent);
+          } else if (p.role === "agent") {
+            setAcquisitionType("agent_self");
+            setAgentShare(p.effective.agent_self_referral ?? g.agent_self_referral);
+          } else if (p.role === "student") {
+            setAcquisitionType("student");
+            setStudentReward(p.effective.student_friend_reward ?? g.student_friend_reward);
+          } else if (p.role === "team_member") {
+            setAcquisitionType("direct");
+          }
+        } else {
+          setPartnerPool(g.partner);
+          setAgentShare(g.agent);
+          setStudentReward(g.student_friend_reward);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingInputs(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchSimulationInputs, selectedId, refreshKey]);
+
+  const resetToConfigured = () => {
+    if (!globals) return;
+    setTeamRate(person?.effective.team ?? globals.team);
+    if (person) {
+      if (person.role === "social_media_partner" || person.role === "ambassador") {
+        setPartnerPool(person.effective.partner ?? globals.partner);
+        setAgentShare(person.recruiter?.agent_effective ?? globals.agent);
+      } else if (person.role === "agent") {
+        setAgentShare(person.effective.agent_self_referral ?? globals.agent_self_referral);
+      } else if (person.role === "student") {
+        setStudentReward(person.effective.student_friend_reward ?? globals.student_friend_reward);
+      }
+    } else {
+      setPartnerPool(globals.partner);
+      setAgentShare(globals.agent);
+      setStudentReward(globals.student_friend_reward);
+    }
+  };
 
   const result = useMemo(
     () =>
@@ -121,6 +204,40 @@ const CommissionSimulator: React.FC<{ t: any }> = ({ t }) => {
             "Pure preview — mirrors the additive engine. No data is written. Change the inputs to see how a case's commission split would be computed at enrollment.",
           )}
         </p>
+
+        {/* Person picker — rates resolved server-side by the engine's resolvers */}
+        <div className="space-y-2">
+          <Label className="text-sm">{t("commissionHub.simPickPerson", "Simulate for (optional)")}</Label>
+          <div className="flex gap-2 flex-wrap">
+            <select
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+              className="h-9 flex-1 min-w-[220px] rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">{t("commissionHub.simNoPerson", "— Global defaults only —")}</option>
+              {people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.role})
+                </option>
+              ))}
+            </select>
+            <Button size="sm" variant="outline" onClick={resetToConfigured} disabled={loadingInputs || !inputs}>
+              {t("commissionHub.simReset", "Reset to configured")}
+            </Button>
+          </div>
+          {person && (
+            <p className="text-xs text-muted-foreground font-mono" dir="ltr">
+              {person.is_recruited && person.agent_name
+                ? t("commissionHub.simChainRecruited", "Admin → Agent {{agent}} → {{role}} {{name}} → Student")
+                    .replace("{{agent}}", person.agent_name)
+                    .replace("{{role}}", person.role ?? "")
+                    .replace("{{name}}", person.name ?? "")
+                : t("commissionHub.simChainDirect", "Admin → Direct {{role}} {{name}} → Student")
+                    .replace("{{role}}", person.role ?? "")
+                    .replace("{{name}}", person.name ?? "")}
+            </p>
+          )}
+        </div>
 
         {/* Acquisition type */}
         <div className="space-y-2">

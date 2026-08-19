@@ -27,6 +27,10 @@ const mockRpc = vi.fn().mockImplementation((name: string) => {
         students_total: 50,
         student_overrides: 0,
         independent_partners: 2,
+        recruited_partners: 7,
+        recruited_ambassadors: 2,
+        direct_partners: 5,
+        direct_ambassadors: 1,
         global_rates: {
           partner: 1000, ambassador: 800, team: 100,
           agent: 500, agent_self_referral: 300,
@@ -83,9 +87,10 @@ describe("AdminCommissionHubPage", () => {
 
   it("renders KPIs from the overview RPC", async () => {
     renderPage();
-    // The Overview tab is default — wait for the partners count (5) to appear.
+    // The Overview tab is default — the recruited-partners KPI (7) is unique
+    // to the recruited/direct split grid; team members (3) is a second card.
     await waitFor(() => {
-      expect(screen.getByText("5")).toBeInTheDocument();
+      expect(screen.getByText("7")).toBeInTheDocument();
     });
     expect(screen.getByText("3")).toBeInTheDocument();
   });

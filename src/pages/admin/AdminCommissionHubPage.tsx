@@ -40,8 +40,10 @@ interface GlobalRateField {
 const AdminCommissionHubPage: React.FC = () => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
-  const { overview, independent, agentList, studentConfig, teamMembers, loading, saving, error, setCommission, refresh } =
-    useCommissionHub();
+  const {
+    overview, agentList, studentConfig, teamMembers, partnerList, ambassadorList,
+    loading, saving, error, setCommission, fetchSimulationInputs, refresh,
+  } = useCommissionHub();
 
   const [rateDrafts, setRateDrafts] = useState<Record<string, number>>({});
   const [agentFilter, setAgentFilter] = useState("");
@@ -51,11 +53,11 @@ const AdminCommissionHubPage: React.FC = () => {
     const g = overview?.global_rates;
     if (!g) return [];
     return [
+      { key: "team_member_commission_rate", label: t("commissionHub.rateTeam", "Team"), value: g.team },
+      { key: "agent_self_referral_rate", label: t("commissionHub.rateAgentSelf", "Agent self-referral"), value: g.agent_self_referral },
+      { key: "agent_commission_rate", label: t("commissionHub.rateAgent", "Agent recruitment"), value: g.agent },
       { key: "partner_commission_rate", label: t("commissionHub.ratePartner", "Partner"), value: g.partner },
       { key: "ambassador_commission_rate", label: t("commissionHub.rateAmbassador", "Ambassador"), value: g.ambassador },
-      { key: "team_member_commission_rate", label: t("commissionHub.rateTeam", "Team"), value: g.team },
-      { key: "agent_commission_rate", label: t("commissionHub.rateAgent", "Agent recruitment"), value: g.agent },
-      { key: "agent_self_referral_rate", label: t("commissionHub.rateAgentSelf", "Agent self-referral"), value: g.agent_self_referral },
       { key: "student_refer_friend_discount", label: t("commissionHub.rateFriendDiscount", "Friend discount"), value: g.student_friend_discount },
       { key: "student_refer_friend_reward", label: t("commissionHub.rateFriendReward", "Friend referrer reward"), value: g.student_friend_reward },
       { key: "student_refer_family_discount", label: t("commissionHub.rateFamilyDiscount", "Family discount"), value: g.student_family_discount },
@@ -147,9 +149,10 @@ const AdminCommissionHubPage: React.FC = () => {
           items={[
             { value: "overview", label: t("commissionHub.tabOverview", "Overview") },
             { value: "rates", label: t("commissionHub.tabRates", "Global rates") },
-            { value: "team", label: t("commissionHub.tabTeam", "Team") },
+            { value: "team", label: t("commissionHub.tabTeamMembers", "Team Members") },
             { value: "agents", label: t("commissionHub.tabAgents", "Agents") },
-            { value: "independent", label: t("commissionHub.tabIndependent", "Direct (no recruiter)") },
+            { value: "partners", label: t("commissionHub.tabPartners", "Partners") },
+            { value: "ambassadors", label: t("commissionHub.tabAmbassadors", "Ambassadors") },
             { value: "students", label: t("commissionHub.tabStudents", "Students") },
             { value: "simulator", label: t("commissionHub.tabSimulator", "Simulator"), icon: Calculator },
           ]}
@@ -159,15 +162,17 @@ const AdminCommissionHubPage: React.FC = () => {
         <TabsContent value="overview" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KpiCard icon={UserCog} label={t("commissionHub.kpiTeam", "Team members")} value={overview?.team_members_total ?? 0} />
-            <KpiCard icon={Users} label={t("commissionHub.kpiPartners", "Partners")} value={overview?.partners_total ?? 0}
-              sub={t("commissionHub.kpiCustom", "{{count}} custom", { count: overview?.partners_custom ?? 0 })} />
-            <KpiCard icon={Users2} label={t("commissionHub.kpiAmbassadors", "Ambassadors")} value={overview?.ambassadors_total ?? 0} />
             <KpiCard icon={Network} label={t("commissionHub.kpiAgents", "Agents")} value={overview?.agents_total ?? 0}
               sub={t("commissionHub.kpiCustom", "{{count}} custom", { count: overview?.agents_custom ?? 0 })} />
+            <KpiCard icon={Users} label={t("commissionHub.kpiRecruitedPartners", "Recruited partners")} value={overview?.recruited_partners ?? 0}
+              sub={t("commissionHub.badgeRecruited", "Recruited")} />
+            <KpiCard icon={Users2} label={t("commissionHub.kpiRecruitedAmbassadors", "Recruited ambassadors")} value={overview?.recruited_ambassadors ?? 0}
+              sub={t("commissionHub.badgeRecruited", "Recruited")} />
+            <KpiCard icon={Users} label={t("commissionHub.kpiDirectPartners", "Direct partners")} value={overview?.direct_partners ?? 0}
+              sub={t("commissionHub.badgeDirect", "Direct")} />
+            <KpiCard icon={Users2} label={t("commissionHub.kpiDirectAmbassadors", "Direct ambassadors")} value={overview?.direct_ambassadors ?? 0}
+              sub={t("commissionHub.badgeDirect", "Direct")} />
             <KpiCard icon={GraduationCap} label={t("commissionHub.kpiStudents", "Students")} value={overview?.students_total ?? 0} />
-            <KpiCard icon={Users} label={t("commissionHub.kpiIndependent", "Direct (no recruiter)")} value={overview?.independent_partners ?? 0}
-              sub={t("commissionHub.kpiIndependentSub", "No agent")} />
-            <KpiCard icon={DollarSign} label={t("commissionHub.kpiAtZero", "Partners at ₪0")} value={overview?.partners_at_zero ?? 0} />
           </div>
 
           {/* Recent changes (audit trail) */}
@@ -209,6 +214,9 @@ const AdminCommissionHubPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                {t("commissionHub.globalRatesExplainer", "Globals are the live defaults for accounts WITHOUT an override — they apply dynamically at enrollment, so an account with no override follows later rate changes. Accounts with an override are pinned to their own amount.")}
+              </p>
               {globalRates.map((r) => {
                 const draft = rateDrafts[r.key];
                 const display = draft !== undefined ? draft : r.value;
@@ -262,7 +270,7 @@ const AdminCommissionHubPage: React.FC = () => {
                   <TeamMemberRow
                     key={m.id}
                     member={m}
-                    globalRate={overview?.global_rates?.team ?? 0}
+                    globalRate={m.global_rate ?? overview?.global_rates?.team ?? 0}
                     saving={saving}
                     onSetCommission={setCommission}
                     onSaved={() => toast({ description: t("commissionHub.saved", "Commission rate updated") })}
@@ -289,42 +297,34 @@ const AdminCommissionHubPage: React.FC = () => {
           />
         </TabsContent>
 
-        {/* ── Independent ── */}
-        <TabsContent value="independent" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4 text-primary" />
-                {t("commissionHub.independentTitle", "Direct partners & ambassadors (no recruiter)")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground mb-3">
-                {t("commissionHub.independentHint", "Recruited directly by Admin — no agent.")}
-              </p>
-              {independent.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-3">{t("commissionHub.none", "None")}</p>
-              ) : (
-                <div className="space-y-2">
-                  {independent.map((a) => (
-                    <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card flex-wrap">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{a.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{a.email}</p>
-                      </div>
-                      <Badge variant="outline" className="text-xs">{a.role}</Badge>
-                      <Badge variant="secondary" className="font-mono">
-                        {a.override === null ? t("commissionHub.default", "default") : fmtILS(a.override)}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {t("commissionHub.studentsReferred", "{{count}} students", { count: a.students_referred })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* ── Partners ── */}
+        <TabsContent value="partners" className="mt-4">
+          <PartnerFamilySection
+            icon={Users}
+            title={t("commissionHub.partnersTitle", "Partners")}
+            hint={t("commissionHub.partnersHint", "All partners — direct and agent-recruited. Override applies only to that account; ambassadors share the same override table, only their global default differs.")}
+            accounts={partnerList}
+            saving={saving}
+            onSetCommission={setCommission}
+            onSaved={() => toast({ description: t("commissionHub.saved", "Commission rate updated") })}
+            onError={(m: string) => toast({ variant: "destructive", description: m })}
+            t={t}
+          />
+        </TabsContent>
+
+        {/* ── Ambassadors ── */}
+        <TabsContent value="ambassadors" className="mt-4">
+          <PartnerFamilySection
+            icon={Users2}
+            title={t("commissionHub.ambassadorsTitle", "Ambassadors")}
+            hint={t("commissionHub.ambassadorsHint", "All ambassadors — direct and agent-recruited. Their default follows the global ambassador rate.")}
+            accounts={ambassadorList}
+            saving={saving}
+            onSetCommission={setCommission}
+            onSaved={() => toast({ description: t("commissionHub.saved", "Commission rate updated") })}
+            onError={(m: string) => toast({ variant: "destructive", description: m })}
+            t={t}
+          />
         </TabsContent>
 
         {/* ── Students (referral config) ── */}
@@ -339,9 +339,18 @@ const AdminCommissionHubPage: React.FC = () => {
           />
         </TabsContent>
 
-        {/* ── Simulator (pure what-if, no writes) ── */}
+        {/* ── Simulator — inputs resolved server-side by the engine's own resolvers ── */}
         <TabsContent value="simulator" className="mt-4">
-          <CommissionSimulator t={t} />
+          <CommissionSimulator
+            t={t}
+            fetchSimulationInputs={fetchSimulationInputs}
+            people={[
+              ...partnerList.map((p) => ({ id: p.id, name: p.name, role: "partner" as const })),
+              ...ambassadorList.map((a) => ({ id: a.id, name: a.name, role: "ambassador" as const })),
+              ...agentList.map((a) => ({ id: a.id, name: a.name, role: "agent" as const })),
+            ]}
+            refreshKey={overview}
+          />
         </TabsContent>
       </Tabs>
     </div>
@@ -373,7 +382,7 @@ const KpiCard: React.FC<{ icon: React.ElementType; label: string; value: number;
 
 /* ── Team member row ──────────────────────────────────────────────────── */
 const TeamMemberRow: React.FC<{
-  member: { id: string; name: string; email: string; override: number | null };
+  member: { id: string; name: string; email: string; override: number | null; is_manager?: boolean };
   globalRate: number;
   saving: boolean;
   onSetCommission: (type: string, id: string | null, kind: string, amount: number) => Promise<void>;
@@ -398,12 +407,21 @@ const TeamMemberRow: React.FC<{
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border bg-card flex-wrap">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate">{member.name}</p>
+        <p className="text-sm font-semibold truncate flex items-center gap-2">
+          {member.name}
+          {member.is_manager && (
+            <Badge variant="outline" className="text-[10px]">{t("commissionHub.badgeManager", "Manager")}</Badge>
+          )}
+        </p>
         <p className="text-xs text-muted-foreground truncate">{member.email}</p>
       </div>
-      <Badge variant="secondary" className="font-mono text-xs">
-        {member.override === null ? t("commissionHub.default", "default") : fmtILS(member.override)}
-      </Badge>
+      {member.override === null ? (
+        <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDefault", "default")}</Badge>
+      ) : (
+        <Badge variant="secondary" className="text-xs">
+          {t("commissionHub.badgeCustom", "custom")} <span className="font-mono">{fmtILS(member.override)}</span>
+        </Badge>
+      )}
       <div className="relative w-32">
         <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
         <Input
@@ -421,9 +439,14 @@ const TeamMemberRow: React.FC<{
   );
 };
 
-/* ── Agent section (renders the agent list from the Hub hook) ──────────── */
+/* ── Agent section — two independent rates per agent (self-referral + additive) ── */
 const AgentSection: React.FC<{
-  agents: Array<{ id: string; name: string; email: string; override: number | null; students_referred: number }>;
+  agents: Array<{
+    id: string; name: string; email: string; status: "active" | "inactive";
+    override: number | null; global_rate: number;
+    self_referral_override: number | null; self_referral_global: number;
+    students_referred: number;
+  }>;
   saving: boolean;
   onSetCommission: (
     entityType: string,
@@ -440,16 +463,16 @@ const AgentSection: React.FC<{
 }> = ({ agents, saving, onSetCommission, onSaved, onError, filter, setFilter, t }) => {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-  const save = async (agentId: string) => {
-    const raw = drafts[agentId];
+  const save = async (key: string, entityType: string, agentId: string) => {
+    const raw = drafts[key];
     if (raw === undefined) return;
     const amount = Math.max(0, Math.round(Number(raw)));
     try {
-      await onSetCommission("agent", agentId, "commission_amount", amount);
+      await onSetCommission(entityType, agentId, "commission_amount", amount);
       onSaved();
       setDrafts((d) => {
         const n = { ...d };
-        delete n[agentId];
+        delete n[key];
         return n;
       });
     } catch (err: any) {
@@ -483,35 +506,69 @@ const AgentSection: React.FC<{
         ) : (
           <div className="space-y-2">
             {filtered.map((a) => {
-              const draft = drafts[a.id];
+              const selfKey = `${a.id}_self`;
+              const additiveKey = `${a.id}_additive`;
+              const selfDraft = drafts[selfKey];
+              const additiveDraft = drafts[additiveKey];
+              const saveSelf = () => save(selfKey, "agent_self_referral", a.id);
+              const saveAdditive = () => save(additiveKey, "agent", a.id);
               return (
-                <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{a.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{a.email}</p>
+                <div key={a.id} className="p-3 rounded-lg border border-border bg-card space-y-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{a.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{a.email}</p>
+                    </div>
+                    <Badge variant={a.status === "active" ? "secondary" : "outline"} className="text-xs">
+                      {a.status === "active"
+                        ? t("commissionHub.statusActive", "Active")
+                        : t("commissionHub.statusInactive", "Inactive")}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {t("commissionHub.studentsReferred", "{{count}} students", { count: a.students_referred })}
+                    </span>
                   </div>
-                  <Badge variant={a.override === null ? "outline" : "secondary"} className="font-mono">
-                    {a.override === null ? t("commissionHub.default", "default") : fmtILS(a.override)}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {t("commissionHub.studentsReferred", "{{count}} students", { count: a.students_referred })}
-                  </span>
-                  <div className="relative w-32">
-                    <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
-                    <Input
-                      type="number"
-                      min={0}
-                      inputMode="numeric"
-                      className="ps-7 h-9"
-                      placeholder={String(a.override ?? "")}
-                      value={draft ?? ""}
-                      onChange={(e) => setDrafts((d) => ({ ...d, [a.id]: e.target.value }))}
-                    />
-                  </div>
-                  <Button size="sm" variant="outline" disabled={draft === undefined || saving} onClick={() => save(a.id)}>
-                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                    {t("common.save", "Save")}
-                  </Button>
+
+                  {/* Two independent rates, each with its own default/custom badge */}
+                  {[
+                    {
+                      key: selfKey, draft: selfDraft, entity: "agent_self_referral",
+                      label: t("commissionHub.agentSelfRate", "Self-referral rate"),
+                      overrideValue: a.self_referral_override, globalValue: a.self_referral_global, onSave: saveSelf,
+                    },
+                    {
+                      key: additiveKey, draft: additiveDraft, entity: "agent",
+                      label: t("commissionHub.agentAdditiveRate", "Additive rate (per recruit)"),
+                      overrideValue: a.override, globalValue: a.global_rate, onSave: saveAdditive,
+                    },
+                  ].map((row) => (
+                    <div key={row.key} className="flex items-center gap-3 flex-wrap">
+                      <Label className="w-44 text-xs text-muted-foreground">{row.label}</Label>
+                      {row.overrideValue === null ? (
+                        <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDefault", "default")}</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          {t("commissionHub.badgeCustom", "custom")} <span className="font-mono">{fmtILS(row.overrideValue)}</span>
+                        </Badge>
+                      )}
+                      <div className="relative w-32">
+                        <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          inputMode="numeric"
+                          className="ps-7 h-8"
+                          placeholder={String(row.overrideValue ?? row.globalValue)}
+                          value={row.draft ?? ""}
+                          onChange={(e) => setDrafts((d) => ({ ...d, [row.key]: e.target.value }))}
+                        />
+                      </div>
+                      <Button size="sm" variant="outline" disabled={row.draft === undefined || saving} onClick={row.onSave}>
+                        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                        {t("common.save", "Save")}
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               );
             })}
@@ -522,6 +579,145 @@ const AgentSection: React.FC<{
         </p>
       </CardContent>
     </Card>
+  );
+};
+
+/* ── Partners / Ambassadors — shared section over get_*_list ───────────── */
+const PartnerFamilySection: React.FC<{
+  icon: React.ElementType;
+  title: string;
+  hint: string;
+  accounts: Array<{
+    id: string; name: string; email: string;
+    override: number | null; global_rate: number;
+    agent_id: string | null; agent_name: string | null;
+    students_referred: number;
+  }>;
+  saving: boolean;
+  onSetCommission: (
+    entityType: string,
+    entityId: string | null,
+    rateKind: string,
+    amount: number,
+    reason?: string,
+  ) => Promise<unknown>;
+  onSaved: () => void;
+  onError: (m: string) => void;
+  t: TFunction<"dashboard">;
+}> = ({ icon: Icon, title, hint, accounts, saving, onSetCommission, onSaved, onError, t }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Icon className="h-4 w-4 text-primary" />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-xs text-muted-foreground mb-3">{hint}</p>
+        {accounts.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-3">{t("commissionHub.none", "None")}</p>
+        ) : (
+          <div className="space-y-2">
+            {accounts.map((a) => (
+              <CommissionAccountRow
+                key={a.id}
+                account={a}
+                saving={saving}
+                onSetCommission={onSetCommission}
+                onSaved={onSaved}
+                onError={onError}
+                t={t}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+/* ── Shared per-account commission row (Partners + Ambassadors) ─────────── */
+const CommissionAccountRow: React.FC<{
+  account: {
+    id: string; name: string; email: string;
+    override: number | null; global_rate: number;
+    agent_id: string | null; agent_name: string | null;
+    students_referred: number;
+  };
+  saving: boolean;
+  onSetCommission: (
+    entityType: string,
+    entityId: string | null,
+    rateKind: string,
+    amount: number,
+    reason?: string,
+  ) => Promise<unknown>;
+  onSaved: () => void;
+  onError: (m: string) => void;
+  t: TFunction<"dashboard">;
+}> = ({ account, saving, onSetCommission, onSaved, onError, t }) => {
+  const [draft, setDraft] = useState<string | undefined>(undefined);
+  const effective = account.override ?? account.global_rate;
+
+  // Both roles write entity_type='partner' — ambassadors intentionally share
+  // partner_commission_overrides (only the global default differs).
+  const save = async () => {
+    if (draft === undefined) return;
+    const amount = Math.max(0, Math.round(Number(draft)));
+    try {
+      await onSetCommission("partner", account.id, "commission_amount", amount);
+      onSaved();
+      setDraft(undefined);
+    } catch (err: any) {
+      onError(err.message);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card flex-wrap">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold truncate">{account.name}</p>
+          {account.agent_id ? (
+            <Badge variant="secondary" className="text-xs gap-1">
+              <Network className="h-3 w-3" />
+              {t("commissionHub.badgeRecruited", "Recruited")}
+              {account.agent_name && <span>· {account.agent_name}</span>}
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDirect", "Direct")}</Badge>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground truncate">{account.email}</p>
+      </div>
+      {account.override === null ? (
+        <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDefault", "default")}</Badge>
+      ) : (
+        <Badge variant="secondary" className="text-xs">
+          {t("commissionHub.badgeCustom", "custom")} <span className="font-mono">{fmtILS(account.override)}</span>
+        </Badge>
+      )}
+      <span className="text-xs text-muted-foreground">
+        {t("commissionHub.studentsReferred", "{{count}} students", { count: account.students_referred })}
+      </span>
+      <div className="relative w-32">
+        <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
+        <Input
+          type="number"
+          min={0}
+          inputMode="numeric"
+          className="ps-7 h-8"
+          placeholder={String(effective)}
+          value={draft ?? ""}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+      </div>
+      <Button size="sm" variant="outline" disabled={draft === undefined || saving} onClick={save}>
+        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+        {t("common.save", "Save")}
+      </Button>
+    </div>
   );
 };
 
