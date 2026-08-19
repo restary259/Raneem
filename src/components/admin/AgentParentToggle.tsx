@@ -40,15 +40,27 @@ const AgentParentToggle: React.FC<Props> = ({
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await (supabase as any)
+      const { data: roleRows, error: roleError } = await supabase
         .from('user_roles')
-        .select('user_id, profiles!inner(full_name)')
+        .select('user_id')
         .eq('role', 'agent');
-      const rows = (data ?? []).map((r: any) => ({
-        id: r.user_id,
-        full_name: r.profiles?.full_name ?? r.user_id,
-      }));
-      setAgents(rows);
+      if (roleError) return;
+      const ids = ((roleRows as { user_id: string }[] | null) ?? [])
+        .map((r) => r.user_id)
+        .filter(Boolean);
+      if (ids.length === 0) {
+        setAgents([]);
+        return;
+      }
+      const { data: profileRows, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', ids);
+      if (profileError) return;
+      setAgents(((profileRows as { id: string; full_name: string | null }[] | null) ?? []).map((p) => ({
+        id: p.id,
+        full_name: p.full_name ?? p.id,
+      })));
     };
     load();
   }, []);
@@ -57,7 +69,7 @@ const AgentParentToggle: React.FC<Props> = ({
     if (pending === undefined || saving) return;
     const next = pending;
     setSaving(true);
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('profiles')
       .update({ agent_id: next })
       .eq('id', recruitId)
@@ -88,7 +100,13 @@ const AgentParentToggle: React.FC<Props> = ({
       ) : (
         <span className="text-xs text-muted-foreground">{t('agent.noParent', 'No agent')}</span>
       )}
-      <Button variant="outline" size="sm" type="button" onClickCapture={stop} disabled={saving}>
+      <Button
+        variant="outline"
+        size="sm"
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setPending(currentAgentId); }}
+        disabled={saving}
+      >
         {currentAgent ? t('agent.reassign', 'Reassign') : t('agent.assign', 'Assign agent')}
       </Button>
 

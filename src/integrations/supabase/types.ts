@@ -5231,6 +5231,7 @@ export type Database = {
       list_ambassador_directory: {
         Args: never
         Returns: {
+          agent_id: string
           available_amount: number
           city: string
           created_at: string
