@@ -4915,7 +4915,6 @@ export type Database = {
         }[]
       }
       get_invoice_by_token: { Args: { p_token: string }; Returns: Json }
-      get_master_partner_override_rate: { Args: never; Returns: number }
       get_member_cash_debts: {
         Args: { p_member_id: string }
         Returns: {

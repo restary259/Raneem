@@ -1675,3 +1675,25 @@ What REMAINS (intentional, out of removal scope):
 - NOTE: pre-existing `get_independent_accounts` still filters on
   `master_partner_id` and breaks IF the simplification's OPTIONAL CLEANUP was
   applied; the new Partners/Ambassadors tabs supersede it in the UI.
+
+## Master-partner residual purge (2026-08-19)
+- The simplification's OPTIONAL CLEANUP was never applied live; standalone
+  migration `20260830000000_master_partner_cleanup.sql` runs those DROPs
+  verbatim + IF EXISTS (profiles master columns, platform_settings obsolete
+  rates, recruit-application column + index, partner_rate_offers table,
+  master/rate-offer RPCs, get_effective_partner_split,
+  get_referral_discount_amount, get_master_partner_override_rate). MANUAL
+  DEPLOY. Existence checks embedded in the header comment.
+- Verified NO live UI reference remained (only the intentional
+  `commissionSettings.hubRedirect/openHub` note). Orphan i18n keys REMOVED
+  from en+ar: commissionSettings.masterShare/allocationHint/masterShareTooHigh,
+  commissionHub.rateMaster/kpiMasters/simMaster/simMasterOut, admin payouts
+  masterBadge/filterMaster, partner.profile.masterBadge (parity guard passes;
+  orphans are no longer "left intentionally").
+- Kept BY DESIGN: commissionClassifier's historical master reward types
+  (legacy paid-reward bucketing); case_financial_snapshots.master_* snapshot
+  columns; user_invitations.master_partner_id (legacy rows);
+  master_services/* (unrelated DARB catalog concept); and the simulator's
+  "Partner pool" (the legitimate base commission — NOT the master pool).
+- types.ts: single stale entry `get_master_partner_override_rate` removed;
+  profiles/partner_recruit_applications blocks already had no master fields.
