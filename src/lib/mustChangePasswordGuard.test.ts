@@ -23,9 +23,12 @@ function collectSources(dir: string): string[] {
 
 describe('must_change_password write guard', () => {
   it('no source file writes profiles.must_change_password directly', () => {
-    // Object-literal writes look like `must_change_password: false` inside
-    // .from('profiles').update({...}). Reads use .select('must_change_password').
-    const directWrite = /must_change_password:\s*(true|false)/;
+    // Object-literal writes look like `must_change_password: <expr>` inside
+    // .from('profiles').update({...}). Reads use .select('must_change_password')
+    // (no colon); the lookahead after the colon excludes type annotations like
+    // `: boolean`. (Lookahead must sit before any \s* consumption, or
+    // backtracking lets the annotation slip past.)
+    const directWrite = /must_change_password\s*:(?!\s*(?:boolean|string|number|unknown)\b)/;
     const offenders = collectSources(SRC_ROOT).filter((file) =>
       directWrite.test(fs.readFileSync(file, 'utf8')),
     );
