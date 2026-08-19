@@ -4799,13 +4799,13 @@ export type Database = {
         Returns: number
       }
       get_agent_list: { Args: never; Returns: Json }
-      get_ambassador_list: { Args: never; Returns: Json }
       get_agent_network_detail: { Args: { p_agent_id: string }; Returns: Json }
       get_agent_self_referral_rate: {
         Args: { p_agent_id: string }
         Returns: number
       }
       get_ambassador_commission_rate: { Args: never; Returns: number }
+      get_ambassador_list: { Args: never; Returns: Json }
       get_auth_failure_spikes: {
         Args: { p_threshold?: number; p_window?: string }
         Returns: {
@@ -4901,7 +4901,6 @@ export type Database = {
         }
       }
       get_independent_accounts: { Args: never; Returns: Json }
-      get_partner_list: { Args: never; Returns: Json }
       get_influencer_lead_ids: {
         Args: { _influencer_id: string }
         Returns: string[]
@@ -5083,6 +5082,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      get_partner_list: { Args: never; Returns: Json }
       get_partner_pool_cases: {
         Args: { p_sources?: string[] }
         Returns: {
@@ -5211,22 +5211,6 @@ export type Database = {
         Returns: boolean
       }
       issue_case_invoice: { Args: { p_case_id: string }; Returns: Json }
-      list_attribution_integrity_issues: {
-        Args: never
-        Returns: {
-          case_id: string
-          cluster_size: number
-          confidence: string
-          created_at: string
-          evidence: string
-          full_name: string
-          issue_type: string
-          phone_number: string
-          source: string
-          suggested_partner_id: string
-          suggested_referred_by: string
-        }[]
-      }
       list_agent_directory: {
         Args: never
         Returns: {
@@ -5267,6 +5251,22 @@ export type Database = {
           requester_id: string
           students_count: number
           total_earned: number
+        }[]
+      }
+      list_attribution_integrity_issues: {
+        Args: never
+        Returns: {
+          case_id: string
+          cluster_size: number
+          confidence: string
+          created_at: string
+          evidence: string
+          full_name: string
+          issue_type: string
+          phone_number: string
+          source: string
+          suggested_partner_id: string
+          suggested_referred_by: string
         }[]
       }
       list_partner_directory: {
