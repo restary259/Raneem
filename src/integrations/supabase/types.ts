@@ -2936,6 +2936,7 @@ export type Database = {
           partner_id: string
           purpose: string
           target_path: string
+          target_role: string | null
           updated_at: string
         }
         Insert: {
@@ -2947,6 +2948,7 @@ export type Database = {
           partner_id: string
           purpose?: string
           target_path?: string
+          target_role?: string | null
           updated_at?: string
         }
         Update: {
@@ -2958,6 +2960,7 @@ export type Database = {
           partner_id?: string
           purpose?: string
           target_path?: string
+          target_role?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2971,6 +2974,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          intended_role: string | null
           note: string | null
           phone: string
           recruit_code: string
@@ -2988,6 +2992,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          intended_role?: string | null
           note?: string | null
           phone: string
           recruit_code: string
@@ -3005,6 +3010,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          intended_role?: string | null
           note?: string | null
           phone?: string
           recruit_code?: string
@@ -4766,6 +4772,7 @@ export type Database = {
         Returns: {
           code: string
           target_path: string
+          target_role: string
         }[]
       }
       ensure_case_finance_confirmations: {
@@ -5045,6 +5052,20 @@ export type Database = {
         }[]
       }
       get_my_payout_preview: { Args: never; Returns: Json }
+      get_my_pending_applications: {
+        Args: never
+        Returns: {
+          city: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          intended_role: string
+          phone: string
+          social_link: string
+          status: string
+        }[]
+      }
       get_my_permissions: { Args: never; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
       get_partner_commission_rate: {
@@ -5462,6 +5483,7 @@ export type Database = {
         Args: { p_code: string }
         Returns: {
           recruiter_name: string
+          target_role: string
           valid: boolean
         }[]
       }
@@ -5520,14 +5542,6 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: undefined
       }
-      seed_starter_documents: {
-        Args: { p_docs: Json }
-        Returns: {
-          slug: string
-          version: string
-          action: string
-        }[]
-      }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       start_student_team_member_thread: { Args: never; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
@@ -5564,6 +5578,7 @@ export type Database = {
           p_note?: string
           p_phone: string
           p_social_link?: string
+          p_target_role?: string
         }
         Returns: string
       }
