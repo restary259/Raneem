@@ -258,6 +258,19 @@ Repository-specific context for the DARB case-management app (Vite + React + Sup
 - DARB amount is never entered manually; Germany (EUR) payments are admin-verified
   via `review_case_payment_proof`.
 
+## Clearing profiles.must_change_password (security invariant)
+- To clear `profiles.must_change_password` from ANY client flow (student, agent,
+  partner, or admin), always call the RPC `clear_must_change_password()`. Never
+  issue a direct `.from('profiles').update({ must_change_password: ... })` — the
+  `restrict_profiles_write` trigger rejects non-admin writes with
+  "Non-admin users cannot change must_change_password". The RPC is SECURITY
+  DEFINER and scoped to `auth.uid()`, so it works for admins too.
+- A vitest guard (`src/lib/mustChangePasswordGuard.test.ts`) fails the suite if
+  any source file reintroduces a direct write to the column.
+- Migration `20260901000000_reassert_clear_must_change_password.sql` re-asserts
+  the RPC verbatim so an out-of-order re-run of an older migration cannot leave
+  the RPC dropped while the trigger stays strict.
+
 ## Build / test
 - `npm run build` ŌåÆ `tsc && vite build` (this is the real gate; eslint is not part of build).
 - `npm test` ŌåÆ vitest (unit tests).

@@ -70,15 +70,14 @@ const ResetPasswordPage = () => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ must_change_password: false })
-          .eq('id', session.user.id);
-        if (profileError) throw profileError;
-      }
+      // A retry after an already-successful change reports "same password" — that is
+      // not a failure here; the flag below still needs clearing.
+      if (error && !/same[_ ]password|different from the old/i.test(error.message)) throw error;
+
+      // Clear the temporary-password flag via the security-definer RPC. A direct
+      // profiles update is blocked by restrict_profiles_write for non-admins.
+      const { error: flagError } = await (supabase as any).rpc('clear_must_change_password');
+      if (flagError) throw flagError;
       const { data: currentRole } = await supabase.rpc('get_my_role');
       await refreshRole();
       toast({ title: t('resetPassword.success'), description: t('resetPassword.successDesc') });

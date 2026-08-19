@@ -128,10 +128,9 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
       }
       // If this flag is not cleared the user is forced through the gate again
       // on every login, so the failure must surface instead of being dropped.
-      const { error: flagError } = await supabase
-        .from('profiles')
-        .update({ must_change_password: false } as any)
-        .eq('id', userId);
+      // Clear via the security-definer RPC: restrict_profiles_write blocks
+      // direct non-admin writes to the column.
+      const { error: flagError } = await (supabase as any).rpc('clear_must_change_password');
       if (flagError) throw flagError;
       toast({ title: '✅ Password updated' });
 
