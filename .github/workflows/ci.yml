@@ -18,7 +18,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # jsdom@30 (test env) requires Node ^22.22.2 || ^24.15.0 || >=26.0.0:
+          # its undici@8 dependency uses node:worker_threads markAsUncloneable,
+          # which does not exist on Node 20.
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
