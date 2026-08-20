@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { stripMustChangePassword } from '@/lib/profileWriteGuards';
 
 const db = supabase as any;
 
@@ -54,7 +55,7 @@ export async function updateNotificationPrefs(
   userId: string,
   prefs: Partial<NotificationPrefs>,
 ): Promise<void> {
-  const { error } = await db.from('profiles').update(prefs).eq('id', userId);
+  const { error } = await db.from('profiles').update(stripMustChangePassword(prefs)).eq('id', userId);
   if (error) throw error;
 }
 

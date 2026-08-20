@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { BirthdayPicker } from "@/components/shared/BirthdayPicker";
 import { OnboardingShell } from "@/components/student/OnboardingShell";
+import { stripMustChangePassword } from "@/lib/profileWriteGuards";
 
 interface EmergencyContact {
   name: string;
@@ -441,7 +442,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const persist = async (patch: Record<string, unknown>) => {
     setSaving(true);
     try {
-      const { error } = await (supabase as any).from("profiles").update(patch).eq("id", user!.id);
+      const { error } = await (supabase as any).from("profiles").update(stripMustChangePassword(patch)).eq("id", user!.id);
       if (error) throw error;
       return true;
     } catch (e: any) {

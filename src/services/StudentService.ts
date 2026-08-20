@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { stripMustChangePassword } from '@/lib/profileWriteGuards';
 
 const db = supabase as any;
 
@@ -10,7 +11,7 @@ export const StudentService = {
   },
 
   async updateProfile(userId: string, patch: Record<string, unknown>): Promise<void> {
-    const { error } = await db.from('profiles').update(patch).eq('id', userId);
+    const { error } = await db.from('profiles').update(stripMustChangePassword(patch)).eq('id', userId);
     if (error) throw error;
   },
 
