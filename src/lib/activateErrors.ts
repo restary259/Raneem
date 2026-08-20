@@ -41,6 +41,11 @@ export function activationErrorMessage(
       return t("activate.weakPassword");
     case "invalid":
       return t("activate.invalid");
+    case "email_exists":
+      return t("activate.emailExists", {
+        defaultValue:
+          "We couldn't complete activation for this email. Contact the DARB team.",
+      });
     case "identity_conflict": {
       const existingRole = typeof payload.existing_role === "string" ? payload.existing_role : undefined;
       const key = existingRole ? ROLE_KEYS[existingRole] : undefined;

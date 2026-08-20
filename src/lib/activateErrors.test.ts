@@ -42,6 +42,12 @@ describe("activationErrorMessage", () => {
     expect(activationErrorMessage({ code: "invalid" }, t)).toBe("invalid");
   });
 
+  it("maps email_exists to a friendly message instead of the raw GoTrue string", () => {
+    expect(activationErrorMessage({ code: "email_exists" }, t)).toBe(
+      "We couldn't complete activation for this email. Contact the DARB team.",
+    );
+  });
+
   it("localizes a known conflicting role", () => {
     expect(
       activationErrorMessage({ code: "identity_conflict", existing_role: "social_media_partner" }, t),

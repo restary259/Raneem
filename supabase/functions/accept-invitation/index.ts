@@ -152,9 +152,23 @@ serve(async (req) => {
         // email already exists in auth.users but resolveIdentity() missed it
         // (profile-row race or RPC unavailability). Re-resolve before
         // surfacing the error: a found identity is adopted under the same
-        // guards as the primary adopt path above.
-        logStep("create_failed_retrying_resolve", { error: createError?.message });
+        // guards as the primary adopt path above. Never leak the raw GoTrue
+        // string to the client — map it to a stable code instead.
+        const createMessage = (createError?.message ?? "").toLowerCase();
+        const isDatabaseEmailError = createMessage.includes("database error checking email");
+
+        logStep("create_failed_retrying_resolve", {
+          error: createError?.message,
+          matched_database_email_error: isDatabaseEmailError,
+        });
         const retryExisting = await resolveIdentity(admin, email);
+
+        logStep("create_retry_resolve_result", {
+          found: retryExisting.exists,
+          has_user_id: Boolean(retryExisting.userId),
+          role: retryExisting.role ?? null,
+          deactivated: retryExisting.deactivated,
+        });
 
         if (retryExisting.exists && retryExisting.userId && !retryExisting.deactivated) {
           if (retryExisting.role && retryExisting.role !== inv.intended_role) {
@@ -182,11 +196,24 @@ serve(async (req) => {
               400,
             );
           }
-          logStep("adopt_or_create", { mode: "retry_adopt", user_id: userId });
+          logStep("adopt_or_create", {
+            mode: "retry_adopt",
+            user_id: userId,
+            role: retryExisting.role ?? null,
+          });
         } else {
-          logStep("adopt_or_create_failed", { mode: "create", error: createError?.message });
+          logStep("adopt_or_create_failed", {
+            mode: "create",
+            error: createError?.message,
+            matched_database_email_error: isDatabaseEmailError,
+          });
           return json(
-            { error: createError?.message ?? "Account could not be created", code: "server_error" },
+            {
+              error: isDatabaseEmailError
+                ? "We couldn't complete activation for this email. Contact the DARB team."
+                : createError?.message ?? "Account could not be created",
+              code: isDatabaseEmailError ? "email_exists" : "server_error",
+            },
             400,
           );
         }

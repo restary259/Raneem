@@ -425,7 +425,8 @@
     "roleStudent": "Student",
     "anotherRole": "another",
     "identityConflict": "This email already has the role {{role}} in DARB. One person can hold only one role — sign in with that account instead.",
-    "identityConflictDeactivated": "This account has been deactivated. Ask the DARB team to reactivate it before continuing."
+    "identityConflictDeactivated": "This account has been deactivated. Ask the DARB team to reactivate it before continuing.",
+    "emailExists": "We couldn't complete activation for this email. Contact the DARB team."
   },
   "common": {
     "close": "Close"
