@@ -4600,9 +4600,11 @@ export type Database = {
           amount_owed_to_admin: number | null
           case_id: string | null
           case_reference: string | null
+          collected_at: string | null
           debt_status: string | null
           payment_id: string | null
           service_fee: number | null
+          settled_at: string | null
           student_name: string | null
           team_commission: number | null
           team_member_id: string | null
@@ -4708,12 +4710,10 @@ export type Database = {
       clear_case_thread: { Args: { p_case_id: string }; Returns: number }
       clear_must_change_password: { Args: never; Returns: undefined }
       confirm_agency_service_fee: { Args: { p_case_id: string }; Returns: Json }
-      confirm_agency_service_payment:
-        | { Args: { p_case_id: string }; Returns: Json }
-        | {
-            Args: { p_case_id: string; p_payment_method?: string }
-            Returns: Json
-          }
+      confirm_agency_service_payment: {
+        Args: { p_case_id: string; p_payment_method?: string }
+        Returns: Json
+      }
       confirm_case_payment: {
         Args: { p_payment_id: string }
         Returns: undefined
@@ -4797,6 +4797,19 @@ export type Database = {
       get_agent_commission_rate: {
         Args: { p_agent_id: string }
         Returns: number
+      }
+      get_admin_cash_collections: {
+        Args: never
+        Returns: {
+          amount: number
+          case_id: string
+          case_reference: string
+          collected_at: string | null
+          payment_id: string
+          student_name: string
+          team_member_id: string | null
+          team_member_name: string | null
+        }[]
       }
       get_agent_list: { Args: never; Returns: Json }
       get_agent_network_detail: { Args: { p_agent_id: string }; Returns: Json }
@@ -4923,8 +4936,10 @@ export type Database = {
           amount_owed_to_admin: number
           case_id: string
           case_reference: string
+          collected_at: string | null
           debt_status: string
           payment_id: string
+          settled_at: string | null
           student_name: string
         }[]
       }
@@ -5040,8 +5055,10 @@ export type Database = {
           amount_owed_to_admin: number
           case_id: string
           case_reference: string
+          collected_at: string | null
           debt_status: string
           payment_id: string
+          settled_at: string | null
           student_name: string
         }[]
       }
@@ -5568,7 +5585,7 @@ export type Database = {
       }
       settle_cash_collection: {
         Args: { p_case_id: string }
-        Returns: undefined
+        Returns: Json
       }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       start_student_team_member_thread: { Args: never; Returns: string }

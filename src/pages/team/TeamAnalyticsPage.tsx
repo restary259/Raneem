@@ -89,12 +89,14 @@ export default function TeamAnalyticsPage() {
 
     // Fetch cash collection debts for this team member via the SECURITY DEFINER
     // RPC (direct view access is revoked from authenticated). The RPC scopes to
-    // auth.uid() server-side, so no .eq("team_member_id", user.id) is needed.
+    // auth.uid() server-side and returns all statuses — the KPI counts only
+    // pending (unsettled) cash; settled rows drop off the moment admin settles.
     try {
       const { data: debts } = await supabase.rpc("get_my_cash_debts");
       if (debts) {
-        setCashDebts(debts);
-        setCashDebtTotal(debts.reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
+        const pending = debts.filter((d) => d.debt_status === "pending");
+        setCashDebts(pending);
+        setCashDebtTotal(pending.reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0));
       }
     } catch (err) {
       console.warn("get_my_cash_debts failed:", err);
@@ -219,18 +221,19 @@ export default function TeamAnalyticsPage() {
 
       </div>
 
-      {/* Cash debt warning — team members who collected cash owe DARB the service fee minus their commission */}
+      {/* Cash owed warning — confirmed cash payments collected from students
+          that still need to be handed to admin */}
       {cashDebtTotal > 0 && (
         <Card className="border-amber-500/40 bg-amber-500/5">
           <CardContent className="p-5 space-y-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
               <span className="text-sm font-semibold text-amber-700">
-                {t('lawyer.analytics.cashDebtTitle', 'Cash Collection Debt')}
+                {t('lawyer.analytics.cashDebtTitle', 'Cash owed to Admin')}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('lawyer.analytics.cashDebtHint', 'You owe DARB for the following cash-collected cases (service fee minus your commission).')}
+              {t('lawyer.analytics.cashDebtHint', 'Cash you collected from students that still needs to be handed to Admin.')}
             </p>
             <div className="text-2xl font-bold tabular-nums text-amber-700">
               ₪{cashDebtTotal.toLocaleString('en-US')}

@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CalendarDays, Clock, RotateCcw, Users } from "lucide-react";
+import { AlertTriangle, Banknote, CalendarDays, Clock, RotateCcw, Users } from "lucide-react";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import { LoadingState, EmptyState } from "@/components/shell";
 
@@ -64,6 +64,9 @@ export default function TeamWorkPage() {
   const [staleCases, setStaleCases] = useState<CaseRow[]>([]);
   const [totalCases, setTotalCases] = useState(0);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
+  // Confirmed cash payments collected from students but not yet handed to
+  // admin. null = not loaded yet. Only admin can settle; this is read-only.
+  const [cashOwed, setCashOwed] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -158,6 +161,22 @@ export default function TeamWorkPage() {
       setReturned((returnedRes.data as unknown as ReturnedRow[]) ?? []);
       setReturnedCount(returnedCountRes.count ?? 0);
       void caseIds;
+
+      // Cash owed to admin = sum of confirmed cash payments still unsettled.
+      // Scoped server-side to auth.uid(); settles drop it automatically.
+      try {
+        const { data: debts } = await supabase.rpc("get_my_cash_debts");
+        if (!ignore) {
+          setCashOwed(
+            (debts ?? [])
+              .filter((d) => d.debt_status === "pending")
+              .reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0),
+          );
+        }
+      } catch (cashErr) {
+        console.warn("get_my_cash_debts failed:", cashErr);
+        if (!ignore) setCashOwed(null);
+      }
     } catch (err) {
       console.error("TeamWorkPage fetchData error:", err);
     } finally {
@@ -203,6 +222,12 @@ export default function TeamWorkPage() {
       value: totalCases,
       tone: "text-primary",
     },
+    {
+      icon: Banknote,
+      label: t("team.work.statCashOwed", "Cash owed to Admin"),
+      value: cashOwed === null ? "—" : `₪${cashOwed.toLocaleString("en-US")}`,
+      tone: cashOwed !== null && cashOwed > 0 ? "text-amber-600" : "text-muted-foreground",
+    },
   ];
 
   return (
@@ -219,7 +244,7 @@ export default function TeamWorkPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {stats.map((s) => (
           <Card key={s.label}>
             <CardContent className="p-4">

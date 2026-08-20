@@ -424,11 +424,11 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
     try {
       // Admin path: SECURITY DEFINER RPC gates on has_role('admin') and scopes
       // to the requested member server-side. Direct view access is revoked from
-      // authenticated, so the RPC is the only path. It returns all statuses; we
-      // filter pending client-side (matches the previous .eq("debt_status","pending")).
+      // authenticated, so the RPC is the only path. It returns all statuses —
+      // pending rows are the member's current obligation, settled rows are the
+      // history trail.
       const { data: rawDebts } = await supabase.rpc("get_member_cash_debts", { p_member_id: teamMemberId });
-      const data = (rawDebts ?? []).filter((d) => d.debt_status === "pending");
-      setDebts(data);
+      setDebts(rawDebts ?? []);
     } catch (err) {
       console.warn("get_member_cash_debts failed:", err);
       setDebts([]);
@@ -453,7 +453,10 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
     }
   };
 
-  const total = debts.reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0);
+  const pending = debts.filter((d) => d.debt_status === "pending");
+  const settled = debts.filter((d) => d.debt_status === "settled");
+  const total = pending.reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0);
+  const settledTotal = settled.reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0);
 
   if (loading) {
     return (
@@ -467,56 +470,114 @@ function CashDebtsCard({ teamMemberId, t, onChanged }: { teamMemberId: string; t
     );
   }
 
-  if (debts.length === 0) return null;
-
   return (
-    <Card className="border-amber-500/40 bg-amber-500/5">
+    <Card className={pending.length > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <Banknote className="h-4 w-4 text-amber-600" />
-          <h3 className="text-sm font-semibold text-amber-700">
-            {t("admin.members.cashDebtTitle", "Cash Collection Debts")}
+          <Banknote className={`h-4 w-4 ${pending.length > 0 ? "text-amber-600" : "text-muted-foreground"}`} />
+          <h3 className={`text-sm font-semibold ${pending.length > 0 ? "text-amber-700" : ""}`}>
+            {t("admin.members.cashDebtTitle", "Cash Collection")}
           </h3>
-          <Badge variant="outline" className="ml-auto text-amber-700 border-amber-500/40">
-            {debts.length}
-          </Badge>
+          {pending.length > 0 && (
+            <Badge variant="outline" className="ml-auto text-amber-700 border-amber-500/40">
+              {pending.length}
+            </Badge>
+          )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {t("admin.members.cashDebtHint", "Pending cash collections this member owes to DARB (service fee minus commission).")}
-        </p>
-        <div className="text-xl font-bold tabular-nums text-amber-700">
-          {formatILS(total)}
-        </div>
-        <div className="space-y-2">
-          {debts.map((d, i) => (
-            <div
-              key={d.payment_id ?? `idx-${i}`}
-              className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card text-sm"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="font-medium truncate">{d.student_name ?? "—"}</div>
-                {d.case_reference && (
-                  <div className="text-xs text-muted-foreground font-mono">{d.case_reference}</div>
-                )}
+
+        {pending.length > 0 ? (
+          <>
+            <p className="text-xs text-muted-foreground">
+              {t("admin.members.cashDebtHint", "Cash this member collected from students and has not yet handed over.")}
+            </p>
+            <div>
+              <div className="text-xs text-muted-foreground">
+                {t("admin.members.cashOwedNow", "Currently owed to Admin")}
               </div>
-              <span className="font-mono tabular-nums text-sm whitespace-nowrap">
-                {formatILS(d.amount_owed_to_admin)}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 gap-1.5"
-                disabled={!d.case_id || settlingId === d.case_id}
-                onClick={() => d.case_id && handleSettle(d.case_id)}
-              >
-                <Landmark className="h-3.5 w-3.5" />
-                {settlingId === d.case_id
-                  ? t("admin.members.settling", "Settling…")
-                  : t("admin.members.settle", "Settle")}
-              </Button>
+              <div className="text-xl font-bold tabular-nums text-amber-700">
+                {formatILS(total)}
+              </div>
             </div>
-          ))}
-        </div>
+            <div className="space-y-2">
+              {pending.map((d, i) => (
+                <div
+                  key={d.payment_id ?? `idx-${i}`}
+                  className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border bg-card text-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{d.student_name ?? "—"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {d.case_reference && <span className="font-mono">{d.case_reference}</span>}
+                      {d.collected_at && (
+                        <span>
+                          {d.case_reference ? " · " : ""}
+                          {t("admin.members.cashCollectedAt", "Collected {{date}}", {
+                            date: new Date(d.collected_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="font-mono tabular-nums text-sm whitespace-nowrap">
+                    {formatILS(d.amount_owed_to_admin)}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                    disabled={!d.case_id || settlingId === d.case_id}
+                    onClick={() => d.case_id && handleSettle(d.case_id)}
+                  >
+                    <Landmark className="h-3.5 w-3.5" />
+                    {settlingId === d.case_id
+                      ? t("admin.members.settling", "Settling…")
+                      : t("admin.members.settle", "Settle")}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {settled.length > 0
+              ? t("admin.members.allCashSettled", "All cash settled — nothing currently owed.")
+              : t("admin.members.noCashCollections", "No cash collections recorded for this member.")}
+          </p>
+        )}
+
+        {settled.length > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{t("admin.members.settledHistory", "Settlement history")}</span>
+                <span className="tabular-nums">
+                  {t("admin.members.settledTotal", "Settled: {{amount}}", { amount: formatILS(settledTotal) })}
+                </span>
+              </div>
+              {settled.map((d, i) => (
+                <div
+                  key={d.payment_id ?? `settled-${i}`}
+                  className="flex items-center justify-between gap-2 text-xs text-muted-foreground"
+                >
+                  <span className="truncate">
+                    {d.student_name ?? "—"}
+                    {d.case_reference ? ` (${d.case_reference})` : ""}
+                  </span>
+                  <span className="tabular-nums whitespace-nowrap">
+                    {formatILS(d.amount_owed_to_admin)}
+                    {d.settled_at && (
+                      <>
+                        {" · "}
+                        {new Date(d.settled_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

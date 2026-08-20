@@ -1,11 +1,11 @@
-import React, { useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useCallback, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, Activity, RefreshCw, Clock } from 'lucide-react';
+import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, Activity, RefreshCw, Clock, Banknote, Landmark } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useNavigate } from 'react-router-dom';
 import { isActiveStatus } from '@/lib/caseStatus';
@@ -44,16 +44,29 @@ interface AttributionIssue {
   cluster_size: number | null;
 }
 
+interface CashCollectionRow {
+  payment_id: string;
+  case_id: string;
+  case_reference: string | null;
+  student_name: string | null;
+  team_member_id: string | null;
+  team_member_name: string | null;
+  amount: number | null;
+  collected_at: string | null;
+}
+
 const AdminCommandCenter = () => {
   const { t, i18n } = useTranslation('dashboard');
   const navigate = useNavigate();
   const isRtl = i18n.language === 'ar';
+  const queryClient = useQueryClient();
+  const [settlingCaseId, setSettlingCaseId] = useState<string | null>(null);
 
   // One parallel batch. The four queue queries do not depend on the three
   // summary queries, so they all fire together instead of in two waves.
   const fetchAll = useCallback(async () => {
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
-    const [casesResult, activityResult, forgottenResult, reviewRes, unassignedRes, balanceRes, failRes, attributionRes] =
+    const [casesResult, activityResult, forgottenResult, reviewRes, unassignedRes, failRes, attributionRes] =
       await Promise.allSettled([
         supabase
           .from('cases')
@@ -80,13 +93,6 @@ const AdminCommandCenter = () => {
           .is('deleted_at', null)
           .eq('archived', false)
           .order('created_at', { ascending: false })
-          .limit(6),
-        supabase
-          .from('case_submissions')
-          .select('id, case_id, remaining_balance, case:cases(full_name, case_reference)')
-          .gt('remaining_balance', 0)
-          .is('deleted_at', null)
-          .order('remaining_balance', { ascending: false })
           .limit(6),
         supabase
           .from('auth_failure_log')
@@ -131,7 +137,6 @@ const AdminCommandCenter = () => {
       queueErrors: {
         review: failed(reviewRes as PromiseSettledResult<{ error: unknown }>),
         unassigned: failed(unassignedRes as PromiseSettledResult<{ error: unknown }>),
-        payments: failed(balanceRes as PromiseSettledResult<{ error: unknown }>),
         auth: failed(failRes as PromiseSettledResult<{ error: unknown }>),
         attribution: failed(attributionRes as PromiseSettledResult<{ error: unknown }>),
       } as Record<string, boolean>,
@@ -146,12 +151,6 @@ const AdminCommandCenter = () => {
         title: c.full_name,
         subtitle: `${c.case_reference ?? c.id.slice(0, 8)} · ${shortDate(c.created_at)}`,
         href: `/admin/cases/${c.id}`,
-      })) as QueueRow[],
-      outstanding: val<any>(balanceRes as PromiseSettledResult<{ data: any[] | null; error: unknown }>).map((s) => ({
-        id: s.id,
-        title: s.case?.full_name ?? '—',
-        subtitle: `₪${Number(s.remaining_balance).toLocaleString('en-US')}`,
-        href: `/admin/cases/${s.case_id}`,
       })) as QueueRow[],
       authFailures: val<any>(failRes as PromiseSettledResult<{ data: any[] | null; error: unknown }>).map((f) => ({
         id: f.id,
@@ -178,11 +177,29 @@ const AdminCommandCenter = () => {
     staleTime: 30_000,
   });
 
+  // Cash Collection: every confirmed cash payment a team member has collected
+  // but not yet handed over. Source of truth is the case_payments row itself
+  // (via the get_admin_cash_collections RPC), so settling below updates this
+  // list, the member drawer, and the team member's KPI in one write.
+  const {
+    data: cashCollections = [],
+    isPending: cashLoading,
+    isError: cashError,
+    refetch: refetchCash,
+  } = useQuery({
+    queryKey: ['admin', 'cash-collections'],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase.rpc('get_admin_cash_collections');
+      if (error) throw error;
+      return (rows ?? []) as CashCollectionRow[];
+    },
+    staleTime: 30_000,
+  });
+
   const counts: CaseCounts = data?.counts ?? { total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0, sla_breaches: 0 };
   const activity: ActivityEntry[] = data?.activity ?? [];
   const awaitingReview = data?.awaitingReview ?? [];
   const unassigned = data?.unassigned ?? [];
-  const outstanding = data?.outstanding ?? [];
   const authFailures = data?.authFailures ?? [];
   const attributionIssues = data?.attributionIssues ?? [];
   const countsError = data?.countsError ?? false;
@@ -191,9 +208,26 @@ const AdminCommandCenter = () => {
   const loading = isPending;
 
   const fetchData = useCallback(() => { void refetch(); }, [refetch]);
+  const fetchCash = useCallback(() => { void refetchCash(); }, [refetchCash]);
 
   useRealtimeSubscription('cases', fetchData, true);
   useRealtimeSubscription('activity_log', fetchData, true);
+  useRealtimeSubscription('case_payments', fetchCash, true);
+
+  const cashTotal = cashCollections.reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
+
+  const handleSettle = async (caseId: string) => {
+    setSettlingCaseId(caseId);
+    try {
+      const { error } = await supabase.rpc('settle_cash_collection', { p_case_id: caseId });
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'cash-collections'] });
+    } catch (err) {
+      console.error('Failed to settle cash collection:', err);
+    } finally {
+      setSettlingCaseId(null);
+    }
+  };
 
 
   const queues = [
@@ -214,15 +248,6 @@ const AdminCommandCenter = () => {
       tone: 'text-primary',
       href: '/admin/pipeline',
       rows: unassigned,
-    },
-    {
-      key: 'payments',
-      title: t('admin.commandCenter.queuePayments', 'Outstanding balances'),
-      empty: t('admin.commandCenter.queuePaymentsEmpty', 'No outstanding balances'),
-      icon: Clock,
-      tone: toneClasses("payment").text,
-      href: '/admin/financials',
-      rows: outstanding,
     },
     {
       key: 'auth',
@@ -351,6 +376,81 @@ const AdminCommandCenter = () => {
           </Card>
         ))}
       </div>
+
+      {/* Cash Collection — confirmed cash payments not yet handed to admin.
+          Replaces the old "Outstanding balances" queue: one source of truth,
+          oldest first, settle inline. */}
+      <Card className="border-amber-500/40">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Banknote className="h-4 w-4 text-amber-600" />
+            {t('admin.commandCenter.cashCollection', 'Cash Collection')}
+            <Badge variant="secondary">{cashCollections.length}</Badge>
+          </CardTitle>
+          {cashCollections.length > 0 && (
+            <span className="text-sm font-semibold tabular-nums text-amber-700" dir="ltr">
+              ₪{cashTotal.toLocaleString('en-US')}
+            </span>
+          )}
+        </CardHeader>
+        <CardContent>
+          {cashError ? (
+            <p className="text-sm text-destructive text-center py-6">
+              {t('admin.commandCenter.queueLoadError', 'Unable to load')}
+            </p>
+          ) : cashLoading ? (
+            <div className="space-y-2">
+              <div className="h-10 bg-muted rounded animate-pulse" />
+              <div className="h-10 bg-muted rounded animate-pulse" />
+            </div>
+          ) : cashCollections.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              {t('admin.commandCenter.cashCollectionEmpty', 'No unsettled cash')}
+            </p>
+          ) : (
+            <div className="divide-y">
+              {cashCollections.map((row) => (
+                <div key={row.payment_id} className="flex items-center justify-between gap-3 py-2.5 flex-wrap">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {row.student_name ?? '—'}
+                      {row.case_reference && (
+                        <span className="text-xs text-muted-foreground font-mono ms-2">{row.case_reference}</span>
+                      )}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {t('admin.commandCenter.cashCollectedBy', 'Collected by {{name}}', {
+                        name: row.team_member_name ?? t('admin.commandCenter.cashUnassigned', 'Unassigned'),
+                      })}
+                      {row.collected_at && ` · ${formatTime(row.collected_at)}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-mono tabular-nums text-sm font-semibold" dir="ltr">
+                      ₪{Number(row.amount ?? 0).toLocaleString('en-US')}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      disabled={settlingCaseId === row.case_id}
+                      onClick={() => handleSettle(row.case_id)}
+                    >
+                      <Landmark className="h-3.5 w-3.5" />
+                      {settlingCaseId === row.case_id
+                        ? t('admin.members.settling', 'Settling…')
+                        : t('admin.members.settle', 'Settle')}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => navigate(`/admin/cases/${row.case_id}`)}>
+                      {t('admin.commandCenter.open', 'Open')}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Recent Activity */}
       <Card>
