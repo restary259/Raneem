@@ -27,6 +27,8 @@ interface Row {
 
 const STATUSES = ['pending', 'in_progress', 'completed', 'rejected'] as const;
 
+const TERMINAL_STATUSES: readonly string[] = ['completed', 'rejected'];
+
 const STATUS_VARIANT: Record<string, 'secondary' | 'default' | 'outline' | 'destructive'> = {
   pending: 'secondary',
   in_progress: 'default',
@@ -88,7 +90,7 @@ const DataRequestsPanel: React.FC<Props> = ({ search = '', onCount }) => {
   const update = async (row: Row, patch: Partial<Pick<Row, 'status' | 'admin_note'>>) => {
     setSaving(row.id);
     const { data: { user } } = await supabase.auth.getUser();
-    const isTerminal = patch.status && ['completed', 'rejected'].includes(patch.status);
+    const isTerminal = patch.status && TERMINAL_STATUSES.includes(patch.status);
     const { error } = await supabase
       .from('data_requests')
       .update({

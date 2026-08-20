@@ -32,6 +32,8 @@ const RECRUIT_EMAIL = 'tsukuyomidomain00@gmail.com';
 
 /** Server-side truth for the application row. */
 let row: any;
+/** When set, the applications query fails with this error. */
+let loadError: any;
 /** Response the edge function should return next. */
 let invokeResult: any;
 const invoke = vi.fn(async (_name: string, _opts: any) => {
@@ -52,7 +54,8 @@ vi.mock('@/integrations/supabase/client', () => ({
     rpc: (...a: any[]) => rpc(),
     from: () => ({
       select: () => ({
-        order: () => Promise.resolve({ data: [row], error: null }),
+        order: () =>
+          Promise.resolve(loadError ? { data: null, error: loadError } : { data: [row], error: null }),
       }),
     }),
   },
@@ -78,6 +81,7 @@ beforeEach(() => {
     created_at: new Date().toISOString(),
     agent: { full_name: 'Recruiting Agent' },
   };
+  loadError = null;
   invokeResult = { data: { success: true, emailed: true, user_id: 'user-1' }, error: null };
 });
 
@@ -159,5 +163,19 @@ describe('RecruitApplicationsPanel — approve recruit → account → invite', 
       ),
     );
     expect(screen.getByRole('button', { name: /Approve/i })).toBeEnabled();
+  });
+
+  it('surfaces a destructive toast instead of an empty list when the query fails', async () => {
+    loadError = { message: 'permission denied for table partner_recruit_applications' };
+    render(<RecruitApplicationsPanel />);
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: 'destructive',
+          description: 'permission denied for table partner_recruit_applications',
+        }),
+      ),
+    );
+    await screen.findByText('No recruit applications');
   });
 });
