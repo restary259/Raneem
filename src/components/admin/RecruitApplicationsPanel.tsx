@@ -41,15 +41,20 @@ export default function RecruitApplicationsPanel({ search = "", onCount }: Props
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const { data } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from("partner_recruit_applications")
       .select("*, agent:profiles!partner_recruit_applications_agent_id_fkey(full_name)")
       .order("created_at", { ascending: false });
+    if (error) {
+      toast({ variant: "destructive", description: error.message });
+      setLoading(false);
+      return;
+    }
     const next = (data || []) as AppRow[];
     setRows(next);
     setLoading(false);
     onCount?.(next.length, next.filter((r) => r.status === "pending").length);
-  }, [onCount]);
+  }, [onCount, toast]);
 
   useEffect(() => { load(); }, [load]);
 

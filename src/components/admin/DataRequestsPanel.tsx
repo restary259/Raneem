@@ -87,11 +87,14 @@ const DataRequestsPanel: React.FC<Props> = ({ search = '', onCount }) => {
 
   const update = async (row: Row, patch: Partial<Pick<Row, 'status' | 'admin_note'>>) => {
     setSaving(row.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    const isTerminal = patch.status && ['completed', 'rejected'].includes(patch.status);
     const { error } = await supabase
       .from('data_requests')
       .update({
         ...patch,
-        handled_at: new Date().toISOString(),
+        handled_by: user?.id ?? null,
+        ...(isTerminal ? { handled_at: new Date().toISOString() } : {}),
       })
       .eq('id', row.id);
     setSaving(null);
