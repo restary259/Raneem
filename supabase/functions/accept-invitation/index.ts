@@ -16,6 +16,15 @@ import { resolveIdentity } from "../_shared/identity.ts";
 const STRONG_PASSWORD =
   /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{10,}$/;
 
+// GoTrue messages like "Database error checking email" are internal and must
+// never reach the client — they confuse users and leak auth internals.
+const safeAuthError = (message: string | undefined, fallback: string) => {
+  const raw = message ?? fallback;
+  return raw.toLowerCase().includes("database error")
+    ? "We couldn't complete activation for this email. Contact the DARB team."
+    : raw;
+};
+
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -135,7 +144,7 @@ serve(async (req) => {
       if (adoptError) {
         logStep("adopt_or_create_failed", { mode: "adopt", error: adoptError.message });
         return json(
-          { error: adoptError.message ?? "Account could not be updated", code: "server_error" },
+          { error: safeAuthError(adoptError.message, "Account could not be updated"), code: "server_error" },
           400,
         );
       }
@@ -192,7 +201,7 @@ serve(async (req) => {
           if (adoptError) {
             logStep("retry_adopt_failed", { user_id: userId, error: adoptError.message });
             return json(
-              { error: adoptError.message ?? "Account could not be updated", code: "server_error" },
+              { error: safeAuthError(adoptError.message, "Account could not be updated"), code: "server_error" },
               400,
             );
           }
