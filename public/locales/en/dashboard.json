@@ -3616,7 +3616,8 @@
     "submit": "Save password and continue",
     "weak": "Password does not meet the requirements",
     "success": "Password updated",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "flagClearFailed": "Password updated, but your session flag could not be cleared. Contact your admin if this screen reappears."
   },
   "adminConfirm": {
     "title": "Administrator confirmation required",

@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
-import { identityConflict } from "../_shared/identity.ts";
+import { identityConflict, resolveIdentity } from "../_shared/identity.ts";
 import { reconcilePendingInvitations } from "../_shared/invitations.ts";
 
 /**
@@ -99,18 +99,49 @@ serve(async (req) => {
 
     const tempPassword = crypto.randomUUID().slice(0, 12) + "A1!";
 
+    let userId: string;
+
     const { data: newUser, error: createError } = await admin.auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
       user_metadata: { full_name: body.full_name },
     });
-    if (createError || !newUser?.user) {
-      return json({ error: createError?.message ?? "Account could not be created" }, 400);
-    }
-    const userId: string = newUser.user.id;
 
-    await admin.from("user_roles").insert({ user_id: userId, role });
+    if (createError || !newUser?.user) {
+      // createUser() fails with "Database error checking email" when the email
+      // already exists in auth.users but identityConflict's resolveIdentity()
+      // missed it. Re-resolve and adopt under the same guards.
+      const retryExisting = await resolveIdentity(admin, email);
+      if (retryExisting.exists && retryExisting.userId && !retryExisting.deactivated) {
+        if (retryExisting.role && retryExisting.role !== role) {
+          return json({
+            error: `This email already has the role ${retryExisting.role}. One person can hold only one role in Darb.`,
+            code: "identity_conflict",
+            existing_role: retryExisting.role,
+          }, 409);
+        }
+        userId = retryExisting.userId;
+        // Set the temp password so the agent receives working credentials.
+        const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
+          password: tempPassword,
+          email_confirm: true,
+        });
+        if (updateError) {
+          return json({ error: updateError.message ?? "Account could not be updated" }, 400);
+        }
+      } else {
+        return json({ error: createError?.message ?? "Account could not be created" }, 400);
+      }
+    } else {
+      userId = newUser.user.id;
+    }
+
+    // Idempotent: an adopted account may already carry this role row.
+    await admin.from("user_roles").upsert(
+      { user_id: userId, role },
+      { onConflict: "user_id", ignoreDuplicates: true },
+    );
 
     const { error: upsertError } = await admin.from("profiles").upsert({
       id: userId,
@@ -123,7 +154,9 @@ serve(async (req) => {
     if (upsertError) console.error("profile upsert error:", upsertError);
 
     // Separately stamp the agent-controlled fields — must be a dedicated UPDATE
-    // so it fires AFTER handle_new_user has created the profile row.
+    // so it fires AFTER handle_new_user has created the profile row. Runs for
+    // adopted accounts too: the recruit must join this agent's network, and
+    // their password was just replaced with the temp one.
     const { error: stampError } = await admin.from("profiles")
       .update({ agent_id: agentId, must_change_password: true })
       .eq("id", userId);

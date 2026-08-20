@@ -54,8 +54,23 @@ export async function resolveIdentity(
   }
 
   if (!userId) {
-    // No profile row — the identity may still exist in auth. Scan every page,
-    // not just the first 1000 users.
+    // No profile row — the identity may still exist in auth without a profile
+    // yet (handle_new_user trigger race, or a profile row missing its email).
+    // Direct indexed lookup in auth.users via SECURITY DEFINER RPC.
+    const { data: authId, error: authLookupError } = await admin.rpc(
+      "get_auth_user_id_by_email",
+      { p_email: email },
+    );
+    if (authLookupError) {
+      console.error("resolveIdentity: auth rpc lookup failed", { email, error: authLookupError });
+    } else if (authId) {
+      userId = authId as string;
+    }
+  }
+
+  if (!userId) {
+    // Slow fallback if the RPC is unavailable (migration not yet applied):
+    // scan every page, not just the first 1000 users.
     const perPage = 1000;
     let page = 1;
     while (page <= 10) {

@@ -106,7 +106,9 @@ serve(async (req) => {
       });
     }
 
-    const reusedExisting = false;
+    let userId: string;
+    let created: boolean;
+
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: tempPassword,
@@ -115,26 +117,56 @@ serve(async (req) => {
     });
 
     if (createError || !newUser?.user) {
-      return new Response(
-        JSON.stringify({ error: createError?.message ?? "Account could not be created" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      // createUser() fails with "Database error checking email" when the email
+      // already exists in auth.users but identityConflict's resolveIdentity()
+      // missed it (profile-row race or RPC unavailability). Re-resolve and
+      // adopt under the same one-identity-one-role guards.
+      const retryExisting = await resolveIdentity(supabaseAdmin, email);
+      if (retryExisting.exists && retryExisting.userId && !retryExisting.deactivated) {
+        if (retryExisting.role && retryExisting.role !== dbRole) {
+          return new Response(
+            JSON.stringify({
+              error: `This email already has the role ${retryExisting.role}. One person can hold only one role in Darb.`,
+              code: "identity_conflict",
+              existing_role: retryExisting.role,
+            }),
+            { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        userId = retryExisting.userId;
+        created = false;
+        // Set the temp password so the admin receives working credentials.
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+          password: tempPassword,
+          email_confirm: true,
+        });
+        if (updateError) {
+          return new Response(
+            JSON.stringify({ error: updateError.message ?? "Account could not be updated" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ error: createError?.message ?? "Account could not be created" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } else {
+      userId = newUser.user.id;
+      created = true;
     }
-    const userId: string = newUser.user.id;
 
-
-
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: userId,
-      role: dbRole,
-    });
+    // Idempotent: an adopted account may already carry this role row.
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: userId, role: dbRole },
+      { onConflict: "user_id", ignoreDuplicates: true },
+    );
 
     await supabaseAdmin.from("profiles").upsert({
       id: userId,
       email,
       full_name,
-      // Existing accounts keep their current password state.
-      must_change_password: reusedExisting ? undefined : true,
       commission_amount: typeof commission_amount === "number" ? commission_amount : 0,
       // Agent link: partners/ambassadors recruited by an Agent, or the
       // Agent's own account. An agent can never sit under another agent
@@ -145,6 +177,15 @@ serve(async (req) => {
           ? agent_id
           : null,
     });
+
+    // Stamp must_change_password in a dedicated UPDATE so it fires AFTER
+    // handle_new_user has created the profile row (avoids the upsert/trigger
+    // race where the upsert lands before the trigger row exists). Applies to
+    // adopted accounts too: their password was just replaced with the temp one.
+    await supabaseAdmin
+      .from("profiles")
+      .update({ must_change_password: true })
+      .eq("id", userId);
 
 
     await supabaseAdmin
@@ -165,10 +206,10 @@ serve(async (req) => {
         user_id: userId,
         email,
         role: dbRole,
-        temp_password: reusedExisting ? null : tempPassword,
-        message: reusedExisting
-          ? `Existing account found — ${dbRole} role added. The user keeps their current password.`
-          : `${dbRole} account created.`,
+        temp_password: tempPassword,
+        message: created
+          ? `${dbRole} account created.`
+          : `Existing ${dbRole} account adopted — the temp password below replaces the old one.`,
 
       }),
       {

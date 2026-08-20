@@ -146,16 +146,55 @@ serve(async (req) => {
         password,
         email_confirm: true,
       });
+
       if (createError || !createdUser?.user) {
-        logStep("adopt_or_create_failed", { mode: "create", error: createError?.message });
-        return json(
-          { error: createError?.message ?? "Account could not be created", code: "server_error" },
-          400,
-        );
+        // createUser() fails with "Database error checking email" when the
+        // email already exists in auth.users but resolveIdentity() missed it
+        // (profile-row race or RPC unavailability). Re-resolve before
+        // surfacing the error: a found identity is adopted under the same
+        // guards as the primary adopt path above.
+        logStep("create_failed_retrying_resolve", { error: createError?.message });
+        const retryExisting = await resolveIdentity(admin, email);
+
+        if (retryExisting.exists && retryExisting.userId && !retryExisting.deactivated) {
+          if (retryExisting.role && retryExisting.role !== inv.intended_role) {
+            logStep("retry_role_conflict", { found_role: retryExisting.role });
+            return json(
+              {
+                error:
+                  `This email already has the role ${retryExisting.role}. One person can hold only one role in Darb.`,
+                code: "identity_conflict",
+                existing_role: retryExisting.role,
+              },
+              409,
+            );
+          }
+          userId = retryExisting.userId;
+          created = false;
+          const { error: adoptError } = await admin.auth.admin.updateUserById(userId, {
+            password,
+            email_confirm: true,
+          });
+          if (adoptError) {
+            logStep("retry_adopt_failed", { user_id: userId, error: adoptError.message });
+            return json(
+              { error: adoptError.message ?? "Account could not be updated", code: "server_error" },
+              400,
+            );
+          }
+          logStep("adopt_or_create", { mode: "retry_adopt", user_id: userId });
+        } else {
+          logStep("adopt_or_create_failed", { mode: "create", error: createError?.message });
+          return json(
+            { error: createError?.message ?? "Account could not be created", code: "server_error" },
+            400,
+          );
+        }
+      } else {
+        userId = createdUser.user.id;
+        created = true;
+        logStep("adopt_or_create", { mode: "create", user_id: userId });
       }
-      userId = createdUser.user.id;
-      created = true;
-      logStep("adopt_or_create", { mode: "create", user_id: userId });
     }
 
     // ── Role (idempotent; one role per user) ──────────────────────────────
