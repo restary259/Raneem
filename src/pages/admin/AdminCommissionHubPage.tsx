@@ -202,9 +202,6 @@ const AdminCommissionHubPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground">
-                {t("commissionHub.globalRatesExplainer", "Globals are the live defaults for accounts WITHOUT an override — they apply dynamically at enrollment, so an account with no override follows later rate changes. Accounts with an override are pinned to their own amount.")}
-              </p>
               {globalRates.map((r) => {
                 const draft = rateDrafts[r.key];
                 const display = draft !== undefined ? draft : r.value;
