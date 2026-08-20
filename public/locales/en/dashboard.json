@@ -648,7 +648,18 @@
       "labelAgeTo": "To (age)",
       "labelMonthlyRate": "Monthly rate ({{currency}})",
       "ageAndAbove": "and above",
-      "noPriceSet": "Price not set yet"
+      "noPriceSet": "Price not set yet",
+      "hubTitle": "Programs Hub",
+      "schoolsDirectory": "Schools",
+      "programsCount": "{{count}} programs",
+      "accommodationsCount": "{{count}} accommodations",
+      "unassignedWarning": "{{count}} unassigned — hidden from team",
+      "unassignedTitle": "No school assigned",
+      "unassignedNote": "These items are hidden from Submit New Student until linked to a school.",
+      "selectSchoolPrompt": "Select a school to view its profile",
+      "addProgramToSchool": "Add Program to this school",
+      "addAccommodationToSchool": "Add Accommodation to this school",
+      "insuranceGlobalNote": "Global — not school-specific"
     },
     "submissions": {
       "title": "Submitted Applications",

@@ -648,7 +648,18 @@
       "labelAgeTo": "إلى (العمر)",
       "labelMonthlyRate": "السعر الشهري ({{currency}})",
       "ageAndAbove": "فما فوق",
-      "noPriceSet": "لم يتم تحديد السعر بعد"
+      "noPriceSet": "لم يتم تحديد السعر بعد",
+      "hubTitle": "مركز البرامج",
+      "schoolsDirectory": "المدارس",
+      "programsCount": "{{count}} برنامج",
+      "accommodationsCount": "{{count}} سكن",
+      "unassignedWarning": "{{count}} غير مرتبطة — مخفية عن الفريق",
+      "unassignedTitle": "بدون مدرسة",
+      "unassignedNote": "هذه العناصر مخفية عن إرسال طالب جديد حتى يتم ربطها بمدرسة.",
+      "selectSchoolPrompt": "اختر مدرسة لعرض ملفها",
+      "addProgramToSchool": "إضافة برنامج لهذه المدرسة",
+      "addAccommodationToSchool": "إضافة سكن لهذه المدرسة",
+      "insuranceGlobalNote": "عام — غير مرتبط بمدرسة"
     },
     "submissions": {
       "title": "الطلبات المقدمة",

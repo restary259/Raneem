@@ -2,139 +2,21 @@ import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import SegmentedTabs from "@/components/shell/SegmentedTabs";
+import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  Trash2,
-  RefreshCw,
-  BookOpen,
-  Home,
-  Clock,
-  BadgeCheck,
-  Pause,
-  Play,
-  Pencil,
-  Building2,
-  Shield,
-  GraduationCap as School,
-} from "lucide-react";
-import PriceTiersEditor, { PriceTier, parseTiers, formatTierLadder } from "@/components/admin/PriceTiersEditor";
+import { Plus, RefreshCw } from "lucide-react";
+import PriceTiersEditor, { PriceTier, parseTiers } from "@/components/admin/PriceTiersEditor";
 import InsuranceRatesEditor from "@/components/admin/InsuranceRatesEditor";
 import PhotoUploader from "@/components/admin/PhotoUploader";
-import { AgePriceTier, parseAgeTiers, formatAgeLadder } from "@/lib/insurancePricing";
-
-import { toneClasses } from "@/lib/statusTokens";
-
-const TONE = {
-  new: toneClasses("new").chip,
-  appointment: toneClasses("appointment").chip,
-  payment: toneClasses("payment").chip,
-  enrolled: toneClasses("enrolled").chip,
-} as const;
-
-const TONE_TEXT = {
-  submitted: toneClasses("submitted").text,
-  payment: toneClasses("payment").text,
-  enrolled: toneClasses("enrolled").text,
-} as const;
-
-
-
-
-function groupBySchool<T extends { school_id: string | null }>(
-  items: T[],
-  schools: { id: string; name_en: string }[],
-): { key: string; label: string; items: T[] }[] {
-  const groups: { key: string; label: string; items: T[] }[] = [];
-  for (const school of schools) {
-    const list = items.filter((i) => i.school_id === school.id);
-    if (list.length) groups.push({ key: school.id, label: school.name_en, items: list });
-  }
-  // Items without a school are unreachable in Submit New Student (that wizard
-  // queries strictly by school_id), so flag them rather than calling them "Other".
-  const ungrouped = items.filter((i) => !i.school_id || !schools.some((s) => s.id === i.school_id));
-  if (ungrouped.length)
-    groups.push({ key: "none", label: "⚠ No school assigned — hidden from Submit New Student", items: ungrouped });
-  return groups;
-}
-
-interface Program {
-  id: string;
-  name_ar: string;
-  name_en: string;
-  type: string;
-  price: number | null;
-  currency: string;
-  duration: string | null;
-  description: string | null;
-  is_active: boolean;
-  created_at: string;
-  lessons_per_week: number | null;
-  duration_in_months: number | null;
-  fixed_start_day_of_month: number | null;
-  school_id: string | null;
-  cefr_range: string | null;
-  hours_per_week: number | null;
-  start_rule: string | null;
-  registration_fee: number | null;
-  price_tiers: unknown;
-  photos: string[] | null;
-}
-interface School {
-  id: string;
-  name_en: string;
-  name_ar: string;
-  city: string | null;
-  country: string;
-  is_active: boolean;
-  created_at: string;
-  photos: string[] | null;
-}
-interface Accommodation {
-  id: string;
-  name_ar: string;
-  name_en: string;
-  price: number | null;
-  currency: string;
-  description: string | null;
-  is_active: boolean;
-  school_id: string | null;
-  deposit: number | null;
-  placement_fee: number | null;
-  meals: string | null;
-  room_type: string | null;
-  distance_note: string | null;
-  price_tiers: unknown;
-  photos: string[] | null;
-}
-interface Insurance {
-  id: string;
-  name: string;
-  tier: string;
-  price: number;
-  currency: string;
-  is_active: boolean;
-  provider?: string | null;
-  coverage_scope?: string | null;
-  billing_period?: string | null;
-  min_months?: number | null;
-  max_months?: number | null;
-  max_age?: number | null;
-  terms_url?: string | null;
-  description_ar?: string | null;
-  description_en?: string | null;
-  age_price_tiers?: unknown;
-  photos: string[] | null;
-}
-
+import { AgePriceTier, parseAgeTiers } from "@/lib/insurancePricing";
+import SchoolDirectory from "@/components/admin/programs/SchoolDirectory";
+import SchoolProfilePanel from "@/components/admin/programs/SchoolProfilePanel";
+import InsuranceSection from "@/components/admin/programs/InsuranceSection";
+import { Program, School, Accommodation, Insurance, UNASSIGNED_KEY } from "@/components/admin/programs/types";
 
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
 const INSURANCE_TIERS = ["basic", "standard", "premium"];
@@ -172,6 +54,9 @@ const AdminProgramsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Selected school in the directory; UNASSIGNED_KEY shows the unlinked items.
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+
   const [progOpen, setProgOpen] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [accomOpen, setAccomOpen] = useState(false);
@@ -181,6 +66,11 @@ const AdminProgramsPage = () => {
   const [editSchoolId, setEditSchoolId] = useState<string | null>(null);
   const [editAccomId, setEditAccomId] = useState<string | null>(null);
   const [editInsId, setEditInsId] = useState<string | null>(null);
+
+  // When a program/accommodation dialog is opened from inside a school
+  // profile, the school is inherited from context and the picker is hidden.
+  const [progSchoolLocked, setProgSchoolLocked] = useState(false);
+  const [accomSchoolLocked, setAccomSchoolLocked] = useState(false);
 
   const emptyProgForm = {
     name_ar: "",
@@ -222,7 +112,6 @@ const AdminProgramsPage = () => {
   const [insForm, setInsForm] = useState(emptyInsForm);
   const [insRates, setInsRates] = useState<AgePriceTier[]>([]);
 
-
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
@@ -249,6 +138,13 @@ const AdminProgramsPage = () => {
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
+
+  // Pre-select the first school so the profile column is never empty.
+  useEffect(() => {
+    if (selectedSchoolId === null && schools.length > 0) {
+      setSelectedSchoolId(schools[0].id);
+    }
+  }, [schools, selectedSchoolId]);
 
   const saveProgram = async () => {
     if (!progForm.name_en) {
@@ -419,7 +315,15 @@ const AdminProgramsPage = () => {
     else fetchAll();
   };
 
-  const openEditProgram = (p: Program) => {
+  const openAddProgram = (schoolId: string) => {
+    setEditProgId(null);
+    setProgForm({ ...emptyProgForm, school_id: schoolId });
+    setProgTiers([]);
+    setProgSchoolLocked(true);
+    setProgOpen(true);
+  };
+
+  const openEditProgram = (p: Program, lockSchool: boolean) => {
     setEditProgId(p.id);
     setProgForm({
       name_ar: p.name_ar,
@@ -440,10 +344,19 @@ const AdminProgramsPage = () => {
       photos: p.photos ?? [],
     });
     setProgTiers(parseTiers(p.price_tiers));
+    setProgSchoolLocked(lockSchool);
     setProgOpen(true);
   };
 
-  const openEditAccom = (a: Accommodation) => {
+  const openAddAccom = (schoolId: string) => {
+    setEditAccomId(null);
+    setAccomForm({ ...emptyAccomForm, school_id: schoolId });
+    setAccomTiers([]);
+    setAccomSchoolLocked(true);
+    setAccomOpen(true);
+  };
+
+  const openEditAccom = (a: Accommodation, lockSchool: boolean) => {
     setEditAccomId(a.id);
     setAccomForm({
       name_ar: a.name_ar,
@@ -460,6 +373,7 @@ const AdminProgramsPage = () => {
       photos: a.photos ?? [],
     });
     setAccomTiers(parseTiers(a.price_tiers));
+    setAccomSchoolLocked(lockSchool);
     setAccomOpen(true);
   };
 
@@ -491,1082 +405,658 @@ const AdminProgramsPage = () => {
     setInsOpen(true);
   };
 
-
-  const tierColor: Record<string, string> = {
-    basic: toneClasses("new").chip,
-    standard: toneClasses("appointment").chip,
-    premium: toneClasses("payment").chip,
-  };
+  const isUnassignedView = selectedSchoolId === UNASSIGNED_KEY;
+  const selectedSchool =
+    selectedSchoolId && !isUnassignedView ? schools.find((s) => s.id === selectedSchoolId) ?? null : null;
+  const isUnlinked = (item: { school_id: string | null }) =>
+    !item.school_id || !schools.some((s) => s.id === item.school_id);
+  const profilePrograms = selectedSchool
+    ? programs.filter((p) => p.school_id === selectedSchool.id)
+    : isUnassignedView
+      ? programs.filter(isUnlinked)
+      : [];
+  const profileAccoms = selectedSchool
+    ? accommodations.filter((a) => a.school_id === selectedSchool.id)
+    : isUnassignedView
+      ? accommodations.filter(isUnlinked)
+      : [];
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('admin.programs.title')}</h1>
-        <Button variant="outline" size="sm" onClick={fetchAll}>
-          <RefreshCw className="h-4 w-4" />
-        </Button>
+        <h1 className="text-2xl font-bold">{t('admin.programs.hubTitle')}</h1>
+        <div className="flex items-center gap-2">
+          <Dialog
+            open={schoolOpen}
+            onOpenChange={(v) => {
+              setSchoolOpen(v);
+              if (!v) {
+                setEditSchoolId(null);
+                setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] });
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                {t('admin.programs.addSchool')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editSchoolId ? t('admin.programs.editSchool') : t('admin.programs.addSchool')}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 pt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelNameEn')}</Label>
+                    <Input
+                      value={schoolForm.name_en}
+                      onChange={(e) => setSchoolForm((f) => ({ ...f, name_en: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelNameAr')}</Label>
+                    <Input
+                      value={schoolForm.name_ar}
+                      onChange={(e) => setSchoolForm((f) => ({ ...f, name_ar: e.target.value }))}
+                      dir="rtl"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelCity')}</Label>
+                    <Input
+                      value={schoolForm.city}
+                      onChange={(e) => setSchoolForm((f) => ({ ...f, city: e.target.value }))}
+                      placeholder="Berlin"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{t('admin.programs.labelCountry')}</Label>
+                    <Input
+                      value={schoolForm.country}
+                      onChange={(e) => setSchoolForm((f) => ({ ...f, country: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <PhotoUploader
+                  photos={schoolForm.photos}
+                  onChange={(photos) => setSchoolForm((f) => ({ ...f, photos }))}
+                  folder="schools"
+                  label={t('admin.programs.labelPhotos')}
+                />
+                <Button className="w-full" onClick={saveSchool} disabled={saving}>
+                  {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" size="sm" onClick={fetchAll}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="programs">
-        <SegmentedTabs
-          items={[
-            { value: "programs", label: t('admin.programs.tabPrograms') },
-            { value: "schools", label: t('admin.programs.tabSchools') },
-            { value: "accommodations", label: t('admin.programs.tabAccommodations') },
-            { value: "insurance", label: t('admin.programs.tabInsurance') },
-          ]}
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] gap-6 items-start">
+        <SchoolDirectory
+          schools={schools}
+          programs={programs}
+          accommodations={accommodations}
+          selectedId={selectedSchoolId}
+          onSelect={setSelectedSchoolId}
         />
+        {loading && schools.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">{t('admin.programs.loading')}</div>
+        ) : (
+          <SchoolProfilePanel
+            selectedId={selectedSchoolId}
+            school={selectedSchool}
+            programs={profilePrograms}
+            accommodations={profileAccoms}
+            onEditSchool={openEditSchool}
+            onToggleSchool={(s) => toggleActive("schools", s.id, s.is_active)}
+            onAddProgram={() => selectedSchool && openAddProgram(selectedSchool.id)}
+            onEditProgram={(p) => openEditProgram(p, !!selectedSchool)}
+            onToggleProgram={(p) => toggleActive("programs", p.id, p.is_active)}
+            onDeleteProgram={(p) => deleteRecord("programs", p.id)}
+            onAddAccommodation={() => selectedSchool && openAddAccom(selectedSchool.id)}
+            onEditAccommodation={(a) => openEditAccom(a, !!selectedSchool)}
+            onToggleAccommodation={(a) => toggleActive("accommodations", a.id, a.is_active)}
+            onDeleteAccommodation={(a) => deleteRecord("accommodations", a.id)}
+          />
+        )}
+      </div>
 
-        {/* Programs Tab */}
-        <TabsContent value="programs" className="space-y-4 mt-4">
-          <div className="flex justify-end">
-            <Dialog
-              open={progOpen}
-              onOpenChange={(v) => {
-                setProgOpen(v);
-                if (!v) {
-                  setEditProgId(null);
-                  setProgForm(emptyProgForm);
-                  setProgTiers([]);
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {t('admin.programs.addProgram')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>{editProgId ? t('admin.programs.editProgram') : t('admin.programs.addProgram')}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelNameEn')}</Label>
-                      <Input
-                        value={progForm.name_en}
-                        onChange={(e) => setProgForm((f) => ({ ...f, name_en: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelNameAr')}</Label>
-                      <Input
-                        value={progForm.name_ar}
-                        onChange={(e) => setProgForm((f) => ({ ...f, name_ar: e.target.value }))}
-                        dir="rtl"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelType')}</Label>
-                    <Select value={progForm.type} onValueChange={(v) => setProgForm((f) => ({ ...f, type: v }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROGRAM_TYPES.map((tp) => (
-                          <SelectItem key={tp} value={tp}>
-                            {tp.replace("_", " ")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelPrice')}</Label>
-                      <Input
-                        type="number"
-                        value={progForm.price}
-                        onChange={(e) => setProgForm((f) => ({ ...f, price: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelCurrency')}</Label>
-                      <Select
-                        value={progForm.currency}
-                        onValueChange={(v) => setProgForm((f) => ({ ...f, currency: v }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="ILS">ILS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelDuration')}</Label>
-                      <Input
-                        value={progForm.duration}
-                        onChange={(e) => setProgForm((f) => ({ ...f, duration: e.target.value }))}
-                        placeholder="6 months"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelLessonsWeek')}</Label>
-                      <Input
-                        type="number"
-                        value={progForm.lessons_per_week}
-                        onChange={(e) => setProgForm((f) => ({ ...f, lessons_per_week: e.target.value }))}
-                        placeholder="20"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelDurationMonths')}</Label>
-                      <Input
-                        type="number"
-                        value={progForm.duration_in_months}
-                        onChange={(e) => setProgForm((f) => ({ ...f, duration_in_months: e.target.value }))}
-                        placeholder="6"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelFixedStartDay')}</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="28"
-                        value={progForm.fixed_start_day_of_month}
-                        onChange={(e) => setProgForm((f) => ({ ...f, fixed_start_day_of_month: e.target.value }))}
-                        placeholder="1"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelLinkedSchool')}</Label>
-                    <Select
-                      value={progForm.school_id || "none"}
-                      onValueChange={(v) => setProgForm((f) => ({ ...f, school_id: v === "none" ? "" : v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('admin.programs.selectSchoolPlaceholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('admin.programs.noSchoolOption')}</SelectItem>
-                        {schools.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.name_en}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelCefr')}</Label>
-                      <Input
-                        value={progForm.cefr_range}
-                        onChange={(e) => setProgForm((f) => ({ ...f, cefr_range: e.target.value }))}
-                        placeholder="A1-C1"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelHoursWeek')}</Label>
-                      <Input
-                        type="number"
-                        step="0.25"
-                        value={progForm.hours_per_week}
-                        onChange={(e) => setProgForm((f) => ({ ...f, hours_per_week: e.target.value }))}
-                        placeholder="15"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelRegistrationFee')}</Label>
-                      <Input
-                        type="number"
-                        value={progForm.registration_fee}
-                        onChange={(e) => setProgForm((f) => ({ ...f, registration_fee: e.target.value }))}
-                        placeholder="60"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelStartRule')}</Label>
-                    <Select
-                      value={progForm.start_rule || "none"}
-                      onValueChange={(v) => setProgForm((f) => ({ ...f, start_rule: v === "none" ? "" : v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t('admin.programs.startRule.none')}</SelectItem>
-                        <SelectItem value="every_monday">{t('admin.programs.startRule.every_monday')}</SelectItem>
-                        <SelectItem value="every_monday_a1_first_monday">
-                          {t('admin.programs.startRule.every_monday_a1_first_monday')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <PriceTiersEditor tiers={progTiers} onChange={setProgTiers} />
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelDescription')}</Label>
-                    <Input
-                      value={progForm.description}
-                      onChange={(e) => setProgForm((f) => ({ ...f, description: e.target.value }))}
-                    />
-                  </div>
-                  <PhotoUploader
-                    photos={progForm.photos}
-                    onChange={(photos) => setProgForm((f) => ({ ...f, photos }))}
-                    folder="programs"
-                    label={t('admin.programs.labelPhotos')}
-                  />
-                  <Button className="w-full" onClick={saveProgram} disabled={saving}>
-                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          {loading ? (
-            <div className="p-8 text-center text-muted-foreground">{t('admin.programs.loading')}</div>
-          ) : (
-            <div className="space-y-6">
-              {groupBySchool(programs, schools).map((group) => (
-                <div key={group.key} className="space-y-3">
-                  <div className="flex items-center gap-2 border-b pb-1">
-                    <School className="h-4 w-4 text-primary" />
-                    <h3 className="text-sm font-semibold">{group.label}</h3>
-                    <span className="text-xs text-muted-foreground">({group.items.length})</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {group.items.map((p) => (
-                <Card
-                  key={p.id}
-                  className={`overflow-hidden hover:shadow-md transition-all ${!p.is_active ? "opacity-60" : ""}`}
-                >
-                  <CardContent className="p-0">
-                    {p.photos && p.photos.length > 0 && (
-                      <div className="relative h-28 w-full">
-                        <img
-                          src={p.photos[0]}
-                          alt={p.name_en}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                            <BookOpen className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold truncate">{p.name_en}</p>
-                            <p className="text-xs text-muted-foreground">{p.name_ar}</p>
-                          </div>
-                        </div>
-                        <Badge variant={p.is_active ? "default" : "secondary"} className="shrink-0 text-xs">
-                          {p.is_active ? t('admin.programs.statusActive') : t('admin.programs.statusInactive')}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                          <BadgeCheck className="h-3 w-3 me-1" />
-                          {p.type.replace("_", " ")}
-                        </span>
-                        {p.cefr_range && (
-                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                            {p.cefr_range}
-                          </span>
-                        )}
-                        {p.price != null && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
-                            💰 {p.price.toLocaleString('en-US')} {p.currency}
-                          </span>
-                        )}
-                        {parseTiers(p.price_tiers).length > 0 && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
-                            {t('admin.programs.tiersCount', { count: parseTiers(p.price_tiers).length })}
-                          </span>
-                        )}
-                        {p.duration_in_months && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.new}`}>
-                            <Clock className="h-3 w-3 me-1" />
-                            {p.duration_in_months}mo
-                          </span>
-                        )}
-                        {p.lessons_per_week && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.appointment}`}>
-                            {p.lessons_per_week} {t('admin.programs.lessonsWk')}
-                          </span>
-                        )}
-                        {p.fixed_start_day_of_month && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
-                            {t('admin.programs.startsDay', { day: p.fixed_start_day_of_month })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-xs"
-                        onClick={() => openEditProgram(p)}
-                      >
-                        <Pencil className="h-3 w-3" />
-                        {t('admin.programs.btnEdit')}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-xs"
-                        onClick={() => toggleActive("programs", p.id, p.is_active)}
-                      >
-                        {p.is_active ? (
-                          <>
-                            <Pause className="h-3 w-3" />
-                            {t('admin.programs.btnPause')}
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-3 w-3" />
-                            {t('admin.programs.btnActivate')}
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => deleteRecord("programs", p.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        {t('admin.programs.btnDelete')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {programs.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-8">{t('admin.programs.noPrograms')}</p>
-              )}
-            </div>
-          )}
-        </TabsContent>
+      <Separator />
 
-        {/* Schools Tab */}
-        <TabsContent value="schools" className="space-y-4 mt-4">
-          <div className="flex justify-end">
-            <Dialog
-              open={schoolOpen}
-              onOpenChange={(v) => {
-                setSchoolOpen(v);
-                if (!v) {
-                  setEditSchoolId(null);
-                  setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] });
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {t('admin.programs.addSchool')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{editSchoolId ? t('admin.programs.editSchool') : t('admin.programs.addSchool')}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelNameEn')}</Label>
-                      <Input
-                        value={schoolForm.name_en}
-                        onChange={(e) => setSchoolForm((f) => ({ ...f, name_en: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelNameAr')}</Label>
-                      <Input
-                        value={schoolForm.name_ar}
-                        onChange={(e) => setSchoolForm((f) => ({ ...f, name_ar: e.target.value }))}
-                        dir="rtl"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelCity')}</Label>
-                      <Input
-                        value={schoolForm.city}
-                        onChange={(e) => setSchoolForm((f) => ({ ...f, city: e.target.value }))}
-                        placeholder="Berlin"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelCountry')}</Label>
-                      <Input
-                        value={schoolForm.country}
-                        onChange={(e) => setSchoolForm((f) => ({ ...f, country: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <PhotoUploader
-                    photos={schoolForm.photos}
-                    onChange={(photos) => setSchoolForm((f) => ({ ...f, photos }))}
-                    folder="schools"
-                    label={t('admin.programs.labelPhotos')}
-                  />
-                  <Button className="w-full" onClick={saveSchool} disabled={saving}>
-                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {schools.map((s) => (
-              <Card
-                key={s.id}
-                className={`overflow-hidden hover:shadow-md transition-all ${!s.is_active ? "opacity-60" : ""}`}
-              >
-                <CardContent className="p-0">
-                  {s.photos && s.photos.length > 0 && (
-                    <div className="relative h-28 w-full">
-                      <img
-                        src={s.photos[0]}
-                        alt={s.name_en}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-submitted)/0.12)]">
-                        <Building2 className={`h-4 w-4 ${TONE_TEXT.submitted}`} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{s.name_en}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {[s.city, s.country].filter(Boolean).join(", ")}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t('admin.programs.accommodationsLinked', { count: accommodations.filter((a) => a.school_id === s.id).length })}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
-                    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditSchool(s)}>
-                      <Pencil className="h-3 w-3" />
-                      {t('admin.programs.btnEdit')}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => toggleActive("schools", s.id, s.is_active)}
-                    >
-                      {s.is_active ? (
-                        <>
-                          <Pause className="h-3 w-3" />
-                          {t('admin.programs.btnPause')}
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-3 w-3" />
-                          {t('admin.programs.btnActivate')}
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => deleteRecord("schools", s.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      {t('admin.programs.btnDelete')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {!loading && schools.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noSchools')}</p>
-            )}
-          </div>
-        </TabsContent>
+      <InsuranceSection
+        insurances={insurances}
+        loading={loading}
+        addTrigger={
+          <Button size="sm" className="gap-2" onClick={() => setInsOpen(true)}>
+            <Plus className="h-4 w-4" />
+            {t('admin.programs.addInsurance')}
+          </Button>
+        }
+        onEdit={openEditIns}
+        onToggle={(i) => toggleActive("insurances", i.id, i.is_active)}
+        onDelete={(i) => deleteRecord("insurances", i.id)}
+      />
 
-        {/* Accommodations Tab */}
-        <TabsContent value="accommodations" className="space-y-4 mt-4">
-          <div className="flex justify-end">
-            <Dialog
-              open={accomOpen}
-              onOpenChange={(v) => {
-                setAccomOpen(v);
-                if (!v) {
-                  setEditAccomId(null);
-                  setAccomForm(emptyAccomForm);
-                  setAccomTiers([]);
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {t('admin.programs.addAccommodation')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{editAccomId ? t('admin.programs.editAccommodation') : t('admin.programs.addAccommodation')}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelNameEn')}</Label>
-                      <Input
-                        value={accomForm.name_en}
-                        onChange={(e) => setAccomForm((f) => ({ ...f, name_en: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelNameAr')}</Label>
-                      <Input
-                        value={accomForm.name_ar}
-                        onChange={(e) => setAccomForm((f) => ({ ...f, name_ar: e.target.value }))}
-                        dir="rtl"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelLinkedSchool')}</Label>
-                    <Select
-                      value={accomForm.school_id}
-                      onValueChange={(v) => setAccomForm((f) => ({ ...f, school_id: v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('admin.programs.selectSchoolPlaceholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {schools
-                          .filter((s) => s.is_active)
-                          .map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name_en}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelPriceMonth')}</Label>
-                      <Input
-                        type="number"
-                        value={accomForm.price}
-                        onChange={(e) => setAccomForm((f) => ({ ...f, price: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelCurrency')}</Label>
-                      <Select
-                        value={accomForm.currency}
-                        onValueChange={(v) => setAccomForm((f) => ({ ...f, currency: v }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="ILS">ILS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelDescription')}</Label>
-                    <Input
-                      value={accomForm.description}
-                      onChange={(e) => setAccomForm((f) => ({ ...f, description: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelRoomType')}</Label>
-                      <Input
-                        value={accomForm.room_type}
-                        onChange={(e) => setAccomForm((f) => ({ ...f, room_type: e.target.value }))}
-                        placeholder="Single / Shared"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelMeals')}</Label>
-                      <Input
-                        value={accomForm.meals}
-                        onChange={(e) => setAccomForm((f) => ({ ...f, meals: e.target.value }))}
-                        placeholder="Breakfast / None"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelDeposit')}</Label>
-                      <Input
-                        type="number"
-                        value={accomForm.deposit}
-                        onChange={(e) => setAccomForm((f) => ({ ...f, deposit: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelPlacementFee')}</Label>
-                      <Input
-                        type="number"
-                        value={accomForm.placement_fee}
-                        onChange={(e) => setAccomForm((f) => ({ ...f, placement_fee: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelDistanceNote')}</Label>
-                    <Input
-                      value={accomForm.distance_note}
-                      onChange={(e) => setAccomForm((f) => ({ ...f, distance_note: e.target.value }))}
-                    />
-                  </div>
-                  <PriceTiersEditor tiers={accomTiers} onChange={setAccomTiers} />
-                  <PhotoUploader
-                    photos={accomForm.photos}
-                    onChange={(photos) => setAccomForm((f) => ({ ...f, photos }))}
-                    folder="accommodations"
-                    label={t('admin.programs.labelPhotos')}
-                  />
-                  <Button className="w-full" onClick={saveAccom} disabled={saving}>
-                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="space-y-6">
-            {groupBySchool(accommodations, schools).map((group) => (
-              <div key={group.key} className="space-y-3">
-                <div className="flex items-center gap-2 border-b pb-1">
-                  <Building2 className={`h-4 w-4 ${TONE_TEXT.payment}`} />
-                  <h3 className="text-sm font-semibold">{group.label}</h3>
-                  <span className="text-xs text-muted-foreground">({group.items.length})</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {group.items.map((a) => {
-              const linkedSchool = schools.find((s) => s.id === a.school_id);
-              return (
-                <Card
-                  key={a.id}
-                  className={`overflow-hidden hover:shadow-md transition-all ${!a.is_active ? "opacity-60" : ""}`}
-                >
-                  <CardContent className="p-0">
-                    {a.photos && a.photos.length > 0 && (
-                      <div className="relative h-28 w-full">
-                        <img
-                          src={a.photos[0]}
-                          alt={a.name_en}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-payment)/0.12)]">
-                          <Home className={`h-4 w-4 ${TONE_TEXT.payment}`} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold">{a.name_en}</p>
-                          {linkedSchool && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Building2 className="h-3 w-3" />
-                              {linkedSchool.name_en}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {a.price != null && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
-                            💰 {a.price.toLocaleString('en-US')} {a.currency}/mo
-                          </span>
-                        )}
-                        {a.room_type && (
-                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                            {a.room_type}
-                          </span>
-                        )}
-                        {a.meals && (
-                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                            {a.meals}
-                          </span>
-                        )}
-                        {a.deposit != null && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.new}`}>
-                            {t('admin.programs.labelDeposit')}: {a.deposit.toLocaleString('en-US')} {a.currency}
-                          </span>
-                        )}
-                        {a.placement_fee != null && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.appointment}`}>
-                            {t('admin.programs.labelPlacementFee')}: {a.placement_fee.toLocaleString('en-US')} {a.currency}
-                          </span>
-                        )}
-                        {parseTiers(a.price_tiers).length > 0 && (
-                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${TONE.payment}`}>
-                            {formatTierLadder(parseTiers(a.price_tiers), a.currency, t('admin.programs.weeksShort'))}
-                          </span>
-                        )}
-                      </div>
-                      {a.distance_note && <p className="text-xs text-muted-foreground">{a.distance_note}</p>}
-                      {a.description && <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>}
-                    </div>
-                    <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
-                      <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditAccom(a)}>
-                        <Pencil className="h-3 w-3" />
-                        {t('admin.programs.btnEdit')}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-xs"
-                        onClick={() => toggleActive("accommodations", a.id, a.is_active)}
-                      >
-                        {a.is_active ? (
-                          <>
-                            <Pause className="h-3 w-3" />
-                            {t('admin.programs.btnPause')}
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-3 w-3" />
-                            {t('admin.programs.btnActivate')}
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => deleteRecord("accommodations", a.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        {t('admin.programs.btnDelete')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-                  })}
-                </div>
+      {/* Program dialog — school is inherited from the profile context when locked */}
+      <Dialog
+        open={progOpen}
+        onOpenChange={(v) => {
+          setProgOpen(v);
+          if (!v) {
+            setEditProgId(null);
+            setProgForm(emptyProgForm);
+            setProgTiers([]);
+            setProgSchoolLocked(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editProgId ? t('admin.programs.editProgram') : t('admin.programs.addProgram')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelNameEn')}</Label>
+                <Input
+                  value={progForm.name_en}
+                  onChange={(e) => setProgForm((f) => ({ ...f, name_en: e.target.value }))}
+                />
               </div>
-            ))}
-            {!loading && accommodations.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">{t('admin.programs.noAccommodations')}</p>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelNameAr')}</Label>
+                <Input
+                  value={progForm.name_ar}
+                  onChange={(e) => setProgForm((f) => ({ ...f, name_ar: e.target.value }))}
+                  dir="rtl"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelType')}</Label>
+              <Select value={progForm.type} onValueChange={(v) => setProgForm((f) => ({ ...f, type: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROGRAM_TYPES.map((tp) => (
+                    <SelectItem key={tp} value={tp}>
+                      {tp.replace("_", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelPrice')}</Label>
+                <Input
+                  type="number"
+                  value={progForm.price}
+                  onChange={(e) => setProgForm((f) => ({ ...f, price: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelCurrency')}</Label>
+                <Select
+                  value={progForm.currency}
+                  onValueChange={(v) => setProgForm((f) => ({ ...f, currency: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="ILS">ILS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelDuration')}</Label>
+                <Input
+                  value={progForm.duration}
+                  onChange={(e) => setProgForm((f) => ({ ...f, duration: e.target.value }))}
+                  placeholder="6 months"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelLessonsWeek')}</Label>
+                <Input
+                  type="number"
+                  value={progForm.lessons_per_week}
+                  onChange={(e) => setProgForm((f) => ({ ...f, lessons_per_week: e.target.value }))}
+                  placeholder="20"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelDurationMonths')}</Label>
+                <Input
+                  type="number"
+                  value={progForm.duration_in_months}
+                  onChange={(e) => setProgForm((f) => ({ ...f, duration_in_months: e.target.value }))}
+                  placeholder="6"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelFixedStartDay')}</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="28"
+                  value={progForm.fixed_start_day_of_month}
+                  onChange={(e) => setProgForm((f) => ({ ...f, fixed_start_day_of_month: e.target.value }))}
+                  placeholder="1"
+                />
+              </div>
+            </div>
+            {!progSchoolLocked && (
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelLinkedSchool')}</Label>
+                <Select
+                  value={progForm.school_id || "none"}
+                  onValueChange={(v) => setProgForm((f) => ({ ...f, school_id: v === "none" ? "" : v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('admin.programs.selectSchoolPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('admin.programs.noSchoolOption')}</SelectItem>
+                    {schools.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-          </div>
-        </TabsContent>
-
-        {/* Insurance Tab */}
-        <TabsContent value="insurance" className="space-y-4 mt-4">
-          <div className="flex justify-end">
-            <Dialog
-              open={insOpen}
-              onOpenChange={(v) => {
-                setInsOpen(v);
-                if (!v) {
-                  setEditInsId(null);
-                  setInsForm(emptyInsForm);
-                  setInsRates([]);
-                }
-
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {t('admin.programs.addInsurance')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-
-                <DialogHeader>
-                  <DialogTitle>{editInsId ? t('admin.programs.editInsurance') : t('admin.programs.addInsurance')}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelName')}</Label>
-                    <Input
-                      value={insForm.name}
-                      onChange={(e) => setInsForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="e.g. Public Health Insurance"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelTier')}</Label>
-                    <Select value={insForm.tier} onValueChange={(v) => setInsForm((f) => ({ ...f, tier: v }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {INSURANCE_TIERS.map((tp) => (
-                          <SelectItem key={tp} value={tp}>
-                            {tp.charAt(0).toUpperCase() + tp.slice(1)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelPriceMonth')}</Label>
-                      <Input
-                        type="number"
-                        value={insForm.price}
-                        onChange={(e) => setInsForm((f) => ({ ...f, price: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelCurrency')}</Label>
-                      <Select
-                        value={insForm.currency}
-                        onValueChange={(v) => setInsForm((f) => ({ ...f, currency: v }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="ILS">ILS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <InsuranceRatesEditor
-                    tiers={insRates}
-                    currency={insForm.currency}
-                    onChange={setInsRates}
-                  />
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelProvider')}</Label>
-                      <Input
-                        value={insForm.provider}
-                        onChange={(e) => setInsForm((f) => ({ ...f, provider: e.target.value }))}
-                        placeholder="MAWISTA"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelCoverageScope')}</Label>
-                      <Select
-                        value={insForm.coverage_scope}
-                        onValueChange={(v) => setInsForm((f) => ({ ...f, coverage_scope: v }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {COVERAGE_SCOPES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {t(`admin.programs.coverage.${s}`)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelMinMonths')}</Label>
-                      <Input
-                        type="number"
-                        value={insForm.min_months}
-                        onChange={(e) => setInsForm((f) => ({ ...f, min_months: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelMaxMonths')}</Label>
-                      <Input
-                        type="number"
-                        value={insForm.max_months}
-                        onChange={(e) => setInsForm((f) => ({ ...f, max_months: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelMaxAge')}</Label>
-                      <Input
-                        type="number"
-                        value={insForm.max_age}
-                        onChange={(e) => setInsForm((f) => ({ ...f, max_age: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>{t('admin.programs.labelTermsUrl')}</Label>
-                    <Input
-                      value={insForm.terms_url}
-                      onChange={(e) => setInsForm((f) => ({ ...f, terms_url: e.target.value }))}
-                      placeholder="https://…"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelDescAr')}</Label>
-                      <textarea
-                        dir="rtl"
-                        rows={3}
-                        className="w-full rounded-md border bg-background p-2 text-sm"
-                        value={insForm.description_ar}
-                        onChange={(e) => setInsForm((f) => ({ ...f, description_ar: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('admin.programs.labelDescEn')}</Label>
-                      <textarea
-                        rows={3}
-                        className="w-full rounded-md border bg-background p-2 text-sm"
-                        value={insForm.description_en}
-                        onChange={(e) => setInsForm((f) => ({ ...f, description_en: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <PhotoUploader
-                    photos={insForm.photos}
-                    onChange={(photos) => setInsForm((f) => ({ ...f, photos }))}
-                    folder="insurance"
-                    label={t('admin.programs.labelPhotos')}
-                  />
-                  <Button className="w-full" onClick={saveIns} disabled={saving}>
-                    {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {insurances.map((ins) => (
-              <Card
-                key={ins.id}
-                className={`overflow-hidden hover:shadow-md transition-all ${!ins.is_active ? "opacity-60" : ""}`}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelCefr')}</Label>
+                <Input
+                  value={progForm.cefr_range}
+                  onChange={(e) => setProgForm((f) => ({ ...f, cefr_range: e.target.value }))}
+                  placeholder="A1-C1"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelHoursWeek')}</Label>
+                <Input
+                  type="number"
+                  step="0.25"
+                  value={progForm.hours_per_week}
+                  onChange={(e) => setProgForm((f) => ({ ...f, hours_per_week: e.target.value }))}
+                  placeholder="15"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelRegistrationFee')}</Label>
+                <Input
+                  type="number"
+                  value={progForm.registration_fee}
+                  onChange={(e) => setProgForm((f) => ({ ...f, registration_fee: e.target.value }))}
+                  placeholder="60"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelStartRule')}</Label>
+              <Select
+                value={progForm.start_rule || "none"}
+                onValueChange={(v) => setProgForm((f) => ({ ...f, start_rule: v === "none" ? "" : v }))}
               >
-                <CardContent className="p-0">
-                  {ins.photos && ins.photos.length > 0 && (
-                    <div className="relative h-28 w-full">
-                      <img
-                        src={ins.photos[0]}
-                        alt={ins.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[hsl(var(--status-enrolled)/0.12)]">
-                        <Shield className={`h-4 w-4 ${TONE_TEXT.enrolled}`} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{ins.name}</p>
-                        <Badge className={`text-xs mt-0.5 ${tierColor[ins.tier] ?? "bg-muted text-muted-foreground"}`}>
-                          {ins.tier}
-                        </Badge>
-                      </div>
-                    </div>
-                    {parseAgeTiers(ins.age_price_tiers).length > 0 ? (
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
-                        💰 {formatAgeLadder(
-                          parseAgeTiers(ins.age_price_tiers),
-                          ins.currency === "EUR" ? "€" : "₪",
-                          t('admin.programs.ageAndAbove'),
-                        )}
-                      </span>
-                    ) : ins.price > 0 ? (
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.enrolled}`}>
-                        💰 {ins.price.toLocaleString('en-US')} {ins.currency}/mo
-                      </span>
-                    ) : (
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${TONE.payment}`}>
-                        {t('admin.programs.noPriceSet')}
-                      </span>
-                    )}
-
-                    {ins.provider && (
-                      <p className="text-xs text-muted-foreground">{ins.provider}</p>
-                    )}
-                    {ins.coverage_scope && (
-                      <p className="text-xs text-muted-foreground">{t(`admin.programs.coverage.${ins.coverage_scope}`)}</p>
-                    )}
-                    {(ins.min_months || ins.max_months || ins.max_age) && (
-                      <p className="text-xs text-muted-foreground">
-                        {ins.min_months && ins.max_months
-                          ? t('admin.programs.termRange', { min: ins.min_months, max: ins.max_months })
-                          : null}
-                        {ins.max_age ? ` · ${t('admin.programs.maxAgeShort', { age: ins.max_age })}` : null}
-                      </p>
-                    )}
-                    {ins.terms_url && (
-                      <a
-                        href={ins.terms_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-block text-xs font-medium text-primary underline"
-                      >
-                        {t('admin.programs.viewTerms')}
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-end gap-1 border-t bg-muted/30 px-3 py-2">
-                    <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => openEditIns(ins)}>
-                      <Pencil className="h-3 w-3" />
-                      {t('admin.programs.btnEdit')}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => toggleActive("insurances", ins.id, ins.is_active)}
-                    >
-                      {ins.is_active ? (
-                        <>
-                          <Pause className="h-3 w-3" />
-                          {t('admin.programs.btnPause')}
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-3 w-3" />
-                          {t('admin.programs.btnActivate')}
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => deleteRecord("insurances", ins.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      {t('admin.programs.btnDelete')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {!loading && insurances.length === 0 && (
-              <p className="col-span-3 text-center text-sm text-muted-foreground py-8">{t('admin.programs.noInsurance')}</p>
-            )}
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('admin.programs.startRule.none')}</SelectItem>
+                  <SelectItem value="every_monday">{t('admin.programs.startRule.every_monday')}</SelectItem>
+                  <SelectItem value="every_monday_a1_first_monday">
+                    {t('admin.programs.startRule.every_monday_a1_first_monday')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <PriceTiersEditor tiers={progTiers} onChange={setProgTiers} />
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelDescription')}</Label>
+              <Input
+                value={progForm.description}
+                onChange={(e) => setProgForm((f) => ({ ...f, description: e.target.value }))}
+              />
+            </div>
+            <PhotoUploader
+              photos={progForm.photos}
+              onChange={(photos) => setProgForm((f) => ({ ...f, photos }))}
+              folder="programs"
+              label={t('admin.programs.labelPhotos')}
+            />
+            <Button className="w-full" onClick={saveProgram} disabled={saving}>
+              {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
+            </Button>
           </div>
-        </TabsContent>
-      </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Accommodation dialog — school is inherited from the profile context when locked */}
+      <Dialog
+        open={accomOpen}
+        onOpenChange={(v) => {
+          setAccomOpen(v);
+          if (!v) {
+            setEditAccomId(null);
+            setAccomForm(emptyAccomForm);
+            setAccomTiers([]);
+            setAccomSchoolLocked(false);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editAccomId ? t('admin.programs.editAccommodation') : t('admin.programs.addAccommodation')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelNameEn')}</Label>
+                <Input
+                  value={accomForm.name_en}
+                  onChange={(e) => setAccomForm((f) => ({ ...f, name_en: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelNameAr')}</Label>
+                <Input
+                  value={accomForm.name_ar}
+                  onChange={(e) => setAccomForm((f) => ({ ...f, name_ar: e.target.value }))}
+                  dir="rtl"
+                />
+              </div>
+            </div>
+            {!accomSchoolLocked && (
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelLinkedSchool')}</Label>
+                <Select
+                  value={accomForm.school_id}
+                  onValueChange={(v) => setAccomForm((f) => ({ ...f, school_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('admin.programs.selectSchoolPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {schools
+                      .filter((s) => s.is_active)
+                      .map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name_en}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelPriceMonth')}</Label>
+                <Input
+                  type="number"
+                  value={accomForm.price}
+                  onChange={(e) => setAccomForm((f) => ({ ...f, price: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelCurrency')}</Label>
+                <Select
+                  value={accomForm.currency}
+                  onValueChange={(v) => setAccomForm((f) => ({ ...f, currency: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="ILS">ILS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelDescription')}</Label>
+              <Input
+                value={accomForm.description}
+                onChange={(e) => setAccomForm((f) => ({ ...f, description: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelRoomType')}</Label>
+                <Input
+                  value={accomForm.room_type}
+                  onChange={(e) => setAccomForm((f) => ({ ...f, room_type: e.target.value }))}
+                  placeholder="Single / Shared"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelMeals')}</Label>
+                <Input
+                  value={accomForm.meals}
+                  onChange={(e) => setAccomForm((f) => ({ ...f, meals: e.target.value }))}
+                  placeholder="Breakfast / None"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelDeposit')}</Label>
+                <Input
+                  type="number"
+                  value={accomForm.deposit}
+                  onChange={(e) => setAccomForm((f) => ({ ...f, deposit: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelPlacementFee')}</Label>
+                <Input
+                  type="number"
+                  value={accomForm.placement_fee}
+                  onChange={(e) => setAccomForm((f) => ({ ...f, placement_fee: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelDistanceNote')}</Label>
+              <Input
+                value={accomForm.distance_note}
+                onChange={(e) => setAccomForm((f) => ({ ...f, distance_note: e.target.value }))}
+              />
+            </div>
+            <PriceTiersEditor tiers={accomTiers} onChange={setAccomTiers} />
+            <PhotoUploader
+              photos={accomForm.photos}
+              onChange={(photos) => setAccomForm((f) => ({ ...f, photos }))}
+              folder="accommodations"
+              label={t('admin.programs.labelPhotos')}
+            />
+            <Button className="w-full" onClick={saveAccom} disabled={saving}>
+              {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Insurance dialog */}
+      <Dialog
+        open={insOpen}
+        onOpenChange={(v) => {
+          setInsOpen(v);
+          if (!v) {
+            setEditInsId(null);
+            setInsForm(emptyInsForm);
+            setInsRates([]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editInsId ? t('admin.programs.editInsurance') : t('admin.programs.addInsurance')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelName')}</Label>
+              <Input
+                value={insForm.name}
+                onChange={(e) => setInsForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. Public Health Insurance"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelTier')}</Label>
+              <Select value={insForm.tier} onValueChange={(v) => setInsForm((f) => ({ ...f, tier: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {INSURANCE_TIERS.map((tp) => (
+                    <SelectItem key={tp} value={tp}>
+                      {tp.charAt(0).toUpperCase() + tp.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelPriceMonth')}</Label>
+                <Input
+                  type="number"
+                  value={insForm.price}
+                  onChange={(e) => setInsForm((f) => ({ ...f, price: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelCurrency')}</Label>
+                <Select
+                  value={insForm.currency}
+                  onValueChange={(v) => setInsForm((f) => ({ ...f, currency: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="ILS">ILS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <InsuranceRatesEditor
+              tiers={insRates}
+              currency={insForm.currency}
+              onChange={setInsRates}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelProvider')}</Label>
+                <Input
+                  value={insForm.provider}
+                  onChange={(e) => setInsForm((f) => ({ ...f, provider: e.target.value }))}
+                  placeholder="MAWISTA"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelCoverageScope')}</Label>
+                <Select
+                  value={insForm.coverage_scope}
+                  onValueChange={(v) => setInsForm((f) => ({ ...f, coverage_scope: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COVERAGE_SCOPES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {t(`admin.programs.coverage.${s}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelMinMonths')}</Label>
+                <Input
+                  type="number"
+                  value={insForm.min_months}
+                  onChange={(e) => setInsForm((f) => ({ ...f, min_months: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelMaxMonths')}</Label>
+                <Input
+                  type="number"
+                  value={insForm.max_months}
+                  onChange={(e) => setInsForm((f) => ({ ...f, max_months: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelMaxAge')}</Label>
+                <Input
+                  type="number"
+                  value={insForm.max_age}
+                  onChange={(e) => setInsForm((f) => ({ ...f, max_age: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('admin.programs.labelTermsUrl')}</Label>
+              <Input
+                value={insForm.terms_url}
+                onChange={(e) => setInsForm((f) => ({ ...f, terms_url: e.target.value }))}
+                placeholder="https://…"
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelDescAr')}</Label>
+                <textarea
+                  dir="rtl"
+                  rows={3}
+                  className="w-full rounded-md border bg-background p-2 text-sm"
+                  value={insForm.description_ar}
+                  onChange={(e) => setInsForm((f) => ({ ...f, description_ar: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>{t('admin.programs.labelDescEn')}</Label>
+                <textarea
+                  rows={3}
+                  className="w-full rounded-md border bg-background p-2 text-sm"
+                  value={insForm.description_en}
+                  onChange={(e) => setInsForm((f) => ({ ...f, description_en: e.target.value }))}
+                />
+              </div>
+            </div>
+            <PhotoUploader
+              photos={insForm.photos}
+              onChange={(photos) => setInsForm((f) => ({ ...f, photos }))}
+              folder="insurance"
+              label={t('admin.programs.labelPhotos')}
+            />
+            <Button className="w-full" onClick={saveIns} disabled={saving}>
+              {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
