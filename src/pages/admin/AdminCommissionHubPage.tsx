@@ -132,18 +132,6 @@ const AdminCommissionHubPage: React.FC = () => {
         </div>
       )}
 
-      {/* Model banner */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20 text-sm">
-        <DollarSign className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-        <p className="text-foreground">
-          {t(
-            "commissionHub.modelBanner",
-            "Agent commissions are ADDITIVE: paid on top of the partner's full pool share, funded from Darb's margin. The partner always keeps their full ₪{{pool}}.",
-            { pool: fmtILS(g?.partner) },
-          )}
-        </p>
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <SegmentedTabs
           items={[

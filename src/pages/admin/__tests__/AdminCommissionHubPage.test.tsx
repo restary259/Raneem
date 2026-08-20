@@ -95,14 +95,6 @@ describe("AdminCommissionHubPage", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
-  it("renders the additive-model banner", async () => {
-    renderPage();
-    await waitFor(() => {
-      expect(screen.getByText(/Commission Hub/i)).toBeInTheDocument();
-    });
-    expect(screen.getByText(/ADDITIVE/i)).toBeInTheDocument();
-  });
-
   it("calls admin_set_commission with the right args when a global rate is saved", async () => {
     const user = userEvent.setup();
     renderPage();
