@@ -182,10 +182,35 @@ serve(async (req) => {
     // handle_new_user has created the profile row (avoids the upsert/trigger
     // race where the upsert lands before the trigger row exists). Applies to
     // adopted accounts too: their password was just replaced with the temp one.
-    await supabaseAdmin
+    // The temp password must never reach the caller unless this flag is
+    // confirmed persisted, so verify with a re-select after the update.
+    const { error: stampError } = await supabaseAdmin
       .from("profiles")
       .update({ must_change_password: true })
       .eq("id", userId);
+    if (stampError) {
+      // userId is logged deliberately: on this path the account exists but its
+      // temp password was never returned to anyone — this line is the only
+      // recovery handle for an operator (the audit insert below never runs).
+      console.error("must_change_password stamp error:", stampError, { userId });
+      return new Response(
+        JSON.stringify({ error: "Account created but password-change flag could not be set" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const { data: stampCheck, error: stampCheckError } = await supabaseAdmin
+      .from("profiles")
+      .select("must_change_password")
+      .eq("id", userId)
+      .maybeSingle();
+    if (stampCheckError || stampCheck?.must_change_password !== true) {
+      console.error("must_change_password verification failed:", stampCheckError ?? stampCheck, { userId });
+      return new Response(
+        JSON.stringify({ error: "Account created but password-change flag could not be verified" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
 
     await supabaseAdmin

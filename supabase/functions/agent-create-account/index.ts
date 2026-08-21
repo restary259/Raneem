@@ -156,13 +156,28 @@ serve(async (req) => {
     // Separately stamp the agent-controlled fields — must be a dedicated UPDATE
     // so it fires AFTER handle_new_user has created the profile row. Runs for
     // adopted accounts too: the recruit must join this agent's network, and
-    // their password was just replaced with the temp one.
+    // their password was just replaced with the temp one. The temp password
+    // must never reach the caller unless the forced-change flag is confirmed
+    // persisted, so verify with a re-select after the update.
     const { error: stampError } = await admin.from("profiles")
       .update({ agent_id: agentId, must_change_password: true })
       .eq("id", userId);
     if (stampError) {
-      console.error("profile stamp error:", stampError);
+      console.error("profile stamp error:", stampError, { userId });
       return json({ error: "Could not link account to agent network" }, 500);
+    }
+
+    const { data: stampCheck, error: stampCheckError } = await admin
+      .from("profiles")
+      .select("must_change_password")
+      .eq("id", userId)
+      .maybeSingle();
+    if (stampCheckError || stampCheck?.must_change_password !== true) {
+      // userId is logged deliberately: on this path the account exists but its
+      // temp password was never returned to anyone — this line is the only
+      // recovery handle for an operator.
+      console.error("must_change_password verification failed:", stampCheckError ?? stampCheck, { userId });
+      return json({ error: "Account created but password-change flag could not be verified" }, 500);
     }
 
     // Close any pending invitation for this email so it doesn't linger.
