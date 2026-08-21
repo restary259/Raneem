@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { validatePassword } from "@/components/auth/PasswordStrength";
 import { User, Lock, ShieldCheck, ChevronRight } from "lucide-react";
+import { changeOwnPassword } from "@/lib/changeOwnPassword";
 
 interface AgentProfile {
   id: string;
@@ -96,12 +97,14 @@ export default function AgentSettingsPage() {
       return;
     }
     setChangingPw(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setChangingPw(false);
-    if (error) {
+    try {
+      await changeOwnPassword(newPassword);
+    } catch {
+      setChangingPw(false);
       toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
       return;
     }
+    setChangingPw(false);
     setNewPassword("");
     setConfirmPassword("");
     toast({ description: t("partner.profile.passwordChanged") });

@@ -12,6 +12,7 @@ import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { validatePassword } from "@/components/auth/PasswordStrength";
 import { buildReferralUrl } from "@/lib/referral";
 import { User, Lock, Link2, Copy, Check, ChevronRight } from "lucide-react";
+import { changeOwnPassword } from "@/lib/changeOwnPassword";
 
 interface PartnerProfile {
   id: string;
@@ -101,12 +102,14 @@ export default function PartnerProfilePage() {
       return;
     }
     setChangingPw(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setChangingPw(false);
-    if (error) {
+    try {
+      await changeOwnPassword(newPassword);
+    } catch {
+      setChangingPw(false);
       toast({ variant: "destructive", title: t("common.error"), description: t("common.actionFailed") });
       return;
     }
+    setChangingPw(false);
     setNewPassword("");
     setConfirmPassword("");
     toast({ description: t("partner.profile.passwordChanged") });

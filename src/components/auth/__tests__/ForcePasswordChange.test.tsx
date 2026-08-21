@@ -4,10 +4,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 /**
- * Contract under test: once supabase.auth.updateUser succeeds, the user must
- * never be trapped on the force-password screen. A failed flag-clearing RPC
- * (missing function, blocking trigger, network) degrades to a warning toast +
- * onDone(), not a permanent blocker.
+ * Contract under test: the gate opens only after the unified server boundary
+ * confirms both the Auth update and profile-flag persistence.
  */
 
 const toast = vi.fn();
@@ -25,15 +23,12 @@ vi.mock('@/components/auth/PasswordStrength', () => ({
   validatePassword: (pw: string) => pw.length >= 10,
 }));
 
-let updateUserResult: { error: any };
-let rpcResult: { error: any };
-const updateUser = vi.fn(async (_patch: any) => updateUserResult);
-const rpc = vi.fn(async (_name: string) => rpcResult);
+let invokeResult: { data: any; error: any };
+const invoke = vi.fn(async (_name: string, _options: any) => invokeResult);
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    auth: { updateUser: (...a: any[]) => updateUser(a[0]) },
-    rpc: (...a: any[]) => rpc(a[0]),
+    functions: { invoke: (...a: any[]) => invoke(a[0], a[1]) },
   },
 }));
 
@@ -41,10 +36,8 @@ import ForcePasswordChange from '../ForcePasswordChange';
 
 beforeEach(() => {
   toast.mockClear();
-  updateUser.mockClear();
-  rpc.mockClear();
-  updateUserResult = { error: null };
-  rpcResult = { error: null };
+  invoke.mockClear();
+  invokeResult = { data: { success: true }, error: null };
 });
 
 const typeAndSubmit = async (onDone: () => void) => {
@@ -56,28 +49,18 @@ const typeAndSubmit = async (onDone: () => void) => {
   await userEvent.click(screen.getByRole('button', { name: /forcePassword\.submit/ }));
 };
 
-describe('ForcePasswordChange — flag-clear resilience', () => {
-  it('clears the flag via RPC and proceeds on the happy path', async () => {
+describe('ForcePasswordChange — verified password boundary', () => {
+  it('uses the unified function and proceeds on the happy path', async () => {
     const onDone = vi.fn();
     await typeAndSubmit(onDone);
-    await waitFor(() => expect(rpc).toHaveBeenCalledWith('clear_must_change_password'));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith('change-own-password', {
+      body: { password: 'Str0ng!Passw0rd' },
+    }));
     expect(onDone).toHaveBeenCalled();
   });
 
-  it('still calls onDone with a warning when the flag RPC is missing or blocked', async () => {
-    rpcResult = { error: { message: 'Could not find the function public.clear_must_change_password' } };
-    const onDone = vi.fn();
-    await typeAndSubmit(onDone);
-    await waitFor(() =>
-      expect(toast).toHaveBeenCalledWith(
-        expect.objectContaining({ variant: 'destructive' }),
-      ),
-    );
-    expect(onDone).toHaveBeenCalled();
-  });
-
-  it('does not call onDone when the password update itself fails', async () => {
-    updateUserResult = { error: { message: 'Auth session missing' } };
+  it('keeps the gate closed when the server cannot verify completion', async () => {
+    invokeResult = { data: null, error: new Error('Function failed') };
     const onDone = vi.fn();
     await typeAndSubmit(onDone);
     await waitFor(() =>
@@ -86,6 +69,18 @@ describe('ForcePasswordChange — flag-clear resilience', () => {
       ),
     );
     expect(onDone).not.toHaveBeenCalled();
-    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('does not call onDone when the password update itself fails', async () => {
+    invokeResult = { data: null, error: new Error('Auth session missing') };
+    const onDone = vi.fn();
+    await typeAndSubmit(onDone);
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'destructive' }),
+      ),
+    );
+    expect(onDone).not.toHaveBeenCalled();
+    expect(invoke).toHaveBeenCalledOnce();
   });
 });

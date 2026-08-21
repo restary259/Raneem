@@ -9,6 +9,7 @@ import { KeyRound, Loader2, Eye, EyeOff } from 'lucide-react';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { friendlyAuthError } from '@/lib/authError';
 import { useToast } from '@/hooks/use-toast';
+import { changeOwnPassword } from '@/lib/changeOwnPassword';
 
 interface Props {
   userId: string;
@@ -40,26 +41,7 @@ const ForcePasswordChange: React.FC<Props> = ({ userId, onDone }) => {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      // A retry after an already-successful change reports "same password" — that is not a
-      // failure here, the flag below still needs clearing.
-      if (error && !/same[_ ]password|different from the old/i.test(error.message)) throw error;
-      const { error: flagError } = await (supabase as any).rpc('clear_must_change_password');
-      if (flagError) {
-        // The password IS changed at this point; a missing RPC or a blocking
-        // trigger must not trap the user on this screen forever. Warn and let
-        // them through — an admin can clear the flag manually.
-        console.error('clear_must_change_password failed:', flagError);
-        toast({
-          variant: 'destructive',
-          description: t(
-            'forcePassword.flagClearFailed',
-            'Password updated, but your session flag could not be cleared. Contact your admin if this screen reappears.',
-          ),
-        });
-        onDone();
-        return;
-      }
+      await changeOwnPassword(password);
       toast({ description: t('forcePassword.success') });
       onDone();
     } catch (err: any) {

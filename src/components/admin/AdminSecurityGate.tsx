@@ -10,6 +10,7 @@ import { toneClasses } from '@/lib/statusTokens';
 import { validatePassword } from '@/components/auth/PasswordStrength';
 import PasswordStrength from '@/components/auth/PasswordStrength';
 import { useToast } from '@/hooks/use-toast';
+import { changeOwnPassword } from '@/lib/changeOwnPassword';
 
 // Step order for existing admin WITH enrolled TOTP:
 //   checking → verify-totp (elevate to AAL2) → force-password (if needed) → done
@@ -117,21 +118,7 @@ const AdminSecurityGate: React.FC<Props> = ({ userId, onCleared }) => {
         return;
       }
 
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        if (error.message.toLowerCase().includes('session') || error.message.toLowerCase().includes('missing')) {
-          toast({ variant: 'destructive', title: 'Session expired', description: 'Please log in again.' });
-          await supabase.auth.signOut();
-          return;
-        }
-        throw error;
-      }
-      // If this flag is not cleared the user is forced through the gate again
-      // on every login, so the failure must surface instead of being dropped.
-      // Clear via the security-definer RPC: restrict_profiles_write blocks
-      // direct non-admin writes to the column.
-      const { error: flagError } = await (supabase as any).rpc('clear_must_change_password');
-      if (flagError) throw flagError;
+      await changeOwnPassword(newPassword);
       toast({ title: '✅ Password updated' });
 
       // After password change, check if TOTP is enrolled
