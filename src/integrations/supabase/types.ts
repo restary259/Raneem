@@ -4794,22 +4794,22 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
-      get_agent_commission_rate: {
-        Args: { p_agent_id: string }
-        Returns: number
-      }
       get_admin_cash_collections: {
         Args: never
         Returns: {
           amount: number
           case_id: string
           case_reference: string
-          collected_at: string | null
+          collected_at: string
           payment_id: string
           student_name: string
-          team_member_id: string | null
-          team_member_name: string | null
+          team_member_id: string
+          team_member_name: string
         }[]
+      }
+      get_agent_commission_rate: {
+        Args: { p_agent_id: string }
+        Returns: number
       }
       get_agent_list: { Args: never; Returns: Json }
       get_agent_network_detail: { Args: { p_agent_id: string }; Returns: Json }
@@ -4829,6 +4829,7 @@ export type Database = {
           target: string
         }[]
       }
+      get_auth_user_id_by_email: { Args: { p_email: string }; Returns: string }
       get_case_darb_service_total: {
         Args: { p_case_id: string }
         Returns: number
@@ -4936,10 +4937,10 @@ export type Database = {
           amount_owed_to_admin: number
           case_id: string
           case_reference: string
-          collected_at: string | null
+          collected_at: string
           debt_status: string
           payment_id: string
-          settled_at: string | null
+          settled_at: string
           student_name: string
         }[]
       }
@@ -5055,10 +5056,10 @@ export type Database = {
           amount_owed_to_admin: number
           case_id: string
           case_reference: string
-          collected_at: string | null
+          collected_at: string
           debt_status: string
           payment_id: string
-          settled_at: string | null
+          settled_at: string
           student_name: string
         }[]
       }
@@ -5583,10 +5584,7 @@ export type Database = {
         Args: { p_case_id: string; p_items: Json }
         Returns: Json
       }
-      settle_cash_collection: {
-        Args: { p_case_id: string }
-        Returns: Json
-      }
+      settle_cash_collection: { Args: { p_case_id: string }; Returns: Json }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       start_student_team_member_thread: { Args: never; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
