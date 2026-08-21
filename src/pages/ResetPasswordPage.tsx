@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import PasswordStrength, { validatePassword } from '@/components/auth/PasswordStrength';
 import { friendlyAuthError } from '@/lib/authError';
 import { useAuth, ROLE_TO_PATH, type AppRole } from '@/contexts/AuthContext';
+import { changeOwnPassword } from '@/lib/changeOwnPassword';
 
 const ResetPasswordPage = () => {
   const [ready, setReady]         = useState(false);
@@ -69,15 +70,7 @@ const ResetPasswordPage = () => {
     }
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      // A retry after an already-successful change fails with code "same_password" —
-      // that is not a failure here; the flag below still needs clearing.
-      if (error && error.code !== 'same_password') throw error;
-
-      // Clear the temporary-password flag via the security-definer RPC. A direct
-      // profiles update is blocked by restrict_profiles_write for non-admins.
-      const { error: flagError } = await (supabase as any).rpc('clear_must_change_password');
-      if (flagError) throw flagError;
+      await changeOwnPassword(password);
       const { data: currentRole } = await supabase.rpc('get_my_role');
       await refreshRole();
       toast({ title: t('resetPassword.success'), description: t('resetPassword.successDesc') });

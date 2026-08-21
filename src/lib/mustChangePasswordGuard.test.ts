@@ -34,7 +34,7 @@ describe('must_change_password write guard', () => {
     );
     expect(
       offenders,
-      `Do not write profiles.must_change_password directly — call the RPC clear_must_change_password() instead (restrict_profiles_write blocks non-admin writes).\nOffenders:\n${offenders.join('\n')}`,
+      `Do not write profiles.must_change_password directly — use the change-own-password server boundary (restrict_profiles_write blocks non-admin writes).\nOffenders:\n${offenders.join('\n')}`,
     ).toEqual([]);
   });
 });

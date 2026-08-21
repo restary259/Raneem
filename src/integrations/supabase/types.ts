@@ -4674,6 +4674,10 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: Json
       }
+      assert_password_change_security_contract: {
+        Args: never
+        Returns: undefined
+      }
       backfill_case_attribution: {
         Args: {
           p_attribution_method?: string

@@ -11,6 +11,7 @@ import PasswordStrength, { validatePassword } from "@/components/auth/PasswordSt
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth, ROLE_TO_PATH } from "@/contexts/AuthContext";
+import { changeOwnPassword } from "@/lib/changeOwnPassword";
 
 const StudentAuthPage = () => {
   const { t, i18n } = useTranslation();
@@ -102,15 +103,7 @@ const StudentAuthPage = () => {
         throw new Error("انتهت جلستك. يرجى تسجيل الدخول مجدداً.");
       }
 
-      // Change the password first, then clear the temporary-password flag through the
-      // security-definer RPC (a direct profiles update is blocked by restrict_profiles_write).
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      // A retry after an already-successful change reports "same password" — that is not a
-      // failure here, the flag below still needs clearing.
-      if (error && !/same[_ ]password|different from the old/i.test(error.message)) throw error;
-
-      const { error: flagError } = await (supabase as any).rpc("clear_must_change_password");
-      if (flagError) throw flagError;
+      await changeOwnPassword(newPassword);
 
       await refreshRole();
       setShowChangePasswordModal(false);
