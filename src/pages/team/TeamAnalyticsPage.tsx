@@ -82,9 +82,9 @@ export default function TeamAnalyticsPage() {
     setTodayAppts(apptRes.data?.length ?? 0);
 
     // Mirrors record_case_commission: a per-member override wins, otherwise the
-    // global default from platform_settings (COALESCE(team_member_commission_rate, 100)).
+    // global default from platform_settings. No hardcoded monetary fallback.
     setCommissionPerCase(
-      overrideRes.data?.commission_amount ?? settingsRes.data?.team_member_commission_rate ?? 100,
+      overrideRes.data?.commission_amount ?? settingsRes.data?.team_member_commission_rate ?? 0,
     );
 
     // Fetch cash collection debts for this team member via the SECURITY DEFINER

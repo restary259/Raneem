@@ -45,7 +45,8 @@ export default function PartnerOverviewPage() {
   const [profile, setProfile] = useState<any>(null);
   const [cases, setCases] = useState<any[]>([]);
   const [paidRewards, setPaidRewards] = useState<any[]>([]);
-  const [commissionRate, setCommissionRate] = useState<number>(500);
+  // null while the rate hasn't loaded — never invent a monetary default.
+  const [commissionRate, setCommissionRate] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -70,8 +71,8 @@ export default function PartnerOverviewPage() {
 
     const isAmbassador = roleRes.data === "ambassador";
     const rate = isAmbassador
-      ? (settingsRes.data?.ambassador_commission_rate ?? 300)
-      : (settingsRes.data?.partner_commission_rate ?? 500);
+      ? (settingsRes.data?.ambassador_commission_rate ?? 0)
+      : (settingsRes.data?.partner_commission_rate ?? 0);
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
     const override = overrideRes;
     setCommissionRate(Number(override?.commission_amount ?? rate));
