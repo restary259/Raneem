@@ -165,7 +165,7 @@ export default function PartnerOverviewPage() {
     },
     {
       label: t("partner.perCaseComm"),
-      value: `₪${commissionRate.toLocaleString('en-US')}`,
+      value: commissionRate == null ? "—" : `₪${commissionRate.toLocaleString('en-US')}`,
       icon: CheckCircle,
       color: "text-brand bg-brand/10",
     },
@@ -196,7 +196,7 @@ export default function PartnerOverviewPage() {
         <div>
           <p className="text-sm font-bold text-foreground">{t("partner.projectedEarnings")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {t("partner.projMultiplier", { paid, rate: commissionRate.toLocaleString('en-US') })}
+            {t("partner.projMultiplier", { paid, rate: (commissionRate ?? 0).toLocaleString('en-US') })}
           </p>
           {paidAllTime > 0 && (
             <p className="text-xs text-[hsl(var(--status-enrolled))] mt-1 font-semibold">
@@ -204,7 +204,7 @@ export default function PartnerOverviewPage() {
             </p>
           )}
         </div>
-        <p className={`text-3xl sm:text-4xl font-black ${toneClasses('payment').text} truncate min-w-0 break-all ${paid > 0 ? 'neon-kpi neon-warning' : ''}`}>₪{(paid * commissionRate).toLocaleString('en-US')}</p>
+        <p className={`text-3xl sm:text-4xl font-black ${toneClasses('payment').text} truncate min-w-0 break-all ${paid > 0 ? 'neon-kpi neon-warning' : ''}`}>₪{(paid * (commissionRate ?? 0)).toLocaleString('en-US')}</p>
       </div>
 
       {/* Pipeline breakdown */}
@@ -320,7 +320,7 @@ export default function PartnerOverviewPage() {
                           {earnsCommission ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(var(--status-enrolled))]">
                               <CheckCircle className="h-3 w-3 shrink-0" />
-                              ₪{commissionRate.toLocaleString('en-US')} {t("partner.projLabel")}
+                              ₪{(commissionRate ?? 0).toLocaleString('en-US')} {t("partner.projLabel")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
