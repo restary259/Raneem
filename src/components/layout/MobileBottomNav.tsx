@@ -125,10 +125,10 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const items = MOBILE_NAV_CONFIG[role] ?? [];
   // Mirror the sidebar: hide Apply when the member's apply_form_enabled admin
-  // toggle is off (partner/ambassador only).
-  const isPartnerRole = role === 'social_media_partner' || role === 'ambassador';
-  const applyFormEnabled = useApplyFormEnabled(isPartnerRole);
-  const moreItems = filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], isPartnerRole, applyFormEnabled);
+  // toggle is off (partner/ambassador/agent).
+  const applyGatedRole = role === 'social_media_partner' || role === 'ambassador' || role === 'agent';
+  const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
+  const moreItems = filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], applyGatedRole, applyFormEnabled);
 
   // Shorten keys for label display
   const shortLabel: Record<string, string> = {

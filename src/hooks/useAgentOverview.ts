@@ -57,6 +57,8 @@ export interface AgentProfile {
   recruit_code: string | null;
   ambassador_recruit_code: string | null;
   referral_code: string | null;
+  /** Admin toggle: whether the agent's referral apply link is active. */
+  referral_code_enabled: boolean;
 }
 
 export interface AgentStats {
@@ -121,7 +123,7 @@ export function useAgentOverview(): AgentOverviewData {
     const [profRes, netRes, linkRes, settingsRes, overrideRes, selfRefRes, kpiRes, pendingRes] = await Promise.all([
       (supabase as any)
         .from("profiles")
-        .select("full_name, email, agent_can_invite_directly, referral_code")
+        .select("full_name, email, agent_can_invite_directly, referral_code, referral_code_enabled")
         .eq("id", uid)
         .maybeSingle(),
       (supabase as any).rpc("get_my_agent_network"),
@@ -158,6 +160,7 @@ export function useAgentOverview(): AgentOverviewData {
       recruit_code: partnerLink?.code ?? linkRows[0]?.code ?? null,
       ambassador_recruit_code: ambassadorLink?.code ?? null,
       referral_code: prof?.referral_code ?? null,
+      referral_code_enabled: prof?.referral_code_enabled !== false,
     });
 
     setRecruits((netRes.data ?? []) as AgentRecruit[]);

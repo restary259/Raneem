@@ -227,13 +227,13 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const baseItems = NAV_CONFIG[role] ?? [];
-  // Partner/ambassador: hide the built-in Apply form when the admin toggle
-  // (profiles.apply_form_enabled) is off for this member.
-  const isPartnerRole = role === "social_media_partner" || role === "ambassador";
-  const applyFormEnabled = useApplyFormEnabled(isPartnerRole);
+  // Partner/ambassador/agent: hide the built-in Apply form when the admin
+  // toggle (profiles.apply_form_enabled) is off for this member.
+  const applyGatedRole = role === "social_media_partner" || role === "ambassador" || role === "agent";
+  const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
   const items: NavItem[] = useMemo(
-    () => filterApplyNavItem(baseItems, isPartnerRole, applyFormEnabled),
-    [baseItems, isPartnerRole, applyFormEnabled],
+    () => filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled),
+    [baseItems, applyGatedRole, applyFormEnabled],
   );
 
   const unreadMessages = useUnreadCaseMessages(true);

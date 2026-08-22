@@ -57,7 +57,10 @@ export default function AgentOverviewPage() {
   const ambassadorUrl = profile?.ambassador_recruit_code
     ? `${window.location.origin}/join/${profile.ambassador_recruit_code}`
     : "";
-  const applyUrl = profile?.referral_code
+  // The referral apply link only resolves while the admin toggle
+  // (profiles.referral_code_enabled) is on — don't hand out a dead link.
+  const referralEnabled = profile?.referral_code_enabled !== false;
+  const applyUrl = profile?.referral_code && referralEnabled
     ? `${window.location.origin}/apply?ref=${encodeURIComponent(profile.referral_code)}`
     : "";
 
@@ -421,6 +424,10 @@ export default function AgentOverviewPage() {
                     )}
                   </Button>
                 </div>
+              ) : profile?.referral_code && !referralEnabled ? (
+                <p className="text-xs text-muted-foreground">
+                  {t("agent.applyLinkDisabled", "Your referral link is currently disabled. Please contact the Darb team to reactivate it.")}
+                </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
                   {t("agent.applyLinkMissing", "No referral link yet.")}

@@ -4296,6 +4296,7 @@
     "recruitAmbassadorLinkHint": "Share this link to recruit ambassadors into your network.",
     "ambassadorLinkMissing": "No ambassador link yet.",
     "applyLink": "Referral apply form",
+    "applyLinkDisabled": "Your referral link is currently disabled. Please contact the Darb team to reactivate it.",
     "applyLinkHint": "Share this link with students. Every application submitted through it is automatically attributed to you, and you earn the self-referral reward when the case is paid.",
     "applyLinkMissing": "No referral link yet.",
     "recentRecruits": "Recent recruits",

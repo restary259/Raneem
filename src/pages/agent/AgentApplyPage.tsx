@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import ApplyForm from "@/components/apply/ApplyForm";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
@@ -24,16 +26,35 @@ const AgentApplyPage: React.FC = () => {
   const { t } = useTranslation("dashboard");
   const { role, initialized, user } = useAuth();
   const { dir } = useDirection();
+  const navigate = useNavigate();
   const [ready, setReady] = useState(false);
 
+  // Guard: agents may use the in-dashboard apply form, unless the admin
+  // disabled it for them (apply_form_enabled = false) -- same as partners.
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || !user) return;
     if (role !== "agent") {
       setReady(false);
       return;
     }
-    setReady(true);
-  }, [initialized, role]);
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("apply_form_enabled")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data && !data.apply_form_enabled) {
+          navigate("/agent", { replace: true });
+          return;
+        }
+        setReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialized, role, user, navigate]);
 
   if (!ready) return <DashboardLoading label={t("common.loading", "Loading…")} />;
 

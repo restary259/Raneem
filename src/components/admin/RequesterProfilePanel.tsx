@@ -85,15 +85,17 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
   const isTeam = role === 'team_member';
   const isAmbassador = role === 'ambassador';
   const isStudent = role === 'student';
-  /** Both partner-family roles share the referral-link + apply-form features. */
+  /** Partners/ambassadors can be assigned a recruiting agent. */
   const hasMemberFeatures = isPartner || isAmbassador;
+  /** Partners, ambassadors and agents share the referral-link + apply-form features. */
+  const hasFeatureToggles = hasMemberFeatures || isAgent;
 
   useEffect(() => { setAgentId(row.agent_id ?? null); }, [row.agent_id, row.requester_id]);
 
   // Fetch the member's two feature flags when the panel opens (admin SELECT
   // on profiles is allowed; the directory RPC does not return these columns).
   useEffect(() => {
-    if (!hasMemberFeatures) return;
+    if (!hasFeatureToggles) return;
     let cancelled = false;
     supabase
       .from('profiles')
@@ -106,7 +108,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
         setApplyFormEnabled(!!data.apply_form_enabled);
       });
     return () => { cancelled = true; };
-  }, [hasMemberFeatures, row.requester_id]);
+  }, [hasFeatureToggles, row.requester_id]);
 
   /** An agent's recruited partners/ambassadors (profiles.agent_id = this agent). */
   const loadAgentNetwork = useCallback(async () => {
@@ -261,7 +263,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
             {contactSpans}
           </div>
 
-          {hasMemberFeatures && (
+          {hasFeatureToggles && (
             <div className="space-y-3 rounded-lg border border-border p-3">
               <p className="text-sm font-medium">{t('admin.features.sectionTitle', 'Features')}</p>
               <div className="flex flex-wrap items-center justify-between gap-3">
