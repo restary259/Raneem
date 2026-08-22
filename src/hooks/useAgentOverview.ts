@@ -169,8 +169,8 @@ export function useAgentOverview(): AgentOverviewData {
 
     const globalPerRecruit = Number(settingsRes.data?.agent_commission_rate ?? 0);
     const perRecruit = Number(overrideRes.data?.commission_amount ?? globalPerRecruit);
-    const pool = Number(settingsRes.data?.partner_commission_rate ?? 1000);
-    const selfGlobal = Number(settingsRes.data?.agent_self_referral_rate ?? 1000);
+    const pool = Number(settingsRes.data?.partner_commission_rate ?? 0);
+    const selfGlobal = Number(settingsRes.data?.agent_self_referral_rate ?? 0);
     const selfOverride = selfRefRes.data?.commission_amount ?? null;
     setRates({
       perRecruit,

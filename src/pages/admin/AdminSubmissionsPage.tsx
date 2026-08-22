@@ -299,7 +299,7 @@ const AdminSubmissionsPage = () => {
           : Promise.resolve({ data: null }),
       ]);
 
-      const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 100;
+      const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 0;
       const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
 
       const caseSource = c.source || "";

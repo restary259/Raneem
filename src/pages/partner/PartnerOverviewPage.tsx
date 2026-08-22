@@ -45,7 +45,8 @@ export default function PartnerOverviewPage() {
   const [profile, setProfile] = useState<any>(null);
   const [cases, setCases] = useState<any[]>([]);
   const [paidRewards, setPaidRewards] = useState<any[]>([]);
-  const [commissionRate, setCommissionRate] = useState<number>(500);
+  // null while the rate hasn't loaded — never invent a monetary default.
+  const [commissionRate, setCommissionRate] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -70,8 +71,8 @@ export default function PartnerOverviewPage() {
 
     const isAmbassador = roleRes.data === "ambassador";
     const rate = isAmbassador
-      ? (settingsRes.data?.ambassador_commission_rate ?? 300)
-      : (settingsRes.data?.partner_commission_rate ?? 500);
+      ? (settingsRes.data?.ambassador_commission_rate ?? 0)
+      : (settingsRes.data?.partner_commission_rate ?? 0);
     const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
     const override = overrideRes;
     setCommissionRate(Number(override?.commission_amount ?? rate));
@@ -164,7 +165,7 @@ export default function PartnerOverviewPage() {
     },
     {
       label: t("partner.perCaseComm"),
-      value: `₪${commissionRate.toLocaleString('en-US')}`,
+      value: commissionRate == null ? "—" : `₪${commissionRate.toLocaleString('en-US')}`,
       icon: CheckCircle,
       color: "text-brand bg-brand/10",
     },
@@ -195,7 +196,7 @@ export default function PartnerOverviewPage() {
         <div>
           <p className="text-sm font-bold text-foreground">{t("partner.projectedEarnings")}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {t("partner.projMultiplier", { paid, rate: commissionRate.toLocaleString('en-US') })}
+            {t("partner.projMultiplier", { paid, rate: (commissionRate ?? 0).toLocaleString('en-US') })}
           </p>
           {paidAllTime > 0 && (
             <p className="text-xs text-[hsl(var(--status-enrolled))] mt-1 font-semibold">
@@ -203,7 +204,7 @@ export default function PartnerOverviewPage() {
             </p>
           )}
         </div>
-        <p className={`text-3xl sm:text-4xl font-black ${toneClasses('payment').text} truncate min-w-0 break-all ${paid > 0 ? 'neon-kpi neon-warning' : ''}`}>₪{(paid * commissionRate).toLocaleString('en-US')}</p>
+        <p className={`text-3xl sm:text-4xl font-black ${toneClasses('payment').text} truncate min-w-0 break-all ${paid > 0 ? 'neon-kpi neon-warning' : ''}`}>₪{(paid * (commissionRate ?? 0)).toLocaleString('en-US')}</p>
       </div>
 
       {/* Pipeline breakdown */}
@@ -319,7 +320,7 @@ export default function PartnerOverviewPage() {
                           {earnsCommission ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(var(--status-enrolled))]">
                               <CheckCircle className="h-3 w-3 shrink-0" />
-                              ₪{commissionRate.toLocaleString('en-US')} {t("partner.projLabel")}
+                              ₪{(commissionRate ?? 0).toLocaleString('en-US')} {t("partner.projLabel")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
