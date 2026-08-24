@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Pause, Play, GraduationCap } from "lucide-react";
+import { Pencil, Pause, Play, GraduationCap, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { School } from "./types";
 
@@ -10,10 +10,11 @@ interface SchoolInfoCardProps {
   school: School;
   onEdit: (school: School) => void;
   onToggleActive: (school: School) => void;
+  onDelete: (school: School) => void;
 }
 
 /** Header of the school profile: identity, photos, status and actions. */
-const SchoolInfoCard = ({ school, onEdit, onToggleActive }: SchoolInfoCardProps) => {
+const SchoolInfoCard = ({ school, onEdit, onToggleActive, onDelete }: SchoolInfoCardProps) => {
   const { t } = useTranslation("dashboard");
 
   return (
@@ -56,6 +57,15 @@ const SchoolInfoCard = ({ school, onEdit, onToggleActive }: SchoolInfoCardProps)
                 {t("admin.programs.btnActivate")}
               </>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => onDelete(school)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {t("common.delete")}
           </Button>
         </div>
       </div>

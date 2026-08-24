@@ -14,6 +14,7 @@ interface SchoolProfilePanelProps {
   accommodations: Accommodation[];
   onEditSchool: (s: School) => void;
   onToggleSchool: (s: School) => void;
+  onDeleteSchool: (s: School) => void;
   onAddProgram: () => void;
   onEditProgram: (p: Program) => void;
   onToggleProgram: (p: Program) => void;
@@ -35,6 +36,7 @@ const SchoolProfilePanel = ({
   accommodations,
   onEditSchool,
   onToggleSchool,
+  onDeleteSchool,
   onAddProgram,
   onEditProgram,
   onToggleProgram,
