@@ -520,14 +520,15 @@ const AdminProgramsPage = () => {
             accommodations={profileAccoms}
             onEditSchool={openEditSchool}
             onToggleSchool={(s) => toggleActive("schools", s.id, s.is_active)}
+            onDeleteSchool={(s) => setDeleteTarget({ kind: "school", id: s.id, name: s.name_en })}
             onAddProgram={() => selectedSchool && openAddProgram(selectedSchool.id)}
             onEditProgram={(p) => openEditProgram(p, !!selectedSchool)}
             onToggleProgram={(p) => toggleActive("programs", p.id, p.is_active)}
-            onDeleteProgram={(p) => deleteRecord("programs", p.id)}
+            onDeleteProgram={(p) => setDeleteTarget({ kind: "program", id: p.id, name: p.name_en })}
             onAddAccommodation={() => selectedSchool && openAddAccom(selectedSchool.id)}
             onEditAccommodation={(a) => openEditAccom(a, !!selectedSchool)}
             onToggleAccommodation={(a) => toggleActive("accommodations", a.id, a.is_active)}
-            onDeleteAccommodation={(a) => deleteRecord("accommodations", a.id)}
+            onDeleteAccommodation={(a) => setDeleteTarget({ kind: "accommodation", id: a.id, name: a.name_en })}
           />
         )}
       </div>
