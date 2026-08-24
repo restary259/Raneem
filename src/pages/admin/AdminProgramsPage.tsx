@@ -315,6 +315,9 @@ const AdminProgramsPage = () => {
     else fetchAll();
   };
 
+  // Schools / programs / accommodations go through the guarded RPC dialog.
+  const [deleteTarget, setDeleteTarget] = useState<CatalogDeleteTarget | null>(null);
+
   const openAddProgram = (schoolId: string) => {
     setEditProgId(null);
     setProgForm({ ...emptyProgForm, school_id: schoolId });
