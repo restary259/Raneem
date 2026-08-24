@@ -659,7 +659,21 @@
       "selectSchoolPrompt": "Select a school to view its profile",
       "addProgramToSchool": "Add Program to this school",
       "addAccommodationToSchool": "Add Accommodation to this school",
-      "insuranceGlobalNote": "Global — not school-specific"
+      "insuranceGlobalNote": "Global — not school-specific",
+      "deleteTitle": "Delete permanently?",
+      "deleteBody": "This permanently removes",
+      "deleteIrreversible": "This action cannot be undone.",
+      "deleteChecking": "Checking dependencies…",
+      "deleteChildren": "Its unused catalog entries are removed too:",
+      "deleteBlocked": "This record is still in use and cannot be deleted.",
+      "deleteDone": "Deleted permanently.",
+      "deleteUseDeactivate": "Deactivate it instead to hide it from new cases while keeping history intact.",
+      "depCases": "Student submissions",
+      "depChildCases": "Student submissions on its programs / housing",
+      "depServices": "Service catalog entries",
+      "depChildServices": "Service entries on its programs / housing",
+      "depContacts": "Important contacts",
+      "depProfiles": "Student profiles"
     },
     "submissions": {
       "title": "Submitted Applications",
