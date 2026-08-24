@@ -659,7 +659,21 @@
       "selectSchoolPrompt": "اختر مدرسة لعرض ملفها",
       "addProgramToSchool": "إضافة برنامج لهذه المدرسة",
       "addAccommodationToSchool": "إضافة سكن لهذه المدرسة",
-      "insuranceGlobalNote": "عام — غير مرتبط بمدرسة"
+      "insuranceGlobalNote": "عام — غير مرتبط بمدرسة",
+      "deleteTitle": "حذف نهائي؟",
+      "deleteBody": "سيؤدي هذا إلى الحذف النهائي لـ",
+      "deleteIrreversible": "لا يمكن التراجع عن هذا الإجراء.",
+      "deleteChecking": "جارٍ فحص الارتباطات…",
+      "deleteChildren": "سيتم حذف العناصر غير المستخدمة التابعة له أيضًا:",
+      "deleteBlocked": "هذا السجل مستخدم حاليًا ولا يمكن حذفه.",
+      "deleteDone": "تم الحذف نهائيًا.",
+      "deleteUseDeactivate": "يمكنك تعطيله بدلًا من ذلك لإخفائه عن الحالات الجديدة مع الحفاظ على السجل.",
+      "depCases": "طلبات الطلاب",
+      "depChildCases": "طلبات الطلاب على برامجه أو سكنه",
+      "depServices": "عناصر كتالوج الخدمات",
+      "depChildServices": "عناصر خدمات على برامجه أو سكنه",
+      "depContacts": "جهات اتصال مهمة",
+      "depProfiles": "ملفات الطلاب"
     },
     "submissions": {
       "title": "الطلبات المقدمة",
