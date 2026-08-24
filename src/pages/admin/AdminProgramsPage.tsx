@@ -550,6 +550,24 @@ const AdminProgramsPage = () => {
         onDelete={(i) => deleteRecord("insurances", i.id)}
       />
 
+      <CatalogDeleteDialog
+        target={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onDeleted={() => {
+          if (deleteTarget?.kind === "school" && selectedSchoolId === deleteTarget.id) {
+            setSelectedSchoolId(null);
+          }
+          fetchAll();
+        }}
+        onDeactivate={(target) => {
+          const table =
+            target.kind === "school" ? "schools" : target.kind === "program" ? "programs" : "accommodations";
+          toggleActive(table, target.id, true);
+        }}
+      />
+
+
+
       {/* Program dialog — school is inherited from the profile context when locked */}
       <Dialog
         open={progOpen}
