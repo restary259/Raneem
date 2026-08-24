@@ -64,7 +64,13 @@ export function AccommodationDetail({ accommodation, school, open, onOpenChange 
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      {/*
+        The lightbox portals to document.body. A modal Radix dialog sets
+        pointer-events:none on the body, which would swallow every click, swipe
+        and thumbnail tap in the viewer — so only one modal layer is mounted at
+        a time. Closing the lightbox restores this detail dialog.
+      */}
+      <Dialog open={open && lightboxAt === null} onOpenChange={(v) => { if (!v && lightboxAt === null) onOpenChange(false); }}>
         <DialogContent className="max-h-[92vh] max-w-4xl gap-0 overflow-hidden p-0">
           <DialogTitle className="sr-only">{name}</DialogTitle>
           <div className="max-h-[92vh] overflow-auto">
