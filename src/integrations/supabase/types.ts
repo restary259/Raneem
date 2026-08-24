@@ -4699,6 +4699,10 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      catalog_dependency_report: {
+        Args: { p_id: string; p_kind: string }
+        Returns: Json
+      }
       chat_sender_label: {
         Args: { _lang?: string; _sender: string; _viewer: string }
         Returns: string
@@ -4741,6 +4745,10 @@ export type Database = {
         Returns: undefined
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
+      delete_catalog_entity: {
+        Args: { p_id: string; p_kind: string }
+        Returns: Json
+      }
       delete_chat_message: {
         Args: { p_kind: string; p_message_id: string }
         Returns: undefined
