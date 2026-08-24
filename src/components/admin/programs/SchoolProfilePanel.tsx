@@ -100,7 +100,12 @@ const SchoolProfilePanel = ({
 
   return (
     <div className="space-y-5">
-      <SchoolInfoCard school={school} onEdit={onEditSchool} onToggleActive={onToggleSchool} />
+      <SchoolInfoCard
+        school={school}
+        onEdit={onEditSchool}
+        onToggleActive={onToggleSchool}
+        onDelete={onDeleteSchool}
+      />
       <SchoolProgramsList
         programs={programs}
         schoolActive={school.is_active}
