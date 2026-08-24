@@ -16,6 +16,7 @@ import { AgePriceTier, parseAgeTiers } from "@/lib/insurancePricing";
 import SchoolDirectory from "@/components/admin/programs/SchoolDirectory";
 import SchoolProfilePanel from "@/components/admin/programs/SchoolProfilePanel";
 import InsuranceSection from "@/components/admin/programs/InsuranceSection";
+import CatalogDeleteDialog, { CatalogDeleteTarget } from "@/components/admin/programs/CatalogDeleteDialog";
 import { Program, School, Accommodation, Insurance, UNASSIGNED_KEY } from "@/components/admin/programs/types";
 
 const PROGRAM_TYPES = ["language_school", "course", "university", "other"];
