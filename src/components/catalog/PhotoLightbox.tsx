@@ -67,9 +67,15 @@ export function PhotoLightbox({
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex flex-col bg-background/98 backdrop-blur-sm"
+      // A parent Radix modal may set pointer-events:none on <body>; re-enable
+      // it here so this viewer stays interactive wherever it is opened from.
+      style={{ pointerEvents: "auto", touchAction: "pan-y" }}
       role="dialog"
       aria-modal="true"
       aria-label={title ?? t("catalog.photoViewer", "Photo viewer")}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
