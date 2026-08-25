@@ -25,8 +25,10 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = false  
   [functions.check-email-availability]  
     verify_jwt = true  
-  [functions.create-student-from-case]  
-    verify_jwt = true  
+  [functions.create-student-from-case]
+    # See record-appointment-outcome: gateway JWT verification rejects
+    # asymmetric user tokens; the function enforces Bearer + admin/team role.
+    verify_jwt = false
   [functions.create-student-standalone]  
     verify_jwt = true  
   [functions.create-team-member]  
@@ -49,8 +51,12 @@ project_id = "mzbadxfvxioedzdjxamc"
     # the cron call at the gateway before requireAuth runs. requireAuth
     # inside still enforces isServiceRole (anon -> 403), so auth is not weakened.
     verify_jwt = false
-  [functions.record-appointment-outcome]  
-    verify_jwt = true  
+  [functions.record-appointment-outcome]
+    # Project uses asymmetric JWT signing keys; gateway verify_jwt rejects
+    # valid user tokens with UNAUTHORIZED_ASYMMETRIC_JWT before the function
+    # boots. The function validates the Bearer token and the caller's role
+    # itself, so auth is not weakened.
+    verify_jwt = false
   [functions.reset-student-password]  
     verify_jwt = true  
   [functions.selective-delete]  
