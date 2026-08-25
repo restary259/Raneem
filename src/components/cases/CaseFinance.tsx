@@ -280,6 +280,16 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   const getLatestProof = (type: SchoolPaymentType) => proofs.find((p) => p.payment_type === type);
 
+  /** Confirmation row from the checklist the enrollment gate reads. */
+  const getConfirmation = (type: SchoolPaymentType) =>
+    financeConfirmations.find((row) => row.finance_type === FINANCE_TYPE_BY_PAYMENT_TYPE[type]);
+
+  /** A German item counts as confirmed via the checklist, an approved proof or a confirmed payment. */
+  const isGermanyItemConfirmed = (type: SchoolPaymentType): boolean =>
+    getConfirmation(type)?.status === "confirmed" ||
+    getLatestProof(type)?.status === "approved" ||
+    getPaymentForType(type)?.status === "confirmed";
+
   /** Readiness checks for the submission checklist (informational only — the
       server-side gate in submit_case_for_review stays authoritative). */
   const profileComplete =
@@ -290,14 +300,16 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const schoolSelected = !!financials?.school_id;
   const hasSchoolKind = (kind: string) => schoolCosts.some((line) => line.kind === kind);
   const germanyKinds = new Set(schoolCosts.map((line) => line.kind));
-  const germanyVerified = schoolPaymentTypes.every((type) => {
-    const kindOf =
-      type === "school_course" ? "program" : type === "school_accommodation" ? "accommodation" : "insurance";
-    if (!germanyKinds.has(kindOf)) return true;
-    const proof = getLatestProof(type);
-    const payment = getPaymentForType(type);
-    return proof?.status === "approved" || payment?.status === "confirmed";
-  });
+  const kindOfType = (type: SchoolPaymentType) =>
+    type === "school_course" ? "program" : type === "school_accommodation" ? "accommodation" : "insurance";
+
+  /** Items that actually block enrollment: course + accommodation, when priced. */
+  const requiredGermanyTypes = schoolPaymentTypes.filter(
+    (type) => !OPTIONAL_SCHOOL_PAYMENT_TYPES.has(type) && germanyKinds.has(kindOfType(type)),
+  );
+  const confirmedRequiredCount = requiredGermanyTypes.filter(isGermanyItemConfirmed).length;
+  const germanyVerified = confirmedRequiredCount === requiredGermanyTypes.length;
+
 
   const typeLabel = (type: SchoolPaymentType) => {
     if (type === "school_course") return t("finance.summary.kind.program", "Language Course");
