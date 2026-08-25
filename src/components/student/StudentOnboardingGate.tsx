@@ -314,9 +314,6 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       const merged: ProfileShape = {
         ...EMPTY_PROFILE,
         ...data,
-        has_changed_legal_name: bool(data.has_changed_legal_name),
-        has_criminal_record: bool(data.has_criminal_record),
-        has_dual_citizenship: bool(data.has_dual_citizenship),
       };
       setProfile(merged);
       const existing = Array.isArray(data.emergency_contacts) ? data.emergency_contacts : [];
@@ -334,9 +331,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         if (i === 3) resumeStep = 3;
       }
       const firstInvalidTask = TASKS.findIndex(
-        task => task.step >= resumeStep && taskErrorFor(task, merged, seeded) !== null,
+        task => task.step >= resumeStep && taskErrorFor(task, merged, seeded, false) !== null,
       );
       setTaskIndex(firstInvalidTask >= 0 ? firstInvalidTask : TASKS.length - 1);
+
     } else {
       setProfile({ ...EMPTY_PROFILE });
       setTaskIndex(0);
