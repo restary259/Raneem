@@ -69,10 +69,11 @@ export default function StudentVisaPage() {
         (supabase as any)
           .from("profiles")
           .select(
-            "eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country",
+            "eye_color, passport_expiry, arrival_date, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country",
           )
           .eq("id", uid)
           .maybeSingle(),
+
       ]);
 
       if (fieldsRes.data) setFields(fieldsRes.data);
@@ -136,7 +137,10 @@ export default function StudentVisaPage() {
         .from("profiles")
         .update({
           eye_color: legalDraft.eye_color,
+          passport_expiry: legalDraft.passport_expiry || null,
+          arrival_date: legalDraft.arrival_date || null,
           has_changed_legal_name: legalDraft.has_changed_legal_name,
+
           previous_legal_name: legalDraft.has_changed_legal_name ? legalDraft.previous_legal_name : null,
           has_criminal_record: legalDraft.has_criminal_record,
           criminal_record_details: legalDraft.has_criminal_record ? legalDraft.criminal_record_details : null,
@@ -331,6 +335,10 @@ export default function StudentVisaPage() {
           )}
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            {t("visa.immigrationHint", "These details are requested by the immigration office. Fill them in once you have them — your team can see them right away.")}
+          </p>
+
           {/* Eye color */}
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">{t("profile.eyeColor", "Eye Color")}</Label>
@@ -351,6 +359,29 @@ export default function StudentVisaPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {/* Passport expiry */}
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{t("profile.passportExpiry", "Passport expiry date")}</Label>
+            <Input
+              type="date"
+              value={editingLegal ? legalDraft.passport_expiry || "" : profile?.passport_expiry || ""}
+              onChange={(e) => setLegalDraft((d: any) => ({ ...d, passport_expiry: e.target.value }))}
+              disabled={!editingLegal}
+            />
+          </div>
+
+          {/* Planned arrival date */}
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{t("profile.arrivalDate", "Planned arrival date in Germany")}</Label>
+            <Input
+              type="date"
+              value={editingLegal ? legalDraft.arrival_date || "" : profile?.arrival_date || ""}
+              onChange={(e) => setLegalDraft((d: any) => ({ ...d, arrival_date: e.target.value }))}
+              disabled={!editingLegal}
+            />
+          </div>
+
 
           {/* Changed legal name */}
           <div className="flex items-center justify-between py-1">

@@ -7,11 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { isValidPhone } from "@/lib/studentProfileFields";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+
 import {
   Select,
   SelectContent,
@@ -43,13 +43,15 @@ interface PreviewContact {
 }
 
 /**
- * Full profile shape captured by the wizard. Mirrors the field set the admin
- * sidebar shows in AdminStudentsPage (PROFILE_SELECT), EXCLUDING the sensitive
- * passport_number — that is sourced externally now. passport_expiry is kept.
+ * Profile shape captured by the wizard. Visa/immigration fields (eye color,
+ * passport expiry, legal-name change, criminal record, dual citizenship) and
+ * the arrival date are NOT collected here — they live on the student Visa page
+ * and are filled in later, once the student actually applies.
  */
 interface ProfileShape {
   full_name: string | null;
   phone_number: string | null;
+  email: string | null;
   date_of_birth: string | null;
   gender: string | null;
   nationality: string | null;
@@ -61,15 +63,6 @@ interface ProfileShape {
   university_name: string | null;
   language_school_id: string | null;
   intake_month: string | null;
-  arrival_date: string | null;
-  passport_expiry: string | null;
-  eye_color: string | null;
-  has_changed_legal_name: boolean | null;
-  previous_legal_name: string | null;
-  has_criminal_record: boolean | null;
-  criminal_record_details: string | null;
-  has_dual_citizenship: boolean | null;
-  second_passport_country: string | null;
   emergency_contacts: EmergencyContact[] | null;
 }
 
@@ -79,6 +72,7 @@ const DEFAULT_NATIONALITY = "Israel";
 const EMPTY_PROFILE: ProfileShape = {
   full_name: null,
   phone_number: null,
+  email: null,
   date_of_birth: null,
   gender: null,
   nationality: DEFAULT_NATIONALITY,
@@ -90,31 +84,15 @@ const EMPTY_PROFILE: ProfileShape = {
   university_name: null,
   language_school_id: null,
   intake_month: null,
-  arrival_date: null,
-  passport_expiry: null,
-  eye_color: null,
-  has_changed_legal_name: false,
-  previous_legal_name: null,
-  has_criminal_record: false,
-  criminal_record_details: null,
-  has_dual_citizenship: false,
-  second_passport_country: null,
   emergency_contacts: null,
 };
 
+
 // Single select of every column the wizard reads or writes — loaded once on
-// mount, never re-fetched per keystroke.
+// mount, never re-fetched per keystroke. Visa/legal columns are no longer part
+// of the wizard (they moved to the student Visa page).
 const SELECT_COLUMNS =
-  "full_name, phone_number, date_of_birth, gender, nationality, city, country, street, house_number, residential_city, university_name, language_school_id, intake_month, arrival_date, passport_expiry, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country, emergency_contacts, emergency_contact_name, emergency_contact_phone";
-
-const EYE_COLORS = ["brown", "blue", "green", "hazel", "gray", "other"] as const;
-
-/** Year list for the arrival-date picker: current year through +6 (the wizard
- *  reuses the segmented BirthdayPicker style, but with future years). */
-const ARRIVAL_YEARS = (() => {
-  const now = new Date().getFullYear();
-  return Array.from({ length: 7 }, (_, i) => String(now + i));
-})();
+  "full_name, phone_number, email, date_of_birth, gender, nationality, city, country, street, house_number, residential_city, university_name, language_school_id, intake_month, emergency_contacts, emergency_contact_name, emergency_contact_phone";
 
 const emptyContact = (): EmergencyContact => ({ name: "", relationship: "", phone: "" });
 
@@ -144,9 +122,6 @@ export const isProfileComplete = (p: Partial<ProfileShape> | null | undefined) =
     hasAddress(p) &&
     filled(p.university_name) &&
     filled(p.intake_month) &&
-    filled(p.arrival_date) &&
-    filled(p.passport_expiry) &&
-    filled(p.eye_color) &&
     validContacts.length >= 2
   );
 };
@@ -154,9 +129,11 @@ export const isProfileComplete = (p: Partial<ProfileShape> | null | undefined) =
 const stepComplete = (p: ProfileShape | null, index: number) => {
   if (!p) return false;
   if (index === 0) {
+    // Confirm-your-details step: the invited identity must be on file.
+    return filled(p.full_name) && filled(p.phone_number);
+  }
+  if (index === 1) {
     return (
-      filled(p.full_name) &&
-      filled(p.phone_number) &&
       filled(p.date_of_birth) &&
       filled(p.gender) &&
       filled(p.nationality) &&
@@ -164,11 +141,8 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
       hasAddress(p)
     );
   }
-  if (index === 1) {
-    return filled(p.university_name) && filled(p.intake_month) && filled(p.arrival_date);
-  }
   if (index === 2) {
-    return filled(p.eye_color) && filled(p.passport_expiry);
+    return filled(p.university_name) && filled(p.intake_month);
   }
   const contacts = Array.isArray(p.emergency_contacts) ? p.emergency_contacts : [];
   return contacts.filter(c => filled(c?.name) && filled(c?.phone)).length >= 2;
@@ -181,39 +155,30 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
  * when the step's last task is completed), so the resume-at-first-incomplete
  * behavior is preserved.
  */
-type TaskType = "text" | "tel" | "dob" | "gender" | "eye" | "date" | "arrival-date" | "address" | "switch-legal" | "contacts" | "school-select";
+type TaskType = "text" | "tel" | "dob" | "gender" | "address" | "contacts" | "school-select" | "confirm-identity";
 
 interface Task {
   step: number;
   key: keyof ProfileShape;
   type: TaskType;
-  /** For switch-legal tasks: the conditional detail field shown when the switch is on. */
-  detailKey?: keyof ProfileShape;
-  detailType?: "text" | "textarea";
 }
 
 const TASKS: Task[] = [
-  // step 0 — Personal
-  { step: 0, key: "full_name", type: "text" },
-  { step: 0, key: "phone_number", type: "tel" },
-  { step: 0, key: "date_of_birth", type: "dob" },
-  { step: 0, key: "gender", type: "gender" },
-  { step: 0, key: "nationality", type: "text" },
-  { step: 0, key: "city", type: "text" },
-  { step: 0, key: "country", type: "address" },
-  // step 1 — Study & arrival
-  { step: 1, key: "university_name", type: "school-select" },
-  { step: 1, key: "intake_month", type: "text" },
-  { step: 1, key: "arrival_date", type: "arrival-date" },
-  // step 2 — Legal & identity
-  { step: 2, key: "eye_color", type: "eye" },
-  { step: 2, key: "passport_expiry", type: "date" },
-  { step: 2, key: "has_changed_legal_name", type: "switch-legal", detailKey: "previous_legal_name", detailType: "text" },
-  { step: 2, key: "has_criminal_record", type: "switch-legal", detailKey: "criminal_record_details", detailType: "textarea" },
-  { step: 2, key: "has_dual_citizenship", type: "switch-legal", detailKey: "second_passport_country", detailType: "text" },
+  // step 0 — Confirm the details we already have
+  { step: 0, key: "full_name", type: "confirm-identity" },
+  // step 1 — Personal
+  { step: 1, key: "date_of_birth", type: "dob" },
+  { step: 1, key: "gender", type: "gender" },
+  { step: 1, key: "nationality", type: "text" },
+  { step: 1, key: "city", type: "text" },
+  { step: 1, key: "country", type: "address" },
+  // step 2 — Study
+  { step: 2, key: "university_name", type: "school-select" },
+  { step: 2, key: "intake_month", type: "text" },
   // step 3 — Emergency contacts
   { step: 3, key: "emergency_contacts", type: "contacts" },
 ];
+
 
 /** Index of the last task belonging to a given logical step. */
 const lastTaskIndexOfStep = (step: number): number => {
@@ -226,22 +191,15 @@ const labelKeyFor = (key: keyof ProfileShape): string => {
   switch (key) {
     case "full_name": return "studentOnboarding.fullName";
     case "phone_number": return "studentOnboarding.phone";
+    case "email": return "studentOnboarding.email";
     case "university_name": return "studentOnboarding.universityName";
     case "intake_month": return "studentOnboarding.intakeMonth";
-    case "arrival_date": return "studentOnboarding.arrivalDate";
-    case "passport_expiry": return "studentOnboarding.passportExpiry";
     case "nationality": return "studentOnboarding.nationality";
     case "city": return "studentOnboarding.city";
     case "country": return "studentOnboarding.country";
     case "street": return "studentOnboarding.street";
     case "house_number": return "studentOnboarding.houseNumber";
     case "residential_city": return "studentOnboarding.residentialCity";
-    case "has_changed_legal_name": return "studentOnboarding.hasChangedLegalName";
-    case "previous_legal_name": return "studentOnboarding.previousLegalName";
-    case "has_criminal_record": return "studentOnboarding.hasCriminalRecord";
-    case "criminal_record_details": return "studentOnboarding.criminalRecordDetails";
-    case "has_dual_citizenship": return "studentOnboarding.hasDualCitizenship";
-    case "second_passport_country": return "studentOnboarding.secondPassportCountry";
     default: return "studentOnboarding.fullName";
   }
 };
@@ -251,22 +209,15 @@ const labelFallbackFor = (key: keyof ProfileShape): string => {
   switch (key) {
     case "full_name": return "Full name";
     case "phone_number": return "Phone number";
+    case "email": return "Email address";
     case "university_name": return "Language school";
     case "intake_month": return "Intake month";
-    case "arrival_date": return "Arrival date";
-    case "passport_expiry": return "Passport expiry";
     case "nationality": return "Nationality";
     case "city": return "City of birth";
     case "country": return "Address";
     case "street": return "Street";
     case "house_number": return "House number";
     case "residential_city": return "City";
-    case "has_changed_legal_name": return "Have you ever changed your legal name?";
-    case "previous_legal_name": return "Previous legal name";
-    case "has_criminal_record": return "Do you have a criminal record?";
-    case "criminal_record_details": return "Details";
-    case "has_dual_citizenship": return "Do you have dual citizenship?";
-    case "second_passport_country": return "Second passport country";
     default: return "Full name";
   }
 };
@@ -276,7 +227,14 @@ const taskErrorFor = (
   task: Task,
   p: ProfileShape | null,
   contactList: EmergencyContact[],
+  identityConfirmed = false,
 ): string | null => {
+  if (task.type === "confirm-identity") {
+    if (!filled(p?.full_name)) return "studentOnboarding.errRequired";
+    if (!filled(p?.phone_number)) return "studentOnboarding.errRequired";
+    if (!isValidPhone(p?.phone_number ?? "")) return "studentOnboarding.errPhoneInvalid";
+    return identityConfirmed ? null : "studentOnboarding.errConfirmIdentity";
+  }
   if (task.type === "contacts") {
     const valid = contactList.filter(c => filled(c.name) && filled(c.phone) && isValidPhone(c.phone));
     return valid.length >= 2 ? null : "studentOnboarding.errContactsMin";
@@ -286,10 +244,6 @@ const taskErrorFor = (
     if (!filled(v)) return "studentOnboarding.errRequired";
     return isValidPhone(v) ? null : "studentOnboarding.errPhoneInvalid";
   }
-  if (task.type === "switch-legal") {
-    // Switches are optional; always valid (the detail field is never required).
-    return null;
-  }
   if (task.type === "address") {
     // Structured home address: street + house number + residential city.
     return filled(p?.street) && filled(p?.house_number) && filled(p?.residential_city)
@@ -298,6 +252,7 @@ const taskErrorFor = (
   }
   return filled(p?.[task.key] as string) ? null : "studentOnboarding.errRequired";
 };
+
 
 /**
  * Blocks the student dashboard until the required profile is on file.
@@ -316,7 +271,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [contacts, setContacts] = useState<EmergencyContact[]>([emptyContact(), emptyContact()]);
   /** Inline errors are only surfaced after the student attempts to advance. */
   const [attempted, setAttempted] = useState(false);
+  /** The student must explicitly confirm the details we already hold. */
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
 
   // Active language schools for the onboarding dropdown + live preview of the
   // contacts that apply to the selected school (universal + school/city).
@@ -359,9 +317,6 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       const merged: ProfileShape = {
         ...EMPTY_PROFILE,
         ...data,
-        has_changed_legal_name: bool(data.has_changed_legal_name),
-        has_criminal_record: bool(data.has_criminal_record),
-        has_dual_citizenship: bool(data.has_dual_citizenship),
       };
       setProfile(merged);
       const existing = Array.isArray(data.emergency_contacts) ? data.emergency_contacts : [];
@@ -379,9 +334,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         if (i === 3) resumeStep = 3;
       }
       const firstInvalidTask = TASKS.findIndex(
-        task => task.step >= resumeStep && taskErrorFor(task, merged, seeded) !== null,
+        task => task.step >= resumeStep && taskErrorFor(task, merged, seeded, false) !== null,
       );
       setTaskIndex(firstInvalidTask >= 0 ? firstInvalidTask : TASKS.length - 1);
+
     } else {
       setProfile({ ...EMPTY_PROFILE });
       setTaskIndex(0);
@@ -453,9 +409,18 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  /** The DB patch written when a logical step completes (mirrors the original per-step persist). */
+  /** The DB patch written when a logical step completes. */
   const stepPatch = (step: number): Record<string, unknown> => {
     if (step === 0) {
+      // Confirm-your-details: name + phone only. `email` is guarded by the
+      // restrict_profiles_write trigger (non-admins cannot change it), so it is
+      // shown read-only and never written here.
+      return {
+        full_name: profile?.full_name,
+        phone_number: profile?.phone_number,
+      };
+    }
+    if (step === 1) {
       // Derive the legacy combined `country` string from the structured fields so
       // every existing reader (AdminStudentsPage "Address / Country",
       // StudentProfile home_address) keeps working unchanged.
@@ -464,8 +429,6 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       const resCity = profile?.residential_city ?? "";
       const combined = [`${street} ${house}`.trim(), resCity].filter(Boolean).join(", ");
       return {
-        full_name: profile?.full_name,
-        phone_number: profile?.phone_number,
         date_of_birth: profile?.date_of_birth,
         gender: profile?.gender,
         nationality: profile?.nationality,
@@ -476,24 +439,11 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         country: combined || null,
       };
     }
-    if (step === 1) {
-      return {
-        university_name: profile?.university_name,
-        language_school_id: profile?.language_school_id,
-        intake_month: profile?.intake_month,
-        arrival_date: profile?.arrival_date || null,
-      };
-    }
-    // step 2 — conditional fields null out when their switch is off (StudentVisaPage.saveLegal shape).
+    // step 2 — study details.
     return {
-      eye_color: profile?.eye_color,
-      passport_expiry: profile?.passport_expiry || null,
-      has_changed_legal_name: !!profile?.has_changed_legal_name,
-      previous_legal_name: profile?.has_changed_legal_name ? profile?.previous_legal_name : null,
-      has_criminal_record: !!profile?.has_criminal_record,
-      criminal_record_details: profile?.has_criminal_record ? profile?.criminal_record_details : null,
-      has_dual_citizenship: !!profile?.has_dual_citizenship,
-      second_passport_country: profile?.has_dual_citizenship ? profile?.second_passport_country : null,
+      university_name: profile?.university_name,
+      language_school_id: profile?.language_school_id,
+      intake_month: profile?.intake_month,
     };
   };
 
@@ -502,7 +452,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const isLastOfStep = taskIndex === lastTaskIndexOfStep(task.step);
 
   const next = async () => {
-    const err = taskErrorFor(task, profile, contacts);
+    const err = taskErrorFor(task, profile, contacts, identityConfirmed);
     if (err) {
       setAttempted(true);
       toast({ variant: "destructive", description: t(err, err) });
@@ -539,7 +489,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Auto-focus the active input/select when the task changes.
   useEffect(() => {
-    if (task.type === "dob" || task.type === "arrival-date" || task.type === "gender" || task.type === "eye" || task.type === "school-select" || task.type === "address") return;
+    if (task.type === "dob" || task.type === "gender" || task.type === "school-select" || task.type === "address" || task.type === "confirm-identity") return;
     const id = `task-${task.key}`;
     const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
     if (el) {
@@ -547,6 +497,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       el.focus();
     }
   }, [taskIndex, task]);
+
 
   if (loading) {
     return (
@@ -559,19 +510,19 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   if (complete) return <>{children}</>;
 
   const steps = [
-    t("studentOnboarding.step1", "Personal"),
-    t("studentOnboarding.step2", "Study & arrival"),
-    t("studentOnboarding.step3", "Legal & identity"),
+    t("studentOnboarding.step1", "Confirm your details"),
+    t("studentOnboarding.step2", "Personal"),
+    t("studentOnboarding.step3", "Study"),
     t("studentOnboarding.step4", "Emergency contacts"),
   ];
 
   const stepLabel = steps[task.step];
-  const err = attempted ? taskErrorFor(task, profile, contacts) : null;
+  const err = attempted ? taskErrorFor(task, profile, contacts, identityConfirmed) : null;
 
   // Per-task headline + short explanation. Falls back to the flat field label
-  // when no friendly copy exists (switch-legal detail fields, etc.).
+  // when no friendly copy exists.
   const headlineKeyFor = (key: keyof ProfileShape): string => {
-    if (key in { full_name: 1, phone_number: 1, date_of_birth: 1, gender: 1, nationality: 1, city: 1, country: 1, university_name: 1, intake_month: 1, arrival_date: 1, eye_color: 1, passport_expiry: 1, has_changed_legal_name: 1, has_criminal_record: 1, has_dual_citizenship: 1, emergency_contacts: 1 }) {
+    if (key in { full_name: 1, phone_number: 1, date_of_birth: 1, gender: 1, nationality: 1, city: 1, country: 1, university_name: 1, intake_month: 1, emergency_contacts: 1 }) {
       return `studentOnboarding.q.${key}`;
     }
     return "";
@@ -587,12 +538,6 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       country: "Where do you live now?",
       university_name: "Which language school will you attend?",
       intake_month: "Which intake are you joining?",
-      arrival_date: "When do you arrive in Germany?",
-      eye_color: "What's your eye color?",
-      passport_expiry: "When does your passport expire?",
-      has_changed_legal_name: "Have you ever changed your legal name?",
-      has_criminal_record: "Do you have a criminal record?",
-      has_dual_citizenship: "Do you hold dual citizenship?",
       emergency_contacts: "Who should we contact in an emergency?",
     };
     return m[key] ?? labelFallbackFor(key);
@@ -609,21 +554,25 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       country: "Your current address — where correspondence should reach you.",
       university_name: "Choose your school — the contacts and requirements shown will adapt to your selection.",
       intake_month: "The month you start your language program.",
-      arrival_date: "Your planned arrival date — we'll time your appointments around it.",
-      eye_color: "Listed on your residence permit and biometric documents.",
-      passport_expiry: "Your passport must be valid for the duration of your studies.",
       emergency_contacts: "Add at least two people we can reach if something happens to you while in Germany.",
     };
     return m[key] ?? "";
   };
 
-  const headlineKey = headlineKeyFor(task.key);
-  const taskTitle = headlineKey
-    ? t(headlineKey, headlineFallbackFor(task.key))
-    : t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key));
-  const taskDesc = descriptionFallbackFor(task.key)
-    ? t(descriptionKeyFor(task.key), descriptionFallbackFor(task.key))
-    : null;
+  const isConfirmStep = task.type === "confirm-identity";
+  const headlineKey = isConfirmStep ? "studentOnboarding.q.confirmIdentity" : headlineKeyFor(task.key);
+  const taskTitle = isConfirmStep
+    ? t(headlineKey, "Let's start with your details")
+    : headlineKey
+      ? t(headlineKey, headlineFallbackFor(task.key))
+      : t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key));
+  const taskDesc = isConfirmStep
+    ? t("studentOnboarding.q.confirmIdentityDesc", "Check the details we already have. Correct anything that's wrong, then confirm to continue.")
+    : descriptionFallbackFor(task.key)
+      ? t(descriptionKeyFor(task.key), descriptionFallbackFor(task.key))
+      : null;
+
+
 
   // Which section comes after the current one (for the "X next" context label).
   const nextSectionLabel = task.step < 3 ? steps[task.step + 1] : null;
@@ -777,57 +726,62 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
         );
-      case "eye":
+      case "confirm-identity":
         return (
-          <div className="space-y-2">
-            <Label htmlFor="task-eye_color">{t("studentOnboarding.eyeColor", "Eye color")}</Label>
-            <Select
-              value={profile?.eye_color ?? ""}
-              onValueChange={v => { setProfile(prev => ({ ...(prev as ProfileShape), eye_color: v })); setAttempted(false); }}
-            >
-              <SelectTrigger id="task-eye_color">
-                <SelectValue placeholder={t("studentOnboarding.selectEyeColor", "Select eye color")} />
-              </SelectTrigger>
-              <SelectContent>
-                {EYE_COLORS.map(c => (
-                  <SelectItem key={c} value={c}>
-                    {t(`studentOnboarding.eyeColors.${c}`, c)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="task-full_name">{t("studentOnboarding.fullName", "Full name")}</Label>
+              <Input
+                id="task-full_name"
+                autoComplete="name"
+                value={profile?.full_name ?? ""}
+                onChange={e => {
+                  setProfile(prev => ({ ...(prev as ProfileShape), full_name: e.target.value }));
+                  setIdentityConfirmed(false);
+                  setAttempted(false);
+                }}
+                className={cn(err && !filled(profile?.full_name) && "border-destructive focus-visible:ring-destructive")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="task-phone_number">{t("studentOnboarding.phone", "Phone number")}</Label>
+              <Input
+                id="task-phone_number"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={t("studentOnboarding.ph.phone", "+972…")}
+                value={profile?.phone_number ?? ""}
+                onChange={e => {
+                  setProfile(prev => ({ ...(prev as ProfileShape), phone_number: e.target.value }));
+                  setIdentityConfirmed(false);
+                  setAttempted(false);
+                }}
+                className={cn(err && !isValidPhone(profile?.phone_number ?? "") && "border-destructive focus-visible:ring-destructive")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="task-email">{t("studentOnboarding.email", "Email address")}</Label>
+              <Input id="task-email" value={profile?.email ?? ""} readOnly disabled />
+              <p className="text-xs text-muted-foreground">
+                {t("studentOnboarding.emailLocked", "This is the address your account was created with. Contact us if it needs to change.")}
+              </p>
+            </div>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-4">
+              <Checkbox
+                id="confirm-identity"
+                checked={identityConfirmed}
+                onCheckedChange={v => { setIdentityConfirmed(v === true); setAttempted(false); }}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-foreground">
+                {t("studentOnboarding.confirmIdentityCheck", "I confirm these details are correct.")}
+              </span>
+            </label>
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
         );
-      case "date":
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={`task-${task.key}`}>
-              {t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}
-            </Label>
-            <Input
-              id={`task-${task.key}`}
-              type="date"
-              value={(profile?.[task.key] as string) ?? ""}
-              onChange={setField(task.key)}
-              className={cn(err && "border-destructive focus-visible:ring-destructive")}
-            />
-            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
-          </div>
-        );
-      case "arrival-date":
-        return (
-          <BirthdayPicker
-            id={`task-${task.key}`}
-            label={t("studentOnboarding.arrivalDate", "Arrival date")}
-            value={profile?.arrival_date ?? ""}
-            onChange={iso => { setProfile(prev => ({ ...(prev as ProfileShape), arrival_date: iso })); setAttempted(false); }}
-            phYear={t("studentOnboarding.ph.year", "Year")}
-            phMonth={t("studentOnboarding.ph.month", "Month")}
-            phDay={t("studentOnboarding.ph.day", "Day")}
-            years={ARRIVAL_YEARS}
-          />
-        );
+
       case "address":
         return (
           <div className="space-y-4">
@@ -863,50 +817,8 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
         );
-      case "switch-legal":
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-4">
-              <Label className="text-base">
-                {t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}
-              </Label>
-              <Switch
-                checked={!!(profile?.[task.key] as boolean)}
-                onCheckedChange={v => {
-                  setProfile(prev => ({ ...(prev as ProfileShape), [task.key]: v }));
-                  setAttempted(false);
-                }}
-              />
-            </div>
-            {profile?.[task.key] && task.detailKey && (
-              <div className="space-y-2">
-                <Label htmlFor={`task-${task.detailKey}`}>
-                  {t(`studentOnboarding.${labelKeyFor(task.detailKey)}`, labelFallbackFor(task.detailKey))}
-                </Label>
-                {task.detailType === "textarea" ? (
-                  <Textarea
-                    id={`task-${task.detailKey}`}
-                    ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                    rows={3}
-                    value={(profile?.[task.detailKey] as string) ?? ""}
-                    onChange={setField(task.detailKey)}
-                    className="text-base"
-                  />
-                ) : (
-                  <Input
-                    id={`task-${task.detailKey}`}
-                    ref={inputRef as React.RefObject<HTMLInputElement>}
-                    value={(profile?.[task.detailKey] as string) ?? ""}
-                    onChange={setField(task.detailKey)}
-                    enterKeyHint="next"
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); next(); } }}
-                   
-                  />
-                )}
-              </div>
-            )}
-          </div>
-        );
+
+
       case "contacts":
         return (
           <div className="space-y-3">

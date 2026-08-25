@@ -196,7 +196,7 @@
     "passportNumber": "Passport number",
     "dateOfBirth": "Date of birth",
     "cityOfBirth": "City of birth",
-    "arrivalDate": "Date of arrival in Germany",
+    "arrivalDate": "Planned arrival date in Germany",
     "homeAddress": "Home address",
     "homeAddressPlaceholder": "Street, city, country",
     "germanAddress": "Address in Germany",
@@ -212,7 +212,8 @@
     "deleteAccountWarning": "Permanently deletes your account and all associated data. This cannot be undone.",
     "typeDelete": "Type DELETE to confirm:",
     "confirmDelete": "Yes, delete my account",
-    "accountDeleted": "Account deleted"
+    "accountDeleted": "Account deleted",
+    "passportExpiry": "Passport expiry date"
   },
   "referrals": {
     "title": "Refer a Friend or Family Member",
@@ -3274,7 +3275,8 @@
     "fieldTypeBoolean": "Yes / No",
     "required": "Required",
     "active": "Active",
-    "saveSuccess": "Visa info saved"
+    "saveSuccess": "Visa info saved",
+    "immigrationHint": "These details are requested by the immigration office. Fill them in once you have them — your team can see them right away."
   },
   "contacts": {
     "title": "Important Contacts",
@@ -4495,9 +4497,9 @@
   "studentOnboarding": {
     "title": "Complete your profile",
     "subtitle": "We need these details before your file can move forward. You can leave and come back — your progress is saved at every step.",
-    "step1": "Personal",
-    "step2": "Study & arrival",
-    "step3": "Legal & identity",
+    "step1": "Confirm your details",
+    "step2": "Personal",
+    "step3": "Study",
     "step4": "Emergency contacts",
     "fullName": "Full name",
     "phone": "Phone number",
@@ -4597,7 +4599,15 @@
     "houseNumber": "House number",
     "residentialCity": "City",
     "noSchools": "No language schools are configured yet. Please contact the admin to add your school, then refresh this page.",
-    "errSchoolsLoad": "Could not load language schools. Please refresh, or contact support if it persists."
+    "errSchoolsLoad": "Could not load language schools. Please refresh, or contact support if it persists.",
+    "email": "Email address",
+    "emailLocked": "This is the address your account was created with. Contact us if it needs to change.",
+    "confirmIdentityCheck": "I confirm these details are correct.",
+    "errConfirmIdentity": "Please confirm your details to continue",
+    "q": {
+      "confirmIdentity": "Let's start with your details",
+      "confirmIdentityDesc": "Check the details we already have. Correct anything that's wrong, then confirm to continue."
+    }
   },
   "pushSettings": {
     "title": "Device notifications",

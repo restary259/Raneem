@@ -434,7 +434,7 @@ export default function StudentOverview({
             )}
             {showTab("visa") && (
               <TabsContent value="visa" className="mt-3">
-                {renderVisaTab ? renderVisaTab() : <VisaReadOnly fields={visaFields} values={visaValues} loading={visaLoading} isAr={isAr} t={t} />}
+                {renderVisaTab ? renderVisaTab() : <VisaReadOnly fields={visaFields} values={visaValues} loading={visaLoading} isAr={isAr} t={t} profile={profile} />}
               </TabsContent>
             )}
             {showDocsTab && (
@@ -528,12 +528,14 @@ function VisaReadOnly({
   loading,
   isAr,
   t,
+  profile,
 }: {
   fields: VisaField[];
   values: Record<string, string>;
   loading: boolean;
   isAr: boolean;
   t: TFunction<"dashboard">;
+  profile?: Record<string, unknown> | null;
 }) {
   if (loading) {
     return (
@@ -542,7 +544,36 @@ function VisaReadOnly({
       </div>
     );
   }
-  if (fields.length === 0 || fields.every((f) => !values[f.id])) {
+  // Profile-level immigration answers the student fills on their Visa page.
+  const profileRows: { label: string; value: string | null }[] = profile
+    ? [
+        { label: isAr ? "انتهاء الجواز" : "Passport expiry", value: (profile.passport_expiry as string) ?? null },
+        { label: isAr ? "تاريخ الوصول" : "Planned arrival", value: (profile.arrival_date as string) ?? null },
+        { label: isAr ? "لون العيون" : "Eye color", value: (profile.eye_color as string) ?? null },
+        {
+          label: isAr ? "تغيير الاسم القانوني" : "Changed legal name",
+          value: profile.has_changed_legal_name
+            ? (profile.previous_legal_name as string) || (isAr ? "نعم" : "Yes")
+            : null,
+        },
+        {
+          label: isAr ? "سجل جنائي" : "Criminal record",
+          value: profile.has_criminal_record
+            ? (profile.criminal_record_details as string) || (isAr ? "نعم" : "Yes")
+            : null,
+        },
+        {
+          label: isAr ? "جنسية مزدوجة" : "Dual citizenship",
+          value: profile.has_dual_citizenship
+            ? (profile.second_passport_country as string) || (isAr ? "نعم" : "Yes")
+            : null,
+        },
+      ].filter((r) => !!r.value)
+    : [];
+
+  const hasDynamic = fields.length > 0 && fields.some((f) => values[f.id]);
+
+  if (!hasDynamic && profileRows.length === 0) {
     return <p className="text-sm text-muted-foreground py-4 text-center">{t("visa.noData", "No visa information on file yet.")}</p>;
   }
   return (
@@ -564,9 +595,16 @@ function VisaReadOnly({
           </div>
         );
       })}
+      {profileRows.map((r) => (
+        <div key={r.label} className="min-w-0">
+          <p className="text-xs text-muted-foreground">{r.label}</p>
+          <p className="mt-0.5 text-sm font-medium text-foreground break-words">{r.value}</p>
+        </div>
+      ))}
     </div>
   );
 }
+
 
 /* ── Contact rows (fallback / standalone) ────────────────────────────── */
 function ContactRows({
