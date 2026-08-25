@@ -3743,6 +3743,7 @@ export type Database = {
           referred_name: string
           referred_phone: string
           referrer_user_id: string
+          status: string
         }
         Insert: {
           created_at?: string
@@ -3753,6 +3754,7 @@ export type Database = {
           referred_name: string
           referred_phone: string
           referrer_user_id: string
+          status?: string
         }
         Update: {
           created_at?: string
@@ -3763,6 +3765,7 @@ export type Database = {
           referred_name?: string
           referred_phone?: string
           referrer_user_id?: string
+          status?: string
         }
         Relationships: [
           {
