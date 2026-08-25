@@ -135,6 +135,8 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const { financials, refetch: refetchFinancials } = useCaseFinancials(caseId);
 
   const [proofs, setProofs] = useState<ProofRow[]>([]);
+  /** Authoritative German-side confirmation state (what the enrollment gate reads). */
+  const [financeConfirmations, setFinanceConfirmations] = useState<FinanceConfirmationRow[]>([]);
   const [proofBusyId, setProofBusyId] = useState<string | null>(null);
   const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
   const [confirmingAgency, setConfirmingAgency] = useState(false);
