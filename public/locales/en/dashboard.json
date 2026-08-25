@@ -4379,8 +4379,6 @@
     "bank": {
       "title": "Bank Details",
       "subtitle": "Secure financial information for receiving your commission payouts.",
-      "secureArea": "Secure financial information",
-      "secureDesc": "Your bank details are encrypted and used only for processing your commission payouts. Once confirmed, they can only be changed by an administrator.",
       "verified": "Verified",
       "country": "Bank account location",
       "israel": "Israeli account",
