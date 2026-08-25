@@ -136,15 +136,8 @@ const AdminSubmissionsPage = () => {
 
   // Split panel state
   const [showSplitPanel, setShowSplitPanel] = useState(false);
-  const [splitPreview, setSplitPreview] = useState<CommissionPreview>({
-    serviceFee: 0,
-    referralDiscount: 0,
-    partners: [],
-    partnerCommission: 0,
-    teamCommission: 0,
-    agent: null,
-    platformRevenue: 0,
-  });
+  const [splitPreview, setSplitPreview] = useState<CommissionPreview>(EMPTY_SPLIT);
+
 
   // Password gate state
   const [showPasswordGate, setShowPasswordGate] = useState(false);
