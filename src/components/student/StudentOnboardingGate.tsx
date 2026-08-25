@@ -271,7 +271,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [contacts, setContacts] = useState<EmergencyContact[]>([emptyContact(), emptyContact()]);
   /** Inline errors are only surfaced after the student attempts to advance. */
   const [attempted, setAttempted] = useState(false);
+  /** The student must explicitly confirm the details we already hold. */
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
 
   // Active language schools for the onboarding dropdown + live preview of the
   // contacts that apply to the selected school (universal + school/city).
