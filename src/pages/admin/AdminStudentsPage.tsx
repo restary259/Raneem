@@ -404,6 +404,9 @@ export default function AdminStudentsPage() {
         const completed = new Map<string, string | null>(
           (subRes.data || []).map((r: any) => [r.case_id, r.profile_completed_at]),
         );
+        const programs = new Map<string, string | null>(
+          (subRes.data || []).map((r: any) => [r.case_id, r.program_id ?? null]),
+        );
         const map: Record<string, CaseSummary> = {};
         (caseRes.data || []).forEach((c: any) => {
           map[c.id] = {
@@ -411,6 +414,8 @@ export default function AdminStudentsPage() {
             reference: c.case_reference,
             status: c.status,
             profileCompletedAt: completed.get(c.id) ?? null,
+            assignedTo: c.assigned_to ?? null,
+            programId: programs.get(c.id) ?? null,
           };
         });
         setCaseInfo(map);
