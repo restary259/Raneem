@@ -111,6 +111,10 @@ interface CaseSummary {
   reference: string | null;
   status: string | null;
   profileCompletedAt: string | null;
+  /** Team member the case is assigned to (resolved in the overview header). */
+  assignedTo: string | null;
+  /** Study program chosen on the case submission. */
+  programId: string | null;
 }
 
 
