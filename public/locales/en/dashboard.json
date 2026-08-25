@@ -1345,6 +1345,20 @@
       "closedCases": "Closed cases",
       "teamRewardTotal": "Team reward total",
       "teamAchievements": "Team achievements",
+      "earlyRelease": {
+        "title": "Locked rewards (early release)",
+        "hint": "Pay selected commissions now instead of waiting for the 20-day hold. Team members only.",
+        "empty": "No locked rewards for this member",
+        "unlocksOn": "Unlocks on",
+        "selectedTotal": "Selected total",
+        "action": "Release & pay now",
+        "confirmReason": "You are about to pay locked commissions immediately, bypassing the 20-day hold.",
+        "confirmTitle": "Release payout early?",
+        "confirmBody": "This marks the selected rewards as paid and records a paid payout for this member.",
+        "note": "Reason (required)",
+        "done": "Payout released"
+      },
+
       "agentOverride": "Agent reward override",
       "agentNetwork": "Agent network",
       "agentNetworkEmpty": "No agents yet",

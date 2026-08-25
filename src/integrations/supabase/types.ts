@@ -4650,6 +4650,10 @@ export type Database = {
         Args: { _reason?: string; _target_id: string }
         Returns: Json
       }
+      admin_early_release_rewards: {
+        Args: { p_member_id: string; p_note: string; p_reward_ids: string[] }
+        Returns: Json
+      }
       admin_reactivate_account: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4969,6 +4973,19 @@ export type Database = {
           payment_id: string
           settled_at: string
           student_name: string
+        }[]
+      }
+      get_member_locked_rewards: {
+        Args: { p_member_id: string }
+        Returns: {
+          amount: number
+          case_id: string
+          case_reference: string
+          created_at: string
+          reward_id: string
+          reward_type: string
+          student_name: string
+          unlock_at: string
         }[]
       }
       get_members_directory: {

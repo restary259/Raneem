@@ -15,6 +15,8 @@ import LinkedStudentsModal from './LinkedStudentsModal';
 import AgentParentToggle from './AgentParentToggle';
 import ReferralLinkToggle from './ReferralLinkToggle';
 import ApplyFormToggle from './ApplyFormToggle';
+import TeamEarlyReleaseCard from './TeamEarlyReleaseCard';
+
 
 import { usePayoutActions } from '@/hooks/usePayoutActions';
 import { useDirection } from '@/hooks/useDirection';
@@ -372,6 +374,15 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
               </CardContent>
             </Card>
           )}
+
+          {isTeam && (
+            <TeamEarlyReleaseCard
+              memberId={row.requester_id}
+              memberName={row.full_name}
+              onReleased={onRefresh}
+            />
+          )}
+
         </CardContent>
       </Card>
 
