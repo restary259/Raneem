@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { generateIntakeMonths } from "@/utils/intakeMonths";
+import { generateIntakeMonths, intakeMonthToStartDate } from "@/utils/intakeMonths";
 import { DOB_MONTHS, DOB_YEARS, daysInMonth, normalizeDate } from "@/utils/dateUtils";
 import { differenceInYears } from "date-fns";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
@@ -370,7 +370,11 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
         insurance_price: vals.insurance_id ? (insCost.total ?? 0) : 0,
 
-        program_start_date: null,
+        /*
+         * The submit gate reads this column, not extra_data.start_month, so
+         * the selected intake month must be persisted here as a real date.
+         */
+        program_start_date: intakeMonthToStartDate(vals.start_month),
 
         program_end_date: null,
 

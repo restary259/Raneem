@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth, ageFromISO, parseISODate } from "@/utils/dateUtils";
+import { intakeMonthToStartDate } from "@/utils/intakeMonths";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { DraftStatus } from "@/components/common/DraftStatus";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
@@ -427,9 +428,10 @@ export default function ProfileCompletionForm({
       };
       const upsertPayload: any = {
         case_id: caseId,
+        school_id: schoolId || null,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
-        program_start_date: null,
+        program_start_date: intakeMonthToStartDate(startMonth),
         program_end_date: null,
         service_fee: 0,
         program_price: selectedProgram?.price ?? 0,

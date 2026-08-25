@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 // ✅ FIX: Use the shared intakeMonths utility (fixes hardcoded 2025 start)
-import { generateIntakeMonths } from "@/utils/intakeMonths";
+import { generateIntakeMonths, intakeMonthToStartDate } from "@/utils/intakeMonths";
 // ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 import { validateUploadFile } from "@/lib/uploadRules";
@@ -610,7 +610,7 @@ export default function SubmitNewStudentPage() {
         program_id: programId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
-        program_start_date: null,
+        program_start_date: intakeMonthToStartDate(startMonth),
         program_end_date: null,
         profile_completed_at: now,
         // Weekly rate × weeks — `*_price` columns always hold the TOTAL.

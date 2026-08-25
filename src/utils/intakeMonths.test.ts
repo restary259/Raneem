@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { generateIntakeMonths, currentMonthValue } from "./intakeMonths";
+import { generateIntakeMonths, currentMonthValue, intakeMonthToStartDate } from "./intakeMonths";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -44,5 +44,18 @@ describe("currentMonthValue", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-01T00:00:00Z"));
     expect(currentMonthValue()).toBe("2026-07");
+  });
+});
+
+describe("intakeMonthToStartDate", () => {
+  it("maps an intake month to the first day of that month", () => {
+    expect(intakeMonthToStartDate("2026-09")).toBe("2026-09-01");
+  });
+
+  it("returns null when no month is selected so validation still rejects it", () => {
+    expect(intakeMonthToStartDate("")).toBeNull();
+    expect(intakeMonthToStartDate(null)).toBeNull();
+    expect(intakeMonthToStartDate(undefined)).toBeNull();
+    expect(intakeMonthToStartDate("September 2026")).toBeNull();
   });
 });
