@@ -33,7 +33,7 @@ import { CopyButton } from "@/components/common/CopyButton";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
 import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
-import CaseFinance from "@/components/cases/CaseFinance";
+import CaseFinance, { type CaseFinanceReadiness } from "@/components/cases/CaseFinance";
 import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
@@ -137,6 +137,7 @@ const AdminSubmissionsPage = () => {
   // Split panel state
   const [showSplitPanel, setShowSplitPanel] = useState(false);
   const [splitPreview, setSplitPreview] = useState<CommissionPreview>(EMPTY_SPLIT);
+  const [financeReadiness, setFinanceReadiness] = useState<CaseFinanceReadiness | null>(null);
 
 
   // Password gate state
@@ -389,6 +390,19 @@ const AdminSubmissionsPage = () => {
 
   const openSplitPanel = async () => {
     if (!selected) return;
+    if (
+      !financeReadiness ||
+      financeReadiness.germanyConfirmedRequired < financeReadiness.germanyRequiredTotal
+    ) {
+      toast({
+        variant: "destructive",
+        description: t(
+          "admin.submissions.confirmGermanPaymentsFirst",
+          "Confirm the language course and accommodation payments before marking this case as enrolled.",
+        ),
+      });
+      return;
+    }
     setApproveEmail("");
     // Check whether the team already sent the student an activation link (a
     // pending user_invitations row for this case). create-student-from-case in
@@ -891,7 +905,12 @@ const AdminSubmissionsPage = () => {
                 </>
               )}
 
-              <CaseFinance caseId={selected.id} canManage={false} canConfirm={true} />
+              <CaseFinance
+                caseId={selected.id}
+                canManage={false}
+                canConfirm={true}
+                onReadinessChange={setFinanceReadiness}
+              />
 
               <CaseInvoiceBlock caseId={selected.id} caseStatus={selected.status} />
 
@@ -959,10 +978,29 @@ const AdminSubmissionsPage = () => {
                   {t("admin.submissions.openFullCase")}
                 </Button>
                 {selected.status !== "enrollment_paid" && (
-                  <Button className="w-full gap-2" onClick={openSplitPanel} disabled={marking}>
-                    <SplitSquareHorizontal className="h-4 w-4" />
-                    {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
-                  </Button>
+                  <div className="space-y-1.5">
+                    <Button
+                      className="w-full gap-2"
+                      onClick={openSplitPanel}
+                      disabled={
+                        marking ||
+                        !financeReadiness ||
+                        financeReadiness.germanyConfirmedRequired < financeReadiness.germanyRequiredTotal
+                      }
+                    >
+                      <SplitSquareHorizontal className="h-4 w-4" />
+                      {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
+                    </Button>
+                    {financeReadiness &&
+                      financeReadiness.germanyConfirmedRequired < financeReadiness.germanyRequiredTotal && (
+                        <p className="text-xs text-muted-foreground">
+                          {t(
+                            "admin.submissions.confirmGermanPaymentsFirst",
+                            "Confirm the language course and accommodation payments before marking this case as enrolled.",
+                          )}
+                        </p>
+                      )}
+                  </div>
                 )}
                 <Button
                   variant="outline"

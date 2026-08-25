@@ -61,6 +61,8 @@ export interface CaseFinanceReadiness {
   agencyConfirmed: boolean;
   agencyAck: boolean;
   confirming: boolean;
+  germanyRequiredTotal: number;
+  germanyConfirmedRequired: number;
 }
 
 export interface CaseFinanceHandle {
@@ -469,8 +471,10 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       agencyConfirmed,
       agencyAck: false,
       confirming: confirmingAgency,
+      germanyRequiredTotal: requiredGermanyTypes.length,
+      germanyConfirmedRequired: confirmedRequiredCount,
     }),
-    [servicesSelected, serviceTotal, agencyConfirmed, confirmingAgency],
+    [servicesSelected, serviceTotal, agencyConfirmed, confirmingAgency, requiredGermanyTypes.length, confirmedRequiredCount],
   );
 
   useEffect(() => {
