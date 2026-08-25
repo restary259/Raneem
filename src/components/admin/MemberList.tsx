@@ -62,7 +62,7 @@ function getPrimaryKPI(member: MemberRow): { label: string; value: string } {
     case "team_member":
       return { label: "admin.members.kpiEnrolled", value: String(member.enrolled_cases) };
     case "agent":
-      return { label: "admin.members.kpiNetworkEnrolled", value: String(member.enrolled_cases ?? 0) };
+      return { label: "admin.members.kpiNetworkEnrolled", value: String(member.network_enrolled_cases ?? 0) };
     case "social_media_partner":
     case "ambassador":
       return { label: "admin.members.kpiEnrolled", value: String(member.students_count) };
