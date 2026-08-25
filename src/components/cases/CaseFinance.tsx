@@ -84,6 +84,17 @@ const schoolPaymentTypes = ["school_course", "school_accommodation", "school_ins
 
 type SchoolPaymentType = (typeof schoolPaymentTypes)[number];
 
+/**
+ * The payment/proof rows use the `school_*` vocabulary, while the finance
+ * checklist (`case_finance_confirmations`) and the enrollment gate use
+ * `language_course` / `accommodation` / `insurance`. Map before calling the RPC.
+ */
+const FINANCE_TYPE_BY_PAYMENT_TYPE: Record<SchoolPaymentType, string> = {
+  school_course: "language_course",
+  school_accommodation: "accommodation",
+  school_insurance: "insurance",
+};
+
 const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   {
     caseId,
@@ -314,7 +325,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     try {
       const { error } = await (supabase as any).rpc("confirm_german_finance_item", {
         p_case_id: caseId,
-        p_finance_type: type,
+        p_finance_type: FINANCE_TYPE_BY_PAYMENT_TYPE[type],
       });
       if (error) throw error;
       toast({
