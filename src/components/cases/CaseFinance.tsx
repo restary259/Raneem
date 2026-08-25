@@ -325,7 +325,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     try {
       const { error } = await (supabase as any).rpc("confirm_german_finance_item", {
         p_case_id: caseId,
-        p_finance_type: type,
+        p_finance_type: FINANCE_TYPE_BY_PAYMENT_TYPE[type],
       });
       if (error) throw error;
       toast({
