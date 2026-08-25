@@ -4996,6 +4996,7 @@ export type Database = {
           available_amount: number
           city: string
           created_at: string
+          direct_enrolled_cases: number
           earned_override: number
           earned_referral: number
           email: string
@@ -5004,6 +5005,7 @@ export type Database = {
           is_deactivated: boolean
           last_request_at: string
           locked_amount: number
+          network_enrolled_cases: number
           open_request_amount: number
           open_requests: number
           paid_amount: number
