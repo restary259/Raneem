@@ -75,17 +75,39 @@ interface SubmittedCase {
   documents?: Array<{ id: string; file_name: string; file_url: string; category: string; created_at: string }>;
 }
 
+/** Referrer roles the server preview can return, mirroring record_case_commission. */
+type ReferrerRole = "partner" | "ambassador" | "agent_self" | "student";
+
 interface CommissionPreview {
   serviceFee: number;
   referralDiscount: number;
-  partners: { partnerId: string; name: string; amount: number }[];
+  /** The single account that earns the referral commission for this case (if any). */
+  referrer: { userId: string; name: string; role: ReferrerRole; amount: number; customRate: boolean } | null;
   teamCommission: number;
+  /** Whether the team amount came from a per-member override rather than the global rate. */
+  teamCustomRate: boolean;
+  teamName: string | null;
   /** Recruiting agent paid on top of the partner pool (additive). */
   agent: { name: string; amount: number } | null;
   platformRevenue: number;
+  marginWarning: boolean;
   // legacy single field for the log message
   partnerCommission: number;
 }
+
+const EMPTY_SPLIT: CommissionPreview = {
+  serviceFee: 0,
+  referralDiscount: 0,
+  referrer: null,
+  teamCommission: 0,
+  teamCustomRate: false,
+  teamName: null,
+  agent: null,
+  platformRevenue: 0,
+  marginWarning: false,
+  partnerCommission: 0,
+};
+
 
 
 const AdminSubmissionsPage = () => {
