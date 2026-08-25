@@ -510,19 +510,19 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   if (complete) return <>{children}</>;
 
   const steps = [
-    t("studentOnboarding.step1", "Personal"),
-    t("studentOnboarding.step2", "Study & arrival"),
-    t("studentOnboarding.step3", "Legal & identity"),
+    t("studentOnboarding.step1", "Confirm your details"),
+    t("studentOnboarding.step2", "Personal"),
+    t("studentOnboarding.step3", "Study"),
     t("studentOnboarding.step4", "Emergency contacts"),
   ];
 
   const stepLabel = steps[task.step];
-  const err = attempted ? taskErrorFor(task, profile, contacts) : null;
+  const err = attempted ? taskErrorFor(task, profile, contacts, identityConfirmed) : null;
 
   // Per-task headline + short explanation. Falls back to the flat field label
-  // when no friendly copy exists (switch-legal detail fields, etc.).
+  // when no friendly copy exists.
   const headlineKeyFor = (key: keyof ProfileShape): string => {
-    if (key in { full_name: 1, phone_number: 1, date_of_birth: 1, gender: 1, nationality: 1, city: 1, country: 1, university_name: 1, intake_month: 1, arrival_date: 1, eye_color: 1, passport_expiry: 1, has_changed_legal_name: 1, has_criminal_record: 1, has_dual_citizenship: 1, emergency_contacts: 1 }) {
+    if (key in { full_name: 1, phone_number: 1, date_of_birth: 1, gender: 1, nationality: 1, city: 1, country: 1, university_name: 1, intake_month: 1, emergency_contacts: 1 }) {
       return `studentOnboarding.q.${key}`;
     }
     return "";
@@ -538,12 +538,6 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       country: "Where do you live now?",
       university_name: "Which language school will you attend?",
       intake_month: "Which intake are you joining?",
-      arrival_date: "When do you arrive in Germany?",
-      eye_color: "What's your eye color?",
-      passport_expiry: "When does your passport expire?",
-      has_changed_legal_name: "Have you ever changed your legal name?",
-      has_criminal_record: "Do you have a criminal record?",
-      has_dual_citizenship: "Do you hold dual citizenship?",
       emergency_contacts: "Who should we contact in an emergency?",
     };
     return m[key] ?? labelFallbackFor(key);
@@ -560,18 +554,24 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       country: "Your current address — where correspondence should reach you.",
       university_name: "Choose your school — the contacts and requirements shown will adapt to your selection.",
       intake_month: "The month you start your language program.",
-      arrival_date: "Your planned arrival date — we'll time your appointments around it.",
-      eye_color: "Listed on your residence permit and biometric documents.",
-      passport_expiry: "Your passport must be valid for the duration of your studies.",
       emergency_contacts: "Add at least two people we can reach if something happens to you while in Germany.",
     };
     return m[key] ?? "";
   };
 
-  const headlineKey = headlineKeyFor(task.key);
-  const taskTitle = headlineKey
-    ? t(headlineKey, headlineFallbackFor(task.key))
-    : t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key));
+  const isConfirmStep = task.type === "confirm-identity";
+  const headlineKey = isConfirmStep ? "studentOnboarding.q.confirmIdentity" : headlineKeyFor(task.key);
+  const taskTitle = isConfirmStep
+    ? t(headlineKey, "Let's start with your details")
+    : headlineKey
+      ? t(headlineKey, headlineFallbackFor(task.key))
+      : t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key));
+  const taskDesc = isConfirmStep
+    ? t("studentOnboarding.q.confirmIdentityDesc", "Check the details we already have. Correct anything that's wrong, then confirm to continue.")
+    : descriptionFallbackFor(task.key)
+      ? t(descriptionKeyFor(task.key), descriptionFallbackFor(task.key))
+      : null;
+
   const taskDesc = descriptionFallbackFor(task.key)
     ? t(descriptionKeyFor(task.key), descriptionFallbackFor(task.key))
     : null;
