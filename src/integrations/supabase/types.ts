@@ -5268,6 +5268,7 @@ export type Database = {
         Returns: undefined
       }
       is_active_agent: { Args: { p_uid: string }; Returns: boolean }
+      is_admin_session: { Args: never; Returns: boolean }
       is_direct_thread_member: {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
