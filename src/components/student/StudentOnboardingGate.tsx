@@ -191,22 +191,15 @@ const labelKeyFor = (key: keyof ProfileShape): string => {
   switch (key) {
     case "full_name": return "studentOnboarding.fullName";
     case "phone_number": return "studentOnboarding.phone";
+    case "email": return "studentOnboarding.email";
     case "university_name": return "studentOnboarding.universityName";
     case "intake_month": return "studentOnboarding.intakeMonth";
-    case "arrival_date": return "studentOnboarding.arrivalDate";
-    case "passport_expiry": return "studentOnboarding.passportExpiry";
     case "nationality": return "studentOnboarding.nationality";
     case "city": return "studentOnboarding.city";
     case "country": return "studentOnboarding.country";
     case "street": return "studentOnboarding.street";
     case "house_number": return "studentOnboarding.houseNumber";
     case "residential_city": return "studentOnboarding.residentialCity";
-    case "has_changed_legal_name": return "studentOnboarding.hasChangedLegalName";
-    case "previous_legal_name": return "studentOnboarding.previousLegalName";
-    case "has_criminal_record": return "studentOnboarding.hasCriminalRecord";
-    case "criminal_record_details": return "studentOnboarding.criminalRecordDetails";
-    case "has_dual_citizenship": return "studentOnboarding.hasDualCitizenship";
-    case "second_passport_country": return "studentOnboarding.secondPassportCountry";
     default: return "studentOnboarding.fullName";
   }
 };
@@ -216,22 +209,15 @@ const labelFallbackFor = (key: keyof ProfileShape): string => {
   switch (key) {
     case "full_name": return "Full name";
     case "phone_number": return "Phone number";
+    case "email": return "Email address";
     case "university_name": return "Language school";
     case "intake_month": return "Intake month";
-    case "arrival_date": return "Arrival date";
-    case "passport_expiry": return "Passport expiry";
     case "nationality": return "Nationality";
     case "city": return "City of birth";
     case "country": return "Address";
     case "street": return "Street";
     case "house_number": return "House number";
     case "residential_city": return "City";
-    case "has_changed_legal_name": return "Have you ever changed your legal name?";
-    case "previous_legal_name": return "Previous legal name";
-    case "has_criminal_record": return "Do you have a criminal record?";
-    case "criminal_record_details": return "Details";
-    case "has_dual_citizenship": return "Do you have dual citizenship?";
-    case "second_passport_country": return "Second passport country";
     default: return "Full name";
   }
 };
@@ -241,7 +227,14 @@ const taskErrorFor = (
   task: Task,
   p: ProfileShape | null,
   contactList: EmergencyContact[],
+  identityConfirmed = false,
 ): string | null => {
+  if (task.type === "confirm-identity") {
+    if (!filled(p?.full_name)) return "studentOnboarding.errRequired";
+    if (!filled(p?.phone_number)) return "studentOnboarding.errRequired";
+    if (!isValidPhone(p?.phone_number ?? "")) return "studentOnboarding.errPhoneInvalid";
+    return identityConfirmed ? null : "studentOnboarding.errConfirmIdentity";
+  }
   if (task.type === "contacts") {
     const valid = contactList.filter(c => filled(c.name) && filled(c.phone) && isValidPhone(c.phone));
     return valid.length >= 2 ? null : "studentOnboarding.errContactsMin";
@@ -251,10 +244,6 @@ const taskErrorFor = (
     if (!filled(v)) return "studentOnboarding.errRequired";
     return isValidPhone(v) ? null : "studentOnboarding.errPhoneInvalid";
   }
-  if (task.type === "switch-legal") {
-    // Switches are optional; always valid (the detail field is never required).
-    return null;
-  }
   if (task.type === "address") {
     // Structured home address: street + house number + residential city.
     return filled(p?.street) && filled(p?.house_number) && filled(p?.residential_city)
@@ -263,6 +252,7 @@ const taskErrorFor = (
   }
   return filled(p?.[task.key] as string) ? null : "studentOnboarding.errRequired";
 };
+
 
 /**
  * Blocks the student dashboard until the required profile is on file.
