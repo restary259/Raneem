@@ -217,9 +217,28 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     setProofs((data ?? []) as ProofRow[]);
   }, [caseId]);
 
+  /**
+   * The German checklist rows are the same rows the enrollment gate reads, so
+   * the UI shows exactly what blocks (or no longer blocks) marking the case paid.
+   */
+  const loadFinanceConfirmations = useCallback(async () => {
+    const { data, error } = await (supabase as any)
+      .from("case_finance_confirmations")
+      .select("finance_type, status, confirmed_at, confirmed_by")
+      .eq("case_id", caseId);
+    if (error) {
+      console.error("Failed to load finance confirmations:", error);
+      setFinanceConfirmations([]);
+      return;
+    }
+    setFinanceConfirmations((data ?? []) as FinanceConfirmationRow[]);
+  }, [caseId]);
+
   useEffect(() => {
     void loadProofs();
-  }, [loadProofs]);
+    void loadFinanceConfirmations();
+  }, [loadProofs, loadFinanceConfirmations]);
+
 
   /** Load the DARB invoice (issued on submit-to-admin) for the Invoice tab. */
   useEffect(() => {
