@@ -817,50 +817,8 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
         );
-      case "switch-legal":
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-4">
-              <Label className="text-base">
-                {t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}
-              </Label>
-              <Switch
-                checked={!!(profile?.[task.key] as boolean)}
-                onCheckedChange={v => {
-                  setProfile(prev => ({ ...(prev as ProfileShape), [task.key]: v }));
-                  setAttempted(false);
-                }}
-              />
-            </div>
-            {profile?.[task.key] && task.detailKey && (
-              <div className="space-y-2">
-                <Label htmlFor={`task-${task.detailKey}`}>
-                  {t(`studentOnboarding.${labelKeyFor(task.detailKey)}`, labelFallbackFor(task.detailKey))}
-                </Label>
-                {task.detailType === "textarea" ? (
-                  <Textarea
-                    id={`task-${task.detailKey}`}
-                    ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                    rows={3}
-                    value={(profile?.[task.detailKey] as string) ?? ""}
-                    onChange={setField(task.detailKey)}
-                    className="text-base"
-                  />
-                ) : (
-                  <Input
-                    id={`task-${task.detailKey}`}
-                    ref={inputRef as React.RefObject<HTMLInputElement>}
-                    value={(profile?.[task.detailKey] as string) ?? ""}
-                    onChange={setField(task.detailKey)}
-                    enterKeyHint="next"
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); next(); } }}
-                   
-                  />
-                )}
-              </div>
-            )}
-          </div>
-        );
+
+
       case "contacts":
         return (
           <div className="space-y-3">
