@@ -372,6 +372,15 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
               </CardContent>
             </Card>
           )}
+
+          {isTeam && (
+            <TeamEarlyReleaseCard
+              memberId={row.requester_id}
+              memberName={row.full_name}
+              onReleased={onRefresh}
+            />
+          )}
+
         </CardContent>
       </Card>
 
