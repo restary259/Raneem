@@ -137,7 +137,10 @@ export default function StudentVisaPage() {
         .from("profiles")
         .update({
           eye_color: legalDraft.eye_color,
+          passport_expiry: legalDraft.passport_expiry || null,
+          arrival_date: legalDraft.arrival_date || null,
           has_changed_legal_name: legalDraft.has_changed_legal_name,
+
           previous_legal_name: legalDraft.has_changed_legal_name ? legalDraft.previous_legal_name : null,
           has_criminal_record: legalDraft.has_criminal_record,
           criminal_record_details: legalDraft.has_criminal_record ? legalDraft.criminal_record_details : null,
