@@ -34,6 +34,10 @@ export interface MemberRow {
   open_requests: number;
   open_request_amount: number;
   last_request_at: string | null;
+  /** Enrolled cases the account referred personally. */
+  direct_enrolled_cases: number;
+  /** Enrolled cases referred by the partners/ambassadors an agent recruited. */
+  network_enrolled_cases: number;
 }
 
 interface MemberListProps {
@@ -58,7 +62,7 @@ function getPrimaryKPI(member: MemberRow): { label: string; value: string } {
     case "team_member":
       return { label: "admin.members.kpiEnrolled", value: String(member.enrolled_cases) };
     case "agent":
-      return { label: "admin.members.kpiNetworkEnrolled", value: String(member.enrolled_cases ?? 0) };
+      return { label: "admin.members.kpiNetworkEnrolled", value: String(member.network_enrolled_cases ?? 0) };
     case "social_media_partner":
     case "ambassador":
       return { label: "admin.members.kpiEnrolled", value: String(member.students_count) };

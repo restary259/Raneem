@@ -111,6 +111,10 @@ interface CaseSummary {
   reference: string | null;
   status: string | null;
   profileCompletedAt: string | null;
+  /** Team member the case is assigned to (resolved in the overview header). */
+  assignedTo: string | null;
+  /** Study program chosen on the case submission. */
+  programId: string | null;
 }
 
 
@@ -371,12 +375,12 @@ export default function AdminStudentsPage() {
           ? supabase.from("profiles").select("id, full_name, email").in("id", creatorIds)
           : Promise.resolve({ data: [] as any[] }),
         caseIds.length
-          ? supabase.from("cases").select("id, case_reference, status").in("id", caseIds)
+          ? supabase.from("cases").select("id, case_reference, status, assigned_to").in("id", caseIds)
           : Promise.resolve({ data: [] as any[] }),
         caseIds.length
           ? (supabase as any)
               .from("case_submissions")
-              .select("case_id, profile_completed_at")
+              .select("case_id, profile_completed_at, program_id")
               .in("case_id", caseIds)
           : Promise.resolve({ data: [] as any[] }),
         emails.length
@@ -400,6 +404,9 @@ export default function AdminStudentsPage() {
         const completed = new Map<string, string | null>(
           (subRes.data || []).map((r: any) => [r.case_id, r.profile_completed_at]),
         );
+        const programs = new Map<string, string | null>(
+          (subRes.data || []).map((r: any) => [r.case_id, r.program_id ?? null]),
+        );
         const map: Record<string, CaseSummary> = {};
         (caseRes.data || []).forEach((c: any) => {
           map[c.id] = {
@@ -407,6 +414,8 @@ export default function AdminStudentsPage() {
             reference: c.case_reference,
             status: c.status,
             profileCompletedAt: completed.get(c.id) ?? null,
+            assignedTo: c.assigned_to ?? null,
+            programId: programs.get(c.id) ?? null,
           };
         });
         setCaseInfo(map);
@@ -893,10 +902,19 @@ export default function AdminStudentsPage() {
                 caseData={(() => {
                   const c = caseOf(selected);
                   return c
-                    ? { id: c.id, case_reference: c.reference, status: c.status, phone_number: selected.phone_number }
+                    ? {
+                        id: c.id,
+                        case_reference: c.reference,
+                        status: c.status,
+                        phone_number: selected.phone_number,
+                        assigned_to: c.assignedTo,
+                      }
                     : null;
                 })()}
-                submission={null}
+                submission={(() => {
+                  const c = caseOf(selected);
+                  return c ? { case_id: c.id, program_id: c.programId } : null;
+                })()}
                 variant="sheet"
                 caseHref={(cid) => `/admin/cases/${cid}`}
                 financeHref={(cid) => `/admin/cases/${cid}`}

@@ -55,6 +55,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       columns: [
         { key: 'case_reference', label: c('reference') },
         { key: 'full_name', label: c('name') },
+        { key: 'email', label: c('email') },
         { key: 'phone', label: c('phone') },
         { key: 'city', label: c('city') },
         { key: 'status', label: c('status'), type: 'enum', enumGroup: 'status' },
