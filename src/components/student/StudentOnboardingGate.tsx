@@ -572,9 +572,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       ? t(descriptionKeyFor(task.key), descriptionFallbackFor(task.key))
       : null;
 
-  const taskDesc = descriptionFallbackFor(task.key)
-    ? t(descriptionKeyFor(task.key), descriptionFallbackFor(task.key))
-    : null;
+
 
   // Which section comes after the current one (for the "X next" context label).
   const nextSectionLabel = task.step < 3 ? steps[task.step + 1] : null;
