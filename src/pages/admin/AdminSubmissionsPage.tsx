@@ -512,7 +512,7 @@ const AdminSubmissionsPage = () => {
       setSelected(null);
       setShowSplitPanel(false);
       setApproveEmail("");
-      setSplitPreview({ serviceFee: 0, referralDiscount: 0, partners: [], partnerCommission: 0, teamCommission: 0, agent: null, platformRevenue: 0 });
+      setSplitPreview(EMPTY_SPLIT);
       await fetchCases();
     } catch (err: any) {
       console.error("[AdminSubmissions]", err);
