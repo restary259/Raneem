@@ -857,17 +857,34 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   <p className="text-xs text-muted-foreground">
                     {t("finance.verification.hint", "Students upload proof. Only Admin can confirm or reject it.")}
                   </p>
+                  {requiredGermanyTypes.length > 0 && (
+                    <p className={`mt-2 text-xs font-medium ${germanyVerified ? toneClasses("paid").text : "text-muted-foreground"}`}>
+                      {t("finance.verification.requiredProgress", "{{done}} of {{total}} required payments confirmed", {
+                        done: confirmedRequiredCount,
+                        total: requiredGermanyTypes.length,
+                      })}
+                    </p>
+                  )}
                 </div>
                 {schoolPaymentTypes.map((type) => {
                   const proof = getLatestProof(type);
                   const payment = getPaymentForType(type);
-                  const confirmed = payment?.status === "confirmed" || proof?.status === "approved";
+                  const confirmation = getConfirmation(type);
+                  const confirmed = isGermanyItemConfirmed(type);
+                  const optional = OPTIONAL_SCHOOL_PAYMENT_TYPES.has(type);
                   const busy =
                     proofBusyId !== null && (proofBusyId === proof?.id || proofBusyId === `germany:${type}`);
                   return (
                     <div key={type} className="rounded-md border p-3 space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">{typeLabel(type)}</span>
+                        <span className="flex flex-wrap items-center gap-2 font-medium">
+                          {typeLabel(type)}
+                          <Badge variant="outline" className="text-[10px] font-normal">
+                            {optional
+                              ? t("finance.verification.optional", "Optional — paid after arrival in Germany")
+                              : t("finance.verification.required", "Required before enrollment")}
+                          </Badge>
+                        </span>
                         <span className="text-sm font-semibold">
                           {payment ? formatCurrencyAmount(payment.amount, payment.currency) : "—"}
                         </span>
@@ -892,6 +909,12 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                         )}
                         {proof?.uploaded_at && (
                           <span className="text-muted-foreground">{formatDateTime(proof.uploaded_at, "—")}</span>
+                        )}
+                        {confirmed && (confirmation?.confirmed_at || proof?.reviewed_at) && (
+                          <span className={toneClasses("paid").text}>
+                            {t("finance.verification.confirmedAt", "Confirmed on")}{" "}
+                            {formatDateTime(confirmation?.confirmed_at ?? proof?.reviewed_at, "—")}
+                          </span>
                         )}
                       </div>
                       {proof?.rejection_reason && <p className={`text-xs ${toneClasses("danger").text}`}>{proof.rejection_reason}</p>}
