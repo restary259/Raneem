@@ -285,103 +285,54 @@ const AdminSubmissionsPage = () => {
     fetchCases();
   }, [fetchCases]);
 
-  // Commission preview — mirrors record_case_commission exactly: ONLY the partner
-  // linked to this case (partner_id, else referred_by) can earn a commission.
+  /**
+   * Commission preview.
+   *
+   * The whole split is resolved server-side by `preview_case_commission_split`,
+   * which runs the SAME classification and the SAME rate resolvers as
+   * `record_case_commission` (partner pool / ambassador rate / agent
+   * recruitment share / agent self-referral / student referral reward). The
+   * browser never re-derives commission math, so the preview cannot disagree
+   * with what is actually paid at enrollment.
+   */
   const loadSplitPreview = useCallback(async (c: SubmittedCase) => {
-    let fee = 0;
-    let referralDiscount = 0;
     try {
-      const { data: finance } = await (supabase as any).rpc("get_case_financials", { p_case_id: c.id });
-      fee = Number(finance?.service_total ?? 0);
-      referralDiscount = Number(finance?.referral_discount ?? 0);
-      const linkedPartnerId = c.partner_id || c.referred_by || null;
+      const { data, error } = await (supabase as any).rpc("preview_case_commission_split", {
+        p_case_id: c.id,
+      });
+      if (error) throw error;
 
-      const [settRes, partnerOvRes, teamOvRes] = await Promise.all([
-        (supabase as any)
-          .from("platform_settings")
-          .select("partner_commission_rate, team_member_commission_rate, partner_dashboard_show_all_cases")
-          .limit(1)
-          .single(),
-        linkedPartnerId
-          ? fetchPartnerVisibilityOverride(linkedPartnerId)
-          : Promise.resolve(null),
-        c.assigned_to
-          ? (supabase as any)
-              .from("team_member_commission_overrides")
-              .select("commission_amount")
-              .eq("team_member_id", c.assigned_to)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-      ]);
-
-      const globalTeam = (settRes.data as any)?.team_member_commission_rate ?? 0;
-      const teamCommission = teamOvRes.data?.commission_amount ?? (c.assigned_to ? globalTeam : 0);
-
-      const caseSource = c.source || "";
-      const po = partnerOvRes;
-      const globalShowAll = (settRes.data as any)?.partner_dashboard_show_all_cases ?? false;
-
-      const qualifyingPartners: { partnerId: string; name: string; amount: number }[] = [];
-      let totalPartner = 0;
-
-      if (po && linkedPartnerId && Number(po.commission_amount) > 0) {
-        const sources = resolveVisibilitySources(po, globalShowAll);
-        const qualifies = sources === null || sources.includes(caseSource);
-
-        if (qualifies) {
-          let name = linkedPartnerId.slice(0, 8);
-          const { data: pProfile } = await (supabase as any)
-            .from("profiles")
-            .select("full_name")
-            .eq("id", linkedPartnerId)
-            .maybeSingle();
-          if (pProfile?.full_name) name = pProfile.full_name;
-
-          totalPartner = Number(po.commission_amount);
-          qualifyingPartners.push({ partnerId: linkedPartnerId, name, amount: totalPartner });
-        }
-      }
-
-      // Recruiting agent (profiles.agent_id on the referring partner) earns a
-      // flat amount ON TOP of the partner pool — it is absorbed by DARB's
-      // margin, matching record_case_commission.
-      let agentLine: { name: string; amount: number } | null = null;
-      if (linkedPartnerId) {
-        const { data: partnerProfile } = await (supabase as any)
-          .from("profiles")
-          .select("agent_id")
-          .eq("id", linkedPartnerId)
-          .maybeSingle();
-        const agentId = partnerProfile?.agent_id ?? null;
-        if (agentId && agentId !== linkedPartnerId) {
-          const [{ data: split }, { data: agentProfile }] = await Promise.all([
-            (supabase as any).rpc("get_effective_agent_split", {
-              p_agent_id: agentId,
-              p_partner_id: linkedPartnerId,
-            }),
-            (supabase as any).from("profiles").select("full_name").eq("id", agentId).maybeSingle(),
-          ]);
-          const row = Array.isArray(split) ? split[0] : split;
-          const amount = Math.max(0, Number(row?.agent_amount ?? 0));
-          if (amount > 0) {
-            agentLine = { name: agentProfile?.full_name ?? agentId.slice(0, 8), amount };
+      const referrer = data?.referrer
+        ? {
+            userId: String(data.referrer.user_id),
+            name: String(data.referrer.name ?? ""),
+            role: (data.referrer.role ?? "partner") as ReferrerRole,
+            amount: Number(data.referrer.amount ?? 0),
+            customRate: Boolean(data.referrer.custom_rate),
           }
-        }
-      }
+        : null;
 
       setSplitPreview({
-        serviceFee: fee,
-        referralDiscount,
-        partners: qualifyingPartners,
-        partnerCommission: totalPartner,
-        teamCommission,
-        agent: agentLine,
-        platformRevenue: Math.max(0, fee - teamCommission - totalPartner - (agentLine?.amount ?? 0)),
+        serviceFee: Number(data?.service_total ?? 0),
+        referralDiscount: Number(data?.referral_discount ?? 0),
+        referrer,
+        teamCommission: Number(data?.team?.amount ?? 0),
+        teamCustomRate: Boolean(data?.team?.custom_rate),
+        teamName: data?.team?.name ?? null,
+        agent: data?.agent
+          ? { name: String(data.agent.name ?? ""), amount: Number(data.agent.amount ?? 0) }
+          : null,
+        platformRevenue: Number(data?.platform_revenue ?? 0),
+        marginWarning: Boolean(data?.margin_warning),
+        partnerCommission: referrer?.amount ?? 0,
       });
-    } catch {
-      setSplitPreview({ serviceFee: fee, referralDiscount, partners: [], partnerCommission: 0, teamCommission: 0, agent: null, platformRevenue: fee });
+    } catch (err) {
+      console.error("[AdminSubmissions] split preview failed", err);
+      setSplitPreview(EMPTY_SPLIT);
     }
   }, []);
+
+
 
   /** Return the selected case to the team member with a change-request note.
    *  request_case_changes sets review_status='changes_requested' and moves the
