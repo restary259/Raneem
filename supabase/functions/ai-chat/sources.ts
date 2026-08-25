@@ -136,15 +136,24 @@ export const SOURCE_REGISTRY: { label: string; url: string; topic: string }[] = 
     topic: "blocked account, financial proof for the study visa",
   },
   {
-    label: "Studienkollegs in Germany — official overview",
-    url: "https://www.studienkollegs.de/",
+    // studienkollegs.de was dropped: its certificate does not match the
+    // hostname, so the page cannot be fetched safely. DAAD covers the topic.
+    label: "DAAD — Studienkollegs and the Feststellungsprüfung",
+    url: "https://www.daad.de/en/studying-in-germany/requirements/studienkollegs/",
     topic: "Studienkolleg courses (T/M/W/G/S) and Feststellungsprüfung",
   },
   {
+    label: "DAAD — admission requirements overview",
+    url: "https://www.daad.de/en/studying-in-germany/requirements/overview/",
+    topic: "university admission requirements for international applicants",
+  },
+  {
+    // The /en/ path currently 500s; the site root serves the live content.
     label: "TestDaF — German language test for university admission",
-    url: "https://www.testdaf.de/en/",
+    url: "https://www.testdaf.de/",
     topic: "German language proficiency requirements",
   },
+
 ];
 
 /** URLs the model may always cite (registry + the university pages we ship). */
