@@ -739,7 +739,12 @@
       "notCollected": "Not collected",
       "referralDiscount": "Referral discount applied",
       "accountAlreadyInvited": "Student account already invited — no action needed.",
-      "accountAlreadyCreated": "Student account already created — no action needed."
+      "accountAlreadyCreated": "Student account already created — no action needed.",
+      "splitNoReferrer": "No referrer on this case",
+      "splitCustomRate": "Custom rate for this account",
+      "splitGlobalRate": "Global default rate",
+      "splitAgentRecruit": "Recruitment share — paid on top of the partner commission",
+      "splitMarginWarning": "Payouts exceed the net service fee for this case — platform revenue will be ₪0."
     },
     "financials": {
       "title": "Financial Dashboard",
@@ -878,7 +883,10 @@
       "visApplyOnlyDesc": "Only their sourced cases",
       "badgeAllCases": "👁 All Cases",
       "badgeApplyOnly": "🔒 Apply/Contact Only",
-      "badgeGlobalDefault": "⚙️ Global Default"
+      "badgeGlobalDefault": "⚙️ Global Default",
+      "ambassador": "Ambassador",
+      "agentSelf": "Agent (own referral)",
+      "studentReferrer": "Student referrer"
     },
     "activity": {
       "title": "Live Activity Feed",
@@ -3947,7 +3955,11 @@
       "awaiting": "Awaiting student proof",
       "view": "View proof",
       "confirmAction": "Confirm payment",
-      "rejectAction": "Reject proof"
+      "rejectAction": "Reject proof",
+      "requiredProgress": "{{done}} of {{total}} required payments confirmed",
+      "optional": "Optional — paid after arrival in Germany",
+      "required": "Required before enrollment",
+      "confirmedAt": "Confirmed on"
     },
     "tabs": {
       "summary": "Summary",

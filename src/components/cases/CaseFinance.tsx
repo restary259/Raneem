@@ -95,6 +95,21 @@ const FINANCE_TYPE_BY_PAYMENT_TYPE: Record<SchoolPaymentType, string> = {
   school_insurance: "insurance",
 };
 
+/**
+ * Insurance is paid by the student AFTER they arrive in Germany, so it is
+ * never required before enrollment. The language course and the accommodation
+ * are. This mirrors `assert_case_ready_for_enrollment` on the server.
+ */
+const OPTIONAL_SCHOOL_PAYMENT_TYPES: ReadonlySet<SchoolPaymentType> = new Set(["school_insurance"]);
+
+interface FinanceConfirmationRow {
+  finance_type: string;
+  status: string;
+  confirmed_at: string | null;
+  confirmed_by: string | null;
+}
+
+
 const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   {
     caseId,
@@ -120,6 +135,8 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const { financials, refetch: refetchFinancials } = useCaseFinancials(caseId);
 
   const [proofs, setProofs] = useState<ProofRow[]>([]);
+  /** Authoritative German-side confirmation state (what the enrollment gate reads). */
+  const [financeConfirmations, setFinanceConfirmations] = useState<FinanceConfirmationRow[]>([]);
   const [proofBusyId, setProofBusyId] = useState<string | null>(null);
   const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
   const [confirmingAgency, setConfirmingAgency] = useState(false);
@@ -200,9 +217,28 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
     setProofs((data ?? []) as ProofRow[]);
   }, [caseId]);
 
+  /**
+   * The German checklist rows are the same rows the enrollment gate reads, so
+   * the UI shows exactly what blocks (or no longer blocks) marking the case paid.
+   */
+  const loadFinanceConfirmations = useCallback(async () => {
+    const { data, error } = await (supabase as any)
+      .from("case_finance_confirmations")
+      .select("finance_type, status, confirmed_at, confirmed_by")
+      .eq("case_id", caseId);
+    if (error) {
+      console.error("Failed to load finance confirmations:", error);
+      setFinanceConfirmations([]);
+      return;
+    }
+    setFinanceConfirmations((data ?? []) as FinanceConfirmationRow[]);
+  }, [caseId]);
+
   useEffect(() => {
     void loadProofs();
-  }, [loadProofs]);
+    void loadFinanceConfirmations();
+  }, [loadProofs, loadFinanceConfirmations]);
+
 
   /** Load the DARB invoice (issued on submit-to-admin) for the Invoice tab. */
   useEffect(() => {
@@ -244,6 +280,16 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   const getLatestProof = (type: SchoolPaymentType) => proofs.find((p) => p.payment_type === type);
 
+  /** Confirmation row from the checklist the enrollment gate reads. */
+  const getConfirmation = (type: SchoolPaymentType) =>
+    financeConfirmations.find((row) => row.finance_type === FINANCE_TYPE_BY_PAYMENT_TYPE[type]);
+
+  /** A German item counts as confirmed via the checklist, an approved proof or a confirmed payment. */
+  const isGermanyItemConfirmed = (type: SchoolPaymentType): boolean =>
+    getConfirmation(type)?.status === "confirmed" ||
+    getLatestProof(type)?.status === "approved" ||
+    getPaymentForType(type)?.status === "confirmed";
+
   /** Readiness checks for the submission checklist (informational only — the
       server-side gate in submit_case_for_review stays authoritative). */
   const profileComplete =
@@ -254,14 +300,16 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   const schoolSelected = !!financials?.school_id;
   const hasSchoolKind = (kind: string) => schoolCosts.some((line) => line.kind === kind);
   const germanyKinds = new Set(schoolCosts.map((line) => line.kind));
-  const germanyVerified = schoolPaymentTypes.every((type) => {
-    const kindOf =
-      type === "school_course" ? "program" : type === "school_accommodation" ? "accommodation" : "insurance";
-    if (!germanyKinds.has(kindOf)) return true;
-    const proof = getLatestProof(type);
-    const payment = getPaymentForType(type);
-    return proof?.status === "approved" || payment?.status === "confirmed";
-  });
+  const kindOfType = (type: SchoolPaymentType) =>
+    type === "school_course" ? "program" : type === "school_accommodation" ? "accommodation" : "insurance";
+
+  /** Items that actually block enrollment: course + accommodation, when priced. */
+  const requiredGermanyTypes = schoolPaymentTypes.filter(
+    (type) => !OPTIONAL_SCHOOL_PAYMENT_TYPES.has(type) && germanyKinds.has(kindOfType(type)),
+  );
+  const confirmedRequiredCount = requiredGermanyTypes.filter(isGermanyItemConfirmed).length;
+  const germanyVerified = confirmedRequiredCount === requiredGermanyTypes.length;
+
 
   const typeLabel = (type: SchoolPaymentType) => {
     if (type === "school_course") return t("finance.summary.kind.program", "Language Course");
@@ -303,7 +351,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
           ? t("finance.proof.confirmedToast", "Germany payment confirmed.")
           : t("finance.proof.rejectedToast", "Payment proof rejected."),
       });
-      await Promise.all([loadProofs(), refetchFinancials()]);
+      await Promise.all([loadProofs(), loadFinanceConfirmations(), refetchFinancials()]);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -331,7 +379,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       toast({
         description: t("finance.proof.confirmedToast", "Germany payment confirmed."),
       });
-      await Promise.all([loadProofs(), refetchFinancials()]);
+      await Promise.all([loadProofs(), loadFinanceConfirmations(), refetchFinancials()]);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -809,17 +857,34 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   <p className="text-xs text-muted-foreground">
                     {t("finance.verification.hint", "Students upload proof. Only Admin can confirm or reject it.")}
                   </p>
+                  {requiredGermanyTypes.length > 0 && (
+                    <p className={`mt-2 text-xs font-medium ${germanyVerified ? toneClasses("paid").text : "text-muted-foreground"}`}>
+                      {t("finance.verification.requiredProgress", "{{done}} of {{total}} required payments confirmed", {
+                        done: confirmedRequiredCount,
+                        total: requiredGermanyTypes.length,
+                      })}
+                    </p>
+                  )}
                 </div>
                 {schoolPaymentTypes.map((type) => {
                   const proof = getLatestProof(type);
                   const payment = getPaymentForType(type);
-                  const confirmed = payment?.status === "confirmed" || proof?.status === "approved";
+                  const confirmation = getConfirmation(type);
+                  const confirmed = isGermanyItemConfirmed(type);
+                  const optional = OPTIONAL_SCHOOL_PAYMENT_TYPES.has(type);
                   const busy =
                     proofBusyId !== null && (proofBusyId === proof?.id || proofBusyId === `germany:${type}`);
                   return (
                     <div key={type} className="rounded-md border p-3 space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">{typeLabel(type)}</span>
+                        <span className="flex flex-wrap items-center gap-2 font-medium">
+                          {typeLabel(type)}
+                          <Badge variant="outline" className="text-[10px] font-normal">
+                            {optional
+                              ? t("finance.verification.optional", "Optional — paid after arrival in Germany")
+                              : t("finance.verification.required", "Required before enrollment")}
+                          </Badge>
+                        </span>
                         <span className="text-sm font-semibold">
                           {payment ? formatCurrencyAmount(payment.amount, payment.currency) : "—"}
                         </span>
@@ -844,6 +909,12 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                         )}
                         {proof?.uploaded_at && (
                           <span className="text-muted-foreground">{formatDateTime(proof.uploaded_at, "—")}</span>
+                        )}
+                        {confirmed && (confirmation?.confirmed_at || proof?.reviewed_at) && (
+                          <span className={toneClasses("paid").text}>
+                            {t("finance.verification.confirmedAt", "Confirmed on")}{" "}
+                            {formatDateTime(confirmation?.confirmed_at ?? proof?.reviewed_at, "—")}
+                          </span>
                         )}
                       </div>
                       {proof?.rejection_reason && <p className={`text-xs ${toneClasses("danger").text}`}>{proof.rejection_reason}</p>}

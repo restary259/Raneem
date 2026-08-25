@@ -5447,6 +5447,10 @@ export type Database = {
         Returns: string
       }
       partner_base_pool: { Args: { p_partner_id: string }; Returns: number }
+      preview_case_commission_split: {
+        Args: { p_case_id: string }
+        Returns: Json
+      }
       profile_agent_fields_unchanged: {
         Args: {
           _agent_can_create_accounts: boolean
