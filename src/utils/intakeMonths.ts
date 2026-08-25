@@ -71,3 +71,14 @@ export function currentMonthValue(): string {
   const opts = generateIntakeMonths(1);
   return opts[0]?.value ?? format(new Date(), "yyyy-MM");
 }
+
+/**
+ * Maps an intake month value ("YYYY-MM") to the first day of that month
+ * ("YYYY-MM-01"), which is what `case_submissions.program_start_date` stores.
+ * Returns null for empty/malformed input so required-field validation still
+ * rejects profiles with no intake month selected.
+ */
+export function intakeMonthToStartDate(month: string | null | undefined): string | null {
+  const v = (month ?? "").trim();
+  return /^\d{4}-\d{2}$/.test(v) ? `${v}-01` : null;
+}
