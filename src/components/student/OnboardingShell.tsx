@@ -71,8 +71,8 @@ export function OnboardingShell({
 
   return (
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col p-4 sm:p-6">
-      {/* ── Header: back + step counter ─────────────────────────────────── */}
-      <header className="flex items-center justify-between">
+      {/* ── Header: back + DARB logo + step counter ─────────────────────── */}
+      <header className="flex items-center justify-between gap-3">
         <Button
           type="button"
           variant="ghost"
@@ -83,6 +83,12 @@ export function OnboardingShell({
         >
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
         </Button>
+        <img
+          src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png"
+          alt="DARB"
+          className="h-9 w-auto select-none object-contain"
+          draggable={false}
+        />
         <div className="text-xs text-muted-foreground" aria-live="polite">
           <span className="font-semibold text-foreground">{stepIndex + 1}</span>
           <span> / {totalSteps}</span>
@@ -90,15 +96,16 @@ export function OnboardingShell({
       </header>
 
       {/* ── Progress: origin → bar → destination ─────────────────────────── */}
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-5 flex items-center gap-3">
         <span className="shrink-0 text-xs font-medium text-foreground">{journeyStart}</span>
         <Progress
           value={progressPct}
-          className="h-1.5 flex-1"
+          className="h-1.5 flex-1 [&>div]:bg-brand"
           aria-label={`${progressPct.toFixed(0)}%`}
         />
         <span className="shrink-0 text-xs text-muted-foreground">{journeyEnd}</span>
       </div>
+
 
       {/* ── Section context: current section + what's next ───────────────── */}
       <div className="mt-3 flex items-baseline justify-between gap-3">
