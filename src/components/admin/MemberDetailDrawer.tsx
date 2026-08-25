@@ -670,8 +670,8 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
       case "agent":
         return [
           { label: t("admin.members.kpiRecruits", "Recruits"), value: String(member.recruited_count), icon: Users },
-          { label: t("admin.members.kpiDirectEnrolled", "Direct Enrolled"), value: String(member.enrolled_cases || 0), icon: Award },
-          { label: t("admin.members.kpiNetworkEnrolled", "Network Enrolled"), value: String(member.enrolled_cases || 0), icon: Network },
+          { label: t("admin.members.kpiDirectEnrolled", "Direct Enrolled"), value: String(member.direct_enrolled_cases || 0), icon: Award },
+          { label: t("admin.members.kpiNetworkEnrolled", "Network Enrolled"), value: String(member.network_enrolled_cases || 0), icon: Network },
           { label: t("admin.members.kpiOverrideEarned", "Override Earned"), value: formatILS(member.earned_override), icon: Crown },
         ];
       case "social_media_partner":
