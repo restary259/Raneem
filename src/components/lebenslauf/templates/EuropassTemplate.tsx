@@ -170,7 +170,7 @@ const EuropassTemplate: React.FC<Props> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white" style={{ fontFamily: "var(--cv-font)", color: "var(--cv-body-color)", padding: "var(--cv-spacing-root)", fontSize: "10pt" }}>
+    <div className="cv-main-flow bg-white" style={{ fontFamily: "var(--cv-font)", color: "var(--cv-body-color)", padding: "var(--cv-spacing-root)", fontSize: "10pt" }}>
       <div className="flex gap-5 mb-5 pb-4" style={{ borderBottom: `3px solid var(--cv-accent)` }}>
         {showPhoto && personal.photo && <img src={personal.photo} alt="Profile" className="w-24 h-28 object-cover" style={{ border: "1px solid var(--cv-rule)" }} />}
         <div className="flex-1">

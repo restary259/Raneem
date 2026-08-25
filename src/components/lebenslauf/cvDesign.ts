@@ -147,14 +147,18 @@ export function isHex(v: string): boolean {
 
 // ─── CSS variable resolver ───────────────────────────────────────────────────
 
-// root is also the PDF slicer's safety margin: PDF_TRAILING_EPSILON_MM
-// (cvLayout.ts) must stay below the smallest root (24px ≈ 6.4mm) so a dropped
-// trailing slice can only ever contain padding, never content.
 const SPACING_SCALE: Record<CVSpacing, { root: string; section: string; entry: string }> = {
   compact: { root: "24px", section: "12px", entry: "6px" },
   normal: { root: "32px", section: "16px", entry: "8px" },
   relaxed: { root: "40px", section: "22px", entry: "12px" },
 };
+
+/** Smallest --cv-spacing-root across all spacings, in px. This is the PDF
+ *  slicer's safety margin (PDF_TRAILING_EPSILON_MM in cvLayout.ts is derived
+ *  from it), so a dropped trailing slice can only contain padding. */
+export const MIN_ROOT_PADDING_PX = Math.min(
+  ...Object.values(SPACING_SCALE).map((s) => parseFloat(s.root)),
+);
 
 /**
  * Resolve design settings into CSS custom properties for the preview root.

@@ -139,6 +139,12 @@ describe("slicePageCount (PDF trailing-page epsilon)", () => {
     expect(slicePageCount(A4_H_MM + PDF_TRAILING_EPSILON_MM + 0.1)).toBe(2);
   });
 
+  it("derives the epsilon from the smallest template bottom padding", () => {
+    // 24px min root padding (compact) − 1mm safety margin at 96dpi. This pins
+    // the coupling: if SPACING_SCALE shrinks, the epsilon must shrink with it.
+    expect(PDF_TRAILING_EPSILON_MM).toBeCloseTo(24 / (96 / 25.4) - 1, 5);
+  });
+
   it("is robust to degenerate / non-finite inputs (one page)", () => {
     expect(slicePageCount(Number.NaN)).toBe(1);
     expect(slicePageCount(-50)).toBe(1);

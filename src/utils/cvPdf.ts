@@ -23,16 +23,19 @@ const A4_WIDTH_MM = 210;
  * shrink or swallow the shift. Returns a restore function that removes the
  * spacers again.
  *
- * Scope: all templates emit .cv-entry only in the single main flow (verified),
- * which keeps entry tops monotonic in document order — the precondition
- * computeEntryShifts relies on. Sidebar/rail blocks (academic rail, modern
- * sidebar) carry no .cv-entry and can still be sliced at a page boundary;
- * accepted residual risk (spacers there would not move the main column, so
- * the cumulative-offset model cannot cover a second parallel flow).
+ * Scope: entries are selected only inside .cv-main-flow — the single vertical
+ * main column every template marks — which is what keeps entry tops monotonic
+ * in document order, the precondition computeEntryShifts relies on. A future
+ * template that puts .cv-entry in a parallel rail/sidebar is excluded rather
+ * than silently corrupting the shift math. Rail/sidebar blocks carry no
+ * .cv-entry and can still be sliced at a page boundary; accepted residual
+ * risk (spacers there would not move the main column, so the cumulative-
+ * offset model cannot cover a second parallel flow). Exported for unit tests.
  */
-function shiftStraddlingEntries(root: HTMLElement): () => void {
+export function shiftStraddlingEntries(root: HTMLElement): () => void {
+  const scope = root.querySelector(".cv-main-flow") ?? root;
   const rootTop = root.getBoundingClientRect().top;
-  const entries = Array.from(root.querySelectorAll<HTMLElement>(".cv-entry"));
+  const entries = Array.from(scope.querySelectorAll<HTMLElement>(".cv-entry"));
   const shifts = computeEntryShifts(
     entries.map((entry) => {
       const rect = entry.getBoundingClientRect();

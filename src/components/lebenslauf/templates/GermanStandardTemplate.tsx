@@ -155,7 +155,7 @@ const GermanStandardTemplate: React.FC<Props> = ({ data }) => {
   };
 
   return (
-    <div className="text-[10.5pt] leading-[1.45] bg-white" style={{ fontFamily: "var(--cv-font)", color: "var(--cv-body-color)", padding: "var(--cv-spacing-root)" }}>
+    <div className="cv-main-flow text-[10.5pt] leading-[1.45] bg-white" style={{ fontFamily: "var(--cv-font)", color: "var(--cv-body-color)", padding: "var(--cv-spacing-root)" }}>
       <div className="flex justify-between items-start mb-5 pb-4" style={{ borderBottom: "2px solid var(--cv-accent)" }}>
         <div>
           <h1 className="text-[20pt] font-bold tracking-tight" style={{ fontFamily: "var(--cv-heading-font)" }}>{fullName || 'Ihr Name'}</h1>

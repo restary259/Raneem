@@ -237,7 +237,7 @@ const ModernSidebarTemplate: React.FC<Props> = ({ data }) => {
       {/* On screen: two columns. On print: the grid flows naturally across pages. */}
       <div className="grid grid-cols-[34%_1fr] gap-0" style={{ minHeight: "100%" }}>
         {sidebarSections}
-        <main style={{ padding: "var(--cv-spacing-root)" }}>
+        <main className="cv-main-flow" style={{ padding: "var(--cv-spacing-root)" }}>
           <div className="mb-5 pb-3" style={{ borderBottom: "1.5px solid var(--cv-accent)" }}>
             <h1 className="text-[22pt] font-bold tracking-tight" style={{ fontFamily: "var(--cv-heading-font)" }}>{fullName || "Ihr Name"}</h1>
             {personal.professionalTitle && <p className="text-[11pt] mt-0.5" style={{ color: "var(--cv-accent)" }}>{personal.professionalTitle}</p>}

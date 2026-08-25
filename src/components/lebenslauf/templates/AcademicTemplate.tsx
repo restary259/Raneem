@@ -193,7 +193,7 @@ const AcademicTemplate: React.FC<Props> = ({ data }) => {
 
       <div className="grid grid-cols-[1fr_2fr] gap-6">
         {rail}
-        <div>
+        <div className="cv-main-flow">
           {mainKeys.map(key => renderMainSection(key))}
           <SignatureBlock data={data} L={L} />
         </div>

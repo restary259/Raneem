@@ -12,8 +12,13 @@
  * 297mm-tall A4 pages.
  */
 
+import { MIN_ROOT_PADDING_PX } from "./cvDesign";
+
 export const A4_W_PX = 794;
 export const A4_H_PX = 1123;
+
+/** CSS px per mm at the 96dpi reference the A4 pixel dims above use. */
+export const PX_PER_MM = 96 / 25.4;
 
 /** Clamped so an ultra-wide column never upsizes the on-screen sheet past 1:1
  *  (the PDF is always captured at native 794px; upsizing would diverge it). */
@@ -36,12 +41,13 @@ export const A4_H_MM = 297;
 
 /**
  * Trailing-page epsilon for the PDF slicer: a final slice shorter than this
- * is dropped as a near-blank page. SAFE ONLY because every template's bottom
- * padding (the compact `--cv-spacing-root`, 24px ≈ 6.4mm) is larger than this
- * value — a dropped slice can then only contain padding, never content.
- * Keep this below 24px ≈ 6.4mm; see SPACING_SCALE in cvDesign.ts.
+ * is dropped as a near-blank page. DERIVED (not merely documented) from the
+ * smallest template bottom padding (MIN_ROOT_PADDING_PX), so a dropped slice
+ * can only ever contain padding, never content — if the spacing scale ever
+ * shrinks, the epsilon shrinks with it instead of silently truncating entries.
+ * Floor of 1mm keeps it meaningful.
  */
-export const PDF_TRAILING_EPSILON_MM = 5;
+export const PDF_TRAILING_EPSILON_MM = Math.max(1, MIN_ROOT_PADDING_PX / PX_PER_MM - 1);
 
 /**
  * Number of A4 pages the rasterized CV image is sliced into. A trailing slice
