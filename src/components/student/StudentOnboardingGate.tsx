@@ -103,18 +103,10 @@ const EMPTY_PROFILE: ProfileShape = {
 };
 
 // Single select of every column the wizard reads or writes — loaded once on
-// mount, never re-fetched per keystroke.
+// mount, never re-fetched per keystroke. Visa/legal columns are no longer part
+// of the wizard (they moved to the student Visa page).
 const SELECT_COLUMNS =
-  "full_name, phone_number, date_of_birth, gender, nationality, city, country, street, house_number, residential_city, university_name, language_school_id, intake_month, arrival_date, passport_expiry, eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country, emergency_contacts, emergency_contact_name, emergency_contact_phone";
-
-const EYE_COLORS = ["brown", "blue", "green", "hazel", "gray", "other"] as const;
-
-/** Year list for the arrival-date picker: current year through +6 (the wizard
- *  reuses the segmented BirthdayPicker style, but with future years). */
-const ARRIVAL_YEARS = (() => {
-  const now = new Date().getFullYear();
-  return Array.from({ length: 7 }, (_, i) => String(now + i));
-})();
+  "full_name, phone_number, email, date_of_birth, gender, nationality, city, country, street, house_number, residential_city, university_name, language_school_id, intake_month, emergency_contacts, emergency_contact_name, emergency_contact_phone";
 
 const emptyContact = (): EmergencyContact => ({ name: "", relationship: "", phone: "" });
 
@@ -144,9 +136,6 @@ export const isProfileComplete = (p: Partial<ProfileShape> | null | undefined) =
     hasAddress(p) &&
     filled(p.university_name) &&
     filled(p.intake_month) &&
-    filled(p.arrival_date) &&
-    filled(p.passport_expiry) &&
-    filled(p.eye_color) &&
     validContacts.length >= 2
   );
 };
@@ -154,9 +143,11 @@ export const isProfileComplete = (p: Partial<ProfileShape> | null | undefined) =
 const stepComplete = (p: ProfileShape | null, index: number) => {
   if (!p) return false;
   if (index === 0) {
+    // Confirm-your-details step: the invited identity must be on file.
+    return filled(p.full_name) && filled(p.phone_number);
+  }
+  if (index === 1) {
     return (
-      filled(p.full_name) &&
-      filled(p.phone_number) &&
       filled(p.date_of_birth) &&
       filled(p.gender) &&
       filled(p.nationality) &&
@@ -164,11 +155,8 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
       hasAddress(p)
     );
   }
-  if (index === 1) {
-    return filled(p.university_name) && filled(p.intake_month) && filled(p.arrival_date);
-  }
   if (index === 2) {
-    return filled(p.eye_color) && filled(p.passport_expiry);
+    return filled(p.university_name) && filled(p.intake_month);
   }
   const contacts = Array.isArray(p.emergency_contacts) ? p.emergency_contacts : [];
   return contacts.filter(c => filled(c?.name) && filled(c?.phone)).length >= 2;
@@ -181,39 +169,30 @@ const stepComplete = (p: ProfileShape | null, index: number) => {
  * when the step's last task is completed), so the resume-at-first-incomplete
  * behavior is preserved.
  */
-type TaskType = "text" | "tel" | "dob" | "gender" | "eye" | "date" | "arrival-date" | "address" | "switch-legal" | "contacts" | "school-select";
+type TaskType = "text" | "tel" | "dob" | "gender" | "address" | "contacts" | "school-select" | "confirm-identity";
 
 interface Task {
   step: number;
   key: keyof ProfileShape;
   type: TaskType;
-  /** For switch-legal tasks: the conditional detail field shown when the switch is on. */
-  detailKey?: keyof ProfileShape;
-  detailType?: "text" | "textarea";
 }
 
 const TASKS: Task[] = [
-  // step 0 — Personal
-  { step: 0, key: "full_name", type: "text" },
-  { step: 0, key: "phone_number", type: "tel" },
-  { step: 0, key: "date_of_birth", type: "dob" },
-  { step: 0, key: "gender", type: "gender" },
-  { step: 0, key: "nationality", type: "text" },
-  { step: 0, key: "city", type: "text" },
-  { step: 0, key: "country", type: "address" },
-  // step 1 — Study & arrival
-  { step: 1, key: "university_name", type: "school-select" },
-  { step: 1, key: "intake_month", type: "text" },
-  { step: 1, key: "arrival_date", type: "arrival-date" },
-  // step 2 — Legal & identity
-  { step: 2, key: "eye_color", type: "eye" },
-  { step: 2, key: "passport_expiry", type: "date" },
-  { step: 2, key: "has_changed_legal_name", type: "switch-legal", detailKey: "previous_legal_name", detailType: "text" },
-  { step: 2, key: "has_criminal_record", type: "switch-legal", detailKey: "criminal_record_details", detailType: "textarea" },
-  { step: 2, key: "has_dual_citizenship", type: "switch-legal", detailKey: "second_passport_country", detailType: "text" },
+  // step 0 — Confirm the details we already have
+  { step: 0, key: "full_name", type: "confirm-identity" },
+  // step 1 — Personal
+  { step: 1, key: "date_of_birth", type: "dob" },
+  { step: 1, key: "gender", type: "gender" },
+  { step: 1, key: "nationality", type: "text" },
+  { step: 1, key: "city", type: "text" },
+  { step: 1, key: "country", type: "address" },
+  // step 2 — Study
+  { step: 2, key: "university_name", type: "school-select" },
+  { step: 2, key: "intake_month", type: "text" },
   // step 3 — Emergency contacts
   { step: 3, key: "emergency_contacts", type: "contacts" },
 ];
+
 
 /** Index of the last task belonging to a given logical step. */
 const lastTaskIndexOfStep = (step: number): number => {
