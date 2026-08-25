@@ -351,7 +351,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
           ? t("finance.proof.confirmedToast", "Germany payment confirmed.")
           : t("finance.proof.rejectedToast", "Payment proof rejected."),
       });
-      await Promise.all([loadProofs(), refetchFinancials()]);
+      await Promise.all([loadProofs(), loadFinanceConfirmations(), refetchFinancials()]);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -379,7 +379,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       toast({
         description: t("finance.proof.confirmedToast", "Germany payment confirmed."),
       });
-      await Promise.all([loadProofs(), refetchFinancials()]);
+      await Promise.all([loadProofs(), loadFinanceConfirmations(), refetchFinancials()]);
     } catch (error: any) {
       toast({
         variant: "destructive",
