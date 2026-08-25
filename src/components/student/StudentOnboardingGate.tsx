@@ -406,9 +406,18 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  /** The DB patch written when a logical step completes (mirrors the original per-step persist). */
+  /** The DB patch written when a logical step completes. */
   const stepPatch = (step: number): Record<string, unknown> => {
     if (step === 0) {
+      // Confirm-your-details: name + phone only. `email` is guarded by the
+      // restrict_profiles_write trigger (non-admins cannot change it), so it is
+      // shown read-only and never written here.
+      return {
+        full_name: profile?.full_name,
+        phone_number: profile?.phone_number,
+      };
+    }
+    if (step === 1) {
       // Derive the legacy combined `country` string from the structured fields so
       // every existing reader (AdminStudentsPage "Address / Country",
       // StudentProfile home_address) keeps working unchanged.
@@ -417,8 +426,6 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       const resCity = profile?.residential_city ?? "";
       const combined = [`${street} ${house}`.trim(), resCity].filter(Boolean).join(", ");
       return {
-        full_name: profile?.full_name,
-        phone_number: profile?.phone_number,
         date_of_birth: profile?.date_of_birth,
         gender: profile?.gender,
         nationality: profile?.nationality,
@@ -429,24 +436,11 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         country: combined || null,
       };
     }
-    if (step === 1) {
-      return {
-        university_name: profile?.university_name,
-        language_school_id: profile?.language_school_id,
-        intake_month: profile?.intake_month,
-        arrival_date: profile?.arrival_date || null,
-      };
-    }
-    // step 2 — conditional fields null out when their switch is off (StudentVisaPage.saveLegal shape).
+    // step 2 — study details.
     return {
-      eye_color: profile?.eye_color,
-      passport_expiry: profile?.passport_expiry || null,
-      has_changed_legal_name: !!profile?.has_changed_legal_name,
-      previous_legal_name: profile?.has_changed_legal_name ? profile?.previous_legal_name : null,
-      has_criminal_record: !!profile?.has_criminal_record,
-      criminal_record_details: profile?.has_criminal_record ? profile?.criminal_record_details : null,
-      has_dual_citizenship: !!profile?.has_dual_citizenship,
-      second_passport_country: profile?.has_dual_citizenship ? profile?.second_passport_country : null,
+      university_name: profile?.university_name,
+      language_school_id: profile?.language_school_id,
+      intake_month: profile?.intake_month,
     };
   };
 
@@ -455,7 +449,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const isLastOfStep = taskIndex === lastTaskIndexOfStep(task.step);
 
   const next = async () => {
-    const err = taskErrorFor(task, profile, contacts);
+    const err = taskErrorFor(task, profile, contacts, identityConfirmed);
     if (err) {
       setAttempted(true);
       toast({ variant: "destructive", description: t(err, err) });
@@ -492,7 +486,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Auto-focus the active input/select when the task changes.
   useEffect(() => {
-    if (task.type === "dob" || task.type === "arrival-date" || task.type === "gender" || task.type === "eye" || task.type === "school-select" || task.type === "address") return;
+    if (task.type === "dob" || task.type === "gender" || task.type === "school-select" || task.type === "address" || task.type === "confirm-identity") return;
     const id = `task-${task.key}`;
     const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
     if (el) {
@@ -500,6 +494,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       el.focus();
     }
   }, [taskIndex, task]);
+
 
   if (loading) {
     return (
