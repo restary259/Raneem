@@ -680,6 +680,7 @@
       "subtitle": "Cases awaiting enrollment confirmation",
       "empty": "No submitted cases yet",
       "markEnrolled": "Mark as Enrolled & Paid",
+      "confirmGermanPaymentsFirst": "Confirm the language course and accommodation payments before marking this case as enrolled.",
       "returnedSuccess": "Case returned to team for changes",
       "returnForChanges": "Return for changes",
       "returnDialog": {
