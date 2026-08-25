@@ -69,6 +69,40 @@ const schoolList = (languageSchools.germany ?? []).map((s) => ({
   programs: Array.isArray(s.programs) ? s.programs : [],
 }));
 
+/**
+ * The published FAQ is the only place the site states dated, source-backed
+ * figures (blocked account, uni-assist fees). The assistant must quote the same
+ * numbers as the page a student can open, so they are generated in rather than
+ * left to the model's memory. Each item keeps the FAQ's own official sources.
+ */
+const faqEN = JSON.parse(
+  readFileSync(resolve(root, "public/locales/en/faq.json"), "utf8"),
+);
+const faqAR = JSON.parse(
+  readFileSync(resolve(root, "public/locales/ar/faq.json"), "utf8"),
+);
+
+const faq = (faqEN.categories ?? []).flatMap((cat, ci) =>
+  (cat.items ?? []).map((item, ii) => {
+    const arCat = faqAR.categories?.[ci];
+    const arItem = arCat?.items?.[ii];
+    return {
+      categoryId: cat.id,
+      categoryEN: strip(cat.title),
+      categoryAR: strip(arCat?.title) ?? null,
+      questionEN: strip(item.q),
+      questionAR: strip(arItem?.q) ?? null,
+      answerEN: strip(item.a),
+      answerAR: strip(arItem?.a) ?? null,
+      sources: (item.sources ?? []).map((s) => ({
+        label: strip(s.label),
+        url: s.url,
+      })),
+    };
+  }),
+);
+
+
 const banner = `// AUTO-GENERATED — DO NOT EDIT BY HAND.
 // Source of truth: src/data/majorsData.ts + src/data/educationalDestinations.ts
 // Regenerate with: bun run scripts/gen-ai-knowledge.mjs
