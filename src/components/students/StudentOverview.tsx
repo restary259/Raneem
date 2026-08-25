@@ -434,7 +434,7 @@ export default function StudentOverview({
             )}
             {showTab("visa") && (
               <TabsContent value="visa" className="mt-3">
-                {renderVisaTab ? renderVisaTab() : <VisaReadOnly fields={visaFields} values={visaValues} loading={visaLoading} isAr={isAr} t={t} />}
+                {renderVisaTab ? renderVisaTab() : <VisaReadOnly fields={visaFields} values={visaValues} loading={visaLoading} isAr={isAr} t={t} profile={profile} />}
               </TabsContent>
             )}
             {showDocsTab && (
@@ -544,7 +544,6 @@ function VisaReadOnly({
       </div>
     );
   }
-  const yesNo = (v: unknown) => (v === true ? (isAr ? "نعم" : "لا".replace("لا", "نعم")) : null);
   // Profile-level immigration answers the student fills on their Visa page.
   const profileRows: { label: string; value: string | null }[] = profile
     ? [
