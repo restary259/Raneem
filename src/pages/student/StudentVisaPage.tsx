@@ -69,10 +69,11 @@ export default function StudentVisaPage() {
         (supabase as any)
           .from("profiles")
           .select(
-            "eye_color, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country",
+            "eye_color, passport_expiry, arrival_date, has_changed_legal_name, previous_legal_name, has_criminal_record, criminal_record_details, has_dual_citizenship, second_passport_country",
           )
           .eq("id", uid)
           .maybeSingle(),
+
       ]);
 
       if (fieldsRes.data) setFields(fieldsRes.data);
