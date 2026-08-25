@@ -726,57 +726,62 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
         );
-      case "eye":
+      case "confirm-identity":
         return (
-          <div className="space-y-2">
-            <Label htmlFor="task-eye_color">{t("studentOnboarding.eyeColor", "Eye color")}</Label>
-            <Select
-              value={profile?.eye_color ?? ""}
-              onValueChange={v => { setProfile(prev => ({ ...(prev as ProfileShape), eye_color: v })); setAttempted(false); }}
-            >
-              <SelectTrigger id="task-eye_color">
-                <SelectValue placeholder={t("studentOnboarding.selectEyeColor", "Select eye color")} />
-              </SelectTrigger>
-              <SelectContent>
-                {EYE_COLORS.map(c => (
-                  <SelectItem key={c} value={c}>
-                    {t(`studentOnboarding.eyeColors.${c}`, c)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="task-full_name">{t("studentOnboarding.fullName", "Full name")}</Label>
+              <Input
+                id="task-full_name"
+                autoComplete="name"
+                value={profile?.full_name ?? ""}
+                onChange={e => {
+                  setProfile(prev => ({ ...(prev as ProfileShape), full_name: e.target.value }));
+                  setIdentityConfirmed(false);
+                  setAttempted(false);
+                }}
+                className={cn(err && !filled(profile?.full_name) && "border-destructive focus-visible:ring-destructive")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="task-phone_number">{t("studentOnboarding.phone", "Phone number")}</Label>
+              <Input
+                id="task-phone_number"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={t("studentOnboarding.ph.phone", "+972…")}
+                value={profile?.phone_number ?? ""}
+                onChange={e => {
+                  setProfile(prev => ({ ...(prev as ProfileShape), phone_number: e.target.value }));
+                  setIdentityConfirmed(false);
+                  setAttempted(false);
+                }}
+                className={cn(err && !isValidPhone(profile?.phone_number ?? "") && "border-destructive focus-visible:ring-destructive")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="task-email">{t("studentOnboarding.email", "Email address")}</Label>
+              <Input id="task-email" value={profile?.email ?? ""} readOnly disabled />
+              <p className="text-xs text-muted-foreground">
+                {t("studentOnboarding.emailLocked", "This is the address your account was created with. Contact us if it needs to change.")}
+              </p>
+            </div>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-4">
+              <Checkbox
+                id="confirm-identity"
+                checked={identityConfirmed}
+                onCheckedChange={v => { setIdentityConfirmed(v === true); setAttempted(false); }}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-foreground">
+                {t("studentOnboarding.confirmIdentityCheck", "I confirm these details are correct.")}
+              </span>
+            </label>
             {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
           </div>
         );
-      case "date":
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={`task-${task.key}`}>
-              {t(`studentOnboarding.${labelKeyFor(task.key)}`, labelFallbackFor(task.key))}
-            </Label>
-            <Input
-              id={`task-${task.key}`}
-              type="date"
-              value={(profile?.[task.key] as string) ?? ""}
-              onChange={setField(task.key)}
-              className={cn(err && "border-destructive focus-visible:ring-destructive")}
-            />
-            {err && <p className="text-xs text-destructive">{t(err, err)}</p>}
-          </div>
-        );
-      case "arrival-date":
-        return (
-          <BirthdayPicker
-            id={`task-${task.key}`}
-            label={t("studentOnboarding.arrivalDate", "Arrival date")}
-            value={profile?.arrival_date ?? ""}
-            onChange={iso => { setProfile(prev => ({ ...(prev as ProfileShape), arrival_date: iso })); setAttempted(false); }}
-            phYear={t("studentOnboarding.ph.year", "Year")}
-            phMonth={t("studentOnboarding.ph.month", "Month")}
-            phDay={t("studentOnboarding.ph.day", "Day")}
-            years={ARRIVAL_YEARS}
-          />
-        );
+
       case "address":
         return (
           <div className="space-y-4">
