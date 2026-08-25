@@ -38,7 +38,7 @@ import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 import { sendCaseMessage } from "@/services/CaseMessageService";
-import { fetchPartnerVisibilityOverride, resolveVisibilitySources } from "@/lib/partnerVisibility";
+
 
 interface SubmittedCase {
   id: string;
