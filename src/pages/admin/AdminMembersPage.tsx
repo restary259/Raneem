@@ -37,6 +37,10 @@ interface MemberRow {
   open_requests: number;
   open_request_amount: number;
   last_request_at: string | null;
+  /** Enrolled cases the account referred personally. */
+  direct_enrolled_cases: number;
+  /** Enrolled cases referred by the partners/ambassadors an agent recruited. */
+  network_enrolled_cases: number;
 }
 
 async function fetchMembers(role?: string): Promise<MemberRow[]> {
