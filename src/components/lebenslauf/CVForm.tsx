@@ -268,6 +268,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
                   <Input type="month" placeholder={f("from")} value={e.from} onChange={(ev) => updateItem<ExperienceEntry>("experience", e.id, { from: ev.target.value })} />
                   <Input type="month" placeholder={f("to")} value={e.to} disabled={e.current} onChange={(ev) => updateItem<ExperienceEntry>("experience", e.id, { to: ev.target.value })} />
                 </div>
+                {errors[`exp_${e.id}`] && <p className="text-xs text-destructive">{errors[`exp_${e.id}`]}</p>}
                 <div className="flex items-center gap-2">
                   <Switch checked={e.current} onCheckedChange={(v) => updateItem<ExperienceEntry>("experience", e.id, { current: v })} />
                   <Label className="text-xs">{f("current")}</Label>
@@ -364,8 +365,8 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
             <Label className="font-medium">{f("language")}</Label>
             <p className="text-xs text-muted-foreground -mt-2">{h("languageHint", "Use CEFR levels: A1–C2.")}</p>
             {data.skills.languages.map((l, idx) => (
-              <div key={l.id} className="flex gap-2 items-end">
-                <Input className="flex-1" placeholder={f("language")} value={l.name} onChange={(e) => {
+              <div key={l.id} className="flex flex-wrap gap-2 items-end">
+                <Input className="flex-1 min-w-0" placeholder={f("language")} value={l.name} onChange={(e) => {
                   const langs = [...data.skills.languages];
                   langs[idx] = { ...langs[idx], name: e.target.value };
                   updateData({ skills: { ...data.skills, languages: langs } });
@@ -401,9 +402,9 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
           <AccordionTrigger>{s("certificates")}</AccordionTrigger>
           <AccordionContent className="space-y-3 pt-2">
             {data.certificates.map((c, idx) => (
-              <div key={c.id} className="flex gap-2 items-end">
-                <Input className="flex-1" placeholder={f("certName")} value={c.name} onChange={(e) => updateItem<CertificateEntry>("certificates", c.id, { name: e.target.value })} />
-                <Input className="flex-1" placeholder={f("issuer")} value={c.issuer} onChange={(e) => updateItem<CertificateEntry>("certificates", c.id, { issuer: e.target.value })} />
+              <div key={c.id} className="flex flex-wrap gap-2 items-end">
+                <Input className="flex-1 min-w-0" placeholder={f("certName")} value={c.name} onChange={(e) => updateItem<CertificateEntry>("certificates", c.id, { name: e.target.value })} />
+                <Input className="flex-1 min-w-0" placeholder={f("issuer")} value={c.issuer} onChange={(e) => updateItem<CertificateEntry>("certificates", c.id, { issuer: e.target.value })} />
                 <Input className="w-28" type="month" value={c.date} onChange={(e) => updateItem<CertificateEntry>("certificates", c.id, { date: e.target.value })} />
                 <Button size="icon" variant="ghost" onClick={() => removeItem("certificates", c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
@@ -428,6 +429,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
                   <Input type="month" value={v.from} onChange={(e) => updateItem<VolunteerEntry>("volunteer", v.id, { from: e.target.value })} />
                   <Input type="month" value={v.to} disabled={v.current} onChange={(e) => updateItem<VolunteerEntry>("volunteer", v.id, { to: e.target.value })} />
                 </div>
+                {errors[`vol_${v.id}`] && <p className="text-xs text-destructive">{errors[`vol_${v.id}`]}</p>}
                 <div className="flex items-center gap-2"><Switch checked={v.current} onCheckedChange={(val) => updateItem<VolunteerEntry>("volunteer", v.id, { current: val })} /><Label className="text-xs">{f("current")}</Label></div>
               </div>
             ))}
@@ -440,10 +442,10 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
           <AccordionTrigger>{s("references")}</AccordionTrigger>
           <AccordionContent className="space-y-3 pt-2">
             {data.references.map((r) => (
-              <div key={r.id} className="flex gap-2 items-end">
-                <Input className="flex-1" placeholder={f("refName")} value={r.name} onChange={(e) => updateItem<ReferenceEntry>("references", r.id, { name: e.target.value })} />
-                <Input className="flex-1" placeholder={f("refPosition")} value={r.position} onChange={(e) => updateItem<ReferenceEntry>("references", r.id, { position: e.target.value })} />
-                <Input className="flex-1" placeholder={f("refContact")} value={r.contact} onChange={(e) => updateItem<ReferenceEntry>("references", r.id, { contact: e.target.value })} />
+              <div key={r.id} className="flex flex-wrap gap-2 items-end">
+                <Input className="flex-1 min-w-0" placeholder={f("refName")} value={r.name} onChange={(e) => updateItem<ReferenceEntry>("references", r.id, { name: e.target.value })} />
+                <Input className="flex-1 min-w-0" placeholder={f("refPosition")} value={r.position} onChange={(e) => updateItem<ReferenceEntry>("references", r.id, { position: e.target.value })} />
+                <Input className="flex-1 min-w-0" placeholder={f("refContact")} value={r.contact} onChange={(e) => updateItem<ReferenceEntry>("references", r.id, { contact: e.target.value })} />
                 <Button size="icon" variant="ghost" onClick={() => removeItem("references", r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             ))}
@@ -496,7 +498,7 @@ const CVForm: React.FC<Props> = ({ data, setData, updatePersonal, updateData, up
         <AccordionItem value="sections">
           <AccordionTrigger>{t("lebenslaufBuilder.sections.sectionsOrder", "Sections")}</AccordionTrigger>
           <AccordionContent className="space-y-1 pt-2">
-            <p className="text-xs text-muted-foreground mb-2">{h("sectionsHint", "Reorder or hide sections. Empty sections never render.")}</p>
+            <p className="text-xs text-muted-foreground mb-2">{h("sectionsHint", "Reorder sections. Empty sections never render.")}</p>
             {data.sectionOrder.map((k, idx) => (
               <div key={k} className="flex items-center gap-2 py-1">
                 <Button size="icon" variant="ghost" onClick={() => moveSection(idx, -1)} disabled={idx === 0}><ArrowUp className="h-3.5 w-3.5" /></Button>

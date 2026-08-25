@@ -53,6 +53,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "exceljs": "^4.4.0",
+    "html2canvas": "^1.4.1",
     "i18next": "^23.11.5",
     "i18next-http-backend": "^3.0.2",
     "input-otp": "^1.2.4",

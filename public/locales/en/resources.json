@@ -245,6 +245,7 @@
     "spacing_relaxed": "Relaxed",
     "advancedFields": "Advanced fields",
     "val_nameRequired": "Name is required",
+    "val_emailRequired": "Email is required",
     "val_email": "Enter a valid email",
     "val_dates": "Start date must be before end date",
     "val_fixFirst": "Fix the required fields first",

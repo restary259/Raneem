@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { A4_H_PX, A4_W_PX, MAX_SCALE, computeScale, pageCount } from "./cvLayout";
+import { A4_H_MM, A4_H_PX, A4_W_PX, MAX_SCALE, computeEntryShifts, computeScale, pageCount, slicePageCount, PDF_TRAILING_EPSILON_MM } from "./cvLayout";
 
 describe("cvLayout A4 geometry", () => {
   it("exposes the 96dpi A4 pixel dimensions (210mm × 297mm)", () => {
@@ -55,5 +55,92 @@ describe("cvLayout A4 geometry", () => {
     for (const w of [200, 400, 600, 793]) {
       expect(computeScale(w) * A4_W_PX).toBeCloseTo(w, 5);
     }
+  });
+});
+
+describe("computeEntryShifts (PDF page-break shifts)", () => {
+  it("leaves entries fully inside a page untouched", () => {
+    expect(computeEntryShifts([{ top: 100, height: 50 }])).toEqual([0]);
+    // Ends exactly on the boundary → still fits, no shift.
+    expect(computeEntryShifts([{ top: A4_H_PX - 50, height: 50 }])).toEqual([0]);
+    // Starts exactly on a boundary → no shift.
+    expect(computeEntryShifts([{ top: A4_H_PX, height: 50 }])).toEqual([0]);
+  });
+
+  it("pushes an entry straddling a page boundary wholly onto the next page", () => {
+    const shifts = computeEntryShifts([{ top: A4_H_PX - 10, height: 50 }]);
+    expect(shifts).toEqual([10]);
+    // After the shift the entry occupies [A4_H_PX, A4_H_PX + 50] — page 2.
+    expect(A4_H_PX - 10 + shifts[0]).toBe(A4_H_PX);
+  });
+
+  it("never shifts an entry at least one page tall (it cannot fit anyway)", () => {
+    expect(computeEntryShifts([{ top: 100, height: A4_H_PX }])).toEqual([0]);
+    expect(computeEntryShifts([{ top: 100, height: A4_H_PX * 2 }])).toEqual([0]);
+  });
+
+  it("accumulates shifts so later entries are re-measured against moved content", () => {
+    // Entry 0 straddles page 1 → shifted 10px to page 2. Entry 1 would fit on
+    // page 2 at its original top, but the +10px push moves it over the page-2
+    // boundary, so it must shift too.
+    const shifts = computeEntryShifts([
+      { top: A4_H_PX - 10, height: 50 },   // → shift 10, lands on page 2
+      { top: 2 * A4_H_PX - 15, height: 50 }, // +10 → straddles page 2 → shift 5
+      { top: 2 * A4_H_PX + 100, height: 50 }, // +15 → comfortably on page 3
+    ]);
+    expect(shifts).toEqual([10, 5, 0]);
+    // Final positions: every entry fully inside a page.
+    let offset = 0;
+    [
+      { top: A4_H_PX - 10, height: 50 },
+      { top: 2 * A4_H_PX - 15, height: 50 },
+      { top: 2 * A4_H_PX + 100, height: 50 },
+    ].forEach((box, i) => {
+      offset += shifts[i];
+      const top = box.top + offset;
+      const pageEnd = (Math.floor(top / A4_H_PX) + 1) * A4_H_PX;
+      expect(top + box.height).toBeLessThanOrEqual(pageEnd);
+    });
+  });
+
+  it("is robust to degenerate / non-finite inputs (no shift)", () => {
+    expect(computeEntryShifts([{ top: 0, height: 0 }])).toEqual([0]);
+    expect(computeEntryShifts([{ top: Number.NaN, height: 50 }])).toEqual([0]);
+    expect(computeEntryShifts([{ top: 100, height: Number.NaN }])).toEqual([0]);
+    expect(computeEntryShifts([{ top: 100, height: -5 }])).toEqual([0]);
+    expect(computeEntryShifts([])).toEqual([]);
+    // A non-positive page height is nonsensical → nothing shifts.
+    expect(computeEntryShifts([{ top: 100, height: 50 }], 0)).toEqual([0]);
+    expect(computeEntryShifts([{ top: 100, height: 50 }], Number.NaN)).toEqual([0]);
+  });
+});
+
+describe("slicePageCount (PDF trailing-page epsilon)", () => {
+  it("counts short content as a single page", () => {
+    expect(slicePageCount(0)).toBe(1);
+    expect(slicePageCount(100)).toBe(1);
+    expect(slicePageCount(A4_H_MM)).toBe(1);
+  });
+
+  it("drops a trailing slice shorter than the epsilon (near-blank page)", () => {
+    // Content ending 4mm (≈15px) past a boundary → only bottom padding in the
+    // slice → dropped. Matches the pre-refactor while-loop semantics.
+    expect(slicePageCount(A4_H_MM + 4)).toBe(1);
+    expect(slicePageCount(2 * A4_H_MM + 4)).toBe(2);
+  });
+
+  it("keeps a trailing slice longer than the epsilon", () => {
+    expect(slicePageCount(A4_H_MM + 6)).toBe(2);
+    expect(slicePageCount(2 * A4_H_MM + 6)).toBe(3);
+  });
+
+  it("treats content ending exactly at the epsilon boundary as droppable", () => {
+    expect(slicePageCount(A4_H_MM + PDF_TRAILING_EPSILON_MM)).toBe(1);
+    expect(slicePageCount(A4_H_MM + PDF_TRAILING_EPSILON_MM + 0.1)).toBe(2);
+  });
+
+  it("is robust to degenerate / non-finite inputs (one page)", () => {
+    expect(slicePageCount(Number.NaN)).toBe(1);
+    expect(slicePageCount(-50)).toBe(1);
   });
 });

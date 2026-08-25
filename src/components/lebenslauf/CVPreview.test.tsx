@@ -51,4 +51,16 @@ describe("CV preview / capture contract", () => {
     // data attribute, not Tailwind class substrings.
     expect(captureC.querySelector("[data-page-break-overlay]")).toBeNull();
   });
+
+  // The form collects projects[].url; every template must render it so the
+  // field is not silently lost in preview and PDF.
+  it.each(templates)("renders the project URL on the %s capture sheet", (template) => {
+    const data = {
+      ...createEmptyCVData(),
+      template,
+      projects: [{ id: "p1", name: "Portfolio", url: "https://example.test/x", bullets: [] }],
+    };
+    const { container: captureC } = render(<CvCaptureSheet data={data} />);
+    expect(captureC.textContent).toContain("https://example.test/x");
+  });
 });

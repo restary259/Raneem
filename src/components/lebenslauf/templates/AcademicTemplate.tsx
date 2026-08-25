@@ -94,6 +94,7 @@ const AcademicTemplate: React.FC<Props> = ({ data }) => {
                   {p.date && <span className="text-[9pt] whitespace-nowrap" style={{ color: "var(--cv-muted)", fontFamily: "var(--cv-date-font)" }}>{p.date}</span>}
                 </div>
                 {p.description && <p className="text-[10pt]" style={{ color: "var(--cv-body-color)" }}>{p.description}</p>}
+                {p.url && <p className="text-[9pt]" style={{ color: "var(--cv-muted)" }}>{p.url}</p>}
                 <Bullets items={p.bullets} className="text-[9.5pt]" />
               </div>
             ))}

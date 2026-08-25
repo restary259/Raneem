@@ -245,6 +245,7 @@
     "spacing_relaxed": "مريح",
     "advancedFields": "حقول متقدمة",
     "val_nameRequired": "الاسم مطلوب",
+    "val_emailRequired": "البريد الإلكتروني مطلوب",
     "val_email": "أدخل بريدًا إلكترونيًا صحيحًا",
     "val_dates": "يجب أن يسبق تاريخ البدء تاريخ الانتهاء",
     "val_fixFirst": "أصلح الحقول المطلوبة أولًا",

@@ -30,3 +30,55 @@ export function pageCount(contentHeight: number, a4Height = A4_H_PX): number {
   if (!Number.isFinite(contentHeight) || contentHeight <= 0 || a4Height <= 0) return 1;
   return Math.max(1, Math.ceil(contentHeight / a4Height));
 }
+
+/** A4 height in mm — the unit jsPDF slices the rasterized image in. */
+export const A4_H_MM = 297;
+
+/**
+ * Trailing-page epsilon for the PDF slicer: a final slice shorter than this
+ * is dropped as a near-blank page. SAFE ONLY because every template's bottom
+ * padding (the compact `--cv-spacing-root`, 24px ≈ 6.4mm) is larger than this
+ * value — a dropped slice can then only contain padding, never content.
+ * Keep this below 24px ≈ 6.4mm; see SPACING_SCALE in cvDesign.ts.
+ */
+export const PDF_TRAILING_EPSILON_MM = 5;
+
+/**
+ * Number of A4 pages the rasterized CV image is sliced into. A trailing slice
+ * shorter than epsilonMm is dropped (it can only contain the templates'
+ * bottom padding — see PDF_TRAILING_EPSILON_MM). Degenerate input → one page.
+ */
+export function slicePageCount(imgHeightMm: number, pageHeightMm = A4_H_MM, epsilonMm = PDF_TRAILING_EPSILON_MM): number {
+  if (!Number.isFinite(imgHeightMm) || imgHeightMm <= 0 || pageHeightMm <= 0) return 1;
+  return Math.max(1, Math.ceil((imgHeightMm - epsilonMm) / pageHeightMm));
+}
+
+export interface EntryBox {
+  /** Distance from the top of the captured sheet, in CSS px. */
+  top: number;
+  height: number;
+}
+
+/**
+ * Page-break shifts for the PDF capture: walks entries in document order with
+ * a cumulative offset; when an entry (shorter than a page) straddles a page
+ * boundary, returns the shift needed to push it wholly onto the next page.
+ * Entries at least one page tall can never fit on a single page, so they are
+ * never shifted. Degenerate measurements (NaN, non-positive height) shift 0.
+ */
+export function computeEntryShifts(entries: EntryBox[], pageHeight = A4_H_PX): number[] {
+  const shifts = entries.map(() => 0);
+  if (!Number.isFinite(pageHeight) || pageHeight <= 0) return shifts;
+  let offset = 0;
+  entries.forEach(({ top, height }, i) => {
+    if (!Number.isFinite(top) || !Number.isFinite(height) || height <= 0 || height >= pageHeight) return;
+    const shiftedTop = top + offset;
+    const pageEnd = (Math.floor(shiftedTop / pageHeight) + 1) * pageHeight;
+    if (shiftedTop + height > pageEnd) {
+      const shift = pageEnd - shiftedTop;
+      shifts[i] = shift;
+      offset += shift;
+    }
+  });
+  return shifts;
+}

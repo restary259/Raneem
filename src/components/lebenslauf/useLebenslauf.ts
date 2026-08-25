@@ -9,8 +9,9 @@ const AUTOSAVE_DEBOUNCE = 1200;
 /**
  * Merge a legacy stored draft into the current shape (new optional fields,
  * design/sectionOrder/signature) so older drafts still load without crashing.
+ * Exported for unit tests.
  */
-function migrateDraft(raw: unknown): CVData {
+export function migrateDraft(raw: unknown): CVData {
   const base = createEmptyCVData();
   const src = (raw ?? {}) as Partial<CVData>;
   const merged: CVData = {
@@ -25,10 +26,14 @@ function migrateDraft(raw: unknown): CVData {
     },
     signature: { ...base.signature, ...(src.signature || {}) },
     design: { ...base.design, ...(src.design || {}) },
-    sectionOrder:
-      Array.isArray(src.sectionOrder) && src.sectionOrder.length > 0
+    // Keep the stored order (known keys only), then append any sections added
+    // since the draft was saved so they still render and remain reorderable.
+    sectionOrder: (() => {
+      const stored = Array.isArray(src.sectionOrder)
         ? src.sectionOrder.filter((k) => ALL_SECTIONS.includes(k as never)) as CVData["sectionOrder"]
-        : [...ALL_SECTIONS],
+        : [];
+      return [...stored, ...ALL_SECTIONS.filter((k) => !stored.includes(k))];
+    })(),
     // ensure new arrays exist for older drafts
     projects: src.projects || [],
     awards: src.awards || [],

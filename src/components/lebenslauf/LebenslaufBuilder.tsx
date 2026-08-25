@@ -16,9 +16,16 @@ function validate(data: CVData, t: (k: string, fb: string) => string): Record<st
   const e: Record<string, string> = {};
   if (!data.personal.firstName.trim()) e.firstName = t("lebenslaufBuilder.val_nameRequired", "Name is required");
   if (!data.personal.lastName.trim()) e.lastName = t("lebenslaufBuilder.val_nameRequired", "Name is required");
-  if (data.personal.email && !EMAIL_RE.test(data.personal.email)) e.email = t("lebenslaufBuilder.val_email", "Enter a valid email");
+  if (!data.personal.email.trim()) e.email = t("lebenslaufBuilder.val_emailRequired", "Email is required");
+  else if (!EMAIL_RE.test(data.personal.email)) e.email = t("lebenslaufBuilder.val_email", "Enter a valid email");
   for (const ed of data.education) {
     if (ed.from && ed.to && !ed.current && ed.from > ed.to) e[`edu_${ed.id}`] = t("lebenslaufBuilder.val_dates", "Start date must be before end date");
+  }
+  for (const ex of data.experience) {
+    if (ex.from && ex.to && !ex.current && ex.from > ex.to) e[`exp_${ex.id}`] = t("lebenslaufBuilder.val_dates", "Start date must be before end date");
+  }
+  for (const vol of data.volunteer) {
+    if (vol.from && vol.to && !vol.current && vol.from > vol.to) e[`vol_${vol.id}`] = t("lebenslaufBuilder.val_dates", "Start date must be before end date");
   }
   return e;
 }
