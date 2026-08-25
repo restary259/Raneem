@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Building2, CheckCircle2, Lock, Landmark, Globe, Loader2, Info } from "lucide-react";
+import { ShieldCheck, Building2, CheckCircle2, Landmark, Globe, Loader2, Info } from "lucide-react";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 
 type BankCountry = "il" | "de";
@@ -34,10 +33,9 @@ const EMPTY: BankData = {
   iban_confirmed_at: null,
 };
 
-/** Premium secure bank-details page. The agent chooses between an Israeli
- *  or German bank account; the UI dynamically renders the correct fields.
- *  Sensitive values are masked when confirmed (locked). Security indicators
- *  (shield, lock, verified badge) communicate that this is a protected area. */
+/** Bank-details page. The agent chooses between an Israeli or German bank
+ *  account; the UI renders the matching fields. Once `iban_confirmed_at` is
+ *  set (by an admin), all inputs disable — enforced by restrict_profiles_write. */
 export default function AgentBankDetailsPage() {
   const { t } = useTranslation("dashboard");
   const { dir } = useDirection();
@@ -140,27 +138,6 @@ export default function AgentBankDetailsPage() {
           {t("agent.bank.subtitle", "Secure financial information for receiving your commission payouts.")}
         </p>
       </div>
-
-      {/* Security notice */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="p-4 flex items-start gap-3">
-          <Lock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground">
-              {t("agent.bank.secureArea", "Secure financial information")}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {t("agent.bank.secureDesc", "Your bank details are encrypted and used only for processing your commission payouts. Once confirmed, they can only be changed by an administrator.")}
-            </p>
-          </div>
-          {locked && (
-            <Badge variant="secondary" className="gap-1 shrink-0">
-              <CheckCircle2 className="h-3 w-3" />
-              {t("agent.bank.verified", "Verified")}
-            </Badge>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Country selector */}
       <Card>
