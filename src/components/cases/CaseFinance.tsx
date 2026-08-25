@@ -95,6 +95,21 @@ const FINANCE_TYPE_BY_PAYMENT_TYPE: Record<SchoolPaymentType, string> = {
   school_insurance: "insurance",
 };
 
+/**
+ * Insurance is paid by the student AFTER they arrive in Germany, so it is
+ * never required before enrollment. The language course and the accommodation
+ * are. This mirrors `assert_case_ready_for_enrollment` on the server.
+ */
+const OPTIONAL_SCHOOL_PAYMENT_TYPES: ReadonlySet<SchoolPaymentType> = new Set(["school_insurance"]);
+
+interface FinanceConfirmationRow {
+  finance_type: string;
+  status: string;
+  confirmed_at: string | null;
+  confirmed_by: string | null;
+}
+
+
 const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
   {
     caseId,
