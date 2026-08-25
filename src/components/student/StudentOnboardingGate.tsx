@@ -43,13 +43,15 @@ interface PreviewContact {
 }
 
 /**
- * Full profile shape captured by the wizard. Mirrors the field set the admin
- * sidebar shows in AdminStudentsPage (PROFILE_SELECT), EXCLUDING the sensitive
- * passport_number — that is sourced externally now. passport_expiry is kept.
+ * Profile shape captured by the wizard. Visa/immigration fields (eye color,
+ * passport expiry, legal-name change, criminal record, dual citizenship) and
+ * the arrival date are NOT collected here — they live on the student Visa page
+ * and are filled in later, once the student actually applies.
  */
 interface ProfileShape {
   full_name: string | null;
   phone_number: string | null;
+  email: string | null;
   date_of_birth: string | null;
   gender: string | null;
   nationality: string | null;
@@ -61,15 +63,6 @@ interface ProfileShape {
   university_name: string | null;
   language_school_id: string | null;
   intake_month: string | null;
-  arrival_date: string | null;
-  passport_expiry: string | null;
-  eye_color: string | null;
-  has_changed_legal_name: boolean | null;
-  previous_legal_name: string | null;
-  has_criminal_record: boolean | null;
-  criminal_record_details: string | null;
-  has_dual_citizenship: boolean | null;
-  second_passport_country: string | null;
   emergency_contacts: EmergencyContact[] | null;
 }
 
@@ -79,6 +72,7 @@ const DEFAULT_NATIONALITY = "Israel";
 const EMPTY_PROFILE: ProfileShape = {
   full_name: null,
   phone_number: null,
+  email: null,
   date_of_birth: null,
   gender: null,
   nationality: DEFAULT_NATIONALITY,
@@ -90,17 +84,9 @@ const EMPTY_PROFILE: ProfileShape = {
   university_name: null,
   language_school_id: null,
   intake_month: null,
-  arrival_date: null,
-  passport_expiry: null,
-  eye_color: null,
-  has_changed_legal_name: false,
-  previous_legal_name: null,
-  has_criminal_record: false,
-  criminal_record_details: null,
-  has_dual_citizenship: false,
-  second_passport_country: null,
   emergency_contacts: null,
 };
+
 
 // Single select of every column the wizard reads or writes — loaded once on
 // mount, never re-fetched per keystroke. Visa/legal columns are no longer part
