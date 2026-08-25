@@ -25,6 +25,14 @@ type DeleteCategory = "contact_info" | "documents" | "payments" | "case" | "all"
 
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
+  // Request-scoped so every response (including the CORS preflight) carries
+  // the right headers. A module-level helper cannot see `corsHeaders`.
+  const json = (body: unknown, status: number) =>
+    new Response(status === 204 ? null : JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
   if (req.method === "OPTIONS") {
     return json(null, 204);
   }
