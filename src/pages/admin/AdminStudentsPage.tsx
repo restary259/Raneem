@@ -902,10 +902,19 @@ export default function AdminStudentsPage() {
                 caseData={(() => {
                   const c = caseOf(selected);
                   return c
-                    ? { id: c.id, case_reference: c.reference, status: c.status, phone_number: selected.phone_number }
+                    ? {
+                        id: c.id,
+                        case_reference: c.reference,
+                        status: c.status,
+                        phone_number: selected.phone_number,
+                        assigned_to: c.assignedTo,
+                      }
                     : null;
                 })()}
-                submission={null}
+                submission={(() => {
+                  const c = caseOf(selected);
+                  return c ? { case_id: c.id, program_id: c.programId } : null;
+                })()}
                 variant="sheet"
                 caseHref={(cid) => `/admin/cases/${cid}`}
                 financeHref={(cid) => `/admin/cases/${cid}`}
