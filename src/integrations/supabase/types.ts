@@ -618,10 +618,13 @@ export type Database = {
           agent_id: string | null
           agent_override: number
           agent_rate_used: number | null
+          attribution_model: string
           case_id: string
           darb_margin: number
           gross_total: number
           id: string
+          is_agent_self_referral: boolean
+          is_student_referrer: boolean
           master_override: number
           master_partner_id: string | null
           master_rate_used: number | null
@@ -632,6 +635,7 @@ export type Database = {
           referrer_id: string | null
           referrer_role: string | null
           snapshotted_at: string
+          student_referral_type: string | null
           student_reward: number
           student_reward_used: number | null
           team_commission: number
@@ -642,10 +646,13 @@ export type Database = {
           agent_id?: string | null
           agent_override?: number
           agent_rate_used?: number | null
+          attribution_model?: string
           case_id: string
           darb_margin?: number
           gross_total: number
           id?: string
+          is_agent_self_referral?: boolean
+          is_student_referrer?: boolean
           master_override?: number
           master_partner_id?: string | null
           master_rate_used?: number | null
@@ -656,6 +663,7 @@ export type Database = {
           referrer_id?: string | null
           referrer_role?: string | null
           snapshotted_at?: string
+          student_referral_type?: string | null
           student_reward?: number
           student_reward_used?: number | null
           team_commission?: number
@@ -666,10 +674,13 @@ export type Database = {
           agent_id?: string | null
           agent_override?: number
           agent_rate_used?: number | null
+          attribution_model?: string
           case_id?: string
           darb_margin?: number
           gross_total?: number
           id?: string
+          is_agent_self_referral?: boolean
+          is_student_referrer?: boolean
           master_override?: number
           master_partner_id?: string | null
           master_rate_used?: number | null
@@ -680,6 +691,7 @@ export type Database = {
           referrer_id?: string | null
           referrer_role?: string | null
           snapshotted_at?: string
+          student_referral_type?: string | null
           student_reward?: number
           student_reward_used?: number | null
           team_commission?: number
