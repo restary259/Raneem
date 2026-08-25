@@ -739,7 +739,12 @@
       "notCollected": "لم يتم جمعها",
       "referralDiscount": "تم تطبيق خصم الإحالة",
       "accountAlreadyInvited": "تمت دعوة حساب الطالب بالفعل — لا حاجة لأي إجراء.",
-      "accountAlreadyCreated": "تم إنشاء حساب الطالب بالفعل — لا حاجة لأي إجراء."
+      "accountAlreadyCreated": "تم إنشاء حساب الطالب بالفعل — لا حاجة لأي إجراء.",
+      "splitNoReferrer": "لا يوجد مُحيل لهذه الحالة",
+      "splitCustomRate": "نسبة مخصصة لهذا الحساب",
+      "splitGlobalRate": "النسبة الافتراضية العامة",
+      "splitAgentRecruit": "حصة التجنيد — تُدفع إضافةً إلى عمولة الشريك",
+      "splitMarginWarning": "المدفوعات تتجاوز صافي رسوم الخدمة لهذه الحالة — إيراد المنصة سيكون ₪0."
     },
     "financials": {
       "title": "لوحة المالية",
@@ -878,7 +883,10 @@
       "visApplyOnlyDesc": "حالاتهم المُحالة فقط",
       "badgeAllCases": "👁 جميع الحالات",
       "badgeApplyOnly": "🔒 حالات التقديم فقط",
-      "badgeGlobalDefault": "⚙️ الإعداد العام"
+      "badgeGlobalDefault": "⚙️ الإعداد العام",
+      "ambassador": "سفير",
+      "agentSelf": "وكيل (إحالة ذاتية)",
+      "studentReferrer": "طالب مُحيل"
     },
     "activity": {
       "title": "سجل النشاط المباشر",
@@ -3965,7 +3973,11 @@
       "awaiting": "بانتظار إثبات الطالب",
       "view": "عرض الإثبات",
       "confirmAction": "تأكيد الدفع",
-      "rejectAction": "رفض الإثبات"
+      "rejectAction": "رفض الإثبات",
+      "requiredProgress": "تم تأكيد {{done}} من {{total}} من الدفعات المطلوبة",
+      "optional": "اختياري — يُدفع بعد الوصول إلى ألمانيا",
+      "required": "مطلوب قبل التسجيل",
+      "confirmedAt": "تم التأكيد في"
     },
     "tabs": {
       "summary": "الملخّص",
