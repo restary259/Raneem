@@ -285,6 +285,18 @@ const AdminSubmissionsPage = () => {
     fetchCases();
   }, [fetchCases]);
 
+  /** Human label for the account that earns the referral commission. */
+  const referrerRoleLabel = useCallback(
+    (role: ReferrerRole): string => {
+      if (role === "ambassador") return t("admin.commission.ambassador", "Ambassador");
+      if (role === "agent_self") return t("admin.commission.agentSelf", "Agent (own referral)");
+      if (role === "student") return t("admin.commission.studentReferrer", "Student referrer");
+      return t("admin.commission.partner", "Partner");
+    },
+    [t],
+  );
+
+
   /**
    * Commission preview.
    *
