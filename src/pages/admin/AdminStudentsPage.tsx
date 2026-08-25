@@ -375,12 +375,12 @@ export default function AdminStudentsPage() {
           ? supabase.from("profiles").select("id, full_name, email").in("id", creatorIds)
           : Promise.resolve({ data: [] as any[] }),
         caseIds.length
-          ? supabase.from("cases").select("id, case_reference, status").in("id", caseIds)
+          ? supabase.from("cases").select("id, case_reference, status, assigned_to").in("id", caseIds)
           : Promise.resolve({ data: [] as any[] }),
         caseIds.length
           ? (supabase as any)
               .from("case_submissions")
-              .select("case_id, profile_completed_at")
+              .select("case_id, profile_completed_at, program_id")
               .in("case_id", caseIds)
           : Promise.resolve({ data: [] as any[] }),
         emails.length
