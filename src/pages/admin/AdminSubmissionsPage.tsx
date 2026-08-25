@@ -1034,36 +1034,71 @@ const AdminSubmissionsPage = () => {
                 <span className="text-muted-foreground">{t("admin.submissions.serviceFee")}</span>
                 <span className="font-bold text-foreground">₪{splitPreview.serviceFee.toLocaleString("en-US")}</span>
               </div>
-              {splitPreview.partners.length === 0 && (
+              {!splitPreview.referrer && (
                 <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
-                  <span className="text-muted-foreground">{t("admin.commission.partner", "Partner Commission")}</span>
+                  <span className="text-muted-foreground">
+                    {t("admin.submissions.splitNoReferrer", "No referrer on this case")}
+                  </span>
                   <span className="font-semibold text-destructive">-₪0</span>
                 </div>
               )}
-              {splitPreview.partners.map((p) => (
-                <div key={p.partnerId} className="flex justify-between p-3 rounded-lg border border-border text-sm">
-                  <span className="text-muted-foreground">
-                    {t("admin.commission.partner", "Partner")}: {p.name}
+              {splitPreview.referrer && (
+                <div className="flex items-start justify-between gap-2 p-3 rounded-lg border border-border text-sm">
+                  <span className="min-w-0 text-muted-foreground">
+                    <span className="block truncate">
+                      {referrerRoleLabel(splitPreview.referrer.role)}: {splitPreview.referrer.name}
+                    </span>
+                    <span className="mt-0.5 block text-[11px]">
+                      {splitPreview.referrer.customRate
+                        ? t("admin.submissions.splitCustomRate", "Custom rate for this account")
+                        : t("admin.submissions.splitGlobalRate", "Global default rate")}
+                    </span>
                   </span>
-                  <span className="font-semibold text-destructive">-₪{p.amount.toLocaleString("en-US")}</span>
+                  <span className="shrink-0 font-semibold text-destructive">
+                    -₪{splitPreview.referrer.amount.toLocaleString("en-US")}
+                  </span>
                 </div>
-              ))}
-              <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
-                <span className="text-muted-foreground">{t("admin.commission.teamMember", "Team Commission")}</span>
-                <span className="font-semibold text-destructive">
+              )}
+              <div className="flex items-start justify-between gap-2 p-3 rounded-lg border border-border text-sm">
+                <span className="min-w-0 text-muted-foreground">
+                  <span className="block truncate">
+                    {t("admin.commission.teamMember", "Team Commission")}
+                    {splitPreview.teamName ? `: ${splitPreview.teamName}` : ""}
+                  </span>
+                  <span className="mt-0.5 block text-[11px]">
+                    {splitPreview.teamCustomRate
+                      ? t("admin.submissions.splitCustomRate", "Custom rate for this account")
+                      : t("admin.submissions.splitGlobalRate", "Global default rate")}
+                  </span>
+                </span>
+                <span className="shrink-0 font-semibold text-destructive">
                   -₪{splitPreview.teamCommission.toLocaleString("en-US")}
                 </span>
               </div>
               {splitPreview.agent && (
-                <div className="flex justify-between p-3 rounded-lg border border-border text-sm">
-                  <span className="text-muted-foreground">
-                    {t("admin.commission.agent", "Agent")}: {splitPreview.agent.name}
+                <div className="flex items-start justify-between gap-2 p-3 rounded-lg border border-border text-sm">
+                  <span className="min-w-0 text-muted-foreground">
+                    <span className="block truncate">
+                      {t("admin.commission.agent", "Agent")}: {splitPreview.agent.name}
+                    </span>
+                    <span className="mt-0.5 block text-[11px]">
+                      {t("admin.submissions.splitAgentRecruit", "Recruitment share — paid on top of the partner commission")}
+                    </span>
                   </span>
-                  <span className="font-semibold text-destructive">
+                  <span className="shrink-0 font-semibold text-destructive">
                     -₪{splitPreview.agent.amount.toLocaleString("en-US")}
                   </span>
                 </div>
               )}
+              {splitPreview.marginWarning && (
+                <div className={`rounded-lg border border-[hsl(var(--status-danger)/0.28)] ${toneClasses("danger").tint} p-3 text-xs ${toneClasses("danger").text}`}>
+                  {t(
+                    "admin.submissions.splitMarginWarning",
+                    "Payouts exceed the net service fee for this case — platform revenue will be ₪0.",
+                  )}
+                </div>
+              )}
+
               <div className={`flex justify-between p-3 rounded-lg ${toneClasses("paid").tint} border border-[hsl(var(--status-paid)/0.28)] text-sm`}>
                 <span className="font-semibold">{t("admin.commission.platformRevenue", "Platform Revenue")}</span>
                 <span className={`font-bold ${toneClasses("paid").text}`}>
