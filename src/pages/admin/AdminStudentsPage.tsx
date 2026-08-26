@@ -1005,7 +1005,34 @@ export default function AdminStudentsPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground py-4 text-center">{t("visa.noData", "No visa information on file yet.")}</p>
+                    (() => {
+                      // No dynamic visa catalog configured: fall back to the
+                      // visa/legal fields stored on the student profile.
+                      const rows: Array<{ label: string; value: string }> = [
+                        { label: t("visa.status", "Visa status"), value: (selected.visa_status as string) || "—" },
+                        { label: t("visa.arrivalDate", "Arrival date"), value: (selected.arrival_date as string) || "—" },
+                        { label: t("visa.passportExpiry", "Passport expiry"), value: (selected.passport_expiry as string) || "—" },
+                        { label: t("visa.eyeColor", "Eye color"), value: (selected.eye_color as string) || "—" },
+                        { label: t("visa.nationality", "Nationality"), value: (selected.nationality as string) || "—" },
+                      ];
+                      const hasAny = rows.some((r) => r.value !== "—");
+                      if (!hasAny) {
+                        return <p className="text-sm text-muted-foreground py-4 text-center">{t("visa.noData", "No visa information on file yet.")}</p>;
+                      }
+                      return (
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                            {t("admin.students.visaInfo")}
+                          </p>
+                          {rows.map((r) => (
+                            <div key={r.label} className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-28 shrink-0">{r.label}</span>
+                              <span className="font-medium">{r.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()
                   )
                 }
                 renderDocumentsTab={() => (
