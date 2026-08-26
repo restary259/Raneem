@@ -142,8 +142,8 @@ function MemberDetailPanel({
 
   return (
     <>
-      <Header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b">
-        <div className="flex items-center gap-3">
+      <Header className="sticky top-0 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b bg-background">
+        <div className="flex items-center gap-3 min-w-0">
           <Close className="shrink-0" asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -155,14 +155,15 @@ function MemberDetailPanel({
           <div className="h-12 w-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
             <RoleIcon className="h-6 w-6 text-primary" />
           </div>
-          <div>
-            <Title className="flex items-center gap-2">
-              {member.full_name}
-              <Badge variant="secondary" className={`text-xs gap-1 ${getRoleColors(member.role)}`}>
-                <RoleIcon className="h-3 w-3" />
+          <div className="min-w-0">
+            <Title className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+              <span className="truncate" title={member.full_name ?? undefined}>{member.full_name}</span>
+              <Badge variant="secondary" className={`text-xs gap-1 whitespace-nowrap ${getRoleColors(member.role)}`}>
+                <RoleIcon className="h-3 w-3 shrink-0" />
                 {roleLabel}
               </Badge>
             </Title>
+
             <Description className="flex items-center gap-2 text-xs">
               {member.email}
               {member.phone_number && (
