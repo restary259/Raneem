@@ -91,6 +91,8 @@ const AGENT_MEMBER: MemberRow = {
   open_requests: 0,
   open_request_amount: 0,
   last_request_at: null,
+  direct_enrolled_cases: 0,
+  network_enrolled_cases: 0,
 };
 
 const renderDrawer = () =>

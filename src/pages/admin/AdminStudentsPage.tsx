@@ -1009,7 +1009,6 @@ export default function AdminStudentsPage() {
                       // No dynamic visa catalog configured: fall back to the
                       // visa/legal fields stored on the student profile.
                       const rows: Array<{ label: string; value: string }> = [
-                        { label: t("visa.status", "Visa status"), value: (selected.visa_status as string) || "—" },
                         { label: t("visa.arrivalDate", "Arrival date"), value: (selected.arrival_date as string) || "—" },
                         { label: t("visa.passportExpiry", "Passport expiry"), value: (selected.passport_expiry as string) || "—" },
                         { label: t("visa.eyeColor", "Eye color"), value: (selected.eye_color as string) || "—" },
