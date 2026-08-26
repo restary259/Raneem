@@ -88,14 +88,14 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
         .some((r: any) => matchesRef(r.payout_reference, q) || (r.case_references || []).some((cr: string) => matchesRef(cr, q)));
       if (q && !refHit && ![p.full_name, p.email, p.city, p.referral_code]
         .some(v => (v || '').toLowerCase().includes(q))) return false;
-      if (filter === 'open') return Number(p.open_requests) > 0;
-      if (filter === 'balance') return Number(p.available_amount) > 0 || Number(p.locked_amount) > 0;
-      if (filter === 'settled') return Number(p.open_requests) === 0 && Number(p.available_amount) === 0;
-      return true;
+      return matchesFilter(p, filter);
     });
   }, [rows, search, filter, requestsByRequester]);
 
-  const openCount = rows.filter(p => Number(p.open_requests) > 0).length;
+  const openCount = rows.filter(p => matchesFilter(p, 'open')).length;
+  const balanceCount = rows.filter(p => matchesFilter(p, 'balance')).length;
+  const settledCount = rows.filter(p => matchesFilter(p, 'settled')).length;
+
 
   const selected = rows.find(p => p.requester_id === selectedId) || null;
   if (selected) {
