@@ -885,6 +885,7 @@ export default function TeamStudentsPage() {
       {/* ── Student list ───────────────────────────────────────────── */}
       {listLoading ? (
         <LoadingState variant="table" rows={5} label={t("team.students.loading")} />
+
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={User}
@@ -932,3 +933,4 @@ export default function TeamStudentsPage() {
     </div>
   );
 }
+
