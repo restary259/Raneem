@@ -667,29 +667,34 @@ const CommissionAccountRow: React.FC<{
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card flex-wrap">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold truncate">{account.name}</p>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border border-border bg-card flex-wrap">
+      <div className="w-full sm:flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+          <p className="text-sm font-semibold truncate max-w-full" title={account.name}>{account.name}</p>
           {account.agent_id ? (
-            <Badge variant="secondary" className="text-xs gap-1">
-              <Network className="h-3 w-3" />
-              {t("commissionHub.badgeRecruited", "Recruited")}
-              {account.agent_name && <span>· {account.agent_name}</span>}
+            <Badge variant="secondary" className="text-xs gap-1 whitespace-nowrap max-w-[12rem]">
+              <Network className="h-3 w-3 shrink-0" />
+              <span className="truncate">
+                {t("commissionHub.badgeRecruited", "Recruited")}
+                {account.agent_name ? ` · ${account.agent_name}` : ""}
+              </span>
             </Badge>
           ) : (
             <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDirect", "Direct")}</Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">{account.email}</p>
+        <p className="text-xs text-muted-foreground truncate" title={account.email}>{account.email}</p>
       </div>
       {account.override === null ? (
-        <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDefault", "default")}</Badge>
+        <Badge variant="outline" className="text-xs w-fit">{t("commissionHub.badgeDefault", "default")}</Badge>
       ) : (
-        <Badge variant="secondary" className="text-xs">
-          {t("commissionHub.badgeCustom", "custom")} <span className="font-mono">{fmtILS(account.override)}</span>
+        <Badge variant="secondary" className="text-xs w-fit whitespace-nowrap">
+          {t("commissionHub.badgeCustom", "custom")}
+          <span className="mx-1 opacity-60">·</span>
+          <span className="font-mono">{fmtILS(account.override)}</span>
         </Badge>
       )}
+
       <span className="text-xs text-muted-foreground">
         {t("commissionHub.studentsReferred", "{{count}} students", { count: account.students_referred })}
       </span>
