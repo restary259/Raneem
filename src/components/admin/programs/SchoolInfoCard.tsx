@@ -62,7 +62,7 @@ const SchoolInfoCard = ({ school, onEdit, onToggleActive, onDelete }: SchoolInfo
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="ms-auto h-8 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive sm:ms-0"
             onClick={() => onDelete(school)}
           >
             <Trash2 className="h-3.5 w-3.5" />
