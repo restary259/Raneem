@@ -225,6 +225,22 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* ── Scroll containers: momentum + no scroll chaining ─────────────────────
+   Every vertical scroll region in the app (dashboard main, drawers, sheets,
+   dialog bodies, chat lists, capped lists) gets iOS momentum scrolling and
+   `overscroll-behavior-y: contain`, so reaching the end of an inner list can
+   never scroll the page behind it and never triggers the browser's
+   pull-to-refresh from inside an overlay. Horizontal scrollers (tab rows,
+   photo galleries) are deliberately untouched. */
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-auto,
+.overflow-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+
 .dir-rtl {
   direction: rtl;
   text-align: right;
