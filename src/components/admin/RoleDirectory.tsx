@@ -19,6 +19,23 @@ const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
 
 type Filter = 'all' | 'open' | 'balance' | 'settled';
 
+/**
+ * Single source of truth for the directory filter buckets — used both for the
+ * rendered list and the option counts so the two can never drift. Buckets are
+ * mutually exclusive: "settled" means no open request, no available AND no
+ * locked balance (a locked-only requester belongs to "Has balance").
+ */
+const matchesFilter = (p: DirectoryRow, filter: Filter): boolean => {
+  const open = Number(p.open_requests) || 0;
+  const available = Number(p.available_amount) || 0;
+  const locked = Number(p.locked_amount) || 0;
+  if (filter === 'open') return open > 0;
+  if (filter === 'balance') return available > 0 || locked > 0;
+  if (filter === 'settled') return open === 0 && available === 0 && locked === 0;
+  return true;
+};
+
+
 const ROLE_RPC: Record<PayoutRole, string> = {
   team_member: 'list_team_directory',
   agent: 'list_agent_directory',
