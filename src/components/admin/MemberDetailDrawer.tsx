@@ -716,11 +716,12 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-        <DrawerContent className="w-full sm:max-w-2xl lg:max-w-3xl">
+        <DrawerContent className="w-full sm:max-w-2xl lg:max-w-3xl flex flex-col h-full max-h-screen">
           <MemberDetailPanel
             {...panelProps}
             slots={{ Header: DrawerHeader, Title: DrawerTitle, Description: DrawerDescription, Close: DrawerClose }}
-            bodyClassName="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)]"
+            bodyClassName="p-4 space-y-6 flex-1 min-h-0 overflow-y-auto"
+
           />
         </DrawerContent>
       </Drawer>
