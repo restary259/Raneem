@@ -1,51 +1,49 @@
-# Mobile Scrolling & Performance Audit — measured, not assumed
+# Fix plan — mobile scrolling to standard + performance findings
 
-## What I already measured (facts, this session)
+Scope: scrolling behaviour and rendering performance only. No business logic, RLS, financial math, routes, or permissions change. Each fix below is tied to a finding, and each gets a before/after measurement with the same harness that produced the baseline.
 
-Chromium mobile emulation, 390x844, DPR 3, touch, **4x CPU throttle**, against the running dev server. Programmatic scroll pass over the full page height, sampling every animation frame.
+## Confirmed defects to fix
 
-| Route | FCP | DOMContentLoaded | DOM nodes | Requests | Frame median | Frame p95 | Frames >50ms |
-|---|---|---|---|---|---|---|---|
-| `/` (landing) | 248 ms | 1708 ms | 540 | 182 | 16.7 ms | 16.7 ms | 0 |
-| `/faq` | 144 ms | 1174 ms | 326 | 175 | 16.7 ms | 16.8 ms | 0 |
-| `/resources` | 184 ms | 1195 ms | 349 | 180 | 16.7 ms | 16.7 ms | 0 |
+**D1 — Dashboard scroll position never resets on navigation.**
+`src/App.tsx:207` calls `window.scrollTo(0, 0)` on route change, but `DashboardLayout` scrolls an inner element (`DashboardLayout.tsx:522`, `overflow-y-auto` inside `h-screen overflow-hidden`). The window is not the scroller, so navigating from a scrolled admin list into a detail page lands mid-page.
 
-Reading: public marketing pages scroll at a locked 60 fps with zero dropped frames even at 4x CPU throttle. Scroll smoothness on the public site is not a problem.
+**D2 — Nested scrollers chain to the page.**
+`MemberDetailDrawer` (three nested scroll regions, lines 280/723/735) and the `max-h-[90vh] overflow-y-auto` dialogs in `AdminSettingsPage` (645, 893) have no `overscroll-behavior`. On touch, reaching the end of the inner list scrolls the page behind the sheet/dialog. Only the chat list currently sets `overscroll-contain`.
 
-Static findings (code-verified, not measured yet):
-- No list virtualization anywhere (`react-window` / `react-virtual` / `virtuoso` absent from `package.json`); long dashboard tables render every row.
-- `DashboardLayout` uses `h-screen overflow-hidden` with a single inner `overflow-y-auto` main region — correct pattern, but nested scrollers exist in `MemberDetailDrawer` (3), `AdminSettingsPage` (2), and several list pages, which is where mobile scroll-chaining bugs usually live.
-- `overscroll-contain` is applied in the chat message list but not on the other nested scrollers.
-- Two queries fetch up to 200 rows unpaginated (`AgentStudentsPage`, `AuthFailuresPanel`).
-- Route chunks are well split in `vite.config.ts` (charts/pdf/supabase isolated).
+**D3 — Body scroll not locked behind mobile sheets/drawers.**
+Same surfaces: the page behind stays scrollable while the overlay is open.
 
-**Honest limitation:** the numbers above are from the dev server on public pages. They say nothing about the authenticated dashboards, which is where the app is heavy. I will not rate the app on those numbers.
+**D4 — No list virtualization anywhere.**
+No `react-window` / `@tanstack/react-virtual` / `virtuoso` in `package.json`. Long admin/team lists mount every row. Two known unpaginated 200-row fetches: `AgentStudentsPage.tsx:49`, `AuthFailuresPanel.tsx:36`.
 
-## What the full audit will do
+**D5 — Momentum/rubber-band inconsistency.**
+`-webkit-overflow-scrolling: touch` is set in `styles/base.css` and `styles/layouts.css` but not on the dashboard main scroller or the drawer/dialog scrollers.
 
-### 1. Production baseline
-Build for production and serve the built output, so measurements reflect real bundle sizes and minified JS — dev-server numbers are excluded from the rating.
+**D6 — Unverified surfaces** (measured in step 1 before any change): sticky header stability while scrolling, bottom-nav overlap of the last content row, chat behaviour when the mobile keyboard opens, and realtime-driven re-render storms on pages with multiple subscriptions.
 
-### 2. Authenticated dashboard measurement
-Sign in as each role and measure the routes that actually matter, at 390x844 with 4x CPU throttle and Slow-4G network emulation:
-- Admin: overview, pipeline, students, financials, members, spreadsheet, commission hub
-- Team: work, cases, case detail, catalog, analytics
-- Student: next steps, documents, fees, messages
-- Partner / Agent: overview, students, earnings
+## Work plan
 
-### 3. Metrics captured per route
-- **Load:** FCP, LCP, Time to Interactive, total blocking time, JS transferred + parsed
-- **Scroll:** frame-time median / p95 / max, dropped-frame count, jank events during a full-height scroll and during a fast fling
-- **Scroll correctness:** momentum on iOS-style touch, scroll chaining between nested scrollers, sticky-header stability, position restoration on back navigation, keyboard-open behavior in chat, pull-to-refresh interference, bottom-nav overlap of last content row
-- **Runtime:** long tasks >50 ms, layout-shift score, DOM node count, re-render storms from realtime subscriptions
-- **Navigation:** click → route change → meaningful content, cold vs. warm
+### Step 1 — Baseline the authenticated dashboards
+Production build served locally, 390x844, DPR 3, touch, 4x CPU throttle, Slow-4G. Playwright harness in `e2e/` using `performance.mark`/`measure`, Long Task and Layout Shift observers, and CDP throttling — no `waitForTimeout` timing. Routes: Admin (overview, pipeline, students, financials, members, spreadsheet, commission hub), Team (work, cases, case detail, catalog, analytics), Student (next steps, documents, fees, messages), Partner/Agent (overview, students, earnings). Per route: FCP, LCP, TBT, long tasks >50 ms, CLS, DOM nodes, JS transferred, frame median/p95/max over a full-height scroll and a fast fling, and dropped-frame count. Written to `docs/mobile-perf-audit.md` as the "before" table.
 
-### 4. Rating
-Each area gets a 1–10 score with the measurement that produced it printed next to it — no score without a number behind it:
-Initial load · Route navigation · Scroll smoothness (public) · Scroll smoothness (dashboards) · Long-list handling · Scroll correctness/UX · Chat scrolling · Runtime responsiveness under load · Overall.
+### Step 2 — Scroll correctness fixes (D1, D2, D3, D5)
+- Add a scroll-reset that targets the actual dashboard scroll container on route change, keeping the existing `window.scrollTo` for public pages. Preserve position on back navigation where the browser would.
+- Apply `overscroll-behavior: contain` to every nested scroller: the drawer body and inner lists in `MemberDetailDrawer`, the `max-h-[90vh]` dialog bodies in `AdminSettingsPage`, and the remaining list-page scrollers found in the sweep.
+- Lock body scroll while a mobile sheet/drawer/dialog is open, released on close (including the back-button path).
+- Add touch momentum to the dashboard main scroller and overlay scrollers so iOS Safari matches the rest of the app.
+- Add a small shared scroll-container primitive so future scrollers inherit contain + momentum by default instead of each surface re-deciding.
 
-### 5. Deliverable
-`docs/mobile-perf-audit.md`: the full table of measurements, per-area scores with evidence, a ranked list of the actual bottlenecks with the file and line responsible, and screenshots/traces for any visible scroll defect. Fixes are proposed, not applied — you approve those separately.
+### Step 3 — Long-list fixes (D4)
+- Paginate or cap-with-"load more" the two 200-row fetches, keeping the same queries and filters.
+- Introduce virtualization only where step 1 shows a real cost (frame p95 above ~24 ms or DOM nodes past a few thousand). Applied per list, verified per list — not a blanket rewrite.
 
-## Technical notes
-Measurement harness lives in `e2e/` as a repeatable Playwright script using `performance.mark`/`measure`, the Long Task and Layout Shift observers, and CDP `Emulation.setCPUThrottlingRate` / `Network.emulateNetworkConditions`. No `waitForTimeout`-based timing. No product code changes in this audit.
+### Step 4 — Runtime jank (D6)
+Address only what step 1 proves: coalesce realtime-triggered refetches on pages that re-run whole fetch waves per event, memoize derivations that scan large arrays on every render, and fix sticky-header/bottom-nav overlap if measurement or screenshots show it.
+
+### Step 5 — Re-measure and rate
+Identical harness, same conditions, "after" table alongside "before" in `docs/mobile-perf-audit.md`, with per-area 1–10 scores each printed next to the number that produced it: initial load, route navigation, scroll smoothness (public), scroll smoothness (dashboards), long-list handling, scroll correctness/UX, chat scrolling, runtime responsiveness, overall. Any area that does not improve is reported as unchanged, not spun.
+
+Gate before finishing: `npm run build`, `npx vitest run`, and the e2e suite all green.
+
+## Out of scope
+Framework or router changes, redesigns, business logic, RLS/security, commission math, and any change to what data a role can see.
