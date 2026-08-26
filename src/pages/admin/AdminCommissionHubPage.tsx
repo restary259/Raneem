@@ -503,9 +503,10 @@ const AgentSection: React.FC<{
               return (
                 <div key={a.id} className="p-3 rounded-lg border border-border bg-card space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{a.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{a.email}</p>
+                    <div className="w-full sm:flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" title={a.name}>{a.name}</p>
+                      <p className="text-xs text-muted-foreground truncate" title={a.email}>{a.email}</p>
+
                     </div>
                     <Badge variant={a.status === "active" ? "secondary" : "outline"} className="text-xs">
                       {a.status === "active"
