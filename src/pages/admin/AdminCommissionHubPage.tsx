@@ -390,23 +390,26 @@ const TeamMemberRow: React.FC<{
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card flex-wrap">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate flex items-center gap-2">
-          {member.name}
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border bg-card flex-wrap">
+      <div className="w-full sm:flex-1 min-w-0">
+        <p className="text-sm font-semibold flex items-center gap-2 min-w-0">
+          <span className="truncate" title={member.name}>{member.name}</span>
           {member.is_manager && (
-            <Badge variant="outline" className="text-[10px]">{t("commissionHub.badgeManager", "Manager")}</Badge>
+            <Badge variant="outline" className="text-[10px] shrink-0">{t("commissionHub.badgeManager", "Manager")}</Badge>
           )}
         </p>
-        <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+        <p className="text-xs text-muted-foreground truncate" title={member.email}>{member.email}</p>
       </div>
       {member.override === null ? (
         <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDefault", "default")}</Badge>
       ) : (
-        <Badge variant="secondary" className="text-xs">
-          {t("commissionHub.badgeCustom", "custom")} <span className="font-mono">{fmtILS(member.override)}</span>
+        <Badge variant="secondary" className="text-xs whitespace-nowrap">
+          {t("commissionHub.badgeCustom", "custom")}
+          <span className="mx-1 opacity-60">·</span>
+          <span className="font-mono">{fmtILS(member.override)}</span>
         </Badge>
       )}
+
       <div className="relative w-32">
         <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
         <Input
@@ -500,9 +503,10 @@ const AgentSection: React.FC<{
               return (
                 <div key={a.id} className="p-3 rounded-lg border border-border bg-card space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{a.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{a.email}</p>
+                    <div className="w-full sm:flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" title={a.name}>{a.name}</p>
+                      <p className="text-xs text-muted-foreground truncate" title={a.email}>{a.email}</p>
+
                     </div>
                     <Badge variant={a.status === "active" ? "secondary" : "outline"} className="text-xs">
                       {a.status === "active"
@@ -527,15 +531,18 @@ const AgentSection: React.FC<{
                       overrideValue: a.override, globalValue: a.global_rate, onSave: saveAdditive,
                     },
                   ].map((row) => (
-                    <div key={row.key} className="flex items-center gap-3 flex-wrap">
-                      <Label className="w-44 text-xs text-muted-foreground">{row.label}</Label>
+                    <div key={row.key} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
+                      <Label className="w-full sm:w-44 text-xs text-muted-foreground">{row.label}</Label>
                       {row.overrideValue === null ? (
-                        <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDefault", "default")}</Badge>
+                        <Badge variant="outline" className="text-xs w-fit">{t("commissionHub.badgeDefault", "default")}</Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs">
-                          {t("commissionHub.badgeCustom", "custom")} <span className="font-mono">{fmtILS(row.overrideValue)}</span>
+                        <Badge variant="secondary" className="text-xs w-fit whitespace-nowrap">
+                          {t("commissionHub.badgeCustom", "custom")}
+                          <span className="mx-1 opacity-60">·</span>
+                          <span className="font-mono">{fmtILS(row.overrideValue)}</span>
                         </Badge>
                       )}
+
                       <div className="relative w-32">
                         <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
                         <Input
