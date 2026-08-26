@@ -19,7 +19,7 @@ const SchoolInfoCard = ({ school, onEdit, onToggleActive, onDelete }: SchoolInfo
 
   return (
     <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3 min-w-0">
           <div
             className={cn(
@@ -30,18 +30,19 @@ const SchoolInfoCard = ({ school, onEdit, onToggleActive, onDelete }: SchoolInfo
             <GraduationCap className={cn("h-5 w-5", school.is_active ? "text-primary" : "text-muted-foreground")} />
           </div>
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold leading-tight">{school.name_en}</h2>
+            <h2 className="break-words text-lg font-semibold leading-tight sm:truncate">{school.name_en}</h2>
             {school.name_ar && <p className="text-sm text-muted-foreground">{school.name_ar}</p>}
             <p className="text-xs text-muted-foreground">
               {[school.city, school.country].filter(Boolean).join(", ")}
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           <Badge variant={school.is_active ? "default" : "secondary"} className="text-xs">
             {school.is_active ? t("admin.programs.statusActive") : t("admin.programs.statusInactive")}
           </Badge>
           <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => onEdit(school)}>
+
             <Pencil className="h-3.5 w-3.5" />
             {t("admin.programs.btnEdit")}
           </Button>
