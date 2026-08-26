@@ -390,23 +390,26 @@ const TeamMemberRow: React.FC<{
   };
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card flex-wrap">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate flex items-center gap-2">
-          {member.name}
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border bg-card flex-wrap">
+      <div className="w-full sm:flex-1 min-w-0">
+        <p className="text-sm font-semibold flex items-center gap-2 min-w-0">
+          <span className="truncate" title={member.name}>{member.name}</span>
           {member.is_manager && (
-            <Badge variant="outline" className="text-[10px]">{t("commissionHub.badgeManager", "Manager")}</Badge>
+            <Badge variant="outline" className="text-[10px] shrink-0">{t("commissionHub.badgeManager", "Manager")}</Badge>
           )}
         </p>
-        <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+        <p className="text-xs text-muted-foreground truncate" title={member.email}>{member.email}</p>
       </div>
       {member.override === null ? (
         <Badge variant="outline" className="text-xs">{t("commissionHub.badgeDefault", "default")}</Badge>
       ) : (
-        <Badge variant="secondary" className="text-xs">
-          {t("commissionHub.badgeCustom", "custom")} <span className="font-mono">{fmtILS(member.override)}</span>
+        <Badge variant="secondary" className="text-xs whitespace-nowrap">
+          {t("commissionHub.badgeCustom", "custom")}
+          <span className="mx-1 opacity-60">·</span>
+          <span className="font-mono">{fmtILS(member.override)}</span>
         </Badge>
       )}
+
       <div className="relative w-32">
         <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
         <Input
