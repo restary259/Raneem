@@ -329,9 +329,10 @@ export default function TeamWorkPage() {
               {t("team.work.scheduleTitle", "Today's schedule")}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="h-[16rem] overflow-y-auto">
             {loading ? (
               <LoadingState variant="rows" rows={3} label={t("common.loading", "Loading...")} />
+
             ) : todayAppts.length === 0 ? (
               <EmptyState title={t("team.work.noAppointments", "No appointments today")} className="py-6" />
             ) : (
@@ -385,9 +386,10 @@ export default function TeamWorkPage() {
               {t("team.work.staleTitle", "Cases with no activity")}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="h-[16rem] overflow-y-auto">
             {loading ? (
               <LoadingState variant="rows" rows={3} label={t("common.loading", "Loading...")} />
+
             ) : staleCases.length === 0 ? (
               <EmptyState title={t("team.work.noStale", "Every case has recent activity")} className="py-6" />
             ) : (
