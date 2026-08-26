@@ -19,6 +19,23 @@ const fmt = (n: number) => `${Number(n || 0).toLocaleString('en-US')} ₪`;
 
 type Filter = 'all' | 'open' | 'balance' | 'settled';
 
+/**
+ * Single source of truth for the directory filter buckets — used both for the
+ * rendered list and the option counts so the two can never drift. Buckets are
+ * mutually exclusive: "settled" means no open request, no available AND no
+ * locked balance (a locked-only requester belongs to "Has balance").
+ */
+const matchesFilter = (p: DirectoryRow, filter: Filter): boolean => {
+  const open = Number(p.open_requests) || 0;
+  const available = Number(p.available_amount) || 0;
+  const locked = Number(p.locked_amount) || 0;
+  if (filter === 'open') return open > 0;
+  if (filter === 'balance') return available > 0 || locked > 0;
+  if (filter === 'settled') return open === 0 && available === 0 && locked === 0;
+  return true;
+};
+
+
 const ROLE_RPC: Record<PayoutRole, string> = {
   team_member: 'list_team_directory',
   agent: 'list_agent_directory',
@@ -88,14 +105,14 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
         .some((r: any) => matchesRef(r.payout_reference, q) || (r.case_references || []).some((cr: string) => matchesRef(cr, q)));
       if (q && !refHit && ![p.full_name, p.email, p.city, p.referral_code]
         .some(v => (v || '').toLowerCase().includes(q))) return false;
-      if (filter === 'open') return Number(p.open_requests) > 0;
-      if (filter === 'balance') return Number(p.available_amount) > 0 || Number(p.locked_amount) > 0;
-      if (filter === 'settled') return Number(p.open_requests) === 0 && Number(p.available_amount) === 0;
-      return true;
+      return matchesFilter(p, filter);
     });
   }, [rows, search, filter, requestsByRequester]);
 
-  const openCount = rows.filter(p => Number(p.open_requests) > 0).length;
+  const openCount = rows.filter(p => matchesFilter(p, 'open')).length;
+  const balanceCount = rows.filter(p => matchesFilter(p, 'balance')).length;
+  const settledCount = rows.filter(p => matchesFilter(p, 'settled')).length;
+
 
   const selected = rows.find(p => p.requester_id === selectedId) || null;
   if (selected) {
@@ -218,8 +235,9 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
           <SelectContent>
             <SelectItem value="all">{t('admin.payouts.filterAllRole', { role: getRoleLabel(role), defaultValue: 'All {{role}}' })} ({rows.length})</SelectItem>
             <SelectItem value="open">{t('admin.payouts.filterOpen', 'Pending requests')} ({openCount})</SelectItem>
-            <SelectItem value="balance">{t('admin.payouts.filterBalance', 'Has balance')}</SelectItem>
-            <SelectItem value="settled">{t('admin.payouts.filterSettled', 'Settled')}</SelectItem>
+            <SelectItem value="balance">{t('admin.payouts.filterBalance', 'Has balance')} ({balanceCount})</SelectItem>
+            <SelectItem value="settled">{t('admin.payouts.filterSettled', 'Settled')} ({settledCount})</SelectItem>
+
           </SelectContent>
         </Select>
         <Button variant="outline" size="sm" onClick={refreshAll}><RefreshCw className="h-4 w-4" /></Button>
