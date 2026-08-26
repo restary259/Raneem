@@ -1358,7 +1358,6 @@
         "note": "Reason (required)",
         "done": "Payout released"
       },
-
       "agentOverride": "Agent reward override",
       "agentNetwork": "Agent network",
       "agentNetworkEmpty": "No agents yet",
@@ -3290,7 +3289,10 @@
     "required": "Required",
     "active": "Active",
     "saveSuccess": "Visa info saved",
-    "immigrationHint": "These details are requested by the immigration office. Fill them in once you have them — your team can see them right away."
+    "immigrationHint": "These details are requested by the immigration office. Fill them in once you have them — your team can see them right away.",
+    "status": "Visa status",
+    "passportExpiry": "Passport expiry",
+    "eyeColor": "Eye color"
   },
   "contacts": {
     "title": "Important Contacts",
