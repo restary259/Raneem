@@ -101,8 +101,16 @@ async def run(base, routes, out_path):
         await page.goto(base, wait_until="domcontentloaded")
         key = os.environ.get("LOVABLE_BROWSER_SUPABASE_STORAGE_KEY")
         sess = os.environ.get("LOVABLE_BROWSER_SUPABASE_SESSION_JSON")
+        session_file = os.environ.get("PERF_SESSION_FILE")
+        if session_file and os.path.exists(session_file):
+            # Session minted with `lovable auth-session --json --user <uuid>`.
+            with open(session_file) as fh:
+                blob = json.load(fh)
+            key = blob.get("storage_key") or key
+            sess = json.dumps(blob.get("session") or blob)
         if key and sess:
             await page.evaluate("([k, s]) => localStorage.setItem(k, s)", [key, sess])
+
 
         for route in routes:
             started = time.time()
