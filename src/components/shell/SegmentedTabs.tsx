@@ -2,6 +2,7 @@ import React from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
+
 export interface SegmentItem {
   value: string;
   label: React.ReactNode;
