@@ -531,7 +531,7 @@ const AgentSection: React.FC<{
                       overrideValue: a.override, globalValue: a.global_rate, onSave: saveAdditive,
                     },
                   ].map((row) => (
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
+                    <div key={row.key} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
                       <Label className="w-full sm:w-44 text-xs text-muted-foreground">{row.label}</Label>
                       {row.overrideValue === null ? (
                         <Badge variant="outline" className="text-xs w-fit">{t("commissionHub.badgeDefault", "default")}</Badge>
