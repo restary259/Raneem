@@ -439,10 +439,21 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   /** A mobile conversation owns the whole screen; hide the tab bar under it. */
   const chatFullscreen = useChatFullscreenActive();
 
+  /* The dashboard scrolls an inner <main>, not the window, so the global
+     window.scrollTo(0,0) in App.tsx never applies here — navigating from a
+     scrolled list into a detail page used to land mid-page. Reset the real
+     scroller on pathname change. The search string is deliberately excluded so
+     tab switches (?tab=) keep the reader's position. */
+  const mainRef = React.useRef<HTMLElement>(null);
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname]);
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
+
 
   return (
     <SidebarProvider>
