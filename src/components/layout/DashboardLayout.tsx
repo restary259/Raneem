@@ -529,6 +529,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
               on notched devices the bar's safe-area portion overlaps the last
               content. The bar is hidden for full-screen mobile chats. */}
           <main
+            ref={mainRef}
             className={cn(
               "flex-1 min-w-0 overflow-y-auto overflow-x-hidden md:pb-0",
               chatFullscreen
@@ -536,6 +537,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                 : "pb-[calc(4rem+env(safe-area-inset-bottom))]",
             )}
           >
+
             <TabErrorBoundary>
               <Outlet />
             </TabErrorBoundary>
