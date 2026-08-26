@@ -235,8 +235,9 @@ const RoleDirectory: React.FC<Props> = ({ role, requests, onRefresh }) => {
           <SelectContent>
             <SelectItem value="all">{t('admin.payouts.filterAllRole', { role: getRoleLabel(role), defaultValue: 'All {{role}}' })} ({rows.length})</SelectItem>
             <SelectItem value="open">{t('admin.payouts.filterOpen', 'Pending requests')} ({openCount})</SelectItem>
-            <SelectItem value="balance">{t('admin.payouts.filterBalance', 'Has balance')}</SelectItem>
-            <SelectItem value="settled">{t('admin.payouts.filterSettled', 'Settled')}</SelectItem>
+            <SelectItem value="balance">{t('admin.payouts.filterBalance', 'Has balance')} ({balanceCount})</SelectItem>
+            <SelectItem value="settled">{t('admin.payouts.filterSettled', 'Settled')} ({settledCount})</SelectItem>
+
           </SelectContent>
         </Select>
         <Button variant="outline" size="sm" onClick={refreshAll}><RefreshCw className="h-4 w-4" /></Button>
