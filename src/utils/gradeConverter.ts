@@ -92,7 +92,12 @@ export function bagrutToGermanGrade(
  * Batch-converts an array of Bagrut scores.
  * Invalid entries are returned with german: -1 and interpretation: "Fail".
  */
-export function bagrutBatchConvert(scores: number[], N_max = 100, N_min = 55): BatchGradeResult[] {
+export function bagrutBatchConvert(
+  scores: number[],
+  N_max = BAGRUT_MAX,
+  N_min = BAGRUT_PASS_MARK,
+): BatchGradeResult[] {
+
   return scores.map((score) => {
     try {
       const result = bagrutToGermanGrade(score, N_max, N_min);
