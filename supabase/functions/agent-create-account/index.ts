@@ -4,6 +4,7 @@ import { buildCorsHeaders } from "../_shared/cors.ts";
 import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
 import { identityConflict, resolveIdentity } from "../_shared/identity.ts";
 import { reconcilePendingInvitations } from "../_shared/invitations.ts";
+import { sendAppEmail } from "../_shared/send-app-email.ts";
 
 /**
  * Agent-triggered manual account creation for a recruited partner or ambassador.
@@ -191,27 +192,15 @@ serve(async (req) => {
     // professional notification even when created manually. Uses the fallback
     // invitation template if no dedicated one exists.
     try {
-      await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-          },
-          body: JSON.stringify({
-            templateName: `${ROLE_LABEL[role]}-invite`,
-            recipientEmail: email,
-            idempotencyKey: `agent-manual-${email}-${Date.now()}`,
-            templateData: {
-              [ROLE_LABEL[role] === "partner" ? "partnerName" : "ambassadorName"]: body.full_name,
-              email,
-              agentName: profile.full_name,
-              activationUrl: null,
-            },
-          }),
+      await sendAppEmail(`${ROLE_LABEL[role]}-invite`, email, {
+        idempotencyKey: `agent-manual-${email}-${Date.now()}`,
+        templateData: {
+          [ROLE_LABEL[role] === "partner" ? "partnerName" : "ambassadorName"]: body.full_name,
+          email,
+          agentName: profile.full_name,
+          activationUrl: null,
         },
-      );
+      });
     } catch (e) {
       console.error("manual account welcome email failed", e);
     }
