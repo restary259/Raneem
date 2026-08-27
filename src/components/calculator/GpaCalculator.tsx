@@ -66,10 +66,13 @@ const GpaCalculator = () => {
       newWarnings.push(t('gpaCalculator.warningBelowPass', { avg: average.toFixed(1), min: NMIN }));
     }
 
-    const germanGrade = 1 + 3 * ((NMAX - average) / (NMAX - NMIN));
+    // Single source of truth — no clamping, so a below-pass average is not
+    // presented as a passing 4.00.
+    const { german } = bagrutToGermanGrade(average, NMAX, NMIN);
     setWarnings(newWarnings);
-    setResults({ average: parseFloat(average.toFixed(2)), germanGrade: parseFloat(Math.max(1.0, Math.min(4.0, germanGrade)).toFixed(2)) });
+    setResults({ average: parseFloat(average.toFixed(2)), germanGrade: average >= NMIN ? german : null });
   };
+
   
   const handleReset = () => { setSubjects(JSON.parse(JSON.stringify(initialSubjects))); setResults({ average: null, germanGrade: null }); setError(null); setWarnings([]); };
 
