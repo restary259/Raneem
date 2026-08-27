@@ -251,7 +251,7 @@ export default function BagrutConverter() {
       ))}
 
       {/* ── Results card ── */}
-      {results && germanLabel && (
+      {results && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -276,25 +276,40 @@ export default function BagrutConverter() {
 
               {/* German grade */}
               <div className="bg-background rounded-lg border p-4 text-center">
-                <div className="text-3xl font-bold tabular-nums text-foreground">{results.germanGrade}</div>
+                <div className="text-3xl font-bold tabular-nums text-foreground">
+                  {results.passed ? results.germanGrade : "—"}
+                </div>
                 <div className="text-xs text-muted-foreground mt-1">{isAr ? "النظام الألماني" : "German Grade"}</div>
                 <div className="mt-2 flex flex-col items-center gap-1">
-                  <Badge variant="outline" className={`text-xs ${germanLabel.color}`}>
-                    {germanLabel.label}
-                  </Badge>
-                  {isAr && (
-                    <span className="text-xs text-muted-foreground">{germanLabel.arabic}</span>
+                  {results.passed && germanLabel ? (
+                    <>
+                      <Badge variant="outline" className={`text-xs ${germanLabel.color}`}>
+                        {germanLabel.label}
+                      </Badge>
+                      {isAr && <span className="text-xs text-muted-foreground">{germanLabel.arabic}</span>}
+                    </>
+                  ) : (
+                    <span className="text-xs text-destructive">
+                      {tr("gpaCalculator.notConvertible", "Below the passing mark — not convertible")}
+                    </span>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Formula note */}
-            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
               <p dir="ltr" className="text-xs font-mono text-center text-muted-foreground">
-                German Grade = 1 + 3 × ((100 − Average) / (100 − 56))
+                {`German Grade = 1 + 3 × ((${NMAX} − Average) / (${NMAX} − ${NMIN}))`}
+              </p>
+              <p className="text-xs text-center text-muted-foreground">
+                {tr(
+                  "gpaCalculator.disclaimer",
+                  "Indicative only — uni-assist and each university may apply a different conversion.",
+                )}
               </p>
             </div>
+
           </CardContent>
         </Card>
       )}
