@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
-import { exportCorporateWorkbook } from '@/utils/export';
+import { exportCorporateWorkbook, exportCorporatePdf } from '@/utils/export';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { toExportColumns, toExportRows } from './exportMapping';
 import { useToast } from '@/hooks/use-toast';
