@@ -69,34 +69,31 @@ const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", ...props }, forwardedRef) => {
-  // eslint-disable-next-line no-console
-  console.log("[select-fix] SelectContent render");
   // The dropdown is portaled to document.body. Inside a modal Dialog,
   // react-remove-scroll registers a document-level wheel/touchmove listener
   // that preventDefaults any scroll gesture outside the dialog — which
   // includes this dropdown, making it impossible to scroll. Stopping
   // propagation before the event reaches document keeps the dropdown natively
   // scrollable (mouse wheel + touch drag) without unlocking the page behind.
-  const localRef = React.useRef<HTMLElement | null>(null);
-  React.useEffect(() => {
-    const el = localRef.current;
-    // eslint-disable-next-line no-console
-    console.log("[select-fix] effect, el:", el ? el.className.slice(0, 40) : null);
-    if (!el) return;
-    el.dataset.scrollFix = "1";
-    const stop = (e: Event) => e.stopPropagation();
-    el.addEventListener("wheel", stop);
-    el.addEventListener("touchmove", stop);
-    return () => {
-      el.removeEventListener("wheel", stop);
-      el.removeEventListener("touchmove", stop);
-    };
-  }, []);
+  // Attached in the ref callback (not an effect) because Radix mounts the
+  // content node lazily when the select opens — effects fire while it is
+  // still unmounted and the ref is null.
+  const detachRef = React.useRef<(() => void) | null>(null);
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         ref={(node) => {
-          localRef.current = node;
+          detachRef.current?.();
+          detachRef.current = null;
+          if (node) {
+            const stop = (e: Event) => e.stopPropagation();
+            node.addEventListener("wheel", stop);
+            node.addEventListener("touchmove", stop);
+            detachRef.current = () => {
+              node.removeEventListener("wheel", stop);
+              node.removeEventListener("touchmove", stop);
+            };
+          }
           if (typeof forwardedRef === "function") forwardedRef(node);
           else if (forwardedRef) forwardedRef.current = node;
         }}
