@@ -118,10 +118,12 @@ export default function BagrutConverter() {
     const newWarnings: string[] = [];
     if (average < NMIN) newWarnings.push(tr("gpaCalculator.warningBelowPass", { avg: average.toFixed(1), min: NMIN }));
 
-    const raw = 1 + 3 * ((NMAX - average) / (NMAX - NMIN));
-    const germanGrade = parseFloat(Math.max(1.0, Math.min(4.0, raw)).toFixed(2));
+    // Single source of truth — no local clamping, so a below-pass average is
+    // reported as "not convertible" instead of a misleading 4.00.
+    const { german } = bagrutToGermanGrade(average, NMAX, NMIN);
     setWarnings(newWarnings);
-    setResults({ average: parseFloat(average.toFixed(2)), germanGrade });
+    setResults({ average: parseFloat(average.toFixed(2)), germanGrade: german, passed: average >= NMIN });
+
   };
 
   const handleReset = () => {
