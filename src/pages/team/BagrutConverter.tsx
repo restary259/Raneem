@@ -68,7 +68,7 @@ export default function BagrutConverter() {
   const isAr = i18n.language === "ar";
 
   const [subjects, setSubjects] = useState<Subject[]>(() => JSON.parse(JSON.stringify(initialSubjects)));
-  const [results, setResults] = useState<{ average: number; germanGrade: number } | null>(null);
+  const [results, setResults] = useState<{ average: number; germanGrade: number; passed: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
 
