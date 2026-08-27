@@ -4772,10 +4772,6 @@ export type Database = {
         Args: { p_kind: string; p_message_id: string }
         Returns: undefined
       }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
       edit_case_message: {
         Args: { p_body: string; p_message_id: string }
         Returns: undefined
@@ -4784,7 +4780,6 @@ export type Database = {
         Args: { p_body: string; p_message_id: string }
         Returns: undefined
       }
-      email_queue_dispatch: { Args: never; Returns: undefined }
       emit_notification: {
         Args: {
           _actor_id: string
@@ -4799,10 +4794,6 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
-      }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
       }
       ensure_agent_recruit_link: {
         Args: never
@@ -5468,15 +5459,6 @@ export type Database = {
         Args: { p_error?: string; p_invoice_id: string; p_status: string }
         Returns: undefined
       }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
-      }
       notification_category_for_source: {
         Args: { _source: string }
         Returns: string
@@ -5517,14 +5499,6 @@ export type Database = {
         Returns: number
       }
       push_queue_dispatch: { Args: never; Returns: undefined }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
-      }
       reassign_case: {
         Args: { p_case_id: string; p_new_assignee: string }
         Returns: undefined
