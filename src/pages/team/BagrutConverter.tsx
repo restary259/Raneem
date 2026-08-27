@@ -10,11 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calculator, RotateCcw, Info, AlertTriangle, TrendingUp } from "lucide-react";
 
+import { BAGRUT_MAX, BAGRUT_PASS_MARK, bagrutToGermanGrade } from "@/utils/gradeConverter";
+
 /* ─── Types & constants ──────────────────────────────────────────────────── */
 type Subject = { id: string; units: string; grade: string };
 
-const NMAX = 100;
-const NMIN = 56;
+const NMAX = BAGRUT_MAX;
+const NMIN = BAGRUT_PASS_MARK;
+
 
 const SUBJECT_GROUPS = [
   {
