@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
 import { useSheetLabels } from './sheetLabels';
-import { exportCorporateWorkbook, exportCorporatePdf } from '@/utils/export';
+import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from '@/utils/export';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { toExportColumns, toExportRows } from './exportMapping';
 import {
@@ -319,6 +319,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         author,
         locale,
         rtl,
+        totalLabel: t('sheets.total'),
         sheets: [
           cover,
           ...loaded.map(({ def, rows }) => ({
@@ -374,6 +375,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         author,
         locale,
         rtl,
+        totalLabel: t('sheets.total'),
         sheets: [
           {
             name: label,
@@ -399,14 +401,24 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {active === 'students' && (
-            <Button variant="outline" size="sm" onClick={exportSchoolPacket} disabled={exporting}>
-              <Download className="h-4 w-4 me-1" />
-              {t('sheets.schoolPacket', 'School packet')}
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting}>
+                <Download className="h-4 w-4 me-1" />
+                {t('sheets.schoolPacket', 'School packet')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting}>
+                <FileText className="h-4 w-4 me-1" />
+                {t('sheets.schoolPacketPdf', 'School packet PDF')}
+              </Button>
+            </>
           )}
-          <Button variant="outline" size="sm" onClick={exportAll} disabled={exporting}>
+          <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting}>
             <Download className="h-4 w-4 me-1" />
             {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting}>
+            <FileText className="h-4 w-4 me-1" />
+            {exporting ? t('sheets.preparing') : t('sheets.exportPdfWorkbook')}
           </Button>
         </div>
       </div>

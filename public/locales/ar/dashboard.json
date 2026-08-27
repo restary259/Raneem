@@ -3458,6 +3458,7 @@
     "exportExcel": "تنزيل Excel",
     "exportPdf": "تنزيل PDF",
     "exportPdfWorkbook": "تنزيل PDF الكامل",
+    "schoolPacketPdf": "PDF ملف المدرسة",
     "pdfFontWarning": "تعذّر تضمين النص العربي/العبري في ملف PDF. استخدم تصدير Excel بدلاً من ذلك.",
     "preparing": "جارٍ التحضير…",
     "exportFailed": "تعذّر إنشاء ملف Excel",
