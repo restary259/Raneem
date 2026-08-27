@@ -5,6 +5,7 @@ import { serverErrorResponse } from "../_shared/errors.ts";
 import { resolveIdentity } from "../_shared/identity.ts";
 import { z, parseBody, email as emailField, uuid } from "../_shared/validate.ts";
 import { createInvitation, reconcilePendingInvitations } from "../_shared/invitations.ts";
+import { sendAppEmail } from "../_shared/send-app-email.ts";
 
 /**
  * Digits, spaces, dashes and parentheses are stripped before validation so
@@ -260,29 +261,19 @@ serve(async (req) => {
           caseReference = caseRef?.case_reference ?? null;
         }
 
-        const response = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${serviceRoleKey}`,
+        const sendResult = await sendAppEmail("student-invite", email, {
+          idempotencyKey: `student-invite-${case_id ?? email}-${Date.now()}`,
+          templateData: {
+            studentName: name,
+            email,
+            caseReference,
+            activationUrl,
           },
-          body: JSON.stringify({
-            templateName: "student-invite",
-            recipientEmail: email,
-            templateData: {
-              studentName: name,
-              email,
-              caseReference,
-              activationUrl,
-            },
-          }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
+        if (!sendResult.ok) {
           console.error("create-student-from-case: invitation email failed", {
-            status: response.status,
-            error: errorText,
+            reason: sendResult.suppressed ? "recipient_suppressed" : sendResult.detail,
           });
           return false;
         }

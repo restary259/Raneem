@@ -5,6 +5,7 @@ import { serverError } from "../_shared/errors.ts";
 import { z, parseBody, email as emailField, personName } from "../_shared/validate.ts";
 import { createInvitation, InvitationConflictError, InvitationType } from "../_shared/invitations.ts";
 import { identityConflict } from "../_shared/identity.ts";
+import { sendAppEmail } from "../_shared/send-app-email.ts";
 
 /**
  * Agent-triggered partner/ambassador invitations.
@@ -114,29 +115,17 @@ serve(async (req) => {
       return json({ error: "Could not create the invitation" }, 500);
     }
 
-    const resp = await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({
-          templateName: cfg.template,
-          recipientEmail: email,
-          idempotencyKey: `${cfg.template}-${email}-${Date.now()}`,
-          templateData: {
-            [cfg.nameKey]: body.full_name,
-            email,
-            agentName,
-            activationUrl,
-          },
-        }),
+    const sendResult = await sendAppEmail(cfg.template, email, {
+      idempotencyKey: `${cfg.template}-${email}-${Date.now()}`,
+      templateData: {
+        [cfg.nameKey]: body.full_name,
+        email,
+        agentName,
+        activationUrl,
       },
-    );
-    const emailed = resp.ok;
-    if (!emailed) console.error("invite email failed", await resp.text());
+    });
+    const emailed = sendResult.ok;
+    if (!emailed) console.error("invite email failed", sendResult.detail);
 
     await admin.from("admin_audit_log").insert({
       admin_id: agentId,

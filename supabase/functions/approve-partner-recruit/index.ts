@@ -5,6 +5,7 @@ import { serverError } from "../_shared/errors.ts";
 import { z, parseBody } from "../_shared/validate.ts";
 import { createInvitation, InvitationConflictError } from "../_shared/invitations.ts";
 import { resolveIdentity } from "../_shared/identity.ts";
+import { sendAppEmail } from "../_shared/send-app-email.ts";
 
 
 /**
@@ -139,29 +140,17 @@ serve(async (req) => {
         console.error("invitation creation failed", e);
         return false;
       }
-      const resp = await fetch(
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-          },
-          body: JSON.stringify({
-            templateName: "partner-invite",
-            recipientEmail: targetEmail,
-            idempotencyKey: `partner-invite-${applicationId}-${Date.now()}`,
-            templateData: {
-              partnerName: fullName,
-              email: targetEmail,
-              masterName: recruiterName,
-              activationUrl,
-            },
-          }),
+      const sendResult = await sendAppEmail("partner-invite", targetEmail, {
+        idempotencyKey: `partner-invite-${applicationId}-${Date.now()}`,
+        templateData: {
+          partnerName: fullName,
+          email: targetEmail,
+          masterName: recruiterName,
+          activationUrl,
         },
-      );
-      if (!resp.ok) console.error("partner invite email failed", await resp.text());
-      return resp.ok;
+      });
+      if (!sendResult.ok) console.error("partner invite email failed", sendResult.detail);
+      return sendResult.ok;
     }
 
     // ---- Resend on an already approved application ------------------------
