@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Calculator, Info, AlertTriangle } from "lucide-react";
 import { useTranslation, Trans } from "react-i18next";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { BAGRUT_MAX, BAGRUT_PASS_MARK, bagrutToGermanGrade } from "@/utils/gradeConverter";
 
 type Subject = { id: string; units: string; grade: string };
 
@@ -20,8 +21,9 @@ const initialSubjects: Subject[] = [
     { id: 't5sos2', units: '', grade: '' }, { id: 't5sos3', units: '', grade: '' },
 ];
 
-const NMAX = 100;
-const NMIN = 56;
+const NMAX = BAGRUT_MAX;
+const NMIN = BAGRUT_PASS_MARK;
+
 
 const GpaCalculator = () => {
   const { t } = useTranslation('resources');
