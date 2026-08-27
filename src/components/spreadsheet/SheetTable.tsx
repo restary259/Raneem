@@ -206,7 +206,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
           </Button>
           <Button size="sm" variant="outline" onClick={handleExportPdf} disabled={!filteredRows.length}>
             <FileText className="h-4 w-4 me-1" />
-            {t('sheets.exportPdf', 'PDF')}
+            {t('sheets.exportPdf')}
           </Button>
 
         </div>
