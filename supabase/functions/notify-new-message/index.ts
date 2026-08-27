@@ -19,24 +19,6 @@ const lastSent = new Map<string, number>();
 const APP_URL = "https://darb.agency";
 
 /**
- * Non-secret fingerprint (first 8 hex chars of SHA-256) of the service-role
- * key, for comparing secrets across functions. Never expose the key itself.
- */
-async function serviceKeyFingerprint(): Promise<string | undefined> {
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (!key) return undefined;
-  try {
-    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key));
-    const hex = Array.from(new Uint8Array(digest))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return hex.slice(0, 8);
-  } catch {
-    return undefined;
-  }
-}
-
-/**
  * Send a branded email through Lovable's managed email API.
  */
 async function sendTemplate(
