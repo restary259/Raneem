@@ -57,7 +57,7 @@ function getGermanLabel(grade: number): { label: string; arabic: string; color: 
 function getAverageColor(avg: number): string {
   if (avg >= 80) return "text-emerald-600";
   if (avg >= 65) return "text-blue-600";
-  if (avg >= 56) return "text-amber-600";
+  if (avg >= NMIN) return "text-amber-600";
   return "text-destructive";
 }
 
