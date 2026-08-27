@@ -52,7 +52,10 @@ export interface CorporateReport {
   /** Arabic reports open right-to-left in Excel. */
   rtl?: boolean;
   locale?: string;
+  /** Localized label for the totals row in the PDF rendering. */
+  totalLabel?: string;
   sheets: CorporateSheet[];
+
 }
 
 const sanitizeSheetName = (name: string, index: number) =>
