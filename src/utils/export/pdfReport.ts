@@ -98,7 +98,7 @@ function minWidthFor(type: ExportColumnType | undefined): number | undefined {
     case 'status':
       return 22;
     default:
-      return undefined;
+      return 18;
   }
 }
 
