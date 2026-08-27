@@ -15,23 +15,23 @@ const PopoverContent = React.forwardRef<
   // preventDefaults wheel/touchmove outside the dialog, which would make this
   // popover unscrollable. Stopping propagation keeps native scrolling working
   // (wheel + touch) without unlocking the page behind. Same fix as select.tsx.
-  const localRef = React.useRef<HTMLElement | null>(null);
-  React.useEffect(() => {
-    const el = localRef.current;
-    if (!el) return;
-    const stop = (e: Event) => e.stopPropagation();
-    el.addEventListener("wheel", stop);
-    el.addEventListener("touchmove", stop);
-    return () => {
-      el.removeEventListener("wheel", stop);
-      el.removeEventListener("touchmove", stop);
-    };
-  }, []);
+  // Attached in the ref callback because Radix mounts the node lazily on open.
+  const detachRef = React.useRef<(() => void) | null>(null);
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         ref={(node) => {
-          localRef.current = node;
+          detachRef.current?.();
+          detachRef.current = null;
+          if (node) {
+            const stop = (e: Event) => e.stopPropagation();
+            node.addEventListener("wheel", stop);
+            node.addEventListener("touchmove", stop);
+            detachRef.current = () => {
+              node.removeEventListener("wheel", stop);
+              node.removeEventListener("touchmove", stop);
+            };
+          }
           if (typeof forwardedRef === "function") forwardedRef(node);
           else if (forwardedRef) forwardedRef.current = node;
         }}
