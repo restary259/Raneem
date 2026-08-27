@@ -5,12 +5,12 @@ import SegmentedTabs from '@/components/shell/SegmentedTabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
 import { useSheetLabels } from './sheetLabels';
-import { exportCorporateWorkbook } from '@/utils/export';
+import { exportCorporateWorkbook, exportCorporatePdf } from '@/utils/export';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { toExportColumns, toExportRows } from './exportMapping';
 import {
@@ -275,7 +275,20 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   const filtersActive = schoolFilter !== 'all' || monthFilter !== 'all';
 
 
-  const exportAll = async () => {
+  type ExportFormat = 'xlsx' | 'pdf';
+
+  /**
+   * One report definition, two file formats — the PDF and the workbook always
+   * carry identical sheets, columns and rows.
+   */
+  const deliver = async (format: ExportFormat, report: CorporateReport) => {
+    if (format === 'xlsx') return exportCorporateWorkbook(report);
+    const { empty, rtlFontMissing } = await exportCorporatePdf(report);
+    if (empty) toast({ description: t('sheets.empty') });
+    else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
+  };
+
+  const exportAll = async (format: ExportFormat = 'xlsx') => {
     setExporting(true);
     try {
       const loaded = await Promise.all(
@@ -299,7 +312,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         ]),
       };
 
-      await exportCorporateWorkbook({
+      await deliver(format, {
         fileName: `DARB-${scope}-report-${new Date().toISOString().slice(0, 10)}`,
         title: t('sheets.title'),
         subtitle: t('sheets.subtitle'),
@@ -325,7 +338,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   };
 
   /** Identity-heavy sheet schools ask for when we forward an application. */
-  const exportSchoolPacket = async () => {
+  const exportSchoolPacket = async (format: ExportFormat = 'xlsx') => {
     setExporting(true);
     try {
       const def = sheets.find(s => s.key === 'students')!;
@@ -352,7 +365,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         { key: 'total', label: c('totalCost'), type: 'currency', currency: 'EUR', total: true },
       ];
       const label = t('sheets.schoolPacket', 'School packet');
-      await exportCorporateWorkbook({
+      await deliver(format, {
         fileName: `DARB-school-packet-${new Date().toISOString().slice(0, 10)}`,
         title: label,
         subtitle: [schoolFilter !== 'all' ? schoolFilter : null, monthFilter !== 'all' ? monthFilter : null]
