@@ -111,8 +111,7 @@ export function shapeForPdf(text: string): string {
   const runs = text.match(/[\u0590-\u05FF\uFB1D-\uFB4F]+|[^\u0590-\u05FF\uFB1D-\uFB4F]+/g) ?? [];
   return runs
     .reverse()
-    .map(run => (HEBREW_RE.test(run) ? [...run].reverse().join('') : [...run].reverse().join('')))
-    .map((run, i) => run)
+    .map(run => (HEBREW_RE.test(run) ? [...run].reverse().join('') : run))
     .join('');
 }
 
