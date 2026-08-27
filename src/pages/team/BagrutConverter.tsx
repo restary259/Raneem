@@ -134,7 +134,7 @@ export default function BagrutConverter() {
   };
 
   const filledCount = subjects.filter((s) => s.units && s.grade).length;
-  const germanLabel = results ? getGermanLabel(results.germanGrade) : null;
+  const germanLabel = results && results.passed ? getGermanLabel(results.germanGrade) : null;
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-5">
