@@ -1454,7 +1454,9 @@
       },
       "exportRecruits": "انتقل إلى تبويب الطلبات للتصدير",
       "searchPlaceholder": "ابحث بالاسم أو البريد أو الهاتف",
-      "empty": "لم يتم العثور على أي طلبات"
+      "empty": "لم يتم العثور على أي طلبات",
+      "colSource": "المصدر",
+      "colMessage": "الرسالة"
     },
     "contacts": {
       "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني",
@@ -3456,6 +3458,10 @@
     "subtitle": "جداول حيّة للطلاب والمدفوعات والعمولات والضرائب",
     "exportWorkbook": "تنزيل الملف الكامل",
     "exportExcel": "تنزيل Excel",
+    "exportPdf": "تنزيل PDF",
+    "exportPdfWorkbook": "تنزيل PDF الكامل",
+    "schoolPacketPdf": "PDF ملف المدرسة",
+    "pdfFontWarning": "تعذّر تضمين النص العربي/العبري في ملف PDF. استخدم تصدير Excel بدلاً من ذلك.",
     "preparing": "جارٍ التحضير…",
     "exportFailed": "تعذّر إنشاء ملف Excel",
     "loadError": "تعذّر تحميل هذا الجدول",
@@ -3549,7 +3555,8 @@
       "dateOfBirth": "تاريخ الميلاد",
       "passportNumber": "رقم الجواز",
       "passportType": "نوع الجواز",
-      "educationLevel": "المستوى التعليمي"
+      "educationLevel": "المستوى التعليمي",
+      "date": "التاريخ"
     },
     "value": {
       "status": {

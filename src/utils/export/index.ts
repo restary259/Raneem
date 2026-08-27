@@ -2,8 +2,10 @@ import { buildCorporateWorkbook, CorporateReport, CorporateSheet, ExportColumn }
 
 export * from './theme';
 export * from './formats';
+export * from './pdfReport';
 export type { CorporateReport, CorporateSheet, ExportColumn };
 export { buildCorporateWorkbook };
+
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 

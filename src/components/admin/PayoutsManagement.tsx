@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { exportPDF } from '@/utils/exportUtils';
-import { exportCorporateWorkbook } from '@/utils/export';
+import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from '@/utils/export';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,78 +52,58 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
 
   // Exports intentionally cover ALL payout requests (every role), not just the
   // active tab — this is a complete payouts report by design (see AGENTS.md).
-  const exportExcel = () =>
-    exportCorporateWorkbook({
-      fileName: `DARB-payouts-${new Date().toISOString().slice(0, 10)}`,
-      title: t('admin.payouts.reportTitle', 'Payouts Report'),
-      author,
-      locale: exportLocale,
-      rtl,
-      sheets: [{
-        name: t('admin.payouts.reportTitle', 'Payouts Report'),
-        columns: [
-          { header: t('admin.payouts.requestId', 'Request ID'), type: 'text' },
-          { header: t('admin.payouts.requester'), type: 'text' },
-          { header: t('admin.payouts.role'), type: 'text' },
-          { header: t('admin.payouts.linkedStudents'), type: 'text' },
-          { header: t('admin.payouts.amount'), type: 'currency', currency: 'ILS', total: 'sum', dataBar: true },
-          { header: t('admin.payouts.status'), type: 'status' },
-          { header: t('admin.payouts.requestDate'), type: 'date' },
-          { header: t('admin.payouts.approvalDate', 'Approval Date'), type: 'date' },
-          { header: t('admin.payouts.paymentMethodCol'), type: 'text' },
-          { header: t('admin.payouts.notes', 'Notes'), type: 'text' },
-        ],
-        rows: requests.map(r => [
-          r.id.slice(0, 8),
-          getName(r),
-          getRoleLabel(r.requestor_role),
-          (r.linked_student_names || []).join('; '),
-          Number(r.amount) || 0,
-          String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),
-          r.requested_at,
-          r.approved_at || null,
-          r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '',
-          r.admin_notes || '',
-        ]),
-      }],
-    });
+  /** One report definition backs both the Excel and the PDF download. */
+  const buildReport = (): CorporateReport => ({
+    fileName: `DARB-payouts-${new Date().toISOString().slice(0, 10)}`,
+    title: t('admin.payouts.reportTitle', 'Payouts Report'),
+    author,
+    locale: exportLocale,
+    rtl,
+    totalLabel: t('sheets.total'),
+    sheets: [{
+      name: t('admin.payouts.reportTitle', 'Payouts Report'),
+      columns: [
+        { header: t('admin.payouts.requestId', 'Request ID'), type: 'text' },
+        { header: t('admin.payouts.requester'), type: 'text' },
+        { header: t('admin.payouts.role'), type: 'text' },
+        { header: t('admin.payouts.linkedStudents'), type: 'text' },
+        { header: t('admin.payouts.amount'), type: 'currency', currency: 'ILS', total: 'sum', dataBar: true },
+        { header: t('admin.payouts.status'), type: 'status' },
+        { header: t('admin.payouts.requestDate'), type: 'date' },
+        { header: t('admin.payouts.approvalDate', 'Approval Date'), type: 'date' },
+        { header: t('admin.payouts.paymentMethodCol'), type: 'text' },
+        { header: t('admin.payouts.notes', 'Notes'), type: 'text' },
+      ],
+      rows: requests.map(r => [
+        r.id.slice(0, 8),
+        getName(r),
+        getRoleLabel(r.requestor_role),
+        (r.linked_student_names || []).join('; '),
+        Number(r.amount) || 0,
+        String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),
+        r.requested_at,
+        r.approved_at || null,
+        r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : '',
+        r.admin_notes || '',
+      ]),
+    }],
+  });
+
+  const exportExcel = async () => {
+    try {
+      await exportCorporateWorkbook(buildReport());
+    } catch {
+      toast({ variant: 'destructive', description: t('sheets.exportFailed') });
+    }
+  };
 
   const exportPdf = async () => {
-    const headers = [
-      t('admin.payouts.requestId', 'Request ID'), t('admin.payouts.requester'), t('admin.payouts.role'),
-      t('admin.payouts.linkedStudents'), t('admin.payouts.amount'), t('admin.payouts.status'),
-      t('admin.payouts.requestDate'), t('admin.payouts.approvalDate', 'Approval Date'),
-      t('admin.payouts.paymentMethodCol'), t('admin.payouts.notes', 'Notes'),
-    ];
-    const dash = '—';
-    const pdfRows = requests.map(r => [
-      r.id.slice(0, 8),
-      getName(r) || dash,
-      getRoleLabel(r.requestor_role),
-      (r.linked_student_names || []).join('; ') || dash,
-      `${(Number(r.amount) || 0).toLocaleString('en-US')} ₪`,
-      String(t(`admin.payouts.statuses.${r.status}`, { defaultValue: r.status })),
-      r.requested_at ? new Date(r.requested_at).toLocaleDateString(exportLocale === 'ar' ? 'en-US' : exportLocale) : dash,
-      r.approved_at ? new Date(r.approved_at).toLocaleDateString(exportLocale === 'ar' ? 'en-US' : exportLocale) : dash,
-      r.payment_method ? String(t(`admin.payouts.methods.${r.payment_method}`, { defaultValue: r.payment_method })) : dash,
-      r.admin_notes || dash,
-    ]);
-    const { rtlFontMissing } = await exportPDF({
-      headers,
-      rows: pdfRows,
-      fileName: `payouts-${new Date().toISOString().slice(0, 10)}`,
-      title: t('admin.payouts.pdfTitle', 'Darb Study International — Payouts'),
-      locale: exportLocale,
-      rtl,
-    });
-    if (rtlFontMissing) {
-      toast({
-        variant: 'destructive',
-        description: t(
-          'admin.payouts.pdfFontWarning',
-          'Arabic/Hebrew names could not be embedded in this PDF. Use the Excel export instead.',
-        ),
-      });
+    try {
+      const { empty, rtlFontMissing } = await exportCorporatePdf(buildReport());
+      if (empty) toast({ description: t('admin.payouts.empty', 'No requests yet.') });
+      else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
+    } catch {
+      toast({ variant: 'destructive', description: t('sheets.exportFailed') });
     }
   };
 
@@ -156,10 +135,10 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
         <SegmentedTabs items={items} />
         <div className="flex justify-end gap-2">
           <Button size="sm" variant="outline" className="gap-2" onClick={exportExcel}>
-            <Download className="h-4 w-4" />{t('admin.payouts.exportExcel', 'Export Excel')}
+            <Download className="h-4 w-4" />{t('sheets.exportExcel')}
           </Button>
           <Button size="sm" variant="outline" className="gap-2" onClick={exportPdf}>
-            <FileText className="h-4 w-4" />PDF
+            <FileText className="h-4 w-4" />{t('sheets.exportPdf')}
           </Button>
         </div>
       </div>

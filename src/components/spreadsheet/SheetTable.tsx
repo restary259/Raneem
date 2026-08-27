@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
-import { exportCorporateWorkbook } from '@/utils/export';
+import { exportCorporateWorkbook, exportCorporatePdf } from '@/utils/export';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { toExportColumns, toExportRows } from './exportMapping';
 import { useToast } from '@/hooks/use-toast';
@@ -127,35 +127,47 @@ const SheetTable: React.FC<SheetTableProps> = ({
       return next;
     });
 
+  /** One report definition drives both the Excel and the PDF download. */
+  const buildReport = () => {
+    const rowsOut = toExportRows(filteredRows, activeColumns, translate);
+    return {
+      fileName,
+      title,
+      subtitle: description,
+      author,
+      locale,
+      rtl,
+      totalLabel: t('sheets.total'),
+      sheets: [
+        {
+          name: title,
+          title,
+          subtitle: description,
+          columns: toExportColumns(activeColumns),
+          rows: rowsOut,
+        },
+      ],
+    };
+  };
+
   const handleExport = async () => {
     try {
-      const rowsOut = toExportRows(filteredRows, activeColumns, translate);
-      if (totals) {
-        rowsOut.push(
-          activeColumns.map((c, i) => (c.total ? totals[c.key] : i === 0 ? t('sheets.total') : null)),
-        );
-      }
-      await exportCorporateWorkbook({
-        fileName,
-        title,
-        subtitle: description,
-        author,
-        locale,
-        rtl,
-        sheets: [
-          {
-            name: title,
-            title,
-            subtitle: description,
-            columns: toExportColumns(activeColumns),
-            rows: totals ? rowsOut.slice(0, -1) : rowsOut,
-          },
-        ],
-      });
+      await exportCorporateWorkbook(buildReport());
     } catch {
       toast({ variant: 'destructive', description: t('sheets.exportFailed') });
     }
   };
+
+  const handleExportPdf = async () => {
+    try {
+      const { empty, rtlFontMissing } = await exportCorporatePdf(buildReport());
+      if (empty) toast({ description: t('sheets.empty') });
+      else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
+    } catch {
+      toast({ variant: 'destructive', description: t('sheets.exportFailed') });
+    }
+  };
+
 
   return (
     <div className="space-y-3">
@@ -192,6 +204,11 @@ const SheetTable: React.FC<SheetTableProps> = ({
             <Download className="h-4 w-4 me-1" />
             {t('sheets.exportExcel')}
           </Button>
+          <Button size="sm" variant="outline" onClick={handleExportPdf} disabled={!filteredRows.length}>
+            <FileText className="h-4 w-4 me-1" />
+            {t('sheets.exportPdf')}
+          </Button>
+
         </div>
       </div>
 

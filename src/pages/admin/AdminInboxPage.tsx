@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
-import { Loader2, Inbox, Search, Download } from "lucide-react";
+import { Inbox, Search, Download, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
-import { downloadCsv } from "@/utils/csv";
+import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from "@/utils/export";
+import { useExportContext } from "@/utils/export/useExportContext";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { LoadingState, EmptyState } from "@/components/shell";
 
@@ -29,6 +30,7 @@ const isPartnership = (row: Submission) =>
 const AdminInboxPage = () => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
+  const { author, locale: exportLocale, rtl } = useExportContext();
   const [rows, setRows] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"all" | "partnership" | "contact" | "recruits" | "dataRequests">("all");
@@ -87,15 +89,67 @@ const AdminInboxPage = () => {
 
   const newCount = rows.filter((r) => r.status === "new").length;
 
-  const exportRows = () => {
-    if (tab === "recruits") {
+  /** Inbox submissions are free-form JSON — flatten to a stable column set. */
+  const buildReport = (): CorporateReport => {
+    const title = t("admin.inbox.title", "Applications Inbox");
+    const dash = "\u2014";
+    return {
+      fileName: `DARB-inbox-${tab}-${new Date().toISOString().slice(0, 10)}`,
+      title,
+      subtitle: t(`admin.inbox.source.${tab}`, tab),
+      author,
+      locale: exportLocale,
+      rtl,
+      totalLabel: t("sheets.total"),
+      sheets: [
+        {
+          name: title,
+          title,
+          columns: [
+            { header: t("sheets.col.name", "Name"), type: "text" },
+            { header: t("sheets.col.email", "Email"), type: "text" },
+            { header: t("sheets.col.phone", "Phone"), type: "text" },
+            { header: t("admin.inbox.colSource", "Source"), type: "text" },
+            { header: t("sheets.col.status", "Status"), type: "status" },
+            { header: t("sheets.col.date", "Date"), type: "datetime" },
+            { header: t("admin.inbox.colMessage", "Message"), type: "text" },
+          ],
+          rows: visible.map((c) => {
+            const d = c.data || {};
+            return [
+              d.name ?? d.full_name ?? dash,
+              d.email ?? dash,
+              d.phone ?? d.whatsapp ?? dash,
+              c.form_source ?? dash,
+              c.status ?? dash,
+              c.created_at ?? null,
+              d.message ?? d.notes ?? dash,
+            ];
+          }),
+        },
+      ],
+    };
+  };
+
+  const exportRows = async (format: "xlsx" | "pdf") => {
+    if (tab === "recruits" || tab === "dataRequests") {
       toast({ title: t("admin.inbox.exportRecruits", "Switch to a submissions tab to export") });
       return;
     }
-    downloadCsv(
-      visible.map((c) => ({ ...c.data, status: c.status, source: c.form_source, date: c.created_at })),
-      `inbox-${tab}.csv`
-    );
+    if (!visible.length) {
+      toast({ description: t("admin.inbox.empty", "No submissions found") });
+      return;
+    }
+    try {
+      const report = buildReport();
+      if (format === "xlsx") await exportCorporateWorkbook(report);
+      else {
+        const { rtlFontMissing } = await exportCorporatePdf(report);
+        if (rtlFontMissing) toast({ variant: "destructive", description: t("sheets.pdfFontWarning") });
+      }
+    } catch {
+      toast({ variant: "destructive", description: t("sheets.exportFailed") });
+    }
   };
 
   const tabLabel = (key: string, fallback: string, count: number) => (
@@ -135,9 +189,13 @@ const AdminInboxPage = () => {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="sm" onClick={exportRows}>
+            <Button variant="outline" size="sm" onClick={() => exportRows("xlsx")}>
               <Download className="h-4 w-4 me-2" />
-              {t("admin.contacts.export", "Export")}
+              {t("sheets.exportExcel")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportRows("pdf")}>
+              <FileText className="h-4 w-4 me-2" />
+              {t("sheets.exportPdf")}
             </Button>
           </div>
 

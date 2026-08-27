@@ -96,10 +96,22 @@ export async function loadTextShaper(): Promise<void> {
 }
 
 /**
- * Keeps text in logical Unicode order. Current jsPDF performs Arabic shaping
- * in its text pipeline; pre-shaping/reversing here caused double bidi handling,
- * broken punctuation and unreadable mixed Arabic/number cells.
+ * Keeps Arabic text in logical Unicode order — current jsPDF performs Arabic
+ * shaping and bidi in its own text pipeline, so pre-shaping there caused
+ * double handling and unreadable output.
+ *
+ * jsPDF does NOT apply that pipeline to Hebrew: a Hebrew string is drawn
+ * left-to-right, so it reads backwards in the PDF. Hebrew-only strings are
+ * therefore reordered here into visual order, with embedded Latin/digit runs
+ * (names, amounts, dates) re-reversed so they stay readable.
  */
 export function shapeForPdf(text: string): string {
-  return text;
+  if (!hasHebrew(text) || hasArabic(text)) return text;
+
+  const runs = text.match(/[\u0590-\u05FF\uFB1D-\uFB4F]+|[^\u0590-\u05FF\uFB1D-\uFB4F]+/g) ?? [];
+  return runs
+    .reverse()
+    .map(run => (HEBREW_RE.test(run) ? [...run].reverse().join('') : run))
+    .join('');
 }
+
