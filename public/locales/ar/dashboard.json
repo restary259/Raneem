@@ -1388,7 +1388,8 @@
       "colReferrals": "الإحالات",
       "colLinked": "الحالات المرتبطة",
       "referralsMade": "الإحالات",
-      "linkedCases": "الحالات المرتبطة"
+      "linkedCases": "الحالات المرتبطة",
+      "empty": "لا توجد طلبات للتصدير بعد."
     },
     "features": {
       "sectionTitle": "الميزات",
