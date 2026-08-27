@@ -80,6 +80,8 @@ const SelectContent = React.forwardRef<
   const localRef = React.useRef<HTMLElement | null>(null);
   React.useEffect(() => {
     const el = localRef.current;
+    // eslint-disable-next-line no-console
+    console.log("[select-fix] effect, el:", el ? el.className.slice(0, 40) : null);
     if (!el) return;
     el.dataset.scrollFix = "1";
     const stop = (e: Event) => e.stopPropagation();
