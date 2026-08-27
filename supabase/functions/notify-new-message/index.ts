@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { requireAuth } from "../_shared/auth.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { sendAppEmail } from "../_shared/send-app-email.ts";
 
 const BodySchema = z.object({
   thread_type: z.enum(["case", "direct"]).optional(),
@@ -36,16 +37,7 @@ async function serviceKeyFingerprint(): Promise<string | undefined> {
 }
 
 /**
- * Queue a branded email through Lovable Emails (send-transactional-email).
- *
- * Uses raw fetch() rather than admin.functions.invoke() because the
- * Supabase JS FunctionsClient can strip/override the Authorization header
- * on nested function-to-function calls (it injects the user session token,
- * and a service-role client has none). A raw fetch with an explicit
- * Authorization: Bearer <service-role-key> header guarantees the internal
- * call passes requireAuth's `token === serviceKey` fast-path in
- * send-transactional-email. This mirrors the working pattern in
- * approve-partner-recruit and send-event-email.
+ * Send a branded email through Lovable's managed email API.
  */
 async function sendTemplate(
   templateName: string,
@@ -53,59 +45,17 @@ async function sendTemplate(
   templateData: Record<string, unknown>,
   idempotencyKey: string,
 ): Promise<{ ok: boolean; detail?: string }> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceKey) {
-    console.error("[chat-email] missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY", {
-      service_key_present: !!serviceKey,
-    });
-    return { ok: false, detail: "Server configuration error" };
-  }
-  let response: Response;
-  try {
-    response = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceKey}`,
-      },
-      body: JSON.stringify({ templateName, recipientEmail, idempotencyKey, templateData }),
-    });
-  } catch (err) {
-    console.error(`[chat-email fetch failed] to=${recipientEmail} template=${templateName}`, err);
-    return { ok: false, detail: String((err as Error)?.message ?? err) };
-  }
-  const text = await response.text().catch(() => "");
-  if (!response.ok) {
-    console.error(
-      `[chat-email failed] to=${recipientEmail} template=${templateName} status=${response.status}`,
-      JSON.stringify({
-        downstream: "send-transactional-email",
-        status: response.status,
-        auth_mode: "service_role",
-        service_key_present: !!serviceKey,
-        service_key_fingerprint: await serviceKeyFingerprint(),
-        detail: text,
-      }),
-    );
-    return { ok: false, detail: text || `HTTP ${response.status}` };
-  }
-  let body: Record<string, unknown> | null = null;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch {
-    // non-JSON success body is fine
-  }
-  if (body && body.success === false) {
-    console.warn(`[chat-email not sent] to=${recipientEmail} reason=${String(body.reason)}`);
-    return { ok: false, detail: String(body.reason ?? "not_sent") };
-  }
-  console.log(`[chat-email queued] to=${recipientEmail} template=${templateName}`, {
-    downstream: "send-transactional-email",
-    status: 200,
-    auth_mode: "service_role",
-    service_key_present: !!serviceKey,
+  const result = await sendAppEmail(templateName, recipientEmail, {
+    templateData,
+    idempotencyKey,
   });
+  if (!result.ok) {
+    console.warn(`[chat-email not sent] template=${templateName}`, {
+      reason: result.suppressed ? "recipient_suppressed" : result.detail,
+    });
+    return { ok: false, detail: result.detail };
+  }
+  console.log(`[chat-email sent] template=${templateName}`);
   return { ok: true };
 }
 
