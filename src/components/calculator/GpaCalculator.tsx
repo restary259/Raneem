@@ -107,22 +107,30 @@ const GpaCalculator = () => {
             {warnings.map((w, i) => (
               <Alert key={i} className="bg-amber-50 border-amber-200"><AlertTriangle className="h-4 w-4 text-amber-600" /><AlertDescription className="text-amber-800">{w}</AlertDescription></Alert>
             ))}
-            {results.average !== null && results.germanGrade !== null && (
+            {results.average !== null && (
               <>
                 <Alert variant="default" className="bg-primary/10 border-primary/50">
                     <Calculator className="h-4 w-4 text-primary" />
                     <AlertTitle className="font-bold text-primary">{t('gpaCalculator.results')}</AlertTitle>
                     <AlertDescription className="space-y-1 text-foreground">
                         <p><Trans i18nKey="gpaCalculator.yourAverage" ns="resources" values={{ average: results.average }} components={{ 1: <span className="font-bold" /> }} /></p>
-                        <p><Trans i18nKey="gpaCalculator.germanGrade" ns="resources" values={{ germanGrade: results.germanGrade }} components={{ 1: <span className="font-bold" /> }} /></p>
+                        {results.germanGrade !== null ? (
+                          <p><Trans i18nKey="gpaCalculator.germanGrade" ns="resources" values={{ germanGrade: results.germanGrade }} components={{ 1: <span className="font-bold" /> }} /></p>
+                        ) : (
+                          <p className="font-semibold text-destructive">
+                            {t('gpaCalculator.notConvertible', 'Below the passing mark — not convertible')}
+                          </p>
+                        )}
                     </AlertDescription>
                 </Alert>
                 <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
                   <p className="font-semibold text-foreground">{t('gpaCalculator.formulaTitle')}</p>
-                  <p dir="ltr" className="text-center font-mono bg-background rounded p-2">German Grade = 1 + 3 × ((100 - Average) / (100 - 56))</p>
+                  <p dir="ltr" className="text-center font-mono bg-background rounded p-2">{`German Grade = 1 + 3 × ((${NMAX} - Average) / (${NMAX} - ${NMIN}))`}</p>
                   <p>{t('gpaCalculator.formulaExplanation')}</p>
                   <p>{t('gpaCalculator.formulaScale')}</p>
+                  <p>{t('gpaCalculator.disclaimer', 'Indicative only — uni-assist and each university may apply a different conversion.')}</p>
                 </div>
+
               </>
             )}
         </CardContent>
