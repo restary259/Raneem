@@ -42,7 +42,6 @@ const BroadcastPage = lazy(() => import("./pages/BroadcastPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const ActivateAccountPage = lazy(() => import("./pages/ActivateAccountPage"));
 
-const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const InvoicePage = lazy(() => import("./pages/InvoicePage"));
 const QuizPage = lazy(() => import("./pages/QuizPage"));
 const AIAdvisorPage = lazy(() => import("./pages/AIAdvisorPage"));
@@ -281,7 +280,6 @@ const App = () => {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/activate" element={<ActivateAccountPage />} />
 
-            <Route path="/unsubscribe" element={<UnsubscribePage />} />
             <Route path="/invoice/:token" element={<InvoicePage />} />
 
 

@@ -154,9 +154,8 @@ export async function sendInvoiceEmail(invoice: CaseInvoice): Promise<boolean> {
   }
 
   try {
-    const { error } = await supabase.functions.invoke("send-transactional-email", {
+    const { error } = await supabase.functions.invoke("send-case-invoice", {
       body: {
-        templateName: "case-invoice",
         recipientEmail: fresh.student_email,
         idempotencyKey: `case-invoice-${fresh.invoice_number}-${fresh.issued_at}`,
         templateData: data,
