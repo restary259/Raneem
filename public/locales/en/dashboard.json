@@ -1436,7 +1436,9 @@
       },
       "exportRecruits": "Switch to a submissions tab to export",
       "searchPlaceholder": "Search by name, email or phone",
-      "empty": "No submissions found"
+      "empty": "No submissions found",
+      "colSource": "Source",
+      "colMessage": "Message"
     },
     "contacts": {
       "searchPlaceholder": "Search by name or email",
@@ -3535,7 +3537,8 @@
       "dateOfBirth": "Date of birth",
       "passportNumber": "Passport number",
       "passportType": "Passport type",
-      "educationLevel": "Education level"
+      "educationLevel": "Education level",
+      "date": "Date"
     },
     "value": {
       "status": {

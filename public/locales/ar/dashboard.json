@@ -1454,7 +1454,9 @@
       },
       "exportRecruits": "انتقل إلى تبويب الطلبات للتصدير",
       "searchPlaceholder": "ابحث بالاسم أو البريد أو الهاتف",
-      "empty": "لم يتم العثور على أي طلبات"
+      "empty": "لم يتم العثور على أي طلبات",
+      "colSource": "المصدر",
+      "colMessage": "الرسالة"
     },
     "contacts": {
       "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني",
@@ -3553,7 +3555,8 @@
       "dateOfBirth": "تاريخ الميلاد",
       "passportNumber": "رقم الجواز",
       "passportType": "نوع الجواز",
-      "educationLevel": "المستوى التعليمي"
+      "educationLevel": "المستوى التعليمي",
+      "date": "التاريخ"
     },
     "value": {
       "status": {
