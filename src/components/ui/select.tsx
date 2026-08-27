@@ -68,10 +68,35 @@ SelectScrollDownButton.displayName =
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = "popper", ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
+>(({ className, children, position = "popper", ...props }, forwardedRef) => {
+  // The dropdown is portaled to document.body. Inside a modal Dialog,
+  // react-remove-scroll registers a document-level wheel/touchmove listener
+  // that preventDefaults any scroll gesture outside the dialog — which
+  // includes this dropdown, making it impossible to scroll. Stopping
+  // propagation before the event reaches document keeps the dropdown natively
+  // scrollable (mouse wheel + touch drag) without unlocking the page behind.
+  // Attached in the ref callback (not an effect) because Radix mounts the
+  // content node lazily when the select opens — effects fire while it is
+  // still unmounted and the ref is null.
+  const detachRef = React.useRef<(() => void) | null>(null);
+  return (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Content
+        ref={(node) => {
+          detachRef.current?.();
+          detachRef.current = null;
+          if (node) {
+            const stop = (e: Event) => e.stopPropagation();
+            node.addEventListener("wheel", stop);
+            node.addEventListener("touchmove", stop);
+            detachRef.current = () => {
+              node.removeEventListener("wheel", stop);
+              node.removeEventListener("touchmove", stop);
+            };
+          }
+          if (typeof forwardedRef === "function") forwardedRef(node);
+          else if (forwardedRef) forwardedRef.current = node;
+        }}
       className={cn(
         "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
@@ -93,8 +118,9 @@ const SelectContent = React.forwardRef<
       </SelectPrimitive.Viewport>
       <SelectScrollDownButton />
     </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-))
+    </SelectPrimitive.Portal>
+  );
+});
 SelectContent.displayName = SelectPrimitive.Content.displayName
 
 const SelectLabel = React.forwardRef<
