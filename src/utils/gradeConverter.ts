@@ -23,6 +23,16 @@ export interface BatchGradeResult {
   interpretation: GradeResult["interpretation"];
 }
 
+/** Highest attainable Bagrut score. */
+export const BAGRUT_MAX = 100;
+
+/**
+ * Minimum passing Bagrut score. This is the single source of truth for every
+ * Bagrut → German conversion surface in the app (public calculator, team tool,
+ * student tool). Do NOT hardcode 55/56 anywhere else.
+ */
+export const BAGRUT_PASS_MARK = 55;
+
 /**
  * Converts a single Bagrut score to its German grade equivalent.
  *
@@ -38,7 +48,12 @@ export interface BatchGradeResult {
  *   bagrutToGermanGrade(55)   → { german: 4.00, interpretation: "Pass", ... }
  *   bagrutToGermanGrade(54)   → { german: 4.07, interpretation: "Fail", ... }
  */
-export function bagrutToGermanGrade(bagrut: number, N_max = 100, N_min = 55): GradeResult {
+export function bagrutToGermanGrade(
+  bagrut: number,
+  N_max = BAGRUT_MAX,
+  N_min = BAGRUT_PASS_MARK,
+): GradeResult {
+
   if (typeof bagrut !== "number" || isNaN(bagrut)) {
     throw new Error("Bagrut score must be a number");
   }
@@ -77,7 +92,12 @@ export function bagrutToGermanGrade(bagrut: number, N_max = 100, N_min = 55): Gr
  * Batch-converts an array of Bagrut scores.
  * Invalid entries are returned with german: -1 and interpretation: "Fail".
  */
-export function bagrutBatchConvert(scores: number[], N_max = 100, N_min = 55): BatchGradeResult[] {
+export function bagrutBatchConvert(
+  scores: number[],
+  N_max = BAGRUT_MAX,
+  N_min = BAGRUT_PASS_MARK,
+): BatchGradeResult[] {
+
   return scores.map((score) => {
     try {
       const result = bagrutToGermanGrade(score, N_max, N_min);

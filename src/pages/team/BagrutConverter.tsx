@@ -10,11 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calculator, RotateCcw, Info, AlertTriangle, TrendingUp } from "lucide-react";
 
+import { BAGRUT_MAX, BAGRUT_PASS_MARK, bagrutToGermanGrade } from "@/utils/gradeConverter";
+
 /* ─── Types & constants ──────────────────────────────────────────────────── */
 type Subject = { id: string; units: string; grade: string };
 
-const NMAX = 100;
-const NMIN = 56;
+const NMAX = BAGRUT_MAX;
+const NMIN = BAGRUT_PASS_MARK;
+
 
 const SUBJECT_GROUPS = [
   {
@@ -54,7 +57,7 @@ function getGermanLabel(grade: number): { label: string; arabic: string; color: 
 function getAverageColor(avg: number): string {
   if (avg >= 80) return "text-emerald-600";
   if (avg >= 65) return "text-blue-600";
-  if (avg >= 56) return "text-amber-600";
+  if (avg >= NMIN) return "text-amber-600";
   return "text-destructive";
 }
 
@@ -65,7 +68,7 @@ export default function BagrutConverter() {
   const isAr = i18n.language === "ar";
 
   const [subjects, setSubjects] = useState<Subject[]>(() => JSON.parse(JSON.stringify(initialSubjects)));
-  const [results, setResults] = useState<{ average: number; germanGrade: number } | null>(null);
+  const [results, setResults] = useState<{ average: number; germanGrade: number; passed: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
 
@@ -115,10 +118,12 @@ export default function BagrutConverter() {
     const newWarnings: string[] = [];
     if (average < NMIN) newWarnings.push(tr("gpaCalculator.warningBelowPass", { avg: average.toFixed(1), min: NMIN }));
 
-    const raw = 1 + 3 * ((NMAX - average) / (NMAX - NMIN));
-    const germanGrade = parseFloat(Math.max(1.0, Math.min(4.0, raw)).toFixed(2));
+    // Single source of truth — no local clamping, so a below-pass average is
+    // reported as "not convertible" instead of a misleading 4.00.
+    const { german } = bagrutToGermanGrade(average, NMAX, NMIN);
     setWarnings(newWarnings);
-    setResults({ average: parseFloat(average.toFixed(2)), germanGrade });
+    setResults({ average: parseFloat(average.toFixed(2)), germanGrade: german, passed: average >= NMIN });
+
   };
 
   const handleReset = () => {
@@ -129,7 +134,7 @@ export default function BagrutConverter() {
   };
 
   const filledCount = subjects.filter((s) => s.units && s.grade).length;
-  const germanLabel = results ? getGermanLabel(results.germanGrade) : null;
+  const germanLabel = results && results.passed ? getGermanLabel(results.germanGrade) : null;
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-5">
@@ -246,7 +251,7 @@ export default function BagrutConverter() {
       ))}
 
       {/* ── Results card ── */}
-      {results && germanLabel && (
+      {results && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -271,25 +276,40 @@ export default function BagrutConverter() {
 
               {/* German grade */}
               <div className="bg-background rounded-lg border p-4 text-center">
-                <div className="text-3xl font-bold tabular-nums text-foreground">{results.germanGrade}</div>
+                <div className="text-3xl font-bold tabular-nums text-foreground">
+                  {results.passed ? results.germanGrade : "—"}
+                </div>
                 <div className="text-xs text-muted-foreground mt-1">{isAr ? "النظام الألماني" : "German Grade"}</div>
                 <div className="mt-2 flex flex-col items-center gap-1">
-                  <Badge variant="outline" className={`text-xs ${germanLabel.color}`}>
-                    {germanLabel.label}
-                  </Badge>
-                  {isAr && (
-                    <span className="text-xs text-muted-foreground">{germanLabel.arabic}</span>
+                  {results.passed && germanLabel ? (
+                    <>
+                      <Badge variant="outline" className={`text-xs ${germanLabel.color}`}>
+                        {germanLabel.label}
+                      </Badge>
+                      {isAr && <span className="text-xs text-muted-foreground">{germanLabel.arabic}</span>}
+                    </>
+                  ) : (
+                    <span className="text-xs text-destructive">
+                      {tr("gpaCalculator.notConvertible", "Below the passing mark — not convertible")}
+                    </span>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Formula note */}
-            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
               <p dir="ltr" className="text-xs font-mono text-center text-muted-foreground">
-                German Grade = 1 + 3 × ((100 − Average) / (100 − 56))
+                {`German Grade = 1 + 3 × ((${NMAX} − Average) / (${NMAX} − ${NMIN}))`}
+              </p>
+              <p className="text-xs text-center text-muted-foreground">
+                {tr(
+                  "gpaCalculator.disclaimer",
+                  "Indicative only — uni-assist and each university may apply a different conversion.",
+                )}
               </p>
             </div>
+
           </CardContent>
         </Card>
       )}

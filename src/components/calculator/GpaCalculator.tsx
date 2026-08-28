@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Calculator, Info, AlertTriangle } from "lucide-react";
 import { useTranslation, Trans } from "react-i18next";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { BAGRUT_MAX, BAGRUT_PASS_MARK, bagrutToGermanGrade } from "@/utils/gradeConverter";
 
 type Subject = { id: string; units: string; grade: string };
 
@@ -20,8 +21,9 @@ const initialSubjects: Subject[] = [
     { id: 't5sos2', units: '', grade: '' }, { id: 't5sos3', units: '', grade: '' },
 ];
 
-const NMAX = 100;
-const NMIN = 56;
+const NMAX = BAGRUT_MAX;
+const NMIN = BAGRUT_PASS_MARK;
+
 
 const GpaCalculator = () => {
   const { t } = useTranslation('resources');
@@ -64,10 +66,13 @@ const GpaCalculator = () => {
       newWarnings.push(t('gpaCalculator.warningBelowPass', { avg: average.toFixed(1), min: NMIN }));
     }
 
-    const germanGrade = 1 + 3 * ((NMAX - average) / (NMAX - NMIN));
+    // Single source of truth — no clamping, so a below-pass average is not
+    // presented as a passing 4.00.
+    const { german } = bagrutToGermanGrade(average, NMAX, NMIN);
     setWarnings(newWarnings);
-    setResults({ average: parseFloat(average.toFixed(2)), germanGrade: parseFloat(Math.max(1.0, Math.min(4.0, germanGrade)).toFixed(2)) });
+    setResults({ average: parseFloat(average.toFixed(2)), germanGrade: average >= NMIN ? german : null });
   };
+
   
   const handleReset = () => { setSubjects(JSON.parse(JSON.stringify(initialSubjects))); setResults({ average: null, germanGrade: null }); setError(null); setWarnings([]); };
 
@@ -102,22 +107,30 @@ const GpaCalculator = () => {
             {warnings.map((w, i) => (
               <Alert key={i} className="bg-amber-50 border-amber-200"><AlertTriangle className="h-4 w-4 text-amber-600" /><AlertDescription className="text-amber-800">{w}</AlertDescription></Alert>
             ))}
-            {results.average !== null && results.germanGrade !== null && (
+            {results.average !== null && (
               <>
                 <Alert variant="default" className="bg-primary/10 border-primary/50">
                     <Calculator className="h-4 w-4 text-primary" />
                     <AlertTitle className="font-bold text-primary">{t('gpaCalculator.results')}</AlertTitle>
                     <AlertDescription className="space-y-1 text-foreground">
                         <p><Trans i18nKey="gpaCalculator.yourAverage" ns="resources" values={{ average: results.average }} components={{ 1: <span className="font-bold" /> }} /></p>
-                        <p><Trans i18nKey="gpaCalculator.germanGrade" ns="resources" values={{ germanGrade: results.germanGrade }} components={{ 1: <span className="font-bold" /> }} /></p>
+                        {results.germanGrade !== null ? (
+                          <p><Trans i18nKey="gpaCalculator.germanGrade" ns="resources" values={{ germanGrade: results.germanGrade }} components={{ 1: <span className="font-bold" /> }} /></p>
+                        ) : (
+                          <p className="font-semibold text-destructive">
+                            {t('gpaCalculator.notConvertible', 'Below the passing mark — not convertible')}
+                          </p>
+                        )}
                     </AlertDescription>
                 </Alert>
                 <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
                   <p className="font-semibold text-foreground">{t('gpaCalculator.formulaTitle')}</p>
-                  <p dir="ltr" className="text-center font-mono bg-background rounded p-2">German Grade = 1 + 3 × ((100 - Average) / (100 - 56))</p>
+                  <p dir="ltr" className="text-center font-mono bg-background rounded p-2">{`German Grade = 1 + 3 × ((${NMAX} - Average) / (${NMAX} - ${NMIN}))`}</p>
                   <p>{t('gpaCalculator.formulaExplanation')}</p>
                   <p>{t('gpaCalculator.formulaScale')}</p>
+                  <p>{t('gpaCalculator.disclaimer', 'Indicative only — uni-assist and each university may apply a different conversion.')}</p>
                 </div>
+
               </>
             )}
         </CardContent>
