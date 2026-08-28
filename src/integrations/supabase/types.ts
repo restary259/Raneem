@@ -4772,6 +4772,7 @@ export type Database = {
         Args: { p_kind: string; p_message_id: string }
         Returns: undefined
       }
+      dispatch_appointment_reminders: { Args: never; Returns: undefined }
       edit_case_message: {
         Args: { p_body: string; p_message_id: string }
         Returns: undefined
@@ -4862,6 +4863,7 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: Json
       }
+      get_cron_dispatch_secret: { Args: never; Returns: string }
       get_document_activity_spikes: {
         Args: { p_threshold?: number; p_window?: string }
         Returns: {
