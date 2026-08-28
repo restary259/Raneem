@@ -4772,6 +4772,11 @@ export type Database = {
         Args: { p_kind: string; p_message_id: string }
         Returns: undefined
       }
+      delete_email: {
+        Args: { message_id: number; queue_name: string }
+        Returns: boolean
+      }
+      dispatch_appointment_reminders: { Args: never; Returns: undefined }
       edit_case_message: {
         Args: { p_body: string; p_message_id: string }
         Returns: undefined
@@ -4862,6 +4867,7 @@ export type Database = {
         Args: { p_user_id?: string }
         Returns: Json
       }
+      get_cron_dispatch_secret: { Args: never; Returns: string }
       get_document_activity_spikes: {
         Args: { p_threshold?: number; p_window?: string }
         Returns: {
@@ -5499,6 +5505,16 @@ export type Database = {
         Returns: number
       }
       push_queue_dispatch: { Args: never; Returns: undefined }
+      read_email_batch: {
+        Args: { batch_size: number; queue_name: string; vt: number }
+        Returns: {
+          enqueued_at: string
+          message: Json
+          msg_id: number
+          read_ct: number
+          vt: string
+        }[]
+      }
       reassign_case: {
         Args: { p_case_id: string; p_new_assignee: string }
         Returns: undefined
