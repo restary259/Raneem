@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { sendWebPush, type PushSubscriptionRecord } from "../_shared/webpush.ts";
 import { requireAuth } from "../_shared/auth.ts";
+import { isCronDispatcher } from "../_shared/cronAuth.ts";
 
 /**
  * Drains the `push_notifications` pgmq queue and delivers Web Push messages.
@@ -227,7 +228,10 @@ Deno.serve(async (req) => {
   // The queue holds notifications for every user, so only the cron caller
   // (service role) may drain it. A gateway-verified JWT is not enough: the
   // project's anon key is itself a valid JWT and is public.
-  const auth = await requireAuth(req);
+  const fromCron = await isCronDispatcher(req);
+  const auth = fromCron
+    ? { ok: true as const, userId: null, isServiceRole: true, roles: [] as string[] }
+    : await requireAuth(req);
   if (!auth.ok || !auth.isServiceRole) {
     return new Response(
       JSON.stringify({ error: auth.ok ? "Forbidden" : auth.error }),
