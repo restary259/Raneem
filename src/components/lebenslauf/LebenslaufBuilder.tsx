@@ -7,6 +7,8 @@ import CVForm from "./CVForm";
 import CVPreview from "./CVPreview";
 import { CvCaptureSheet } from "./CvSheet";
 import { useLebenslauf } from "./useLebenslauf";
+import { useCvFonts } from "./useCvFonts";
+
 import { CVData } from "./types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
