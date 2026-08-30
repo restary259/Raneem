@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import AnimatedCounter from "./AnimatedCounter";
@@ -74,7 +75,7 @@ const Hero = () => {
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
           <Button size="lg" variant="outline" asChild className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 transition-transform duration-300 hover:scale-105">
-            <Link to="/contact">{t('common:applyNow')}</Link>
+            <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer">{t('common:applyNow')}</a>
           </Button>
         </div>
 
