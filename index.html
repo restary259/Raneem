@@ -31,11 +31,21 @@
     <!-- Fonts (single non-blocking request) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&family=Inter:wght@400;500;700&family=Source+Sans+3:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;700&family=Source+Serif+4:wght@400;500;700&family=Merriweather:wght@400;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&family=Inter:wght@400;500;700&family=Source+Sans+3:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;700&family=Source+Serif+4:wght@400;500;700&family=Merriweather:wght@400;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet"></noscript>
 
-    <!-- LCP Preloads -->
-    <link rel="preload" as="image" href="/lovable-uploads/hero-poster.webp" fetchpriority="high">
+    <!-- LCP Preload — only the landing route renders the hero, so only it pays for the image -->
+    <script>
+      if (location.pathname === '/' || location.pathname === '/index.html') {
+        var heroPreload = document.createElement('link');
+        heroPreload.rel = 'preload';
+        heroPreload.as = 'image';
+        heroPreload.href = '/lovable-uploads/hero-poster.webp';
+        heroPreload.setAttribute('fetchpriority', 'high');
+        document.head.appendChild(heroPreload);
+      }
+    </script>
+
 
     <!-- Canonical (brand domain only — never the preview host) -->
     <link rel="canonical" href="https://darb.agency/" />
@@ -198,14 +208,43 @@
     
     <!-- PWA Loading Script -->
     <script>
-      // Hide loading screen immediately when app is ready
-      window.addEventListener('load', () => {
-        const loading = document.getElementById('pwa-loading');
-        if (loading) {
+      // Hide the splash as soon as React paints its first content — waiting for
+      // `load` kept it up while lazy images were still streaming on slow networks.
+      (function () {
+        var hidden = false;
+        function hideLoading() {
+          if (hidden) return;
+          var loading = document.getElementById('pwa-loading');
+          if (!loading) return;
+          hidden = true;
           loading.classList.add('hidden');
-          setTimeout(() => loading.remove(), 500);
+          setTimeout(function () { loading.remove(); }, 500);
         }
-      });
+
+        function watchRoot() {
+          var root = document.getElementById('root');
+          if (!root) return;
+          if (root.childElementCount > 0) { hideLoading(); return; }
+          var observer = new MutationObserver(function () {
+            if (root.childElementCount > 0) {
+              observer.disconnect();
+              hideLoading();
+            }
+          });
+          observer.observe(root, { childList: true });
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', watchRoot);
+        } else {
+          watchRoot();
+        }
+
+        // Fallbacks: never leave the splash stuck.
+        window.addEventListener('load', hideLoading);
+        setTimeout(hideLoading, 10000);
+      })();
+
       
       // Handle PWA display mode
       if (window.matchMedia('(display-mode: standalone)').matches) {

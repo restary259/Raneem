@@ -16,21 +16,11 @@ i18n
     lng: savedLang || 'ar',
     fallbackLng: 'ar',
     supportedLngs: ['ar', 'en'],
-    ns: [
-      'common',
-      'landing',
-      'about',
-      'services',
-      'partnership',
-      'contact',
-      'partners',
-      'resources',
-      'faq',
-      'blog',
-      'legal',
-      'broadcast',
-      'dashboard',
-    ],
+    // Only the namespace every route needs is loaded up front. The rest are
+    // fetched on demand by useTranslation(<ns>) through the HTTP backend, so a
+    // public page no longer waits on dashboard.json (59 kB) before first paint.
+    ns: ['common'],
+
     defaultNS: 'common',
     partialBundledLanguages: true,
     resources: {

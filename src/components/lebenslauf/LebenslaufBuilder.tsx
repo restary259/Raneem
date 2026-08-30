@@ -7,6 +7,8 @@ import CVForm from "./CVForm";
 import CVPreview from "./CVPreview";
 import { CvCaptureSheet } from "./CvSheet";
 import { useLebenslauf } from "./useLebenslauf";
+import { useCvFonts } from "./useCvFonts";
+
 import { CVData } from "./types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,6 +49,8 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
   stickyTopClassName = "lg:top-20",
 }) => {
   const { t } = useTranslation("resources");
+  useCvFonts();
+
   const { data, setData, updateData, updatePersonal, updateDesign, updateSignature, saveDraft, loadDraft, clearAll, downloadPdf, generating } = useLebenslauf();
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
   const [faqOpen, setFaqOpen] = useState(false);
