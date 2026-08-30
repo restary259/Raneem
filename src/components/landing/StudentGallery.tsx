@@ -63,10 +63,11 @@ const StudentGallery = () => {
           alt={student.name ? `${student.name} — Darb student now studying in ${student.destination}` : `Darb student success story in ${student.destination}`}
           className="absolute inset-0 h-full w-full object-cover md:group-hover:scale-110 transition-transform duration-500"
           style={{ objectPosition: student.focus || '50% 40%' }}
-          loading={index < 2 ? "eager" : "lazy"}
-          fetchPriority={index < 2 ? "high" : "low"}
+          loading={index === 0 ? "eager" : "lazy"}
+          fetchPriority={index === 0 ? "high" : "low"}
           decoding="async"
         />
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
         <div className="absolute bottom-0 end-0 p-4 sm:p-6 text-white text-end">
           {student.name ? <p className="text-lg font-semibold">{student.name}</p> : null}
