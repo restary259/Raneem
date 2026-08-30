@@ -647,7 +647,7 @@ export default function TeamAppointmentsPage() {
                   onDragLeave={() => setDragOverSlot(null)}
                   onClick={() => openNew(currentDate, hour)}
                 >
-                  <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-r border-border/40 select-none">
+                  <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-e border-border/40 select-none">
                     {new Date().setHours(hour, 0, 0, 0) &&
                       new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
                         hour: "numeric",
@@ -680,12 +680,13 @@ export default function TeamAppointmentsPage() {
               className="sticky top-0 z-10 bg-background border-b border-border grid"
               style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
             >
-              <div className="border-r border-border/40" />
+              <div className="border-e border-border/40" />
               {weekDays.map((day) => (
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    "py-2 px-1 text-center border-r border-border/40 last:border-r-0",
+                    "py-2 px-1 text-center border-e border-border/40",
+
                     isToday(day) && "bg-violet-50/50",
                   )}
                 >
@@ -714,7 +715,7 @@ export default function TeamAppointmentsPage() {
                 className="grid border-b border-border/30 min-h-[64px]"
                 style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
               >
-                <div className="py-1 px-3 text-xs text-muted-foreground border-r border-border/40 flex items-start pt-2 shrink-0 select-none">
+                <div className="py-1 px-3 text-xs text-muted-foreground border-e border-border/40 flex items-start pt-2 shrink-0 select-none">
                   {new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
                     hour: "numeric",
                     hour12: true,
@@ -727,7 +728,8 @@ export default function TeamAppointmentsPage() {
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "min-w-0 border-r border-border/30 last:border-r-0 p-0.5 relative transition-colors cursor-pointer",
+                        "min-w-0 border-e border-border/30 p-0.5 relative transition-colors cursor-pointer",
+
                         isToday(day) && "bg-violet-50/25",
                         isOver ? "bg-violet-100/70" : "hover:bg-muted/20",
                       )}
@@ -787,7 +789,7 @@ export default function TeamAppointmentsPage() {
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "min-h-[100px] border-r border-border/30 last:border-r-0 p-1.5 transition-colors cursor-pointer",
+                        "min-h-[100px] border-e border-border/30 p-1.5 transition-colors cursor-pointer",
                         !isSameMonth(day, currentDate) && "opacity-35 bg-muted/10",
                         isToday(day) && "bg-violet-50/40",
                         isOver ? "bg-violet-100/50" : "hover:bg-muted/15",
