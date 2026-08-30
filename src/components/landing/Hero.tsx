@@ -75,7 +75,7 @@ const Hero = () => {
           <Button size="lg" asChild className="w-full sm:w-auto bg-brand-strong text-brand-foreground hover:bg-brand-strong/90 transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
-          <Button size="lg" asChild className="w-full sm:w-auto bg-[#25D366] text-white hover:bg-[#1eb857] transition-transform duration-300 hover:scale-105">
+          <Button size="lg" asChild className="w-full sm:w-auto bg-[hsl(160_68%_55%)] text-white hover:bg-[hsl(160_68%_45%)] transition-transform duration-300 hover:scale-105">
             <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
               {t('common:applyNow')}
