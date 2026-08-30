@@ -715,7 +715,7 @@ export default function TeamAppointmentsPage() {
                 className="grid border-b border-border/30 min-h-[64px]"
                 style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
               >
-                <div className="py-1 px-3 text-xs text-muted-foreground border-r border-border/40 flex items-start pt-2 shrink-0 select-none">
+                <div className="py-1 px-3 text-xs text-muted-foreground border-e border-border/40 flex items-start pt-2 shrink-0 select-none">
                   {new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
                     hour: "numeric",
                     hour12: true,
@@ -728,7 +728,8 @@ export default function TeamAppointmentsPage() {
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "min-w-0 border-r border-border/30 last:border-r-0 p-0.5 relative transition-colors cursor-pointer",
+                        "min-w-0 border-e border-border/30 p-0.5 relative transition-colors cursor-pointer",
+
                         isToday(day) && "bg-violet-50/25",
                         isOver ? "bg-violet-100/70" : "hover:bg-muted/20",
                       )}
