@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import AnimatedCounter from "./AnimatedCounter";
 
 /**
@@ -74,8 +75,11 @@ const Hero = () => {
           <Button size="lg" asChild className="w-full sm:w-auto bg-brand-strong text-brand-foreground hover:bg-brand-strong/90 transition-transform duration-300 hover:scale-105">
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
-          <Button size="lg" variant="outline" asChild className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 transition-transform duration-300 hover:scale-105">
-            <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer">{t('common:applyNow')}</a>
+          <Button size="lg" asChild className="w-full sm:w-auto bg-[#25D366] text-white hover:bg-[#1eb857] transition-transform duration-300 hover:scale-105">
+            <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              {t('common:applyNow')}
+            </a>
           </Button>
         </div>
 
