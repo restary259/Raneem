@@ -208,14 +208,43 @@
     
     <!-- PWA Loading Script -->
     <script>
-      // Hide loading screen immediately when app is ready
-      window.addEventListener('load', () => {
-        const loading = document.getElementById('pwa-loading');
-        if (loading) {
+      // Hide the splash as soon as React paints its first content — waiting for
+      // `load` kept it up while lazy images were still streaming on slow networks.
+      (function () {
+        var hidden = false;
+        function hideLoading() {
+          if (hidden) return;
+          var loading = document.getElementById('pwa-loading');
+          if (!loading) return;
+          hidden = true;
           loading.classList.add('hidden');
-          setTimeout(() => loading.remove(), 500);
+          setTimeout(function () { loading.remove(); }, 500);
         }
-      });
+
+        function watchRoot() {
+          var root = document.getElementById('root');
+          if (!root) return;
+          if (root.childElementCount > 0) { hideLoading(); return; }
+          var observer = new MutationObserver(function () {
+            if (root.childElementCount > 0) {
+              observer.disconnect();
+              hideLoading();
+            }
+          });
+          observer.observe(root, { childList: true });
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', watchRoot);
+        } else {
+          watchRoot();
+        }
+
+        // Fallbacks: never leave the splash stuck.
+        window.addEventListener('load', hideLoading);
+        setTimeout(hideLoading, 10000);
+      })();
+
       
       // Handle PWA display mode
       if (window.matchMedia('(display-mode: standalone)').matches) {
