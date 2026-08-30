@@ -647,7 +647,7 @@ export default function TeamAppointmentsPage() {
                   onDragLeave={() => setDragOverSlot(null)}
                   onClick={() => openNew(currentDate, hour)}
                 >
-                  <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-r border-border/40 select-none">
+                  <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-e border-border/40 select-none">
                     {new Date().setHours(hour, 0, 0, 0) &&
                       new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
                         hour: "numeric",
@@ -789,7 +789,7 @@ export default function TeamAppointmentsPage() {
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "min-h-[100px] border-r border-border/30 last:border-r-0 p-1.5 transition-colors cursor-pointer",
+                        "min-h-[100px] border-e border-border/30 p-1.5 transition-colors cursor-pointer",
                         !isSameMonth(day, currentDate) && "opacity-35 bg-muted/10",
                         isToday(day) && "bg-violet-50/40",
                         isOver ? "bg-violet-100/50" : "hover:bg-muted/15",
