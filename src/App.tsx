@@ -171,7 +171,10 @@ const App = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, i18n } = useTranslation("dashboard");
+  // Only the i18n instance is used here; keeping the default ("common") namespace
+  // avoids pulling dashboard.json into the boot path of every public route.
+  const { i18n } = useTranslation();
+
 
   // Global safety net for unhandled promise rejections
   useEffect(() => {
