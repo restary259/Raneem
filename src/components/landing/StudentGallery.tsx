@@ -63,8 +63,9 @@ const StudentGallery = () => {
           alt={student.name ? `${student.name} — Darb student now studying in ${student.destination}` : `Darb student success story in ${student.destination}`}
           className="absolute inset-0 h-full w-full object-cover md:group-hover:scale-110 transition-transform duration-500"
           style={{ objectPosition: student.focus || '50% 40%' }}
-          loading={index === 0 ? "eager" : "lazy"}
-          fetchPriority={index === 0 ? "high" : "low"}
+          loading={inCarousel && index === 0 ? "eager" : "lazy"}
+          fetchPriority={inCarousel && index === 0 ? "high" : "low"}
+
           decoding="async"
         />
 
