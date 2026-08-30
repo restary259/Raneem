@@ -680,12 +680,13 @@ export default function TeamAppointmentsPage() {
               className="sticky top-0 z-10 bg-background border-b border-border grid"
               style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
             >
-              <div className="border-r border-border/40" />
+              <div className="border-e border-border/40" />
               {weekDays.map((day) => (
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    "py-2 px-1 text-center border-r border-border/40 last:border-r-0",
+                    "py-2 px-1 text-center border-e border-border/40",
+
                     isToday(day) && "bg-violet-50/50",
                   )}
                 >
