@@ -276,15 +276,23 @@ Deno.serve(async (req) => {
     // never from the client body, so an applicant can't set their own discount.
     let cleanReferralDiscount = 0;
     if (validatedReferrerId) {
-      const { data: settings } = await supabaseAdmin
+      const { data: settings, error: settingsErr } = await supabaseAdmin
         .from("platform_settings")
-        .select("referral_discount_amount")
+        .select("student_refer_friend_discount, student_refer_family_discount")
         .maybeSingle();
-      const configuredDiscount = Number(settings?.referral_discount_amount ?? 0);
+      if (settingsErr) {
+        console.error("referral discount lookup failed:", settingsErr.message);
+      }
+      const configuredDiscount = Number(
+        (normalizedReferralType === "family"
+          ? settings?.student_refer_family_discount
+          : settings?.student_refer_friend_discount) ?? 0,
+      );
       cleanReferralDiscount = Number.isFinite(configuredDiscount)
         ? Math.min(Math.max(configuredDiscount, 0), MAX_REFERRAL_DISCOUNT)
         : 0;
     }
+
 
     // Duplicate phone detection — only block if the existing case comes from the same
     // public submission flows (contact_form or apply_page). If the blocking case was
