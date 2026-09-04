@@ -54,7 +54,7 @@ const HomepageExperience = () => {
   const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
 
   return (
-    <>
+    <div className="homepage-experience">
       <section className="relative flex min-h-[660px] items-end overflow-hidden bg-primary pb-12 pt-28 text-primary-foreground sm:min-h-[720px] md:min-h-[calc(100svh-4rem)] md:items-center md:py-20">
         <img
           src="/lovable-uploads/hero-poster.webp"
@@ -342,7 +342,7 @@ const HomepageExperience = () => {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 
