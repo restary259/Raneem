@@ -34,7 +34,7 @@ const journeyIcons = [SearchCheck, FileCheck2, Plane, GraduationCap];
 const SectionIntro = ({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) => (
   <div className="max-w-2xl">
     <p className="text-xs font-bold uppercase text-brand-strong">{eyebrow}</p>
-    <h2 className="mt-3 font-editorial text-3xl font-bold leading-tight text-primary sm:text-4xl lg:text-5xl">
+    <h2 className="mt-3 text-3xl font-bold leading-tight text-primary sm:text-4xl lg:text-5xl">
       {title}
     </h2>
     <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">{body}</p>
@@ -72,7 +72,7 @@ const HomepageExperience = () => {
               <span className="h-2 w-2 rounded-full bg-trust" aria-hidden="true" />
               {t("homepage.hero.eyebrow")}
             </p>
-            <h1 className="max-w-4xl font-editorial text-4xl font-bold leading-[1.12] text-primary-foreground sm:text-6xl lg:text-7xl">
+            <h1 className="max-w-4xl text-4xl font-bold leading-[1.12] text-primary-foreground sm:text-6xl lg:text-7xl">
               {t("homepage.hero.title")}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-primary-foreground/85 sm:text-xl">
@@ -103,15 +103,15 @@ const HomepageExperience = () => {
       <section aria-label={t("homepage.proof.aria")} className="border-b border-border bg-background">
         <div className="container grid grid-cols-2 divide-x divide-border py-7 rtl:divide-x-reverse md:grid-cols-3 md:py-9">
           <div className="px-3 text-center md:px-8">
-            <p className="font-editorial text-3xl font-bold text-primary sm:text-4xl">16+</p>
+            <p className="text-3xl font-bold text-primary sm:text-4xl">16+</p>
             <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.students")}</p>
           </div>
           <div className="px-3 text-center md:px-8">
-            <p className="font-editorial text-3xl font-bold text-primary sm:text-4xl">6+</p>
+            <p className="text-3xl font-bold text-primary sm:text-4xl">6+</p>
             <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.partners")}</p>
           </div>
           <div className="col-span-2 mt-6 border-t border-border px-3 pt-6 text-center md:col-span-1 md:mt-0 md:border-s md:border-t-0 md:pt-0">
-            <p className="font-editorial text-2xl font-bold text-primary sm:text-3xl">{t("homepage.proof.arabicTitle")}</p>
+            <p className="text-2xl font-bold text-primary sm:text-3xl">{t("homepage.proof.arabicTitle")}</p>
             <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.arabicBody")}</p>
           </div>
         </div>
@@ -143,7 +143,7 @@ const HomepageExperience = () => {
         <div className="container grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div>
             <p className="text-xs font-bold uppercase text-brand">{t("homepage.students.eyebrow")}</p>
-            <h2 className="mt-3 max-w-xl font-editorial text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+            <h2 className="mt-3 max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
               {t("homepage.students.title")}
             </h2>
             <p className="mt-5 max-w-xl text-base leading-8 text-primary-foreground/70 sm:text-lg">
@@ -158,10 +158,10 @@ const HomepageExperience = () => {
           </div>
 
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
-            {students.slice(0, 6).map((student, index) => (
+            {students.map((student, index) => (
               <figure
                 key={`${student.image}-${index}`}
-                className={`relative aspect-[3/4] w-[70vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-md sm:w-auto sm:max-w-none ${index >= 3 ? "hidden sm:block" : ""} ${index % 3 === 1 ? "sm:translate-y-8" : ""}`}
+                className={`relative aspect-[3/4] w-[70vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-md sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""}`}
               >
                 <img
                   src={student.image}
@@ -169,6 +169,7 @@ const HomepageExperience = () => {
                   loading="lazy"
                   decoding="async"
                   className="h-full w-full object-cover"
+                  style={{ objectPosition: student.focus || "50% 40%" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent" />
                 <figcaption className="absolute inset-x-0 bottom-0 p-4">
@@ -225,7 +226,7 @@ const HomepageExperience = () => {
               className="aspect-[4/5] w-full object-cover"
             />
             <div className="absolute bottom-0 end-0 max-w-[85%] bg-primary p-5 text-primary-foreground sm:p-7">
-              <p className="font-editorial text-xl font-bold sm:text-2xl">{t("homepage.scope.imageCaption")}</p>
+              <p className="text-xl font-bold sm:text-2xl">{t("homepage.scope.imageCaption")}</p>
             </div>
           </div>
           <div>
@@ -262,7 +263,7 @@ const HomepageExperience = () => {
           <div className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3">
             {["assess", "breakdown", "payment"].map((key, index) => (
               <div key={key} className="bg-background p-6">
-                <p className="font-editorial text-3xl font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p>
+                <p className="text-3xl font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p>
                 <h3 className="mt-5 font-bold text-primary">{t(`homepage.pricing.${key}Title`)}</h3>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">{t(`homepage.pricing.${key}Body`)}</p>
               </div>
@@ -297,7 +298,7 @@ const HomepageExperience = () => {
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/90 to-transparent p-6 pt-24 text-primary-foreground">
               <ShieldCheck className="h-7 w-7 text-brand" />
-              <p className="mt-3 font-editorial text-2xl font-bold">{t("homepage.parents.caption")}</p>
+              <p className="mt-3 text-2xl font-bold">{t("homepage.parents.caption")}</p>
             </div>
           </div>
         </div>
@@ -330,7 +331,7 @@ const HomepageExperience = () => {
         <div className="absolute inset-y-0 end-0 w-1/3 border-s border-primary-foreground/10" aria-hidden="true" />
         <div className="container relative">
           <p className="text-xs font-bold uppercase text-brand">{t("homepage.final.eyebrow")}</p>
-          <h2 className="mt-4 max-w-3xl font-editorial text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">{t("homepage.final.title")}</h2>
+          <h2 className="mt-4 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">{t("homepage.final.title")}</h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-primary-foreground/70">{t("homepage.final.body")}</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" variant="accent" className="h-14 rounded-md px-7 text-base">

@@ -26,7 +26,7 @@ const Header = () => {
                 {...{ fetchpriority: "high" }}
               />
               <span 
-                className="hidden flex-shrink-0 whitespace-nowrap font-editorial font-bold text-primary sm:block"
+                className="hidden flex-shrink-0 whitespace-nowrap font-bold text-primary sm:block"
                 style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
               >
                 {t('loader.brand')}

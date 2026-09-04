@@ -209,17 +209,6 @@
     @apply bg-background text-foreground;
   }
 
-  .font-editorial {
-    letter-spacing: 0;
-  }
-
-  [dir="ltr"] .homepage-experience {
-    font-family: "Work Sans", "Noto Sans", sans-serif;
-  }
-
-  [dir="rtl"] .homepage-experience {
-    font-family: "IBM Plex Sans Arabic", "Tajawal", sans-serif;
-  }
 }
 
 /* Smooth scrolling */
