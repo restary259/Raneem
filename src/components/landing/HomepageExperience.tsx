@@ -78,8 +78,9 @@ const HomepageExperience = () => {
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
   const steps = t("homepage.journey.steps", { returnObjects: true }) as TextItem[];
   const students = t("studentGallery.students", { returnObjects: true }) as GalleryStudent[];
-  const topStudents = students.slice(0, 5);
-  const bottomStudents = students.slice(5);
+  const half = Math.ceil(students.length / 2);
+  const topStudents = students.slice(0, half);
+  const bottomStudents = students.slice(half);
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
   const parentPoints = t("homepage.parents.points", { returnObjects: true }) as string[];
@@ -231,20 +232,8 @@ const HomepageExperience = () => {
       </section>
 
       <section className="bg-background py-20 sm:py-28">
-        <div className="container grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          <div className="relative overflow-hidden rounded-md">
-            <img
-              src="/lovable-uploads/9b8b98bb-5c79-46fa-b62e-d761109d355f.webp"
-              alt={t("homepage.scope.imageAlt")}
-              loading="lazy"
-              decoding="async"
-              className="aspect-[4/5] w-full object-cover"
-            />
-            <div className="absolute bottom-0 end-0 max-w-[85%] bg-primary p-5 text-primary-foreground sm:p-7">
-              <p className="text-xl font-bold sm:text-2xl">{t("homepage.scope.imageCaption")}</p>
-            </div>
-          </div>
-          <div>
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
             <SectionIntro
               eyebrow={t("homepage.scope.eyebrow")}
               title={t("homepage.scope.title")}
@@ -288,8 +277,8 @@ const HomepageExperience = () => {
       </section>
 
       <section className="bg-background py-20 sm:py-28">
-        <div className="container grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20">
-          <div>
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
             <SectionIntro
               eyebrow={t("homepage.parents.eyebrow")}
               title={t("homepage.parents.title")}
@@ -302,19 +291,6 @@ const HomepageExperience = () => {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="relative overflow-hidden rounded-md">
-            <img
-              src="/lovable-uploads/d34cf9ba-952a-4971-b654-9fabf29dd95d.webp"
-              alt={t("homepage.parents.imageAlt")}
-              loading="lazy"
-              decoding="async"
-              className="aspect-[4/5] w-full object-cover"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/90 to-transparent p-6 pt-24 text-primary-foreground">
-              <ShieldCheck className="h-7 w-7 text-brand" />
-              <p className="mt-3 text-2xl font-bold">{t("homepage.parents.caption")}</p>
-            </div>
           </div>
         </div>
       </section>
