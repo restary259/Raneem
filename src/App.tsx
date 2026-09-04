@@ -418,7 +418,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-        {!isApplyPage && !isDashboardPath && idleReady && (
+        {!isApplyPage && location.pathname !== "/" && !isDashboardPath && idleReady && (
           <Suspense fallback={null}>
             <ChatWidget />
             <PWAInstaller />

@@ -55,7 +55,7 @@ const HomepageExperience = () => {
 
   return (
     <div className="homepage-experience">
-      <section className="relative flex min-h-[660px] items-end overflow-hidden bg-primary pb-12 pt-28 text-primary-foreground sm:min-h-[720px] md:min-h-[calc(100svh-4rem)] md:items-center md:py-20">
+      <section className="relative flex min-h-[660px] items-end overflow-hidden bg-primary pb-12 pt-28 text-primary-foreground sm:min-h-[720px] md:h-[calc(100svh-4rem)] md:min-h-[640px] md:max-h-[800px] md:items-center md:py-20">
         <img
           src="/lovable-uploads/hero-poster.webp"
           alt={t("homepage.hero.imageAlt")}
