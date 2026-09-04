@@ -26,7 +26,7 @@ const WhatsAppFloatingButton = () => {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t('whatsapp.floatingLabel', 'Chat with us on WhatsApp')}
-      className="fixed z-40 bottom-24 md:bottom-6 right-4 md:right-6 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+      className="fixed z-40 bottom-24 md:bottom-6 end-0 w-11 h-11 rounded-s-lg bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
