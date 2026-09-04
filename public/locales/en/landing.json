@@ -205,5 +205,158 @@
     "trustBadge3": "Support Until Enrollment",
     "exploreWebsite": "Explore Our Website",
     "whileYouWait": "In the meantime, browse our services and discover more"
+  },
+  "homepage": {
+    "hero": {
+      "eyebrow": "Darb Study International · Arabic support at every step",
+      "title": "Your clear path to studying in Germany",
+      "subtitle": "We assess your profile, help you choose a suitable route, and guide you through applications, visa preparation, accommodation, and arrival.",
+      "imageAlt": "A German university setting representing the beginning of a study journey",
+      "reassurance": "Start with a profile assessment — no online payment"
+    },
+    "actions": {
+      "apply": "Assess your profile and apply",
+      "whatsapp": "Talk to us on WhatsApp",
+      "checkProfile": "Could this path fit you?",
+      "startAssessment": "Start your profile assessment"
+    },
+    "proof": {
+      "aria": "Verified facts about Darb",
+      "students": "students supported by Darb",
+      "partners": "educational partners",
+      "arabicTitle": "Personal Arabic guidance",
+      "arabicBody": "Clear explanations and a person following your file"
+    },
+    "services": {
+      "eyebrow": "What does Darb do?",
+      "title": "One journey, with a team that knows every step",
+      "body": "Instead of navigating requirements and institutions alone, you receive an organized route and clear guidance shaped around your profile.",
+      "items": [
+        {
+          "title": "Academic assessment",
+          "description": "We understand your background and goals, then clarify suitable routes before you begin."
+        },
+        {
+          "title": "Application preparation",
+          "description": "We review documents and coordinate applications to suitable educational institutions."
+        },
+        {
+          "title": "Visa-file preparation",
+          "description": "We organize requirements and prepare you for the appointment; the authority makes the decision."
+        },
+        {
+          "title": "Accommodation support",
+          "description": "We help with the search and coordination with available accommodation providers."
+        },
+        {
+          "title": "Guidance through arrival",
+          "description": "We support your preparation and help you understand the first steps of settling in."
+        }
+      ]
+    },
+    "students": {
+      "eyebrow": "Darb students",
+      "title": "Real people whose journey began with one step",
+      "body": "These are Darb students in Germany. Every profile is different, but the beginning is the same: understand the situation and build a clear next step.",
+      "namedAlt": "{{name}}, a Darb student in {{destination}}",
+      "alt": "A Darb student during their study journey in {{destination}}"
+    },
+    "journey": {
+      "eyebrow": "How does it work?",
+      "title": "From the first conversation to the first day of study",
+      "body": "Four clear stages give you and your family a realistic view of what happens and when.",
+      "steps": [
+        {
+          "title": "Consultation and assessment",
+          "description": "We learn about your qualifications and goals, then clarify the options that fit your profile."
+        },
+        {
+          "title": "Preparation and application",
+          "description": "We organize and review documents, then follow applications with educational institutions."
+        },
+        {
+          "title": "Visa and preparation",
+          "description": "We prepare the requirements list and support your travel and accommodation planning."
+        },
+        {
+          "title": "Arrival and follow-up",
+          "description": "We guide your first steps and remain a point of support during the transition."
+        }
+      ]
+    },
+    "scope": {
+      "eyebrow": "Clarity before commitment",
+      "title": "We know our role—and explain every institution’s role",
+      "body": "Darb professionally guides you and prepares your file, but does not replace the university or embassy and never promises a decision it cannot control.",
+      "imageAlt": "Students inside a university building in Germany",
+      "imageCaption": "Professional guidance; official decisions remain with the responsible authorities",
+      "includedTitle": "What Darb handles",
+      "included": [
+        "Consultation and route selection",
+        "Application-file organization and review",
+        "Application follow-up and updates",
+        "Visa and travel preparation"
+      ],
+      "decisionsTitle": "What official bodies decide",
+      "decisions": [
+        "The university or school decides admission",
+        "The embassy and authorities decide the visa",
+        "The insurer is responsible for the coverage contract",
+        "The housing provider is responsible for the lease and deposit"
+      ]
+    },
+    "pricing": {
+      "eyebrow": "What will it cost?",
+      "title": "Clear pricing after we understand what you need",
+      "body": "We do not show a generic price that may not reflect your case. We first define the required service, then provide a written breakdown before any commitment.",
+      "assessTitle": "Needs assessment",
+      "assessBody": "We identify the services your profile needs without adding what it does not.",
+      "breakdownTitle": "Written breakdown",
+      "breakdownBody": "You receive a clear explanation of fees, inclusions, and third-party costs.",
+      "paymentTitle": "In-person payment",
+      "paymentBody": "No payment is processed online; agreements and payment take place at the Darb office."
+    },
+    "parents": {
+      "eyebrow": "For students and parents",
+      "title": "Trust begins with knowing what is happening in the file",
+      "body": "Studying abroad is a major family decision. We give students and families understandable follow-up, not vague promises.",
+      "points": [
+        "A person follows the file and explains the next stage",
+        "Clear breakdown of required documents and fees",
+        "Arabic-language support for important questions",
+        "Organized follow-up from assessment through arrival"
+      ],
+      "imageAlt": "Darb students outside a university building in Germany",
+      "caption": "Every step understood, every decision explained"
+    },
+    "faq": {
+      "eyebrow": "Before you begin",
+      "title": "Important questions deserve clear answers",
+      "body": "Short answers to help you choose your next step with confidence.",
+      "all": "View all frequently asked questions",
+      "items": [
+        {
+          "title": "Does Darb guarantee admission or a visa?",
+          "description": "No. Darb professionally prepares and follows the file, while admissions and visa decisions remain solely with universities and the responsible authorities."
+        },
+        {
+          "title": "How much does the service cost?",
+          "description": "It depends on your profile and the services required. After assessment, you receive a clear written breakdown before any commitment."
+        },
+        {
+          "title": "Do I pay through the website?",
+          "description": "No. The website processes no payments. Agreements, signatures, and payment take place in person at the Darb office."
+        },
+        {
+          "title": "What is the first step?",
+          "description": "Request a profile assessment or contact us on WhatsApp. We will explain what information is needed and the most suitable next step."
+        }
+      ]
+    },
+    "final": {
+      "eyebrow": "Your next step",
+      "title": "You do not need to know the whole route today",
+      "body": "Send your details so we can understand your profile, or speak with us directly on WhatsApp. We will help you identify the right first step."
+    }
   }
 }
