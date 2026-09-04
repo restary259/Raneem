@@ -30,6 +30,7 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: ['"IBM Plex Sans Arabic"', '"Tajawal"', '"Noto Sans Arabic"', '"Noto Sans"', 'sans-serif'],
+				editorial: ['"Instrument Serif"', '"Noto Naskh Arabic"', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -58,6 +59,8 @@ export default {
 					strong: 'hsl(var(--brand-strong))',
 					foreground: 'hsl(var(--brand-foreground))'
 				},
+				trust: 'hsl(var(--trust))',
+				'editorial-paper': 'hsl(var(--editorial-paper))',
 				accent: {
 					DEFAULT: 'hsl(var(--accent))',
 					foreground: 'hsl(var(--accent-foreground))'

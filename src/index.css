@@ -26,6 +26,8 @@
     --brand-foreground: 0 0% 100%;
     /* AA-safe orange: >=4.5:1 with white text and on white backgrounds */
     --brand-strong: 24.6 95% 38%;
+    --trust: 160.7 72.3% 31.4%;
+    --editorial-paper: 210 20% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -205,6 +207,10 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  .font-editorial {
+    letter-spacing: 0;
   }
 }
 
