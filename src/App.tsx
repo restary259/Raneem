@@ -418,9 +418,13 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-        {!isApplyPage && location.pathname !== "/" && !isDashboardPath && idleReady && (
+        {!isApplyPage && !isDashboardPath && idleReady && (
           <Suspense fallback={null}>
             <WhatsAppFloatingButton />
+          </Suspense>
+        )}
+        {!isApplyPage && location.pathname !== "/" && !isDashboardPath && idleReady && (
+          <Suspense fallback={null}>
             <PWAInstaller />
             <CookieBanner />
           </Suspense>
