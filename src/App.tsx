@@ -28,7 +28,7 @@ const EducationalDestinationsPage = lazy(() => import("./pages/EducationalDestin
 const StudentAuthPage = lazy(() => import("./pages/StudentAuthPage"));
 
 // Non-critical global widgets — deferred off the critical path
-const ChatWidget = lazy(() => import("./components/chat/ChatWidget"));
+const WhatsAppFloatingButton = lazy(() => import("./components/common/WhatsAppFloatingButton"));
 const PWAInstaller = lazy(() => import("./components/common/PWAInstaller"));
 const OfflineIndicator = lazy(() => import("./components/common/OfflineIndicator"));
 const InAppBrowserBanner = lazy(() => import("./components/common/InAppBrowserBanner"));
@@ -420,7 +420,7 @@ const App = () => {
         </Suspense>
         {!isApplyPage && location.pathname !== "/" && !isDashboardPath && idleReady && (
           <Suspense fallback={null}>
-            <ChatWidget />
+            <WhatsAppFloatingButton />
             <PWAInstaller />
             <CookieBanner />
           </Suspense>

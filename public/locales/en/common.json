@@ -38,6 +38,9 @@
     }
   },
   "applyNow": "Apply Now",
+  "whatsapp": {
+    "floatingLabel": "Chat with us on WhatsApp"
+  },
   "footer": {
     "quote": "Darb — your path to studying in Germany",
     "instagram": "Instagram",
