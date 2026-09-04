@@ -277,8 +277,8 @@ const HomepageExperience = () => {
       </section>
 
       <section className="bg-background py-20 sm:py-28">
-        <div className="container grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20">
-          <div>
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
             <SectionIntro
               eyebrow={t("homepage.parents.eyebrow")}
               title={t("homepage.parents.title")}
@@ -291,19 +291,6 @@ const HomepageExperience = () => {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="relative overflow-hidden rounded-md">
-            <img
-              src="/lovable-uploads/d34cf9ba-952a-4971-b654-9fabf29dd95d.webp"
-              alt={t("homepage.parents.imageAlt")}
-              loading="lazy"
-              decoding="async"
-              className="aspect-[4/5] w-full object-cover"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/90 to-transparent p-6 pt-24 text-primary-foreground">
-              <ShieldCheck className="h-7 w-7 text-brand" />
-              <p className="mt-3 text-2xl font-bold">{t("homepage.parents.caption")}</p>
-            </div>
           </div>
         </div>
       </section>
