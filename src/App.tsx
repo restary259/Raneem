@@ -420,7 +420,7 @@ const App = () => {
         </Suspense>
         {!isApplyPage && location.pathname !== "/" && !isDashboardPath && idleReady && (
           <Suspense fallback={null}>
-            <ChatWidget />
+            <WhatsAppFloatingButton />
             <PWAInstaller />
             <CookieBanner />
           </Suspense>
