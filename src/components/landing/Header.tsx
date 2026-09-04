@@ -12,7 +12,7 @@ const Header = () => {
   const { dir } = useDirection();
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" dir={dir}>
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 shadow-sm backdrop-blur" dir={dir}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo Side */}
@@ -21,12 +21,12 @@ const Header = () => {
               <img 
                 src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" 
                 alt={t('loader.brand')} 
-                className="h-8 md:h-10 w-auto object-contain flex-shrink-0"
+                className="h-8 w-auto flex-shrink-0 object-contain md:h-10"
                 style={{ minWidth: '2rem' }}
                 {...{ fetchpriority: "high" }}
               />
               <span 
-                className="font-bold text-gray-900 hidden sm:block flex-shrink-0 whitespace-nowrap"
+                className="hidden flex-shrink-0 whitespace-nowrap font-editorial font-bold text-primary sm:block"
                 style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
               >
                 {t('loader.brand')}
@@ -44,7 +44,7 @@ const Header = () => {
             <LanguageSwitcher />
             <Link 
               to="/student-auth" 
-              className="bg-brand-strong text-brand-foreground px-4 md:px-5 py-2 md:py-2.5 rounded-full font-medium hover:bg-brand-strong/90 transition-colors text-sm md:text-base whitespace-nowrap flex-shrink-0"
+              className="flex-shrink-0 whitespace-nowrap rounded-md bg-brand-strong px-4 py-2 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-strong/90 md:px-5 md:py-2.5"
             >
               {t('nav.studentLogin')}
             </Link>

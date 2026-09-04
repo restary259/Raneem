@@ -72,7 +72,8 @@
     "majorsAria": "Browse Majors",
     "advisorAria": "AI Advisor",
     "accountAria": "Student Account",
-    "mainNav": "Main Navigation"
+    "mainNav": "Main Navigation",
+    "whatsapp": "WhatsApp"
   },
   "chat": {
     "title": "Darb AI Assistant",
@@ -315,8 +316,8 @@
     "bookingError": "Failed to initiate booking. Please try again."
   },
   "seo": {
-    "indexTitle": "Darb | Studying in Germany for Arab Students",
-    "indexDesc": "Darb guides you step by step to studying in Germany: Bagrut recognition, university admission, visa and housing, with full Arabic-language support.",
+    "indexTitle": "Darb | Study in Germany with Arabic Support",
+    "indexDesc": "Darb guides Arab students toward studying in Germany, from profile assessment and applications to visa preparation, housing, and arrival.",
     "aboutTitle": "About Us — Darb Study Pathways",
     "aboutDesc": "Learn about the Darb team, our vision, and our values in guiding students to study in Germany.",
     "servicesTitle": "Our Services — Darb Study in Germany",

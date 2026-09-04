@@ -1,12 +1,7 @@
 
 import Header from "@/components/landing/Header";
-import Hero from "@/components/landing/Hero";
-import AboutCustom from "@/components/landing/AboutCustom";
-import WhyChooseUs from "@/components/landing/WhyChooseUs";
 import Footer from "@/components/landing/Footer";
-import PartnersMarquee from "@/components/landing/PartnersMarquee";
-import StudentJourney from "@/components/landing/StudentJourney";
-import StudentGallery from "@/components/landing/StudentGallery";
+import HomepageExperience from "@/components/landing/HomepageExperience";
 import SEOHead from "@/components/common/SEOHead";
 import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";
@@ -19,12 +14,7 @@ const Index = () => {
       <SEOHead title={t('seo.indexTitle')} description={t('seo.indexDesc')} />
       <Header />
       <main className="flex-grow">
-        <Hero />
-        <PartnersMarquee />
-        <StudentGallery />
-        <AboutCustom />
-        <StudentJourney />
-        <WhyChooseUs />
+        <HomepageExperience />
       </main>
       <Footer />
     </div>

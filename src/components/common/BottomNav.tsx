@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Bot, User, FileText } from 'lucide-react';
+import { Home, Search, Bot, User, FileText, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
+import { WHATSAPP_PHONE_URL } from '@/lib/contactConfig';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -19,6 +20,28 @@ const BottomNav = () => {
 
   if (!isMobile || isInfluencerApply || isDashboard) {
     return null;
+  }
+
+  if (location.pathname === '/') {
+    return (
+      <nav
+        role="navigation"
+        aria-label={t('bottomNav.mainNav')}
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-primary-foreground/10 bg-primary px-3 py-2 pb-safe md:hidden"
+        dir={dir}
+      >
+        <div className="mx-auto grid max-w-md grid-cols-2 gap-2">
+          <Link to="/apply" className="flex h-11 items-center justify-center gap-2 rounded-md bg-brand-strong px-4 text-sm font-bold text-brand-foreground">
+            <FileText className="h-4 w-4" />
+            {t('bottomNav.apply')}
+          </Link>
+          <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer" className="flex h-11 items-center justify-center gap-2 rounded-md border border-primary-foreground/25 px-4 text-sm font-bold text-primary-foreground">
+            <MessageCircle className="h-4 w-4" />
+            {t('bottomNav.whatsapp', 'WhatsApp')}
+          </a>
+        </div>
+      </nav>
+    );
   }
 
   const isActive = (path: string) => {
