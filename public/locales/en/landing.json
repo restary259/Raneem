@@ -74,22 +74,16 @@
     "subtitle": "See the inspiring success stories of our students at top universities worldwide.",
     "students": [
       {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.webp",
+        "focus": "50% 30%"
+      },
+      {
         "name": "Naseem Khatib",
         "destination": "Germany",
         "image": "/lovable-uploads/a8e524a4-fa5d-42ce-a497-f991a17b39bb.webp",
         "focus": "50% 55%"
-      },
-      {
-        "name": "Adam Diab",
-        "destination": "Germany",
-        "image": "/lovable-uploads/ad84e26f-4c17-4fd2-8998-8bb99eb98062.webp",
-        "focus": "50% 75%"
-      },
-      {
-        "name": "Adam Diab",
-        "destination": "Germany",
-        "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.webp",
-        "focus": "50% 40%"
       },
       {
         "name": "Yazan Dawahde",
@@ -100,8 +94,8 @@
       {
         "name": "",
         "destination": "Germany",
-        "image": "/lovable-uploads/d34cf9ba-952a-4971-b654-9fabf29dd95d.webp",
-        "focus": "50% 60%"
+        "image": "/lovable-uploads/4e4eb6e1-6d93-4bc9-82da-7a11c8b7b2d4.webp",
+        "focus": "50% 70%"
       },
       {
         "name": "",
@@ -110,22 +104,10 @@
         "focus": "50% 60%"
       },
       {
-        "name": "",
+        "name": "Adam Diab",
         "destination": "Germany",
-        "image": "/lovable-uploads/9b8b98bb-5c79-46fa-b62e-d761109d355f.webp",
-        "focus": "50% 65%"
-      },
-      {
-        "name": "",
-        "destination": "Germany",
-        "image": "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.webp",
-        "focus": "50% 30%"
-      },
-      {
-        "name": "",
-        "destination": "Germany",
-        "image": "/lovable-uploads/4e4eb6e1-6d93-4bc9-82da-7a11c8b7b2d4.webp",
-        "focus": "50% 70%"
+        "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.webp",
+        "focus": "50% 40%"
       },
       {
         "name": "",
@@ -134,16 +116,22 @@
         "focus": "50% 55%"
       },
       {
-        "name": "",
+        "name": "Adam Diab",
         "destination": "Germany",
-        "image": "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.webp",
-        "focus": "50% 50%"
+        "image": "/lovable-uploads/ad84e26f-4c17-4fd2-8998-8bb99eb98062.webp",
+        "focus": "50% 75%"
       },
       {
         "name": "",
         "destination": "Germany",
-        "image": "/lovable-uploads/b88bf7f9-2a94-4112-8c34-6b83771686e7.webp",
-        "focus": "50% 75%"
+        "image": "/lovable-uploads/d34cf9ba-952a-4971-b654-9fabf29dd95d.webp",
+        "focus": "50% 60%"
+      },
+      {
+        "name": "",
+        "destination": "Germany",
+        "image": "/lovable-uploads/9b8b98bb-5c79-46fa-b62e-d761109d355f.webp",
+        "focus": "50% 65%"
       }
     ]
   },

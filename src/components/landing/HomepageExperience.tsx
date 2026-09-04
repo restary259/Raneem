@@ -41,6 +41,36 @@ const SectionIntro = ({ eyebrow, title, body }: { eyebrow: string; title: string
   </div>
 );
 
+const StudentFigure = ({
+  student,
+  index,
+  t,
+  className,
+}: {
+  student: GalleryStudent;
+  index: number;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  className?: string;
+}) => (
+  <figure
+    className={`relative aspect-[3/4] w-[70vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-md sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""} ${className ?? ""}`}
+  >
+    <img
+      src={student.image}
+      alt={student.name ? t("homepage.students.namedAlt", { name: student.name, destination: student.destination }) : t("homepage.students.alt", { destination: student.destination })}
+      loading="lazy"
+      decoding="async"
+      className="h-full w-full object-cover"
+      style={{ objectPosition: student.focus || "50% 40%" }}
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent" />
+    <figcaption className="absolute inset-x-0 bottom-0 p-4">
+      {student.name ? <p className="font-bold">{student.name}</p> : null}
+      <p className="text-sm text-primary-foreground/70">{student.destination}</p>
+    </figcaption>
+  </figure>
+);
+
 const HomepageExperience = () => {
   const { t } = useTranslation("landing");
   const { isRtl } = useDirection();
@@ -48,6 +78,8 @@ const HomepageExperience = () => {
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
   const steps = t("homepage.journey.steps", { returnObjects: true }) as TextItem[];
   const students = t("studentGallery.students", { returnObjects: true }) as GalleryStudent[];
+  const topStudents = students.slice(0, 5);
+  const bottomStudents = students.slice(5);
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
   const parentPoints = t("homepage.parents.points", { returnObjects: true }) as string[];
@@ -158,25 +190,8 @@ const HomepageExperience = () => {
           </div>
 
           <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
-            {students.map((student, index) => (
-              <figure
-                key={`${student.image}-${index}`}
-                className={`relative aspect-[3/4] w-[70vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-md sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""}`}
-              >
-                <img
-                  src={student.image}
-                  alt={student.name ? t("homepage.students.namedAlt", { name: student.name, destination: student.destination }) : t("homepage.students.alt", { destination: student.destination })}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-full w-full object-cover"
-                  style={{ objectPosition: student.focus || "50% 40%" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent" />
-                <figcaption className="absolute inset-x-0 bottom-0 p-4">
-                  {student.name ? <p className="font-bold">{student.name}</p> : null}
-                  <p className="text-sm text-primary-foreground/70">{student.destination}</p>
-                </figcaption>
-              </figure>
+            {topStudents.map((student, index) => (
+              <StudentFigure key={`${student.image}-${index}`} student={student} index={index} t={t} />
             ))}
           </div>
         </div>
@@ -324,6 +339,14 @@ const HomepageExperience = () => {
               <Link to="/faq">{t("homepage.faq.all")}<Arrow className="h-4 w-4" /></Link>
             </Button>
           </div>
+        </div>
+      </section>
+
+      <section aria-label={t("homepage.students.title")} className="border-t border-border bg-background py-14 sm:py-16">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-6 lg:px-8">
+          {bottomStudents.map((student, index) => (
+            <StudentFigure key={`${student.image}-bottom-${index}`} student={student} index={index} t={t} className="!w-[60vw] !max-w-[240px] sm:!w-[240px]" />
+          ))}
         </div>
       </section>
 
