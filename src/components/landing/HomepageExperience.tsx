@@ -327,7 +327,6 @@ const HomepageExperience = () => {
       </section>
 
       <section className="relative overflow-hidden bg-primary py-20 text-primary-foreground sm:py-28">
-        <div className="absolute inset-y-0 end-0 w-1/3 border-s border-primary-foreground/10" aria-hidden="true" />
         <div className="container relative">
           <p className="text-xs font-bold uppercase text-brand">{t("homepage.final.eyebrow")}</p>
           <h2 className="mt-4 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">{t("homepage.final.title")}</h2>
