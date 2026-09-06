@@ -42,8 +42,15 @@ const majors = majorsData.flatMap((c) =>
     summaryEN: m.detailedDescriptionEN ?? m.descriptionEN ?? null,
     durationAR: m.duration ?? null,
     durationEN: m.durationEN ?? null,
-    languageAR: m.languageRequirements ?? null,
-    languageEN: m.languageRequirementsEN ?? null,
+    // Prefer the structured, verified language profile when a major has one.
+    languageAR: m.languageProfile
+      ? `لغة التدريس: ${m.languageProfile.teachingLanguage}. المستوى المطلوب: ${m.languageProfile.requiredLevel}. الشهادات المقبولة: ${m.languageProfile.acceptedCertificates.join("، ")}.${(m.languageProfile.exceptions ?? []).length ? ` استثناءات: ${m.languageProfile.exceptions.join("؛ ")}.` : ""} الدراسة بالإنجليزية: ${m.languageProfile.englishOption}.`
+      : (m.languageRequirements ?? null),
+    languageEN: m.languageProfile
+      ? `Teaching language: ${m.languageProfile.teachingLanguageEN}. Required level: ${m.languageProfile.requiredLevelEN}. Accepted certificates: ${m.languageProfile.acceptedCertificatesEN.join(", ")}.${(m.languageProfile.exceptionsEN ?? []).length ? ` Exceptions: ${m.languageProfile.exceptionsEN.join("; ")}.` : ""} English-taught option: ${m.languageProfile.englishOptionEN}.`
+      : (m.languageRequirementsEN ?? null),
+    admissionAR: m.glance ? `${m.glance.degree} · ${m.glance.admissionMode} · ${m.glance.applicationChannel}` : null,
+    admissionEN: m.glance ? `${m.glance.degreeEN} · ${m.glance.admissionModeEN} · ${m.glance.applicationChannelEN}` : null,
     backgroundAR: m.requiredBackground ?? m.requirements ?? null,
     backgroundEN: m.requiredBackgroundEN ?? m.requirementsEN ?? null,
     careersAR: m.careerOpportunities ?? m.careerProspects ?? null,
