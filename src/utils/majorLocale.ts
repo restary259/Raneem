@@ -35,3 +35,37 @@ export const getLocalizedMajor = (major: SubMajor, lang: string): LocalizedMajor
 export const getLocalizedCategoryTitle = (title: string, titleEN: string | undefined, lang: string): string => {
   return lang === 'en' ? (titleEN || title) : title;
 };
+
+export interface LocalizedTiers {
+  official: string[];
+  universitySpecific: string[];
+  darbGuidance: string[];
+}
+
+/** Picks the AR or EN side of the tiered requirements. Returns null when absent. */
+export const getLocalizedTiers = (major: SubMajor, lang: string): LocalizedTiers | null => {
+  const t = major.requirementTiers;
+  if (!t) return null;
+  const en = lang === 'en';
+  return {
+    official: en ? t.officialEN : t.official,
+    universitySpecific: en ? t.universitySpecificEN : t.universitySpecific,
+    darbGuidance: en ? t.darbGuidanceEN : t.darbGuidance,
+  };
+};
+
+export interface LocalizedSource {
+  title: string;
+  url: string;
+  verifies: string;
+  checked: string;
+}
+
+/** Localized source list (AR falls back to EN when no Arabic copy exists). */
+export const getLocalizedSources = (major: SubMajor, lang: string): LocalizedSource[] =>
+  (major.sources ?? []).map((s) => ({
+    title: lang === 'en' ? s.title : (s.titleAR || s.title),
+    url: s.url,
+    verifies: lang === 'en' ? s.verifies : (s.verifiesAR || s.verifies),
+    checked: s.checked,
+  }));
