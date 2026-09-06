@@ -2,9 +2,25 @@ import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
+import { useModalPointerEventsGuard } from "@/components/ui/useModalPointerEventsGuard";
 import { buttonVariants } from "@/components/ui/button"
 
-const AlertDialog = AlertDialogPrimitive.Root
+const AlertDialog: React.FC<React.ComponentProps<typeof AlertDialogPrimitive.Root>> = ({ open, defaultOpen, onOpenChange, ...props }) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(!!defaultOpen);
+  const isControlled = open !== undefined;
+  useModalPointerEventsGuard(isControlled ? open : uncontrolledOpen);
+  return (
+    <AlertDialogPrimitive.Root
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={(v) => {
+        if (!isControlled) setUncontrolledOpen(v);
+        onOpenChange?.(v);
+      }}
+      {...props}
+    />
+  );
+};
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
