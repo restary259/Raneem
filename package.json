@@ -102,5 +102,9 @@
     "typescript-eslint": "^8.11.0",
     "vite": "^5.0.8",
     "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "@radix-ui/react-dialog": "1.1.23",
+    "@radix-ui/react-dismissable-layer": "1.1.19"
   }
 }
