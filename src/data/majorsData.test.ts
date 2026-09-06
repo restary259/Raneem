@@ -97,3 +97,21 @@ describe('Health & Medical Sciences fact-check metadata', () => {
     });
   }
 });
+
+describe('Health & Medical Sciences glance + language profile', () => {
+  const health = majorsData.find((c) => c.id === 'health-medical')!;
+  for (const m of health.subMajors) {
+    it(`${m.id}: has glance and structured language profile with AR/EN parity`, () => {
+      expect(m.glance).toBeTruthy();
+      const l = m.languageProfile!;
+      expect(l).toBeTruthy();
+      expect(l.acceptedCertificates.length).toBe(l.acceptedCertificatesEN.length);
+      expect(l.acceptedCertificates.length).toBeGreaterThan(0);
+      expect((l.exceptions ?? []).length).toBe((l.exceptionsEN ?? []).length);
+      for (const k of ['teachingLanguage', 'requiredLevel', 'englishOption'] as const) {
+        expect(l[k].length).toBeGreaterThan(0);
+        expect(l[`${k}EN`].length).toBeGreaterThan(0);
+      }
+    });
+  }
+});
