@@ -277,7 +277,21 @@
     "modalSources": "Sources",
     "sourceVerifies": "Verifies",
     "sourceChecked": "checked {{date}}",
-    "sourcesDisclaimer": "Admission requirements change by intake. Always confirm on the university's page before applying."
+    "sourcesDisclaimer": "Admission requirements change by intake. Always confirm on the university's page before applying.",
+    "glanceDegree": "Degree",
+    "glanceAdmission": "Admission",
+    "glanceChannel": "Apply via",
+    "glanceLanguage": "Language",
+    "sectionCanIGetIn": "Can I get in?",
+    "sectionLanguage": "Language requirements",
+    "sectionHowToApply": "How to apply",
+    "sectionAbout": "What you study & who it suits",
+    "langTeaching": "Teaching language",
+    "langLevel": "Required German level",
+    "langCertificates": "Accepted certificates",
+    "langExceptions": "University-specific exceptions",
+    "langEnglish": "English-taught option",
+    "langSourceNote": "Certificate list per the KMK/HRK RO-DT framework; levels confirmed on the university pages listed under Sources."
   },
   "contact": {
     "submitting": "Sending... ⏳",
