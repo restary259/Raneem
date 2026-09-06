@@ -69,10 +69,12 @@ describe('majorsData Arabic/English parity', () => {
   }
 });
 
-describe('Health & Medical Sciences fact-check metadata', () => {
-  const health = majorsData.find((c) => c.id === 'health-medical')!;
+const VERIFIED_CATEGORIES = ['health-medical', 'engineering-technology'] as const;
 
-  it('every health major carries lastVerified, tiers and direct sources', () => {
+describe.each(VERIFIED_CATEGORIES)('%s fact-check metadata', (categoryId) => {
+  const health = majorsData.find((c) => c.id === categoryId)!;
+
+  it('every major carries lastVerified, tiers and direct sources', () => {
     for (const m of health.subMajors) {
       expect(m.lastVerified, `${m.id} lastVerified`).toMatch(/^\d{4}-\d{2}$/);
       expect(m.requirementTiers, `${m.id} tiers`).toBeTruthy();
@@ -98,8 +100,8 @@ describe('Health & Medical Sciences fact-check metadata', () => {
   }
 });
 
-describe('Health & Medical Sciences glance + language profile', () => {
-  const health = majorsData.find((c) => c.id === 'health-medical')!;
+describe.each(VERIFIED_CATEGORIES)('%s glance + language profile', (categoryId) => {
+  const health = majorsData.find((c) => c.id === categoryId)!;
   for (const m of health.subMajors) {
     it(`${m.id}: has glance and structured language profile with AR/EN parity`, () => {
       expect(m.glance).toBeTruthy();
