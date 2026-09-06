@@ -68,3 +68,32 @@ describe('majorsData Arabic/English parity', () => {
     });
   }
 });
+
+describe('Health & Medical Sciences fact-check metadata', () => {
+  const health = majorsData.find((c) => c.id === 'health-medical')!;
+
+  it('every health major carries lastVerified, tiers and direct sources', () => {
+    for (const m of health.subMajors) {
+      expect(m.lastVerified, `${m.id} lastVerified`).toMatch(/^\d{4}-\d{2}$/);
+      expect(m.requirementTiers, `${m.id} tiers`).toBeTruthy();
+      expect(m.sources?.length ?? 0, `${m.id} sources`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  for (const m of health.subMajors) {
+    it(`${m.id}: tier arrays keep AR/EN in sync and sources are direct https pages`, () => {
+      const t = m.requirementTiers!;
+      expect(t.official.length).toBe(t.officialEN.length);
+      expect(t.universitySpecific.length).toBe(t.universitySpecificEN.length);
+      expect(t.darbGuidance.length).toBe(t.darbGuidanceEN.length);
+      expect(t.official.length).toBeGreaterThan(0);
+      for (const s of m.sources!) {
+        const u = new URL(s.url);
+        expect(u.protocol).toBe('https:');
+        expect(u.pathname.length, `${s.url} must not be a homepage`).toBeGreaterThan(1);
+        expect(s.checked).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(s.verifies.length).toBeGreaterThan(10);
+      }
+    });
+  }
+});
