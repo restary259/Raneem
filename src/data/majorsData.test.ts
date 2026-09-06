@@ -69,7 +69,7 @@ describe('majorsData Arabic/English parity', () => {
   }
 });
 
-const VERIFIED_CATEGORIES = ['health-medical', 'engineering-technology'] as const;
+const VERIFIED_CATEGORIES = ['health-medical', 'engineering-technology', 'law'] as const;
 
 describe.each(VERIFIED_CATEGORIES)('%s fact-check metadata', (categoryId) => {
   const health = majorsData.find((c) => c.id === categoryId)!;
