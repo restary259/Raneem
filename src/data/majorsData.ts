@@ -28,6 +28,26 @@ export interface RequirementTiers {
   darbGuidanceEN: string[];
 }
 
+
+/** Compact "at a glance" facts shown at the top of the major card. AR/EN pairs. */
+export interface MajorGlance {
+  degree: string; degreeEN: string;
+  admissionMode: string; admissionModeEN: string;
+  applicationChannel: string; applicationChannelEN: string;
+}
+
+/**
+ * Structured language requirements (replaces the free-text paragraph when
+ * present). Only verified facts; `exceptions` are university-specific.
+ */
+export interface LanguageProfile {
+  teachingLanguage: string; teachingLanguageEN: string;
+  requiredLevel: string; requiredLevelEN: string;
+  acceptedCertificates: string[]; acceptedCertificatesEN: string[];
+  exceptions?: string[]; exceptionsEN?: string[];
+  englishOption: string; englishOptionEN: string;
+}
+
 export interface SubMajor {
   id: string;
   nameAR: string;
@@ -59,6 +79,10 @@ export interface SubMajor {
   sources?: MajorSource[];
   /** "YYYY-MM" of the last fact-check pass. Shown as "Last verified". */
   lastVerified?: string;
+  /** Top-of-card fact chips. */
+  glance?: MajorGlance;
+  /** Structured language block (preferred over `languageRequirements`). */
+  languageProfile?: LanguageProfile;
 }
 
 export interface MajorCategory {
@@ -230,6 +254,24 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Public Health',
         nameDE: 'Public Health / Gesundheitswissenschaften',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'B.A. / B.Sc.',
+          degreeEN: 'B.A. / B.Sc.',
+          admissionMode: 'مفتوح (بريمن، بيليفيلد) أو اختبار كفاءة (بايرويت)',
+          admissionModeEN: 'Open (Bremen, Bielefeld) or aptitude test (Bayreuth)',
+          applicationChannel: 'uni-assist (لحاملي الشهادات الأجنبية) أو الجامعة مباشرة',
+          applicationChannelEN: 'uni-assist (foreign certificates) or the university directly',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية',
+          teachingLanguageEN: 'German',
+          requiredLevel: 'C1 — تحدده كل جامعة',
+          requiredLevelEN: 'C1 — set by each university',
+          acceptedCertificates: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          acceptedCertificatesEN: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          englishOption: 'لا يوجد بكالوريوس بالإنجليزية تم التحقق منه (خيارات إنجليزية في الماجستير فقط)',
+          englishOptionEN: 'No verified English-taught bachelor (English options at master level only)',
+        },
         description: 'تعرف على تخصص الصحة العامة وتحسين صحة المجتمعات',
         descriptionEN: 'Learn about public health and improving community wellness',
         duration: 'عادةً 6 فصول دراسية (بكالوريوس B.A./B.Sc.)',
@@ -284,6 +326,26 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Bioinformatics',
         nameDE: 'Bioinformatik',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'B.Sc.',
+          degreeEN: 'B.Sc.',
+          admissionMode: 'بلا قيود (سارلاند) / NC محلي (توبنغن) / اختبار كفاءة (LMU/TUM)',
+          admissionModeEN: 'No restriction (Saarland) / local NC (Tübingen) / aptitude test (LMU/TUM)',
+          applicationChannel: 'uni-assist (لحاملي الشهادات الأجنبية) أو الجامعة مباشرة',
+          applicationChannelEN: 'uni-assist (foreign certificates) or the university directly',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية',
+          teachingLanguageEN: 'German',
+          requiredLevel: 'C1 — تحدده كل جامعة',
+          requiredLevelEN: 'C1 — set by each university',
+          acceptedCertificates: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          acceptedCertificatesEN: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          englishOption: 'لا يوجد بكالوريوس بالإنجليزية تم التحقق منه (خيارات إنجليزية في الماجستير فقط)',
+          englishOptionEN: 'No verified English-taught bachelor (English options at master level only)',
+          exceptions: ['جامعة سارلاند: DSH-2 على مستوى الجامعة'],
+          exceptionsEN: ['Saarland University: DSH-2 university-wide'],
+        },
         description: 'اكتشف دور الحوسبة في تحليل البيانات الحيوية والجينومية',
         descriptionEN: 'Discover the role of computing in analyzing biological and genomic data',
         duration: 'عادةً 6 فصول دراسية (بكالوريوس B.Sc.)',
@@ -341,6 +403,24 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Biomedical Engineering',
         nameDE: 'Medizintechnik / Biomedizinische Technik',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'B.Sc. / B.Eng.',
+          degreeEN: 'B.Sc. / B.Eng.',
+          admissionMode: 'مفتوح (FAU إرلانغن، TU إلمناو)',
+          admissionModeEN: 'Open (FAU Erlangen, TU Ilmenau)',
+          applicationChannel: 'uni-assist (لحاملي الشهادات الأجنبية) أو الجامعة مباشرة',
+          applicationChannelEN: 'uni-assist (foreign certificates) or the university directly',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية',
+          teachingLanguageEN: 'German',
+          requiredLevel: 'C1 — تحدده كل جامعة',
+          requiredLevelEN: 'C1 — set by each university',
+          acceptedCertificates: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          acceptedCertificatesEN: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          englishOption: 'لا بكالوريوس بالإنجليزية تم التحقق منه؛ ماجستير بالإنجليزية متاح (مثل M.Sc. في RWTH Aachen)',
+          englishOptionEN: 'No verified English-taught bachelor; English master available (e.g. M.Sc. at RWTH Aachen)',
+        },
         description: 'اجمع بين الطب والهندسة لتحسين الرعاية الصحية',
         descriptionEN: 'Combine medicine and engineering to improve healthcare',
         duration: '6-7 فصول دراسية حسب الجامعة (B.Sc./B.Eng.)',
@@ -397,6 +477,24 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Pharmacy',
         nameDE: 'Pharmazie (Staatsexamen)',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'Staatsexamen (امتحان الدولة)',
+          degreeEN: 'Staatsexamen (state examination)',
+          admissionMode: 'مقيّد (NC) — توزيع مركزي',
+          admissionModeEN: 'Restricted (NC) — central allocation',
+          applicationChannel: 'Hochschulstart + حصة دولية خاصة بكل جامعة (مثل Charité عبر uni-assist)',
+          applicationChannelEN: 'Hochschulstart + a per-university international quota (e.g. Charité via uni-assist)',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية فقط',
+          teachingLanguageEN: 'German only',
+          requiredLevel: 'C1 — DSH-2 أو TestDaF 4×4 في كل الجامعات التي فُحصت؛ لا استثناء B2',
+          requiredLevelEN: 'C1 — DSH-2 or TestDaF 4×4 at every university checked; no B2 exception',
+          acceptedCertificates: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          acceptedCertificatesEN: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          englishOption: 'لا يوجد بكالوريوس بالإنجليزية تم التحقق منه (خيارات إنجليزية في الماجستير فقط)',
+          englishOptionEN: 'No verified English-taught bachelor (English options at master level only)',
+        },
         description: 'اكتشف علم الأدوية وتطوير العلاجات الدوائية',
         descriptionEN: 'Discover pharmacology and pharmaceutical treatment development',
         duration: '8 فصول جامعية (4 سنوات) + تدريب Famulatur 8 أسابيع + سنة عملية 12 شهراً قبل رخصة المزاولة (AAppO §1)',
@@ -459,6 +557,24 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Dentistry',
         nameDE: 'Zahnmedizin (Staatsexamen)',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'Staatsexamen (امتحان الدولة)',
+          degreeEN: 'Staatsexamen (state examination)',
+          admissionMode: 'مقيّد (NC) — توزيع مركزي',
+          admissionModeEN: 'Restricted (NC) — central allocation',
+          applicationChannel: 'Hochschulstart + حصة دولية خاصة بكل جامعة (مثل Charité عبر uni-assist)',
+          applicationChannelEN: 'Hochschulstart + a per-university international quota (e.g. Charité via uni-assist)',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية (الجامعات الحكومية)',
+          teachingLanguageEN: 'German (public universities)',
+          requiredLevel: 'C1 — DSH-2 أو TestDaF 4×4 (LMU، هايدلبرغ، Charité، فرانكفورت، مونستر)',
+          requiredLevelEN: 'C1 — DSH-2 or TestDaF 4×4 (LMU, Heidelberg, Charité, Frankfurt, Münster)',
+          acceptedCertificates: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          acceptedCertificatesEN: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          englishOption: 'لا يوجد برنامج حكومي بالإنجليزية',
+          englishOptionEN: 'No English-taught public program',
+        },
         description: 'تعرف على مسار طب الأسنان والصحة الفموية',
         descriptionEN: 'Learn about the dentistry pathway and oral health',
         duration: '10 فصول دراسية (5 سنوات و5,000 ساعة وفق ZApprO §2) + امتحانات الدولة؛ كثير من الجامعات تذكر 5.5 سنوات إجمالاً',
@@ -529,6 +645,24 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Medicine',
         nameDE: 'Humanmedizin (Staatsexamen)',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'Staatsexamen (امتحان الدولة)',
+          degreeEN: 'Staatsexamen (state examination)',
+          admissionMode: 'مقيّد (NC) — توزيع مركزي',
+          admissionModeEN: 'Restricted (NC) — central allocation',
+          applicationChannel: 'Hochschulstart + حصة دولية خاصة بكل جامعة (مثل Charité عبر uni-assist)',
+          applicationChannelEN: 'Hochschulstart + a per-university international quota (e.g. Charité via uni-assist)',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية (جميع الجامعات الحكومية)',
+          teachingLanguageEN: 'German (all public universities)',
+          requiredLevel: 'C1 — DSH-2 أو TestDaF 4×4؛ لا استثناء B2 في الجامعات التي فُحصت',
+          requiredLevelEN: 'C1 — DSH-2 or TestDaF 4×4; no B2 exception at the universities checked',
+          acceptedCertificates: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          acceptedCertificatesEN: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          englishOption: 'لا يوجد برنامج حكومي بالإنجليزية. UMCH هامبورغ (خاص) يمنح شهادة UMFST الرومانية وليس Staatsexamen',
+          englishOptionEN: 'No English-taught public program. UMCH Hamburg (private) awards the Romanian UMFST degree, not the Staatsexamen',
+        },
         description: 'اكتشف مجال الطب وفرصه المستقبلية في الرعاية الصحية',
         descriptionEN: 'Discover the field of medicine and its future healthcare opportunities',
         duration: '6 سنوات و3 أشهر (12.5 فصلاً) شاملة السنة العملية (PJ) وفق ÄApprO §1',
@@ -602,6 +736,24 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Physiotherapy',
         nameDE: 'Physiotherapie',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'تدريب مهني (3 سنوات) أو B.Sc.',
+          degreeEN: 'Ausbildung (3 years) or B.Sc.',
+          admissionMode: 'معهد/جامعة يختار بنفسه؛ لا NC مركزي',
+          admissionModeEN: 'Selected by each school/university; no central NC',
+          applicationChannel: 'المعهد أو الجامعة مباشرة',
+          applicationChannelEN: 'The school or university directly',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية',
+          teachingLanguageEN: 'German',
+          requiredLevel: 'عادةً B2 للتدريب المهني (يحدده كل معهد) / C1 للبكالوريوس',
+          requiredLevelEN: 'Typically B2 for Ausbildung (set by each school) / C1 for the bachelor',
+          acceptedCertificates: ['B2 (معهد التدريب)', 'DSH-2 / TestDaF 4×4 (بكالوريوس)'],
+          acceptedCertificatesEN: ['B2 (training school)', 'DSH-2 / TestDaF 4×4 (bachelor)'],
+          englishOption: 'لا يوجد بكالوريوس بالإنجليزية تم التحقق منه (خيارات إنجليزية في الماجستير فقط)',
+          englishOptionEN: 'No verified English-taught bachelor (English options at master level only)',
+        },
         description: 'تعرف على تخصص العلاج الطبيعي وإعادة التأهيل',
         descriptionEN: 'Learn about physiotherapy and rehabilitation',
         duration: '3 سنوات تدريب مهني (Ausbildung، MPhG §9) أو بكالوريوس جامعي مدمج بالتدريب (عادةً 7-8 فصول)',
@@ -659,6 +811,26 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Veterinary Medicine',
         nameDE: 'Tiermedizin (Staatsexamen)',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'Staatsexamen (امتحان الدولة)',
+          degreeEN: 'Staatsexamen (state examination)',
+          admissionMode: 'مقيّد (NC) — توزيع مركزي، 5 مواقع فقط',
+          admissionModeEN: 'Restricted (NC) — central allocation, 5 locations only',
+          applicationChannel: 'Hochschulstart (حصة المتقدمين الأجانب ~5%)؛ لا تقديم مباشر للكلية',
+          applicationChannelEN: 'Hochschulstart (foreign-applicant quota ~5%); no direct faculty application',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية',
+          teachingLanguageEN: 'German',
+          requiredLevel: 'يختلف: C1 (LMU) إلى DSH-1 / B2 عند التقديم (JLU غيسن)',
+          requiredLevelEN: 'Varies: C1 (LMU) to DSH-1 / B2 at application (JLU Giessen)',
+          acceptedCertificates: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          acceptedCertificatesEN: ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'],
+          englishOption: 'لا يوجد بكالوريوس بالإنجليزية تم التحقق منه (خيارات إنجليزية في الماجستير فقط)',
+          englishOptionEN: 'No verified English-taught bachelor (English options at master level only)',
+          exceptions: ['LMU ميونخ: DSH-2 (C1)', 'JLU غيسن: DSH-1 / TestDaF 14 نقطة / B2 عند التقديم مع إثبات أعلى لاحقاً'],
+          exceptionsEN: ['LMU Munich: DSH-2 (C1)', 'JLU Giessen: DSH-1 / TestDaF 14 points / B2 at application, higher proof later'],
+        },
         description: 'تعرف على دراسة الطب البيطري ورعاية الحيوانات',
         descriptionEN: 'Learn about veterinary medicine and animal care',
         duration: '11 فصلاً دراسياً (5 سنوات و6 أشهر) وفق TAppV §1',
@@ -724,6 +896,24 @@ export const majorsData: MajorCategory[] = [
         nameEN: 'Nursing',
         nameDE: 'Pflegefachfrau/-mann · Pflege (B.Sc.)',
         lastVerified: HEALTH_LAST_VERIFIED,
+        glance: {
+          degree: 'تدريب مهني (3 سنوات) أو B.Sc. (7–8 فصول)',
+          degreeEN: 'Ausbildung (3 years) or B.Sc. (7–8 semesters)',
+          admissionMode: 'معهد/مستشفى أو الجامعة يختار بنفسه',
+          admissionModeEN: 'Selected by each school/hospital or university',
+          applicationChannel: 'المستشفى/المعهد مباشرة، أو الجامعة (uni-assist للشهادات الأجنبية)',
+          applicationChannelEN: 'The hospital/school directly, or the university (uni-assist for foreign certificates)',
+        },
+        languageProfile: {
+          teachingLanguage: 'الألمانية',
+          teachingLanguageEN: 'German',
+          requiredLevel: 'عادةً B2 للتدريب المهني (يحدده كل معهد) / C1 للبكالوريوس',
+          requiredLevelEN: 'Typically B2 for Ausbildung (set by each school) / C1 for the bachelor',
+          acceptedCertificates: ['B2 (معهد التدريب)', 'DSH-2 / TestDaF 4×4 (بكالوريوس)'],
+          acceptedCertificatesEN: ['B2 (training school)', 'DSH-2 / TestDaF 4×4 (bachelor)'],
+          englishOption: 'لا يوجد بكالوريوس بالإنجليزية تم التحقق منه (خيارات إنجليزية في الماجستير فقط)',
+          englishOptionEN: 'No verified English-taught bachelor (English options at master level only)',
+        },
         description: 'تعرف على مسار التمريض ومستقبله في الرعاية الصحية',
         descriptionEN: 'Learn about the nursing pathway and its future in healthcare',
         duration: '3 سنوات تدريب مهني (Ausbildung، PflBG) أو بكالوريوس جامعي مؤهِّل مباشرةً من 7-8 فصول (PflBG الجزء 3)',

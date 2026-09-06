@@ -69,3 +69,41 @@ export const getLocalizedSources = (major: SubMajor, lang: string): LocalizedSou
     verifies: lang === 'en' ? s.verifies : (s.verifiesAR || s.verifies),
     checked: s.checked,
   }));
+
+export interface LocalizedGlance {
+  degree: string;
+  admissionMode: string;
+  applicationChannel: string;
+}
+
+export const getLocalizedGlance = (major: SubMajor, lang: string): LocalizedGlance | null => {
+  const g = major.glance;
+  if (!g) return null;
+  const en = lang === 'en';
+  return {
+    degree: en ? g.degreeEN : g.degree,
+    admissionMode: en ? g.admissionModeEN : g.admissionMode,
+    applicationChannel: en ? g.applicationChannelEN : g.applicationChannel,
+  };
+};
+
+export interface LocalizedLanguageProfile {
+  teachingLanguage: string;
+  requiredLevel: string;
+  acceptedCertificates: string[];
+  exceptions: string[];
+  englishOption: string;
+}
+
+export const getLocalizedLanguageProfile = (major: SubMajor, lang: string): LocalizedLanguageProfile | null => {
+  const l = major.languageProfile;
+  if (!l) return null;
+  const en = lang === 'en';
+  return {
+    teachingLanguage: en ? l.teachingLanguageEN : l.teachingLanguage,
+    requiredLevel: en ? l.requiredLevelEN : l.requiredLevel,
+    acceptedCertificates: en ? l.acceptedCertificatesEN : l.acceptedCertificates,
+    exceptions: (en ? l.exceptionsEN : l.exceptions) ?? [],
+    englishOption: en ? l.englishOptionEN : l.englishOption,
+  };
+};

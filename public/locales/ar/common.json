@@ -277,7 +277,22 @@
     "modalSources": "المصادر",
     "sourceVerifies": "يثبت",
     "sourceChecked": "تم التحقق {{date}}",
-    "sourcesDisclaimer": "شروط القبول تتغير مع كل دورة قبول. تحقق دائماً من صفحة الجامعة قبل التقديم."
+    "sourcesDisclaimer": "شروط القبول تتغير مع كل دورة قبول. تحقق دائماً من صفحة الجامعة قبل التقديم.",
+    "glanceDegree": "الشهادة",
+    "glanceAdmission": "القبول",
+    "glanceChannel": "التقديم عبر",
+    "glanceLanguage": "اللغة",
+    "sectionCanIGetIn": "هل أستطيع القبول؟",
+    "sectionLanguage": "متطلبات اللغة",
+    "sectionHowToApply": "كيف أقدّم؟",
+    "sectionAbout": "ماذا تدرس ولمن يناسب",
+    "langTeaching": "لغة التدريس",
+    "langLevel": "مستوى الألمانية المطلوب",
+    "langCertificates": "الشهادات المقبولة",
+    "langExceptions": "استثناءات خاصة بجامعات",
+    "langEnglish": "خيار الدراسة بالإنجليزية",
+    "langSourceNote": "قائمة الشهادات وفق إطار RO-DT (KMK/HRK)؛ المستويات مؤكدة من صفحات الجامعات المذكورة في المصادر.",
+    "modalDuration": "المدة"
   },
   "contact": {
     "submitting": "جار الإرسال... ⏳",
