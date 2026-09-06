@@ -291,7 +291,8 @@
     "langCertificates": "Accepted certificates",
     "langExceptions": "University-specific exceptions",
     "langEnglish": "English-taught option",
-    "langSourceNote": "Certificate list per the KMK/HRK RO-DT framework; levels confirmed on the university pages listed under Sources."
+    "langSourceNote": "Certificate list per the KMK/HRK RO-DT framework; levels confirmed on the university pages listed under Sources.",
+    "modalDuration": "Duration"
   },
   "contact": {
     "submitting": "Sending... ⏳",
