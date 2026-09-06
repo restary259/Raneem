@@ -48,8 +48,8 @@ describe('majorsData Arabic/English parity', () => {
     describe(`${category}/${major.id}`, () => {
       for (const [arKey, enKey] of AR_EN_PAIRS) {
         it(`${arKey} / ${enKey} stay in sync`, () => {
-          const ar = major[arKey];
-          const en = major[enKey];
+          const ar = major[arKey] as string | undefined;
+          const en = major[enKey] as string | undefined;
           // Both present or both absent.
           expect(Boolean(ar), `${arKey} present without ${enKey}`).toBe(Boolean(en));
           if (!ar || !en) return;
