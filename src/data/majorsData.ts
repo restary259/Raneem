@@ -1,4 +1,33 @@
 
+/**
+ * A single authoritative source backing a factual claim on a major.
+ * `url` must point at the exact page/document (never a homepage).
+ */
+export interface MajorSource {
+  title: string;
+  titleAR?: string;
+  url: string;
+  /** What claim this source verifies (EN). */
+  verifies: string;
+  verifiesAR?: string;
+  /** ISO date the source was last checked, e.g. "2026-09-06". */
+  checked: string;
+}
+
+/**
+ * Admission requirements split by authority tier so a student can tell a
+ * legal/nationwide rule apart from a university-specific one and from Darb's
+ * own practical advice. AR/EN arrays must have the same length.
+ */
+export interface RequirementTiers {
+  official: string[];
+  officialEN: string[];
+  universitySpecific: string[];
+  universitySpecificEN: string[];
+  darbGuidance: string[];
+  darbGuidanceEN: string[];
+}
+
 export interface SubMajor {
   id: string;
   nameAR: string;
@@ -24,6 +53,12 @@ export interface SubMajor {
   careerOpportunitiesEN?: string;
   arab48Notes?: string;
   arab48NotesEN?: string;
+  /** Tiered admission requirements (official / university-specific / Darb). */
+  requirementTiers?: RequirementTiers;
+  /** Direct authoritative sources for the claims above. */
+  sources?: MajorSource[];
+  /** "YYYY-MM" of the last fact-check pass. Shown as "Last verified". */
+  lastVerified?: string;
 }
 
 export interface MajorCategory {
