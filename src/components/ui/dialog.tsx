@@ -3,8 +3,24 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useModalPointerEventsGuard } from "@/components/ui/useModalPointerEventsGuard";
 
-const Dialog = DialogPrimitive.Root;
+const Dialog: React.FC<React.ComponentProps<typeof DialogPrimitive.Root>> = ({ open, defaultOpen, onOpenChange, ...props }) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(!!defaultOpen);
+  const isControlled = open !== undefined;
+  useModalPointerEventsGuard(isControlled ? open : uncontrolledOpen);
+  return (
+    <DialogPrimitive.Root
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={(v) => {
+        if (!isControlled) setUncontrolledOpen(v);
+        onOpenChange?.(v);
+      }}
+      {...props}
+    />
+  );
+};
 
 const DialogTrigger = DialogPrimitive.Trigger;
 

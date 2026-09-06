@@ -4,8 +4,24 @@ import { X } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { useModalPointerEventsGuard } from "@/components/ui/useModalPointerEventsGuard";
 
-const Sheet = SheetPrimitive.Root
+const Sheet: React.FC<React.ComponentProps<typeof SheetPrimitive.Root>> = ({ open, defaultOpen, onOpenChange, ...props }) => {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(!!defaultOpen);
+  const isControlled = open !== undefined;
+  useModalPointerEventsGuard(isControlled ? open : uncontrolledOpen);
+  return (
+    <SheetPrimitive.Root
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={(v) => {
+        if (!isControlled) setUncontrolledOpen(v);
+        onOpenChange?.(v);
+      }}
+      {...props}
+    />
+  );
+};
 
 const SheetTrigger = SheetPrimitive.Trigger
 

@@ -1,3 +1,4 @@
+import type { TablesUpdate } from "@/integrations/supabase/types";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -738,7 +739,7 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
        */
       const name = fullNameOf(values);
 
-      const casePatch: Record<string, unknown> = {
+      const casePatch: TablesUpdate<"cases"> = {
         phone_number: values.student_phone?.trim() || null,
 
         city: values.city?.trim() || null,
