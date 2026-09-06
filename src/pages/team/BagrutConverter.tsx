@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calculator, RotateCcw, Info, AlertTriangle, TrendingUp } from "lucide-react";
+import { Calculator, RotateCcw, Info, AlertTriangle, TrendingUp, Copy } from "lucide-react";
 
 import { BAGRUT_MAX, BAGRUT_PASS_MARK, bagrutToGermanGrade } from "@/utils/gradeConverter";
 
@@ -59,6 +60,17 @@ function getAverageColor(avg: number): string {
   if (avg >= 65) return "text-blue-600";
   if (avg >= NMIN) return "text-amber-600";
   return "text-destructive";
+}
+
+/** Per-row grade feedback — same bands as getAverageColor. */
+function getGradeBandClasses(grade: string): string {
+  if (!grade) return "";
+  const g = parseInt(grade, 10);
+  if (Number.isNaN(g)) return "";
+  if (g >= 80) return "border-emerald-300 text-emerald-700 font-semibold";
+  if (g >= 65) return "border-blue-300 text-blue-700 font-semibold";
+  if (g >= NMIN) return "border-amber-300 text-amber-700 font-semibold";
+  return "border-destructive/50 text-destructive font-semibold";
 }
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
@@ -136,107 +148,26 @@ export default function BagrutConverter() {
   const filledCount = subjects.filter((s) => s.units && s.grade).length;
   const germanLabel = results && results.passed ? getGermanLabel(results.germanGrade) : null;
 
-  return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-5">
-      {/* ── Page header ── */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">{t("nav.bagrut", "أداة البجروت")}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {t("team.bagrut.subtitle", "تحويل درجات البجروت إلى درجات الجامعات الألمانية")}
-        </p>
-      </div>
+  const handleCopyResult = async () => {
+    if (!results) return;
+    const avgLabel = isAr ? "معدل البجروت" : "Bagrut average";
+    const germanTxt = results.passed
+      ? `${results.germanGrade} (${germanLabel ? (isAr ? germanLabel.arabic : germanLabel.label) : ""})`
+      : tr("gpaCalculator.notConvertible", "Below the passing mark — not convertible");
+    const germanLbl = isAr ? "النظام الألماني" : "German grade";
+    const summary = `${avgLabel}: ${results.average}/100 — ${germanLbl}: ${germanTxt}`;
+    try {
+      await navigator.clipboard.writeText(summary);
+      toast.success(t("team.bagrut.copied", "Result copied to clipboard"));
+    } catch {
+      toast.error(t("team.bagrut.copyFailed", "Could not copy — please copy manually"));
+    }
+  };
 
-      {/* ── Progress pill ── (always visible) */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-300"
-            style={{ width: `${(filledCount / ALL_SUBJECT_IDS.length) * 100}%` }}
-          />
-        </div>
-        <span className="tabular-nums shrink-0">
-          {filledCount}/{ALL_SUBJECT_IDS.length} {isAr ? "مادة" : "subjects"}
-        </span>
-      </div>
-
-      {/* ── Subject groups ── */}
-      <div className="space-y-4">
-        {SUBJECT_GROUPS.map((group) => (
-          <Card key={group.label} className="overflow-hidden">
-            {/* Group header */}
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b bg-muted/30">
-              <span className={`w-2 h-2 rounded-full ${group.dot} shrink-0`} />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                {isAr ? group.label : group.labelEn}
-              </span>
-            </div>
-
-            <CardContent className="p-0">
-              {group.subjects.map((subjectId, idx) => {
-                const globalIdx = ALL_SUBJECT_IDS.indexOf(subjectId);
-                const subject = subjects[globalIdx];
-                const isLast = idx === group.subjects.length - 1;
-                return (
-                  <div key={subjectId}>
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      {/* Label — no truncation, allow wrapping */}
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span className="text-sm font-medium text-foreground leading-tight">
-                          {tr(`gpaCalculator.subjects.${subjectId}`)}
-                        </span>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help shrink-0" />
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[200px]">
-                            <p className="text-xs">{tr("gpaCalculator.tooltipText")}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-
-                      {/* Inputs */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Select value={subject.units} onValueChange={(v) => handleChange(globalIdx, "units", v)}>
-                          <SelectTrigger className="w-24 h-8 text-sm">
-                            <SelectValue placeholder={isAr ? "الوحدات" : "Units"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[1, 2, 3, 4, 5].map((i) => (
-                              <SelectItem key={i} value={String(i)}>
-                                {i} {isAr ? "وح" : "u"}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <Input
-                          type="number"
-                          placeholder="0–100"
-                          min="0"
-                          max="100"
-                          value={subject.grade}
-                          onChange={(e) => handleChange(globalIdx, "grade", e.target.value)}
-                          className="w-20 h-8 text-sm text-center tabular-nums"
-                        />
-
-                        {/* Filled indicator */}
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
-                            subject.units && subject.grade ? group.dot : "bg-muted"
-                          }`}
-                        />
-                      </div>
-                    </div>
-                    {!isLast && <Separator />}
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* ── Error / Warnings ── */}
+  /* ── Results + actions (side column on desktop) ── */
+  const resultsSection = (
+    <div className="space-y-4 lg:sticky lg:top-6">
+      {/* Error / Warnings */}
       {error && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -250,7 +181,7 @@ export default function BagrutConverter() {
         </Alert>
       ))}
 
-      {/* ── Results card ── */}
+      {/* Results card */}
       {results && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-5">
@@ -270,7 +201,7 @@ export default function BagrutConverter() {
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full" style={{ width: `${results.average}%` }} />
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1 tabular-nums">{results.average} / 100</div>
+                  <div className="text-xs text-muted-foreground mt-1 tabular-nums" dir="ltr">{results.average} / 100</div>
                 </div>
               </div>
 
@@ -310,37 +241,147 @@ export default function BagrutConverter() {
               </p>
             </div>
 
+            {/* Copy result */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyResult}
+              className="mt-3 w-full gap-2"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              {t("team.bagrut.copyResult", isAr ? "نسخ النتيجة" : "Copy result")}
+            </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* ── Actions ── */}
-      <div className="flex items-center gap-3 pt-1">
+      {/* Actions */}
+      <div className="flex items-center gap-3">
         <Button
           onClick={handleCalculate}
-          className="flex-1 sm:flex-none gap-2"
+          className="flex-1 gap-2"
           disabled={filledCount === 0}
         >
           <Calculator className="h-4 w-4" />
           {isAr ? "احسب المعدل" : "Calculate"}
         </Button>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              size="icon"
-              className="shrink-0"
-              aria-label={isAr ? "إعادة تعيين" : "Reset"}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p className="text-xs">{isAr ? "إعادة تعيين" : "Reset"}</p>
-          </TooltipContent>
-        </Tooltip>
+        <Button
+          onClick={handleReset}
+          variant="outline"
+          className="shrink-0 gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          {t("team.bagrut.reset", isAr ? "إعادة تعيين" : "Reset")}
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5">
+      {/* ── Page header ── */}
+      <div>
+        <h1 className="text-xl font-bold text-foreground">{t("nav.bagrut", "أداة البجروت")}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {t("team.bagrut.subtitle", "تحويل درجات البجروت إلى درجات الجامعات الألمانية")}
+        </p>
+      </div>
+
+      {/* ── Progress pill ── (always visible) */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-300"
+            style={{ width: `${(filledCount / ALL_SUBJECT_IDS.length) * 100}%` }}
+          />
+        </div>
+        <span className="tabular-nums shrink-0">
+          {filledCount}/{ALL_SUBJECT_IDS.length} {isAr ? "مادة" : "subjects"}
+        </span>
+      </div>
+
+      {/* ── Two-column on desktop, stacked on mobile ── */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_340px] lg:items-start">
+        {/* Subject groups */}
+        <div className="space-y-4">
+          {SUBJECT_GROUPS.map((group) => (
+            <Card key={group.label} className="overflow-hidden">
+              {/* Group header */}
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b bg-muted/30">
+                <span className={`w-2 h-2 rounded-full ${group.dot} shrink-0`} />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {isAr ? group.label : group.labelEn}
+                </span>
+              </div>
+
+              <CardContent className="p-0">
+                {group.subjects.map((subjectId, idx) => {
+                  const globalIdx = ALL_SUBJECT_IDS.indexOf(subjectId);
+                  const subject = subjects[globalIdx];
+                  const isLast = idx === group.subjects.length - 1;
+                  return (
+                    <div key={subjectId}>
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        {/* Label — no truncation, allow wrapping */}
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <span className="text-sm font-medium text-foreground leading-tight">
+                            {tr(`gpaCalculator.subjects.${subjectId}`)}
+                          </span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[200px]">
+                              <p className="text-xs">{tr("gpaCalculator.tooltipText")}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+
+                        {/* Inputs */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Select value={subject.units} onValueChange={(v) => handleChange(globalIdx, "units", v)}>
+                            <SelectTrigger className="w-24 h-8 text-sm">
+                              <SelectValue placeholder={isAr ? "الوحدات" : "Units"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <SelectItem key={i} value={String(i)}>
+                                  {i} {isAr ? "وح" : "u"}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          <Input
+                            type="number"
+                            placeholder={isAr ? "من 0 إلى 100" : "0–100"}
+                            min="0"
+                            max="100"
+                            value={subject.grade}
+                            onChange={(e) => handleChange(globalIdx, "grade", e.target.value)}
+                            className={`w-20 h-8 text-sm text-center tabular-nums transition-colors ${getGradeBandClasses(subject.grade)}`}
+                          />
+
+                          {/* Filled indicator */}
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
+                              subject.units && subject.grade ? group.dot : "bg-muted"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                      {!isLast && <Separator />}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Results + actions */}
+        {resultsSection}
       </div>
     </div>
   );

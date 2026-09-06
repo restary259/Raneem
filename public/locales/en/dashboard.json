@@ -2346,7 +2346,11 @@
       "catCase": "Case & Submissions"
     },
     "bagrut": {
-      "subtitle": "Convert Bagrut scores to German university grades"
+      "subtitle": "Convert Bagrut scores to German university grades",
+      "reset": "Reset",
+      "copyResult": "Copy result",
+      "copied": "Result copied to clipboard",
+      "copyFailed": "Could not copy — please copy manually"
     },
     "analytics": {
       "title": "My Analytics",
