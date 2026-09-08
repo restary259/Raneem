@@ -423,7 +423,7 @@ const App = () => {
             <WhatsAppFloatingButton />
           </Suspense>
         )}
-        {!isApplyPage && location.pathname !== "/" && !isDashboardPath && idleReady && (
+        {!isApplyPage && !isDashboardPath && idleReady && (
           <Suspense fallback={null}>
             <PWAInstaller />
             <CookieBanner />
