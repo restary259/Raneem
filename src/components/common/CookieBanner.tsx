@@ -15,9 +15,7 @@ const CookieBanner = () => {
     // Use localStorage for persistence (survives session, not affected by login/logout)
     const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!stored) {
-      // Small delay to avoid blocking initial render and interfering with other UI
-      const timer = setTimeout(() => setVisible(true), 1500);
-      return () => clearTimeout(timer);
+      setVisible(true);
     }
   }, []);
 

@@ -217,10 +217,10 @@ const App = () => {
   useEffect(() => {
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
     if (w.requestIdleCallback) {
-      const id = w.requestIdleCallback(() => setIdleReady(true), { timeout: 2000 });
+      const id = w.requestIdleCallback(() => setIdleReady(true), { timeout: 300 });
       return () => (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(id);
     }
-    const t = window.setTimeout(() => setIdleReady(true), 600);
+    const t = window.setTimeout(() => setIdleReady(true), 200);
     return () => window.clearTimeout(t);
   }, []);
 
