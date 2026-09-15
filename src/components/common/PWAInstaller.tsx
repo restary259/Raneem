@@ -28,19 +28,16 @@ const PWAInstaller = () => {
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     if (standalone || isInWebAppiOS) { setIsInstalled(true); return; }
 
-    const savedNotificationState = localStorage.getItem('pwa-notifications-disabled');
-    if (savedNotificationState) {
-      setShowNotificationPrompt(false);
-    } else if ('Notification' in window && Notification.permission === 'default') {
-      setShowNotificationPrompt(true);
-    }
+    // Notification opt-in is NOT auto-shown to first-time visitors browsing the
+    // public site. It is only offered after the user installs the app.
+
 
     const handlePrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowPrompt(true);
     };
-    const handleInstalled = () => { setIsInstalled(true); setShowPrompt(false); };
+    const handleInstalled = () => { setIsInstalled(true); setShowPrompt(false); maybeOfferNotifications(); };
 
     window.addEventListener('beforeinstallprompt', handlePrompt);
     window.addEventListener('appinstalled', handleInstalled);
@@ -51,12 +48,17 @@ const PWAInstaller = () => {
     return () => { window.removeEventListener('beforeinstallprompt', handlePrompt); window.removeEventListener('appinstalled', handleInstalled); };
   }, []);
 
+  const maybeOfferNotifications = () => {
+    if (localStorage.getItem('pwa-notifications-disabled')) return;
+    if ('Notification' in window && Notification.permission === 'default') setShowNotificationPrompt(true);
+  };
+
   const handleInstall = async () => {
     if (!deferredPrompt) { if (isIOS()) setShowIOSModal(true); return; }
     try {
       await deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
-      if (result.outcome === 'accepted') setIsInstalled(true);
+      if (result.outcome === 'accepted') { setIsInstalled(true); maybeOfferNotifications(); }
       setDeferredPrompt(null); setShowPrompt(false);
     } catch (error) { console.error('Install error:', error); }
   };
@@ -88,10 +90,11 @@ const PWAInstaller = () => {
     setShowNotificationPrompt(false);
   };
 
-  if (isInstalled || sessionStorage.getItem('pwa-install-dismissed') || !showPrompt) return null;
+  const hideInstallUi = isInstalled || !!sessionStorage.getItem('pwa-install-dismissed') || !showPrompt;
 
   return (
     <>
+      {!hideInstallUi && (<>
       {/* Fixed floating pill button - all devices */}
       <div className="fixed bottom-24 md:bottom-6 right-3 md:right-6 z-40 animate-fade-in">
         <div className="flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-3 py-2 md:px-4 md:py-2.5">
@@ -127,6 +130,7 @@ const PWAInstaller = () => {
            <Button onClick={() => { setShowIOSModal(false); dismiss(); }} className="w-full bg-accent hover:bg-accent/90">{t('pwa.understood')}</Button>
          </DialogContent>
        </Dialog>
+      </>)}
 
        {/* Notification Opt-in Prompt */}
        <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
