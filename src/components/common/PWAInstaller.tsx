@@ -28,12 +28,9 @@ const PWAInstaller = () => {
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     if (standalone || isInWebAppiOS) { setIsInstalled(true); return; }
 
-    const savedNotificationState = localStorage.getItem('pwa-notifications-disabled');
-    if (savedNotificationState) {
-      setShowNotificationPrompt(false);
-    } else if ('Notification' in window && Notification.permission === 'default') {
-      setShowNotificationPrompt(true);
-    }
+    // Notification opt-in is NOT auto-shown to first-time visitors browsing the
+    // public site. It is only offered after the user installs the app.
+
 
     const handlePrompt = (e: Event) => {
       e.preventDefault();
