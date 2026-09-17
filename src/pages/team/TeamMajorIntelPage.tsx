@@ -441,7 +441,7 @@ export default function TeamMajorIntelPage() {
             {studentHeader}
             <ScrollArea className="min-h-0 flex-1">
               {studentBody}
-              <div className="border-t border-border">{programmeBody}</div>
+              <div className="border-t border-border">{programmeBody(false)}</div>
             </ScrollArea>
             {saveBar}
           </div>
