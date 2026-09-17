@@ -47,8 +47,11 @@ export function planColumnGroups(
   keyIndex = 0,
 ): number[][] {
   if (!widths.length) return [];
+  // Floating-point slack: fitWidths scales columns to exactly `available`, so
+  // a hair-width rounding excess must not trigger a pointless page split.
+  const fits = (sum: number) => sum <= available + EPSILON_MM;
   const total = widths.reduce((a, b) => a + b, 0);
-  if (total <= available) return [widths.map((_, i) => i)];
+  if (fits(total)) return [widths.map((_, i) => i)];
 
   const keyWidth = widths[keyIndex] ?? 0;
   const groups: number[][] = [];
