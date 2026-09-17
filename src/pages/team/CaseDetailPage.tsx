@@ -524,7 +524,10 @@ export default function CaseDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* flex-wrap: on phones the two badges + the progress dots exceed the
+            card width, so the dots drop onto their own full-width line
+            instead of overflowing past the card edge. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <Badge
             variant="outline"
             className={`shrink-0 whitespace-nowrap border ${statusColorClasses(statusMeta?.color)}`}
