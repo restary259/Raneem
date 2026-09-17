@@ -86,7 +86,7 @@ export default function TeamMajorIntelPage() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className="h-12 ps-9 text-base"
-              placeholder={t('intel.searchPlaceholder', 'علوم الحاسوب · מדעי המחשב · Computer Science · Informatik')}
+              placeholder={t('intel.searchPlaceholder', isAr ? 'ابحث عن تخصص…' : 'Search a major…')}
               aria-label={t('intel.search', 'Search a major')}
             />
           </div>
