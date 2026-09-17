@@ -2399,6 +2399,30 @@ export type Database = {
         }
         Relationships: []
       }
+      intel_verification_requests: {
+        Row: {
+          created_at: string
+          id: string
+          major_id: string
+          major_name: string
+          requested_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          major_id: string
+          major_name: string
+          requested_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          major_id?: string
+          major_name?: string
+          requested_by?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           accommodation: boolean
