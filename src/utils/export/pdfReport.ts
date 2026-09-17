@@ -100,8 +100,39 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
   const rtl = !!report.rtl;
   const locale = report.locale === 'ar' ? 'ar' : report.locale || 'en-US';
   const widest = Math.max(...sheets.map(s => s.columns.length));
+  const margin = 10;
+
+  // Measure on a scratch document first: a table that cannot fit the portrait
+  // page is printed landscape rather than needlessly split across pages.
+  const scratch = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const scratchFonts: FontRegistration = await registerPdfFonts(scratch);
+  const measureOn = (target: typeof scratch, faces: FontRegistration) =>
+    (text: string, size: number, bold: boolean) => {
+      target.setFont(fontForText(text, faces), bold ? 'bold' : 'normal');
+      target.setFontSize(size);
+      return target.getTextWidth(text);
+    };
+  const scratchMeasure = measureOn(scratch, scratchFonts);
+  const naturalFor = (sheet: CorporateSheet, m: (t: string, s: number, b: boolean) => number) => {
+    const probe = sheet.rows.slice(0, 200).map(row =>
+      cellsOf(row, sheet.columns).map((value, i) =>
+        formatPdfValue(value, sheet.columns[i].type, sheet.columns[i].currency),
+      ),
+    );
+    return sheet.columns.map((col, i) => {
+      let w = m(shapeForPdf(String(col.header ?? '')), 9, true);
+      for (const row of probe) w = Math.max(w, m(shapeForPdf(String(row[i] ?? '')), 8, false));
+      return w + CELL_PADDING * 2 + 1;
+    });
+  };
+  const portraitAvailable = scratch.internal.pageSize.width - margin * 2;
+  const needsWide = sheets.some(
+    sheet => fitWidths(naturalFor(sheet, scratchMeasure), portraitAvailable).reduce((a, b) => a + b, 0) >
+      portraitAvailable + 0.01,
+  );
+
   const doc = new jsPDF({
-    orientation: widest > LAYOUT.landscapeThreshold ? 'landscape' : 'portrait',
+    orientation: widest > LAYOUT.landscapeThreshold || needsWide ? 'landscape' : 'portrait',
     unit: 'mm',
     format: 'a4',
   });
@@ -109,10 +140,10 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
 
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  const margin = 10;
   const available = pageWidth - margin * 2;
   const alignStart = rtl ? 'right' : 'left';
   const xStart = rtl ? pageWidth - margin - 4 : margin + 4;
+
 
   let rtlFontMissing = false;
   const track = (text: string) => {
