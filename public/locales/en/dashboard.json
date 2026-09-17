@@ -3134,6 +3134,21 @@
     "invoice": {
       "emailSent": "Invoice {{number}} emailed to the student",
       "emailFailed": "Invoice {{number}} created, but the email could not be sent"
+    },
+    "majorLink": {
+      "title": "Field of study",
+      "studentWrote": "The student wrote",
+      "suggested": "Suggested",
+      "noMatch": "No matching major — pick one below.",
+      "pick": "Choose another major",
+      "searchPlaceholder": "علوم الحاسوب · Computer Science · Informatik",
+      "cancel": "Cancel",
+      "open": "Open in Major Intelligence",
+      "change": "Change",
+      "clear": "Clear",
+      "notVerified": "Not verified yet",
+      "saveFailed": "Could not save the field of study",
+      "note": "This only records which field of study the case is about. It decides nothing about eligibility."
     }
   },
   "partner": {
