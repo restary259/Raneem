@@ -2625,7 +2625,8 @@
     "reports": "Reports",
     "more": "More",
     "bottomNav": "Main navigation",
-    "commission": "Commission"
+    "commission": "Commission",
+    "majorIntel": "Major Intelligence"
   },
   "case": {
     "status": {
@@ -4863,5 +4864,132 @@
     "simDarbMargin": "Darb margin (platform revenue)",
     "simNegativeMargin": "Negative margin — payouts exceed NET (a warning would be logged)",
     "simHealthy": "Healthy margin"
+  },
+  "intel": {
+    "title": "Major Intelligence",
+    "subtitle": "Verified admission facts for Arab 48 applicants with an Israeli Bagrut. No source, no fact.",
+    "search": "Search a major",
+    "searchPlaceholder": "علوم الحاسوب · מדעי המחשב · Computer Science · Informatik",
+    "noMatch": "No major matches this search.",
+    "pickTitle": "Select a major to start",
+    "pickBody": "The tool answers one question: can this student proceed, and what must we check first.",
+    "notVerifiedBody": "This major has not been verified against official sources yet. Do not advise the student from the public page — escalate for verification.",
+    "profile": "Israeli Bagrut · Israeli passport · Arab 48 applicant",
+    "intake": "Student intake",
+    "questions": "What the team must ask",
+    "guidance": "DARB operational guidance",
+    "guidanceNote": "Internal guidance — never presented to a student as an official rule.",
+    "sources": "Verified sources",
+    "tier": "Tier",
+    "openSource": "Open source",
+    "openProgramPage": "Open the official programme page",
+    "noOfficialFact": "No official requirement found — do not assume one",
+    "conflictTitle": "Official sources disagree — do not give a definitive answer",
+    "calculatedOnly": "Calculated — not an admission decision",
+    "calculatedGrade": "Calculated German grade",
+    "noGradeYet": "Enter the overall Bagrut result to calculate the German grade.",
+    "stillMissing": "Still unanswered",
+    "official": "Official",
+    "student": "Student",
+    "none": "none published",
+    "notAsked": "not asked yet",
+    "teamAction": "Team action",
+    "actionBlocked": "Do not present this programme as available until these are resolved",
+    "actionVerify": "Verify or ask the student before advising",
+    "actionClear": "Every checked requirement is met on the recorded evidence.",
+    "status": {
+      "verified": "Verified",
+      "stale": "Needs re-check",
+      "conflicting": "Conflicting",
+      "unverified": "Not verified"
+    },
+    "check": {
+      "MEETS": "Meets",
+      "DOES_NOT_MEET": "Does not meet",
+      "NOT_DETERMINABLE": "Not determinable"
+    },
+    "factType": {
+      "OFFICIAL_REQUIREMENT": "Official requirement",
+      "OFFICIAL_PROCEDURE": "Official procedure",
+      "OFFICIAL_DEADLINE": "Official deadline",
+      "OFFICIAL_ADMISSION_MODE": "Admission mode",
+      "OFFICIAL_LANGUAGE": "Language requirement",
+      "OFFICIAL_DOCUMENT_REQUIREMENT": "Document requirement",
+      "CALCULATED_VALUE": "DARB calculation",
+      "DARB_OPERATIONAL_GUIDANCE": "DARB guidance"
+    },
+    "admission": {
+      "open": "Open admission",
+      "nc": "Restricted (NC)",
+      "aptitude_test": "Aptitude assessment",
+      "selection_procedure": "Selection procedure",
+      "unknown": "Unknown"
+    },
+    "channel": {
+      "university": "Directly with the university",
+      "uni_assist": "uni-assist",
+      "hochschulstart": "Hochschulstart",
+      "other": "Other"
+    },
+    "row": {
+      "math": "Mathematics units",
+      "english": "English units",
+      "further": "Further subject units",
+      "fullBagrut": "Full Bagrut certificate",
+      "subject.programme": "Programme subject requirements",
+      "language": "German language requirement",
+      "grade": "Converted grade vs published threshold",
+      "channel": "Application channel",
+      "deadline": "Application deadline",
+      "access": "University access rule"
+    },
+    "fact": {
+      "teachingLanguage": "Teaching language",
+      "admissionMode": "Admission mode",
+      "channel": "Application channel",
+      "foreignQualification": "Foreign qualification route",
+      "entrance": "Entrance procedure",
+      "deadline": "Deadline",
+      "documents": "Documents",
+      "fees": "Fees",
+      "access": "University access rule",
+      "conversion": "Grade conversion procedure",
+      "language": "Language"
+    },
+    "field": {
+      "bagrutYear": "Graduation year",
+      "bagrutAverage": "Overall Bagrut result",
+      "mathUnits": "Maths units",
+      "mathGrade": "Maths grade",
+      "englishUnits": "English units",
+      "englishGrade": "English grade",
+      "furtherSubject": "Further subject",
+      "furtherUnits": "Further subject units",
+      "furtherGrade": "Further subject grade",
+      "germanLevel": "Current German level",
+      "germanCertificate": "Certificate held",
+      "germanCertificateDate": "Certificate date (expected)",
+      "fullBagrut": "Holds a full Bagrut certificate"
+    },
+    "q": {
+      "mathUnits": "Maths units and grade",
+      "englishUnits": "English units and grade",
+      "furtherSubject": "One further subject at 4 units and its grade",
+      "bagrutAverage": "Overall Bagrut result",
+      "fullBagrut": "Is the Bagrut certificate complete?",
+      "germanLevel": "Current German level",
+      "germanCertificate": "Certificate held or expected, and its date",
+      "documents": "Passport and document route"
+    },
+    "qWhy": {
+      "mathUnits": "Programme prerequisite and access rule",
+      "englishUnits": "Access rule for direct university entry",
+      "furtherSubject": "Access rule for direct university entry",
+      "bagrutAverage": "Needed for the grade conversion",
+      "fullBagrut": "Higher-education eligibility",
+      "germanLevel": "Language requirement per programme",
+      "germanCertificate": "Only a certificate proves the level",
+      "documents": "Application and visa handling"
+    }
   }
 }

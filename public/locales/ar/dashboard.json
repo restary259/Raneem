@@ -2643,7 +2643,8 @@
     "reports": "التقارير",
     "more": "المزيد",
     "bottomNav": "التنقل الرئيسي",
-    "commission": "العمولات"
+    "commission": "العمولات",
+    "majorIntel": "معلومات التخصصات"
   },
   "case": {
     "status": {
@@ -4881,5 +4882,132 @@
     "simDarbMargin": "هامش دارب (إيراد المنصة)",
     "simNegativeMargin": "هامش سلبي — المدفوعات تتجاوز الصافي (سيتم تسجيل تحذير)",
     "simHealthy": "هامش صحي"
+  },
+  "intel": {
+    "title": "معلومات التخصصات",
+    "subtitle": "حقائق قبول موثّقة لطلاب الداخل بشهادة بجروت إسرائيلية. لا مصدر، لا معلومة.",
+    "search": "ابحث عن تخصص",
+    "searchPlaceholder": "علوم الحاسوب · מדעי המחשב · Computer Science · Informatik",
+    "noMatch": "لا يوجد تخصص مطابق لهذا البحث.",
+    "pickTitle": "اختر تخصصاً للبدء",
+    "pickBody": "الأداة تجيب عن سؤال واحد: هل يستطيع هذا الطالب المتابعة، وما الذي يجب التحقق منه أولاً.",
+    "notVerifiedBody": "هذا التخصص لم يُوثَّق بعد من مصادر رسمية. لا تنصح الطالب اعتماداً على الصفحة العامة — حوّله للتحقق.",
+    "profile": "بجروت إسرائيلية · جواز إسرائيلي · متقدم من الداخل",
+    "intake": "بيانات الطالب",
+    "questions": "ما يجب أن يسأله الفريق",
+    "guidance": "إرشادات درب التشغيلية",
+    "guidanceNote": "إرشادات داخلية — لا تُقدَّم للطالب كقاعدة رسمية.",
+    "sources": "المصادر الموثّقة",
+    "tier": "المستوى",
+    "openSource": "افتح المصدر",
+    "openProgramPage": "افتح صفحة البرنامج الرسمية",
+    "noOfficialFact": "لا يوجد شرط رسمي — لا تفترض شرطاً",
+    "conflictTitle": "المصادر الرسمية متعارضة — لا تعطِ إجابة قاطعة",
+    "calculatedOnly": "محسوب — ليس قرار قبول",
+    "calculatedGrade": "المعدل الألماني المحسوب",
+    "noGradeYet": "أدخل معدل البجروت العام لحساب المعدل الألماني.",
+    "stillMissing": "لم يُجب عنه بعد",
+    "official": "رسمي",
+    "student": "الطالب",
+    "none": "غير منشور",
+    "notAsked": "لم يُسأل بعد",
+    "teamAction": "إجراء الفريق",
+    "actionBlocked": "لا تعرض هذا البرنامج كخيار متاح قبل معالجة ما يلي",
+    "actionVerify": "تحقّق أو اسأل الطالب قبل تقديم النصيحة",
+    "actionClear": "كل شرط تم فحصه مستوفى وفق الأدلة المسجّلة.",
+    "status": {
+      "verified": "موثّق",
+      "stale": "يحتاج إعادة تحقق",
+      "conflicting": "متعارض",
+      "unverified": "غير موثّق"
+    },
+    "check": {
+      "MEETS": "مستوفى",
+      "DOES_NOT_MEET": "غير مستوفى",
+      "NOT_DETERMINABLE": "غير قابل للتحديد"
+    },
+    "factType": {
+      "OFFICIAL_REQUIREMENT": "شرط رسمي",
+      "OFFICIAL_PROCEDURE": "إجراء رسمي",
+      "OFFICIAL_DEADLINE": "موعد رسمي",
+      "OFFICIAL_ADMISSION_MODE": "نمط القبول",
+      "OFFICIAL_LANGUAGE": "شرط اللغة",
+      "OFFICIAL_DOCUMENT_REQUIREMENT": "شرط الوثائق",
+      "CALCULATED_VALUE": "حساب درب",
+      "DARB_OPERATIONAL_GUIDANCE": "إرشاد درب"
+    },
+    "admission": {
+      "open": "قبول مفتوح",
+      "nc": "قبول مقيّد (NC)",
+      "aptitude_test": "إجراء إثبات أهلية",
+      "selection_procedure": "إجراء انتقاء",
+      "unknown": "غير معروف"
+    },
+    "channel": {
+      "university": "مباشرة عبر الجامعة",
+      "uni_assist": "uni-assist",
+      "hochschulstart": "Hochschulstart",
+      "other": "أخرى"
+    },
+    "row": {
+      "math": "وحدات الرياضيات",
+      "english": "وحدات الإنجليزية",
+      "further": "وحدات المادة الإضافية",
+      "fullBagrut": "شهادة بجروت كاملة",
+      "subject.programme": "شروط مواد البرنامج",
+      "language": "شرط اللغة الألمانية",
+      "grade": "المعدل المحوَّل مقابل الحد المنشور",
+      "channel": "قناة التقديم",
+      "deadline": "موعد التقديم",
+      "access": "قاعدة القبول الجامعي"
+    },
+    "fact": {
+      "teachingLanguage": "لغة التدريس",
+      "admissionMode": "نمط القبول",
+      "channel": "قناة التقديم",
+      "foreignQualification": "مسار الشهادة الأجنبية",
+      "entrance": "إجراء القبول",
+      "deadline": "الموعد",
+      "documents": "الوثائق",
+      "fees": "الرسوم",
+      "access": "قاعدة القبول الجامعي",
+      "conversion": "إجراء تحويل المعدل",
+      "language": "اللغة"
+    },
+    "field": {
+      "bagrutYear": "سنة التخرج",
+      "bagrutAverage": "معدل البجروت العام",
+      "mathUnits": "وحدات الرياضيات",
+      "mathGrade": "علامة الرياضيات",
+      "englishUnits": "وحدات الإنجليزية",
+      "englishGrade": "علامة الإنجليزية",
+      "furtherSubject": "المادة الإضافية",
+      "furtherUnits": "وحدات المادة الإضافية",
+      "furtherGrade": "علامة المادة الإضافية",
+      "germanLevel": "مستوى الألمانية الحالي",
+      "germanCertificate": "الشهادة المتوفرة",
+      "germanCertificateDate": "تاريخ الشهادة (المتوقع)",
+      "fullBagrut": "يحمل شهادة بجروت كاملة"
+    },
+    "q": {
+      "mathUnits": "وحدات الرياضيات وعلامتها",
+      "englishUnits": "وحدات الإنجليزية وعلامتها",
+      "furtherSubject": "مادة إضافية بأربع وحدات وعلامتها",
+      "bagrutAverage": "معدل البجروت العام",
+      "fullBagrut": "هل شهادة البجروت كاملة؟",
+      "germanLevel": "مستوى الألمانية الحالي",
+      "germanCertificate": "الشهادة المتوفرة أو المتوقعة وتاريخها",
+      "documents": "الجواز ومسار الوثائق"
+    },
+    "qWhy": {
+      "mathUnits": "شرط مسبق للبرنامج وقاعدة القبول",
+      "englishUnits": "قاعدة القبول الجامعي المباشر",
+      "furtherSubject": "قاعدة القبول الجامعي المباشر",
+      "bagrutAverage": "لازم لتحويل المعدل",
+      "fullBagrut": "أهلية التعليم العالي",
+      "germanLevel": "شرط اللغة لكل برنامج",
+      "germanCertificate": "الشهادة وحدها تثبت المستوى",
+      "documents": "معالجة التقديم والتأشيرة"
+    }
   }
 }
