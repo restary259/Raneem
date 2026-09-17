@@ -3476,6 +3476,9 @@
     "total": "Total",
     "loading": "Loading…",
     "empty": "No data yet",
+    "noRecords": "No records",
+    "pdfPart": "part",
+    "sheetLoadFailed": "Some reports could not be loaded: {{names}}",
     "tab": {
       "students": "Students",
       "myStudents": "My Students",
