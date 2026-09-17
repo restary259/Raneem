@@ -291,9 +291,24 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   const exportAll = async (format: ExportFormat = 'xlsx') => {
     setExporting(true);
     try {
+      // A sheet that fails to load must be named, never silently missing.
+      const failed: string[] = [];
       const loaded = await Promise.all(
-        sheets.map(async s => ({ def: s, rows: filterRows(data[s.key] ?? (await s.load())) })),
+        sheets.map(async s => {
+          try {
+            return { def: s, rows: filterRows(data[s.key] ?? (await s.load())) };
+          } catch {
+            failed.push(s.label);
+            return { def: s, rows: [] as any[] };
+          }
+        }),
       );
+      if (failed.length) {
+        toast({
+          variant: 'destructive',
+          description: t('sheets.sheetLoadFailed', { names: failed.join(', ') }),
+        });
+      }
       const visibleColumns = (def: SheetDef) => def.columns.filter(col => !(col.hidden && scope === 'team'));
 
       const cover = {
@@ -320,6 +335,8 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         locale,
         rtl,
         totalLabel: t('sheets.total'),
+        emptyLabel: t('sheets.noRecords', 'No records'),
+        continuedLabel: t('sheets.pdfPart', 'part'),
         sheets: [
           cover,
           ...loaded.map(({ def, rows }) => ({
