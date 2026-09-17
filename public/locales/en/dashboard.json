@@ -2362,6 +2362,7 @@
     "work": {
       "title": "My work",
       "allCases": "All cases",
+      "majorIntel": "Major intelligence",
       "statToday": "Today's appointments",
       "statOutcomes": "Outcomes to record",
       "statReturned": "Returned by admin",
