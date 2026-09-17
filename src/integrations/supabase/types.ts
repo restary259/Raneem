@@ -1327,6 +1327,9 @@ export type Database = {
           id: string
           influencer_commission: number
           intake_notes: string | null
+          intel_major_confirmed_at: string | null
+          intel_major_confirmed_by: string | null
+          intel_major_id: string | null
           is_no_show: boolean
           last_activity_at: string
           lawyer_commission: number
@@ -1368,6 +1371,9 @@ export type Database = {
           id?: string
           influencer_commission?: number
           intake_notes?: string | null
+          intel_major_confirmed_at?: string | null
+          intel_major_confirmed_by?: string | null
+          intel_major_id?: string | null
           is_no_show?: boolean
           last_activity_at?: string
           lawyer_commission?: number
@@ -1409,6 +1415,9 @@ export type Database = {
           id?: string
           influencer_commission?: number
           intake_notes?: string | null
+          intel_major_confirmed_at?: string | null
+          intel_major_confirmed_by?: string | null
+          intel_major_id?: string | null
           is_no_show?: boolean
           last_activity_at?: string
           lawyer_commission?: number
@@ -1431,6 +1440,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cases_intel_major_confirmed_by_fkey"
+            columns: ["intel_major_confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cases_partner_link_id_fkey"
             columns: ["partner_link_id"]
@@ -4914,6 +4930,9 @@ export type Database = {
           id: string
           influencer_commission: number
           intake_notes: string | null
+          intel_major_confirmed_at: string | null
+          intel_major_confirmed_by: string | null
+          intel_major_id: string | null
           is_no_show: boolean
           last_activity_at: string
           lawyer_commission: number
