@@ -105,6 +105,7 @@ export default function CaseOverviewPanel({ caseData }: Props) {
           ))}
         </div>
       )}
-    </section>
+      </section>
+    </div>
   );
 }
