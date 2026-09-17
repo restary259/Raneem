@@ -13,6 +13,8 @@
 export const MIN_COL_MM = 14;
 /** Widest a single column may claim; longer text wraps instead (mm). */
 export const MAX_COL_MM = 46;
+/** Rounding tolerance when comparing summed millimetre widths. */
+const EPSILON_MM = 0.05;
 
 /**
  * Clamps natural (measured) column widths into the readable range and, when
