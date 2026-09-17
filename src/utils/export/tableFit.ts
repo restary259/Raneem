@@ -60,7 +60,7 @@ export function planColumnGroups(
 
   for (let i = 0; i < widths.length; i++) {
     if (groups.length > 0 && i === keyIndex) continue; // already repeated per group
-    if (current.length && used + widths[i] > available) {
+    if (current.length && !fits(used + widths[i])) {
       groups.push(current);
       current = [];
       used = 0;
