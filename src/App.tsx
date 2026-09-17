@@ -343,6 +343,7 @@ const App = () => {
               <Route path="tools/currency" element={<TeamCurrencyPage />} />
               <Route path="tools/cv" element={<TeamCvBuilderPage />} />
               <Route path="catalog" element={<TeamCatalogPage />} />
+              <Route path="majors" element={<TeamMajorIntelPage />} />
             </Route>
 
             {/* ── Partner + Ambassador Dashboard (/partner/*) ── */}
