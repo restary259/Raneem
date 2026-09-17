@@ -524,20 +524,27 @@ export default function CaseDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Badge
-            variant="outline"
-            className={`shrink-0 whitespace-nowrap border ${statusColorClasses(statusMeta?.color)}`}
-          >
-            {t(`case.status.${caseData.status}`, statusMeta?.label_en ?? caseData.status)}
-          </Badge>
-          {paymentMethod && (
-            <Badge variant="secondary" className="shrink-0 gap-1">
-              {paymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
-              {t(`finance.paymentMethod.${paymentMethod}`, paymentMethod === "cash" ? "Cash" : "Bank Transfer")}
+        {/* Mobile: the two badges + the progress dots exceed the card width,
+            so the dots get their own full-width line instead of overflowing
+            past the card edge. Desktop keeps them on one row. */}
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              variant="outline"
+              className={`shrink-0 whitespace-nowrap border ${statusColorClasses(statusMeta?.color)}`}
+            >
+              {t(`case.status.${caseData.status}`, statusMeta?.label_en ?? caseData.status)}
             </Badge>
-          )}
-          <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
+            {paymentMethod && (
+              <Badge variant="secondary" className="shrink-0 gap-1">
+                {paymentMethod === "cash" ? <Banknote className="h-3 w-3" /> : <Landmark className="h-3 w-3" />}
+                {t(`finance.paymentMethod.${paymentMethod}`, paymentMethod === "cash" ? "Cash" : "Bank Transfer")}
+              </Badge>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <CaseProgressRail statuses={statuses} currentKey={caseData.status} />
+          </div>
         </div>
       </div>
 
