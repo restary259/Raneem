@@ -412,31 +412,13 @@ export default function TeamMajorIntelPage() {
       </Button>
     </div>
   ) : (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className={cn('flex min-h-0 flex-col', scroll && 'h-full')}>
       {programmeSwitcher}
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="p-4">
-          {activeProgram && (
-            <ProgramCard
-              major={major}
-              program={activeProgram}
-              intake={intake}
-              sources={major.sources}
-              focus={journeyFocus}
-              guidance={guidanceBlock}
-            />
-          )}
-        </div>
-        {major.sources.slice(0, 2).map((source) => (
-          <a key={source.id} href={source.url} target="_blank" rel="noreferrer" className="mx-4 mb-2 flex items-center gap-2 text-xs text-primary underline underline-offset-2">
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden />{isAr ? (source.titleAR ?? source.title) : source.title}
-          </a>
-        ))}
-      </ScrollArea>
+      {scroll ? <ScrollArea className="min-h-0 flex-1">{programmeDetail}</ScrollArea> : programmeDetail}
     </div>
   );
 
-  const programmes = <Pane>{programmeBody}</Pane>;
+  const programmes = <Pane>{programmeBody(true)}</Pane>;
 
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col overflow-hidden bg-background p-3 md:p-4">
