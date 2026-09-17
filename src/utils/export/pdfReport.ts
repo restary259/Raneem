@@ -265,7 +265,7 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
           const face = fontForText(text, fonts);
           if (face !== 'helvetica') data.cell.styles.font = face;
           if (hasRtl(text)) data.cell.styles.halign = 'right';
-          if (totals && data.section === 'body' && data.row.index === displayBody.length - 1) {
+          if (totals && data.section === 'body' && data.row.index === body.length - 1) {
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.fillColor = [237, 241, 246];
           }
