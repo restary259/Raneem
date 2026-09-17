@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Banknote, BookSearch, CalendarDays, Clock, RotateCcw, Users } from "lucide-react";
+import { AlertTriangle, Banknote, CalendarDays, Clock, GraduationCap, RotateCcw, Users } from "lucide-react";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import { LoadingState, EmptyState } from "@/components/shell";
 
@@ -241,7 +241,7 @@ export default function TeamWorkPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => navigate("/team/majors")}>
-            <BookSearch className="h-4 w-4" />
+            <GraduationCap className="h-4 w-4" />
             {t("team.work.majorIntel", "Major intelligence")}
           </Button>
           <Button size="sm" variant="outline" onClick={() => navigate("/team/cases")}>
