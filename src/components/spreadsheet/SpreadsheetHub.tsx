@@ -421,21 +421,21 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
         <div className="flex items-center gap-2 flex-wrap">
           {active === 'students' && (
             <>
-              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting}>
+              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
                 <Download className="h-4 w-4 me-1" />
-                {t('sheets.schoolPacket', 'School packet')}
+                {t('sheets.schoolPacketExcel', 'School packet (Excel)')}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting}>
+              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
                 <FileText className="h-4 w-4 me-1" />
-                {t('sheets.schoolPacketPdf', 'School packet PDF')}
+                {t('sheets.schoolPacketPdf', 'School packet (PDF)')}
               </Button>
             </>
           )}
-          <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting}>
+          <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
             <Download className="h-4 w-4 me-1" />
             {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting}>
+          <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
             <FileText className="h-4 w-4 me-1" />
             {exporting ? t('sheets.preparing') : t('sheets.exportPdfWorkbook')}
           </Button>
