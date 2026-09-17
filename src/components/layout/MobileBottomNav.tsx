@@ -82,6 +82,7 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   team_member: [
     { key: 'nav.submitNew', icon: UserPlus, href: '/team/submit' },
     { key: 'nav.catalog', icon: Hotel, href: '/team/catalog' },
+    { key: 'nav.majorIntel', icon: GraduationCap, href: '/team/majors' },
     { key: 'nav.reports', icon: BarChart2, href: '/team/analytics' },
     { key: 'nav.bagrut', icon: Calculator, href: '/team/bagrut' },
     { key: 'nav.cvBuilder', icon: FileText, href: '/team/tools/cv' },
