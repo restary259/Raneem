@@ -3494,6 +3494,9 @@
     "total": "المجموع",
     "loading": "جارٍ التحميل…",
     "empty": "لا توجد بيانات بعد",
+    "noRecords": "لا توجد سجلات",
+    "pdfPart": "جزء",
+    "sheetLoadFailed": "تعذّر تحميل بعض الجداول: {{names}}",
     "tab": {
       "students": "الطلاب",
       "myStudents": "طلابي",

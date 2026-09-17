@@ -13,7 +13,11 @@
 import { BRAND, LAYOUT } from './theme';
 import { CorporateReport, CorporateSheet, ExportColumn, ExportRow } from './corporateSheet';
 import { ExportColumnType, coerceValue, generatedStamp } from './formats';
+import { fitWidths, planColumnGroups } from './tableFit';
 import { fontForText, hasRtl, registerPdfFonts, shapeForPdf, type FontRegistration } from '@/utils/pdfFonts';
+
+/** Padding inside every table cell (mm), shared by measuring and drawing. */
+const CELL_PADDING = 2.4;
 
 export interface PdfReportResult {
   /** True when RTL text was present but no font could render it. */
@@ -83,28 +87,10 @@ function totalsRow(sheet: CorporateSheet, totalLabel: string): string[] | null {
   });
 }
 
-/** Numeric / date columns must never wrap — reserve a sensible minimum. */
-function minWidthFor(type: ExportColumnType | undefined): number | undefined {
-  switch (type) {
-    case 'currency':
-      return 26;
-    case 'date':
-      return 24;
-    case 'datetime':
-      return 32;
-    case 'number':
-    case 'percent':
-      return 20;
-    case 'status':
-      return 22;
-    default:
-      return 18;
-  }
-}
-
 export async function exportCorporatePdf(report: CorporateReport): Promise<PdfReportResult> {
-  const sheets = report.sheets.filter(sheet => sheet.rows.length > 0);
-  if (!sheets.length) return { rtlFontMissing: false, empty: true };
+  const sheets = report.sheets;
+  const hasAnyRow = sheets.some(sheet => sheet.rows.length > 0);
+  if (!sheets.length || !hasAnyRow) return { rtlFontMissing: false, empty: true };
 
   const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
     import('jspdf'),
@@ -114,8 +100,39 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
   const rtl = !!report.rtl;
   const locale = report.locale === 'ar' ? 'ar' : report.locale || 'en-US';
   const widest = Math.max(...sheets.map(s => s.columns.length));
+  const margin = 10;
+
+  // Measure on a scratch document first: a table that cannot fit the portrait
+  // page is printed landscape rather than needlessly split across pages.
+  const scratch = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const scratchFonts: FontRegistration = await registerPdfFonts(scratch);
+  const measureOn = (target: typeof scratch, faces: FontRegistration) =>
+    (text: string, size: number, bold: boolean) => {
+      target.setFont(fontForText(text, faces), bold ? 'bold' : 'normal');
+      target.setFontSize(size);
+      return target.getTextWidth(text);
+    };
+  const scratchMeasure = measureOn(scratch, scratchFonts);
+  const naturalFor = (sheet: CorporateSheet, m: (t: string, s: number, b: boolean) => number) => {
+    const probe = sheet.rows.slice(0, 200).map(row =>
+      cellsOf(row, sheet.columns).map((value, i) =>
+        formatPdfValue(value, sheet.columns[i].type, sheet.columns[i].currency),
+      ),
+    );
+    return sheet.columns.map((col, i) => {
+      let w = m(shapeForPdf(String(col.header ?? '')), 9, true);
+      for (const row of probe) w = Math.max(w, m(shapeForPdf(String(row[i] ?? '')), 8, false));
+      return w + CELL_PADDING * 2 + 1;
+    });
+  };
+  const portraitAvailable = scratch.internal.pageSize.width - margin * 2;
+  const needsWide = sheets.some(
+    sheet => fitWidths(naturalFor(sheet, scratchMeasure), portraitAvailable).reduce((a, b) => a + b, 0) >
+      portraitAvailable + 0.01,
+  );
+
   const doc = new jsPDF({
-    orientation: widest > LAYOUT.landscapeThreshold ? 'landscape' : 'portrait',
+    orientation: widest > LAYOUT.landscapeThreshold || needsWide ? 'landscape' : 'portrait',
     unit: 'mm',
     format: 'a4',
   });
@@ -123,9 +140,10 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
 
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  const margin = 10;
+  const available = pageWidth - margin * 2;
   const alignStart = rtl ? 'right' : 'left';
   const xStart = rtl ? pageWidth - margin - 4 : margin + 4;
+
 
   let rtlFontMissing = false;
   const track = (text: string) => {
@@ -140,29 +158,24 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
     doc.text(track(text), x, y, { align: alignStart });
   };
 
+  const measure = (text: string, size: number, bold: boolean) => {
+    doc.setFont(fontForText(text, fonts), bold ? 'bold' : 'normal');
+    doc.setFontSize(size);
+    return doc.getTextWidth(text);
+  };
+
   const totalLabel = report.totalLabel ?? 'Total';
+  const emptyLabel = report.emptyLabel ?? 'No records';
+  const continuedLabel = report.continuedLabel ?? 'part';
   const stampParts = [
     `${BRAND.company}`,
     generatedStamp(locale),
     report.author ? `${report.author}` : null,
   ].filter(Boolean) as string[];
 
-  sheets.forEach((sheet, index) => {
-    if (index > 0) doc.addPage();
+  let firstSection = true;
 
-    let y = margin + 8;
-    write(sheet.title || report.title, xStart, y, 15, [30, 58, 95]);
-    y += 6;
-    const subtitle = [sheet.subtitle, index === 0 ? report.subtitle : null].filter(Boolean).join(' · ');
-    if (subtitle) {
-      write(subtitle, xStart, y, 9, [107, 114, 128]);
-      y += 5;
-    }
-    write(`${stampParts.join('  ·  ')}  ·  ${sheet.rows.length.toLocaleString(numberLocale)}`, xStart, y, 8, [
-      150, 150, 150,
-    ]);
-    y += 4;
-
+  sheets.forEach(sheet => {
     const headers = sheet.columns.map(c => c.header);
     const body = sheet.rows.map(row =>
       cellsOf(row, sheet.columns).map((value, i) =>
@@ -172,44 +185,93 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
     const totals = totalsRow(sheet, totalLabel);
     if (totals) body.push(totals);
 
-    const displayHeaders = rtl ? [...headers].reverse() : headers;
-    const displayBody = rtl ? body.map(r => [...r].reverse()) : body;
-    const displayColumns = rtl ? [...sheet.columns].reverse() : sheet.columns;
-
-    const columnStyles: Record<number, Record<string, unknown>> = {};
-    displayColumns.forEach((col, i) => {
-      const min = minWidthFor(col.type);
-      if (min) columnStyles[i] = { minCellWidth: min };
+    // Measure real text so columns are sized by content, then clamp + fit them
+    // into the printable area; anything still too wide continues on its own
+    // page instead of being drawn off the paper. Grouping is planned in
+    // logical column order (so the key column really is the first one) and
+    // only the drawing order is mirrored for RTL.
+    const probe = body.slice(0, 200);
+    const natural = headers.map((header, i) => {
+      let w = measure(track(String(header ?? '')), 9, true);
+      for (const row of probe) w = Math.max(w, measure(track(String(row[i] ?? '')), 8, false));
+      return w + CELL_PADDING * 2 + 1;
     });
+    const widths = fitWidths(natural, available);
+    const groups = planColumnGroups(widths, available, 0);
 
-    autoTable(doc, {
-      head: [displayHeaders.map(track)],
-      body: displayBody.map(r => r.map(cell => track(String(cell ?? '')))),
-      startY: y + 2,
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2.4, lineWidth: 0.1, lineColor: [217, 222, 229], overflow: 'linebreak' },
-      headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: 'bold', fontSize: 9, minCellHeight: 8 },
-      alternateRowStyles: { fillColor: [245, 247, 250] },
-      columnStyles,
-      margin: { top: margin, left: margin, right: margin, bottom: margin + 4 },
-      // jsPDF binds one font per cell — pick the face that owns the script used.
-      didParseCell: data => {
-        const text = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text ?? '');
-        const face = fontForText(text, fonts);
-        if (face !== 'helvetica') data.cell.styles.font = face;
-        if (hasRtl(text)) data.cell.styles.halign = 'right';
-        if (totals && data.section === 'body' && data.row.index === displayBody.length - 1) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [237, 241, 246];
-        }
-      },
-      didDrawPage: () => {
+    groups.forEach((group, groupIndex) => {
+      if (!firstSection) doc.addPage();
+      firstSection = false;
+
+      let y = margin + 8;
+      const heading =
+        groups.length > 1
+          ? `${sheet.title || report.title} (${continuedLabel} ${groupIndex + 1}/${groups.length})`
+          : sheet.title || report.title;
+      write(heading, xStart, y, 15, [30, 58, 95]);
+      y += 6;
+      const subtitle = [sheet.subtitle, report.subtitle].filter(Boolean).join(' · ');
+      if (subtitle) {
+        write(subtitle, xStart, y, 9, [107, 114, 128]);
+        y += 5;
+      }
+      write(`${stampParts.join('  ·  ')}  ·  ${sheet.rows.length.toLocaleString(numberLocale)}`, xStart, y, 8, [
+        150, 150, 150,
+      ]);
+      y += 4;
+
+      const drawFooter = () => {
         const footer = `${BRAND.confidentiality}  ·  ${doc.getCurrentPageInfo().pageNumber}`;
         doc.setFont(fontForText(footer, fonts), 'normal');
         doc.setFontSize(7);
         doc.setTextColor(150);
         doc.text(shapeForPdf(footer), rtl ? pageWidth - margin : margin, pageHeight - 6, { align: alignStart });
-      },
+      };
+
+      // A section with no rows still prints, so the contents page and the
+      // document can never disagree about which reports are included.
+      if (!sheet.rows.length) {
+        write(emptyLabel, xStart, y + 8, 10, [107, 114, 128]);
+        drawFooter();
+        return;
+      }
+
+      const order = rtl ? [...group].reverse() : group;
+      const columnStyles: Record<number, Record<string, unknown>> = {};
+      order.forEach((sourceIndex, i) => {
+        columnStyles[i] = { cellWidth: widths[sourceIndex] };
+      });
+
+      autoTable(doc, {
+        head: [order.map(i => track(String(headers[i] ?? '')))],
+        body: body.map(r => order.map(i => track(String(r[i] ?? '')))),
+        startY: y + 2,
+        theme: 'grid',
+        tableWidth: 'wrap',
+        styles: {
+          fontSize: 8,
+          cellPadding: CELL_PADDING,
+          lineWidth: 0.1,
+          lineColor: [217, 222, 229],
+          overflow: 'linebreak',
+        },
+        headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: 'bold', fontSize: 9, minCellHeight: 8 },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+        columnStyles,
+        margin: { top: margin, left: margin, right: margin, bottom: margin + 4 },
+        // jsPDF binds one font per cell — pick the face that owns the script used.
+        didParseCell: data => {
+          const text = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text ?? '');
+          const face = fontForText(text, fonts);
+          if (face !== 'helvetica') data.cell.styles.font = face;
+          if (hasRtl(text)) data.cell.styles.halign = 'right';
+          if (totals && data.section === 'body' && data.row.index === body.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [237, 241, 246];
+          }
+        },
+        didDrawPage: drawFooter,
+      });
     });
   });
 

@@ -138,6 +138,8 @@ const SheetTable: React.FC<SheetTableProps> = ({
       locale,
       rtl,
       totalLabel: t('sheets.total'),
+      emptyLabel: t('sheets.noRecords', 'No records'),
+      continuedLabel: t('sheets.pdfPart', 'part'),
       sheets: [
         {
           name: title,
