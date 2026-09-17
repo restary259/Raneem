@@ -236,14 +236,15 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
         return;
       }
 
+      const order = rtl ? [...group].reverse() : group;
       const columnStyles: Record<number, Record<string, unknown>> = {};
-      group.forEach((sourceIndex, i) => {
+      order.forEach((sourceIndex, i) => {
         columnStyles[i] = { cellWidth: widths[sourceIndex] };
       });
 
       autoTable(doc, {
-        head: [group.map(i => track(String(displayHeaders[i] ?? '')))],
-        body: displayBody.map(r => group.map(i => track(String(r[i] ?? '')))),
+        head: [order.map(i => track(String(headers[i] ?? '')))],
+        body: body.map(r => order.map(i => track(String(r[i] ?? '')))),
         startY: y + 2,
         theme: 'grid',
         tableWidth: 'wrap',
