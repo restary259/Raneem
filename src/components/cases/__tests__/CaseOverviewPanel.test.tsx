@@ -74,7 +74,8 @@ beforeEach(() => {
 const openPanel = async () => {
   const utils = render(<CaseOverviewPanel caseData={caseData as any} />);
   // The collapse trigger button shows the overview title ("Overview").
-  const trigger = await screen.findByRole("button");
+  // (The field-of-study block above it also renders buttons.)
+  const trigger = await screen.findByRole("button", { name: "Overview" });
   trigger.click();
   // wait for the "Referred by" row populated after the RPC resolves
   await waitFor(() => expect(screen.getByText("Referred by")).toBeInTheDocument());
