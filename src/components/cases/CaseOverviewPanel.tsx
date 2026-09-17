@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { formatDateMedium } from "@/utils/dateUtils";
+import CaseMajorLink from "@/components/cases/CaseMajorLink";
 
 interface Props {
   caseData: Record<string, any>;
