@@ -60,6 +60,8 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     locale: exportLocale,
     rtl,
     totalLabel: t('sheets.total'),
+    emptyLabel: t('sheets.noRecords', 'No records'),
+    continuedLabel: t('sheets.pdfPart', 'part'),
     sheets: [{
       name: t('admin.payouts.reportTitle', 'Payouts Report'),
       columns: [
