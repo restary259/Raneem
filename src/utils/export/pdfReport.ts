@@ -135,7 +135,7 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
 
   const totalLabel = report.totalLabel ?? 'Total';
   const emptyLabel = report.emptyLabel ?? 'No records';
-  const continuedLabel = report.continuedLabel ?? 'continued';
+  const continuedLabel = report.continuedLabel ?? 'part';
   const stampParts = [
     `${BRAND.company}`,
     generatedStamp(locale),
