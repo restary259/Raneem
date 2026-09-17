@@ -71,12 +71,12 @@ export default function IntakeForm({ intake, onChange, compact = false }: Props)
       title: t('intel.group.german', 'German'),
       fields: [
         <div className="space-y-1.5">
-          <Label className="text-xs">{t('intel.field.germanLevel', 'Current German level')}</Label>
+          <Label htmlFor="germanLevel" className="text-xs">{t('intel.field.germanLevel', 'Current German level')}</Label>
           <Select
             value={intake.germanLevel ?? 'all'}
             onValueChange={(v) => set({ germanLevel: v === 'all' ? undefined : (v as GermanLevel) })}
           >
-            <SelectTrigger>
+            <SelectTrigger id="germanLevel">
               <SelectValue placeholder="—" />
             </SelectTrigger>
             <SelectContent>
