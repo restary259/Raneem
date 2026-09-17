@@ -4934,7 +4934,7 @@
     "group": { "bagrut": "Bagrut", "subjects": "Subjects", "german": "German" },
     "tab": { "requirements": "Requirements", "application": "Application", "documents": "Documents", "sources": "Sources" },
     "search": "Search a major",
-    "searchPlaceholder": "علوم الحاسوب · מדעי המחשב · Computer Science · Informatik",
+    "searchPlaceholder": "Search a major…",
     "noMatch": "No major matches this search.",
     "pickTitle": "Select a major to start",
     "pickBody": "The tool answers one question: can this student proceed, and what must we check first.",
