@@ -56,22 +56,18 @@ export function planColumnGroups(
   let used = 0;
 
   for (let i = 0; i < widths.length; i++) {
-    if (groups.length > 0 && i === keyIndex) continue; // repeated below, not duplicated
-    const isFirstGroup = groups.length === 0;
-    const overhead = isFirstGroup || current.length ? 0 : keyWidth;
-    const width = widths[i];
-    const startsEmpty = current.length === 0;
-    if (!startsEmpty && used + width > available) {
+    if (groups.length > 0 && i === keyIndex) continue; // already repeated per group
+    if (current.length && used + widths[i] > available) {
       groups.push(current);
       current = [];
       used = 0;
     }
-    if (current.length === 0 && groups.length > 0 && i !== keyIndex) {
+    if (!current.length && groups.length > 0 && i !== keyIndex) {
       current.push(keyIndex);
       used += keyWidth;
     }
     current.push(i);
-    used += width + overhead * 0;
+    used += widths[i];
   }
   if (current.length) groups.push(current);
   return groups;
