@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExternalLink } from 'lucide-react';
-import SectionCard from '@/components/shell/SectionCard';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { MajorIntel, ProgramIntel } from '@/data/intel/types';
 import type { IntelSource } from '@/data/intel/factTypes';
 import { evaluateProgram, type CheckRow, type StudentIntake } from '@/lib/eligibility/engine';
@@ -20,7 +20,7 @@ const ROW_LABEL: Record<string, string> = {
   deadline: 'Application deadline',
 };
 
-function RowLine({ row }: { row: CheckRow }) {
+export function RowLine({ row }: { row: CheckRow }) {
   const { t, i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
   const note = isAr ? (row.noteAR ?? row.note) : row.note;
@@ -74,47 +74,42 @@ export default function ProgramCard({
   const srcUrl = (id?: string | null) => sources.find((s) => s.id === id)?.url;
 
   return (
-    <SectionCard
-      title={isAr ? program.universityNameAR : program.universityName}
-      description={`${isAr ? program.programNameAR : program.programName} · ${isAr ? program.cityAR : program.city}`}
-      actions={
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">{isAr ? program.universityNameAR : program.universityName}</h2>
+          <p className="text-sm text-muted-foreground">{isAr ? program.programNameAR : program.programName} · {isAr ? program.cityAR : program.city}</p>
+        </div>
         <div className="flex items-center gap-2">
           <VerificationBadge status="verified" checkedAt={program.lastVerified} />
           <CheckBadge status={assessment.overall} />
         </div>
-      }
-    >
-      <div className="space-y-4">
-        <div>
+      </div>
+
+      <div className="rounded-md border border-border bg-muted/30 p-3">
+        <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{t('intel.teamAction', 'Team action')}</p>
+        <p className="text-sm">
+          {assessment.missing.length > 0
+            ? `${t('intel.actionBlocked', 'Do not present this programme as available until these are resolved')}: ${assessment.missing.map((k) => t(`intel.row.${k}`, ROW_LABEL[k] ?? k)).join(' · ')}`
+            : assessment.toVerify.length > 0
+              ? `${t('intel.actionVerify', 'Verify or ask the student before advising')}: ${assessment.toVerify.map((k) => t(`intel.row.${k}`, ROW_LABEL[k] ?? k)).join(' · ')}`
+              : t('intel.actionClear', 'Every checked requirement is met on the recorded evidence.')}
+        </p>
+      </div>
+
+      <Tabs defaultValue="requirements" className="min-w-0">
+        <TabsList className="grid h-auto w-full grid-cols-4">
+          <TabsTrigger value="requirements" className="px-1 text-xs">{t('intel.tab.requirements', 'Requirements')}</TabsTrigger>
+          <TabsTrigger value="application" className="px-1 text-xs">{t('intel.tab.application', 'Application')}</TabsTrigger>
+          <TabsTrigger value="documents" className="px-1 text-xs">{t('intel.tab.documents', 'Documents')}</TabsTrigger>
+          <TabsTrigger value="sources" className="px-1 text-xs">{t('intel.tab.sources', 'Sources')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="requirements" className="mt-3">
           {assessment.rows.map((r) => (
             <RowLine key={r.key} row={r} />
           ))}
-        </div>
-
-        <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t('intel.teamAction', 'Team action')}
-          </p>
-          <ul className="list-inside list-disc space-y-1 text-xs text-foreground">
-            {assessment.missing.length > 0 && (
-              <li>
-                {t('intel.actionBlocked', 'Do not present this programme as available until these are resolved')}:{' '}
-                {assessment.missing.map((k) => t(`intel.row.${k}`, ROW_LABEL[k] ?? k)).join(' · ')}
-              </li>
-            )}
-            {assessment.toVerify.length > 0 && (
-              <li>
-                {t('intel.actionVerify', 'Verify or ask the student before advising')}:{' '}
-                {assessment.toVerify.map((k) => t(`intel.row.${k}`, ROW_LABEL[k] ?? k)).join(' · ')}
-              </li>
-            )}
-            {assessment.missing.length === 0 && assessment.toVerify.length === 0 && (
-              <li>{t('intel.actionClear', 'Every checked requirement is met on the recorded evidence.')}</li>
-            )}
-          </ul>
-        </div>
-
-        <div>
+        </TabsContent>
+        <TabsContent value="application" className="mt-3">
           <FactLine
             label={t('intel.fact.teachingLanguage', 'Teaching language')}
             f={program.teachingLanguage}
@@ -164,6 +159,8 @@ export default function ProgramCard({
                 </div>
               );
             })}
+        </TabsContent>
+        <TabsContent value="documents" className="mt-3">
           <FactLine
             label={t('intel.fact.documents', 'Documents')}
             f={program.documents}
@@ -177,8 +174,20 @@ export default function ProgramCard({
               sourceUrl={srcUrl(program.fees.sourceId)}
             />
           )}
-        </div>
-
+        </TabsContent>
+        <TabsContent value="sources" className="mt-3 space-y-2">
+          {[program.teachingLanguage, program.admissionMode, program.applicationChannel, program.foreignQualification, program.entranceRequirement, program.deadline, program.documents, program.fees]
+            .filter((fact) => fact?.sourceId)
+            .map((fact) => sources.find((source) => source.id === fact?.sourceId))
+            .filter((source, index, all) => source && all.findIndex((item) => item?.id === source.id) === index)
+            .map((source) => source && (
+              <a key={source.id} href={source.url} target="_blank" rel="noreferrer" className="flex items-start gap-2 rounded-md border border-border p-3 text-sm hover:bg-accent">
+                <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span>{isAr ? (source.titleAR ?? source.title) : source.title}</span>
+              </a>
+            ))}
+        </TabsContent>
+      </Tabs>
         <a
           href={program.programUrl}
           target="_blank"
@@ -188,7 +197,6 @@ export default function ProgramCard({
           <ExternalLink className="h-3.5 w-3.5" aria-hidden />
           {t('intel.openProgramPage', 'Open the official programme page')}
         </a>
-      </div>
-    </SectionCard>
+    </div>
   );
 }

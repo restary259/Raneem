@@ -1327,9 +1327,12 @@ export type Database = {
           id: string
           influencer_commission: number
           intake_notes: string | null
+          intel_intake_updated_at: string | null
+          intel_intake_updated_by: string | null
           intel_major_confirmed_at: string | null
           intel_major_confirmed_by: string | null
           intel_major_id: string | null
+          intel_student_intake: Json | null
           is_no_show: boolean
           last_activity_at: string
           lawyer_commission: number
@@ -1371,9 +1374,12 @@ export type Database = {
           id?: string
           influencer_commission?: number
           intake_notes?: string | null
+          intel_intake_updated_at?: string | null
+          intel_intake_updated_by?: string | null
           intel_major_confirmed_at?: string | null
           intel_major_confirmed_by?: string | null
           intel_major_id?: string | null
+          intel_student_intake?: Json | null
           is_no_show?: boolean
           last_activity_at?: string
           lawyer_commission?: number
@@ -1415,9 +1421,12 @@ export type Database = {
           id?: string
           influencer_commission?: number
           intake_notes?: string | null
+          intel_intake_updated_at?: string | null
+          intel_intake_updated_by?: string | null
           intel_major_confirmed_at?: string | null
           intel_major_confirmed_by?: string | null
           intel_major_id?: string | null
+          intel_student_intake?: Json | null
           is_no_show?: boolean
           last_activity_at?: string
           lawyer_commission?: number
@@ -1440,6 +1449,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cases_intel_intake_updated_by_fkey"
+            columns: ["intel_intake_updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cases_intel_major_confirmed_by_fkey"
             columns: ["intel_major_confirmed_by"]
@@ -4930,9 +4946,12 @@ export type Database = {
           id: string
           influencer_commission: number
           intake_notes: string | null
+          intel_intake_updated_at: string | null
+          intel_intake_updated_by: string | null
           intel_major_confirmed_at: string | null
           intel_major_confirmed_by: string | null
           intel_major_id: string | null
+          intel_student_intake: Json | null
           is_no_show: boolean
           last_activity_at: string
           lawyer_commission: number
@@ -5611,6 +5630,14 @@ export type Database = {
             }
             Returns: Json
           }
+      save_case_intel_intake: {
+        Args: { p_case_id: string; p_intake: Json }
+        Returns: {
+          intel_intake_updated_at: string
+          intel_intake_updated_by: string
+          intel_student_intake: Json
+        }[]
+      }
       search_cases_for_mention: {
         Args: { p_query: string }
         Returns: {
