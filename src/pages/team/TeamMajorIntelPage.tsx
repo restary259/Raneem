@@ -372,7 +372,29 @@ export default function TeamMajorIntelPage() {
     </div>
   ) : null;
 
-  const programmeBody = !major ? (
+  const programmeDetail = (
+    <>
+      <div className="p-4">
+        {activeProgram && (
+          <ProgramCard
+            major={major!}
+            program={activeProgram}
+            intake={intake}
+            sources={major!.sources}
+            focus={journeyFocus}
+            guidance={guidanceBlock}
+          />
+        )}
+      </div>
+      {major?.sources.slice(0, 2).map((source) => (
+        <a key={source.id} href={source.url} target="_blank" rel="noreferrer" className="mx-4 mb-2 flex items-center gap-2 text-xs text-primary underline underline-offset-2">
+          <ExternalLink className="h-3.5 w-3.5" aria-hidden />{isAr ? (source.titleAR ?? source.title) : source.title}
+        </a>
+      ))}
+    </>
+  );
+
+  const programmeBody = (scroll: boolean) => !major ? (
     <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">{t('intel.pickBody', 'Select a major to begin.')}</div>
   ) : major.status !== 'verified' ? (
     <div className="space-y-3 p-5">
