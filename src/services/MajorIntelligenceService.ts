@@ -88,4 +88,16 @@ export const MajorIntelligenceService = {
     if (!saved) throw new Error('INTEL_INTAKE_SAVE_EMPTY');
     return saved.intel_intake_updated_at;
   },
+
+  /** Records that this team member wants a major checked against official sources. */
+  async requestVerification(majorId: string, majorName: string): Promise<void> {
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth.user?.id;
+    if (!userId) throw new Error('INTEL_NO_SESSION');
+    const { error } = await supabase
+      .from('intel_verification_requests')
+      .insert({ major_id: majorId, major_name: majorName, requested_by: userId });
+    // A repeat request for the same major is not an error.
+    if (error && error.code !== '23505') throw error;
+  },
 };
