@@ -3152,6 +3152,21 @@
     "invoice": {
       "emailSent": "تم إرسال الفاتورة {{number}} إلى الطالب",
       "emailFailed": "تم إنشاء الفاتورة {{number}} لكن تعذّر إرسال البريد"
+    },
+    "majorLink": {
+      "title": "مجال الدراسة",
+      "studentWrote": "ما كتبه الطالب",
+      "suggested": "اقتراح",
+      "noMatch": "لا يوجد تخصص مطابق — اختر واحدًا أدناه.",
+      "pick": "اختيار تخصص آخر",
+      "searchPlaceholder": "علوم الحاسوب · Computer Science · Informatik",
+      "cancel": "إلغاء",
+      "open": "فتح في معلومات التخصصات",
+      "change": "تغيير",
+      "clear": "إزالة",
+      "notVerified": "غير موثّق بعد",
+      "saveFailed": "تعذّر حفظ مجال الدراسة",
+      "note": "هذا يسجّل مجال الدراسة الخاص بالملف فقط، ولا يقرّر شيئًا بخصوص الأهلية."
     }
   },
   "partner": {

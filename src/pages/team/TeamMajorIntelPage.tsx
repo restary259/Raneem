@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, ShieldCheck, ExternalLink } from 'lucide-react';
 import { PageHeader, SectionCard, EmptyState } from '@/components/shell';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AUTHORITY_TIER } from '@/data/intel/factTypes';
-import { searchMajors } from '@/data/intel/majorIntel';
+import { getMajorIntel, searchMajors } from '@/data/intel/majorIntel';
 import { CS_GUIDANCE } from '@/data/intel/computerScience';
 import type { MajorIntel } from '@/data/intel/types';
 import { EMPTY_INTAKE, missingIntakeFields, calculateGermanGrade, type StudentIntake } from '@/lib/eligibility/engine';
@@ -28,9 +29,18 @@ const QUESTIONS: { key: string; fallback: string; why: string }[] = [
 export default function TeamMajorIntelPage() {
   const { t, i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<MajorIntel | null>(null);
   const [intake, setIntake] = useState<StudentIntake>(EMPTY_INTAKE);
+
+  // Deep link from a case: /team/majors?major=<id>&case=<caseId>
+  const linkedMajorId = searchParams.get('major');
+  useEffect(() => {
+    if (!linkedMajorId) return;
+    const m = getMajorIntel(linkedMajorId);
+    if (m) setSelected(m);
+  }, [linkedMajorId]);
 
   const results = useMemo(() => searchMajors(query), [query]);
   const major = selected;

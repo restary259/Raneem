@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { formatDateMedium } from "@/utils/dateUtils";
+import CaseMajorLink from "@/components/cases/CaseMajorLink";
 
 interface Props {
   caseData: Record<string, any>;
@@ -77,7 +78,13 @@ export default function CaseOverviewPanel({ caseData }: Props) {
   const notSet = t("case.overview.notSet");
 
   return (
-    <section className="rounded-xl border bg-card">
+    <div className="space-y-3">
+      <CaseMajorLink
+        caseId={caseData.id}
+        degreeInterest={caseData.degree_interest ?? null}
+        majorId={caseData.intel_major_id ?? null}
+      />
+      <section className="rounded-xl border bg-card">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -99,6 +106,7 @@ export default function CaseOverviewPanel({ caseData }: Props) {
           ))}
         </div>
       )}
-    </section>
+      </section>
+    </div>
   );
 }
