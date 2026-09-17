@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Banknote, CalendarDays, Clock, RotateCcw, Users } from "lucide-react";
+import { AlertTriangle, Banknote, BookSearch, CalendarDays, Clock, RotateCcw, Users } from "lucide-react";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
 import { LoadingState, EmptyState } from "@/components/shell";
 
@@ -239,9 +239,15 @@ export default function TeamWorkPage() {
             {dateStr}
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => navigate("/team/cases")}>
-          {t("team.work.allCases", "All cases")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => navigate("/team/majors")}>
+            <BookSearch className="h-4 w-4" />
+            {t("team.work.majorIntel", "Major intelligence")}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => navigate("/team/cases")}>
+            {t("team.work.allCases", "All cases")}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
