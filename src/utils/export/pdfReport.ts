@@ -185,14 +185,13 @@ export async function exportCorporatePdf(report: CorporateReport): Promise<PdfRe
     const totals = totalsRow(sheet, totalLabel);
     if (totals) body.push(totals);
 
-    const displayHeaders = rtl ? [...headers].reverse() : headers;
-    const displayBody = rtl ? body.map(r => [...r].reverse()) : body;
-
     // Measure real text so columns are sized by content, then clamp + fit them
     // into the printable area; anything still too wide continues on its own
-    // page instead of being drawn off the paper.
-    const probe = displayBody.slice(0, 200);
-    const natural = displayHeaders.map((header, i) => {
+    // page instead of being drawn off the paper. Grouping is planned in
+    // logical column order (so the key column really is the first one) and
+    // only the drawing order is mirrored for RTL.
+    const probe = body.slice(0, 200);
+    const natural = headers.map((header, i) => {
       let w = measure(track(String(header ?? '')), 9, true);
       for (const row of probe) w = Math.max(w, measure(track(String(row[i] ?? '')), 8, false));
       return w + CELL_PADDING * 2 + 1;
