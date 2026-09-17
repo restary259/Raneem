@@ -27,7 +27,7 @@ interface Props {
  */
 export default function CaseMajorLink({ caseId, degreeInterest, majorId }: Props) {
   const { t, i18n } = useTranslation("dashboard");
-  const isAr = i18n.language === "ar";
+  const isAr = i18n?.language === "ar";
   const { toast } = useToast();
 
   const [linkedId, setLinkedId] = useState<string | null>(majorId);
