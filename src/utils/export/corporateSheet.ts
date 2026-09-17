@@ -54,6 +54,10 @@ export interface CorporateReport {
   locale?: string;
   /** Localized label for the totals row in the PDF rendering. */
   totalLabel?: string;
+  /** Localized label printed for a section that has no records (PDF). */
+  emptyLabel?: string;
+  /** Localized word used on continuation pages of a wide table (PDF). */
+  continuedLabel?: string;
   sheets: CorporateSheet[];
 
 }
