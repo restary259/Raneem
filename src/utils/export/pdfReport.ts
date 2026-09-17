@@ -13,7 +13,11 @@
 import { BRAND, LAYOUT } from './theme';
 import { CorporateReport, CorporateSheet, ExportColumn, ExportRow } from './corporateSheet';
 import { ExportColumnType, coerceValue, generatedStamp } from './formats';
+import { fitWidths, planColumnGroups } from './tableFit';
 import { fontForText, hasRtl, registerPdfFonts, shapeForPdf, type FontRegistration } from '@/utils/pdfFonts';
+
+/** Padding inside every table cell (mm), shared by measuring and drawing. */
+const CELL_PADDING = 2.4;
 
 export interface PdfReportResult {
   /** True when RTL text was present but no font could render it. */
