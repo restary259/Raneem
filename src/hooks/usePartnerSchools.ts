@@ -123,7 +123,7 @@ export function usePartnerSchoolDetail(slug: string | undefined, year?: number):
           db.from("partner_countries").select("*").eq("id", school.country_id).maybeSingle(),
           versionQuery.maybeSingle(),
           db.from("school_level_durations").select("*").eq("school_id", school.id).order("sort_order"),
-          db.from("school_start_dates").select("*").eq("school_id", school.id).order("start_date"),
+          db.from("school_start_dates").select("*").eq("school_id", school.id).eq("year", year ?? 2027).order("start_date"),
           db.from("school_policies").select("*").eq("school_id", school.id).order("sort_order"),
           db.from("school_notes").select("*").eq("school_id", school.id).eq("is_active", true).order("sort_order"),
           db.from("school_sources").select("*").eq("school_id", school.id).order("sort_order"),
