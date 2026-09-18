@@ -2423,6 +2423,8 @@
     "hoursPerWeek": "hours/week",
     "lessonsPerWeek": "lessons/week",
     "noAccommodationsDesc": "Accommodation entries are managed by administrators.",
+    "filteredFromSchool": "Showing only the rooms linked to the option you opened.",
+
     "noPhotos": "No photos available",
     "noPrograms": "No courses listed for this school",
     "noProgramsDesc": "Courses are managed by administrators.",
