@@ -1,0 +1,287 @@
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CEFR_ORDER,
+  formatBandLabel,
+  formatEur,
+  levelPlan,
+  quoteAccommodation,
+  quoteCourse,
+  summerWeeks,
+  totalWeeks,
+  type AccommodationPriceTier,
+  type CoursePriceTier,
+  type LevelDuration,
+} from "@/lib/partnerSchools";
+
+interface Props {
+  courses: any[];
+  courseTiers: any[];
+  levels: LevelDuration[];
+  accommodations: any[];
+  accommodationTiers: any[];
+  version: any | null;
+  lang: string;
+}
+
+export default function SchoolCalculator({
+  courses,
+  courseTiers,
+  levels,
+  accommodations,
+  accommodationTiers,
+  version,
+  lang,
+}: Props) {
+  const { t } = useTranslation("dashboard");
+  const defaultCourse = courses.find((c) => c.is_darb_standard) ?? courses[0];
+  const [courseId, setCourseId] = useState<string>(defaultCourse?.id ?? "");
+  const [from, setFrom] = useState("A1");
+  const [to, setTo] = useState("B2");
+  const [withAcc, setWithAcc] = useState(false);
+  const [accId, setAccId] = useState<string>(accommodations[0]?.id ?? "");
+  const [accWeeks, setAccWeeks] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  const course = courses.find((c) => c.id === courseId) ?? defaultCourse;
+  const acc = accommodations.find((a) => a.id === accId) ?? accommodations[0];
+
+  const plan = useMemo(() => levelPlan(from, to, levels), [from, to, levels]);
+  const weeks = totalWeeks(plan);
+  const missingLevels = plan.filter((p) => p.missing).map((p) => p.level);
+
+  const tiers: CoursePriceTier[] = useMemo(
+    () => courseTiers.filter((tier) => tier.course_id === course?.id),
+    [courseTiers, course],
+  );
+  const courseQuote = useMemo(() => quoteCourse(tiers, weeks, "booking"), [tiers, weeks]);
+
+  const stayWeeks = accWeeks === "" ? weeks : Math.max(0, Number(accWeeks) || 0);
+  const accTiers: AccommodationPriceTier[] = useMemo(
+    () => accommodationTiers.filter((tier) => tier.accommodation_id === acc?.id),
+    [accommodationTiers, acc],
+  );
+  const accQuote = useMemo(
+    () => (withAcc ? quoteAccommodation(accTiers, stayWeeks) : null),
+    [withAcc, accTiers, stayWeeks],
+  );
+  const arrangementFee = withAcc ? Number(acc?.arrangement_fee ?? 0) : 0;
+
+  const supplementWeeks = withAcc
+    ? summerWeeks(startDate || null, stayWeeks, version?.summer_from ?? null, version?.summer_to ?? null)
+    : 0;
+  const supplement = supplementWeeks * Number(version?.summer_supplement_per_week ?? 0);
+
+  const payable =
+    (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + supplement;
+  const incomplete = courseQuote.total == null || (withAcc && accQuote?.total == null) || missingLevels.length > 0;
+
+  const answer = [
+    `${from} → ${to}`,
+    `${weeks} weeks`,
+    `${course?.name_en ?? ""}`,
+    `Course: ${formatEur(courseQuote.total)}${courseQuote.pricePerWeek ? ` (${weeks} × ${formatEur(courseQuote.pricePerWeek)}/week)` : ""}`,
+    withAcc ? `Accommodation (${acc?.name_en}, ${stayWeeks} weeks): ${formatEur(accQuote?.total ?? null)}` : "",
+    withAcc && arrangementFee ? `Accommodation arrangement: ${formatEur(arrangementFee)}` : "",
+    supplement ? `Summer supplement: ${formatEur(supplement)}` : "",
+    `Estimated payable: ${formatEur(payable)}`,
+    "Security deposit is separate — amount to confirm with the school.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(answer);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      {/* Inputs */}
+      <Card className="space-y-4 p-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label>{t("partnerSchools.startingLevel", "Starting level")}</Label>
+            <Select value={from} onValueChange={setFrom}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CEFR_ORDER.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("partnerSchools.targetLevel", "Target level")}</Label>
+            <Select value={to} onValueChange={setTo}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CEFR_ORDER.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("partnerSchools.course", "Course")}</Label>
+            <Select value={course?.id ?? ""} onValueChange={setCourseId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {courses.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {lang === "ar" && c.name_ar ? c.name_ar : c.name_en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+          <Label htmlFor="addacc" className="cursor-pointer">
+            {t("partnerSchools.addAccommodation", "Add accommodation")}
+          </Label>
+          <Switch id="addacc" checked={withAcc} onCheckedChange={setWithAcc} />
+        </div>
+
+        {withAcc && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5 sm:col-span-3">
+              <Label>{t("partnerSchools.accommodationType", "Accommodation")}</Label>
+              <Select value={acc?.id ?? ""} onValueChange={setAccId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {accommodations.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {lang === "ar" && a.name_ar ? a.name_ar : a.name_en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("partnerSchools.accWeeks", "Accommodation weeks")}</Label>
+              <Input
+                type="number"
+                min={0}
+                value={accWeeks}
+                placeholder={String(weeks)}
+                onChange={(e) => setAccWeeks(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>{t("partnerSchools.startDate", "Start date")}</Label>
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        {/* Breakdown */}
+        <div className="space-y-2 rounded-md bg-muted/40 p-3 text-sm">
+          <div className="font-medium text-foreground">{t("partnerSchools.breakdown", "Calculation")}</div>
+          <ul className="space-y-1 text-muted-foreground">
+            {plan.map((p) => (
+              <li key={p.level} className="flex justify-between">
+                <span>{p.level}</span>
+                <span>
+                  {p.missing
+                    ? t("partnerSchools.notRecorded", "Not recorded — verify with the school")
+                    : `${p.weeks} ${t("partnerSchools.weeks", "weeks")}`}
+                </span>
+              </li>
+            ))}
+            {courseQuote.band && (
+              <li className="flex justify-between border-t border-border pt-1">
+                <span>
+                  {weeks} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band)})
+                </span>
+                <span>{formatEur(courseQuote.total)}</span>
+              </li>
+            )}
+            {withAcc && accQuote?.tier && (
+              <li className="flex justify-between">
+                <span>
+                  {acc?.name_en} · {stayWeeks} {t("partnerSchools.weeks", "weeks")}
+                  {accQuote.perWeek ? ` × ${formatEur(accQuote.perWeek)}` : ""}
+                </span>
+                <span>{formatEur(accQuote.total)}</span>
+              </li>
+            )}
+          </ul>
+        </div>
+      </Card>
+
+      {/* Result */}
+      <Card className="h-fit space-y-3 border-brand/40 p-4">
+        <div className="text-sm text-muted-foreground">{from} → {to}</div>
+        <div className="text-3xl font-semibold text-foreground">
+          {weeks} {t("partnerSchools.weeks", "weeks")}
+        </div>
+        <div className="text-2xl font-semibold text-brand">{formatEur(courseQuote.total)}</div>
+        <div className="text-xs text-muted-foreground">
+          {t("partnerSchools.courseTuition", "Course tuition (school price)")}
+        </div>
+
+        <div className="space-y-1.5 border-t border-border pt-3 text-sm">
+          <Row label={t("partnerSchools.course", "Course")} value={formatEur(courseQuote.total)} />
+          {withAcc && (
+            <>
+              <Row label={t("partnerSchools.accommodation", "Accommodation")} value={formatEur(accQuote?.total ?? null)} />
+              {arrangementFee > 0 && (
+                <Row label={t("partnerSchools.arrangementFee", "Accommodation arrangement")} value={formatEur(arrangementFee)} />
+              )}
+            </>
+          )}
+          {supplement > 0 && (
+            <Row label={t("partnerSchools.summerSupplement", "Summer supplement")} value={formatEur(supplement)} />
+          )}
+          <div className="flex justify-between border-t border-border pt-2 text-base font-semibold text-foreground">
+            <span>{t("partnerSchools.estimatedPayable", "Estimated payable cost")}</span>
+            <span>{formatEur(payable)}</span>
+          </div>
+        </div>
+
+        <p className="rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">
+          {t(
+            "partnerSchools.depositSeparate",
+            "Security deposit is separate and not included above — amount to confirm with the school.",
+          )}
+        </p>
+        {incomplete && (
+          <p className="rounded-md bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-400">
+            {t("partnerSchools.incomplete", "Some values are not recorded — verify with the school before quoting.")}
+          </p>
+        )}
+
+        <Button className="w-full" variant="outline" onClick={copy}>
+          {copied ? <Check className="me-2 h-4 w-4" /> : <Copy className="me-2 h-4 w-4" />}
+          {t("partnerSchools.copyAnswer", "Copy answer")}
+        </Button>
+      </Card>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between text-muted-foreground">
+      <span>{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
