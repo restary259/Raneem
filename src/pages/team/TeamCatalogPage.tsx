@@ -105,10 +105,14 @@ export default function TeamCatalogPage() {
 
   const schoolAccommodations = useMemo(() => {
     if (!data || !school) return [];
+    const requestedMeals = searchParams.get("meals");
     return data.accommodations.filter(
-      (a) => a.school_id === school.id && (!filters.roomType || a.room_type === filters.roomType),
+      (a) =>
+        a.school_id === school.id &&
+        (!filters.roomType || a.room_type === filters.roomType) &&
+        (!requestedMeals || a.meals === requestedMeals),
     );
-  }, [data, school, filters.roomType]);
+  }, [data, school, filters.roomType, searchParams]);
 
   const selectedSchool = useMemo(() => {
     if (!data || !selected) return null;

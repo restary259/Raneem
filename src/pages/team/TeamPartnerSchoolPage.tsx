@@ -3,8 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  BedDouble,
   CalendarDays,
   Check,
+  Clock3,
+  Euro,
   ExternalLink,
   FileText,
   MapPin,
@@ -16,10 +19,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PageHeader, LoadingState, ErrorState, EmptyState } from "@/components/shell";
 import { usePartnerSchoolDetail } from "@/hooks/usePartnerSchools";
 import { useLang } from "@/hooks/useLang";
-import { formatBandLabel, formatEur } from "@/lib/partnerSchools";
+import {
+  formatBandLabel,
+  formatEur,
+  formatSchoolDate,
+  levelPlan,
+  partnerSchoolCatalogUrl,
+  quoteCourse,
+  totalWeeks,
+} from "@/lib/partnerSchools";
+import { mealsLabel, roomTypeLabel } from "@/lib/catalogDisplay";
 import SchoolCalculator from "@/components/team/partnerSchools/SchoolCalculator";
 
 const TABS = [
@@ -47,6 +60,24 @@ export default function TeamPartnerSchoolPage() {
     () => data?.courses.find((c) => c.is_darb_standard) ?? data?.courses[0] ?? null,
     [data],
   );
+  const a1ToC1 = useMemo(() => {
+    if (!standard) return null;
+    const plan = levelPlan("A1", "C1", data?.levels ?? []);
+    const weeks = totalWeeks(plan);
+    const tiers = (data?.courseTiers ?? []).filter((tier) => tier.course_id === standard.id);
+    return { plan, weeks, quote: quoteCourse(tiers, weeks) };
+  }, [data, standard]);
+
+  const datesByMonth = useMemo(() => {
+    const groups = new Map<string, typeof data.startDates>();
+    for (const date of data.startDates) {
+      const key = date.start_date.slice(0, 7);
+      const current = groups.get(key) ?? [];
+      current.push(date);
+      groups.set(key, current);
+    }
+    return Array.from(groups.entries());
+  }, [data]);
 
   /** Structured lookup — answers come only from stored records. */
   const searchHits = useMemo(() => {
@@ -131,7 +162,7 @@ export default function TeamPartnerSchoolPage() {
   const { school, version } = data;
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-[1500px] space-y-3 pb-8" dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHeader
         title={school.name}
         subtitle={
@@ -149,7 +180,7 @@ export default function TeamPartnerSchoolPage() {
           </span>
         }
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="ghost" size="sm">
               <Link to={`/team/partner-schools/${country}`}>
                 <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
@@ -169,7 +200,7 @@ export default function TeamPartnerSchoolPage() {
       />
 
       {/* Search */}
-      <Card className="p-3">
+      <Card className="border-border/70 p-3 shadow-none">
         <div className="relative">
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -202,29 +233,54 @@ export default function TeamPartnerSchoolPage() {
 
       {/* Quick answers */}
       {standard && (
-        <Card className="border-brand/40 p-4">
-          <Badge className="mb-3 bg-brand text-brand-foreground hover:bg-brand">
-            {t("partnerSchools.darbStandard", "DARB Standard")}
-          </Badge>
-          <div className="mb-3 text-sm font-medium text-foreground">{loc(standard.name_en, standard.name_ar)}</div>
-          <div className="grid gap-3 text-sm sm:grid-cols-3 lg:grid-cols-5">
-            <Fact label={t("partnerSchools.lessons", "Lessons")} value={`${standard.lessons_per_week} / ${t("partnerSchools.week", "week")}`} />
-            <Fact label={t("partnerSchools.schedule", "Schedule")} value={loc(standard.schedule_text_en, standard.schedule_text_ar)} />
-            <Fact label={t("partnerSchools.classSize", "Class size")} value={`${t("partnerSchools.max", "Max")} ${standard.max_students}`} />
-            <Fact label={t("partnerSchools.starts", "Starts")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
-            <Fact label={t("partnerSchools.city", "City")} value={school.city ?? "—"} />
+        <Card className="overflow-hidden border-brand/40 shadow-none">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="p-4 sm:p-5">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <Badge className="bg-brand text-brand-foreground hover:bg-brand">
+                  {t("partnerSchools.darbStandard", "DARB Standard")}
+                </Badge>
+                <h2 className="text-base font-semibold text-foreground">{loc(standard.name_en, standard.name_ar)}</h2>
+              </div>
+              <div className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+                <Fact label={t("partnerSchools.lessons", "Lessons")} value={`${standard.lessons_per_week} / ${t("partnerSchools.week", "week")}`} />
+                <Fact label={t("partnerSchools.schedule", "Schedule")} value={loc(standard.schedule_text_en, standard.schedule_text_ar)} />
+                <Fact label={t("partnerSchools.classSize", "Class size")} value={`${t("partnerSchools.max", "Max")} ${standard.max_students}`} />
+                <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
+              </div>
+            </div>
+            {a1ToC1 && (
+              <div className="border-t border-brand/20 bg-brand/5 p-4 lg:border-s lg:border-t-0">
+                <p className="text-xs font-medium text-muted-foreground">{t("partnerSchools.quickAnswer", "Quick answer")}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">A1 → C1</p>
+                <div className="mt-2 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-2xl font-semibold text-brand">{formatEur(a1ToC1.quote.total)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {a1ToC1.weeks} {t("partnerSchools.weeks", "weeks")} × {formatEur(a1ToC1.quote.pricePerWeek)}
+                    </p>
+                  </div>
+                  <Euro className="h-5 w-5 text-brand" />
+                </div>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  {t("partnerSchools.a1C1Exclusions", "School tuition only. Accommodation, supplements, deposits and DARB office fees are separate.")}
+                </p>
+              </div>
+            )}
           </div>
         </Card>
       )}
 
       <Tabs defaultValue="overview">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+        <div className="sticky top-0 z-20 -mx-1 overflow-x-auto bg-background/95 px-1 py-1 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+        <TabsList className="flex h-auto w-max min-w-full justify-start gap-1 p-1 rtl:flex-row">
           {TABS.map((key) => (
-            <TabsTrigger key={key} value={key}>
+            <TabsTrigger key={key} value={key} className="whitespace-nowrap px-3 py-2">
               {t(`partnerSchools.tab.${key}`, key)}
             </TabsTrigger>
           ))}
         </TabsList>
+        </div>
 
         {/* Overview */}
         <TabsContent value="overview" className="mt-3 grid gap-3 lg:grid-cols-2">
@@ -315,23 +371,41 @@ export default function TeamPartnerSchoolPage() {
         <TabsContent value="accommodation" className="mt-3 space-y-3">
           <div className="flex justify-end">
             <Button asChild variant="outline" size="sm">
-              <Link to="/team/catalog">
+              <Link to={school.catalog_school_id ? `/team/catalog?school=${school.catalog_school_id}&tab=accommodations` : "/team/catalog"}>
                 {t("partnerSchools.openCatalog", "Open DARB Catalog")}
                 <ExternalLink className="ms-2 h-3.5 w-3.5" />
               </Link>
             </Button>
           </div>
           {data.accommodations.length === 0 && <NotRecorded />}
-          <div className="grid gap-3 lg:grid-cols-2">
+          <Accordion type="single" collapsible className="overflow-hidden rounded-md border border-border bg-card px-4">
             {data.accommodations.map((a) => {
               const tiers = data.accommodationTiers.filter((x) => x.accommodation_id === a.id);
+              const catalogUrl = partnerSchoolCatalogUrl({
+                schoolId: school.catalog_school_id,
+                roomType: a.room_type,
+                meals: a.meals,
+              });
               return (
-                <Card key={a.id} className="space-y-2 p-4">
-                  <h3 className="text-sm font-semibold text-foreground">{loc(a.name_en, a.name_ar)}</h3>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
+                <AccordionItem key={a.id} value={a.id} className="last:border-b-0">
+                  <AccordionTrigger className="gap-3 py-3 text-start hover:no-underline">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        <BedDouble className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-foreground">{loc(a.name_en, a.name_ar)}</span>
+                        <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                          {roomTypeLabel(a.room_type, lang)} · {mealsLabel(a.meals, lang)} · {t("partnerSchools.from", "from")} {formatEur(a.from_price_per_week)}/{t("partnerSchools.week", "week")}
+                        </span>
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-3 ps-12">
+                    <ul className="divide-y divide-border/60 rounded-md border border-border/70 px-3 text-sm text-muted-foreground">
                     {tiers.map((x) => (
-                      <li key={x.id} className="flex justify-between">
-                        <span>{formatBandLabel(x)}</span>
+                      <li key={x.id} className="flex items-center justify-between gap-4 py-2">
+                        <span>{formatBandLabel(x, lang)}</span>
                         <span className="font-medium text-foreground">
                           {x.total_price != null
                             ? formatEur(x.total_price)
@@ -340,7 +414,9 @@ export default function TeamPartnerSchoolPage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
+                  <div className="flex flex-wrap gap-1.5">
+                    {roomTypeLabel(a.room_type, lang) && <Badge variant="outline">{roomTypeLabel(a.room_type, lang)}</Badge>}
+                    {mealsLabel(a.meals, lang) && <Badge variant="outline">{mealsLabel(a.meals, lang)}</Badge>}
                     {a.minimum_age && (
                       <Badge variant="secondary">
                         {t("partnerSchools.minAge", "Minimum age")} {a.minimum_age}
@@ -358,35 +434,61 @@ export default function TeamPartnerSchoolPage() {
                       {loc(a.availability_note_en, a.availability_note_ar)}
                     </p>
                   )}
-                  <SourceLine name={a.source_name} doc={a.source_document} verified={a.last_verified_at} t={(k, d) => t(k, d ?? k)} />
-                </Card>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3">
+                    <SourceLine name={a.source_name} doc={a.source_document} verified={a.last_verified_at} t={(k, d) => t(k, d ?? k)} />
+                    {catalogUrl && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={catalogUrl}>
+                          {t("partnerSchools.viewInCatalog", "View in catalog")}
+                          <ExternalLink className="ms-2 h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </AccordionContent>
+                </AccordionItem>
               );
             })}
-          </div>
+          </Accordion>
         </TabsContent>
 
         {/* Start dates */}
         <TabsContent value="startDates" className="mt-3 space-y-3">
-          <Card className="space-y-2 p-4">
-            <h3 className="text-sm font-semibold text-foreground">{t("partnerSchools.allStudents", "A2 and above")}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t("partnerSchools.everyMonday", "Courses start every Monday.")}
-            </p>
+          <Card className="flex items-start gap-3 p-4 shadow-none">
+            <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">{t("partnerSchools.withGermanStart", "Students with prior German")}</h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.everyMondayExplained", "Students with prior German may start on any Monday after the school confirms their placement level.")}
+              </p>
+            </div>
           </Card>
-          <Card className="space-y-2 p-4">
+          <Card className="space-y-3 p-4 shadow-none">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <CalendarDays className="h-4 w-4" />
-              {t("partnerSchools.beginners", "Absolute beginners (A1)")}
+               {t("partnerSchools.beginnerStartDates", "Beginner course start dates (A1)")}
             </h3>
             {data.startDates.length === 0 ? (
               <NotRecorded />
             ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {data.startDates.map((d) => (
-                  <Badge key={d.id} variant="secondary">{d.start_date}</Badge>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {datesByMonth.map(([month, dates]) => (
+                  <div key={month} className="rounded-md border border-border/70 p-3">
+                    <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                      {new Intl.DateTimeFormat(lang === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`))}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {dates.map((date) => (
+                        <Badge key={date.id} variant="secondary" className="font-normal">{formatSchoolDate(date.start_date, lang)}</Badge>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
+            <p className="text-sm leading-6 text-muted-foreground">
+              {t("partnerSchools.beginnerDatesExplained", "Students beginning A1 with no previous German must choose one of these published start dates.")}
+            </p>
             <SourceLine
               name={data.startDates[0]?.source_name}
               doc={data.startDates[0]?.source_document}
