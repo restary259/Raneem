@@ -410,14 +410,23 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Accommodation */}
         <TabsContent value="accommodation" className="mt-3 space-y-3">
-          <Card className="border-brand/30 bg-brand/5 p-4 shadow-none">
-            <h3 className="text-sm font-semibold text-foreground">
-              {t("partnerSchools.singleRoomSettingTitle", "Where is the single room?")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {t("partnerSchools.singleRoomSetting", "KAPITO single rooms may be with a host family, an individual host, or in a shared flat. The exact placement is confirmed by the school and is not guaranteed in advance.")}
-            </p>
-          </Card>
+          {accommodationNotes.length > 0 ? (
+            accommodationNotes.map((n) => (
+              <Card key={n.id} className="border-brand/30 bg-brand/5 p-4 shadow-none">
+                <h3 className="text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="border-brand/30 bg-brand/5 p-4 shadow-none">
+              <h3 className="text-sm font-semibold text-foreground">
+                {t("partnerSchools.singleRoomSettingTitle", "Where is the single room?")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.singleRoomSetting", "KAPITO single rooms may be with a host family, an individual host, or in a shared flat. The exact placement is confirmed by the school and is not guaranteed in advance.")}
+              </p>
+            </Card>
+          )}
           <div className="flex justify-end">
             <Button asChild variant="outline" size="sm">
               <Link to={school.catalog_school_id ? `/team/catalog?school=${school.catalog_school_id}&tab=accommodations` : "/team/catalog"}>
