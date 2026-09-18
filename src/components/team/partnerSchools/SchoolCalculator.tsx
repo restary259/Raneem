@@ -22,6 +22,7 @@ import {
   quoteCourse,
   summerWeeks,
   totalWeeks,
+  totalWeeksMax,
   type AccommodationPriceTier,
   type CoursePriceTier,
   type LevelDuration,
@@ -62,6 +63,8 @@ export default function SchoolCalculator({
 
   const plan = useMemo(() => levelPlan(from, to, levels), [from, to, levels]);
   const weeks = totalWeeks(plan);
+  const weeksMax = totalWeeksMax(plan);
+  const isRange = weeksMax > weeks;
   const missingLevels = plan.filter((p) => p.missing).map((p) => p.level);
 
   const tiers: CoursePriceTier[] = useMemo(
@@ -69,6 +72,14 @@ export default function SchoolCalculator({
     [courseTiers, course],
   );
   const courseQuote = useMemo(() => quoteCourse(tiers, weeks, "booking"), [tiers, weeks]);
+  const courseQuoteMax = useMemo(
+    () => (isRange ? quoteCourse(tiers, weeksMax, "booking") : null),
+    [tiers, weeksMax, isRange],
+  );
+  const weeksLabel = isRange ? `${weeks}–${weeksMax}` : String(weeks);
+  const courseTotalLabel = courseQuoteMax
+    ? `${formatEur(courseQuote.total)} – ${formatEur(courseQuoteMax.total)}`
+    : formatEur(courseQuote.total);
 
   const stayWeeks = accWeeks === "" ? weeks : Math.max(0, Number(accWeeks) || 0);
   const accTiers: AccommodationPriceTier[] = useMemo(
@@ -92,11 +103,11 @@ export default function SchoolCalculator({
 
   const answer = [
     `${from} → ${to}`,
-    t("partnerSchools.copyWeeks", "{{weeks}} weeks", { weeks }),
+    t("partnerSchools.copyWeeks", "{{weeks}} weeks", { weeks: weeksLabel }),
     lang === "ar" && course?.name_ar ? course.name_ar : course?.name_en ?? "",
     t("partnerSchools.copyCourse", "Course: {{total}} ({{weeks}} × {{rate}}/week)", {
-      total: formatEur(courseQuote.total),
-      weeks,
+      total: courseTotalLabel,
+      weeks: weeksLabel,
       rate: formatEur(courseQuote.pricePerWeek),
     }),
     withAcc
@@ -113,6 +124,12 @@ export default function SchoolCalculator({
       ? t("partnerSchools.copySummer", "Summer supplement: {{total}}", { total: formatEur(supplement) })
       : "",
     t("partnerSchools.copyPayable", "Estimated payable: {{total}}", { total: formatEur(payable) }),
+    isRange
+      ? t(
+          "partnerSchools.rangeNote",
+          "This school publishes a range of teaching hours per level, so the duration and price are a range.",
+        )
+      : "",
     withAcc ? t("partnerSchools.depositSeparate", "Security deposit is separate — amount to confirm with the school.") : "",
   ]
     .filter(Boolean)
@@ -215,16 +232,16 @@ export default function SchoolCalculator({
                 <span>
                   {p.missing
                     ? t("partnerSchools.notRecorded", "Not recorded — verify with the school")
-                    : `${p.weeks} ${t("partnerSchools.weeks", "weeks")}`}
+                    : `${p.weeksMax > p.weeks ? `${p.weeks}–${p.weeksMax}` : p.weeks} ${t("partnerSchools.weeks", "weeks")}`}
                 </span>
               </li>
             ))}
             {courseQuote.band && (
               <li className="flex justify-between border-t border-border pt-1">
                 <span>
-                  {weeks} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})
+                  {weeksLabel} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})
                 </span>
-                <span>{formatEur(courseQuote.total)}</span>
+                <span>{courseTotalLabel}</span>
               </li>
             )}
             {withAcc && accQuote?.tier && (
@@ -244,15 +261,23 @@ export default function SchoolCalculator({
       <Card className="h-fit space-y-3 border-brand/40 p-4 shadow-none">
         <div className="text-sm text-muted-foreground">{from} → {to}</div>
         <div className="text-3xl font-semibold text-foreground">
-          {weeks} {t("partnerSchools.weeks", "weeks")}
+          {weeksLabel} {t("partnerSchools.weeks", "weeks")}
         </div>
-        <div className="text-2xl font-semibold text-brand">{formatEur(courseQuote.total)}</div>
+        <div className="text-2xl font-semibold text-brand">{courseTotalLabel}</div>
         <div className="text-xs text-muted-foreground">
           {t("partnerSchools.courseTuition", "Course tuition (school price)")}
         </div>
+        {isRange && (
+          <p className="rounded-md bg-muted/50 p-2 text-xs leading-5 text-muted-foreground">
+            {t(
+              "partnerSchools.rangeNote",
+              "This school publishes a range of teaching hours per level, so the duration and price are a range.",
+            )}
+          </p>
+        )}
 
         <div className="space-y-1.5 border-t border-border pt-3 text-sm">
-          <Row label={t("partnerSchools.course", "Course")} value={formatEur(courseQuote.total)} />
+          <Row label={t("partnerSchools.course", "Course")} value={courseTotalLabel} />
           {withAcc && (
             <>
               <Row label={t("partnerSchools.accommodation", "Accommodation")} value={formatEur(accQuote?.total ?? null)} />

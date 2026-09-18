@@ -19,11 +19,16 @@ export interface AccommodationPriceTier {
   to_weeks: number | null;
   total_price: number | null;
   price_per_week: number | null;
+  extra_day_price?: number | null;
 }
 
 export interface LevelDuration {
   level: string;
   weeks: number;
+  /** Set when the school publishes a range (e.g. teaching-hour ranges). */
+  weeks_max?: number | null;
+  hours_min?: number | null;
+  hours_max?: number | null;
   sort_order: number;
 }
 
@@ -45,6 +50,12 @@ const INCLUDED_ITEM_AR: Record<string, string> = {
   "Visa and insurance support": "دعم التأشيرة والتأمين",
   "Certificate and student ID card": "شهادة وبطاقة طالب",
   "Free Wi-Fi": "إنترنت لاسلكي مجاني",
+  "Free placement test": "اختبار تحديد مستوى مجاني",
+  "Free level completion tests": "اختبارات إنهاء المستوى مجاناً",
+  "Free certificate of participation": "شهادة مشاركة مجانية",
+  "Internal language exam from € 80": "امتحان لغة داخلي ابتداءً من 80 يورو",
+  "Internationally recognised language exams from € 180":
+    "امتحانات لغة معترف بها دولياً ابتداءً من 180 يورو",
 };
 
 /** Converts canonical school inclusions to Arabic without inventing missing facts. */
@@ -66,20 +77,37 @@ export function levelsBetween(from: string, to: string): string[] {
 export interface LevelPlanRow {
   level: string;
   weeks: number;
+  /** Upper end when the school publishes a range; equals `weeks` otherwise. */
+  weeksMax: number;
   missing: boolean;
 }
 
 export function levelPlan(from: string, to: string, durations: LevelDuration[]): LevelPlanRow[] {
-  const byLevel = new Map(durations.map((d) => [d.level, d.weeks]));
-  return levelsBetween(from, to).map((level) => ({
-    level,
-    weeks: byLevel.get(level) ?? 0,
-    missing: !byLevel.has(level),
-  }));
+  const byLevel = new Map(durations.map((d) => [d.level, d]));
+  return levelsBetween(from, to).map((level) => {
+    const row = byLevel.get(level);
+    const weeks = row?.weeks ?? 0;
+    return {
+      level,
+      weeks,
+      weeksMax: row?.weeks_max ?? weeks,
+      missing: !row,
+    };
+  });
 }
 
 export function totalWeeks(rows: LevelPlanRow[]): number {
   return rows.reduce((sum, r) => sum + r.weeks, 0);
+}
+
+/** Upper end of the plan; equals `totalWeeks` when every level is a fixed duration. */
+export function totalWeeksMax(rows: LevelPlanRow[]): number {
+  return rows.reduce((sum, r) => sum + (r.weeksMax || r.weeks), 0);
+}
+
+/** True when the school publishes durations as a range rather than a fixed number. */
+export function isRangePlan(rows: LevelPlanRow[]): boolean {
+  return totalWeeksMax(rows) > totalWeeks(rows);
 }
 
 /** The single weekly band that applies to a booking of `weeks` weeks. */

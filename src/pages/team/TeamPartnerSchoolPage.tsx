@@ -59,12 +59,17 @@ export default function TeamPartnerSchoolPage() {
     () => data?.courses.find((c) => c.is_darb_standard) ?? data?.courses[0] ?? null,
     [data],
   );
-  const fortyTwoWeekQuote = useMemo(() => {
-    if (!standard) return null;
-    const weeks = 42;
+  const featuredQuote = useMemo(() => {
+    const weeks = data?.school.featured_weeks ?? null;
+    if (!standard || !weeks) return null;
     const tiers = (data?.courseTiers ?? []).filter((tier) => tier.course_id === standard.id);
     return { weeks, quote: quoteCourse(tiers, weeks) };
   }, [data, standard]);
+
+  const notesOf = (kind: string) => (data?.notes ?? []).filter((n) => n.kind === kind);
+  const accommodationNotes = notesOf("accommodation");
+  const officialNotes = notesOf("registration_official");
+  const darbNotes = notesOf("darb_recommendation");
 
   const datesByMonth = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof data>["startDates"]>();
@@ -262,11 +267,18 @@ export default function TeamPartnerSchoolPage() {
               <div className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
                 <Fact label={t("partnerSchools.lessons", "Lessons")} value={`${standard.lessons_per_week} / ${t("partnerSchools.week", "week")}`} />
                 <Fact label={t("partnerSchools.schedule", "Schedule")} value={loc(standard.schedule_text_en, standard.schedule_text_ar)} />
-                <Fact label={t("partnerSchools.classSize", "Class size")} value={`${t("partnerSchools.max", "Max")} ${standard.max_students}`} />
+                <Fact
+                  label={t("partnerSchools.classSize", "Class size")}
+                  value={
+                    standard.max_students
+                      ? `${t("partnerSchools.max", "Max")} ${standard.max_students}`
+                      : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
+                  }
+                />
                 <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
               </div>
             </div>
-            {fortyTwoWeekQuote && (
+            {featuredQuote && (
               <div className="border-t border-brand/20 bg-brand/5 p-4 lg:border-s lg:border-t-0">
                 <p className="text-xs font-medium text-muted-foreground">{t("partnerSchools.quickAnswer", "Quick answer")}</p>
                 <p className="mt-1 text-sm font-semibold text-foreground">
@@ -274,9 +286,9 @@ export default function TeamPartnerSchoolPage() {
                 </p>
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-2xl font-semibold text-brand">{formatEur(fortyTwoWeekQuote.quote.total)}</p>
+                    <p className="text-2xl font-semibold text-brand">{formatEur(featuredQuote.quote.total)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {fortyTwoWeekQuote.weeks} {t("partnerSchools.weeks", "weeks")} × {formatEur(fortyTwoWeekQuote.quote.pricePerWeek)}
+                      {featuredQuote.weeks} {t("partnerSchools.weeks", "weeks")} × {formatEur(featuredQuote.quote.pricePerWeek)}
                     </p>
                   </div>
                   <Euro className="h-5 w-5 text-brand" />
@@ -317,9 +329,17 @@ export default function TeamPartnerSchoolPage() {
             ) : (
               <ul className="space-y-1 text-sm text-muted-foreground">
                 {data.levels.map((l) => (
-                  <li key={l.id} className="flex justify-between">
+                  <li key={l.id} className="flex justify-between gap-3">
                     <span>{l.level}</span>
-                    <span>{l.weeks} {t("partnerSchools.weeks", "weeks")}</span>
+                    <span className="text-end">
+                      {l.weeks_max && l.weeks_max > l.weeks ? `${l.weeks}–${l.weeks_max}` : l.weeks}{" "}
+                      {t("partnerSchools.weeks", "weeks")}
+                      {l.hours_min && l.hours_max ? (
+                        <span className="block text-xs">
+                          {l.hours_min}–{l.hours_max} {t("partnerSchools.teachingHours", "teaching hours")}
+                        </span>
+                      ) : null}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -395,14 +415,23 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Accommodation */}
         <TabsContent value="accommodation" className="mt-3 space-y-3">
-          <Card className="border-brand/30 bg-brand/5 p-4 shadow-none">
-            <h3 className="text-sm font-semibold text-foreground">
-              {t("partnerSchools.singleRoomSettingTitle", "Where is the single room?")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {t("partnerSchools.singleRoomSetting", "KAPITO single rooms may be with a host family, an individual host, or in a shared flat. The exact placement is confirmed by the school and is not guaranteed in advance.")}
-            </p>
-          </Card>
+          {accommodationNotes.length > 0 ? (
+            accommodationNotes.map((n) => (
+              <Card key={n.id} className="border-brand/30 bg-brand/5 p-4 shadow-none">
+                <h3 className="text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="border-brand/30 bg-brand/5 p-4 shadow-none">
+              <h3 className="text-sm font-semibold text-foreground">
+                {t("partnerSchools.singleRoomSettingTitle", "Where is the single room?")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.singleRoomSetting", "KAPITO single rooms may be with a host family, an individual host, or in a shared flat. The exact placement is confirmed by the school and is not guaranteed in advance.")}
+              </p>
+            </Card>
+          )}
           <div className="flex justify-end">
             <Button asChild variant="outline" size="sm">
               <Link to={school.catalog_school_id ? `/team/catalog?school=${school.catalog_school_id}&tab=accommodations` : "/team/catalog"}>
@@ -440,10 +469,15 @@ export default function TeamPartnerSchoolPage() {
                     {tiers.map((x) => (
                       <li key={x.id} className="flex items-center justify-between gap-4 py-2">
                         <span>{formatBandLabel(x, lang)}</span>
-                        <span className="font-medium text-foreground">
+                        <span className="text-end font-medium text-foreground">
                           {x.total_price != null
                             ? formatEur(x.total_price)
                             : `${formatEur(x.price_per_week)}/${t("partnerSchools.week", "week")}`}
+                          {x.extra_day_price != null && (
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              {t("partnerSchools.extraDay", "Extra day")}: {formatEur(x.extra_day_price)}
+                            </span>
+                          )}
                         </span>
                       </li>
                     ))}
@@ -534,24 +568,44 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Application guidance */}
         <TabsContent value="application" className="mt-3 space-y-3">
-          <Card className="border-brand/35 p-4 shadow-none">
-            <Badge variant="outline">{t("partnerSchools.officialSchoolRule", "Official KAPITO procedure")}</Badge>
-            <h3 className="mt-3 text-sm font-semibold text-foreground">
-              {t("partnerSchools.officialApplicationTitle", "Registration and payment timing")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {t("partnerSchools.officialApplicationBody", "Send the registration form, then pay the €200 deposit or the full course fee. KAPITO reserves the course place after receiving the deposit. The remaining amount is due one week before the course starts.")}
-            </p>
-          </Card>
-          <Card className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
-            <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
-            <h3 className="mt-3 text-sm font-semibold text-foreground">
-              {t("partnerSchools.whenToApply", "When should we apply?")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {t("partnerSchools.darbApplicationTiming", "Submit 1–2 months before the preferred start date to improve the chance of securing the preferred accommodation. This is DARB office guidance, not a KAPITO minimum registration period.")}
-            </p>
-          </Card>
+          {officialNotes.length > 0 ? (
+            officialNotes.map((n) => (
+              <Card key={n.id} className="border-brand/35 p-4 shadow-none">
+                <Badge variant="outline">{t("partnerSchools.officialSchoolRuleGeneric", "Official school procedure")}</Badge>
+                <h3 className="mt-3 text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="border-brand/35 p-4 shadow-none">
+              <Badge variant="outline">{t("partnerSchools.officialSchoolRule", "Official KAPITO procedure")}</Badge>
+              <h3 className="mt-3 text-sm font-semibold text-foreground">
+                {t("partnerSchools.officialApplicationTitle", "Registration and payment timing")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.officialApplicationBody", "Send the registration form, then pay the €200 deposit or the full course fee. KAPITO reserves the course place after receiving the deposit. The remaining amount is due one week before the course starts.")}
+              </p>
+            </Card>
+          )}
+          {darbNotes.length > 0 ? (
+            darbNotes.map((n) => (
+              <Card key={n.id} className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
+                <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
+                <h3 className="mt-3 text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
+              <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
+              <h3 className="mt-3 text-sm font-semibold text-foreground">
+                {t("partnerSchools.whenToApply", "When should we apply?")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.darbApplicationTiming", "Submit 1–2 months before the preferred start date to improve the chance of securing the preferred accommodation. This is DARB office guidance, not a KAPITO minimum registration period.")}
+              </p>
+            </Card>
+          )}
           {data.policies
             .filter((p) => p.category === "registration" || p.category === "arrival")
             .map((p) => (

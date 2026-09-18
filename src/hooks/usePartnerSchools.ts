@@ -37,6 +37,10 @@ export interface PartnerSchoolRow {
   standard_course_note_ar: string | null;
   minimum_age: number | null;
   last_verified_at: string | null;
+  /** When set, the school sheet shows a quick-answer quote for this many weeks. */
+  featured_weeks?: number | null;
+  featured_note_en?: string | null;
+  featured_note_ar?: string | null;
 }
 
 export interface SchoolDetail {
