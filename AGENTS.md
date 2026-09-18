@@ -1710,3 +1710,58 @@ What REMAINS (intentional, out of removal scope):
   "Partner pool" (the legitimate base commission — NOT the master pool).
 - types.ts: single stale entry `get_master_partner_override_rate` removed;
   profiles/partner_recruit_applications blocks already had no master fields.
+
+## Partner Schools: GoAcademy! Düsseldorf 2026 (2026-09-18)
+- Third Partner School on the internal reference tool, seeded exactly like KAPITO
+  and F+U (same tables, same `TeamPartnerSchoolPage`; no school-specific UI, no
+  calculator changes). Route `/team/partner-schools/germany/goacademy-dusseldorf`,
+  slug `goacademy-dusseldorf`, linked to catalog school `go-academy` via
+  `catalog_school_id`.
+- Migration `20260918210000_add_goacademy_partner_school.sql` (MANUAL DEPLOY —
+  `supabase db push` or dashboard SQL editor; not applied by Vercel build or CI).
+  Idempotent DO-block guard: skips entirely when `partner_schools.slug =
+  'goacademy-dusseldorf'` exists. `partner_countries.germany` insert uses
+  `ON CONFLICT (slug) DO NOTHING`. Depends on two earlier additive columns:
+  `school_accommodations.catalog_accommodation_ids` (`20260918193420`) and
+  `school_level_durations.weeks_max` (`20260918183959`) — both timestamped before
+  this file.
+- Seeded rows: 2026 EUR price version (is_current) → 7 courses → 5 level
+  durations → 7 accommodations → 16 policies → 3 notes → 5 sources.
+- Courses: `standard_intensive` (20 + 5 LMS, DARB standard, cefr A1–C1,
+  tiers 1–4:190 / 5–24:175 / 25–52:165), `high_intensive` (30 + 5 LMS,
+  tier 1–2:315), `university_pathway` (tier 24–48:175), `vocational_training`
+  (tier 12–48:175), `evening_course` (4 lessons/wk, monthly pricing),
+  `german_for_doctors` (€920 total), `german_for_nursing` (€790 total). Courses
+  with only total/monthly prices get rows with NO tiers → excluded from the DARB
+  standard set (`is_darb_standard=false`) and from the calculator; their verified
+  totals/dates/packages are recorded as policies (doctors/nursing start dates,
+  University Pathway packages €4,900/€6,900/€8,900, evening €185/€175/€160).
+- Accommodations: `standard_shared/single`, `comfort_shared/single`, `studio`,
+  `host_family_bb`, `host_family_half` — each linked to the matching catalog
+  accommodation by `name_en` subselect (`catalog_accommodation_ids`), with
+  `from_price_per_week` = the 24+ catalog rate (130/180/150/210/270/250/300).
+  `arrangement_fee` 90, deposit 250, airport transfer 100/150 recorded as data
+  (NOT added to calculator totals — same decision as KAPITO/F+U).
+- Policies span categories registration/arrival/accommodation/course/program/
+  exam/about/other (registration €60, placement €90, transfer €100 one-way /
+  €150 both ways, telc/TestDaF/TestAS/DSH exam fees, ISO/AZAV + IALC memberships).
+- The 3 `school_notes` kinds (`accommodation`, `registration_official`,
+  `darb_recommendation`) are the SAME kinds `TeamPartnerSchoolPage.notesOf()`
+  reads, so the KAPITO-specific fallback strings are suppressed for GoAcademy
+  exactly as for F+U. `featured_weeks` NULL; `last_verified_at` NULL everywhere
+  (no fake verification dates); `source_year` = 2026.
+- `school_sources` holds the five supplied GoAcademy 2026 documents (German
+  courses brochure, price list, accommodation doc, agency brochure, IH school
+  presentation — exact filenames from `Downloads/`).
+- `src/lib/partnerSchools.ts`: `INCLUDED_ITEM_AR` +6 entries so every
+  `included_items` string used in the seed localizes to Arabic (no silent English
+  fallback): certificate, LMS tuition, weekly counselling, university application
+  support, visa assistance, TestDaF/telc/TestAS/DSH prep at the school centre.
+- `src/lib/partnerSchools.test.ts`: GoAcademy describe block using the seeded
+  shapes — A1→C1 = 44–50 weeks (published ranges, `weeks_max`), 44×165=€7,260 /
+  50×165=€8,250 in the 25–52 band, 4 wks €760, 12 wks €2,100, accommodation
+  4/10/26 wks = €660/€1,450/€3,380, Arabic included-item localization.
+- Build: `npm run build` (tsc+vite) clean; `npx vitest run` 1406/1406 pass
+  (70 files) incl. i18n parity guard. Live §27 QA (list/detail/tabs/EN-AR,
+  no duplicate catalog entry, calculators unchanged) must be done after the
+  migration is applied.

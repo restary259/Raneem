@@ -3,6 +3,8 @@ import {
   levelsBetween,
   levelPlan,
   totalWeeks,
+  totalWeeksMax,
+  isRangePlan,
   quoteCourse,
   quoteAccommodation,
   summerWeeks,
@@ -107,6 +109,60 @@ describe("partnerSchools", () => {
   it("does not link options with no catalog record", () => {
     expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: [] })).toBeNull();
     expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: null })).toBeNull();
+  });
+});
+
+const goLevels = [
+  { level: "A1", weeks: 8, weeks_max: 8, sort_order: 1 },
+  { level: "A2", weeks: 8, weeks_max: 8, sort_order: 2 },
+  { level: "B1", weeks: 8, weeks_max: 10, sort_order: 3 },
+  { level: "B2", weeks: 10, weeks_max: 12, sort_order: 4 },
+  { level: "C1", weeks: 10, weeks_max: 12, sort_order: 5 },
+];
+
+const goCourseTiers: CoursePriceTier[] = [
+  { from_weeks: 1, to_weeks: 4, price_per_week: 190, kind: "booking" },
+  { from_weeks: 5, to_weeks: 24, price_per_week: 175, kind: "booking" },
+  { from_weeks: 25, to_weeks: 52, price_per_week: 165, kind: "booking" },
+];
+
+const goAccTiers: AccommodationPriceTier[] = [
+  { from_weeks: 1, to_weeks: 4, total_price: null, price_per_week: 165 },
+  { from_weeks: 5, to_weeks: 23, total_price: null, price_per_week: 145 },
+  { from_weeks: 24, to_weeks: null, total_price: null, price_per_week: 130 },
+];
+
+describe("partnerSchools (GoAcademy! Düsseldorf 2026)", () => {
+  it("A1 → C1 is 44–50 weeks (published ranges)", () => {
+    const plan = levelPlan("A1", "C1", goLevels);
+    expect(totalWeeks(plan)).toBe(44);
+    expect(totalWeeksMax(plan)).toBe(50);
+    expect(isRangePlan(plan)).toBe(true);
+  });
+
+  it("quotes the pathway in the 25–52 week band", () => {
+    const quote = quoteCourse(goCourseTiers, 44);
+    expect(quote.pricePerWeek).toBe(165);
+    expect(quote.total).toBe(7260);
+    expect(quoteCourse(goCourseTiers, 50).total).toBe(8250);
+  });
+
+  it("uses the shorter booking bands for short stays", () => {
+    expect(quoteCourse(goCourseTiers, 4).total).toBe(760);
+    expect(quoteCourse(goCourseTiers, 12).total).toBe(2100);
+  });
+
+  it("prices the standard apartment twin by the three published weekly bands", () => {
+    expect(quoteAccommodation(goAccTiers, 4).total).toBe(660);
+    expect(quoteAccommodation(goAccTiers, 10).total).toBe(1450);
+    expect(quoteAccommodation(goAccTiers, 26).total).toBe(3380);
+  });
+
+  it("localizes GoAcademy included benefits in Arabic", () => {
+    expect(localizeIncludedItem("Certificate upon completion", "ar"))
+      .toBe("شهادة إتمام الدورة");
+    expect(localizeIncludedItem("1 hour of counselling per week", "ar"))
+      .toBe("ساعة استشارة أسبوعياً");
   });
 });
 

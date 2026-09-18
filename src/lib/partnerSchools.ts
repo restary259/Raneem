@@ -56,6 +56,14 @@ const INCLUDED_ITEM_AR: Record<string, string> = {
   "Internal language exam from € 80": "امتحان لغة داخلي ابتداءً من 80 يورو",
   "Internationally recognised language exams from € 180":
     "امتحانات لغة معترف بها دولياً ابتداءً من 180 يورو",
+  "Certificate upon completion": "شهادة إتمام الدورة",
+  "LMS online tuition (5 lessons per week)": "دروس إلكترونية عبر منصة التعليم (5 حصص أسبوعياً)",
+  "1 hour of counselling per week": "ساعة استشارة أسبوعياً",
+  "Support for selection, application and enrolment at a German university":
+    "دعم اختيار الجامعة الألمانية والتقديم والتسجيل فيها",
+  "Visa requirement assistance": "مساعدة في متطلبات التأشيرة",
+  "Examination preparation for TestDaF / telc / TestAS / DSH at the school test centre":
+    "تحضير لامتحانات TestDaF وtelc وTestAS وDSH في مركز الاختبارات بالمدرسة",
 };
 
 /** Converts canonical school inclusions to Arabic without inventing missing facts. */
