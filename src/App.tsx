@@ -85,6 +85,9 @@ const TeamBagrutConverter = lazy(() => import("./pages/team/BagrutConverter"));
 const TeamCurrencyPage = lazy(() => import("./pages/team/TeamCurrencyPage"));
 const TeamCvBuilderPage = lazy(() => import("./pages/team/TeamCvBuilderPage"));
 const TeamCatalogPage = lazy(() => import("./pages/team/TeamCatalogPage"));
+const TeamPartnerSchoolsPage = lazy(() => import("./pages/team/TeamPartnerSchoolsPage"));
+const TeamPartnerSchoolsCountryPage = lazy(() => import("./pages/team/TeamPartnerSchoolsCountryPage"));
+const TeamPartnerSchoolPage = lazy(() => import("./pages/team/TeamPartnerSchoolPage"));
 const TeamMajorIntelPage = lazy(() => import("./pages/team/TeamMajorIntelPage"));
 
 // Partner pages (Phase 5)
@@ -344,6 +347,9 @@ const App = () => {
               <Route path="tools/currency" element={<TeamCurrencyPage />} />
               <Route path="tools/cv" element={<TeamCvBuilderPage />} />
               <Route path="catalog" element={<TeamCatalogPage />} />
+              <Route path="partner-schools" element={<TeamPartnerSchoolsPage />} />
+              <Route path="partner-schools/:country" element={<TeamPartnerSchoolsCountryPage />} />
+              <Route path="partner-schools/:country/:school" element={<TeamPartnerSchoolPage />} />
               <Route path="majors" element={<TeamMajorIntelPage />} />
             </Route>
 

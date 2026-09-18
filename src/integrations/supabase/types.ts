@@ -2997,6 +2997,48 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_countries: {
+        Row: {
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          flag_emoji: string | null
+          id: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       partner_links: {
         Row: {
           active: boolean
@@ -3111,6 +3153,87 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_schools: {
+        Row: {
+          address: string | null
+          catalog_school_id: string | null
+          city: string | null
+          country_id: string
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          last_verified_at: string | null
+          minimum_age: number | null
+          name: string
+          partner_status: string
+          phone: string | null
+          slug: string
+          sort_order: number
+          standard_course_note_ar: string | null
+          standard_course_note_en: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          catalog_school_id?: string | null
+          city?: string | null
+          country_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          minimum_age?: number | null
+          name: string
+          partner_status?: string
+          phone?: string | null
+          slug: string
+          sort_order?: number
+          standard_course_note_ar?: string | null
+          standard_course_note_en?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          catalog_school_id?: string | null
+          city?: string | null
+          country_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          last_verified_at?: string | null
+          minimum_age?: number | null
+          name?: string
+          partner_status?: string
+          phone?: string | null
+          slug?: string
+          sort_order?: number
+          standard_course_note_ar?: string | null
+          standard_course_note_en?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_schools_catalog_school_id_fkey"
+            columns: ["catalog_school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_schools_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "partner_countries"
             referencedColumns: ["id"]
           },
         ]
@@ -3960,6 +4083,632 @@ export type Database = {
             columns: ["permission_id"]
             isOneToOne: false
             referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_accommodation_price_tiers: {
+        Row: {
+          accommodation_id: string
+          created_at: string
+          from_weeks: number
+          id: string
+          price_per_week: number | null
+          sort_order: number
+          to_weeks: number | null
+          total_price: number | null
+        }
+        Insert: {
+          accommodation_id: string
+          created_at?: string
+          from_weeks: number
+          id?: string
+          price_per_week?: number | null
+          sort_order?: number
+          to_weeks?: number | null
+          total_price?: number | null
+        }
+        Update: {
+          accommodation_id?: string
+          created_at?: string
+          from_weeks?: number
+          id?: string
+          price_per_week?: number | null
+          sort_order?: number
+          to_weeks?: number | null
+          total_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_accommodation_price_tiers_accommodation_id_fkey"
+            columns: ["accommodation_id"]
+            isOneToOne: false
+            referencedRelation: "school_accommodations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_accommodations: {
+        Row: {
+          arrangement_fee: number | null
+          availability_confirmed: boolean
+          availability_note_ar: string | null
+          availability_note_en: string | null
+          code: string
+          created_at: string
+          deposit_amount: number | null
+          deposit_confirmed: boolean
+          deposit_note_ar: string | null
+          deposit_note_en: string | null
+          from_price_per_week: number | null
+          id: string
+          last_verified_at: string | null
+          meals: string | null
+          minimum_age: number | null
+          name_ar: string | null
+          name_en: string
+          notes: string | null
+          price_version_id: string
+          room_type: string | null
+          sort_order: number
+          source_document: string | null
+          source_name: string | null
+          source_url: string | null
+          source_year: number | null
+          updated_at: string
+        }
+        Insert: {
+          arrangement_fee?: number | null
+          availability_confirmed?: boolean
+          availability_note_ar?: string | null
+          availability_note_en?: string | null
+          code: string
+          created_at?: string
+          deposit_amount?: number | null
+          deposit_confirmed?: boolean
+          deposit_note_ar?: string | null
+          deposit_note_en?: string | null
+          from_price_per_week?: number | null
+          id?: string
+          last_verified_at?: string | null
+          meals?: string | null
+          minimum_age?: number | null
+          name_ar?: string | null
+          name_en: string
+          notes?: string | null
+          price_version_id: string
+          room_type?: string | null
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          updated_at?: string
+        }
+        Update: {
+          arrangement_fee?: number | null
+          availability_confirmed?: boolean
+          availability_note_ar?: string | null
+          availability_note_en?: string | null
+          code?: string
+          created_at?: string
+          deposit_amount?: number | null
+          deposit_confirmed?: boolean
+          deposit_note_ar?: string | null
+          deposit_note_en?: string | null
+          from_price_per_week?: number | null
+          id?: string
+          last_verified_at?: string | null
+          meals?: string | null
+          minimum_age?: number | null
+          name_ar?: string | null
+          name_en?: string
+          notes?: string | null
+          price_version_id?: string
+          room_type?: string | null
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_accommodations_price_version_id_fkey"
+            columns: ["price_version_id"]
+            isOneToOne: false
+            referencedRelation: "school_price_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_course_price_tiers: {
+        Row: {
+          course_id: string
+          created_at: string
+          from_weeks: number
+          id: string
+          kind: string
+          price_per_week: number
+          sort_order: number
+          to_weeks: number | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          from_weeks: number
+          id?: string
+          kind?: string
+          price_per_week: number
+          sort_order?: number
+          to_weeks?: number | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          from_weeks?: number
+          id?: string
+          kind?: string
+          price_per_week?: number
+          sort_order?: number
+          to_weeks?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_course_price_tiers_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "school_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_courses: {
+        Row: {
+          cefr_range: string | null
+          code: string
+          created_at: string
+          id: string
+          included_items: Json
+          is_darb_standard: boolean
+          last_verified_at: string | null
+          lesson_minutes: number | null
+          lessons_per_week: number | null
+          max_students: number | null
+          name_ar: string | null
+          name_en: string
+          notes: string | null
+          price_version_id: string
+          schedule_text_ar: string | null
+          schedule_text_en: string | null
+          sort_order: number
+          source_document: string | null
+          source_name: string | null
+          source_url: string | null
+          source_year: number | null
+          start_rule_ar: string | null
+          start_rule_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          cefr_range?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          included_items?: Json
+          is_darb_standard?: boolean
+          last_verified_at?: string | null
+          lesson_minutes?: number | null
+          lessons_per_week?: number | null
+          max_students?: number | null
+          name_ar?: string | null
+          name_en: string
+          notes?: string | null
+          price_version_id: string
+          schedule_text_ar?: string | null
+          schedule_text_en?: string | null
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          start_rule_ar?: string | null
+          start_rule_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cefr_range?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          included_items?: Json
+          is_darb_standard?: boolean
+          last_verified_at?: string | null
+          lesson_minutes?: number | null
+          lessons_per_week?: number | null
+          max_students?: number | null
+          name_ar?: string | null
+          name_en?: string
+          notes?: string | null
+          price_version_id?: string
+          schedule_text_ar?: string | null
+          schedule_text_en?: string | null
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          start_rule_ar?: string | null
+          start_rule_en?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_courses_price_version_id_fkey"
+            columns: ["price_version_id"]
+            isOneToOne: false
+            referencedRelation: "school_price_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_level_durations: {
+        Row: {
+          created_at: string
+          id: string
+          last_verified_at: string | null
+          level: string
+          notes: string | null
+          school_id: string
+          sort_order: number
+          source_document: string | null
+          source_name: string | null
+          source_url: string | null
+          source_year: number | null
+          updated_at: string
+          weeks: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          level: string
+          notes?: string | null
+          school_id: string
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          updated_at?: string
+          weeks: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          level?: string
+          notes?: string | null
+          school_id?: string
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          updated_at?: string
+          weeks?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_level_durations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "partner_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_notes: {
+        Row: {
+          body_ar: string | null
+          body_en: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          kind: string
+          school_id: string
+          severity: string
+          sort_order: number
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+          updated_on: string | null
+        }
+        Insert: {
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          school_id: string
+          severity?: string
+          sort_order?: number
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+          updated_on?: string | null
+        }
+        Update: {
+          body_ar?: string | null
+          body_en?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          kind?: string
+          school_id?: string
+          severity?: string
+          sort_order?: number
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+          updated_on?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_notes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "partner_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_policies: {
+        Row: {
+          body_ar: string | null
+          body_en: string | null
+          category: string
+          created_at: string
+          id: string
+          last_verified_at: string | null
+          school_id: string
+          sort_order: number
+          source_document: string | null
+          source_name: string | null
+          source_url: string | null
+          source_year: number | null
+          title_ar: string | null
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          body_ar?: string | null
+          body_en?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          school_id: string
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          title_ar?: string | null
+          title_en: string
+          updated_at?: string
+        }
+        Update: {
+          body_ar?: string | null
+          body_en?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          school_id?: string
+          sort_order?: number
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          title_ar?: string | null
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_policies_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "partner_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_price_versions: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          is_current: boolean
+          label: string | null
+          last_verified_at: string | null
+          notes: string | null
+          school_id: string
+          source_document: string | null
+          source_name: string | null
+          source_url: string | null
+          source_year: number | null
+          summer_from: string | null
+          summer_supplement_per_week: number | null
+          summer_to: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_current?: boolean
+          label?: string | null
+          last_verified_at?: string | null
+          notes?: string | null
+          school_id: string
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          summer_from?: string | null
+          summer_supplement_per_week?: number | null
+          summer_to?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_current?: boolean
+          label?: string | null
+          last_verified_at?: string | null
+          notes?: string | null
+          school_id?: string
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          summer_from?: string | null
+          summer_supplement_per_week?: number | null
+          summer_to?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_price_versions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "partner_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_sources: {
+        Row: {
+          created_at: string
+          document_path: string | null
+          id: string
+          kind: string
+          last_verified_at: string | null
+          name: string
+          school_id: string
+          sort_order: number
+          source_year: number | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_path?: string | null
+          id?: string
+          kind?: string
+          last_verified_at?: string | null
+          name: string
+          school_id: string
+          sort_order?: number
+          source_year?: number | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_path?: string | null
+          id?: string
+          kind?: string
+          last_verified_at?: string | null
+          name?: string
+          school_id?: string
+          sort_order?: number
+          source_year?: number | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_sources_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "partner_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_start_dates: {
+        Row: {
+          audience: string
+          course_code: string | null
+          created_at: string
+          id: string
+          last_verified_at: string | null
+          note_ar: string | null
+          note_en: string | null
+          school_id: string
+          source_document: string | null
+          source_name: string | null
+          source_url: string | null
+          source_year: number | null
+          start_date: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          audience?: string
+          course_code?: string | null
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          note_ar?: string | null
+          note_en?: string | null
+          school_id: string
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          start_date: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          audience?: string
+          course_code?: string | null
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          note_ar?: string | null
+          note_en?: string | null
+          school_id?: string
+          source_document?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          source_year?: number | null
+          start_date?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_start_dates_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "partner_schools"
             referencedColumns: ["id"]
           },
         ]

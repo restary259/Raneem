@@ -2627,7 +2627,8 @@
     "more": "More",
     "bottomNav": "Main navigation",
     "commission": "Commission",
-    "majorIntel": "Major Intelligence"
+    "majorIntel": "Major Intelligence",
+    "partnerSchools": "Partner Schools"
   },
   "case": {
     "status": {
@@ -4904,7 +4905,12 @@
     "unchanged": "No saved assessment",
     "programmes": "University programmes",
     "toVerify": "to verify",
-    "mobile": { "major": "Major", "student": "Student", "programs": "Programmes", "assessment": "Assessment" },
+    "mobile": {
+      "major": "Major",
+      "student": "Student",
+      "programs": "Programmes",
+      "assessment": "Assessment"
+    },
     "card": {
       "subtitle": "Search a subject and open its card.",
       "back": "All subjects",
@@ -4922,7 +4928,7 @@
     },
     "readyToUse": "Ready to use",
     "recent": "Recently opened",
-    "stillMissing": "Still missing",
+    "stillMissing": "Still unanswered",
     "provisionalHint": "Any verdict below is provisional until these are answered.",
     "saving": "Saving…",
     "retry": "Retry",
@@ -4930,9 +4936,20 @@
     "requestVerification": "Request verification",
     "requestSent": "Verification request sent.",
     "requestError": "The request could not be sent.",
-    "journeyStep": { "after": "After admission" },
-    "group": { "bagrut": "Bagrut", "subjects": "Subjects", "german": "German" },
-    "tab": { "requirements": "Requirements", "application": "Application", "documents": "Documents", "sources": "Sources" },
+    "journeyStep": {
+      "after": "After admission"
+    },
+    "group": {
+      "bagrut": "Bagrut",
+      "subjects": "Subjects",
+      "german": "German"
+    },
+    "tab": {
+      "requirements": "Requirements",
+      "application": "Application",
+      "documents": "Documents",
+      "sources": "Sources"
+    },
     "search": "Search a major",
     "searchPlaceholder": "Search a major…",
     "noMatch": "No major matches this search.",
@@ -4953,7 +4970,6 @@
     "calculatedOnly": "Calculated — not an admission decision",
     "calculatedGrade": "Calculated German grade",
     "noGradeYet": "Enter the overall Bagrut result to calculate the German grade.",
-    "stillMissing": "Still unanswered",
     "official": "Official",
     "student": "Student",
     "none": "none published",
@@ -5055,6 +5071,71 @@
       "germanLevel": "Language requirement per programme",
       "germanCertificate": "Only a certificate proves the level",
       "documents": "Application and visa handling"
+    }
+  },
+  "partnerSchools": {
+    "title": "Partner Schools",
+    "subtitle": "Access partner school information, pricing, accommodation and application details.",
+    "openCatalog": "Open DARB Catalog",
+    "schools": "schools",
+    "noCountries": "No countries recorded yet",
+    "countrySubtitle": "Partner language schools and their verified information.",
+    "back": "Back",
+    "noSchools": "No schools recorded for this country yet",
+    "partnerSchool": "Partner School",
+    "darbStandard": "DARB Standard",
+    "notFound": "School not found",
+    "pricesShown": "Prices shown",
+    "lastVerified": "Last verified",
+    "website": "School website",
+    "searchPlaceholder": "Search {{name}} information…",
+    "notRecorded": "Not recorded — verify with the school",
+    "source": "Source",
+    "lessons": "Lessons",
+    "week": "week",
+    "weeks": "weeks",
+    "schedule": "Schedule",
+    "classSize": "Class size",
+    "max": "Max",
+    "starts": "Starts",
+    "city": "City",
+    "levels": "Levels",
+    "included": "Included in the course price",
+    "schoolPricesNote": "These are school prices. DARB service fees are not included.",
+    "bookingPrice": "Booking price",
+    "extensionPrice": "Extension price",
+    "summerNote": "Summer supplement",
+    "minAge": "Minimum age",
+    "arrangementFee": "Accommodation arrangement",
+    "allStudents": "A2 and above",
+    "everyMonday": "Courses start every Monday.",
+    "beginners": "Absolute beginners (A1)",
+    "whenToApply": "When should we apply?",
+    "updated": "Updated",
+    "startingLevel": "Starting level",
+    "targetLevel": "Target level",
+    "course": "Course",
+    "addAccommodation": "Add accommodation",
+    "accommodationType": "Accommodation",
+    "accWeeks": "Accommodation weeks",
+    "startDate": "Start date",
+    "breakdown": "Calculation",
+    "courseTuition": "Course tuition (school price)",
+    "accommodation": "Accommodation",
+    "summerSupplement": "Summer supplement",
+    "estimatedPayable": "Estimated payable cost",
+    "depositSeparate": "Security deposit is separate and not included above — amount to confirm with the school.",
+    "incomplete": "Some values are not recorded — verify with the school before quoting.",
+    "copyAnswer": "Copy answer",
+    "tab": {
+      "overview": "Overview",
+      "courses": "Courses & Prices",
+      "calculator": "Level Calculator",
+      "accommodation": "Accommodation",
+      "startDates": "Start Dates",
+      "application": "Application",
+      "policies": "Policies",
+      "documents": "Documents"
     }
   }
 }
