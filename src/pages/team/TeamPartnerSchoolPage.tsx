@@ -273,9 +273,13 @@ export default function TeamPartnerSchoolPage() {
 
       <Tabs defaultValue="overview">
         <div className="sticky top-0 z-20 -mx-1 overflow-x-auto bg-background/95 px-1 py-1 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-        <TabsList className="flex h-auto w-max min-w-full justify-start gap-1 p-1 rtl:flex-row">
+        <TabsList className="flex h-auto w-full justify-between gap-1 p-1 rtl:flex-row">
           {TABS.map((key) => (
-            <TabsTrigger key={key} value={key} className="whitespace-nowrap px-3 py-2">
+            <TabsTrigger
+              key={key}
+              value={key}
+              className="flex-1 whitespace-nowrap px-2 py-2 text-center"
+            >
               {t(`partnerSchools.tab.${key}`, key)}
             </TabsTrigger>
           ))}
