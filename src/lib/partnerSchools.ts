@@ -222,10 +222,25 @@ export function formatSchoolDate(value: string, lang: "en" | "ar"): string {
   }).format(date);
 }
 
+/**
+ * The DARB catalog only stores self-catering rooms, so board options a school
+ * arranges (host families with breakfast or half board) have no catalog entry.
+ * Returning null keeps the UI honest instead of linking to an empty result.
+ */
+const CATALOG_MEALS: Record<string, string | null> = {
+  none: "self_catering",
+  self_catering: "self_catering",
+  breakfast: null,
+  half_board: null,
+  full_board: null,
+};
+
 export function partnerSchoolCatalogUrl(input: CatalogAccommodationLinkInput): string | null {
   if (!input.schoolId) return null;
+  const meals = input.meals ? CATALOG_MEALS[input.meals] ?? null : null;
+  if (input.meals && !meals) return null;
   const params = new URLSearchParams({ school: input.schoolId, tab: "accommodations" });
   if (input.roomType) params.set("roomType", input.roomType);
-  if (input.meals) params.set("meals", input.meals === "none" ? "self_catering" : input.meals);
+  if (meals) params.set("meals", meals);
   return `/team/catalog?${params.toString()}`;
 }
