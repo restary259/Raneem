@@ -324,9 +324,17 @@ export default function TeamPartnerSchoolPage() {
             ) : (
               <ul className="space-y-1 text-sm text-muted-foreground">
                 {data.levels.map((l) => (
-                  <li key={l.id} className="flex justify-between">
+                  <li key={l.id} className="flex justify-between gap-3">
                     <span>{l.level}</span>
-                    <span>{l.weeks} {t("partnerSchools.weeks", "weeks")}</span>
+                    <span className="text-end">
+                      {l.weeks_max && l.weeks_max > l.weeks ? `${l.weeks}–${l.weeks_max}` : l.weeks}{" "}
+                      {t("partnerSchools.weeks", "weeks")}
+                      {l.hours_min && l.hours_max ? (
+                        <span className="block text-xs">
+                          {l.hours_min}–{l.hours_max} {t("partnerSchools.teachingHours", "teaching hours")}
+                        </span>
+                      ) : null}
+                    </span>
                   </li>
                 ))}
               </ul>
