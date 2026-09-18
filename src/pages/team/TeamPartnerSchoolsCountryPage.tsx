@@ -25,7 +25,7 @@ export default function TeamPartnerSchoolsCountryPage() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8">
       <PageHeader
         title={country ? `${country.flag_emoji ?? ""} ${lang === "ar" ? country.name_ar : country.name_en}`.trim() : t("partnerSchools.title", "Partner Schools")}
         subtitle={t("partnerSchools.countrySubtitle", "Partner language schools and their verified information.")}
@@ -48,7 +48,7 @@ export default function TeamPartnerSchoolsCountryPage() {
       <div className="grid gap-3 sm:grid-cols-2">
         {schools.map((s) => (
           <Link key={s.id} to={`/team/partner-schools/${slug}/${s.slug}`}>
-            <Card className="flex h-full items-start justify-between gap-3 border-border p-4 transition-colors hover:border-brand/50 hover:bg-muted/40">
+            <Card className="flex h-full items-start justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
               <div className="min-w-0 space-y-2">
                 <div className="text-base font-semibold text-foreground">{s.name}</div>
                 {s.city && (
@@ -65,7 +65,7 @@ export default function TeamPartnerSchoolsCountryPage() {
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="max-w-prose text-xs leading-5 text-muted-foreground">
                   {lang === "ar" ? s.standard_course_note_ar : s.standard_course_note_en}
                 </p>
               </div>
