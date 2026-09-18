@@ -63,6 +63,8 @@ export default function SchoolCalculator({
 
   const plan = useMemo(() => levelPlan(from, to, levels), [from, to, levels]);
   const weeks = totalWeeks(plan);
+  const weeksMax = totalWeeksMax(plan);
+  const isRange = weeksMax > weeks;
   const missingLevels = plan.filter((p) => p.missing).map((p) => p.level);
 
   const tiers: CoursePriceTier[] = useMemo(
@@ -70,6 +72,14 @@ export default function SchoolCalculator({
     [courseTiers, course],
   );
   const courseQuote = useMemo(() => quoteCourse(tiers, weeks, "booking"), [tiers, weeks]);
+  const courseQuoteMax = useMemo(
+    () => (isRange ? quoteCourse(tiers, weeksMax, "booking") : null),
+    [tiers, weeksMax, isRange],
+  );
+  const weeksLabel = isRange ? `${weeks}–${weeksMax}` : String(weeks);
+  const courseTotalLabel = courseQuoteMax
+    ? `${formatEur(courseQuote.total)} – ${formatEur(courseQuoteMax.total)}`
+    : formatEur(courseQuote.total);
 
   const stayWeeks = accWeeks === "" ? weeks : Math.max(0, Number(accWeeks) || 0);
   const accTiers: AccommodationPriceTier[] = useMemo(
