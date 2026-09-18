@@ -102,16 +102,29 @@ export default function TeamCatalogPage() {
     [data, school],
   );
 
+  const requestedIds = useMemo(() => {
+    const raw = searchParams.get("ids");
+    return raw ? raw.split(",").map((v) => v.trim()).filter(Boolean) : [];
+  }, [searchParams]);
+
   const schoolAccommodations = useMemo(() => {
     if (!data || !school) return [];
-    const requestedMeals = searchParams.get("meals");
+    if (requestedIds.length) {
+      return data.accommodations.filter((a) => requestedIds.includes(a.id));
+    }
     return data.accommodations.filter(
-      (a) =>
-        a.school_id === school.id &&
-        (!filters.roomType || a.room_type === filters.roomType) &&
-        (!requestedMeals || a.meals === requestedMeals),
+      (a) => a.school_id === school.id && (!filters.roomType || a.room_type === filters.roomType),
     );
-  }, [data, school, filters.roomType, searchParams]);
+  }, [data, school, filters.roomType, requestedIds]);
+
+  // A link that points at exactly one room opens that room straight away.
+  useEffect(() => {
+    if (requestedIds.length === 1 && schoolAccommodations.length === 1) {
+      setSelected(schoolAccommodations[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedIds, schoolAccommodations.length]);
+
 
   const selectedSchool = useMemo(() => {
     if (!data || !selected) return null;
