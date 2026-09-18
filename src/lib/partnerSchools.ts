@@ -24,6 +24,10 @@ export interface AccommodationPriceTier {
 export interface LevelDuration {
   level: string;
   weeks: number;
+  /** Set when the school publishes a range (e.g. teaching-hour ranges). */
+  weeks_max?: number | null;
+  hours_min?: number | null;
+  hours_max?: number | null;
   sort_order: number;
 }
 
