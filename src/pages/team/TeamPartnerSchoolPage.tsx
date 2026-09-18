@@ -125,7 +125,7 @@ export default function TeamPartnerSchoolPage() {
   }, [query, data, lang]);
 
   if (loading) return <LoadingState rows={4} />;
-  if (error) return <ErrorState message={error} onRetry={refetch} />;
+  if (error) return <ErrorState title={error} onRetry={refetch} />;
   if (!data) return <EmptyState title={t("partnerSchools.notFound", "School not found")} />;
 
   const { school, version } = data;
@@ -286,7 +286,7 @@ export default function TeamPartnerSchoolPage() {
                     <PriceTable title={t("partnerSchools.extensionPrice", "Extension price")} rows={extension} />
                   )}
                 </div>
-                <SourceLine name={c.source_name} doc={c.source_document} verified={c.last_verified_at} t={t} />
+                <SourceLine name={c.source_name} doc={c.source_document} verified={c.last_verified_at} t={(k, d) => t(k, d ?? k)} />
               </Card>
             );
           })}
@@ -358,7 +358,7 @@ export default function TeamPartnerSchoolPage() {
                       {loc(a.availability_note_en, a.availability_note_ar)}
                     </p>
                   )}
-                  <SourceLine name={a.source_name} doc={a.source_document} verified={a.last_verified_at} t={t} />
+                  <SourceLine name={a.source_name} doc={a.source_document} verified={a.last_verified_at} t={(k, d) => t(k, d ?? k)} />
                 </Card>
               );
             })}
@@ -424,7 +424,7 @@ export default function TeamPartnerSchoolPage() {
               <Card key={p.id} className="space-y-1 p-4">
                 <h3 className="text-sm font-semibold text-foreground">{loc(p.title_en, p.title_ar)}</h3>
                 <p className="text-sm text-muted-foreground">{loc(p.body_en, p.body_ar)}</p>
-                <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={t} />
+                <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={(k, d) => t(k, d ?? k)} />
               </Card>
             ))}
         </TabsContent>
@@ -439,7 +439,7 @@ export default function TeamPartnerSchoolPage() {
                 {loc(p.title_en, p.title_ar)}
               </h3>
               <p className="text-sm text-muted-foreground">{loc(p.body_en, p.body_ar)}</p>
-              <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={t} />
+              <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={(k, d) => t(k, d ?? k)} />
             </Card>
           ))}
         </TabsContent>

@@ -40,7 +40,7 @@ export default function TeamPartnerSchoolsCountryPage() {
       />
 
       {loading && <LoadingState rows={2} />}
-      {error && <ErrorState message={error} onRetry={refetch} />}
+      {error && <ErrorState title={error} onRetry={refetch} />}
       {!loading && !error && schools.length === 0 && (
         <EmptyState title={t("partnerSchools.noSchools", "No schools recorded for this country yet")} />
       )}
