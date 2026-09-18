@@ -124,6 +124,12 @@ export default function SchoolCalculator({
       ? t("partnerSchools.copySummer", "Summer supplement: {{total}}", { total: formatEur(supplement) })
       : "",
     t("partnerSchools.copyPayable", "Estimated payable: {{total}}", { total: formatEur(payable) }),
+    isRange
+      ? t(
+          "partnerSchools.rangeNote",
+          "This school publishes a range of teaching hours per level, so the duration and price are a range.",
+        )
+      : "",
     withAcc ? t("partnerSchools.depositSeparate", "Security deposit is separate — amount to confirm with the school.") : "",
   ]
     .filter(Boolean)
