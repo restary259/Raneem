@@ -59,9 +59,9 @@ export default function TeamPartnerSchoolPage() {
     () => data?.courses.find((c) => c.is_darb_standard) ?? data?.courses[0] ?? null,
     [data],
   );
-  const fortyTwoWeekQuote = useMemo(() => {
-    if (!standard) return null;
-    const weeks = 42;
+  const featuredQuote = useMemo(() => {
+    const weeks = data?.school.featured_weeks ?? null;
+    if (!standard || !weeks) return null;
     const tiers = (data?.courseTiers ?? []).filter((tier) => tier.course_id === standard.id);
     return { weeks, quote: quoteCourse(tiers, weeks) };
   }, [data, standard]);
