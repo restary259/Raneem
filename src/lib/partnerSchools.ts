@@ -34,9 +34,9 @@ export interface LevelDuration {
 
 export interface CatalogAccommodationLinkInput {
   schoolId: string | null;
-  roomType: string | null;
-  meals: string | null;
+  catalogIds: string[] | null | undefined;
 }
+
 
 export const CEFR_ORDER = ["A1", "A2", "B1", "B2", "C1"] as const;
 export type CefrLevel = (typeof CEFR_ORDER)[number];
