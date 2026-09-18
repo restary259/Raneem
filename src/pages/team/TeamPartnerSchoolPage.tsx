@@ -293,7 +293,7 @@ export default function TeamPartnerSchoolPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue="overview" dir={lang === "ar" ? "rtl" : "ltr"}>
         <div className="sticky top-0 z-20 -mx-1 overflow-x-auto bg-background/95 px-1 py-1 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <TabsList className="flex h-auto w-full justify-between gap-1 p-1 rtl:flex-row">
           {TABS.map((key) => (
