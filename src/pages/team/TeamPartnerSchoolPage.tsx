@@ -66,6 +66,11 @@ export default function TeamPartnerSchoolPage() {
     return { weeks, quote: quoteCourse(tiers, weeks) };
   }, [data, standard]);
 
+  const notesOf = (kind: string) => (data?.notes ?? []).filter((n) => n.kind === kind);
+  const accommodationNotes = notesOf("accommodation");
+  const officialNotes = notesOf("registration_official");
+  const darbNotes = notesOf("darb_recommendation");
+
   const datesByMonth = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof data>["startDates"]>();
     for (const date of data?.startDates ?? []) {
