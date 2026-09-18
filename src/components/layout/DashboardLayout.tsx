@@ -63,6 +63,7 @@ import {
   Wrench,
   ClipboardEdit,
   Hotel,
+  School,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
