@@ -359,19 +359,20 @@ export default function TeamCatalogPage() {
                     </p>
                   )}
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-6">
-
-                  {schoolAccommodations.map((a) => (
-                    <AccommodationCard
-                      key={a.id}
-                      accommodation={a}
-                      school={school}
-                      size="large"
-                      showSchool={false}
-                      onSelect={setSelected}
-                    />
-                  ))}
+                    {schoolAccommodations.map((a) => (
+                      <AccommodationCard
+                        key={a.id}
+                        accommodation={a}
+                        school={school}
+                        size="large"
+                        showSchool={false}
+                        onSelect={setSelected}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
+
             </div>
           )}
         </>
