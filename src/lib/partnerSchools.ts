@@ -19,6 +19,7 @@ export interface AccommodationPriceTier {
   to_weeks: number | null;
   total_price: number | null;
   price_per_week: number | null;
+  extra_day_price?: number | null;
 }
 
 export interface LevelDuration {
