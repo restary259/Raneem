@@ -1,0 +1,154 @@
+/**
+ * Pure helpers for the internal Partner Schools reference tool.
+ *
+ * All pricing logic lives here so it is testable and never duplicated in JSX.
+ * Rule used for course tuition (matches the school's own published examples):
+ * the WHOLE booking sits in one weekly band, chosen by the total number of
+ * weeks. It is never a progressive/staged calculation.
+ */
+
+export interface CoursePriceTier {
+  from_weeks: number;
+  to_weeks: number | null;
+  price_per_week: number;
+  kind: string;
+}
+
+export interface AccommodationPriceTier {
+  from_weeks: number;
+  to_weeks: number | null;
+  total_price: number | null;
+  price_per_week: number | null;
+}
+
+export interface LevelDuration {
+  level: string;
+  weeks: number;
+  sort_order: number;
+}
+
+export const CEFR_ORDER = ["A1", "A2", "B1", "B2", "C1"] as const;
+export type CefrLevel = (typeof CEFR_ORDER)[number];
+
+/** Levels a student still has to complete to move from `from` up to `to`. */
+export function levelsBetween(from: string, to: string): string[] {
+  const start = CEFR_ORDER.indexOf(from as CefrLevel);
+  const end = CEFR_ORDER.indexOf(to as CefrLevel);
+  if (start < 0 || end < 0 || end < start) return [];
+  // Starting AT A1 means A1 still has to be studied; starting at A2 means the
+  // student already holds A1, so A2 is the first level they study.
+  return CEFR_ORDER.slice(start, end + 1);
+}
+
+export interface LevelPlanRow {
+  level: string;
+  weeks: number;
+  missing: boolean;
+}
+
+export function levelPlan(from: string, to: string, durations: LevelDuration[]): LevelPlanRow[] {
+  const byLevel = new Map(durations.map((d) => [d.level, d.weeks]));
+  return levelsBetween(from, to).map((level) => ({
+    level,
+    weeks: byLevel.get(level) ?? 0,
+    missing: !byLevel.has(level),
+  }));
+}
+
+export function totalWeeks(rows: LevelPlanRow[]): number {
+  return rows.reduce((sum, r) => sum + r.weeks, 0);
+}
+
+/** The single weekly band that applies to a booking of `weeks` weeks. */
+export function resolveCourseBand(
+  tiers: CoursePriceTier[],
+  weeks: number,
+  kind: "booking" | "extension" = "booking",
+): CoursePriceTier | null {
+  if (weeks <= 0) return null;
+  const pool = tiers.filter((t) => t.kind === kind);
+  const match = pool.find((t) => weeks >= t.from_weeks && (t.to_weeks == null || weeks <= t.to_weeks));
+  return match ?? null;
+}
+
+export interface CourseQuote {
+  weeks: number;
+  pricePerWeek: number | null;
+  total: number | null;
+  band: CoursePriceTier | null;
+}
+
+export function quoteCourse(
+  tiers: CoursePriceTier[],
+  weeks: number,
+  kind: "booking" | "extension" = "booking",
+): CourseQuote {
+  const band = resolveCourseBand(tiers, weeks, kind);
+  const pricePerWeek = band?.price_per_week ?? null;
+  return {
+    weeks,
+    pricePerWeek,
+    total: pricePerWeek == null ? null : Math.round(pricePerWeek * weeks * 100) / 100,
+    band,
+  };
+}
+
+export interface AccommodationQuote {
+  weeks: number;
+  total: number | null;
+  /** Set when the price came from a per-week rate rather than a fixed total. */
+  perWeek: number | null;
+  tier: AccommodationPriceTier | null;
+}
+
+/**
+ * Accommodation pricing: the first weeks may have fixed totals (1, 2, 3, 4
+ * weeks), longer stays use a weekly rate from the open-ended tier.
+ */
+export function quoteAccommodation(
+  tiers: AccommodationPriceTier[],
+  weeks: number,
+): AccommodationQuote {
+  if (weeks <= 0) return { weeks: 0, total: 0, perWeek: null, tier: null };
+  const tier =
+    tiers.find((t) => weeks >= t.from_weeks && (t.to_weeks == null || weeks <= t.to_weeks)) ?? null;
+  if (!tier) return { weeks, total: null, perWeek: null, tier: null };
+  if (tier.total_price != null) return { weeks, total: tier.total_price, perWeek: null, tier };
+  if (tier.price_per_week != null) {
+    return {
+      weeks,
+      total: Math.round(tier.price_per_week * weeks * 100) / 100,
+      perWeek: tier.price_per_week,
+      tier,
+    };
+  }
+  return { weeks, total: null, perWeek: null, tier };
+}
+
+/** Number of whole weeks of a stay that fall inside the school's summer window. */
+export function summerWeeks(
+  startDate: string | null,
+  weeks: number,
+  from: string | null,
+  to: string | null,
+): number {
+  if (!startDate || !from || !to || weeks <= 0) return 0;
+  const start = new Date(startDate);
+  const end = new Date(start.getTime() + weeks * 7 * 86400000);
+  const sFrom = new Date(from);
+  const sTo = new Date(to);
+  const overlapStart = Math.max(start.getTime(), sFrom.getTime());
+  const overlapEnd = Math.min(end.getTime(), sTo.getTime() + 86400000);
+  if (overlapEnd <= overlapStart) return 0;
+  return Math.ceil((overlapEnd - overlapStart) / (7 * 86400000));
+}
+
+export function formatEur(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  return `€${Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+}
+
+export function formatBandLabel(tier: CoursePriceTier | AccommodationPriceTier): string {
+  const to = tier.to_weeks;
+  return to == null ? `${tier.from_weeks}+ weeks` : tier.from_weeks === to ? `${to} week${to > 1 ? "s" : ""}` : `${tier.from_weeks}–${to} weeks`;
+}
