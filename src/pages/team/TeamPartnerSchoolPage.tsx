@@ -391,7 +391,7 @@ export default function TeamPartnerSchoolPage() {
               name={data.startDates[0]?.source_name}
               doc={data.startDates[0]?.source_document}
               verified={data.startDates[0]?.last_verified_at}
-              t={t}
+              t={(k, d) => t(k, d ?? k)}
             />
           </Card>
         </TabsContent>
