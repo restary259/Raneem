@@ -352,7 +352,14 @@ export default function TeamCatalogPage() {
                   description={t("catalog.noAccommodationsDesc", "Accommodation entries are managed by administrators.")}
                 />
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-6">
+                <div className="space-y-3">
+                  {requestedIds.length > 1 && (
+                    <p className="text-sm text-muted-foreground">
+                      {t("catalog.filteredFromSchool", "Showing only the rooms linked to the option you opened.")}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-6">
+
                   {schoolAccommodations.map((a) => (
                     <AccommodationCard
                       key={a.id}
