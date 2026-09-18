@@ -1,0 +1,1 @@
+ALTER TABLE public.school_accommodations ADD COLUMN IF NOT EXISTS catalog_accommodation_ids uuid[];

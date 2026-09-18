@@ -4146,6 +4146,7 @@ export type Database = {
           availability_confirmed: boolean
           availability_note_ar: string | null
           availability_note_en: string | null
+          catalog_accommodation_ids: string[] | null
           code: string
           created_at: string
           deposit_amount: number | null
@@ -4174,6 +4175,7 @@ export type Database = {
           availability_confirmed?: boolean
           availability_note_ar?: string | null
           availability_note_en?: string | null
+          catalog_accommodation_ids?: string[] | null
           code: string
           created_at?: string
           deposit_amount?: number | null
@@ -4202,6 +4204,7 @@ export type Database = {
           availability_confirmed?: boolean
           availability_note_ar?: string | null
           availability_note_en?: string | null
+          catalog_accommodation_ids?: string[] | null
           code?: string
           created_at?: string
           deposit_amount?: number | null
