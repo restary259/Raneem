@@ -1,0 +1,529 @@
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  CalendarDays,
+  Check,
+  ExternalLink,
+  FileText,
+  MapPin,
+  Search,
+  ShieldCheck,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader, LoadingState, ErrorState, EmptyState } from "@/components/shell";
+import { usePartnerSchoolDetail } from "@/hooks/usePartnerSchools";
+import { useLang } from "@/hooks/useLang";
+import { formatBandLabel, formatEur } from "@/lib/partnerSchools";
+import SchoolCalculator from "@/components/team/partnerSchools/SchoolCalculator";
+
+const TABS = [
+  "overview",
+  "courses",
+  "calculator",
+  "accommodation",
+  "startDates",
+  "application",
+  "policies",
+  "documents",
+] as const;
+
+export default function TeamPartnerSchoolPage() {
+  const { t } = useTranslation("dashboard");
+  const lang = useLang();
+  const { country, school: slug } = useParams();
+  const { data, loading, error, refetch } = usePartnerSchoolDetail(slug);
+  const [query, setQuery] = useState("");
+
+  const loc = (en: string | null | undefined, ar: string | null | undefined) =>
+    (lang === "ar" ? ar || en : en) ?? "";
+
+  const standard = useMemo(
+    () => data?.courses.find((c) => c.is_darb_standard) ?? data?.courses[0] ?? null,
+    [data],
+  );
+
+  /** Structured lookup — answers come only from stored records. */
+  const searchHits = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!data || q.length < 2) return [];
+    const hits: { answer: string; source: string; verified: string | null }[] = [];
+    const push = (answer: string, source?: string | null, verified?: string | null) =>
+      hits.push({ answer, source: source ?? "—", verified: verified ?? null });
+    const has = (...words: string[]) => words.some((w) => q.includes(w));
+
+    for (const c of data.courses) {
+      const tiers = data.courseTiers.filter((x) => x.course_id === c.id && x.kind === "booking");
+      const name = loc(c.name_en, c.name_ar);
+      if (has("course", "lesson", "price", "week", "دورة", "سعر", "حصة") || q.includes(String(c.lessons_per_week))) {
+        push(
+          `${name} — ${tiers.map((x) => `${formatBandLabel(x)}: ${formatEur(x.price_per_week)}/week`).join(" · ")}`,
+          c.source_name,
+          c.last_verified_at,
+        );
+      }
+      if (has("include", "included", "يشمل")) {
+        const items = (c.included_items as string[]) ?? [];
+        if (items.length) push(`${name} includes: ${items.join(", ")}`, c.source_name, c.last_verified_at);
+      }
+      if (has("schedule", "time", "monday", "دوام", "وقت")) {
+        push(`${name} — ${c.schedule_text_en}, max ${c.max_students} students. ${c.start_rule_en}`, c.source_name, c.last_verified_at);
+      }
+      const weekMatch = q.match(/(\d+)\s*(week|weeks|أسبوع)/);
+      if (weekMatch) {
+        const w = Number(weekMatch[1]);
+        const band = tiers.find((x) => w >= x.from_weeks && (x.to_weeks == null || w <= x.to_weeks));
+        if (band) {
+          push(
+            `${name} — ${w} weeks × ${formatEur(band.price_per_week)} = ${formatEur(band.price_per_week * w)}`,
+            c.source_name,
+            c.last_verified_at,
+          );
+        }
+      }
+    }
+
+    for (const a of data.accommodations) {
+      const name = loc(a.name_en, a.name_ar);
+      if (has("room", "accommodation", "apartment", "studio", "breakfast", "board", "housing", "سكن", "غرفة", "شقة")) {
+        const tiers = data.accommodationTiers.filter((x) => x.accommodation_id === a.id);
+        push(
+          `${name} — ${tiers
+            .map((x) => `${formatBandLabel(x)}: ${x.total_price != null ? formatEur(x.total_price) : `${formatEur(x.price_per_week)}/week`}`)
+            .join(" · ")}${a.minimum_age ? ` · minimum age ${a.minimum_age}` : ""}`,
+          a.source_name,
+          a.last_verified_at,
+        );
+      }
+      if (has("deposit", "تأمين")) push(`${name} — ${loc(a.deposit_note_en, a.deposit_note_ar)}`, a.source_name, a.last_verified_at);
+      if (has("fee", "arrangement", "رسوم") && a.arrangement_fee) {
+        push(`Accommodation arrangement fee: ${formatEur(a.arrangement_fee)} per person`, a.source_name, a.last_verified_at);
+      }
+    }
+
+    if (has("beginner", "start", "monday", "مبتدئ", "بداية")) {
+      const beginner = data.startDates.filter((d) => d.audience === "beginner");
+      push(
+        `Courses start every Monday. Absolute beginners: ${beginner.map((d) => d.start_date).join(", ") || "not recorded"}`,
+        beginner[0]?.source_name,
+        beginner[0]?.last_verified_at,
+      );
+    }
+
+    for (const p of data.policies) {
+      if (q.split(/\s+/).some((w) => w.length > 2 && (p.title_en?.toLowerCase().includes(w) || p.body_en?.toLowerCase().includes(w) || p.category.includes(w)))) {
+        push(`${loc(p.title_en, p.title_ar)} — ${loc(p.body_en, p.body_ar)}`, p.source_name, p.last_verified_at);
+      }
+    }
+
+    return hits.slice(0, 6);
+  }, [query, data, lang]);
+
+  if (loading) return <LoadingState rows={4} />;
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
+  if (!data) return <EmptyState title={t("partnerSchools.notFound", "School not found")} />;
+
+  const { school, version } = data;
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title={school.name}
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            <MapPin className="h-3.5 w-3.5" />
+            {school.city}
+            <span className="text-muted-foreground">·</span>
+            {t("partnerSchools.pricesShown", "Prices shown")}: {version?.year ?? "—"}
+            {school.last_verified_at && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                {t("partnerSchools.lastVerified", "Last verified")}: {school.last_verified_at}
+              </>
+            )}
+          </span>
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to={`/team/partner-schools/${country}`}>
+                <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+                {t("partnerSchools.back", "Back")}
+              </Link>
+            </Button>
+            {school.website_url && (
+              <Button asChild variant="outline" size="sm">
+                <a href={school.website_url} target="_blank" rel="noreferrer">
+                  {t("partnerSchools.website", "School website")}
+                  <ExternalLink className="ms-2 h-3.5 w-3.5" />
+                </a>
+              </Button>
+            )}
+          </div>
+        }
+      />
+
+      {/* Search */}
+      <Card className="p-3">
+        <div className="relative">
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("partnerSchools.searchPlaceholder", "Search {{name}} information…", { name: school.name })}
+            className="ps-9"
+          />
+        </div>
+        {query.trim().length >= 2 && (
+          <div className="mt-3 space-y-2">
+            {searchHits.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t("partnerSchools.notRecorded", "Not recorded — verify with the school")}
+              </p>
+            ) : (
+              searchHits.map((h, i) => (
+                <div key={i} className="rounded-md border border-border p-2.5 text-sm">
+                  <p className="text-foreground">{h.answer}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("partnerSchools.source", "Source")}: {h.source}
+                    {h.verified ? ` · ${t("partnerSchools.lastVerified", "Last verified")}: ${h.verified}` : ""}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* Quick answers */}
+      {standard && (
+        <Card className="border-brand/40 p-4">
+          <Badge className="mb-3 bg-brand text-brand-foreground hover:bg-brand">
+            {t("partnerSchools.darbStandard", "DARB Standard")}
+          </Badge>
+          <div className="mb-3 text-sm font-medium text-foreground">{loc(standard.name_en, standard.name_ar)}</div>
+          <div className="grid gap-3 text-sm sm:grid-cols-3 lg:grid-cols-5">
+            <Fact label={t("partnerSchools.lessons", "Lessons")} value={`${standard.lessons_per_week} / ${t("partnerSchools.week", "week")}`} />
+            <Fact label={t("partnerSchools.schedule", "Schedule")} value={loc(standard.schedule_text_en, standard.schedule_text_ar)} />
+            <Fact label={t("partnerSchools.classSize", "Class size")} value={`${t("partnerSchools.max", "Max")} ${standard.max_students}`} />
+            <Fact label={t("partnerSchools.starts", "Starts")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
+            <Fact label={t("partnerSchools.city", "City")} value={school.city ?? "—"} />
+          </div>
+        </Card>
+      )}
+
+      <Tabs defaultValue="overview">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+          {TABS.map((key) => (
+            <TabsTrigger key={key} value={key}>
+              {t(`partnerSchools.tab.${key}`, key)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {/* Overview */}
+        <TabsContent value="overview" className="mt-3 grid gap-3 lg:grid-cols-2">
+          <Card className="space-y-2 p-4">
+            <h3 className="text-sm font-semibold text-foreground">{t("partnerSchools.levels", "Levels")}</h3>
+            {data.levels.length === 0 ? (
+              <NotRecorded />
+            ) : (
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                {data.levels.map((l) => (
+                  <li key={l.id} className="flex justify-between">
+                    <span>{l.level}</span>
+                    <span>{l.weeks} {t("partnerSchools.weeks", "weeks")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+          <Card className="space-y-2 p-4">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t("partnerSchools.included", "Included in the course price")}
+            </h3>
+            {((standard?.included_items as string[]) ?? []).length === 0 ? (
+              <NotRecorded />
+            ) : (
+              <ul className="grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">
+                {((standard?.included_items as string[]) ?? []).map((item) => (
+                  <li key={item} className="flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </TabsContent>
+
+        {/* Courses */}
+        <TabsContent value="courses" className="mt-3 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            {t("partnerSchools.schoolPricesNote", "These are school prices. DARB service fees are not included.")}
+          </p>
+          {data.courses.map((c) => {
+            const booking = data.courseTiers.filter((x) => x.course_id === c.id && x.kind === "booking");
+            const extension = data.courseTiers.filter((x) => x.course_id === c.id && x.kind === "extension");
+            return (
+              <Card key={c.id} className={`p-4 ${c.is_darb_standard ? "border-brand/40" : ""}`}>
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground">{loc(c.name_en, c.name_ar)}</h3>
+                  {c.is_darb_standard && (
+                    <Badge className="bg-brand text-brand-foreground hover:bg-brand">
+                      {t("partnerSchools.darbStandard", "DARB Standard")}
+                    </Badge>
+                  )}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <PriceTable title={t("partnerSchools.bookingPrice", "Booking price")} rows={booking} />
+                  {extension.length > 0 && (
+                    <PriceTable title={t("partnerSchools.extensionPrice", "Extension price")} rows={extension} />
+                  )}
+                </div>
+                <SourceLine name={c.source_name} doc={c.source_document} verified={c.last_verified_at} t={t} />
+              </Card>
+            );
+          })}
+          {version?.summer_supplement_per_week && (
+            <p className="text-xs text-muted-foreground">
+              {t("partnerSchools.summerNote", "Summer supplement")}: {formatEur(version.summer_supplement_per_week)}/
+              {t("partnerSchools.week", "week")} · {version.summer_from} → {version.summer_to}
+            </p>
+          )}
+        </TabsContent>
+
+        {/* Calculator */}
+        <TabsContent value="calculator" className="mt-3">
+          <SchoolCalculator
+            courses={data.courses}
+            courseTiers={data.courseTiers}
+            levels={data.levels}
+            accommodations={data.accommodations}
+            accommodationTiers={data.accommodationTiers}
+            version={version}
+            lang={lang}
+          />
+        </TabsContent>
+
+        {/* Accommodation */}
+        <TabsContent value="accommodation" className="mt-3 space-y-3">
+          <div className="flex justify-end">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/team/catalog">
+                {t("partnerSchools.openCatalog", "Open DARB Catalog")}
+                <ExternalLink className="ms-2 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+          {data.accommodations.length === 0 && <NotRecorded />}
+          <div className="grid gap-3 lg:grid-cols-2">
+            {data.accommodations.map((a) => {
+              const tiers = data.accommodationTiers.filter((x) => x.accommodation_id === a.id);
+              return (
+                <Card key={a.id} className="space-y-2 p-4">
+                  <h3 className="text-sm font-semibold text-foreground">{loc(a.name_en, a.name_ar)}</h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    {tiers.map((x) => (
+                      <li key={x.id} className="flex justify-between">
+                        <span>{formatBandLabel(x)}</span>
+                        <span className="font-medium text-foreground">
+                          {x.total_price != null
+                            ? formatEur(x.total_price)
+                            : `${formatEur(x.price_per_week)}/${t("partnerSchools.week", "week")}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {a.minimum_age && (
+                      <Badge variant="secondary">
+                        {t("partnerSchools.minAge", "Minimum age")} {a.minimum_age}
+                      </Badge>
+                    )}
+                    {a.arrangement_fee && (
+                      <Badge variant="secondary">
+                        {t("partnerSchools.arrangementFee", "Accommodation arrangement")} {formatEur(a.arrangement_fee)}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{loc(a.deposit_note_en, a.deposit_note_ar)}</p>
+                  {!a.availability_confirmed && (
+                    <p className="rounded-md bg-amber-500/10 p-2 text-xs text-amber-700 dark:text-amber-400">
+                      {loc(a.availability_note_en, a.availability_note_ar)}
+                    </p>
+                  )}
+                  <SourceLine name={a.source_name} doc={a.source_document} verified={a.last_verified_at} t={t} />
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        {/* Start dates */}
+        <TabsContent value="startDates" className="mt-3 space-y-3">
+          <Card className="space-y-2 p-4">
+            <h3 className="text-sm font-semibold text-foreground">{t("partnerSchools.allStudents", "A2 and above")}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t("partnerSchools.everyMonday", "Courses start every Monday.")}
+            </p>
+          </Card>
+          <Card className="space-y-2 p-4">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <CalendarDays className="h-4 w-4" />
+              {t("partnerSchools.beginners", "Absolute beginners (A1)")}
+            </h3>
+            {data.startDates.length === 0 ? (
+              <NotRecorded />
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {data.startDates.map((d) => (
+                  <Badge key={d.id} variant="secondary">{d.start_date}</Badge>
+                ))}
+              </div>
+            )}
+            <SourceLine
+              name={data.startDates[0]?.source_name}
+              doc={data.startDates[0]?.source_document}
+              verified={data.startDates[0]?.last_verified_at}
+              t={t}
+            />
+          </Card>
+        </TabsContent>
+
+        {/* Application guidance */}
+        <TabsContent value="application" className="mt-3 space-y-3">
+          {data.notes.length === 0 ? (
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold text-foreground">
+                {t("partnerSchools.whenToApply", "When should we apply?")}
+              </h3>
+              <NotRecorded />
+            </Card>
+          ) : (
+            data.notes.map((n) => (
+              <Card key={n.id} className="space-y-1 p-4">
+                <h3 className="text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
+                <p className="text-sm text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+                {n.updated_on && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("partnerSchools.updated", "Updated")}: {n.updated_on}
+                  </p>
+                )}
+              </Card>
+            ))
+          )}
+          {data.policies
+            .filter((p) => p.category === "registration" || p.category === "arrival")
+            .map((p) => (
+              <Card key={p.id} className="space-y-1 p-4">
+                <h3 className="text-sm font-semibold text-foreground">{loc(p.title_en, p.title_ar)}</h3>
+                <p className="text-sm text-muted-foreground">{loc(p.body_en, p.body_ar)}</p>
+                <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={t} />
+              </Card>
+            ))}
+        </TabsContent>
+
+        {/* Policies */}
+        <TabsContent value="policies" className="mt-3 space-y-3">
+          {data.policies.length === 0 && <NotRecorded />}
+          {data.policies.map((p) => (
+            <Card key={p.id} className="space-y-1 p-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <ShieldCheck className="h-4 w-4" />
+                {loc(p.title_en, p.title_ar)}
+              </h3>
+              <p className="text-sm text-muted-foreground">{loc(p.body_en, p.body_ar)}</p>
+              <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={t} />
+            </Card>
+          ))}
+        </TabsContent>
+
+        {/* Documents */}
+        <TabsContent value="documents" className="mt-3 space-y-2">
+          {data.sources.length === 0 && <NotRecorded />}
+          {data.sources.map((s) => (
+            <Card key={s.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-foreground">
+                  <FileText className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{s.name}</span>
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {s.document_path ?? s.url}
+                  {s.last_verified_at ? ` · ${t("partnerSchools.lastVerified", "Last verified")}: ${s.last_verified_at}` : ""}
+                </p>
+              </div>
+              {s.url && (
+                <Button asChild variant="ghost" size="sm">
+                  <a href={s.url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </Button>
+              )}
+            </Card>
+          ))}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-0.5">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-sm font-medium text-foreground">{value}</div>
+    </div>
+  );
+}
+
+function PriceTable({ title, rows }: { title: string; rows: any[] }) {
+  return (
+    <div>
+      <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+      <ul className="space-y-1 text-sm">
+        {rows.map((r) => (
+          <li key={r.id} className="flex justify-between border-b border-border/60 py-1 last:border-0">
+            <span className="text-muted-foreground">{formatBandLabel(r)}</span>
+            <span className="font-medium text-foreground">{formatEur(r.price_per_week)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function NotRecorded() {
+  const { t } = useTranslation("dashboard");
+  return (
+    <p className="text-sm text-muted-foreground">
+      {t("partnerSchools.notRecorded", "Not recorded — verify with the school")}
+    </p>
+  );
+}
+
+function SourceLine({
+  name,
+  doc,
+  verified,
+  t,
+}: {
+  name?: string | null;
+  doc?: string | null;
+  verified?: string | null;
+  t: (k: string, d?: string) => string;
+}) {
+  if (!name && !doc) return null;
+  return (
+    <p className="pt-2 text-xs text-muted-foreground">
+      {t("partnerSchools.source", "Source")}: {name ?? doc}
+      {verified ? ` · ${t("partnerSchools.lastVerified", "Last verified")}: ${verified}` : ""}
+    </p>
+  );
+}
