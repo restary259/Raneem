@@ -52,7 +52,6 @@ export default function TeamCatalogPage() {
   useEffect(() => {
     const requestedSchool = searchParams.get("school");
     const requestedRoomType = searchParams.get("roomType") ?? "";
-    const requestedMeals = searchParams.get("meals") ?? "";
     if (requestedSchool) {
       setSchoolId(requestedSchool);
       setTab("accommodations");
@@ -60,7 +59,7 @@ export default function TeamCatalogPage() {
         ...current,
         schoolId: requestedSchool,
         roomType: requestedRoomType,
-        search: requestedMeals,
+        search: "",
       }));
     }
   }, [searchParams]);
