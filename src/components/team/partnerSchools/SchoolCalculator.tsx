@@ -22,6 +22,7 @@ import {
   quoteCourse,
   summerWeeks,
   totalWeeks,
+  totalWeeksMax,
   type AccommodationPriceTier,
   type CoursePriceTier,
   type LevelDuration,
