@@ -27,6 +27,12 @@ export interface LevelDuration {
   sort_order: number;
 }
 
+export interface CatalogAccommodationLinkInput {
+  schoolId: string | null;
+  roomType: string | null;
+  meals: string | null;
+}
+
 export const CEFR_ORDER = ["A1", "A2", "B1", "B2", "C1"] as const;
 export type CefrLevel = (typeof CEFR_ORDER)[number];
 
@@ -148,7 +154,33 @@ export function formatEur(value: number | null | undefined): string {
   return `€${Number(value).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }
 
-export function formatBandLabel(tier: CoursePriceTier | AccommodationPriceTier): string {
+export function formatBandLabel(
+  tier: CoursePriceTier | AccommodationPriceTier,
+  lang: "en" | "ar" = "en",
+): string {
   const to = tier.to_weeks;
-  return to == null ? `${tier.from_weeks}+ weeks` : tier.from_weeks === to ? `${to} week${to > 1 ? "s" : ""}` : `${tier.from_weeks}–${to} weeks`;
+  const unit = lang === "ar" ? "أسبوع" : tier.from_weeks === to && to === 1 ? "week" : "weeks";
+  if (to == null) return lang === "ar" ? `${tier.from_weeks}+ ${unit}` : `${tier.from_weeks}+ ${unit}`;
+  return tier.from_weeks === to ? `${to} ${unit}` : `${tier.from_weeks}–${to} ${unit}`;
+}
+
+/** Arabic month names with Western numerals, or an equally concise English date. */
+export function formatSchoolDate(value: string, lang: "en" | "ar"): string {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return value;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return new Intl.DateTimeFormat(lang === "ar" ? "ar-EG-u-nu-latn" : "en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+export function partnerSchoolCatalogUrl(input: CatalogAccommodationLinkInput): string | null {
+  if (!input.schoolId) return null;
+  const params = new URLSearchParams({ school: input.schoolId, tab: "accommodations" });
+  if (input.roomType) params.set("roomType", input.roomType);
+  if (input.meals) params.set("meals", input.meals === "none" ? "self_catering" : input.meals);
+  return `/team/catalog?${params.toString()}`;
 }

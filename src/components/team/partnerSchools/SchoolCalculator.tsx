@@ -92,14 +92,28 @@ export default function SchoolCalculator({
 
   const answer = [
     `${from} → ${to}`,
-    `${weeks} weeks`,
-    `${course?.name_en ?? ""}`,
-    `Course: ${formatEur(courseQuote.total)}${courseQuote.pricePerWeek ? ` (${weeks} × ${formatEur(courseQuote.pricePerWeek)}/week)` : ""}`,
-    withAcc ? `Accommodation (${acc?.name_en}, ${stayWeeks} weeks): ${formatEur(accQuote?.total ?? null)}` : "",
-    withAcc && arrangementFee ? `Accommodation arrangement: ${formatEur(arrangementFee)}` : "",
-    supplement ? `Summer supplement: ${formatEur(supplement)}` : "",
-    `Estimated payable: ${formatEur(payable)}`,
-    "Security deposit is separate — amount to confirm with the school.",
+    t("partnerSchools.copyWeeks", "{{weeks}} weeks", { weeks }),
+    lang === "ar" && course?.name_ar ? course.name_ar : course?.name_en ?? "",
+    t("partnerSchools.copyCourse", "Course: {{total}} ({{weeks}} × {{rate}}/week)", {
+      total: formatEur(courseQuote.total),
+      weeks,
+      rate: formatEur(courseQuote.pricePerWeek),
+    }),
+    withAcc
+      ? t("partnerSchools.copyAccommodation", "Accommodation ({{name}}, {{weeks}} weeks): {{total}}", {
+          name: lang === "ar" && acc?.name_ar ? acc.name_ar : acc?.name_en,
+          weeks: stayWeeks,
+          total: formatEur(accQuote?.total ?? null),
+        })
+      : "",
+    withAcc && arrangementFee
+      ? t("partnerSchools.copyArrangement", "Accommodation arrangement: {{total}}", { total: formatEur(arrangementFee) })
+      : "",
+    supplement
+      ? t("partnerSchools.copySummer", "Summer supplement: {{total}}", { total: formatEur(supplement) })
+      : "",
+    t("partnerSchools.copyPayable", "Estimated payable: {{total}}", { total: formatEur(payable) }),
+    withAcc ? t("partnerSchools.depositSeparate", "Security deposit is separate — amount to confirm with the school.") : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -115,9 +129,9 @@ export default function SchoolCalculator({
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]" dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* Inputs */}
-      <Card className="space-y-4 p-4">
+      <Card className="space-y-4 p-4 shadow-none">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label>{t("partnerSchools.startingLevel", "Starting level")}</Label>
@@ -208,7 +222,7 @@ export default function SchoolCalculator({
             {courseQuote.band && (
               <li className="flex justify-between border-t border-border pt-1">
                 <span>
-                  {weeks} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band)})
+                  {weeks} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})
                 </span>
                 <span>{formatEur(courseQuote.total)}</span>
               </li>
@@ -216,7 +230,7 @@ export default function SchoolCalculator({
             {withAcc && accQuote?.tier && (
               <li className="flex justify-between">
                 <span>
-                  {acc?.name_en} · {stayWeeks} {t("partnerSchools.weeks", "weeks")}
+                  {lang === "ar" && acc?.name_ar ? acc.name_ar : acc?.name_en} · {stayWeeks} {t("partnerSchools.weeks", "weeks")}
                   {accQuote.perWeek ? ` × ${formatEur(accQuote.perWeek)}` : ""}
                 </span>
                 <span>{formatEur(accQuote.total)}</span>
@@ -227,7 +241,7 @@ export default function SchoolCalculator({
       </Card>
 
       {/* Result */}
-      <Card className="h-fit space-y-3 border-brand/40 p-4">
+      <Card className="h-fit space-y-3 border-brand/40 p-4 shadow-none">
         <div className="text-sm text-muted-foreground">{from} → {to}</div>
         <div className="text-3xl font-semibold text-foreground">
           {weeks} {t("partnerSchools.weeks", "weeks")}
