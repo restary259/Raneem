@@ -504,13 +504,17 @@ export default function TeamPartnerSchoolPage() {
                   )}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3">
                     <SourceLine name={a.source_name} doc={a.source_document} verified={a.last_verified_at} t={(k, d) => t(k, d ?? k)} />
-                    {catalogUrl && (
+                    {catalogUrl ? (
                       <Button asChild variant="outline" size="sm">
                         <Link to={catalogUrl}>
                           {t("partnerSchools.viewInCatalog", "View in catalog")}
                           <ExternalLink className="ms-2 h-3.5 w-3.5" />
                         </Link>
                       </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {t("partnerSchools.notInCatalog", "Not in the DARB catalog — the school arranges this option directly.")}
+                      </span>
                     )}
                   </div>
                 </AccordionContent>
