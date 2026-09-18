@@ -469,10 +469,15 @@ export default function TeamPartnerSchoolPage() {
                     {tiers.map((x) => (
                       <li key={x.id} className="flex items-center justify-between gap-4 py-2">
                         <span>{formatBandLabel(x, lang)}</span>
-                        <span className="font-medium text-foreground">
+                        <span className="text-end font-medium text-foreground">
                           {x.total_price != null
                             ? formatEur(x.total_price)
                             : `${formatEur(x.price_per_week)}/${t("partnerSchools.week", "week")}`}
+                          {x.extra_day_price != null && (
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              {t("partnerSchools.extraDay", "Extra day")}: {formatEur(x.extra_day_price)}
+                            </span>
+                          )}
                         </span>
                       </li>
                     ))}
