@@ -7,6 +7,7 @@ import {
   quoteAccommodation,
   summerWeeks,
   formatSchoolDate,
+  localizeIncludedItem,
   partnerSchoolCatalogUrl,
   type CoursePriceTier,
   type AccommodationPriceTier,
@@ -29,11 +30,11 @@ const courseTiers: CoursePriceTier[] = [
 ];
 
 const roomTiers: AccommodationPriceTier[] = [
-  { from_weeks: 1, to_weeks: 1, total_price: 140, price_per_week: null },
-  { from_weeks: 2, to_weeks: 2, total_price: 240, price_per_week: null },
-  { from_weeks: 3, to_weeks: 3, total_price: 330, price_per_week: null },
-  { from_weeks: 4, to_weeks: 4, total_price: 440, price_per_week: null },
-  { from_weeks: 5, to_weeks: null, total_price: null, price_per_week: 110 },
+  { from_weeks: 1, to_weeks: 1, total_price: 290, price_per_week: null },
+  { from_weeks: 2, to_weeks: 2, total_price: 390, price_per_week: null },
+  { from_weeks: 3, to_weeks: 3, total_price: 525, price_per_week: null },
+  { from_weeks: 4, to_weeks: 4, total_price: 660, price_per_week: null },
+  { from_weeks: 5, to_weeks: null, total_price: null, price_per_week: 165 },
 ];
 
 describe("partnerSchools", () => {
@@ -57,6 +58,12 @@ describe("partnerSchools", () => {
     expect(quote.total).toBe(7040);
   });
 
+  it("quotes the featured 42-week course at the verified 24+ weekly rate", () => {
+    const quote = quoteCourse(courseTiers, 42);
+    expect(quote.pricePerWeek).toBe(160);
+    expect(quote.total).toBe(6720);
+  });
+
   it("short bookings use their own band", () => {
     expect(quoteCourse(courseTiers, 4).total).toBe(840);
     expect(quoteCourse(courseTiers, 8).total).toBe(1520);
@@ -68,9 +75,9 @@ describe("partnerSchools", () => {
   });
 
   it("prices accommodation from fixed totals then a weekly rate", () => {
-    expect(quoteAccommodation(roomTiers, 1).total).toBe(140);
-    expect(quoteAccommodation(roomTiers, 4).total).toBe(440);
-    expect(quoteAccommodation(roomTiers, 13).total).toBe(1430);
+    expect(quoteAccommodation(roomTiers, 1).total).toBe(290);
+    expect(quoteAccommodation(roomTiers, 4).total).toBe(660);
+    expect(quoteAccommodation(roomTiers, 13).total).toBe(2145);
   });
 
   it("counts only the weeks that fall inside the summer window", () => {
@@ -80,7 +87,13 @@ describe("partnerSchools", () => {
   });
 
   it("formats Arabic school dates with Arabic month names and Western digits", () => {
-    expect(formatSchoolDate("2026-01-05", "ar")).toBe("5 يناير 2026");
+    expect(formatSchoolDate("2027-01-04", "ar")).toBe("4 يناير 2027");
+  });
+
+  it("localizes official included benefits in Arabic", () => {
+    expect(localizeIncludedItem("10 hours of learning support and exam preparation per week", "ar"))
+      .toBe("10 ساعات أسبوعياً للدعم التعليمي والتحضير للامتحانات");
+    expect(localizeIncludedItem("Free Wi-Fi", "en")).toBe("Free Wi-Fi");
   });
 
   it("builds a filtered catalog handoff without guessing a unit", () => {

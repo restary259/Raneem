@@ -36,6 +36,23 @@ export interface CatalogAccommodationLinkInput {
 export const CEFR_ORDER = ["A1", "A2", "B1", "B2", "C1"] as const;
 export type CefrLevel = (typeof CEFR_ORDER)[number];
 
+const INCLUDED_ITEM_AR: Record<string, string> = {
+  "Personalised lessons in small groups": "دروس مخصصة ضمن مجموعات صغيرة",
+  "Cultural and leisure programme": "برنامج ثقافي وترفيهي",
+  "10 hours of learning support and exam preparation per week": "10 ساعات أسبوعياً للدعم التعليمي والتحضير للامتحانات",
+  "Additional learning materials": "مواد تعليمية إضافية",
+  "Placement test": "اختبار تحديد المستوى",
+  "Visa and insurance support": "دعم التأشيرة والتأمين",
+  "Certificate and student ID card": "شهادة وبطاقة طالب",
+  "Free Wi-Fi": "إنترنت لاسلكي مجاني",
+};
+
+/** Converts canonical school inclusions to Arabic without inventing missing facts. */
+export function localizeIncludedItem(item: string, lang: "en" | "ar"): string {
+  if (lang === "en") return item;
+  return INCLUDED_ITEM_AR[item] ?? item;
+}
+
 /** Levels a student still has to complete to move from `from` up to `to`. */
 export function levelsBetween(from: string, to: string): string[] {
   const start = CEFR_ORDER.indexOf(from as CefrLevel);
