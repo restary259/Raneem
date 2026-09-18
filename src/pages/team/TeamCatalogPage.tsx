@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { RefreshCw, Building2, Globe2, GraduationCap, BedDouble, ArrowLeft, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -38,6 +39,7 @@ export default function TeamCatalogPage() {
   const { t } = useTranslation("dashboard");
   const lang = useLang();
   const { data, loading, error, refetch } = useTeamCatalog();
+  const [searchParams] = useSearchParams();
 
   const [filters, setFilters] = useState<CatalogFilterValues>(EMPTY_FILTERS);
   const [country, setCountry] = useState<string | null>(null);
@@ -46,6 +48,22 @@ export default function TeamCatalogPage() {
   const [selected, setSelected] = useState<CatalogAccommodation | null>(null);
   const [schoolPhotosOpen, setSchoolPhotosOpen] = useState(false);
   const [programPhotos, setProgramPhotos] = useState<CatalogProgram | null>(null);
+
+  useEffect(() => {
+    const requestedSchool = searchParams.get("school");
+    const requestedRoomType = searchParams.get("roomType") ?? "";
+    const requestedMeals = searchParams.get("meals") ?? "";
+    if (requestedSchool) {
+      setSchoolId(requestedSchool);
+      setTab("accommodations");
+      setFilters((current) => ({
+        ...current,
+        schoolId: requestedSchool,
+        roomType: requestedRoomType,
+        search: requestedMeals,
+      }));
+    }
+  }, [searchParams]);
 
   const countries = useMemo(() => (data ? groupByCountry(data.schools) : []), [data]);
 

@@ -6,6 +6,8 @@ import {
   quoteCourse,
   quoteAccommodation,
   summerWeeks,
+  formatSchoolDate,
+  partnerSchoolCatalogUrl,
   type CoursePriceTier,
   type AccommodationPriceTier,
 } from "./partnerSchools";
@@ -50,7 +52,9 @@ describe("partnerSchools", () => {
 
   it("A1 → C1 is 44 weeks", () => {
     expect(totalWeeks(levelPlan("A1", "C1", levels))).toBe(44);
-    expect(quoteCourse(courseTiers, 44).total).toBe(7040);
+    const quote = quoteCourse(courseTiers, 44);
+    expect(quote.pricePerWeek).toBe(160);
+    expect(quote.total).toBe(7040);
   });
 
   it("short bookings use their own band", () => {
@@ -73,5 +77,15 @@ describe("partnerSchools", () => {
     expect(summerWeeks("2026-07-06", 4, "2026-07-06", "2026-08-28")).toBe(4);
     expect(summerWeeks("2026-01-05", 4, "2026-07-06", "2026-08-28")).toBe(0);
     expect(summerWeeks(null, 4, "2026-07-06", "2026-08-28")).toBe(0);
+  });
+
+  it("formats Arabic school dates with Arabic month names and Western digits", () => {
+    expect(formatSchoolDate("2026-01-05", "ar")).toBe("5 يناير 2026");
+  });
+
+  it("builds a filtered catalog handoff without guessing a unit", () => {
+    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", roomType: "studio", meals: "none" }))
+      .toBe("/team/catalog?school=school-1&tab=accommodations&roomType=studio&meals=self_catering");
+    expect(partnerSchoolCatalogUrl({ schoolId: null, roomType: "studio", meals: "none" })).toBeNull();
   });
 });
