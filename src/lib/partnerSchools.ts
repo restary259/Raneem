@@ -70,20 +70,37 @@ export function levelsBetween(from: string, to: string): string[] {
 export interface LevelPlanRow {
   level: string;
   weeks: number;
+  /** Upper end when the school publishes a range; equals `weeks` otherwise. */
+  weeksMax: number;
   missing: boolean;
 }
 
 export function levelPlan(from: string, to: string, durations: LevelDuration[]): LevelPlanRow[] {
-  const byLevel = new Map(durations.map((d) => [d.level, d.weeks]));
-  return levelsBetween(from, to).map((level) => ({
-    level,
-    weeks: byLevel.get(level) ?? 0,
-    missing: !byLevel.has(level),
-  }));
+  const byLevel = new Map(durations.map((d) => [d.level, d]));
+  return levelsBetween(from, to).map((level) => {
+    const row = byLevel.get(level);
+    const weeks = row?.weeks ?? 0;
+    return {
+      level,
+      weeks,
+      weeksMax: row?.weeks_max ?? weeks,
+      missing: !row,
+    };
+  });
 }
 
 export function totalWeeks(rows: LevelPlanRow[]): number {
   return rows.reduce((sum, r) => sum + r.weeks, 0);
+}
+
+/** Upper end of the plan; equals `totalWeeks` when every level is a fixed duration. */
+export function totalWeeksMax(rows: LevelPlanRow[]): number {
+  return rows.reduce((sum, r) => sum + (r.weeksMax || r.weeks), 0);
+}
+
+/** True when the school publishes durations as a range rather than a fixed number. */
+export function isRangePlan(rows: LevelPlanRow[]): boolean {
+  return totalWeeksMax(rows) > totalWeeks(rows);
 }
 
 /** The single weekly band that applies to a booking of `weeks` weeks. */
