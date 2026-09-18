@@ -232,16 +232,16 @@ export default function SchoolCalculator({
                 <span>
                   {p.missing
                     ? t("partnerSchools.notRecorded", "Not recorded — verify with the school")
-                    : `${p.weeks} ${t("partnerSchools.weeks", "weeks")}`}
+                    : `${p.weeksMax > p.weeks ? `${p.weeks}–${p.weeksMax}` : p.weeks} ${t("partnerSchools.weeks", "weeks")}`}
                 </span>
               </li>
             ))}
             {courseQuote.band && (
               <li className="flex justify-between border-t border-border pt-1">
                 <span>
-                  {weeks} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})
+                  {weeksLabel} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})
                 </span>
-                <span>{formatEur(courseQuote.total)}</span>
+                <span>{courseTotalLabel}</span>
               </li>
             )}
             {withAcc && accQuote?.tier && (
@@ -261,15 +261,23 @@ export default function SchoolCalculator({
       <Card className="h-fit space-y-3 border-brand/40 p-4 shadow-none">
         <div className="text-sm text-muted-foreground">{from} → {to}</div>
         <div className="text-3xl font-semibold text-foreground">
-          {weeks} {t("partnerSchools.weeks", "weeks")}
+          {weeksLabel} {t("partnerSchools.weeks", "weeks")}
         </div>
-        <div className="text-2xl font-semibold text-brand">{formatEur(courseQuote.total)}</div>
+        <div className="text-2xl font-semibold text-brand">{courseTotalLabel}</div>
         <div className="text-xs text-muted-foreground">
           {t("partnerSchools.courseTuition", "Course tuition (school price)")}
         </div>
+        {isRange && (
+          <p className="rounded-md bg-muted/50 p-2 text-xs leading-5 text-muted-foreground">
+            {t(
+              "partnerSchools.rangeNote",
+              "This school publishes a range of teaching hours per level, so the duration and price are a range.",
+            )}
+          </p>
+        )}
 
         <div className="space-y-1.5 border-t border-border pt-3 text-sm">
-          <Row label={t("partnerSchools.course", "Course")} value={formatEur(courseQuote.total)} />
+          <Row label={t("partnerSchools.course", "Course")} value={courseTotalLabel} />
           {withAcc && (
             <>
               <Row label={t("partnerSchools.accommodation", "Accommodation")} value={formatEur(accQuote?.total ?? null)} />
