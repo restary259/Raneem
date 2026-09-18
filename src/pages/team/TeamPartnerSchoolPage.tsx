@@ -608,10 +608,13 @@ export default function TeamPartnerSchoolPage() {
   );
 }
 
+/** Arabic script must never be uppercased or letter-spaced — it breaks joining. */
+const microLabel = "text-xs font-medium text-muted-foreground ltr:uppercase ltr:tracking-wide";
+
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-0.5">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={microLabel}>{label}</div>
       <div className="text-sm font-medium text-foreground">{value}</div>
     </div>
   );
@@ -620,7 +623,7 @@ function Fact({ label, value }: { label: string; value: string }) {
 function PriceTable({ title, rows, lang }: { title: string; rows: any[]; lang: "en" | "ar" }) {
   return (
     <div>
-      <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
+      <div className={`mb-1 ${microLabel}`}>{title}</div>
       <ul className="space-y-1 text-sm">
         {rows.map((r) => (
           <li key={r.id} className="flex justify-between border-b border-border/60 py-1 last:border-0">
