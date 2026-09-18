@@ -568,24 +568,44 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Application guidance */}
         <TabsContent value="application" className="mt-3 space-y-3">
-          <Card className="border-brand/35 p-4 shadow-none">
-            <Badge variant="outline">{t("partnerSchools.officialSchoolRule", "Official KAPITO procedure")}</Badge>
-            <h3 className="mt-3 text-sm font-semibold text-foreground">
-              {t("partnerSchools.officialApplicationTitle", "Registration and payment timing")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {t("partnerSchools.officialApplicationBody", "Send the registration form, then pay the €200 deposit or the full course fee. KAPITO reserves the course place after receiving the deposit. The remaining amount is due one week before the course starts.")}
-            </p>
-          </Card>
-          <Card className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
-            <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
-            <h3 className="mt-3 text-sm font-semibold text-foreground">
-              {t("partnerSchools.whenToApply", "When should we apply?")}
-            </h3>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {t("partnerSchools.darbApplicationTiming", "Submit 1–2 months before the preferred start date to improve the chance of securing the preferred accommodation. This is DARB office guidance, not a KAPITO minimum registration period.")}
-            </p>
-          </Card>
+          {officialNotes.length > 0 ? (
+            officialNotes.map((n) => (
+              <Card key={n.id} className="border-brand/35 p-4 shadow-none">
+                <Badge variant="outline">{t("partnerSchools.officialSchoolRuleGeneric", "Official school procedure")}</Badge>
+                <h3 className="mt-3 text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="border-brand/35 p-4 shadow-none">
+              <Badge variant="outline">{t("partnerSchools.officialSchoolRule", "Official KAPITO procedure")}</Badge>
+              <h3 className="mt-3 text-sm font-semibold text-foreground">
+                {t("partnerSchools.officialApplicationTitle", "Registration and payment timing")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.officialApplicationBody", "Send the registration form, then pay the €200 deposit or the full course fee. KAPITO reserves the course place after receiving the deposit. The remaining amount is due one week before the course starts.")}
+              </p>
+            </Card>
+          )}
+          {darbNotes.length > 0 ? (
+            darbNotes.map((n) => (
+              <Card key={n.id} className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
+                <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
+                <h3 className="mt-3 text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
+              <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
+              <h3 className="mt-3 text-sm font-semibold text-foreground">
+                {t("partnerSchools.whenToApply", "When should we apply?")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.darbApplicationTiming", "Submit 1–2 months before the preferred start date to improve the chance of securing the preferred accommodation. This is DARB office guidance, not a KAPITO minimum registration period.")}
+              </p>
+            </Card>
+          )}
           {data.policies
             .filter((p) => p.category === "registration" || p.category === "arrival")
             .map((p) => (
