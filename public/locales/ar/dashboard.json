@@ -2645,7 +2645,8 @@
     "more": "المزيد",
     "bottomNav": "التنقل الرئيسي",
     "commission": "العمولات",
-    "majorIntel": "معلومات التخصصات"
+    "majorIntel": "معلومات التخصصات",
+    "partnerSchools": "مدارس الشركاء"
   },
   "case": {
     "status": {
@@ -4921,7 +4922,12 @@
     "unchanged": "لا يوجد تقييم محفوظ",
     "programmes": "البرامج الجامعية",
     "toVerify": "بحاجة للتحقق",
-    "mobile": { "major": "التخصص", "student": "الطالب", "programs": "البرامج", "assessment": "التقييم" },
+    "mobile": {
+      "major": "التخصص",
+      "student": "الطالب",
+      "programs": "البرامج",
+      "assessment": "التقييم"
+    },
     "card": {
       "subtitle": "ابحث عن تخصص وافتح بطاقته.",
       "back": "كل التخصصات",
@@ -4939,7 +4945,7 @@
     },
     "readyToUse": "جاهزة للاستخدام",
     "recent": "فُتحت مؤخراً",
-    "stillMissing": "ما زال ناقصاً",
+    "stillMissing": "لم يُجب عنه بعد",
     "provisionalHint": "كل نتيجة أدناه مبدئية حتى تُستكمل هذه الحقول.",
     "saving": "جارٍ الحفظ…",
     "retry": "إعادة المحاولة",
@@ -4947,9 +4953,20 @@
     "requestVerification": "اطلب التحقق",
     "requestSent": "تم إرسال طلب التحقق.",
     "requestError": "تعذر إرسال الطلب.",
-    "journeyStep": { "after": "بعد القبول" },
-    "group": { "bagrut": "البجروت", "subjects": "المواد", "german": "الألمانية" },
-    "tab": { "requirements": "الشروط", "application": "التقديم", "documents": "الوثائق", "sources": "المصادر" },
+    "journeyStep": {
+      "after": "بعد القبول"
+    },
+    "group": {
+      "bagrut": "البجروت",
+      "subjects": "المواد",
+      "german": "الألمانية"
+    },
+    "tab": {
+      "requirements": "الشروط",
+      "application": "التقديم",
+      "documents": "الوثائق",
+      "sources": "المصادر"
+    },
     "subtitle": "حقائق قبول موثّقة لطلاب الداخل بشهادة بجروت إسرائيلية. لا مصدر، لا معلومة.",
     "search": "ابحث عن تخصص",
     "searchPlaceholder": "ابحث عن تخصص…",
@@ -4971,7 +4988,6 @@
     "calculatedOnly": "محسوب — ليس قرار قبول",
     "calculatedGrade": "المعدل الألماني المحسوب",
     "noGradeYet": "أدخل معدل البجروت العام لحساب المعدل الألماني.",
-    "stillMissing": "لم يُجب عنه بعد",
     "official": "رسمي",
     "student": "الطالب",
     "none": "غير منشور",
@@ -5073,6 +5089,71 @@
       "germanLevel": "شرط اللغة لكل برنامج",
       "germanCertificate": "الشهادة وحدها تثبت المستوى",
       "documents": "معالجة التقديم والتأشيرة"
+    }
+  },
+  "partnerSchools": {
+    "title": "مدارس الشركاء",
+    "subtitle": "معلومات مدارس الشركاء والأسعار والسكن وتفاصيل التقديم.",
+    "openCatalog": "فتح كتالوج درب",
+    "schools": "مدارس",
+    "noCountries": "لا توجد دول مسجلة بعد",
+    "countrySubtitle": "مدارس اللغة الشريكة ومعلوماتها الموثقة.",
+    "back": "رجوع",
+    "noSchools": "لا توجد مدارس مسجلة لهذه الدولة بعد",
+    "partnerSchool": "مدرسة شريكة",
+    "darbStandard": "معيار درب",
+    "notFound": "المدرسة غير موجودة",
+    "pricesShown": "الأسعار المعروضة",
+    "lastVerified": "آخر تحقق",
+    "website": "موقع المدرسة",
+    "searchPlaceholder": "ابحث في معلومات {{name}}…",
+    "notRecorded": "غير مسجل — تحقق مع المدرسة",
+    "source": "المصدر",
+    "lessons": "الحصص",
+    "week": "أسبوع",
+    "weeks": "أسابيع",
+    "schedule": "الدوام",
+    "classSize": "حجم الصف",
+    "max": "حد أقصى",
+    "starts": "البداية",
+    "city": "المدينة",
+    "levels": "المستويات",
+    "included": "مشمول في سعر الدورة",
+    "schoolPricesNote": "هذه أسعار المدرسة. رسوم خدمة مكتب درب غير مشمولة.",
+    "bookingPrice": "سعر الحجز",
+    "extensionPrice": "سعر التمديد",
+    "summerNote": "إضافة الصيف",
+    "minAge": "الحد الأدنى للعمر",
+    "arrangementFee": "رسوم ترتيب السكن",
+    "allStudents": "A2 وما فوق",
+    "everyMonday": "الدورات تبدأ كل يوم إثنين.",
+    "beginners": "المبتدئون تماماً (A1)",
+    "whenToApply": "متى نقدّم الطلب؟",
+    "updated": "آخر تحديث",
+    "startingLevel": "المستوى الحالي",
+    "targetLevel": "المستوى المطلوب",
+    "course": "الدورة",
+    "addAccommodation": "إضافة السكن",
+    "accommodationType": "السكن",
+    "accWeeks": "أسابيع السكن",
+    "startDate": "تاريخ البداية",
+    "breakdown": "التفصيل",
+    "courseTuition": "رسوم الدورة (سعر المدرسة)",
+    "accommodation": "السكن",
+    "summerSupplement": "إضافة الصيف",
+    "estimatedPayable": "التكلفة التقديرية المستحقة",
+    "depositSeparate": "التأمين منفصل وغير مشمول أعلاه — يُؤكَّد المبلغ مع المدرسة.",
+    "incomplete": "بعض القيم غير مسجلة — تحقق مع المدرسة قبل إعطاء عرض.",
+    "copyAnswer": "نسخ الإجابة",
+    "tab": {
+      "overview": "نظرة عامة",
+      "courses": "الدورات والأسعار",
+      "calculator": "حاسبة المستويات",
+      "accommodation": "السكن",
+      "startDates": "تواريخ البدء",
+      "application": "التقديم",
+      "policies": "السياسات",
+      "documents": "المستندات"
     }
   }
 }
