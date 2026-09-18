@@ -103,11 +103,11 @@ export default function SchoolCalculator({
 
   const answer = [
     `${from} → ${to}`,
-    t("partnerSchools.copyWeeks", "{{weeks}} weeks", { weeks }),
+    t("partnerSchools.copyWeeks", "{{weeks}} weeks", { weeks: weeksLabel }),
     lang === "ar" && course?.name_ar ? course.name_ar : course?.name_en ?? "",
     t("partnerSchools.copyCourse", "Course: {{total}} ({{weeks}} × {{rate}}/week)", {
-      total: formatEur(courseQuote.total),
-      weeks,
+      total: courseTotalLabel,
+      weeks: weeksLabel,
       rate: formatEur(courseQuote.pricePerWeek),
     }),
     withAcc
