@@ -27,10 +27,9 @@ import {
   formatBandLabel,
   formatEur,
   formatSchoolDate,
-  levelPlan,
+  localizeIncludedItem,
   partnerSchoolCatalogUrl,
   quoteCourse,
-  totalWeeks,
 } from "@/lib/partnerSchools";
 import { mealsLabel, roomTypeLabel } from "@/lib/catalogDisplay";
 import SchoolCalculator from "@/components/team/partnerSchools/SchoolCalculator";
@@ -60,12 +59,11 @@ export default function TeamPartnerSchoolPage() {
     () => data?.courses.find((c) => c.is_darb_standard) ?? data?.courses[0] ?? null,
     [data],
   );
-  const a1ToC1 = useMemo(() => {
+  const fortyTwoWeekQuote = useMemo(() => {
     if (!standard) return null;
-    const plan = levelPlan("A1", "C1", data?.levels ?? []);
-    const weeks = totalWeeks(plan);
+    const weeks = 42;
     const tiers = (data?.courseTiers ?? []).filter((tier) => tier.course_id === standard.id);
-    return { plan, weeks, quote: quoteCourse(tiers, weeks) };
+    return { weeks, quote: quoteCourse(tiers, weeks) };
   }, [data, standard]);
 
   const datesByMonth = useMemo(() => {
@@ -100,10 +98,20 @@ export default function TeamPartnerSchoolPage() {
       }
       if (has("include", "included", "يشمل")) {
         const items = (c.included_items as string[]) ?? [];
-        if (items.length) push(`${name} includes: ${items.join(", ")}`, c.source_name, c.last_verified_at);
+        if (items.length) {
+          push(
+            `${t("partnerSchools.included", "Included in the course price")}: ${items.map((item) => localizeIncludedItem(item, lang)).join("، ")}`,
+            c.source_name,
+            c.last_verified_at,
+          );
+        }
       }
       if (has("schedule", "time", "monday", "دوام", "وقت")) {
-        push(`${name} — ${c.schedule_text_en}, max ${c.max_students} students. ${c.start_rule_en}`, c.source_name, c.last_verified_at);
+        push(
+          `${name} — ${loc(c.schedule_text_en, c.schedule_text_ar)} · ${t("partnerSchools.maxStudents", "Maximum {{count}} students", { count: c.max_students })} · ${loc(c.start_rule_en, c.start_rule_ar)}`,
+          c.source_name,
+          c.last_verified_at,
+        );
       }
       const weekMatch = q.match(/(\d+)\s*(week|weeks|أسبوع)/);
       if (weekMatch) {
@@ -111,7 +119,12 @@ export default function TeamPartnerSchoolPage() {
         const band = tiers.find((x) => w >= x.from_weeks && (x.to_weeks == null || w <= x.to_weeks));
         if (band) {
           push(
-            `${name} — ${w} weeks × ${formatEur(band.price_per_week)} = ${formatEur(band.price_per_week * w)}`,
+            t("partnerSchools.searchCourseQuote", "{{name}} — {{weeks}} weeks × {{rate}} = {{total}}", {
+              name,
+              weeks: w,
+              rate: formatEur(band.price_per_week),
+              total: formatEur(band.price_per_week * w),
+            }),
             c.source_name,
             c.last_verified_at,
           );
@@ -126,14 +139,18 @@ export default function TeamPartnerSchoolPage() {
         push(
           `${name} — ${tiers
             .map((x) => `${formatBandLabel(x, lang)}: ${x.total_price != null ? formatEur(x.total_price) : `${formatEur(x.price_per_week)}/${t("partnerSchools.week", "week")}`}`)
-            .join(" · ")}${a.minimum_age ? ` · minimum age ${a.minimum_age}` : ""}`,
+            .join(" · ")}${a.minimum_age ? ` · ${t("partnerSchools.minAge", "Minimum age")} ${a.minimum_age}` : ""}`,
           a.source_name,
           a.last_verified_at,
         );
       }
       if (has("deposit", "تأمين")) push(`${name} — ${loc(a.deposit_note_en, a.deposit_note_ar)}`, a.source_name, a.last_verified_at);
       if (has("fee", "arrangement", "رسوم") && a.arrangement_fee) {
-        push(`Accommodation arrangement fee: ${formatEur(a.arrangement_fee)} per person`, a.source_name, a.last_verified_at);
+        push(
+          t("partnerSchools.searchArrangementFee", "Accommodation arrangement: {{amount}} per person", { amount: formatEur(a.arrangement_fee) }),
+          a.source_name,
+          a.last_verified_at,
+        );
       }
     }
 
@@ -249,20 +266,25 @@ export default function TeamPartnerSchoolPage() {
                 <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
               </div>
             </div>
-            {a1ToC1 && (
+            {fortyTwoWeekQuote && (
               <div className="border-t border-brand/20 bg-brand/5 p-4 lg:border-s lg:border-t-0">
                 <p className="text-xs font-medium text-muted-foreground">{t("partnerSchools.quickAnswer", "Quick answer")}</p>
-                <p className="mt-1 text-sm font-semibold text-foreground">A1 → C1</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {t("partnerSchools.featured42Title", "42-week Intensive Course")}
+                </p>
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-2xl font-semibold text-brand">{formatEur(a1ToC1.quote.total)}</p>
+                    <p className="text-2xl font-semibold text-brand">{formatEur(fortyTwoWeekQuote.quote.total)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {a1ToC1.weeks} {t("partnerSchools.weeks", "weeks")} × {formatEur(a1ToC1.quote.pricePerWeek)}
+                      {fortyTwoWeekQuote.weeks} {t("partnerSchools.weeks", "weeks")} × {formatEur(fortyTwoWeekQuote.quote.pricePerWeek)}
                     </p>
                   </div>
                   <Euro className="h-5 w-5 text-brand" />
                 </div>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">
+                  {t("partnerSchools.featured42Note", "A 42-week tuition quote. The official A1→C1 pathway is listed separately as 44 weeks in the level calculator.")}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {t("partnerSchools.a1C1Exclusions", "School tuition only. Accommodation, supplements, deposits and DARB office fees are separate.")}
                 </p>
               </div>
@@ -314,7 +336,7 @@ export default function TeamPartnerSchoolPage() {
                 {((standard?.included_items as string[]) ?? []).map((item) => (
                   <li key={item} className="flex items-center gap-1.5">
                     <Check className="h-3.5 w-3.5 text-emerald-600" />
-                    {item}
+                  {localizeIncludedItem(item, lang)}
                   </li>
                 ))}
               </ul>
@@ -373,6 +395,14 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Accommodation */}
         <TabsContent value="accommodation" className="mt-3 space-y-3">
+          <Card className="border-brand/30 bg-brand/5 p-4 shadow-none">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t("partnerSchools.singleRoomSettingTitle", "Where is the single room?")}
+            </h3>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              {t("partnerSchools.singleRoomSetting", "KAPITO single rooms may be with a host family, an individual host, or in a shared flat. The exact placement is confirmed by the school and is not guaranteed in advance.")}
+            </p>
+          </Card>
           <div className="flex justify-end">
             <Button asChild variant="outline" size="sm">
               <Link to={school.catalog_school_id ? `/team/catalog?school=${school.catalog_school_id}&tab=accommodations` : "/team/catalog"}>
@@ -458,7 +488,7 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Start dates */}
         <TabsContent value="startDates" className="mt-3 space-y-3">
-          <Card className="flex items-start gap-3 p-4 shadow-none">
+          <Card className="flex items-start gap-3 border-brand/35 bg-brand/5 p-4 shadow-none">
             <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
             <div>
               <h3 className="text-sm font-semibold text-foreground">{t("partnerSchools.withGermanStart", "Students with prior German")}</h3>
@@ -504,26 +534,24 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Application guidance */}
         <TabsContent value="application" className="mt-3 space-y-3">
-          {data.notes.length === 0 ? (
-            <Card className="p-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                {t("partnerSchools.whenToApply", "When should we apply?")}
-              </h3>
-              <NotRecorded />
-            </Card>
-          ) : (
-            data.notes.map((n) => (
-              <Card key={n.id} className="space-y-1 p-4">
-                <h3 className="text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
-                <p className="text-sm text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
-                {n.updated_on && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("partnerSchools.updated", "Updated")}: {n.updated_on}
-                  </p>
-                )}
-              </Card>
-            ))
-          )}
+          <Card className="border-brand/35 p-4 shadow-none">
+            <Badge variant="outline">{t("partnerSchools.officialSchoolRule", "Official KAPITO procedure")}</Badge>
+            <h3 className="mt-3 text-sm font-semibold text-foreground">
+              {t("partnerSchools.officialApplicationTitle", "Registration and payment timing")}
+            </h3>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              {t("partnerSchools.officialApplicationBody", "Send the registration form, then pay the €200 deposit or the full course fee. KAPITO reserves the course place after receiving the deposit. The remaining amount is due one week before the course starts.")}
+            </p>
+          </Card>
+          <Card className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
+            <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
+            <h3 className="mt-3 text-sm font-semibold text-foreground">
+              {t("partnerSchools.whenToApply", "When should we apply?")}
+            </h3>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              {t("partnerSchools.darbApplicationTiming", "Submit 1–2 months before the preferred start date to improve the chance of securing the preferred accommodation. This is DARB office guidance, not a KAPITO minimum registration period.")}
+            </p>
+          </Card>
           {data.policies
             .filter((p) => p.category === "registration" || p.category === "arrival")
             .map((p) => (

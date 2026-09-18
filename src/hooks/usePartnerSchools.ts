@@ -176,7 +176,7 @@ export function usePartnerSchoolDetail(slug: string | undefined, year?: number):
           levels: levelsRes.data ?? [],
           accommodations,
           accommodationTiers,
-          startDates: startRes.data ?? [],
+          startDates: (startRes.data ?? []).filter((date: { year: number }) => date.year === version?.year),
           policies: polRes.data ?? [],
           notes: notesRes.data ?? [],
           sources: srcRes.data ?? [],
