@@ -3165,6 +3165,9 @@ export type Database = {
           country_id: string
           created_at: string
           email: string | null
+          featured_note_ar: string | null
+          featured_note_en: string | null
+          featured_weeks: number | null
           id: string
           is_active: boolean
           last_verified_at: string | null
@@ -3186,6 +3189,9 @@ export type Database = {
           country_id: string
           created_at?: string
           email?: string | null
+          featured_note_ar?: string | null
+          featured_note_en?: string | null
+          featured_weeks?: number | null
           id?: string
           is_active?: boolean
           last_verified_at?: string | null
@@ -3207,6 +3213,9 @@ export type Database = {
           country_id?: string
           created_at?: string
           email?: string | null
+          featured_note_ar?: string | null
+          featured_note_en?: string | null
+          featured_weeks?: number | null
           id?: string
           is_active?: boolean
           last_verified_at?: string | null
@@ -4091,6 +4100,7 @@ export type Database = {
         Row: {
           accommodation_id: string
           created_at: string
+          extra_day_price: number | null
           from_weeks: number
           id: string
           price_per_week: number | null
@@ -4101,6 +4111,7 @@ export type Database = {
         Insert: {
           accommodation_id: string
           created_at?: string
+          extra_day_price?: number | null
           from_weeks: number
           id?: string
           price_per_week?: number | null
@@ -4111,6 +4122,7 @@ export type Database = {
         Update: {
           accommodation_id?: string
           created_at?: string
+          extra_day_price?: number | null
           from_weeks?: number
           id?: string
           price_per_week?: number | null
@@ -4356,6 +4368,8 @@ export type Database = {
       school_level_durations: {
         Row: {
           created_at: string
+          hours_max: number | null
+          hours_min: number | null
           id: string
           last_verified_at: string | null
           level: string
@@ -4368,9 +4382,12 @@ export type Database = {
           source_year: number | null
           updated_at: string
           weeks: number
+          weeks_max: number | null
         }
         Insert: {
           created_at?: string
+          hours_max?: number | null
+          hours_min?: number | null
           id?: string
           last_verified_at?: string | null
           level: string
@@ -4383,9 +4400,12 @@ export type Database = {
           source_year?: number | null
           updated_at?: string
           weeks: number
+          weeks_max?: number | null
         }
         Update: {
           created_at?: string
+          hours_max?: number | null
+          hours_min?: number | null
           id?: string
           last_verified_at?: string | null
           level?: string
@@ -4398,6 +4418,7 @@ export type Database = {
           source_year?: number | null
           updated_at?: string
           weeks?: number
+          weeks_max?: number | null
         }
         Relationships: [
           {
