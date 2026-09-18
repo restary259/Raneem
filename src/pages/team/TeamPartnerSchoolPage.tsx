@@ -69,15 +69,15 @@ export default function TeamPartnerSchoolPage() {
   }, [data, standard]);
 
   const datesByMonth = useMemo(() => {
-    const groups = new Map<string, typeof data.startDates>();
-    for (const date of data.startDates) {
+    const groups = new Map<string, NonNullable<typeof data>["startDates"]>();
+    for (const date of data?.startDates ?? []) {
       const key = date.start_date.slice(0, 7);
       const current = groups.get(key) ?? [];
       current.push(date);
       groups.set(key, current);
     }
     return Array.from(groups.entries());
-  }, [data]);
+  }, [data?.startDates]);
 
   /** Structured lookup — answers come only from stored records. */
   const searchHits = useMemo(() => {
@@ -93,7 +93,7 @@ export default function TeamPartnerSchoolPage() {
       const name = loc(c.name_en, c.name_ar);
       if (has("course", "lesson", "price", "week", "دورة", "سعر", "حصة") || q.includes(String(c.lessons_per_week))) {
         push(
-          `${name} — ${tiers.map((x) => `${formatBandLabel(x)}: ${formatEur(x.price_per_week)}/week`).join(" · ")}`,
+          `${name} — ${tiers.map((x) => `${formatBandLabel(x, lang)}: ${formatEur(x.price_per_week)}/${t("partnerSchools.week", "week")}`).join(" · ")}`,
           c.source_name,
           c.last_verified_at,
         );
@@ -125,7 +125,7 @@ export default function TeamPartnerSchoolPage() {
         const tiers = data.accommodationTiers.filter((x) => x.accommodation_id === a.id);
         push(
           `${name} — ${tiers
-            .map((x) => `${formatBandLabel(x)}: ${x.total_price != null ? formatEur(x.total_price) : `${formatEur(x.price_per_week)}/week`}`)
+            .map((x) => `${formatBandLabel(x, lang)}: ${x.total_price != null ? formatEur(x.total_price) : `${formatEur(x.price_per_week)}/${t("partnerSchools.week", "week")}`}`)
             .join(" · ")}${a.minimum_age ? ` · minimum age ${a.minimum_age}` : ""}`,
           a.source_name,
           a.last_verified_at,
@@ -140,7 +140,7 @@ export default function TeamPartnerSchoolPage() {
     if (has("beginner", "start", "monday", "مبتدئ", "بداية")) {
       const beginner = data.startDates.filter((d) => d.audience === "beginner");
       push(
-        `Courses start every Monday. Absolute beginners: ${beginner.map((d) => d.start_date).join(", ") || "not recorded"}`,
+        `${t("partnerSchools.everyMondayExplained", "Students with prior German may start on any Monday after placement confirmation.")} ${t("partnerSchools.beginnerStartDates", "Beginner course start dates (A1)")}: ${beginner.map((d) => formatSchoolDate(d.start_date, lang)).join("، ") || t("partnerSchools.notRecorded", "Not recorded")}`,
         beginner[0]?.source_name,
         beginner[0]?.last_verified_at,
       );
@@ -337,9 +337,9 @@ export default function TeamPartnerSchoolPage() {
                   )}
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <PriceTable title={t("partnerSchools.bookingPrice", "Booking price")} rows={booking} />
+                <PriceTable title={t("partnerSchools.bookingPrice", "Booking price")} rows={booking} lang={lang} />
                   {extension.length > 0 && (
-                    <PriceTable title={t("partnerSchools.extensionPrice", "Extension price")} rows={extension} />
+                    <PriceTable title={t("partnerSchools.extensionPrice", "Extension price")} rows={extension} lang={lang} />
                   )}
                 </div>
                 <SourceLine name={c.source_name} doc={c.source_document} verified={c.last_verified_at} t={(k, d) => t(k, d ?? k)} />
@@ -585,14 +585,14 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PriceTable({ title, rows }: { title: string; rows: any[] }) {
+function PriceTable({ title, rows, lang }: { title: string; rows: any[]; lang: "en" | "ar" }) {
   return (
     <div>
       <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{title}</div>
       <ul className="space-y-1 text-sm">
         {rows.map((r) => (
           <li key={r.id} className="flex justify-between border-b border-border/60 py-1 last:border-0">
-            <span className="text-muted-foreground">{formatBandLabel(r)}</span>
+            <span className="text-muted-foreground">{formatBandLabel(r, lang)}</span>
             <span className="font-medium text-foreground">{formatEur(r.price_per_week)}</span>
           </li>
         ))}
