@@ -34,9 +34,9 @@ export interface LevelDuration {
 
 export interface CatalogAccommodationLinkInput {
   schoolId: string | null;
-  roomType: string | null;
-  meals: string | null;
+  catalogIds: string[] | null | undefined;
 }
+
 
 export const CEFR_ORDER = ["A1", "A2", "B1", "B2", "C1"] as const;
 export type CefrLevel = (typeof CEFR_ORDER)[number];
@@ -223,24 +223,15 @@ export function formatSchoolDate(value: string, lang: "en" | "ar"): string {
 }
 
 /**
- * The DARB catalog only stores self-catering rooms, so board options a school
- * arranges (host families with breakfast or half board) have no catalog entry.
- * Returning null keeps the UI honest instead of linking to an empty result.
+ * A school housing option links to the exact catalog record(s) it maps to.
+ * Options the catalog does not hold (host families, board options the school
+ * arranges directly) carry no ids, so no link is rendered.
  */
-const CATALOG_MEALS: Record<string, string | null> = {
-  none: "self_catering",
-  self_catering: "self_catering",
-  breakfast: null,
-  half_board: null,
-  full_board: null,
-};
-
 export function partnerSchoolCatalogUrl(input: CatalogAccommodationLinkInput): string | null {
-  if (!input.schoolId) return null;
-  const meals = input.meals ? CATALOG_MEALS[input.meals] ?? null : null;
-  if (input.meals && !meals) return null;
+  const ids = (input.catalogIds ?? []).filter(Boolean);
+  if (!input.schoolId || ids.length === 0) return null;
   const params = new URLSearchParams({ school: input.schoolId, tab: "accommodations" });
-  if (input.roomType) params.set("roomType", input.roomType);
-  if (meals) params.set("meals", meals);
+  params.set("ids", ids.join(","));
   return `/team/catalog?${params.toString()}`;
 }
+

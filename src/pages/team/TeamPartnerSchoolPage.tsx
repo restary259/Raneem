@@ -446,9 +446,9 @@ export default function TeamPartnerSchoolPage() {
               const tiers = data.accommodationTiers.filter((x) => x.accommodation_id === a.id);
               const catalogUrl = partnerSchoolCatalogUrl({
                 schoolId: school.catalog_school_id,
-                roomType: a.room_type,
-                meals: a.meals,
+                catalogIds: a.catalog_accommodation_ids,
               });
+
               return (
                 <AccordionItem key={a.id} value={a.id} className="last:border-b-0">
                   <AccordionTrigger className="gap-3 py-3 text-start hover:no-underline">

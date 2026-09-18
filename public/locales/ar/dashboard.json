@@ -2441,6 +2441,8 @@
     "hoursPerWeek": "ساعة/أسبوع",
     "lessonsPerWeek": "حصة/أسبوع",
     "noAccommodationsDesc": "تُدار مدخلات أماكن الإقامة من قبل المسؤولين.",
+    "filteredFromSchool": "نعرض فقط الغرف المرتبطة بالخيار الذي فتحته.",
+
     "noPhotos": "لا توجد صور متاحة",
     "noPrograms": "لا توجد دورات لهذه المدرسة",
     "noProgramsDesc": "تُدار الدورات من قبل المسؤولين.",
