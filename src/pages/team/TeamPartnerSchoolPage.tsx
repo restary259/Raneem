@@ -162,7 +162,7 @@ export default function TeamPartnerSchoolPage() {
   const { school, version } = data;
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-3 pb-8" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="mx-auto w-full max-w-[1500px] space-y-3 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHeader
         title={school.name}
         subtitle={
