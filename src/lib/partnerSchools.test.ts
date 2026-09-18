@@ -97,15 +97,16 @@ describe("partnerSchools", () => {
   });
 
   it("builds a filtered catalog handoff without guessing a unit", () => {
-    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", roomType: "studio", meals: "none" }))
-      .toBe("/team/catalog?school=school-1&tab=accommodations&roomType=studio&meals=self_catering");
-    expect(partnerSchoolCatalogUrl({ schoolId: null, roomType: "studio", meals: "none" })).toBeNull();
+    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: ["room-1"] }))
+      .toBe("/team/catalog?school=school-1&tab=accommodations&ids=room-1");
+    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: ["room-1", "room-2"] }))
+      .toBe("/team/catalog?school=school-1&tab=accommodations&ids=room-1%2Croom-2");
+    expect(partnerSchoolCatalogUrl({ schoolId: null, catalogIds: ["room-1"] })).toBeNull();
   });
 
-  it("does not link board options the catalog does not hold", () => {
-    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", roomType: "single", meals: "half_board" })).toBeNull();
-    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", roomType: "single", meals: "breakfast" })).toBeNull();
-    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", roomType: "single", meals: null }))
-      .toBe("/team/catalog?school=school-1&tab=accommodations&roomType=single");
+  it("does not link options with no catalog record", () => {
+    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: [] })).toBeNull();
+    expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: null })).toBeNull();
   });
 });
+
