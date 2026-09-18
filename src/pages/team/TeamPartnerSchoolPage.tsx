@@ -262,11 +262,18 @@ export default function TeamPartnerSchoolPage() {
               <div className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
                 <Fact label={t("partnerSchools.lessons", "Lessons")} value={`${standard.lessons_per_week} / ${t("partnerSchools.week", "week")}`} />
                 <Fact label={t("partnerSchools.schedule", "Schedule")} value={loc(standard.schedule_text_en, standard.schedule_text_ar)} />
-                <Fact label={t("partnerSchools.classSize", "Class size")} value={`${t("partnerSchools.max", "Max")} ${standard.max_students}`} />
+                <Fact
+                  label={t("partnerSchools.classSize", "Class size")}
+                  value={
+                    standard.max_students
+                      ? `${t("partnerSchools.max", "Max")} ${standard.max_students}`
+                      : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
+                  }
+                />
                 <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
               </div>
             </div>
-            {fortyTwoWeekQuote && (
+            {featuredQuote && (
               <div className="border-t border-brand/20 bg-brand/5 p-4 lg:border-s lg:border-t-0">
                 <p className="text-xs font-medium text-muted-foreground">{t("partnerSchools.quickAnswer", "Quick answer")}</p>
                 <p className="mt-1 text-sm font-semibold text-foreground">
@@ -274,9 +281,9 @@ export default function TeamPartnerSchoolPage() {
                 </p>
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-2xl font-semibold text-brand">{formatEur(fortyTwoWeekQuote.quote.total)}</p>
+                    <p className="text-2xl font-semibold text-brand">{formatEur(featuredQuote.quote.total)}</p>
                     <p className="text-xs text-muted-foreground">
-                      {fortyTwoWeekQuote.weeks} {t("partnerSchools.weeks", "weeks")} × {formatEur(fortyTwoWeekQuote.quote.pricePerWeek)}
+                      {featuredQuote.weeks} {t("partnerSchools.weeks", "weeks")} × {formatEur(featuredQuote.quote.pricePerWeek)}
                     </p>
                   </div>
                   <Euro className="h-5 w-5 text-brand" />
