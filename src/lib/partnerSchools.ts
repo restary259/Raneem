@@ -50,6 +50,12 @@ const INCLUDED_ITEM_AR: Record<string, string> = {
   "Visa and insurance support": "دعم التأشيرة والتأمين",
   "Certificate and student ID card": "شهادة وبطاقة طالب",
   "Free Wi-Fi": "إنترنت لاسلكي مجاني",
+  "Free placement test": "اختبار تحديد مستوى مجاني",
+  "Free level completion tests": "اختبارات إنهاء المستوى مجاناً",
+  "Free certificate of participation": "شهادة مشاركة مجانية",
+  "Internal language exam from € 80": "امتحان لغة داخلي ابتداءً من 80 يورو",
+  "Internationally recognised language exams from € 180":
+    "امتحانات لغة معترف بها دولياً ابتداءً من 180 يورو",
 };
 
 /** Converts canonical school inclusions to Arabic without inventing missing facts. */
