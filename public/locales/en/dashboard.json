@@ -5121,6 +5121,7 @@
     "searchCourseQuote": "{{name}} — {{weeks}} weeks × {{rate}} = {{total}}",
     "from": "from",
     "viewInCatalog": "View in catalog",
+    "notInCatalog": "Not in the DARB catalog — the school arranges this option directly.",
     "singleRoomSettingTitle": "Where is the single room?",
     "singleRoomSetting": "KAPITO single rooms may be with a host family, an individual host, or in a shared flat. The exact placement is confirmed by the school and is not guaranteed in advance.",
     "allStudents": "A2 and above",
