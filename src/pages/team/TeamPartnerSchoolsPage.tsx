@@ -13,7 +13,7 @@ export default function TeamPartnerSchoolsPage() {
   const { data, loading, error, refetch } = usePartnerCountries();
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8">
       <PageHeader
         title={t("partnerSchools.title", "Partner Schools")}
         subtitle={t(
@@ -41,13 +41,13 @@ export default function TeamPartnerSchoolsPage() {
           const count = (data?.schools ?? []).filter((s) => s.country_id === c.id).length;
           return (
             <Link key={c.id} to={`/team/partner-schools/${c.slug}`}>
-              <Card className="flex h-full items-center justify-between gap-3 border-border p-4 transition-colors hover:border-brand/50 hover:bg-muted/40">
+              <Card className="flex h-full items-center justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-base font-semibold text-foreground">
                     <span aria-hidden>{c.flag_emoji}</span>
                     <span className="truncate">{lang === "ar" ? c.name_ar : c.name_en}</span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 max-w-prose text-sm leading-6 text-muted-foreground">
                     {lang === "ar" ? c.description_ar : c.description_en}
                   </p>
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
