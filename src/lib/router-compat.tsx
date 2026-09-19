@@ -163,7 +163,7 @@ import {
   createMemoryHistory,
   createRootRoute,
   createRouter as tsCreateRouter,
-  RouterProvider,
+  RouterContextProvider,
 } from "@tanstack/react-router";
 
 export function MemoryRouter({
@@ -182,5 +182,5 @@ export function MemoryRouter({
     // Test helper: children/entries are fixed for the lifetime of the render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return <RouterProvider router={router} />;
+  return <RouterContextProvider router={router}>{children}</RouterContextProvider>;
 }
