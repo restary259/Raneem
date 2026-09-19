@@ -375,7 +375,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                     return (
                       <a
                         key={recommendation.universityId}
-                        href={recommendation.source.url}
+                        href={recommendation.programUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
@@ -389,7 +389,17 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                           <span className="mt-1 block text-xs text-muted-foreground">
                             #{recommendation.rank} · {meta.city} · {recommendation.match === 'exact'
                               ? t('intel.recommendations.exact', 'Exact programme route')
-                              : t('intel.recommendations.related', 'Related route — verify exact programme')}
+                              : t('intel.recommendations.related', 'Related route — official catalogue')}
+                          </span>
+                          <span className="mt-1 block text-xs">
+                            {recommendation.linkKind === 'programme'
+                              ? t('intel.recommendations.openProgramme', 'Official programme page')
+                              : t('intel.recommendations.openCatalogue', 'Official programme catalogue')}
+                          </span>
+                          <span className={recommendation.tuition.kind === 'verify'
+                            ? 'mt-1 block text-xs text-muted-foreground'
+                            : 'mt-1 block text-xs font-medium'}>
+                            {recommendation.tuition.amount ?? recommendation.tuition.label}
                           </span>
                         </span>
                         <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
