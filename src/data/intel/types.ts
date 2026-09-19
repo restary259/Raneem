@@ -98,6 +98,19 @@ export interface MajorAliases {
   de: string[];
 }
 
+export type RecommendationMatch = 'exact' | 'related';
+
+export interface UniversityRecommendation {
+  universityId: string;
+  rank: 1 | 2 | 3 | 4;
+  primary: boolean;
+  tu9: boolean;
+  match: RecommendationMatch;
+  focus: string;
+  focusAR: string;
+  source: IntelSource;
+}
+
 export interface MajorIntel {
   id: string;
   canonicalEN: string;
@@ -114,6 +127,8 @@ export interface MajorIntel {
   gradeConversion?: VerifiedFact<string>;
   /** Field-level language picture; each programme still carries its own. */
   language?: VerifiedFact<LanguageRequirementValue>;
+  /** DARB-ranked university recommendations shown to the team. */
+  universityRecommendations?: UniversityRecommendation[];
   programs: ProgramIntel[];
   sources: IntelSource[];
 }
