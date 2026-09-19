@@ -4926,7 +4926,15 @@
       "languageTiming": "Language course planning: reaching B2 takes about 10 months of full-time language school, and about 12 months including sitting Telc, TestDaF or DSH.",
       "startTiming": "Recommended start: begin the language course about 12 months before the application deadline — 10 months of study plus the Telc, TestDaF or DSH exam and its result.",
       "gradeTable": "Bagrut average → German grade",
-      "website": "Website"
+      "website": "Website",
+      "teachingLanguage": "Teaching language",
+      "requiredLevel": "Required CEFR level",
+      "levelMap": "CEFR level map",
+      "required": "required",
+      "below": "below requirement",
+      "above": "meets or exceeds",
+      "acceptedProof": "Accepted proof",
+      "additionalLanguage": "Additional language"
     },
     "readyToUse": "Ready to use",
     "recent": "Recently opened",
