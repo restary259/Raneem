@@ -186,7 +186,6 @@ function makeProgram(
   base: Omit<ProgramIntel, 'teachingLanguage' | 'applicationChannel' | 'foreignQualification' | 'documents' | 'fees'>,
 ): ProgramIntel {
   return {
-    languageRequirement: SHARED_LANGUAGE,
     ...base,
     teachingLanguage: unverified(
       'OFFICIAL_LANGUAGE',

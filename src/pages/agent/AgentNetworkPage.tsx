@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";

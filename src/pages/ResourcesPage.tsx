@@ -8,7 +8,7 @@ import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
 import PageHero from '@/components/common/PageHero';
 import { DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useInView } from 'react-intersection-observer';
 
 const ToolsSection = ({ tools }: { tools: { id: string; title: string; description: string; icon: React.ElementType; path: string }[] }) => {

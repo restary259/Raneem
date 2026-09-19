@@ -1,5 +1,5 @@
 /**
- * Router-compat shim — bridges react-router-dom v6 call sites to
+ * Router-compat shim — bridges @/lib/router-compat v6 call sites to
  * @tanstack/react-router without hand-rewriting every component.
  * This is the same load-bearing pattern used in Klar's dev-copy migration.
  */
@@ -79,7 +79,7 @@ export function useParams<T extends Record<string, string | undefined> = Record<
 }
 
 
-// ---------- useSearchParams (react-router-dom compat) ----------
+// ---------- useSearchParams (@/lib/router-compat compat) ----------
 
 export function useSearchParams(): [URLSearchParams, (init: URLSearchParams | Record<string, string> | ((prev: URLSearchParams) => URLSearchParams), opts?: { replace?: boolean }) => void] {
   const loc = tsLocation();
@@ -155,3 +155,32 @@ export const Outlet = TSOutlet;
 // ---------- NavLink (minimal) ----------
 
 export const NavLink = Link;
+
+// ---------- MemoryRouter (test-only helper) ----------
+// Renders arbitrary children inside a real TanStack router backed by a memory
+// history, so components using the compat hooks work in unit tests.
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter as tsCreateRouter,
+  RouterContextProvider,
+} from "@tanstack/react-router";
+
+export function MemoryRouter({
+  children,
+  initialEntries,
+}: {
+  children?: ReactNode;
+  initialEntries?: string[];
+}) {
+  const router = useMemo(() => {
+    const rootRoute = createRootRoute({ component: () => <>{children}</> });
+    return tsCreateRouter({
+      routeTree: rootRoute,
+      history: createMemoryHistory({ initialEntries: initialEntries ?? ["/"] }),
+    });
+    // Test helper: children/entries are fixed for the lifetime of the render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return <RouterContextProvider router={router}>{children}</RouterContextProvider>;
+}

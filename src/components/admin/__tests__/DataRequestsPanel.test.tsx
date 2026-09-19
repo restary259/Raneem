@@ -59,7 +59,12 @@ vi.mock('@/integrations/supabase/client', () => ({
 import DataRequestsPanel from '../DataRequestsPanel';
 
 const selectStatus = async (optionName: string) => {
-  await userEvent.click(screen.getByRole('combobox'));
+  // Open the Radix select via keyboard: pointer-based opening is unreliable in
+  // jsdom once a previous test in the same file has interacted with the DOM
+  // (React 19 + Radix pointer-capture bookkeeping leaks across tests).
+  const combo = screen.getByRole('combobox');
+  combo.focus();
+  await userEvent.keyboard('{Enter}');
   await userEvent.click(await screen.findByRole('option', { name: optionName }));
 };
 

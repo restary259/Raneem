@@ -6,7 +6,7 @@ import { clearChatHistory } from '@/utils/chatCache';
 const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 export const useSessionTimeout = () => {
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const logout = useCallback(async () => {
     clearChatHistory();

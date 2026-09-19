@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from '@/lib/router-compat';
 import { Home, Search, Bot, User, FileText } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTranslation } from 'react-i18next';

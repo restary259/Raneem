@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { ShieldCheck } from "lucide-react";
 
 interface ConsentBlockProps {

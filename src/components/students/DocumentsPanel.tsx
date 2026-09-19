@@ -122,7 +122,7 @@ export default function DocumentsPanel({
           .select("id, full_name, email")
           .in("id", uploaderIds);
         (profs ?? []).forEach((p: { id: string; full_name: string | null; email: string | null }) => {
-          uploaderMap[p.id] = p.full_name || p.email;
+          uploaderMap[p.id] = p.full_name || p.email || "";
         });
       }
       setDocs(

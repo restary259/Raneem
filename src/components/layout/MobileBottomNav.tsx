@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { AppRole } from '@/contexts/AuthContext';

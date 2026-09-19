@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "@/lib/router-compat";
 import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import PasswordResetModal from "@/components/auth/PasswordResetModal";
 import PasswordStrength, { validatePassword } from "@/components/auth/PasswordStrength";

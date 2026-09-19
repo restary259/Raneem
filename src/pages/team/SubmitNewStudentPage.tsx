@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { DraftStatus } from "@/components/common/DraftStatus";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { readFunctionError, readFunctionErrorBody } from "@/lib/functionError";
 import { identityConflictMessage } from "@/lib/identityConflict";

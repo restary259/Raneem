@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useAuthedUserId } from '@/hooks/useAuthedUserId';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

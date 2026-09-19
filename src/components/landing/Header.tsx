@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import DesktopNav from './DesktopNav';
 import MobileNav from './MobileNav';
@@ -23,7 +23,7 @@ const Header = () => {
                 alt={t('loader.brand')} 
                 className="h-8 w-auto flex-shrink-0 object-contain md:h-10"
                 style={{ minWidth: '2rem' }}
-                {...{ fetchpriority: "high" }}
+                fetchPriority="high"
               />
               <span 
                 className="hidden flex-shrink-0 whitespace-nowrap font-bold text-primary sm:block"

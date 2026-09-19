@@ -740,7 +740,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
       const name = fullNameOf(values);
 
       const casePatch: TablesUpdate<"cases"> = {
-        phone_number: values.student_phone?.trim() || null,
+        // phone_number is NOT NULL on cases — skip the update when blank
+        // instead of writing null (which the DB would reject anyway).
+        phone_number: values.student_phone?.trim() || undefined,
 
         city: values.city?.trim() || null,
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, Inbox, MessageCircle, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";

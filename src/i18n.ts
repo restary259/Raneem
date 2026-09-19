@@ -41,6 +41,8 @@ i18n
 
 // Update document direction on language change
 i18n.on('languageChanged', (lng) => {
+  // SSR guard — this module is evaluated on the server too (TanStack Start).
+  if (typeof document === 'undefined') return;
   const dir = lng === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.dir = dir;
   document.documentElement.lang = lng;

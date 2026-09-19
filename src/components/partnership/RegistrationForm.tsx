@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";

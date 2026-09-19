@@ -32,7 +32,7 @@ export const useCurrencyComparator = () => {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as unknown as import("react-hook-form").Resolver<FormValues>,
     defaultValues: {
       amount: 1000,
       targetCountry: 'DE',

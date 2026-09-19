@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -57,7 +57,7 @@ const Hero = () => {
           src="/lovable-uploads/hero-poster.webp"
           alt=""
           aria-hidden="true"
-          {...{ fetchpriority: "high" }}
+          fetchPriority="high"
           decoding="async"
           className="absolute top-0 left-0 w-full h-full object-cover"
         />

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { cn } from '@/lib/utils';
 import { NavigationMenuLink } from '@/components/ui/navigation-menu';
 

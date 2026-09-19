@@ -165,6 +165,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "dns-prefetch", href: "//fonts.gstatic.com" },
       { rel: "stylesheet", href: appCss },
     ],
+    scripts: [
+      { children: HERO_PRELOAD_SCRIPT },
+      { type: "application/ld+json", children: SITE_JSONLD },
+      { type: "application/ld+json", children: ORG_JSONLD },
+      { children: SPLASH_FALLBACK_SCRIPT },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -178,9 +184,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
         <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
-        <script dangerouslySetInnerHTML={{ __html: HERO_PRELOAD_SCRIPT }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: SITE_JSONLD }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ORG_JSONLD }} />
       </head>
       <body>
         {/* PWA splash — hidden by AppShell once React mounts */}
@@ -194,7 +197,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         {children}
-        <script dangerouslySetInnerHTML={{ __html: SPLASH_FALLBACK_SCRIPT }} />
         <Scripts />
       </body>
     </html>

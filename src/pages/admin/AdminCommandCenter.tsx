@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, Activity, RefreshCw, Clock, Banknote, Landmark } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { isActiveStatus } from '@/lib/caseStatus';
 import { isSlaBreached } from '@/lib/slaPolicy';
 import { toneClasses } from '@/lib/statusTokens';

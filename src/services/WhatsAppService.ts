@@ -91,9 +91,9 @@ export async function getIdentitySuggestions(whatsappLeadId: string): Promise<Id
 export async function linkWhatsAppIdentity(whatsappLeadId: string, target: { lead_id?: string; case_id?: string; profile_id?: string }) {
   const { error } = await supabase.rpc("whatsapp_link_identity", {
     p_whatsapp_lead_id: whatsappLeadId,
-    p_lead_id: target.lead_id ?? null,
-    p_case_id: target.case_id ?? null,
-    p_profile_id: target.profile_id ?? null,
+    p_lead_id: target.lead_id,
+    p_case_id: target.case_id,
+    p_profile_id: target.profile_id,
   });
   fail(error);
 }

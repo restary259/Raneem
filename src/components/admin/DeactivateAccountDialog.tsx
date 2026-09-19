@@ -56,7 +56,7 @@ const DeactivateAccountDialog: React.FC<Props> = ({ target, onOpenChange, onDone
     try {
       const { data, error } = await supabase.rpc('admin_deactivate_account', {
         _target_id: target.id,
-        _reason: reason.trim() || null,
+        _reason: reason.trim() || undefined,
       });
       if (error) throw error;
       const already = (data as { already_deactivated?: boolean } | null)?.already_deactivated;

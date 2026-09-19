@@ -28,7 +28,7 @@ import {
 import { toneClasses } from "@/lib/statusTokens";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { CopyButton } from "@/components/common/CopyButton";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
@@ -171,6 +171,7 @@ const AdminSubmissionsPage = () => {
     });
     const docsMap: Record<string, any[]> = {};
     (docsRes.data || []).forEach((d) => {
+      if (!d.case_id) return;
       if (!docsMap[d.case_id]) docsMap[d.case_id] = [];
       docsMap[d.case_id].push(d);
     });

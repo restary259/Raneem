@@ -47,12 +47,12 @@ export function activationErrorMessage(
           "We couldn't complete activation for this email. Contact the DARB team.",
       });
     case "identity_conflict": {
-      const existingRole = typeof payload.existing_role === "string" ? payload.existing_role : undefined;
+      const existingRole = typeof payload?.existing_role === "string" ? payload.existing_role : undefined;
       const key = existingRole ? ROLE_KEYS[existingRole] : undefined;
       const role = key
         ? t(key)
         : existingRole ?? t("activate.anotherRole", "another");
-      return payload.deactivated
+      return payload?.deactivated
         ? t("activate.identityConflictDeactivated", {
             defaultValue:
               "This account has been deactivated. Ask the DARB team to reactivate it before continuing.",
