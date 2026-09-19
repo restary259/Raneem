@@ -6,12 +6,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { History, Search, ShieldCheck } from 'lucide-react';
+import { Search, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { SUBJECTS, getSubject, searchSubjects, type SubjectEntry } from '@/lib/intel/subjects';
-import { pushRecentMajor, readRecentMajors } from '@/lib/intel/recentMajors';
 import MajorCard from '@/components/team/intel/MajorCard';
 
 export default function TeamMajorIntelPage() {
@@ -20,12 +19,10 @@ export default function TeamMajorIntelPage() {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [subject, setSubject] = useState<SubjectEntry | null>(null);
-  const [recentIds, setRecentIds] = useState<string[]>(() => readRecentMajors());
   const linkedMajorId = searchParams.get('major');
 
   const open = useCallback((entry: SubjectEntry) => {
     setSubject(entry);
-    setRecentIds(pushRecentMajor(entry.id));
     window.scrollTo({ top: 0 });
   }, []);
 
@@ -36,10 +33,6 @@ export default function TeamMajorIntelPage() {
   }, [linkedMajorId, open]);
 
   const results = useMemo(() => (query.trim() ? searchSubjects(query) : []), [query]);
-  const recent = useMemo(
-    () => recentIds.map((id) => getSubject(id)).filter((s): s is SubjectEntry => Boolean(s)),
-    [recentIds],
-  );
 
   const grouped = useMemo(() => {
     const map = new Map<string, SubjectEntry[]>();
@@ -103,15 +96,6 @@ export default function TeamMajorIntelPage() {
             </section>
           ) : (
             <>
-              {recent.length > 0 && (
-                <section className="space-y-2">
-                  <h2 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                    <History className="h-3.5 w-3.5" aria-hidden />
-                    {t('intel.recent', 'Recently opened')}
-                  </h2>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{recent.map(tile)}</div>
-                </section>
-              )}
               {grouped.map(([category, entries], index) => (
                 <section key={category} className={cn('space-y-2', index > 0 && 'pt-2')}>
                   <h2 className="text-xs font-semibold uppercase text-muted-foreground">{category}</h2>

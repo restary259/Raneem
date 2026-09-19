@@ -36,7 +36,7 @@ describe('alias search', () => {
   });
 
   it('returns unverified majors as honest stubs', () => {
-    const stub = getMajorIntel('medicine');
+    const stub = getMajorIntel('architecture');
     if (stub) {
       expect(stub.status).toBe('not_verified');
       expect(stub.programs).toHaveLength(0);

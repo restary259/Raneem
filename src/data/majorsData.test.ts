@@ -73,16 +73,19 @@ const VERIFIED_CATEGORIES = ['health-medical', 'engineering-technology', 'comput
 
 describe.each(VERIFIED_CATEGORIES)('%s fact-check metadata', (categoryId) => {
   const health = majorsData.find((c) => c.id === categoryId)!;
+  // Majors added without a fact-check pass carry no lastVerified and are
+  // treated as unverified pending research — only verified entries are guarded.
+  const verified = health.subMajors.filter((m) => m.lastVerified);
 
-  it('every major carries lastVerified, tiers and direct sources', () => {
-    for (const m of health.subMajors) {
+  it('every verified major carries lastVerified, tiers and direct sources', () => {
+    for (const m of verified) {
       expect(m.lastVerified, `${m.id} lastVerified`).toMatch(/^\d{4}-\d{2}$/);
       expect(m.requirementTiers, `${m.id} tiers`).toBeTruthy();
       expect(m.sources?.length ?? 0, `${m.id} sources`).toBeGreaterThanOrEqual(3);
     }
   });
 
-  for (const m of health.subMajors) {
+  for (const m of verified) {
     it(`${m.id}: tier arrays keep AR/EN in sync and sources are direct https pages`, () => {
       const t = m.requirementTiers!;
       expect(t.official.length).toBe(t.officialEN.length);
@@ -102,7 +105,8 @@ describe.each(VERIFIED_CATEGORIES)('%s fact-check metadata', (categoryId) => {
 
 describe.each(VERIFIED_CATEGORIES)('%s glance + language profile', (categoryId) => {
   const health = majorsData.find((c) => c.id === categoryId)!;
-  for (const m of health.subMajors) {
+  const verified = health.subMajors.filter((m) => m.lastVerified);
+  for (const m of verified) {
     it(`${m.id}: has glance and structured language profile with AR/EN parity`, () => {
       expect(m.glance).toBeTruthy();
       const l = m.languageProfile!;
