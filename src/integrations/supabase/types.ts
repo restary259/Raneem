@@ -5547,9 +5547,15 @@ export type Database = {
           created_by: string | null
           desired_program: string | null
           id: string
+          identity_confirmed_at: string | null
+          identity_confirmed_by: string | null
           intended_start_date: string | null
           language_level: string | null
           lead_stage: string
+          linked_case_id: string | null
+          linked_lead_id: string | null
+          linked_profile_id: string | null
+          marketing_consent_status: string
           source: string
           student_name: string
           tags: string[]
@@ -5566,9 +5572,15 @@ export type Database = {
           created_by?: string | null
           desired_program?: string | null
           id?: string
+          identity_confirmed_at?: string | null
+          identity_confirmed_by?: string | null
           intended_start_date?: string | null
           language_level?: string | null
           lead_stage?: string
+          linked_case_id?: string | null
+          linked_lead_id?: string | null
+          linked_profile_id?: string | null
+          marketing_consent_status?: string
           source?: string
           student_name?: string
           tags?: string[]
@@ -5585,9 +5597,15 @@ export type Database = {
           created_by?: string | null
           desired_program?: string | null
           id?: string
+          identity_confirmed_at?: string | null
+          identity_confirmed_by?: string | null
           intended_start_date?: string | null
           language_level?: string | null
           lead_stage?: string
+          linked_case_id?: string | null
+          linked_lead_id?: string | null
+          linked_profile_id?: string | null
+          marketing_consent_status?: string
           source?: string
           student_name?: string
           tags?: string[]
@@ -5606,6 +5624,41 @@ export type Database = {
           {
             foreignKeyName: "whatsapp_leads_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_leads_identity_confirmed_by_fkey"
+            columns: ["identity_confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_leads_linked_case_id_fkey"
+            columns: ["linked_case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_leads_linked_lead_id_fkey"
+            columns: ["linked_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_leads_linked_lead_id_fkey"
+            columns: ["linked_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads_lawyer_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_leads_linked_profile_id_fkey"
+            columns: ["linked_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -6560,6 +6613,7 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      is_whatsapp_staff: { Args: { p_user: string }; Returns: boolean }
       issue_case_invoice: { Args: { p_case_id: string }; Returns: Json }
       list_agent_directory: {
         Args: never
@@ -6979,8 +7033,33 @@ export type Database = {
         Returns: boolean
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
+      whatsapp_identity_suggestions: {
+        Args: { p_whatsapp_lead_id: string }
+        Returns: {
+          case_id: string
+          detail: string
+          display_name: string
+          lead_id: string
+          match_id: string
+          match_kind: string
+          profile_id: string
+        }[]
+      }
       whatsapp_ingest_event: { Args: { p_payload: Json }; Returns: Json }
+      whatsapp_link_identity: {
+        Args: {
+          p_case_id?: string
+          p_lead_id?: string
+          p_profile_id?: string
+          p_whatsapp_lead_id: string
+        }
+        Returns: undefined
+      }
       whatsapp_status_rank: { Args: { p_status: string }; Returns: number }
+      whatsapp_unlink_identity: {
+        Args: { p_whatsapp_lead_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
