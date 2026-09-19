@@ -3,25 +3,26 @@ import { subscribeTables } from "@/lib/realtimeRegistry";
 import { useAuth } from "@/contexts/AuthContext";
 import { totalUnreadCaseMessages } from "@/services/CaseMessageService";
 import { totalUnreadDirectMessages } from "@/services/DirectMessageService";
+import { listWhatsAppThreads } from "@/services/WhatsAppService";
 
 /** Live count of unread case + direct messages across every thread the user can see. */
 export function useUnreadCaseMessages(enabled = true): number {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
-  const [whatsappCount, setWhatsappCount] = useState(0);
 
   const load = useCallback(async () => {
     if (!enabled || !user?.id) return;
     try {
-      const [cases, direct] = await Promise.all([
+      const [cases, direct, whatsapp] = await Promise.all([
         totalUnreadCaseMessages(user.id).catch(() => 0),
         totalUnreadDirectMessages(user.id).catch(() => 0),
+        listWhatsAppThreads().then((rows) => rows.reduce((sum, row) => sum + row.unread_count, 0)).catch(() => 0),
       ]);
-      setCount(cases + direct + whatsappCount);
+      setCount(cases + direct + whatsapp);
     } catch {
       /* non-blocking badge */
     }
-  }, [enabled, user?.id, whatsappCount]);
+  }, [enabled, user?.id]);
 
   useEffect(() => {
     load();
