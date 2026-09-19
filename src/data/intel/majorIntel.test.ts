@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { majorsData } from '@/data/majorsData';
 import { ALL_MAJOR_INTEL } from './majorIntel';
+import { getUniversityRecommendations } from './universityRecommendations';
 
 describe('Major Intelligence coverage', () => {
   const publicMajors = majorsData.flatMap((category) => category.subMajors);
@@ -14,6 +15,24 @@ describe('Major Intelligence coverage', () => {
     });
 
     expect(missing, 'Every public major must have at least one university/programme route.').toEqual([]);
+  });
+
+  it('provides at least four ranked university recommendations for every public major', () => {
+    for (const id of publicIds) {
+      const recommendations = getUniversityRecommendations(id);
+      expect(recommendations).toHaveLength(4);
+      expect(recommendations.map((item) => item.rank)).toEqual([1, 2, 3, 4]);
+      expect(recommendations[0].primary).toBe(true);
+      expect(new Set(recommendations.map((item) => item.universityId)).size).toBe(4);
+      for (const recommendation of recommendations) {
+        expect(recommendation.source.url.startsWith('https://')).toBe(true);
+        expect(recommendation.source.authority).toBe('university');
+      }
+
+      const exactTU9 = recommendations.filter((item) => item.tu9 && item.match === 'exact');
+      expect(exactTU9.length).toBeLessThanOrEqual(1);
+      if (exactTU9.length === 1) expect(recommendations[0].tu9).toBe(true);
+    }
   });
 
   it('keeps public major IDs unique', () => {
@@ -46,4 +65,15 @@ describe('Major Intelligence coverage', () => {
       }
     }
   });
+  it('never exposes a non-TU9 primary when an exact TU9 route is explicitly ranked', () => {
+    for (const major of ALL_MAJOR_INTEL) {
+      const recommendations = getUniversityRecommendations(major.id);
+      if (recommendations.length === 0) continue;
+      const exactTU9 = recommendations.filter((item) => item.tu9 && item.match === 'exact');
+      if (exactTU9.length > 0) {
+        expect(recommendations[0].tu9).toBe(true);
+      }
+    }
+  });
+
 });
