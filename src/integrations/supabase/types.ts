@@ -5335,6 +5335,340 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_conversations: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          first_response_at: string | null
+          human_takeover: boolean
+          id: string
+          last_inbound_at: string | null
+          last_message_preview: string | null
+          last_outbound_at: string | null
+          lead_id: string
+          state: string
+          takeover_at: string | null
+          takeover_by: string | null
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          first_response_at?: string | null
+          human_takeover?: boolean
+          id?: string
+          last_inbound_at?: string | null
+          last_message_preview?: string | null
+          last_outbound_at?: string | null
+          lead_id: string
+          state?: string
+          takeover_at?: string | null
+          takeover_by?: string | null
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          first_response_at?: string | null
+          human_takeover?: boolean
+          id?: string
+          last_inbound_at?: string | null
+          last_message_preview?: string | null
+          last_outbound_at?: string | null
+          lead_id?: string
+          state?: string
+          takeover_at?: string | null
+          takeover_by?: string | null
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_conversations_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_conversations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "whatsapp_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_conversations_takeover_by_fkey"
+            columns: ["takeover_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_events: {
+        Row: {
+          actor_id: string | null
+          conversation_id: string
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          conversation_id: string
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_internal_notes: {
+        Row: {
+          author_id: string
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_internal_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_internal_notes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_leads: {
+        Row: {
+          assigned_advisor: string | null
+          budget_range: string | null
+          consent_status: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          desired_program: string | null
+          id: string
+          intended_start_date: string | null
+          language_level: string | null
+          lead_stage: string
+          source: string
+          student_name: string
+          tags: string[]
+          target_country: string | null
+          updated_at: string
+          whatsapp_number: string
+        }
+        Insert: {
+          assigned_advisor?: string | null
+          budget_range?: string | null
+          consent_status?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          desired_program?: string | null
+          id?: string
+          intended_start_date?: string | null
+          language_level?: string | null
+          lead_stage?: string
+          source?: string
+          student_name?: string
+          tags?: string[]
+          target_country?: string | null
+          updated_at?: string
+          whatsapp_number: string
+        }
+        Update: {
+          assigned_advisor?: string | null
+          budget_range?: string | null
+          consent_status?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          desired_program?: string | null
+          id?: string
+          intended_start_date?: string | null
+          language_level?: string | null
+          lead_stage?: string
+          source?: string
+          student_name?: string
+          tags?: string[]
+          target_country?: string | null
+          updated_at?: string
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_leads_assigned_advisor_fkey"
+            columns: ["assigned_advisor"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_messages: {
+        Row: {
+          authored_by: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          delivery_status: string
+          direction: string
+          error_message: string | null
+          error_status: number | null
+          id: string
+          message_type: string
+          provider_message_id: string | null
+          sent_at: string | null
+          template_name: string | null
+        }
+        Insert: {
+          authored_by?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          delivery_status?: string
+          direction: string
+          error_message?: string | null
+          error_status?: number | null
+          id?: string
+          message_type?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          template_name?: string | null
+        }
+        Update: {
+          authored_by?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          delivery_status?: string
+          direction?: string
+          error_message?: string | null
+          error_status?: number | null
+          id?: string
+          message_type?: string
+          provider_message_id?: string | null
+          sent_at?: string | null
+          template_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_authored_by_fkey"
+            columns: ["authored_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_templates: {
+        Row: {
+          approval_status: string
+          category: string
+          components: Json
+          created_at: string
+          id: string
+          language_code: string
+          last_synced_at: string
+          provider_name: string
+          purpose: string
+          updated_at: string
+        }
+        Insert: {
+          approval_status?: string
+          category: string
+          components?: Json
+          created_at?: string
+          id?: string
+          language_code: string
+          last_synced_at?: string
+          provider_name: string
+          purpose: string
+          updated_at?: string
+        }
+        Update: {
+          approval_status?: string
+          category?: string
+          components?: Json
+          created_at?: string
+          id?: string
+          language_code?: string
+          last_synced_at?: string
+          provider_name?: string
+          purpose?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       leads_lawyer_safe: {
@@ -6084,6 +6418,14 @@ export type Database = {
           full_name: string
           last_read_at: string
           user_id: string
+        }[]
+      }
+      get_whatsapp_dashboard: { Args: never; Returns: Json }
+      get_whatsapp_staff_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
         }[]
       }
       has_permission: {

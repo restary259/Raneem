@@ -13,7 +13,7 @@ import {
   TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
   Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
-  Hotel,
+  Hotel, MessageCircleMore,
 } from 'lucide-react';
 
 interface NavItem {
@@ -72,6 +72,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
  */
 const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
+    { key: 'nav.whatsapp', icon: MessageCircleMore, href: '/admin/whatsapp' },
     { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
     { key: 'nav.team', icon: Users, href: '/admin/members' },
     { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },
@@ -80,6 +81,7 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
   ],
   team_member: [
+    { key: 'nav.whatsapp', icon: MessageCircleMore, href: '/team/whatsapp' },
     { key: 'nav.submitNew', icon: UserPlus, href: '/team/submit' },
     { key: 'nav.catalog', icon: Hotel, href: '/team/catalog' },
     { key: 'nav.majorIntel', icon: GraduationCap, href: '/team/majors' },
@@ -161,6 +163,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.programs': t('nav.programs', 'Programs'),
     'nav.submissions': t('nav.submissions', 'Submissions'),
     'nav.messages': t('nav.messages', 'Messages'),
+    'nav.whatsapp': t('nav.whatsapp', 'WhatsApp'),
     'nav.inbox': t('nav.inbox', 'Applications'),
     'nav.network': t('nav.network', 'Network'),
     'nav.recruit': t('nav.recruit', 'Recruit'),
