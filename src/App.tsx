@@ -312,8 +312,8 @@ const App = () => {
               <Route path="analytics" element={<Navigate to="/admin/financials?tab=analytics" replace />} />
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="inbox" element={<AdminInboxPage />} />
-              <Route path="messages" element={<CaseMessagesInboxPage />} />
-              <Route path="whatsapp" element={<Navigate to="/admin/inbox?tab=whatsapp" replace />} />
+              <Route path="messages" element={<TeamInboxPage />} />
+              <Route path="whatsapp" element={<Navigate to="/admin/messages?tab=whatsapp" replace />} />
 
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="commission" element={<AdminCommissionHubPage />} />

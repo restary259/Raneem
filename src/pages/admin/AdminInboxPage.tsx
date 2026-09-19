@@ -3,15 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import ContactsManager from "@/components/admin/ContactsManager";
 import RecruitApplicationsPanel from "@/components/admin/RecruitApplicationsPanel";
 import DataRequestsPanel from "@/components/admin/DataRequestsPanel";
-import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
-import { Inbox, Search, Download, FileText, MessageCircleMore } from "lucide-react";
+import { Inbox, Search, Download, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from "@/utils/export";
 import { useExportContext } from "@/utils/export/useExportContext";
@@ -26,21 +25,22 @@ type Submission = {
   created_at: string;
 };
 
-type InboxTab = "whatsapp" | "all" | "partnership" | "contact" | "recruits" | "dataRequests";
-const INBOX_TABS: InboxTab[] = ["whatsapp", "all", "partnership", "contact", "recruits", "dataRequests"];
+type InboxTab = "all" | "partnership" | "contact" | "recruits" | "dataRequests";
+const INBOX_TABS: InboxTab[] = ["all", "partnership", "contact", "recruits", "dataRequests"];
 
 const isPartnership = (row: Submission) =>
   (row.form_source || "").toLowerCase().includes("partner");
 
 const AdminInboxPage = () => {
   const { t } = useTranslation("dashboard");
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { author, locale: exportLocale, rtl } = useExportContext();
   const [rows, setRows] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const requestedTab = searchParams.get("tab");
-  const initialTab = INBOX_TABS.includes(requestedTab as InboxTab) ? requestedTab as InboxTab : "whatsapp";
+  const initialTab = INBOX_TABS.includes(requestedTab as InboxTab) ? requestedTab as InboxTab : "all";
   const [tab, setTab] = useState<InboxTab>(initialTab);
   const [search, setSearch] = useState("");
   const [recruitCount, setRecruitCount] = useState(0);
@@ -54,10 +54,15 @@ const AdminInboxPage = () => {
   }, []);
 
   const changeTab = useCallback((value: string) => {
-    const next = INBOX_TABS.includes(value as InboxTab) ? value as InboxTab : "whatsapp";
+    const next = INBOX_TABS.includes(value as InboxTab) ? value as InboxTab : "all";
     setTab(next);
-    setSearchParams(next === "whatsapp" ? { tab: "whatsapp" } : { tab: next }, { replace: true });
+    setSearchParams({ tab: next }, { replace: true });
   }, [setSearchParams]);
+
+  // WhatsApp now lives in the unified messaging page; keep old links working.
+  useEffect(() => {
+    if (requestedTab === "whatsapp") navigate("/admin/messages?tab=whatsapp", { replace: true });
+  }, [requestedTab, navigate]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -193,7 +198,7 @@ const AdminInboxPage = () => {
       <Tabs value={tab} onValueChange={changeTab} className="space-y-4">
         {/* Toolbar: search + export on top, tabs directly beneath */}
         <div className="sticky top-14 z-10 -mx-4 sm:-mx-6 space-y-3 bg-background/95 px-4 sm:px-6 py-3 backdrop-blur">
-          {tab !== "whatsapp" && <div className="flex flex-wrap items-center gap-3">
+          {<div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -215,7 +220,6 @@ const AdminInboxPage = () => {
 
           <SegmentedTabs
             items={[
-              { value: "whatsapp", icon: MessageCircleMore, label: t("admin.inbox.source.whatsapp", "WhatsApp") },
               { value: "all", label: tabLabel("admin.inbox.source.all", "All", searched.length) },
               { value: "partnership", label: tabLabel("admin.inbox.source.partnership", "Partnership", partnership.length) },
               { value: "contact", label: tabLabel("admin.inbox.source.contact", "Contact", contact.length) },
@@ -241,11 +245,7 @@ const AdminInboxPage = () => {
           />
         </div>
 
-        <TabsContent value="whatsapp" forceMount className={tab === "whatsapp" ? "mt-0" : "hidden"}>
-          <WhatsAppInboxPage embedded />
-        </TabsContent>
-
-        {tab !== "whatsapp" && (loading ? (
+        {(loading ? (
           <LoadingState variant="table" rows={6} />
         ) : searched.length === 0 && tab !== "recruits" && tab !== "dataRequests" ? (
           <EmptyState
