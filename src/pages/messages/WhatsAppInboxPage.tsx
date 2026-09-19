@@ -217,6 +217,9 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const responseSamples = threads.filter((x) => x.first_response_at).map((x) => (new Date(x.first_response_at!).getTime() - new Date(x.created_at).getTime()) / 60000).filter((x) => x >= 0);
   const responseAvg = responseSamples.length ? Math.round(responseSamples.reduce((a, b) => a + b, 0) / responseSamples.length) : null;
 
+  const receiving = (inbound?.inboundCount ?? 0) > 0;
+  const statusLabel = receiving ? t("status.receiving") : t("status.waiting");
+
   if (loading) return <LoadingState variant="cards" rows={4} label={t("title")} />;
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
