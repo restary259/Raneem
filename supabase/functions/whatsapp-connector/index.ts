@@ -135,7 +135,7 @@ serve(async (req) => {
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
       const { data: conversation, error } = await admin
         .from("whatsapp_conversations")
-        .select("id, last_inbound_at, lead:whatsapp_leads!inner(whatsapp_number)")
+        .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number)")
         .eq("id", conversationId)
         .maybeSingle();
       if (error) throw error;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, Inbox, MessageCircle, RefreshCw, Search, ShieldCheck, Sparkles, UserRound, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, Inbox, MessageCircle, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
+import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -22,13 +24,15 @@ import { cn } from "@/lib/utils";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  addInternalNote, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  requestWhatsAppAiAssist, updateConversation, updateLead,
+  addInternalNote, createWhatsAppTemplate, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
+  requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, syncWhatsAppTemplates, updateConversation, updateLead,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
 const STATES: ConversationState[] = ["new", "open", "waiting", "resolved"];
 const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documents_pending", "application_in_progress", "won", "lost"];
+const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
+const TEMPLATE_PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
 const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 
 export default function WhatsAppInboxPage() {
@@ -56,6 +60,15 @@ export default function WhatsAppInboxPage() {
   const [aiResult, setAiResult] = useState<AiAssistResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [templateId, setTemplateId] = useState<string | null>(null);
+  const [templateParameters, setTemplateParameters] = useState<string[]>([]);
+  const [templateSyncing, setTemplateSyncing] = useState(false);
+  const [templatePurpose, setTemplatePurpose] = useState<string>(TEMPLATE_PURPOSES[0]);
+  const [templateLanguage, setTemplateLanguage] = useState<"ar" | "en">("ar");
+  const [templateCategory, setTemplateCategory] = useState<"UTILITY" | "MARKETING">("UTILITY");
+  const [templateBody, setTemplateBody] = useState("");
+  const [templateCreating, setTemplateCreating] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
@@ -77,8 +90,16 @@ export default function WhatsAppInboxPage() {
   }, [load]);
 
   const active = threads.find((x) => x.id === selectedId) ?? null;
+  const approvedTemplates = useMemo(() => templates.filter((item) => item.approval_status === "APPROVED"), [templates]);
+  const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
+  const selectedTemplateText = useMemo(() => {
+    if (!selectedTemplate || !Array.isArray(selectedTemplate.components)) return "";
+    const body = selectedTemplate.components.find((item) => item && typeof item === "object" && String((item as Record<string, unknown>).type ?? "").toUpperCase() === "BODY") as Record<string, unknown> | undefined;
+    return String(body?.text ?? "");
+  }, [selectedTemplate]);
+  const parameterCount = useMemo(() => [...selectedTemplateText.matchAll(/{{\s*(\d+)\s*}}/g)].length, [selectedTemplateText]);
   useEffect(() => {
-    setMessages([]); setNotes([]); setAiResult(null); setComposer("");
+    setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]);
     if (!selectedId) return;
     Promise.all([listConversationMessages(selectedId), listConversationNotes(selectedId)])
       .then(([m, n]) => { setMessages(m); setNotes(n); })
@@ -116,6 +137,44 @@ export default function WhatsAppInboxPage() {
     try { setAiResult(await requestWhatsAppAiAssist({ mode, lead: active.lead, messages, instruction: aiInstruction, language: rtl ? "ar" : "en" })); }
     catch { toast({ variant: "destructive", description: t("errors.ai") }); }
     finally { setAiLoading(false); }
+  };
+  const reloadConversation = async () => {
+    if (!active) return;
+    const [nextMessages] = await Promise.all([listConversationMessages(active.id), load()]);
+    setMessages(nextMessages);
+  };
+  const sendReply = async () => {
+    if (!active || sending) return;
+    setSending(true);
+    try {
+      if (requiresApprovedTemplate(active.last_inbound_at)) {
+        if (!templateId) return;
+        await sendWhatsAppTemplate(active.id, templateId, templateParameters);
+        setTemplateId(null); setTemplateParameters([]);
+      } else {
+        if (!composer.trim()) return;
+        await sendWhatsAppText(active.id, composer.trim());
+        setComposer("");
+      }
+      await reloadConversation();
+      toast({ description: t("conversation.sent") });
+    } catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.send") }); }
+    finally { setSending(false); }
+  };
+  const syncTemplates = async () => {
+    setTemplateSyncing(true);
+    try { const result = await syncWhatsAppTemplates(); setTemplates(await listWhatsAppTemplates()); toast({ description: t("templates.synced", { count: result.synced }) }); }
+    catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.templates") }); }
+    finally { setTemplateSyncing(false); }
+  };
+  const createTemplate = async () => {
+    if (!templateBody.trim()) return;
+    setTemplateCreating(true);
+    try {
+      await createWhatsAppTemplate({ purpose: templatePurpose, language: templateLanguage, category: templateCategory, body: templateBody.trim() });
+      setTemplateBody(""); setTemplates(await listWhatsAppTemplates()); toast({ description: t("templates.submitted") });
+    } catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.templates") }); }
+    finally { setTemplateCreating(false); }
   };
 
   const newLeads = threads.filter((x) => x.lead.lead_stage === "new").length;

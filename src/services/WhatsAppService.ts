@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { readFunctionError } from "@/lib/functionError";
 
 type Tables = Database["public"]["Tables"];
 export type WhatsAppLead = Tables["whatsapp_leads"]["Row"];
@@ -59,5 +60,28 @@ export async function addInternalNote(conversationId: string, authorId: string, 
 export interface AiAssistResult { draft: string; summary: string; escalation_required: boolean; escalation_reasons: string[] }
 export async function requestWhatsAppAiAssist(input: { mode: "welcome" | "qualification" | "summary"; lead: WhatsAppLead; messages: WhatsAppMessage[]; instruction?: string; language: "ar" | "en" }) {
   const { data, error } = await supabase.functions.invoke("whatsapp-ai-assist", { body: input });
-  fail(error); return data as AiAssistResult;
+  if (error) throw new Error(await readFunctionError(error));
+  return data as AiAssistResult;
+}
+
+async function invokeWhatsAppConnector<T>(body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke("whatsapp-connector", { body });
+  if (error) throw new Error(await readFunctionError(error));
+  return data as T;
+}
+
+export function sendWhatsAppText(conversationId: string, body: string) {
+  return invokeWhatsAppConnector<{ message: WhatsAppMessage }>({ action: "send", conversation_id: conversationId, body });
+}
+
+export function sendWhatsAppTemplate(conversationId: string, templateId: string, parameters: string[]) {
+  return invokeWhatsAppConnector<{ message: WhatsAppMessage }>({ action: "send", conversation_id: conversationId, template_id: templateId, parameters });
+}
+
+export function syncWhatsAppTemplates() {
+  return invokeWhatsAppConnector<{ synced: number }>({ action: "sync_templates" });
+}
+
+export function createWhatsAppTemplate(input: { purpose: string; language: "ar" | "en"; category: "UTILITY" | "MARKETING"; body: string }) {
+  return invokeWhatsAppConnector<{ created: boolean; provider_name: string; approval_status: "PENDING" }>({ action: "create_template", ...input });
 }
