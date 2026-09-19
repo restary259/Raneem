@@ -25,9 +25,9 @@ import { cn } from "@/lib/utils";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  addInternalNote, createWhatsAppTemplate, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
-  type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
+  addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
+  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
+  type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
 const STATES: ConversationState[] = ["new", "open", "waiting", "resolved"];
