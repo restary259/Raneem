@@ -4171,6 +4171,8 @@ export type Database = {
           source_name: string | null
           source_url: string | null
           source_year: number | null
+          surcharge_waived_from_weeks: number | null
+          surcharge_weeks: number | null
           updated_at: string
         }
         Insert: {
@@ -4200,6 +4202,8 @@ export type Database = {
           source_name?: string | null
           source_url?: string | null
           source_year?: number | null
+          surcharge_waived_from_weeks?: number | null
+          surcharge_weeks?: number | null
           updated_at?: string
         }
         Update: {
@@ -4229,6 +4233,8 @@ export type Database = {
           source_name?: string | null
           source_url?: string | null
           source_year?: number | null
+          surcharge_waived_from_weeks?: number | null
+          surcharge_weeks?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -4308,6 +4314,8 @@ export type Database = {
           source_year: number | null
           start_rule_ar: string | null
           start_rule_en: string | null
+          surcharge_waived_from_weeks: number | null
+          surcharge_weeks: number | null
           updated_at: string
         }
         Insert: {
@@ -4335,6 +4343,8 @@ export type Database = {
           source_year?: number | null
           start_rule_ar?: string | null
           start_rule_en?: string | null
+          surcharge_waived_from_weeks?: number | null
+          surcharge_weeks?: number | null
           updated_at?: string
         }
         Update: {
@@ -4362,6 +4372,8 @@ export type Database = {
           source_year?: number | null
           start_rule_ar?: string | null
           start_rule_en?: string | null
+          surcharge_waived_from_weeks?: number | null
+          surcharge_weeks?: number | null
           updated_at?: string
         }
         Relationships: [

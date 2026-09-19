@@ -5110,6 +5110,8 @@
     "website": "موقع المدرسة",
     "searchPlaceholder": "ابحث في معلومات {{name}}…",
     "notRecorded": "غير مسجل — تحقق مع المدرسة",
+    "noPublishedPrice": "لا يوجد سعر أسبوعي منشور",
+    "coursePriceMissing": "هذه الدورة بلا سعر أسبوعي منشور — اطلب عرض سعر من المدرسة.",
     "teachingHours": "حصة تدريسية",
     "extraDay": "يوم إضافي",
     "night": "ليلة واحدة",

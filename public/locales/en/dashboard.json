@@ -5092,6 +5092,8 @@
     "website": "School website",
     "searchPlaceholder": "Search {{name}} information…",
     "notRecorded": "Not recorded — verify with the school",
+    "noPublishedPrice": "no published weekly price",
+    "coursePriceMissing": "This course has no published weekly price — request a quote from the school.",
     "teachingHours": "teaching hours",
     "extraDay": "Extra day",
     "night": "1 night",

@@ -113,10 +113,58 @@ describe("partnerSchools", () => {
       expect(quoteStay(alphaTiers, 40).total).toBe(190);
     });
 
-    it("falls back to zero when the school prints no nightly rate", () => {
+    it("has no price at all when the school prints no nightly rate", () => {
       const noNight = roomTiers;
       expect(noNight.some((t) => t.night_price != null)).toBe(false);
-      expect(quoteStay(noNight, 0).total).toBe(0);
+      expect(quoteStay(noNight, 0).total).toBeNull();
+    });
+  });
+
+  describe("GoAcademy! charges the opening weeks at a higher rate", () => {
+    // Official 2026 price list: week 1-4 EUR 190, week 5-24 EUR 175,
+    // week 25-52 EUR 165 "from the beginning" for 25+ bookings.
+    const goCourse = [
+      { from_weeks: 1, to_weeks: 4, price_per_week: 190, kind: "booking" },
+      { from_weeks: 5, to_weeks: 24, price_per_week: 175, kind: "booking" },
+      { from_weeks: 25, to_weeks: 52, price_per_week: 165, kind: "booking" },
+    ];
+    const rule = { surchargeWeeks: 4, surchargeWaivedFromWeeks: 25 };
+    // Accommodation (standard shared): 165 / 145 / 130, surcharge waived from 12 weeks.
+    const goRoom = [
+      { from_weeks: 1, to_weeks: 4, total_price: null, price_per_week: 165 },
+      { from_weeks: 5, to_weeks: 23, total_price: null, price_per_week: 145 },
+      { from_weeks: 24, to_weeks: null, total_price: null, price_per_week: 130 },
+    ];
+    const roomRule = { surchargeWeeks: 4, surchargeWaivedFromWeeks: 12 };
+
+    it("prices short bookings inside the opening band", () => {
+      expect(quoteCourse(goCourse, 4, "booking", rule).total).toBe(760);
+      expect(quoteCourse(goCourse, 1, "booking", rule).total).toBe(190);
+    });
+
+    it("splits the opening weeks for mid-length bookings", () => {
+      expect(quoteCourse(goCourse, 5, "booking", rule).total).toBe(935);
+      expect(quoteCourse(goCourse, 12, "booking", rule).total).toBe(2160);
+      expect(quoteCourse(goCourse, 20, "booking", rule).total).toBe(3560);
+      expect(quoteCourse(goCourse, 24, "booking", rule).total).toBe(4260);
+    });
+
+    it("drops the surcharge from 25 weeks", () => {
+      expect(quoteCourse(goCourse, 25, "booking", rule).total).toBe(4125);
+      expect(quoteCourse(goCourse, 44, "booking", rule).total).toBe(7260);
+    });
+
+    it("applies the same rule to accommodation with its own waiver point", () => {
+      expect(quoteAccommodation(goRoom, 4, roomRule).total).toBe(660);
+      expect(quoteAccommodation(goRoom, 8, roomRule).total).toBe(1240);
+      expect(quoteAccommodation(goRoom, 11, roomRule).total).toBe(1675);
+      expect(quoteAccommodation(goRoom, 12, roomRule).total).toBe(1740);
+      expect(quoteAccommodation(goRoom, 24, roomRule).total).toBe(3120);
+    });
+
+    it("leaves schools without the rule on a single flat band", () => {
+      expect(quoteCourse(goCourse, 12, "booking").total).toBe(2100);
+      expect(quoteAccommodation(goRoom, 8).total).toBe(1160);
     });
   });
 

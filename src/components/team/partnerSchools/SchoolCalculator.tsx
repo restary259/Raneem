@@ -72,10 +72,23 @@ export default function SchoolCalculator({
     () => courseTiers.filter((tier) => tier.course_id === course?.id),
     [courseTiers, course],
   );
-  const courseQuote = useMemo(() => quoteCourse(tiers, weeks, "booking"), [tiers, weeks]);
+  // Schools that charge a higher rate for the opening weeks publish the rule on the row.
+  const courseRule = useMemo(
+    () => ({
+      surchargeWeeks: course?.surcharge_weeks ?? null,
+      surchargeWaivedFromWeeks: course?.surcharge_waived_from_weeks ?? null,
+    }),
+    [course],
+  );
+  const pricedCourseIds = useMemo(
+    () => new Set(courseTiers.map((tier) => tier.course_id)),
+    [courseTiers],
+  );
+  const coursePriceMissing = course ? !pricedCourseIds.has(course.id) : true;
+  const courseQuote = useMemo(() => quoteCourse(tiers, weeks, "booking", courseRule), [tiers, weeks, courseRule]);
   const courseQuoteMax = useMemo(
-    () => (isRange ? quoteCourse(tiers, weeksMax, "booking") : null),
-    [tiers, weeksMax, isRange],
+    () => (isRange ? quoteCourse(tiers, weeksMax, "booking", courseRule) : null),
+    [tiers, weeksMax, isRange, courseRule],
   );
   const weeksLabel = isRange ? `${weeks}–${weeksMax}` : String(weeks);
   const courseTotalLabel = courseQuoteMax
@@ -92,9 +105,16 @@ export default function SchoolCalculator({
     () => accTiers.find((tier) => tier.night_price != null)?.night_price ?? null,
     [accTiers],
   );
+  const accRule = useMemo(
+    () => ({
+      surchargeWeeks: acc?.surcharge_weeks ?? null,
+      surchargeWaivedFromWeeks: acc?.surcharge_waived_from_weeks ?? null,
+    }),
+    [acc],
+  );
   const accQuote = useMemo(
-    () => (withAcc ? quoteStay(accTiers, stayWeeks) : null),
-    [withAcc, accTiers, stayWeeks],
+    () => (withAcc ? quoteStay(accTiers, stayWeeks, accRule) : null),
+    [withAcc, accTiers, stayWeeks, accRule],
   );
   const arrangementFee = withAcc ? Number(acc?.arrangement_fee ?? 0) : 0;
   const registrationFee = Number(course?.registration_fee ?? 0);
@@ -104,9 +124,12 @@ export default function SchoolCalculator({
     : 0;
   const supplement = supplementWeeks * Number(version?.summer_supplement_per_week ?? 0);
 
-  const payable =
-    (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + registrationFee + supplement;
-  const incomplete = courseQuote.total == null || (withAcc && accQuote?.total == null) || missingLevels.length > 0;
+  // A missing published price must never be silently counted as zero.
+  const priceMissing = courseQuote.total == null || (withAcc && accQuote?.total == null);
+  const payable = priceMissing
+    ? null
+    : (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + registrationFee + supplement;
+  const incomplete = priceMissing || missingLevels.length > 0;
 
   const answer = [
     `${from} → ${to}`,
@@ -186,6 +209,9 @@ export default function SchoolCalculator({
                 {courses.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {lang === "ar" && c.name_ar ? c.name_ar : c.name_en}
+                    {pricedCourseIds.has(c.id)
+                      ? ""
+                      : ` — ${t("partnerSchools.noPublishedPrice", "no published weekly price")}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -251,10 +277,22 @@ export default function SchoolCalculator({
                 </span>
               </li>
             ))}
+            {coursePriceMissing && (
+              <li className="border-t border-border pt-1 text-amber-700 dark:text-amber-400">
+                {t(
+                  "partnerSchools.coursePriceMissing",
+                  "This course has no published weekly price — request a quote from the school.",
+                )}
+              </li>
+            )}
             {courseQuote.band && (
               <li className="flex justify-between border-t border-border pt-1">
                 <span>
-                  {weeksLabel} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})
+                  {courseQuote.openingWeeks
+                    ? `${courseQuote.openingWeeks} × ${formatEur(courseQuote.openingPricePerWeek)} + ${
+                        weeks - courseQuote.openingWeeks
+                      } × ${formatEur(courseQuote.pricePerWeek)}`
+                    : `${weeksLabel} × ${formatEur(courseQuote.pricePerWeek)} (${formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})`}
                 </span>
                 <span>{courseTotalLabel}</span>
               </li>
@@ -262,8 +300,12 @@ export default function SchoolCalculator({
             {withAcc && accQuote?.tier && (
               <li className="flex justify-between">
                 <span>
-                  {lang === "ar" && acc?.name_ar ? acc.name_ar : acc?.name_en} · {stayWeeks} {t("partnerSchools.weeks", "weeks")}
-                  {accQuote.perWeek ? ` × ${formatEur(accQuote.perWeek)}` : ""}
+                  {lang === "ar" && acc?.name_ar ? acc.name_ar : acc?.name_en} ·{" "}
+                  {accQuote.openingWeeks
+                    ? `${accQuote.openingWeeks} × ${formatEur(accQuote.openingPerWeek)} + ${
+                        stayWeeks - accQuote.openingWeeks
+                      } × ${formatEur(accQuote.perWeek)}`
+                    : `${stayWeeks} ${t("partnerSchools.weeks", "weeks")}${accQuote.perWeek ? ` × ${formatEur(accQuote.perWeek)}` : ""}`}
                 </span>
                 <span>{formatEur(accQuote.total)}</span>
               </li>
