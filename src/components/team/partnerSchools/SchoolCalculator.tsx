@@ -124,9 +124,12 @@ export default function SchoolCalculator({
     : 0;
   const supplement = supplementWeeks * Number(version?.summer_supplement_per_week ?? 0);
 
-  const payable =
-    (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + registrationFee + supplement;
-  const incomplete = courseQuote.total == null || (withAcc && accQuote?.total == null) || missingLevels.length > 0;
+  // A missing published price must never be silently counted as zero.
+  const priceMissing = courseQuote.total == null || (withAcc && accQuote?.total == null);
+  const payable = priceMissing
+    ? null
+    : (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + registrationFee + supplement;
+  const incomplete = priceMissing || missingLevels.length > 0;
 
   const answer = [
     `${from} → ${to}`,
