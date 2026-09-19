@@ -224,7 +224,7 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
   return (
-    <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto w-full max-w-[1800px] pb-20 md:pb-4", embedded && "pb-4")}>
+    <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto flex w-full max-w-[1800px] flex-col pb-20 md:pb-4", embedded ? "min-h-0 flex-1 pb-4" : "")}>
       {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
       {embedded && <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>}
       <div className={cn("mb-3 rounded-lg border p-3 text-xs", receiving ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5")}>
@@ -233,10 +233,10 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
         {inbound?.lastInboundAt && <p className="mt-1 text-muted-foreground">{t("status.lastInbound", { time: fmt(inbound.lastInboundAt, i18n.language) })}</p>}
         {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
       </div>
-      <Tabs defaultValue="inbox" className="space-y-3">
+      <Tabs defaultValue="inbox" className={cn("space-y-3", embedded && "flex min-h-0 flex-1 flex-col")}>
         <TabsList className="grid w-full grid-cols-3 md:w-[470px]"><TabsTrigger value="inbox">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>
-        <TabsContent value="inbox" className="m-0">
-          <Card className="h-[calc(100dvh-14.5rem)] min-h-[560px] overflow-hidden rounded-xl shadow-none">
+        <TabsContent value="inbox" className={cn("m-0", embedded && "min-h-0 flex-1")}>
+          <Card className={cn("overflow-hidden rounded-xl shadow-none", embedded ? "h-full min-h-0" : "h-[calc(100dvh-14.5rem)] min-h-[560px]")}>
             <div className="grid h-full md:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(430px,1fr)_340px]">
               <aside className={cn("flex min-h-0 flex-col border-e", mobile && selectedId && "hidden")}>
                 <div className="space-y-2 border-b p-3">

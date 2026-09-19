@@ -1882,3 +1882,33 @@ catalog school `alpha-aktiv`.
   the catalog was missing and corrects "Student Residence - Double Not
   Central" 27+ band from 140 to 130.
 - Live QA must be done after the migration is applied.
+
+## Admin messaging page layout - sticky bar + panel sizing (2026-09-19)
+
+The `/admin/messages` (and `/admin/inbox`) toolbars overlapped the page title and
+action buttons. Two root causes:
+
+- **Sticky toolbar offset.** `DashboardLayout` renders page content inside `main`,
+  which already starts below the 3.5rem app header. The toolbars also carried
+  `sticky top-14`, adding a *second* header-height offset, so the bar anchored
+  ~112px down while the page `h1` sat at ~137px - an overlap. Sticky bars inside
+  `main` must use `top-0`; `top-14` is only correct for elements positioned
+  against the viewport rather than inside the scrolled region.
+- **Hardcoded viewport heights.** `CaseMessagesInboxPage` used
+  `h-[calc(100dvh-7.5rem)] md:min-h-[520px]`. Those magic chrome constants drift
+  out of sync with the real header. When a page is rendered inside a shell that
+  already sizes it, it must not compute its own viewport height: use
+  `flex-1 min-h-0` and let the flex column above size it. `WhatsAppInboxPage` has
+  the same pattern but still needs it for its standalone route, so it now branches
+  on its `embedded` prop: `flex-1 min-h-0` inside the tab panel, fixed height only
+  when rendered standalone.
+
+Note on Radix tabs: `TabsContent` unmounts the inactive panel children
+(`children: present && children`), so both panels can never render at once and
+there is no `display`-utility hazard on `TabsContent`. Do not add a `flex` class
+there expecting it to affect visibility.
+
+Layout fixes here are verified with an occlusion-aware harness rather than
+screenshots: it scrolls each page and uses `document.elementFromPoint` to prove
+no interactive element is covered, and that no panel overflows its scroll
+container. Baseline was 36 failures across 5 viewports, 0 after the fixes.

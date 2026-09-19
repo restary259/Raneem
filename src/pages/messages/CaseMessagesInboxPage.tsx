@@ -262,7 +262,10 @@ export default function CaseMessagesInboxPage() {
   return (
     <div
       className={cn(
-        "flex h-[calc(100dvh-7.5rem)] min-h-0 flex-col md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6",
+        // Fills the tab panel: the panel is already sized by the flex column
+        // above, so a hardcoded `100dvh - <chrome>` height (and its min-height)
+        // would drift out of sync with the real header.
+        "flex min-h-0 flex-1 flex-col md:gap-4 md:p-6",
         /* On mobile an open conversation takes the whole surface, WhatsApp-style. */
         selected ? "gap-0 p-0" : "gap-2 p-2",
       )}

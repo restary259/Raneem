@@ -30,3 +30,6 @@ dist-ssr
 playwright-report/
 test-results/
 .agents_tmp/
+
+# Local visual harness for messaging UI work (see .preview/README.md)
+.preview/

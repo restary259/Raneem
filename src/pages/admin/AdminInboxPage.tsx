@@ -196,8 +196,10 @@ const AdminInboxPage = () => {
       </div>
 
       <Tabs value={tab} onValueChange={changeTab} className="space-y-4">
-        {/* Toolbar: search + export on top, tabs directly beneath */}
-        <div className="sticky top-14 z-10 -mx-4 sm:-mx-6 space-y-3 bg-background/95 px-4 sm:px-6 py-3 backdrop-blur">
+        {/* `main` already begins below the app header, so the bar must stick at
+            its own top edge. `top-14` added a second header-height offset that
+            left a gap for rows to scroll through and covered the ones beneath. */}
+        <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 space-y-3 bg-background/95 px-4 sm:px-6 py-3 backdrop-blur">
           {<div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

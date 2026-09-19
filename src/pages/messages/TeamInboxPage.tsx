@@ -23,8 +23,10 @@ export default function TeamInboxPage() {
   };
 
   return (
-    <Tabs value={tab} onValueChange={changeTab} className="min-h-0">
-      <div className="sticky top-14 z-20 border-b bg-background/95 px-2 py-2 backdrop-blur sm:px-6">
+    <Tabs value={tab} onValueChange={changeTab} className="flex h-full min-h-0 flex-col">
+      {/* main already starts below the app header, so the bar sticks at its own
+          top edge (`top-0`); `top-14` pushed it down over the page heading. */}
+      <div className="sticky top-0 z-20 shrink-0 border-b bg-background/95 px-2 py-2 backdrop-blur sm:px-6">
         <SegmentedTabs
           items={[
             {
@@ -41,11 +43,21 @@ export default function TeamInboxPage() {
         />
       </div>
 
-      <TabsContent value="messages" className="mt-0">
-        <CaseMessagesInboxPage />
+      {/* Both panels live in the same flex column: the tab strip is a fixed row
+          and the active panel fills the rest. The flex context sits one level
+          below `TabsContent` on purpose - an inactive panel keeps the `[hidden]`
+          attribute, and giving `TabsContent` a `display` utility would override
+          the preflight `[hidden]` rule, letting the empty hidden panel still
+          consume space in the column. */}
+      <TabsContent value="messages" className="mt-0 min-h-0 flex-1">
+        <div className="flex h-full min-h-0 flex-col">
+          <CaseMessagesInboxPage />
+        </div>
       </TabsContent>
-      <TabsContent value="whatsapp" className="mt-0 px-2 sm:px-6">
-        <WhatsAppInboxPage embedded />
+      <TabsContent value="whatsapp" className="mt-0 min-h-0 flex-1 px-2 sm:px-6">
+        <div className="flex h-full min-h-0 flex-col">
+          <WhatsAppInboxPage embedded />
+        </div>
       </TabsContent>
     </Tabs>
   );
