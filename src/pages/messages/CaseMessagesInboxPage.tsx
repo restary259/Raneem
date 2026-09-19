@@ -8,6 +8,7 @@ import {
   BellOff,
   FolderOpen,
   Loader2,
+  MessageCircle,
 
   MessageSquare,
   Plus,
@@ -78,7 +79,7 @@ export default function CaseMessagesInboxPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [selected, setSelected] = useState<{ type: "case" | "direct"; id: string } | null>(null);
+  const [selected, setSelected] = useState<{ type: "case" | "direct" | "whatsapp"; id: string } | null>(null);
 
   const [staffOpen, setStaffOpen] = useState(false);
   const online = useOnlineUsers();
@@ -147,6 +148,8 @@ export default function CaseMessagesInboxPage() {
       .channel("messages-inbox")
       .on("postgres_changes", { event: "*", schema: "public", table: "case_messages" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages" }, () => load())
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -235,7 +238,7 @@ export default function CaseMessagesInboxPage() {
   const isMuted = selected ? muted.has(`${selected.type}:${selected.id}`) : false;
 
   const toggleMute = async () => {
-    if (!selected || !user?.id) return;
+    if (!selected || !user?.id || selected.type === "whatsapp") return;
     try {
       await setThreadMuted(user.id, selected.type, selected.id, !isMuted);
       setMuted((prev) => {
