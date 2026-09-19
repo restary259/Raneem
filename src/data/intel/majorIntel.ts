@@ -9,8 +9,12 @@
 import { majorsData } from '@/data/majorsData';
 import type { MajorIntel } from './types';
 import { COMPUTER_SCIENCE_INTEL } from './computerScience';
+import { ENGINEERING_TECHNOLOGY_INTEL } from './engineeringTechnology';
 
-export const VERIFIED_MAJORS: MajorIntel[] = [COMPUTER_SCIENCE_INTEL];
+export const VERIFIED_MAJORS: MajorIntel[] = [
+  COMPUTER_SCIENCE_INTEL,
+  ENGINEERING_TECHNOLOGY_INTEL,
+];
 
 const VERIFIED_IDS = new Set(VERIFIED_MAJORS.map((m) => m.id));
 /** Public-dataset ids that the verified entries already cover. */
