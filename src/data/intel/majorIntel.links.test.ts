@@ -2,33 +2,44 @@ import { describe, expect, it } from 'vitest';
 import { ALL_MAJOR_INTEL } from './majorIntel';
 
 const TIMEOUT_MS = 15_000;
+const NETWORK_RETRIES = 2;
 
 async function checkUrl(url: string): Promise<{ status: number; finalUrl: string }> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let lastError: unknown = null;
 
-  try {
-    let response = await fetch(url, {
-      method: 'HEAD',
-      redirect: 'follow',
-      signal: controller.signal,
-      headers: { 'user-agent': 'DARB-Major-Intelligence-Link-Checker/1.0' },
-    });
+  for (let attempt = 1; attempt <= NETWORK_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    // Some university servers reject HEAD. A GET is a valid fallback.
-    if (response.status === 405 || response.status === 501) {
-      response = await fetch(url, {
-        method: 'GET',
+    try {
+      let response = await fetch(url, {
+        method: 'HEAD',
         redirect: 'follow',
         signal: controller.signal,
         headers: { 'user-agent': 'DARB-Major-Intelligence-Link-Checker/1.0' },
       });
-    }
 
-    return { status: response.status, finalUrl: response.url || url };
-  } finally {
-    clearTimeout(timer);
+      // Some university servers reject HEAD. A GET is a valid fallback.
+      if (response.status === 405 || response.status === 501) {
+        response = await fetch(url, {
+          method: 'GET',
+          redirect: 'follow',
+          signal: controller.signal,
+          headers: { 'user-agent': 'DARB-Major-Intelligence-Link-Checker/1.0' },
+        });
+      }
+
+      return { status: response.status, finalUrl: response.url || url };
+    } catch (error) {
+      lastError = error;
+      if (attempt < NETWORK_RETRIES) continue;
+      throw lastError;
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  throw lastError;
 }
 
 describe('Major Intelligence recommendation links', () => {
