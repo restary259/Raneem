@@ -5,9 +5,9 @@ import { formatThreadTime, initials } from "@/lib/chatFormat";
 import { toneClasses } from "@/lib/statusTokens";
 
 /** Sidebar sections, in the order staff work through them. */
-export type ThreadCategory = "direct" | "cases" | "partners";
+export type ThreadCategory = "direct" | "cases" | "partners" | "whatsapp";
 
-export const THREAD_CATEGORY_ORDER: ThreadCategory[] = ["direct", "cases", "partners"];
+export const THREAD_CATEGORY_ORDER: ThreadCategory[] = ["direct", "cases", "partners", "whatsapp"];
 
 /** One restrained colour identity per section — indicators only, never fills.
  *  Anchored on semantic tones so avatars/badges stay legible in dark & aurora. */
@@ -33,6 +33,12 @@ const CATEGORY_STYLE: Record<
     badge: toneClasses("payment").chip,
     dot: toneClasses("payment").dot,
   },
+  whatsapp: {
+    bar: "bg-emerald-500",
+    avatar: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    badge: "border-emerald-500/30 text-emerald-700 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+  },
 };
 
 export interface ThreadListItem {
@@ -42,7 +48,7 @@ export interface ThreadListItem {
   preview: string;
   timestamp: string | null;
   unread: number;
-  type: "case" | "direct";
+  type: "case" | "direct" | "whatsapp";
   /** Sidebar section this thread belongs to. */
   category?: ThreadCategory;
   /** Direct threads only — used for the presence dot. */
