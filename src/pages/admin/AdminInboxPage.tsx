@@ -215,7 +215,6 @@ const AdminInboxPage = () => {
 
           <SegmentedTabs
             items={[
-              { value: "whatsapp", icon: MessageCircleMore, label: t("admin.inbox.source.whatsapp", "WhatsApp") },
               { value: "all", label: tabLabel("admin.inbox.source.all", "All", searched.length) },
               { value: "partnership", label: tabLabel("admin.inbox.source.partnership", "Partnership", partnership.length) },
               { value: "contact", label: tabLabel("admin.inbox.source.contact", "Contact", contact.length) },
