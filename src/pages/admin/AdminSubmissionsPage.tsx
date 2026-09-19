@@ -28,7 +28,7 @@ import {
 import { toneClasses } from "@/lib/statusTokens";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@/lib/router-compat";
 import { CopyButton } from "@/components/common/CopyButton";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";

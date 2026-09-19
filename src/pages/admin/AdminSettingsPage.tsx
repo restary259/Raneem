@@ -43,7 +43,7 @@ import AuthFailuresPanel from "@/components/admin/AuthFailuresPanel";
 
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "@/lib/router-compat";
 
 interface PlatformSettings {
   id: string;

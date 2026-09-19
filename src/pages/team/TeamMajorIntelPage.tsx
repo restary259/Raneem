@@ -4,7 +4,7 @@
  * empty card that is filled in manually over time.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import { Search, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';

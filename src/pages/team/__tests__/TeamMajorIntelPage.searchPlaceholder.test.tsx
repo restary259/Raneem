@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from '@/lib/router-compat';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import dashboardAr from '../../../../public/locales/ar/dashboard.json';

@@ -1,6 +1,6 @@
 import { MessageCircleMore, MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import CaseMessagesInboxPage from "@/pages/messages/CaseMessagesInboxPage";

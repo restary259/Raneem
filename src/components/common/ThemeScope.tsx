@@ -1,6 +1,6 @@
 import React from "react";
 import { ThemeProvider } from "next-themes";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 
 const DASHBOARD_PREFIXES = ["/admin", "/team", "/partner", "/agent", "/student"];
 

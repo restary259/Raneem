@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "@/lib/router-compat";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs, { type SegmentItem } from "./SegmentedTabs";
 import { LoadingState } from "./States";

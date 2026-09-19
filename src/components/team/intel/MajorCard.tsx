@@ -7,7 +7,7 @@
  * "not filled in yet" line — never public marketing prose.
  */
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ChevronRight, ExternalLink, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';

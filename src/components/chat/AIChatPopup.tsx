@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Bot, Maximize2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { useAIChat } from '@/hooks/useAIChat';
 import ChatComposer from '@/components/chat/ChatComposer';
 import ChatMessageList from '@/components/chat/ChatMessageList';

@@ -1,6 +1,6 @@
 
 import { Instagram, Facebook } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import TikTokIcon from "../icons/TikTokIcon";
 

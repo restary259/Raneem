@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { 
   GraduationCap, FileText, Plane, Home, CreditCard, Users, Calculator, HelpCircle, Brain
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/lib/router-compat';
 import { useInView } from 'react-intersection-observer';
 
 const iconList = [GraduationCap, FileText, Plane, Home, CreditCard, Users, Calculator, Brain, HelpCircle];
