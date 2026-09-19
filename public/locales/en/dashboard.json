@@ -1428,8 +1428,8 @@
       "sourceEdge": "Backend function"
     },
     "inbox": {
-      "title": "Applications Inbox",
-      "subtitle": "Partnership and contact form submissions",
+      "title": "Inbox",
+      "subtitle": "WhatsApp conversations, applications and staff requests",
       "source": {
         "whatsapp": "WhatsApp",
         "all": "All",
