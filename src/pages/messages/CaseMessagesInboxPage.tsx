@@ -142,12 +142,8 @@ export default function CaseMessagesInboxPage() {
   useEffect(() => {
     const channel = supabase
       .channel("messages-inbox")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "case_messages" }, () =>
-        load(),
-      )
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, () =>
-        load(),
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "case_messages" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () => load())
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
