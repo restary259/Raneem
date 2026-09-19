@@ -132,20 +132,62 @@ export function resolveCourseBand(
   return match ?? null;
 }
 
+/**
+ * Some schools charge a higher rate for the first weeks of a booking and the
+ * lower rate only for the weeks after that, instead of one flat band.
+ * GoAcademy! Düsseldorf publishes exactly this rule; every other partner school
+ * leaves these unset and keeps the flat-band behaviour.
+ */
+export interface SurchargeRule {
+  /** Number of opening weeks charged at the band that covers week 1. */
+  surchargeWeeks?: number | null;
+  /** From this booking length the school drops the surcharge entirely. */
+  surchargeWaivedFromWeeks?: number | null;
+}
+
+/** True when the opening weeks must be priced separately for this booking. */
+function splitsOpeningWeeks(weeks: number, rule?: SurchargeRule): number {
+  const n = rule?.surchargeWeeks ?? 0;
+  const waived = rule?.surchargeWaivedFromWeeks ?? null;
+  if (!n || weeks <= n) return 0;
+  if (waived != null && weeks >= waived) return 0;
+  return n;
+}
+
 export interface CourseQuote {
   weeks: number;
   pricePerWeek: number | null;
   total: number | null;
   band: CoursePriceTier | null;
+  /** Set only when the opening weeks are charged at a higher rate. */
+  openingWeeks?: number;
+  openingPricePerWeek?: number | null;
 }
 
 export function quoteCourse(
   tiers: CoursePriceTier[],
   weeks: number,
   kind: "booking" | "extension" = "booking",
+  rule?: SurchargeRule,
 ): CourseQuote {
   const band = resolveCourseBand(tiers, weeks, kind);
   const pricePerWeek = band?.price_per_week ?? null;
+  const opening = splitsOpeningWeeks(weeks, rule);
+  if (opening > 0) {
+    const firstBand = resolveCourseBand(tiers, 1, kind);
+    const openingRate = firstBand?.price_per_week ?? null;
+    if (openingRate != null && pricePerWeek != null) {
+      const total = openingRate * opening + pricePerWeek * (weeks - opening);
+      return {
+        weeks,
+        pricePerWeek,
+        total: Math.round(total * 100) / 100,
+        band,
+        openingWeeks: opening,
+        openingPricePerWeek: openingRate,
+      };
+    }
+  }
   return {
     weeks,
     pricePerWeek,
