@@ -220,7 +220,7 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
   ),
   gradeConversion: fact(
     'The KMK uses the modified Bavarian formula for converting foreign higher-education entrance grades. The converted result is a grade-conversion value, not an admission decision.',
-    'CALCULATED_VALUE',
+    'OFFICIAL_PROCEDURE',
     'kmk-grade-conversion',
     CHECKED,
     {
@@ -331,21 +331,10 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         note: 'Bauingenieurwesen B.Sc. is not admission-restricted.',
         noteAR: 'بكالوريوس الهندسة المدنية غير مقيّد القبول.',
       }),
-      subjectRequirements: fact(
-        [
-          {
-            subject: 'further_subject',
-            label: 'At least six weeks of practical training on a construction site (Baustellenpraktikum) is required.',
-            labelAR: 'يُطلب تدريب عملي في موقع بناء لمدة لا تقل عن ستة أسابيع.',
-          },
-        ],
+      subjectRequirements: unverified(
         'OFFICIAL_REQUIREMENT',
-        'stuttgart-civil',
-        CHECKED,
-        {
-          noteAR:
-            'يشترط البرنامج تدريباً عملياً في موقع بناء لمدة لا تقل عن ستة أسابيع؛ هذا ليس شرط وحدات بجروت.',
-        },
+        'No programme-specific Israeli Bagrut subject/unit requirement was verified on the checked programme page. The six-week construction-site internship is recorded separately as a programme requirement.',
+        'لم يتم التحقق من شرط مواد/وحدات بجروت خاص بالبرنامج في صفحة البرنامج المفحوصة. تم تسجيل التدريب العملي لمدة ستة أسابيع بشكل منفصل كشرط للبرنامج.',
       ),
       languageRequirement: SHARED_LANGUAGE,
       gradeRequirement: unverified(
@@ -353,10 +342,12 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         'No programme-specific converted-grade threshold was verified on the checked page.',
         'لم يتم التحقق من حد معدل محوَّل خاص بالبرنامج في الصفحة المفحوصة.',
       ),
-      entranceRequirement: unverified(
-        'OFFICIAL_PROCEDURE',
-        'No programme-specific entrance/aptitude test was verified on the checked page.',
-        'لم يتم التحقق من اختبار قبول/أهلية خاص بالبرنامج في الصفحة المفحوصة.',
+      entranceRequirement: fact(
+        'At least six weeks of practical training on a construction site (Baustellenpraktikum) is required. This is a programme prerequisite, not an entrance examination.',
+        'OFFICIAL_REQUIREMENT',
+        'stuttgart-civil',
+        CHECKED,
+        { noteAR: 'يُطلب تدريب عملي في موقع بناء لمدة لا تقل عن ستة أسابيع. هذا شرط للبرنامج وليس امتحان قبول.' },
       ),
       deadline: fact(
         { semester: 'Winter semester', semesterAR: 'الفصل الشتوي', deadline: '15 May – 15 September' },
@@ -490,7 +481,7 @@ function makeVerifiedEngineeringMajor(
     ),
     gradeConversion: fact(
       'The KMK uses the modified Bavarian formula for converting foreign higher-education entrance grades. The converted result is a grade-conversion value, not an admission decision.',
-      'CALCULATED_VALUE',
+      'OFFICIAL_PROCEDURE',
       'kmk-grade-conversion',
       CHECKED,
       { noteAR: 'تستخدم KMK صيغة بافاريا المعدلة لتحويل درجات شهادات التأهل الأجنبية للجامعة. النتيجة قيمة تحويل وليست قرار قبول.' },
