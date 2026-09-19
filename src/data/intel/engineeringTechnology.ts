@@ -462,3 +462,111 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
   ],
   sources: SOURCES,
 };
+
+
+function makeVerifiedEngineeringMajor(
+  id: string,
+  canonicalEN: string,
+  canonicalAR: string,
+  nameDE: string,
+  program: ProgramIntel,
+  aliases: { ar: string[]; he: string[]; en: string[]; de: string[] },
+): MajorIntel {
+  return {
+    id,
+    canonicalEN,
+    canonicalAR,
+    nameDE,
+    degreeLevel: 'bachelor',
+    aliases,
+    status: 'verified',
+    lastVerified: '2026-09',
+    bagrutAccess: fact(
+      { mathUnits: 3, englishUnits: 4, furtherUnits: 4 },
+      'OFFICIAL_REQUIREMENT',
+      'daad-israel-bagrut',
+      CHECKED,
+      { note: BAGRUT_EN, noteAR: BAGRUT_AR },
+    ),
+    gradeConversion: fact(
+      'The KMK uses the modified Bavarian formula for converting foreign higher-education entrance grades. The converted result is a grade-conversion value, not an admission decision.',
+      'CALCULATED_VALUE',
+      'kmk-grade-conversion',
+      CHECKED,
+      { noteAR: 'تستخدم KMK صيغة بافاريا المعدلة لتحويل درجات شهادات التأهل الأجنبية للجامعة. النتيجة قيمة تحويل وليست قرار قبول.' },
+    ),
+    language: SHARED_LANGUAGE,
+    programs: [program],
+    sources: SOURCES,
+  };
+}
+
+const ENGINEERING_PROGRAMS = ENGINEERING_TECHNOLOGY_INTEL.programs;
+
+export const ENGINEERING_TECHNOLOGY_MAJORS: MajorIntel[] = [
+  makeVerifiedEngineeringMajor(
+    'mechanical-engineering',
+    'Mechanical Engineering',
+    'الهندسة الميكانيكية',
+    'Maschinenbau',
+    ENGINEERING_PROGRAMS.find((p) => p.id === 'stuttgart-maschinenbau-bsc')!,
+    {
+      ar: ['الهندسة الميكانيكية', 'هندسة ميكانيكية', 'ميكانيك'],
+      he: ['הנדסת מכונות', 'הנדסה מכנית'],
+      en: ['Mechanical Engineering', 'Mechanical Engineering BSc'],
+      de: ['Maschinenbau'],
+    },
+  ),
+  makeVerifiedEngineeringMajor(
+    'electrical-engineering-information-technology',
+    'Electrical Engineering and Information Technology',
+    'الهندسة الكهربائية وتقنية المعلومات',
+    'Elektrotechnik und Informationstechnik',
+    ENGINEERING_PROGRAMS.find((p) => p.id === 'stuttgart-electrical-information-technology-bsc')!,
+    {
+      ar: ['الهندسة الكهربائية', 'الهندسة الكهربائية وتقنية المعلومات', 'هندسة كهرباء'],
+      he: ['הנדסת חשמל', 'הנדסת חשמל ומידע'],
+      en: ['Electrical Engineering', 'Electrical Engineering and Information Technology', 'EEIT'],
+      de: ['Elektrotechnik', 'Elektrotechnik und Informationstechnik'],
+    },
+  ),
+  makeVerifiedEngineeringMajor(
+    'civil-engineering',
+    'Civil Engineering',
+    'الهندسة المدنية',
+    'Bauingenieurwesen',
+    ENGINEERING_PROGRAMS.find((p) => p.id === 'stuttgart-bauingenieurwesen-bsc')!,
+    {
+      ar: ['الهندسة المدنية', 'هندسة مدنية', 'هندسة بناء'],
+      he: ['הנדסה אזרחית', 'הנדסת בניין'],
+      en: ['Civil Engineering', 'Civil Engineering BSc'],
+      de: ['Bauingenieurwesen'],
+    },
+  ),
+  makeVerifiedEngineeringMajor(
+    'environmental-protection-engineering',
+    'Environmental Protection Technology',
+    'هندسة حماية البيئة',
+    'Umweltschutztechnik',
+    ENGINEERING_PROGRAMS.find((p) => p.id === 'stuttgart-umweltschutztechnik-bsc')!,
+    {
+      ar: ['هندسة حماية البيئة', 'الهندسة البيئية', 'هندسة البيئة'],
+      he: ['הנדסת סביבה', 'הנדסת הגנת הסביבה'],
+      en: ['Environmental Engineering', 'Environmental Protection Technology', 'Environmental Protection'],
+      de: ['Umweltschutztechnik'],
+    },
+  ),
+  makeVerifiedEngineeringMajor(
+    'materials-science',
+    'Materials Science',
+    'علم وهندسة المواد',
+    'Materialwissenschaft',
+    ENGINEERING_PROGRAMS.find((p) => p.id === 'stuttgart-materialwissenschaft-bsc')!,
+    {
+      ar: ['علم المواد', 'هندسة المواد', 'علم وهندسة المواد'],
+      he: ['מדע החומרים', 'הנדסת חומרים'],
+      en: ['Materials Science', 'Materials Engineering', 'Materials Science and Engineering'],
+      de: ['Materialwissenschaft'],
+    },
+  ),
+];
