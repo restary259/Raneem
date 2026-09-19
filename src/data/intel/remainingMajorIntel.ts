@@ -382,7 +382,7 @@ const R: Record<string, Route> = {
     id: 'freiburg-environmental-natural-sciences-bsc', universityName: 'University of Freiburg', universityNameAR: 'جامعة فرايبورغ',
     city: 'Freiburg', cityAR: 'فرايبورغ', programName: 'Environmental Natural Sciences (B.Sc.)', programNameDE: 'Umweltnaturwissenschaften',
     programNameAR: 'العلوم البيئية الطبيعية (بكالوريوس)',
-    url: 'https://uni-freiburg.de/en/study/degree-programmes/158/',
+    url: 'https://uni-freiburg.de/en/studies/degree-programmes/degree-programme/757/',
     title: 'University of Freiburg — Environmental Natural Sciences B.Sc.', titleAR: 'جامعة فرايبورغ — بكالوريوس العلوم البيئية الطبيعية',
     language: { language: 'German', minimumLevel: 'C1', certificates: GERMAN_C1_CERTS }, admission: 'nc', channel: 'hochschulstart',
     deadline: { semester: 'Winter semester', semesterAR: 'الفصل الشتوي', deadline: '01.06.–15.07.' },
