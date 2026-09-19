@@ -105,9 +105,16 @@ export default function SchoolCalculator({
     () => accTiers.find((tier) => tier.night_price != null)?.night_price ?? null,
     [accTiers],
   );
+  const accRule = useMemo(
+    () => ({
+      surchargeWeeks: acc?.surcharge_weeks ?? null,
+      surchargeWaivedFromWeeks: acc?.surcharge_waived_from_weeks ?? null,
+    }),
+    [acc],
+  );
   const accQuote = useMemo(
-    () => (withAcc ? quoteStay(accTiers, stayWeeks) : null),
-    [withAcc, accTiers, stayWeeks],
+    () => (withAcc ? quoteStay(accTiers, stayWeeks, accRule) : null),
+    [withAcc, accTiers, stayWeeks, accRule],
   );
   const arrangementFee = withAcc ? Number(acc?.arrangement_fee ?? 0) : 0;
   const registrationFee = Number(course?.registration_fee ?? 0);
