@@ -102,19 +102,78 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
               programs.map((program) => {
                 const req = program.languageRequirement;
                 const value = req.status === 'verified' ? req.value : null;
+                const teaching =
+                  program.teachingLanguage.status === 'verified' ? program.teachingLanguage.value.join(' / ') : null;
                 return (
-                  <Row key={program.id} label={isAr ? program.universityNameAR : program.universityName}>
+                  <div key={program.id} className="space-y-2 rounded-md border border-border p-3">
+                    <Row label={isAr ? program.universityNameAR : program.universityName}>
+                      {teaching ? (
+                        <span className="font-medium">
+                          {t('intel.card.teachingLanguage', 'Teaching language')}: {teaching}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {t('intel.none', 'none published')}
+                        </span>
+                      )}
+                    </Row>
                     {value ? (
                       <>
-                        <span className="font-medium">{value.minimumLevel}</span>
+                        <Row label={t('intel.card.requiredLevel', 'Required CEFR level')}>
+                          <span className="font-semibold">
+                            {value.language} {value.minimumLevel}
+                          </span>
+                        </Row>
+                        <div>
+                          <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                            {t('intel.card.levelMap', 'CEFR level map')}
+                          </p>
+                          <div className="grid grid-cols-6 gap-1">
+                            {(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const).map((level) => {
+                              const requiredIndex = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(value.minimumLevel);
+                              const levelIndex = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(level);
+                              const isRequired = level === value.minimumLevel;
+                              const isBelow = levelIndex < requiredIndex;
+                              return (
+                                <div
+                                  key={level}
+                                  className={`rounded-md border px-1.5 py-2 text-center text-xs ${isRequired ? 'border-primary bg-primary/10 font-semibold text-primary' : isBelow ? 'opacity-45' : ''}`}
+                                >
+                                  <div>{level}</div>
+                                  <div className="mt-0.5 text-[10px] text-muted-foreground">
+                                    {isRequired
+                                      ? t('intel.card.required', 'required')
+                                      : isBelow
+                                        ? t('intel.card.below', 'below')
+                                        : t('intel.card.above', 'meets')}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                         {value.certificates.length > 0 && (
-                          <span className="text-muted-foreground"> · {value.certificates.join(' · ')}</span>
+                          <Row label={t('intel.card.acceptedProof', 'Accepted proof')}>
+                            <span className="text-muted-foreground">{value.certificates.join(' · ')}</span>
+                          </Row>
+                        )}
+                        {value.additionalLanguage && (
+                          <Row label={t('intel.card.additionalLanguage', 'Additional language')}>
+                            <span className="font-medium">
+                              {value.additionalLanguage.language} {value.additionalLanguage.minimumLevel}
+                            </span>
+                            {value.additionalLanguage.certificates.length > 0 && (
+                              <span className="text-muted-foreground"> · {value.additionalLanguage.certificates.join(' · ')}</span>
+                            )}
+                          </Row>
                         )}
                       </>
                     ) : (
-                      <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>
+                      <Row label={t('intel.card.requiredLevel', 'Required CEFR level')}>
+                        <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>
+                      </Row>
                     )}
-                  </Row>
+                  </div>
                 );
               })
             )}
