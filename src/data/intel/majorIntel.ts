@@ -9,11 +9,11 @@
 import { majorsData } from '@/data/majorsData';
 import type { MajorIntel } from './types';
 import { COMPUTER_SCIENCE_INTEL } from './computerScience';
-import { ENGINEERING_TECHNOLOGY_INTEL } from './engineeringTechnology';
+import { ENGINEERING_TECHNOLOGY_MAJORS } from './engineeringTechnology';
 
 export const VERIFIED_MAJORS: MajorIntel[] = [
   COMPUTER_SCIENCE_INTEL,
-  ENGINEERING_TECHNOLOGY_INTEL,
+  ...ENGINEERING_TECHNOLOGY_MAJORS,
 ];
 
 const VERIFIED_IDS = new Set(VERIFIED_MAJORS.map((m) => m.id));
