@@ -1,0 +1,17 @@
+{
+  "customizations": [
+    { "token": ":root light theme HSL variables (background/foreground/card/popover/muted/accent/brand/brand-strong/trust/editorial-paper/destructive/border/input/ring/radius/primary/secondary/sidebar-*)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": ".dark theme block (neutral near-white primary, DARB orange brand)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": ".aurora third theme block", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--status-* pipeline status hues (light/dark/aurora)", "source": "src/index.css", "reappliedIn": "src/styles.css" },
+    { "token": "--surface-shadow / --surface-shadow-lg + shadow-surface utilities", "source": "src/index.css + tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "brand/trust/editorial-paper/sidebar color utilities", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css @theme inline" },
+    { "token": "font-sans (IBM Plex Sans Arabic/Tajawal) + font-editorial", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css @theme inline" },
+    { "token": "keyframes/animations: accordion, fade-in, scale-in, marquee, marquee2, fade-in-up/left/right", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css" },
+    { "token": "container center/padding/1400px cap", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css @utility container" },
+    { "token": "darkMode variant including .aurora", "source": "tailwind.config.ts", "reappliedIn": "src/styles.css @custom-variant dark" },
+    { "token": "neon.css dark-mode glow system", "source": "src/styles/neon.css (kept on disk)", "reappliedIn": "src/styles.css @import" },
+    { "token": "cv-print.css print stylesheet", "source": "src/styles/cv-print.css (kept on disk, was imported in main.tsx)", "reappliedIn": "src/styles.css @import" },
+    { "token": "RTL/LTR direction rules, pb-safe, scroll containment, scrollbar/selection styling, touch-action, iOS 16px input fix, reduced-motion, kpi-grid container queries, Lovable badge hide", "source": "src/index.css", "reappliedIn": "src/styles.css" }
+  ]
+}

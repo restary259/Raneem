@@ -361,7 +361,7 @@ export default function MessageList({
                   <div
                     key={m.id}
                     className={cn(
-                      "w-fit max-w-full space-y-2 overflow-hidden break-words rounded-2xl border px-3.5 py-2.5 shadow-sm",
+                      "w-fit max-w-full space-y-2 overflow-hidden break-words rounded-2xl border px-3.5 py-2.5 shadow-xs",
                       group.mine
                         ? "rounded-ee-sm border-primary/25 bg-primary/10"
                         : "rounded-es-sm border-border bg-card",

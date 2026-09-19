@@ -16,7 +16,7 @@ const CommissionCalculator = () => {
   return (
     <section className="py-12 md:py-24 bg-secondary">
       <div className="container mx-auto px-4">
-        <Card className="max-w-2xl mx-auto bg-background/80 backdrop-blur-sm border-white/20 shadow-lg">
+        <Card className="max-w-2xl mx-auto bg-background/80 backdrop-blur-xs border-white/20 shadow-lg">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center">{t('commissionCalculator.title')}</CardTitle>
           </CardHeader>

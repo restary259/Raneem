@@ -211,7 +211,7 @@ export default function AgentNetworkPage() {
                 <button
                   key={r.partner_id}
                   onClick={() => handleSelect(r)}
-                  className="w-full p-4 text-start hover:bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="w-full p-4 text-start hover:bg-muted/20 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-sm truncate">{r.full_name}</p>

@@ -1,39 +1,32 @@
+// DARB service worker — v5.0.0 (TanStack Start migration)
+//
+// This worker replaces the old caching worker at the SAME URL so returning
+// browsers pick it up automatically on their next online visit.
+//
+// What changed:
+//   - ALL offline caching removed (no fetch handler). The app is online-only;
+//     the old cached SPA shell can never be served against the new server-
+//     rendered app.
+//   - Every old cache is deleted on activate.
+// What is preserved:
+//   - Web Push: the push / notificationclick / pushsubscriptionchange handlers
+//     are carried over verbatim, so existing push subscriptions keep working
+//     without users re-granting permission.
 
-const CACHE_VERSION = '4.2.1';
-const STATIC_CACHE = `darb-static-v${CACHE_VERSION}`;
-const AI_CACHE = 'darb-ai-cache';
-const DOCS_CACHE = 'darb-docs-cache';
-const FONT_CACHE = 'darb-fonts-cache';
-const OFFLINE_URL = '/offline.html';
+const CACHE_VERSION = '5.0.0';
 
-// Assets to cache immediately — only real files, NOT SPA routes (they 404 on cache.addAll)
-const STATIC_CACHE_URLS = [
-  '/',
-  '/offline.html',
-  '/manifest.json',
-];
-
-// Install event
 self.addEventListener('install', event => {
-  console.log('[SW] Install - v' + CACHE_VERSION);
-  event.waitUntil(
-    Promise.all([
-      caches.open(STATIC_CACHE).then(cache => cache.addAll(STATIC_CACHE_URLS)),
-      self.skipWaiting()
-    ])
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
-// Activate - cleanup old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activate - v' + CACHE_VERSION);
-  const keepCaches = [STATIC_CACHE, AI_CACHE, DOCS_CACHE, FONT_CACHE];
   event.waitUntil(
     Promise.all([
-      caches.keys().then(names =>
-        Promise.all(names.filter(n => !keepCaches.includes(n)).map(n => caches.delete(n)))
-      ),
-      self.clients.claim()
+      // Drop every cache the old worker created (darb-static-v*, darb-ai-cache,
+      // darb-docs-cache, darb-fonts-cache, and anything else on this origin
+      // owned by the previous worker).
+      caches.keys().then(names => Promise.all(names.map(n => caches.delete(n)))),
+      self.clients.claim(),
     ])
   );
   self.clients.matchAll().then(clients => {
@@ -41,153 +34,18 @@ self.addEventListener('activate', event => {
   });
 });
 
-// Message handler
+// Message handler — kept for compatibility with app code that posts these.
 self.addEventListener('message', event => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
-  // Clear all caches on logout (security)
   if (event.data?.type === 'CLEAR_CACHES_ON_LOGOUT') {
-    caches.keys().then(names =>
-      Promise.all(names.map(n => caches.delete(n)))
-    ).then(() => {
-      console.log('[SW] All caches cleared on logout');
-    });
-    return;
-  }
-  // Cache AI conversation
-  if (event.data?.type === 'CACHE_AI_RESPONSE') {
-    caches.open(AI_CACHE).then(cache => {
-      const resp = new Response(JSON.stringify(event.data.conversation));
-      cache.put('latest-conversation', resp);
-    });
-  }
-  // Cache document for offline
-  if (event.data?.type === 'CACHE_DOCUMENT') {
-    caches.open(DOCS_CACHE).then(cache => {
-      fetch(event.data.url).then(resp => {
-        if (resp.ok) cache.put(event.data.url, resp);
-      }).catch(() => {});
-    });
+    caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
   }
 });
 
-// Stale-while-revalidate helper
-function staleWhileRevalidate(event, cacheName) {
-  event.respondWith(
-    caches.open(cacheName).then(cache =>
-      cache.match(event.request).then(cached => {
-        const fetchPromise = fetch(event.request).then(networkResp => {
-          if (networkResp.ok) cache.put(event.request, networkResp.clone());
-          return networkResp;
-        }).catch(() => cached);
-        return cached || fetchPromise;
-      })
-    )
-  );
-}
-
-// Fetch handler
-self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  if (request.method !== 'GET') return;
-
-  // NEVER cache Supabase API requests (auth, database, storage API)
-  if (url.hostname.includes('supabase.co') || url.hostname.includes('supabase.in')) {
-    return; // Let browser handle directly
-  }
-
-  // Google Fonts -> font cache
-  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-    event.respondWith(
-      caches.open(FONT_CACHE).then(cache =>
-        cache.match(request).then(cached => {
-          if (cached) return cached;
-          return fetch(request).then(resp => {
-            cache.put(request, resp.clone());
-            return resp;
-          }).catch(() => cached);
-        })
-      )
-    );
-    return;
-  }
-
-  // Skip non-origin requests (except fonts handled above)
-  if (!url.origin.includes(self.location.origin)) return;
-
-  // Document files from storage -> docs cache with stale-while-revalidate
-  if (url.pathname.includes('/storage/') || url.pathname.includes('/student-documents/')) {
-    staleWhileRevalidate(event, DOCS_CACHE);
-    return;
-  }
-
-  // Navigation requests — NETWORK ONLY (never cache HTML)
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(OFFLINE_URL))
-    );
-    return;
-  }
-
-  // JS/CSS -> stale-while-revalidate so a deploy with new hashed bundles is
-  // fetched instead of serving stale JS forever (which causes "Failed to
-  // fetch dynamically imported module" on every page after an update).
-  if (/\.(js|css|woff2?|eot|ttf|otf)$/.test(url.pathname)) {
-    staleWhileRevalidate(event, STATIC_CACHE);
-    return;
-  }
-
-  // Images -> cache-first with offline SVG fallback
-  if (/\.(png|jpg|jpeg|svg|gif|webp)$/.test(url.pathname)) {
-    event.respondWith(
-      caches.match(request).then(cached => {
-        if (cached) return cached;
-        return fetch(request).then(resp => {
-          if (resp.ok && resp.type === 'basic') {
-            caches.open(STATIC_CACHE).then(c => c.put(request, resp.clone()));
-          }
-          return resp;
-        }).catch(() =>
-          new Response(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#f0f0f0"/><text x="100" y="100" text-anchor="middle" dy=".3em" fill="#999">غير متاح</text></svg>',
-            { headers: { 'Content-Type': 'image/svg+xml' } }
-          )
-        );
-      })
-    );
-    return;
-  }
-
-  // Default: network-first
-  event.respondWith(
-    fetch(request).then(resp => {
-      const clone = resp.clone();
-      caches.open(STATIC_CACHE).then(c => c.put(request, clone));
-      return resp;
-    }).catch(() => caches.match(request))
-  );
-});
-
-// Background sync
-self.addEventListener('sync', event => {
-  if (event.tag === 'contact-form-sync') {
-    event.waitUntil(syncContactForms());
-  }
-});
-
-async function syncContactForms() {
-  try {
-    const cache = await caches.open(STATIC_CACHE);
-    const reqs = await cache.keys();
-    for (const req of reqs.filter(r => r.url.includes('/api/contact') && r.method === 'POST')) {
-      try { await fetch(req); await cache.delete(req); } catch {}
-    }
-  } catch {}
-}
+// NOTE: intentionally NO 'fetch' handler — no offline mode, no response caching.
 
 // ---------------------------------------------------------------------------
-// Web Push
+// Web Push (preserved verbatim from the pre-migration worker)
 // ---------------------------------------------------------------------------
 const NOTIFICATION_ICON = '/icons/icon-192.png';
 // Android / Samsung Internet render `badge` as a monochrome mask, so it must be
@@ -270,4 +128,3 @@ self.addEventListener('pushsubscriptionchange', event => {
     for (const client of windows) client.postMessage({ type: 'PUSH_SUBSCRIPTION_CHANGED' });
   })());
 });
-

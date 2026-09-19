@@ -514,7 +514,7 @@ export default function TeamAppointmentsPage() {
           s.bg,
           draggingId === appt.id
             ? "opacity-40 scale-95 cursor-grabbing"
-            : "cursor-grab hover:shadow-sm hover:scale-[1.01] active:cursor-grabbing",
+            : "cursor-grab hover:shadow-xs hover:scale-[1.01] active:cursor-grabbing",
           compact ? "text-[9px] px-1.5 py-0.5 mb-0.5" : "text-[11px] p-1.5 mb-1",
         )}
       >
@@ -586,7 +586,7 @@ export default function TeamAppointmentsPage() {
                 className={cn(
                   "px-3 py-1 text-xs font-medium rounded-full transition-all capitalize",
                   view === v
-                    ? "bg-background shadow-sm text-foreground"
+                    ? "bg-background shadow-xs text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -600,7 +600,7 @@ export default function TeamAppointmentsPage() {
           </div>
           <Button
             size="sm"
-            className="gap-1.5 rounded-full px-3 sm:px-4 h-8 shadow-sm shrink-0"
+            className="gap-1.5 rounded-full px-3 sm:px-4 h-8 shadow-xs shrink-0"
             onClick={() => openNew()}
           >
             <Plus className="h-3.5 w-3.5" />

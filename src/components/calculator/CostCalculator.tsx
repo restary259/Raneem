@@ -163,15 +163,15 @@ const CostCalculator = () => {
           {/* Toggles */}
           <div className="space-y-4">
             <h4 className="font-medium">{t('costCalc.additionalOptions')}</h4>
-            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-sm">
+            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-xs">
               <Switch checked={includeMobile} onCheckedChange={setIncludeMobile} />
               <Label className="m-0">{t('costCalc.mobileLabel')} (€{MOBILE_INTERNET}/{t('costCalc.month')})</Label>
             </div>
-            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-sm">
+            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-xs">
               <Switch checked={includeTransport} onCheckedChange={setIncludeTransport} />
               <Label className="m-0">{t('costCalc.transportLabel')} (€{DEUTSCHLAND_TICKET}/{t('costCalc.month')})</Label>
             </div>
-            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-sm">
+            <div className="flex flex-row-reverse items-center justify-end gap-4 rounded-md border p-3 shadow-xs">
               <Switch checked={includeVisa} onCheckedChange={setIncludeVisa} />
               <Label className="m-0">{t('costCalc.visaLabel')} (€{VISA_FEE})</Label>
             </div>

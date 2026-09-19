@@ -26,7 +26,7 @@ const TimelineStep = ({ step, index, total }: { step: Step; index: number; total
         {/* Right side content (RTL: appears on the right) */}
         <div className={`${isEven ? '' : 'invisible'}`}>
           {isEven && (
-             <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md hover:border-accent/20 transition-all duration-300">
+             <div className="bg-card rounded-xl p-6 shadow-xs border border-border hover:shadow-md hover:border-accent/20 transition-all duration-300">
               <h3 className="text-lg font-bold text-foreground mb-2">{step.title}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
             </div>
@@ -46,7 +46,7 @@ const TimelineStep = ({ step, index, total }: { step: Step; index: number; total
         {/* Left side content (RTL: appears on the left) */}
         <div className={`${!isEven ? '' : 'invisible'}`}>
           {!isEven && (
-            <div className="bg-card rounded-xl p-6 shadow-sm border border-border hover:shadow-md hover:border-accent/20 transition-all duration-300">
+            <div className="bg-card rounded-xl p-6 shadow-xs border border-border hover:shadow-md hover:border-accent/20 transition-all duration-300">
               <h3 className="text-lg font-bold text-foreground mb-2">{step.title}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
             </div>
@@ -64,7 +64,7 @@ const TimelineStep = ({ step, index, total }: { step: Step; index: number; total
             <div className="w-0.5 flex-1 bg-border mt-2" />
           )}
         </div>
-        <div className="bg-card rounded-xl p-4 shadow-sm border border-border flex-1 mb-4 hover:shadow-md hover:border-accent/20 transition-all duration-300">
+        <div className="bg-card rounded-xl p-4 shadow-xs border border-border flex-1 mb-4 hover:shadow-md hover:border-accent/20 transition-all duration-300">
           <h3 className="text-base font-bold text-foreground mb-1">{step.title}</h3>
           <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
         </div>

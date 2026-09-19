@@ -104,7 +104,7 @@ export default function ThemePicker() {
                     style={{ background: option.swatch.accent }}
                   />
                   <span
-                    className="h-3 w-full rounded-sm"
+                    className="h-3 w-full rounded-xs"
                     style={{ background: option.swatch.surface, borderTop: `1px solid ${option.swatch.line}` }}
                   />
                 </span>

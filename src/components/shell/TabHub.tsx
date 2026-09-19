@@ -44,7 +44,7 @@ export default function TabHub({ tabs, param = "tab", className }: TabHubProps) 
     <Tabs value={active} onValueChange={onChange} className={className}>
       <SegmentedTabs items={tabs.map(({ render, ...rest }) => rest)} />
       {tabs.map((tab) => (
-        <TabsContent key={tab.value} value={tab.value} className="mt-3 focus-visible:outline-none">
+        <TabsContent key={tab.value} value={tab.value} className="mt-3 focus-visible:outline-hidden">
           {active === tab.value && (
             <Suspense fallback={<LoadingState rows={4} />}>{tab.render()}</Suspense>
           )}

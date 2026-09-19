@@ -194,7 +194,7 @@ const Contact = () => {
                     <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)}
                       className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
                         passportType === pt.value
-                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                           : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
                       }`}>
                       {isAr ? pt.labelAr : pt.labelEn}
@@ -219,7 +219,7 @@ const Contact = () => {
                     }}
                       className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
                         educationLevel === lvl.value
-                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                           : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
                       }`}>
                       {isAr ? lvl.labelAr : lvl.labelEn}

@@ -66,7 +66,7 @@ export default function SegmentedTabs({ items, className }: SegmentedTabsProps) 
             <TabsTrigger
               key={item.value}
               value={item.value}
-              className="shrink-0 gap-1.5 px-2.5 py-2 text-sm sm:px-4 sm:gap-1.5 data-[state=active]:shadow-sm"
+              className="shrink-0 gap-1.5 px-2.5 py-2 text-sm sm:px-4 sm:gap-1.5 data-[state=active]:shadow-xs"
             >
               {item.icon && <item.icon className="hidden h-4 w-4 sm:block" aria-hidden />}
               {item.label}

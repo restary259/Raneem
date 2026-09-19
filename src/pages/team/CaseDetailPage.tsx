@@ -617,7 +617,7 @@ export default function CaseDetailPage() {
       ) : showTabbedWorkflow ? (
         <>
           {/* Sticky action bar: view switcher + the single context-aware action. */}
-          <div className="sticky top-0 z-20 flex flex-col gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm">
+          <div className="sticky top-0 z-20 flex flex-col gap-3 rounded-xl border bg-card px-4 py-3 shadow-xs">
             <div className="flex items-center justify-between gap-3">
               <div className="hidden sm:block">
                 <Tabs value={activeView} onValueChange={(v) => setActiveView(v as WorkflowView)}>

@@ -125,7 +125,7 @@ export function AccommodationDetail({ accommodation, school, open, onOpenChange 
                   size="sm"
                   variant="secondary"
                   onClick={() => setLightboxAt(0)}
-                  className="absolute bottom-3 end-3 shadow-sm"
+                  className="absolute bottom-3 end-3 shadow-xs"
                 >
                   <Images className="me-1.5 h-4 w-4" />
                   {t("catalog.viewAllPhotos", "View all photos")} ({photos.length.toLocaleString("en-US")})

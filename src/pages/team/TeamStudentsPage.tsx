@@ -908,7 +908,7 @@ export default function TeamStudentsPage() {
                       navigate(`/team/students/${s.id}`);
                     }
                   }}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User className="h-4 w-4 text-primary" />
