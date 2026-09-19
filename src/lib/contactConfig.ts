@@ -7,8 +7,12 @@
  * email footer). The community group is a separate, clearly-labelled channel.
  */
 
-/** The single customer-facing DARB WhatsApp Business number (digits only). */
-export const WHATSAPP_BUSINESS_NUMBER = "972507368283";
+/**
+ * The single customer-facing DARB WhatsApp Business number (digits only).
+ * This is the number authorised on the WhatsApp Business connection
+ * (+49 176 23790623) — incoming replies land in the staff WhatsApp inbox.
+ */
+export const WHATSAPP_BUSINESS_NUMBER = "4917623790623";
 
 /** Canonical WhatsApp link — use this for every public "message us" action. */
 export const WHATSAPP_BUSINESS_URL = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}`;
