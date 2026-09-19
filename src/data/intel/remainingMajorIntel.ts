@@ -95,13 +95,19 @@ function makeProgram(r: Route): ProgramIntel {
     programNameDE: r.programNameDE,
     programNameAR: r.programNameAR,
     degreeLevel: r.programName.includes('Staatsexamen') ? 'staatsexamen' : 'bachelor',
-    teachingLanguage: fact(
-      [r.language?.language === 'English' ? 'English' : 'German'],
-      'OFFICIAL_LANGUAGE',
-      r.id,
-      CHECKED,
-      { note: 'Teaching language follows the named university route.', noteAR: 'لغة التدريس مأخوذة من مسار الجامعة المحدد.' },
-    ),
+    teachingLanguage: r.language
+      ? fact(
+          [r.language.language],
+          'OFFICIAL_LANGUAGE',
+          r.id,
+          CHECKED,
+          { note: 'Teaching language follows the named university route.', noteAR: 'لغة التدريس مأخوذة من مسار الجامعة المحدد.' },
+        )
+      : unverified(
+          'OFFICIAL_LANGUAGE',
+          'Teaching language was not locked from the named route in this pass.',
+          'لغة التدريس لم يتم تثبيتها من المسار المحدد في هذا المرور.',
+        ),
     admissionMode: r.admission
       ? fact(r.admission, 'OFFICIAL_ADMISSION_MODE', r.id, CHECKED)
       : unverified(
