@@ -113,10 +113,11 @@ describe("partnerSchools", () => {
       expect(quoteStay(alphaTiers, 40).total).toBe(190);
     });
 
-    it("falls back to zero when the school prints no nightly rate", () => {
+    it("does not treat missing nightly pricing as free accommodation", () => {
       const noNight = roomTiers;
       expect(noNight.some((t) => t.night_price != null)).toBe(false);
-      expect(quoteStay(noNight, 0).total).toBe(0);
+      expect(quoteStay(noNight, 0).total).toBeNull();
+      expect(quoteAccommodation(noNight, 0).total).toBeNull();
     });
   });
 
