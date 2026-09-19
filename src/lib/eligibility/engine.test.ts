@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { COMPUTER_SCIENCE_INTEL } from '@/data/intel/computerScience';
-import { searchMajors, getMajorIntel } from '@/data/intel/majorIntel';
+import { searchMajors, getMajorIntel, ALL_MAJOR_INTEL } from '@/data/intel/majorIntel';
 import {
   evaluateBagrutAccess,
   evaluateProgram,
