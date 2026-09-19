@@ -20,6 +20,7 @@ import {
   levelPlan,
   quoteAccommodation,
   quoteCourse,
+  quoteStay,
   summerWeeks,
   totalWeeks,
   totalWeeksMax,
@@ -86,11 +87,17 @@ export default function SchoolCalculator({
     () => accommodationTiers.filter((tier) => tier.accommodation_id === acc?.id),
     [accommodationTiers, acc],
   );
+  // Schools that publish a nightly rate can quote a stay shorter than a week.
+  const nightRate = useMemo(
+    () => accTiers.find((tier) => tier.night_price != null)?.night_price ?? null,
+    [accTiers],
+  );
   const accQuote = useMemo(
-    () => (withAcc ? quoteAccommodation(accTiers, stayWeeks) : null),
+    () => (withAcc ? quoteStay(accTiers, stayWeeks) : null),
     [withAcc, accTiers, stayWeeks],
   );
   const arrangementFee = withAcc ? Number(acc?.arrangement_fee ?? 0) : 0;
+  const registrationFee = Number(course?.registration_fee ?? 0);
 
   const supplementWeeks = withAcc
     ? summerWeeks(startDate || null, stayWeeks, version?.summer_from ?? null, version?.summer_to ?? null)
@@ -98,7 +105,7 @@ export default function SchoolCalculator({
   const supplement = supplementWeeks * Number(version?.summer_supplement_per_week ?? 0);
 
   const payable =
-    (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + supplement;
+    (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + registrationFee + supplement;
   const incomplete = courseQuote.total == null || (withAcc && accQuote?.total == null) || missingLevels.length > 0;
 
   const answer = [
@@ -119,6 +126,9 @@ export default function SchoolCalculator({
       : "",
     withAcc && arrangementFee
       ? t("partnerSchools.copyArrangement", "Accommodation arrangement: {{total}}", { total: formatEur(arrangementFee) })
+      : "",
+    registrationFee
+      ? t("partnerSchools.copyRegistration", "Registration fee: {{total}}", { total: formatEur(registrationFee) })
       : "",
     supplement
       ? t("partnerSchools.copySummer", "Summer supplement: {{total}}", { total: formatEur(supplement) })
@@ -211,9 +221,14 @@ export default function SchoolCalculator({
                 type="number"
                 min={0}
                 value={accWeeks}
-                placeholder={String(weeks)}
+                placeholder={nightRate != null ? "0" : String(weeks)}
                 onChange={(e) => setAccWeeks(e.target.value)}
               />
+              {nightRate != null && (
+                <p className="text-xs text-muted-foreground">
+                  {t("partnerSchools.accNightHint", "Enter 0 for a single night at {{rate}}.", { rate: formatEur(nightRate) })}
+                </p>
+              )}
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>{t("partnerSchools.startDate", "Start date")}</Label>
@@ -253,6 +268,20 @@ export default function SchoolCalculator({
                 <span>{formatEur(accQuote.total)}</span>
               </li>
             )}
+            {withAcc && !accQuote?.tier && accQuote?.total != null && (
+              <li className="flex justify-between">
+                <span>
+                  {lang === "ar" && acc?.name_ar ? acc.name_ar : acc?.name_en} · {t("partnerSchools.night", "1 night")}
+                </span>
+                <span>{formatEur(accQuote.total)}</span>
+              </li>
+            )}
+            {registrationFee > 0 && (
+              <li className="flex justify-between">
+                <span>{t("partnerSchools.registrationFee", "Registration fee")}</span>
+                <span>{formatEur(registrationFee)}</span>
+              </li>
+            )}
           </ul>
         </div>
       </Card>
@@ -278,6 +307,9 @@ export default function SchoolCalculator({
 
         <div className="space-y-1.5 border-t border-border pt-3 text-sm">
           <Row label={t("partnerSchools.course", "Course")} value={courseTotalLabel} />
+          {registrationFee > 0 && (
+            <Row label={t("partnerSchools.registrationFee", "Registration fee")} value={formatEur(registrationFee)} />
+          )}
           {withAcc && (
             <>
               <Row label={t("partnerSchools.accommodation", "Accommodation")} value={formatEur(accQuote?.total ?? null)} />

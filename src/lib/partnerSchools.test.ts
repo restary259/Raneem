@@ -7,6 +7,7 @@ import {
   isRangePlan,
   quoteCourse,
   quoteAccommodation,
+  quoteStay,
   summerWeeks,
   formatSchoolDate,
   localizeIncludedItem,
@@ -80,6 +81,43 @@ describe("partnerSchools", () => {
     expect(quoteAccommodation(roomTiers, 1).total).toBe(290);
     expect(quoteAccommodation(roomTiers, 4).total).toBe(660);
     expect(quoteAccommodation(roomTiers, 13).total).toBe(2145);
+  });
+
+  describe("quoteStay (Alpha Aktiv publishes a nightly rate)", () => {
+    // Alpha Aktiv 'Single Student Residence A — Bismarckplatz' (2026 brochure):
+    // 1 week 300, 2 weeks 600, 3-4 weeks 245/week, ..., nightly 85.
+    const alphaTiers: AccommodationPriceTier[] = [
+      { from_weeks: 1, to_weeks: 1, total_price: 300, price_per_week: null, night_price: 85 },
+      { from_weeks: 2, to_weeks: 2, total_price: 600, price_per_week: null },
+      { from_weeks: 3, to_weeks: 4, total_price: 245, price_per_week: null },
+      { from_weeks: 5, to_weeks: 12, total_price: 230, price_per_week: null },
+      { from_weeks: 13, to_weeks: 26, total_price: 215, price_per_week: null },
+      { from_weeks: 27, to_weeks: null, total_price: 190, price_per_week: null },
+    ];
+
+    it("quotes a single night at the published nightly rate", () => {
+      const quote = quoteStay(alphaTiers, 0);
+      expect(quote.total).toBe(85);
+      expect(quote.weeks).toBe(0);
+      expect(quote.tier).toBeNull();
+    });
+
+    it("quotes a one-week stay as one week, not as a night", () => {
+      expect(quoteStay(alphaTiers, 1).total).toBe(300);
+      expect(quoteStay(alphaTiers, 1).tier).not.toBeNull();
+    });
+
+    it("quotes longer stays exactly like quoteAccommodation", () => {
+      expect(quoteStay(alphaTiers, 4).total).toBe(245);
+      expect(quoteStay(alphaTiers, 12).total).toBe(230);
+      expect(quoteStay(alphaTiers, 40).total).toBe(190);
+    });
+
+    it("falls back to zero when the school prints no nightly rate", () => {
+      const noNight = roomTiers;
+      expect(noNight.some((t) => t.night_price != null)).toBe(false);
+      expect(quoteStay(noNight, 0).total).toBe(0);
+    });
   });
 
   it("counts only the weeks that fall inside the summer window", () => {

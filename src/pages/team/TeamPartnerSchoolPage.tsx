@@ -111,6 +111,13 @@ export default function TeamPartnerSchoolPage() {
           );
         }
       }
+      if (c.registration_fee != null && has("registration", "fee", "تسجيل", "رسوم")) {
+        push(
+          `${name} — ${t("partnerSchools.registrationFee", "Registration fee")}: ${formatEur(c.registration_fee)}`,
+          c.source_name,
+          c.last_verified_at,
+        );
+      }
       if (has("schedule", "time", "monday", "دوام", "وقت")) {
         push(
           `${name} — ${loc(c.schedule_text_en, c.schedule_text_ar)} · ${t("partnerSchools.maxStudents", "Maximum {{count}} students", { count: c.max_students })} · ${loc(c.start_rule_en, c.start_rule_ar)}`,
@@ -388,6 +395,11 @@ export default function TeamPartnerSchoolPage() {
                     <PriceTable title={t("partnerSchools.extensionPrice", "Extension price")} rows={extension} lang={lang} />
                   )}
                 </div>
+                {c.registration_fee != null && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {t("partnerSchools.registrationFee", "Registration fee")}: {formatEur(c.registration_fee)}
+                  </p>
+                )}
                 <SourceLine name={c.source_name} doc={c.source_document} verified={c.last_verified_at} t={(k, d) => t(k, d ?? k)} />
               </Card>
             );
@@ -476,6 +488,11 @@ export default function TeamPartnerSchoolPage() {
                           {x.extra_day_price != null && (
                             <span className="block text-xs font-normal text-muted-foreground">
                               {t("partnerSchools.extraDay", "Extra day")}: {formatEur(x.extra_day_price)}
+                            </span>
+                          )}
+                          {x.night_price != null && (
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              {t("partnerSchools.night", "1 night")}: {formatEur(x.night_price)}
                             </span>
                           )}
                         </span>

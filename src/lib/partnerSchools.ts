@@ -20,6 +20,8 @@ export interface AccommodationPriceTier {
   total_price: number | null;
   price_per_week: number | null;
   extra_day_price?: number | null;
+  /** Published rate for a single night, where the school prints one. */
+  night_price?: number | null;
 }
 
 export interface LevelDuration {
@@ -182,6 +184,21 @@ export function quoteAccommodation(
     };
   }
   return { weeks, total: null, perWeek: null, tier };
+}
+
+/**
+ * Quotes a stay that may be shorter than a week: weeks = 0 means a single
+ * night, priced from the published nightly rate when the school prints one.
+ * Falls back to the plain weekly quote (0 for a zero-week stay) otherwise.
+ */
+export function quoteStay(
+  tiers: AccommodationPriceTier[],
+  weeks: number,
+): AccommodationQuote {
+  if (weeks > 0) return quoteAccommodation(tiers, weeks);
+  const night = tiers.find((t) => t.night_price != null)?.night_price ?? null;
+  if (night == null) return quoteAccommodation(tiers, weeks);
+  return { weeks: 0, total: night, perWeek: null, tier: null };
 }
 
 /** Number of whole weeks of a stay that fall inside the school's summer window. */

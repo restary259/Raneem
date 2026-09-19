@@ -1711,57 +1711,174 @@ What REMAINS (intentional, out of removal scope):
 - types.ts: single stale entry `get_master_partner_override_rate` removed;
   profiles/partner_recruit_applications blocks already had no master fields.
 
-## Partner Schools: GoAcademy! Düsseldorf 2026 (2026-09-18)
-- Third Partner School on the internal reference tool, seeded exactly like KAPITO
-  and F+U (same tables, same `TeamPartnerSchoolPage`; no school-specific UI, no
-  calculator changes). Route `/team/partner-schools/germany/goacademy-dusseldorf`,
-  slug `goacademy-dusseldorf`, linked to catalog school `go-academy` via
-  `catalog_school_id`.
-- Migration `20260918210000_add_goacademy_partner_school.sql` (MANUAL DEPLOY —
-  `supabase db push` or dashboard SQL editor; not applied by Vercel build or CI).
-  Idempotent DO-block guard: skips entirely when `partner_schools.slug =
-  'goacademy-dusseldorf'` exists. `partner_countries.germany` insert uses
-  `ON CONFLICT (slug) DO NOTHING`. Depends on two earlier additive columns:
-  `school_accommodations.catalog_accommodation_ids` (`20260918193420`) and
-  `school_level_durations.weeks_max` (`20260918183959`) — both timestamped before
-  this file.
-- Seeded rows: 2026 EUR price version (is_current) → 7 courses → 5 level
-  durations → 7 accommodations → 16 policies → 3 notes → 5 sources.
-- Courses: `standard_intensive` (20 + 5 LMS, DARB standard, cefr A1–C1,
-  tiers 1–4:190 / 5–24:175 / 25–52:165), `high_intensive` (30 + 5 LMS,
-  tier 1–2:315), `university_pathway` (tier 24–48:175), `vocational_training`
-  (tier 12–48:175), `evening_course` (4 lessons/wk, monthly pricing),
-  `german_for_doctors` (€920 total), `german_for_nursing` (€790 total). Courses
-  with only total/monthly prices get rows with NO tiers → excluded from the DARB
-  standard set (`is_darb_standard=false`) and from the calculator; their verified
-  totals/dates/packages are recorded as policies (doctors/nursing start dates,
-  University Pathway packages €4,900/€6,900/€8,900, evening €185/€175/€160).
-- Accommodations: `standard_shared/single`, `comfort_shared/single`, `studio`,
-  `host_family_bb`, `host_family_half` — each linked to the matching catalog
-  accommodation by `name_en` subselect (`catalog_accommodation_ids`), with
-  `from_price_per_week` = the 24+ catalog rate (130/180/150/210/270/250/300).
-  `arrangement_fee` 90, deposit 250, airport transfer 100/150 recorded as data
-  (NOT added to calculator totals — same decision as KAPITO/F+U).
+## Partner Schools knowledge base (2026-09-18)
+
+Internal reference tool for partner language schools, read-only for team/admin.
+Tables: `partner_countries`, `partner_schools`, `school_price_versions`,
+`school_courses`, `school_course_price_tiers`, `school_level_durations`,
+`school_accommodations`, `school_accommodation_price_tiers`,
+`school_start_dates`, `school_policies`, `school_notes`, `school_sources`.
+
+- Pages: `src/pages/team/TeamPartnerSchoolsPage.tsx` (country list) ->
+  `TeamPartnerSchoolsCountryPage.tsx` -> `TeamPartnerSchoolPage.tsx` (8 tabs).
+- Data access: `src/hooks/usePartnerSchools.ts` (never writes - admin editing
+  screens are a separate, later phase).
+- Pricing logic lives only in `src/lib/partnerSchools.ts` (testable, no JSX):
+  course tuition puts the WHOLE booking in one weekly band chosen by total
+  weeks; accommodation uses fixed totals for short stays then a weekly rate.
+- `src/components/team/partnerSchools/SchoolCalculator.tsx` is the single
+  calculator; every school plugs into it. No second calculator.
+
+**Schools seeded (all 2026, `sort_order` = card order):**
+1. `kapito` - KAPITO Sprachschule, Munster (migration
+   `20260918102914_*.sql`)
+2. `goacademy-dusseldorf` - GoAcademy! Dusseldorf (migration
+   `20260918210000_add_goacademy_partner_school.sql`), linked to catalog
+   school `go-academy`
+3. `alpha-aktiv` - Alpha Aktiv Sprachschule, Heidelberg (migration
+   `20260918200000_partner_school_alpha_aktiv_2026.sql`), linked to catalog
+   school `alpha-aktiv`
+
+There is NO F+U partner school. F+U Academy of Languages appears in the DARB
+Catalog (`20260820000000_school_catalog_seed.sql`) and in
+`.lovable/plan/partner-schools-add-f-u-academy-of-languages-...md`, but no
+partner-school migration was ever written for it. Do not cite it as an
+existing precedent.
+
+All migrations here are MANUAL DEPLOY (`supabase db push` or the dashboard SQL
+editor) - the Vercel build and CI do not apply them. Each is idempotent and
+guarded by its unique `partner_schools.slug`.
+
+### Catalog linking (single mechanism, do not fork)
+
+- `school_accommodations.catalog_accommodation_ids uuid[]` points a housing
+  option at the exact existing catalog `accommodations` row(s).
+- `partnerSchoolCatalogUrl()` builds
+  `/team/catalog?school=<catalogSchoolId>&tab=accommodations&ids=<id,id>`;
+  `TeamCatalogPage` reads `ids` and, when exactly one id, opens its detail.
+- **Never create duplicate catalog rows.** Match by `name_en`, link the id.
+  A school-only option (host families) keeps the empty list and renders
+  "Not in the DARB catalog - the school arranges this option directly."
+
+### Two price sources must agree
+
+The Partner School page and Team Catalog render the same rooms, so a brochure
+price must land in both. When adding one, correct the catalog row too
+(`price` = cheapest long-stay weekly band; `price_tiers` = the same bands) and
+keep `from_price_per_week` equal to the 24+/long-stay rate. Never leave one
+screen at a different price. The Alpha Aktiv migration fixes the
+"Double Not Central" 27+ band (140 -> 130) and adds the published apartments
+the catalog was missing.
+
+### Bilingual + source rules
+
+- Every field has EN + AR where the schema supports it. Reuse existing
+  `partnerSchools.*` keys in `public/locales/{en,ar}/dashboard.json`; do not
+  invent alternate Arabic terminology. `src/lib/i18nKeys.test.ts` is the
+  parity guard - a key referenced from source must exist in BOTH locales.
+- Each fact carries `source_name` / `source_document` / `source_year` /
+  `last_verified_at`. Anything the source does not print stays empty and
+  reads "Not recorded - verify with the school" - never invent a value.
+  Do not write a `last_verified_at` you did not actually verify.
+- `school_notes` kinds drive the page and have KAPITO-specific fallbacks:
+  `accommodation` (else a KAPITO single-room paragraph shows),
+  `registration_official` (else "Official KAPITO procedure"),
+  `darb_recommendation`. A new school MUST seed its own notes or KAPITO text
+  leaks onto its page.
+- Course inclusions used in a seed must have an `INCLUDED_ITEM_AR` entry,
+  otherwise Arabic silently falls back to English.
+
+### Additive columns
+
+Added progressively; each is NULL for schools seeded before it, so their
+rendering and calculator output are unchanged.
+
+- `school_accommodation_price_tiers.night_price` (Alpha Aktiv) - published
+  "1 night" rate. Calculator: accommodation weeks = 0 quotes `night_price`
+  via `quoteStay()`. Also shown in the accommodation tier row.
+- `school_courses.registration_fee` (Alpha Aktiv) - per-course fee. Shown in
+  the courses tab and added to the calculator's payable total and "Copy
+  answer".
+- `school_level_durations.weeks_max` (GoAcademy) - lets a level publish a
+  duration range instead of one number.
+
+## Partner Schools: GoAcademy! Dusseldorf 2026 (2026-09-18)
+
+Second Partner School, seeded exactly like KAPITO (same tables, same
+`TeamPartnerSchoolPage`; no school-specific UI, no calculator changes). Route
+`/team/partner-schools/germany/goacademy-dusseldorf`, slug
+`goacademy-dusseldorf`, linked to catalog school `go-academy` via
+`catalog_school_id`. Depends on the additive columns
+`school_accommodations.catalog_accommodation_ids` (`20260918193420`) and
+`school_level_durations.weeks_max` (`20260918183959`), both timestamped
+earlier.
+
+- Seeded rows: 2026 EUR price version (is_current) -> 7 courses -> 5 level
+  durations -> 7 accommodations -> 16 policies -> 3 notes -> 5 sources.
+- Courses: `standard_intensive` (20 + 5 LMS, DARB standard, cefr A1-C1,
+  tiers 1-4:190 / 5-24:175 / 25-52:165), `high_intensive` (30 + 5 LMS,
+  tier 1-2:315), `university_pathway` (tier 24-48:175), `vocational_training`
+  (tier 12-48:175), `evening_course` (4 lessons/wk, monthly pricing),
+  `german_for_doctors` (EUR 920 total), `german_for_nursing` (EUR 790 total).
+  Courses with only total/monthly prices get rows with NO tiers -> excluded
+  from the DARB standard set (`is_darb_standard=false`) and from the
+  calculator; their verified totals/dates/packages are recorded as policies
+  (doctors/nursing start dates, University Pathway packages
+  4,900/6,900/8,900, evening 185/175/160).
+- Accommodations: `standard_shared/single`, `comfort_shared/single`,
+  `studio`, `host_family_bb`, `host_family_half` - each linked to the matching
+  catalog accommodation by `name_en` subselect, with `from_price_per_week` =
+  the 24+ catalog rate (130/180/150/210/270/250/300). `arrangement_fee` 90,
+  deposit 250, airport transfer 100/150 recorded as data (NOT added to
+  calculator totals - same decision as KAPITO).
 - Policies span categories registration/arrival/accommodation/course/program/
-  exam/about/other (registration €60, placement €90, transfer €100 one-way /
-  €150 both ways, telc/TestDaF/TestAS/DSH exam fees, ISO/AZAV + IALC memberships).
-- The 3 `school_notes` kinds (`accommodation`, `registration_official`,
-  `darb_recommendation`) are the SAME kinds `TeamPartnerSchoolPage.notesOf()`
-  reads, so the KAPITO-specific fallback strings are suppressed for GoAcademy
-  exactly as for F+U. `featured_weeks` NULL; `last_verified_at` NULL everywhere
-  (no fake verification dates); `source_year` = 2026.
+  exam/about/other (registration EUR 60, placement EUR 90, transfer EUR 100
+  one-way / EUR 150 both ways, telc/TestDaF/TestAS/DSH exam fees, ISO/AZAV +
+  IALC memberships).
+- The 3 `school_notes` kinds are the SAME kinds `TeamPartnerSchoolPage.notesOf()`
+  reads, so the KAPITO-specific fallback strings are suppressed for GoAcademy.
+  `featured_weeks` NULL; `last_verified_at` NULL everywhere (no fake
+  verification dates); `source_year` = 2026.
 - `school_sources` holds the five supplied GoAcademy 2026 documents (German
   courses brochure, price list, accommodation doc, agency brochure, IH school
-  presentation — exact filenames from `Downloads/`).
+  presentation - exact filenames from `Downloads/`).
 - `src/lib/partnerSchools.ts`: `INCLUDED_ITEM_AR` +6 entries so every
-  `included_items` string used in the seed localizes to Arabic (no silent English
-  fallback): certificate, LMS tuition, weekly counselling, university application
-  support, visa assistance, TestDaF/telc/TestAS/DSH prep at the school centre.
+  `included_items` string used in the seed localizes to Arabic (no silent
+  English fallback): certificate, LMS tuition, weekly counselling, university
+  application support, visa assistance, TestDaF/telc/TestAS/DSH prep at the
+  school centre.
 - `src/lib/partnerSchools.test.ts`: GoAcademy describe block using the seeded
-  shapes — A1→C1 = 44–50 weeks (published ranges, `weeks_max`), 44×165=€7,260 /
-  50×165=€8,250 in the 25–52 band, 4 wks €760, 12 wks €2,100, accommodation
-  4/10/26 wks = €660/€1,450/€3,380, Arabic included-item localization.
-- Build: `npm run build` (tsc+vite) clean; `npx vitest run` 1406/1406 pass
-  (70 files) incl. i18n parity guard. Live §27 QA (list/detail/tabs/EN-AR,
-  no duplicate catalog entry, calculators unchanged) must be done after the
-  migration is applied.
+  shapes - A1->C1 = 44-50 weeks (published ranges, `weeks_max`), 44x165 =
+  EUR 7,260 / 50x165 = EUR 8,250 in the 25-52 band, 4 wks EUR 760, 12 wks
+  EUR 2,100, accommodation 4/10/26 wks = EUR 660/1,450/3,380, Arabic
+  included-item localization.
+- Live QA (list/detail/tabs/EN-AR, no duplicate catalog entry, calculators
+  unchanged) must be done after the migration is applied.
+
+## Partner Schools: Alpha Aktiv Sprachschule 2026 (2026-09-18)
+
+Third Partner School, same architecture as KAPITO and GoAcademy. Route
+`/team/partner-schools/germany/alpha-aktiv`, slug `alpha-aktiv`, linked to
+catalog school `alpha-aktiv`.
+
+- Seeded from the official 24-page Course Program 2026 brochure plus the
+  official website where the brochure is silent. Seeded rows: 2026 EUR price
+  version -> 11 courses -> 5 level durations (A1-C1) -> 14 accommodations ->
+  12 start dates -> 5 policies -> 4 notes -> 2 sources.
+- Courses: `intensive20` (DARB standard, 215/190/165/150 across four weekly
+  bands), `superintensive25` (260/230/210/195), `superintensive30_conversation`
+  (275), `intensive20_plus5` (415/390/365), `intensive20_plus10`
+  (615/590/565), `private_normal`, `private_exam_prep`, `evening`,
+  `prep_dsh_testdaf` (205), `prep_telc` (205), `school_preparation` (885).
+  Registration fee EUR 50 on every course.
+- **C2 is deliberately absent from `school_level_durations`** because the
+  source publishes no duration for it. The calculator then renders "not
+  recorded" instead of guessing - do not "fix" this by inventing a number.
+- Accommodations: single/double student residence and apartments, each with the
+  published weekly totals plus a `night_price`; `arrangement_fee` 100.
+  `host_family` has no price (the brochure does not publish one) and stays
+  unlinked to the catalog.
+- Catalog consistency: the migration also adds the three published apartments
+  the catalog was missing and corrects "Student Residence - Double Not
+  Central" 27+ band from 140 to 130.
+- Live QA must be done after the migration is applied.
