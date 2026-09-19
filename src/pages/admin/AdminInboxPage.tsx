@@ -3,13 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import ContactsManager from "@/components/admin/ContactsManager";
 import RecruitApplicationsPanel from "@/components/admin/RecruitApplicationsPanel";
 import DataRequestsPanel from "@/components/admin/DataRequestsPanel";
+import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
-import { Inbox, Search, Download, FileText } from "lucide-react";
+import { Inbox, Search, Download, FileText, MessageCircleMore } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from "@/utils/export";
 import { useExportContext } from "@/utils/export/useExportContext";
@@ -24,16 +26,22 @@ type Submission = {
   created_at: string;
 };
 
+type InboxTab = "whatsapp" | "all" | "partnership" | "contact" | "recruits" | "dataRequests";
+const INBOX_TABS: InboxTab[] = ["whatsapp", "all", "partnership", "contact", "recruits", "dataRequests"];
+
 const isPartnership = (row: Submission) =>
   (row.form_source || "").toLowerCase().includes("partner");
 
 const AdminInboxPage = () => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { author, locale: exportLocale, rtl } = useExportContext();
   const [rows, setRows] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"all" | "partnership" | "contact" | "recruits" | "dataRequests">("all");
+  const requestedTab = searchParams.get("tab");
+  const initialTab = INBOX_TABS.includes(requestedTab as InboxTab) ? requestedTab as InboxTab : "whatsapp";
+  const [tab, setTab] = useState<InboxTab>(initialTab);
   const [search, setSearch] = useState("");
   const [recruitCount, setRecruitCount] = useState(0);
   const [recruitPending, setRecruitPending] = useState(0);
@@ -44,6 +52,12 @@ const AdminInboxPage = () => {
     setDataReqCount(total);
     setDataReqPending(pending);
   }, []);
+
+  const changeTab = useCallback((value: string) => {
+    const next = INBOX_TABS.includes(value as InboxTab) ? value as InboxTab : "whatsapp";
+    setTab(next);
+    setSearchParams(next === "whatsapp" ? { tab: "whatsapp" } : { tab: next }, { replace: true });
+  }, [setSearchParams]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -176,10 +190,10 @@ const AdminInboxPage = () => {
         {newCount > 0 && <Badge variant="destructive" className="ms-auto">{newCount}</Badge>}
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="space-y-4">
+      <Tabs value={tab} onValueChange={changeTab} className="space-y-4">
         {/* Toolbar: search + export on top, tabs directly beneath */}
         <div className="sticky top-14 z-10 -mx-4 sm:-mx-6 space-y-3 bg-background/95 px-4 sm:px-6 py-3 backdrop-blur">
-          <div className="flex flex-wrap items-center gap-3">
+          {tab !== "whatsapp" && <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -197,10 +211,11 @@ const AdminInboxPage = () => {
               <FileText className="h-4 w-4 me-2" />
               {t("sheets.exportPdf")}
             </Button>
-          </div>
+          </div>}
 
           <SegmentedTabs
             items={[
+              { value: "whatsapp", icon: MessageCircleMore, label: t("admin.inbox.source.whatsapp", "WhatsApp") },
               { value: "all", label: tabLabel("admin.inbox.source.all", "All", searched.length) },
               { value: "partnership", label: tabLabel("admin.inbox.source.partnership", "Partnership", partnership.length) },
               { value: "contact", label: tabLabel("admin.inbox.source.contact", "Contact", contact.length) },
@@ -226,7 +241,11 @@ const AdminInboxPage = () => {
           />
         </div>
 
-        {loading ? (
+        <TabsContent value="whatsapp" forceMount className={tab === "whatsapp" ? "mt-0" : "hidden"}>
+          <WhatsAppInboxPage embedded />
+        </TabsContent>
+
+        {tab !== "whatsapp" && (loading ? (
           <LoadingState variant="table" rows={6} />
         ) : searched.length === 0 && tab !== "recruits" && tab !== "dataRequests" ? (
           <EmptyState
@@ -245,7 +264,7 @@ const AdminInboxPage = () => {
               <ContactsManager contacts={contact} onRefresh={load} />
             </TabsContent>
           </>
-        )}
+        ))}
 
         {/* Mounted always so the tab badge stays accurate. */}
         <TabsContent value="recruits" forceMount className={tab === "recruits" ? "mt-0" : "hidden"}>

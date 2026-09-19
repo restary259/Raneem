@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
@@ -25,7 +26,7 @@ import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, syncWhatsAppTemplates, updateConversation, updateLead,
+  requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -35,7 +36,7 @@ const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
 const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 
-export default function WhatsAppInboxPage() {
+export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boolean }) {
   const { t, i18n } = useTranslation("whatsapp");
   const { user } = useAuth();
   const { toast } = useToast();
@@ -69,6 +70,10 @@ export default function WhatsAppInboxPage() {
   const [templateCategory, setTemplateCategory] = useState<"UTILITY" | "MARKETING">("UTILITY");
   const [templateBody, setTemplateBody] = useState("");
   const [templateCreating, setTemplateCreating] = useState(false);
+  const [startOpen, setStartOpen] = useState(false);
+  const [startNumber, setStartNumber] = useState("");
+  const [startName, setStartName] = useState("");
+  const [starting, setStarting] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
@@ -190,6 +195,18 @@ export default function WhatsAppInboxPage() {
     } catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.templates") }); }
     finally { setTemplateCreating(false); }
   };
+  const startConversation = async () => {
+    if (!startNumber.trim() || starting) return;
+    setStarting(true);
+    try {
+      const result = await startWhatsAppConversation(startNumber, startName);
+      await load();
+      setSelectedId(result.conversation.id);
+      setStartOpen(false); setStartNumber(""); setStartName("");
+      toast({ description: result.created ? t("start.created") : t("start.existing") });
+    } catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.start") }); }
+    finally { setStarting(false); }
+  };
 
   const newLeads = threads.filter((x) => x.lead.lead_stage === "new").length;
   const unassigned = threads.filter((x) => !x.assigned_to).length;
@@ -200,8 +217,9 @@ export default function WhatsAppInboxPage() {
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
   return (
-    <div dir={rtl ? "rtl" : "ltr"} className="mx-auto w-full max-w-[1800px] pb-20 md:pb-4">
-      <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<div className="flex items-center gap-2"><Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5" />{t("connected")}</Badge><Button size="icon" variant="outline" onClick={load} aria-label={t("actions.refresh")}><RefreshCw className="h-4 w-4" /></Button></div>} />
+    <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto w-full max-w-[1800px] pb-20 md:pb-4", embedded && "pb-4")}>
+      {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions connectedLabel={t("connected")} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
+      {embedded && <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions connectedLabel={t("connected")} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>}
       <Tabs defaultValue="inbox" className="space-y-3">
         <TabsList className="grid w-full grid-cols-3 md:w-[470px]"><TabsTrigger value="inbox">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>
         <TabsContent value="inbox" className="m-0">
@@ -236,8 +254,19 @@ export default function WhatsAppInboxPage() {
         <TabsContent value="dashboard" className="m-0 space-y-4"><div className="grid gap-3 sm:grid-cols-3"><Metric icon={Sparkles} label={t("dashboard.newLeads")} value={newLeads} /><Metric icon={UsersRound} label={t("dashboard.unassigned")} value={unassigned} /><Metric icon={Clock3} label={t("dashboard.response")} value={responseAvg === null ? "—" : `${responseAvg} ${t("dashboard.minutes")}`} /></div><Card className="rounded-xl p-5 shadow-none"><h2 className="mb-4 font-semibold">{t("dashboard.byStage")}</h2>{threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{t(`stage.${s}`)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}</Card></TabsContent>
         <TabsContent value="templates" className="m-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-4"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>
       </Tabs>
+      <Dialog open={startOpen} onOpenChange={setStartOpen}>
+        <DialogContent dir={rtl ? "rtl" : "ltr"}>
+          <DialogHeader><DialogTitle>{t("start.title")}</DialogTitle><DialogDescription>{t("start.description")}</DialogDescription></DialogHeader>
+          <div className="space-y-3"><div><Label htmlFor="wa-number">{t("profile.number")}</Label><Input id="wa-number" dir="ltr" value={startNumber} onChange={(event) => setStartNumber(event.target.value)} placeholder="0529402168" /></div><div><Label htmlFor="wa-name">{t("profile.studentName")}</Label><Input id="wa-name" value={startName} onChange={(event) => setStartName(event.target.value)} placeholder={t("start.nameOptional")} /></div></div>
+          <DialogFooter><Button disabled={!startNumber.trim() || starting} onClick={() => void startConversation()}><MessageCircle className="me-2 h-4 w-4" />{t("start.create")}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+function WhatsAppActions({ connectedLabel, refreshLabel, startLabel, onRefresh, onStart }: { connectedLabel: string; refreshLabel: string; startLabel: string; onRefresh: () => void; onStart: () => void }) {
+  return <div className="flex flex-wrap items-center gap-2"><Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5" />{connectedLabel}</Badge><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
 }
 
 function Field({ label, value, onBlur, type = "text" }: { label: string; value: string; onBlur: (value: string) => void; type?: string }) {

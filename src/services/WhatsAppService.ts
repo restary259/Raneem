@@ -85,3 +85,11 @@ export function syncWhatsAppTemplates() {
 export function createWhatsAppTemplate(input: { purpose: string; language: "ar" | "en"; category: "UTILITY" | "MARKETING"; body: string }) {
   return invokeWhatsAppConnector<{ created: boolean; provider_name: string; approval_status: "PENDING" }>({ action: "create_template", ...input });
 }
+
+export function startWhatsAppConversation(whatsappNumber: string, studentName = "") {
+  return invokeWhatsAppConnector<{ created: boolean; lead: WhatsAppLead; conversation: WhatsAppConversation }>({
+    action: "start_conversation",
+    whatsapp_number: whatsappNumber,
+    student_name: studentName,
+  });
+}

@@ -313,7 +313,7 @@ const App = () => {
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="inbox" element={<AdminInboxPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
-              <Route path="whatsapp" element={<WhatsAppInboxPage />} />
+              <Route path="whatsapp" element={<Navigate to="/admin/inbox?tab=whatsapp" replace />} />
 
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="commission" element={<AdminCommissionHubPage />} />

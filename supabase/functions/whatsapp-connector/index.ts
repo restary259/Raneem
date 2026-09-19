@@ -27,6 +27,15 @@ function digitsOnly(value: unknown) {
   return String(value ?? "").replace(/\D/g, "");
 }
 
+function normalizeWhatsAppNumber(value: unknown) {
+  const digits = digitsOnly(value);
+  if (/^05\d{8}$/.test(digits)) return `972${digits.slice(1)}`;
+  if (/^00972\d{9}$/.test(digits)) return digits.slice(2);
+  if (/^972\d{9}$/.test(digits)) return digits;
+  if (digits.length >= 8 && digits.length <= 15 && !digits.startsWith("0")) return digits;
+  return null;
+}
+
 function purposeForTemplate(name: string): Purpose | null {
   return PURPOSES.find((purpose) => name.includes(purpose)) ?? null;
 }
@@ -72,6 +81,62 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
+
+    if (action === "start_conversation") {
+      const whatsappNumber = normalizeWhatsAppNumber(input?.whatsapp_number);
+      const studentName = String(input?.student_name ?? "").trim().slice(0, 200);
+      if (!whatsappNumber) return json({ error: "Enter a valid WhatsApp number with its country code" }, 400, corsHeaders);
+
+      const { data: existingLead, error: existingError } = await admin
+        .from("whatsapp_leads")
+        .select("*")
+        .eq("whatsapp_number", whatsappNumber)
+        .maybeSingle();
+      if (existingError) throw existingError;
+
+      let lead = existingLead;
+      let created = false;
+      if (!lead) {
+        const { data: insertedLead, error: leadError } = await admin.from("whatsapp_leads").insert({
+          whatsapp_number: whatsappNumber,
+          student_name: studentName,
+          source: "whatsapp",
+          consent_status: "unknown",
+          lead_stage: "new",
+          created_by: auth.userId,
+        }).select("*").single();
+        if (leadError) {
+          if (leadError.code !== "23505") throw leadError;
+          const { data: racedLead, error: racedError } = await admin.from("whatsapp_leads").select("*").eq("whatsapp_number", whatsappNumber).single();
+          if (racedError) throw racedError;
+          lead = racedLead;
+        } else {
+          lead = insertedLead;
+          created = true;
+        }
+      }
+      if (!lead) return json({ error: "WhatsApp lead could not be created" }, 500, corsHeaders);
+
+      const { data: existingConversation, error: conversationReadError } = await admin.from("whatsapp_conversations").select("*").eq("lead_id", lead.id).maybeSingle();
+      if (conversationReadError) throw conversationReadError;
+      let conversation = existingConversation;
+      if (!conversation) {
+        const { data: insertedConversation, error: conversationError } = await admin.from("whatsapp_conversations").insert({
+          lead_id: lead.id,
+          state: "new",
+          human_takeover: true,
+          takeover_by: auth.userId,
+          takeover_at: new Date().toISOString(),
+        }).select("*").single();
+        if (conversationError) {
+          if (conversationError.code !== "23505") throw conversationError;
+          const { data: racedConversation, error: racedConversationError } = await admin.from("whatsapp_conversations").select("*").eq("lead_id", lead.id).single();
+          if (racedConversationError) throw racedConversationError;
+          conversation = racedConversation;
+        } else conversation = insertedConversation;
+      }
+      return json({ created, lead, conversation }, 200, corsHeaders);
+    }
 
     if (action === "sync_templates") {
       const upstream = await provider("/message_templates?fields=name,status,language,category,components&limit=100", "GET");
