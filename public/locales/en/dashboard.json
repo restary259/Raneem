@@ -4231,7 +4231,8 @@
     "section": {
       "direct": "Direct",
       "cases": "Cases",
-      "partners": "Partners"
+      "partners": "Partners",
+      "whatsapp": "WhatsApp"
     },
     "delete": {
       "button": "Delete message"
