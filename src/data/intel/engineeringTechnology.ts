@@ -119,6 +119,7 @@ const SHARED_FOREIGN_QUALIFICATION = fact(
 
 const SHARED_LANGUAGE = fact(
   {
+    language: 'German',
     minimumLevel: 'C1',
     certificates: [
       'TestDaF with at least level 4 in all four parts',
