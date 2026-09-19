@@ -26,8 +26,8 @@ type Submission = {
   created_at: string;
 };
 
-type InboxTab = "whatsapp" | "all" | "partnership" | "contact" | "recruits" | "dataRequests";
-const INBOX_TABS: InboxTab[] = ["whatsapp", "all", "partnership", "contact", "recruits", "dataRequests"];
+type InboxTab = "all" | "partnership" | "contact" | "recruits" | "dataRequests";
+const INBOX_TABS: InboxTab[] = ["all", "partnership", "contact", "recruits", "dataRequests"];
 
 const isPartnership = (row: Submission) =>
   (row.form_source || "").toLowerCase().includes("partner");
