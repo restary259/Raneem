@@ -11,11 +11,13 @@ import type { MajorIntel } from './types';
 import { COMPUTER_SCIENCE_INTEL } from './computerScience';
 import { ENGINEERING_TECHNOLOGY_MAJORS } from './engineeringTechnology';
 import { COMPUTER_IT_MAJORS } from './computerIt';
+import { REMAINING_MAJOR_INTEL } from './remainingMajorIntel';
 
 export const VERIFIED_MAJORS: MajorIntel[] = [
   COMPUTER_SCIENCE_INTEL,
   ...ENGINEERING_TECHNOLOGY_MAJORS,
   ...COMPUTER_IT_MAJORS,
+  ...REMAINING_MAJOR_INTEL,
 ];
 
 const VERIFIED_IDS = new Set(VERIFIED_MAJORS.map((m) => m.id));
