@@ -17,6 +17,7 @@ import { useTeamCatalog } from '@/hooks/useTeamCatalog';
 import { bagrutToGermanGrade } from '@/utils/gradeConverter';
 import type { SubjectEntry } from '@/lib/intel/subjects';
 import type { ProgramIntel } from '@/data/intel/types';
+import { getRecommendedUniversityMeta } from '@/data/intel/universityRecommendations';
 
 const GRADE_SCALE = [95, 90, 85, 80, 75, 70, 65, 60, 55];
 const CEFR_LABELS = {
@@ -338,27 +339,84 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
           </TabsContent>
 
           {/* Universities --------------------------------------------------- */}
-          <TabsContent value="universities" className="mt-4 space-y-2">
+          <TabsContent value="universities" className="mt-4 space-y-3">
+            {(intel?.universityRecommendations?.length ?? 0) >= 4 && (
+              <section className="space-y-2">
+                <div className="flex items-end justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold">{t('intel.recommendations.title', 'Recommended universities')}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('intel.recommendations.subtitle', 'DARB-ranked options: TU9 is prioritized when the major has a concrete TU9 route.')}
+                    </p>
+                  </div>
+                  <Badge variant="outline">{t('intel.recommendations.count', '4+ options')}</Badge>
+                </div>
+                <div className="grid gap-2 lg:grid-cols-2">
+                  {intel!.universityRecommendations!.slice(0, 4).map((recommendation) => {
+                    const meta = getRecommendedUniversityMeta(recommendation.universityId);
+                    if (!meta) return null;
+                    return (
+                      <a
+                        key={recommendation.universityId}
+                        href={recommendation.source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
+                      >
+                        <span className="min-w-0">
+                          <span className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-semibold">
+                              {isAr ? meta.nameAR : meta.name}
+                            </span>
+                            {recommendation.primary && (
+                              <Badge variant="default" className="text-[10px]">
+                                {t('intel.recommendations.primary', 'Primary')}
+                              </Badge>
+                            )}
+                            {recommendation.tu9 && (
+                              <Badge variant="outline" className="text-[10px]">
+                                {t('intel.recommendations.tu9', 'TU9 priority')}
+                              </Badge>
+                            )}
+                          </span>
+                          <span className="mt-1 block text-xs text-muted-foreground">
+                            #{recommendation.rank} · {meta.city} · {recommendation.match === 'exact'
+                              ? t('intel.recommendations.exact', 'Exact programme route')
+                              : t('intel.recommendations.related', 'Related route — verify exact programme')}
+                          </span>
+                        </span>
+                        <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                      </a>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
             {programs.length === 0 ? (
               <Empty />
             ) : (
-              programs.slice(0, 4).map((program) => (
-                <a
-                  key={program.id}
-                  href={program.programUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
-                >
-                  <span className="min-w-0">
-                    <span className="block font-medium">{isAr ? program.universityNameAR : program.universityName}</span>
-                    <span className="block text-xs text-muted-foreground">
-                      {isAr ? program.programNameAR : program.programName} · {isAr ? program.cityAR : program.city}
+              <section className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('intel.recommendations.verifiedRoutes', 'Verified programme routes on file')}
+                </p>
+                {programs.slice(0, 6).map((program) => (
+                  <a
+                    key={program.id}
+                    href={program.programUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-medium">{isAr ? program.universityNameAR : program.universityName}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {isAr ? program.programNameAR : program.programName} · {isAr ? program.cityAR : program.city}
+                      </span>
                     </span>
-                  </span>
-                  <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                </a>
-              ))
+                    <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                  </a>
+                ))}
+              </section>
             )}
           </TabsContent>
         </Tabs>
