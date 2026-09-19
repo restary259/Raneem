@@ -54,12 +54,11 @@ import {
   startDirectThread,
   type DirectThread,
 } from "@/services/DirectMessageService";
-import { listWhatsAppThreads, type WhatsAppThread } from "@/services/WhatsAppService";
 
 const FS_CHAT =
   "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none";
 
-type Filter = "all" | "cases" | "direct" | "partners" | "whatsapp" | "unread";
+type Filter = "all" | "cases" | "direct" | "partners" | "unread";
 
 export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
@@ -72,7 +71,6 @@ export default function CaseMessagesInboxPage() {
 
   const [threads, setThreads] = useState<CaseMessageThread[]>([]);
   const [directThreads, setDirectThreads] = useState<DirectThread[]>([]);
-  const [whatsappThreads, setWhatsappThreads] = useState<WhatsAppThread[]>([]);
   const [muted, setMuted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -124,13 +122,9 @@ export default function CaseMessagesInboxPage() {
         listMyCaseThreads(user.id),
         listMyDirectThreads(user.id).catch(() => [] as DirectThread[]),
         listMutedThreads(user.id).catch(() => []),
-        role === "admin" || role === "team_member"
-          ? listWhatsAppThreads().catch(() => [] as WhatsAppThread[])
-          : Promise.resolve([] as WhatsAppThread[]),
       ]);
       setThreads(caseRows);
       setDirectThreads(directRows);
-      setWhatsappThreads(whatsappRows);
       setMuted(new Set(muteRows.map((m) => `${m.thread_type}:${m.thread_id}`)));
       // Do NOT auto-select the first thread on load — the inbox opens on the
       // conversation list and the user explicitly picks one to open it.
@@ -161,16 +155,6 @@ export default function CaseMessagesInboxPage() {
   }, [load]);
 
   const items: ThreadListItem[] = useMemo(() => {
-    const whatsappItems: ThreadListItem[] = whatsappThreads.map((thread) => ({
-      id: thread.id,
-      type: "whatsapp" as const,
-      category: "whatsapp" as const,
-      title: thread.lead.student_name || thread.lead.whatsapp_number,
-      subtitle: thread.lead.whatsapp_number,
-      preview: thread.last_message_preview || t("messagesInbox.noMessagesYet"),
-      timestamp: thread.updated_at,
-      unread: thread.unread_count,
-    }));
     const caseItems: ThreadListItem[] = threads.map((thread) => ({
       id: thread.caseId,
       type: "case",
@@ -198,12 +182,11 @@ export default function CaseMessagesInboxPage() {
     }));
 
     const q = query.trim().toLowerCase();
-    return [...whatsappItems, ...directItems, ...caseItems]
+    return [...directItems, ...caseItems]
       .filter((item) => {
         if (filter === "cases" && item.category !== "cases") return false;
         if (filter === "direct" && item.category !== "direct") return false;
         if (filter === "partners" && item.category !== "partners") return false;
-        if (filter === "whatsapp" && item.category !== "whatsapp") return false;
         if (filter === "unread" && item.unread === 0) return false;
         if (!q) return true;
         return (
@@ -215,7 +198,7 @@ export default function CaseMessagesInboxPage() {
       .sort(
         (a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime(),
       );
-  }, [threads, directThreads, whatsappThreads, query, filter, t]);
+  }, [threads, directThreads, query, filter, t]);
 
   const caseUnread = threads.reduce((sum, thread) => sum + thread.unread, 0);
   const partnerThreads = directThreads.filter(
@@ -225,18 +208,13 @@ export default function CaseMessagesInboxPage() {
   const partnerUnread = partnerThreads.reduce((sum, thread) => sum + thread.unread, 0);
   const directUnread =
     directThreads.reduce((sum, thread) => sum + thread.unread, 0) - partnerUnread;
-  const whatsappUnread = whatsappThreads.reduce((sum, thread) => sum + thread.unread_count, 0);
-  const totalUnread = caseUnread + directUnread + partnerUnread + whatsappUnread;
+  const totalUnread = caseUnread + directUnread + partnerUnread;
 
   const activeCase =
     selected?.type === "case" ? threads.find((x) => x.caseId === selected.id) ?? null : null;
   const activeDirect =
     selected?.type === "direct"
       ? directThreads.find((x) => x.threadId === selected.id) ?? null
-      : null;
-  const activeWhatsApp =
-    selected?.type === "whatsapp"
-      ? whatsappThreads.find((x) => x.id === selected.id) ?? null
       : null;
 
   const isMuted = selected ? muted.has(`${selected.type}:${selected.id}`) : false;
@@ -278,7 +256,6 @@ export default function CaseMessagesInboxPage() {
     { key: "direct", label: t("chat.section.direct"), count: directUnread },
     { key: "cases", label: t("chat.section.cases"), count: caseUnread },
     { key: "partners", label: t("chat.section.partners"), count: partnerUnread },
-    { key: "whatsapp", label: t("messagesInbox.whatsappTab", "WhatsApp"), count: whatsappUnread },
     { key: "unread", label: t("chat.filter.unread"), count: totalUnread },
   ];
 
@@ -414,13 +391,7 @@ export default function CaseMessagesInboxPage() {
               <ThreadList
                 items={items}
                 selectedId={selected?.id ?? null}
-                onSelect={(item) => {
-                  if (item.type === "whatsapp") {
-                    navigate(`${basePath}/messages?tab=whatsapp&conversation=${encodeURIComponent(item.id)}`);
-                    return;
-                  }
-                  setSelected({ type: item.type, id: item.id });
-                }}
+                onSelect={(item) => setSelected({ type: item.type, id: item.id })}
                 emptyLabel={t("messagesInbox.empty")}
                 onlineUserIds={online}
                 grouped={filter === "all"}
@@ -435,7 +406,7 @@ export default function CaseMessagesInboxPage() {
             selected ? `flex ${FS_CHAT}` : "hidden",
           )}
         >
-          {activeCase || activeDirect || activeWhatsApp ? (
+          {activeCase || activeDirect ? (
             <>
               <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card p-2 md:p-3">
                 <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -450,7 +421,7 @@ export default function CaseMessagesInboxPage() {
                   </Button>
                   <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate font-medium">
-                    {activeCase ? activeCase.caseName : activeWhatsApp ? activeWhatsApp.lead.student_name || activeWhatsApp.lead.whatsapp_number : activeDirect!.otherUserName}
+                    {activeCase ? activeCase.caseName : activeDirect!.otherUserName}
                     {activeDirect?.otherUserId && online.has(activeDirect.otherUserId) && (
                       <span className={`flex items-center gap-1 text-[11px] font-normal ${toneClasses("enrolled").text}`}>
                         <span className={`h-2 w-2 rounded-full ${toneClasses("enrolled").dot}`} />
@@ -461,9 +432,7 @@ export default function CaseMessagesInboxPage() {
                   <p className="truncate text-xs text-muted-foreground">
                     {activeCase
                       ? activeCase.caseReference ?? t("chat.type.case")
-                      : activeWhatsApp
-                        ? activeWhatsApp.lead.whatsapp_number
-                        : activeDirect!.otherUserRole
+                      : activeDirect!.otherUserRole
                         ? t(
                             `case.messages.role.${activeDirect!.otherUserRole}`,
                             activeDirect!.otherUserRole,
@@ -507,14 +476,6 @@ export default function CaseMessagesInboxPage() {
                     allowInternal
                     className="flex min-h-0 flex-1 flex-col"
                   />
-                ) : activeWhatsApp ? (
-                  <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-                    <MessageCircle className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">{t("messagesInbox.whatsappTab", "Open this conversation in WhatsApp")}</p>
-                    <Button onClick={() => navigate(`${basePath}/messages?tab=whatsapp&conversation=${encodeURIComponent(activeWhatsApp.id)}`)}>
-                      {t("messagesInbox.whatsappTab", "WhatsApp")}
-                    </Button>
-                  </div>
                 ) : (
                   <DirectMessages
                     key={activeDirect!.threadId}
