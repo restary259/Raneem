@@ -86,3 +86,6 @@ project_id = "mzbadxfvxioedzdjxamc"
 [functions.whatsapp-ai-assist]
   # Role validation is enforced inside requireAuth for asymmetric project JWTs.
   verify_jwt = false
+[functions.whatsapp-connector]
+  # Role validation is enforced inside requireAuth for asymmetric project JWTs.
+  verify_jwt = false
