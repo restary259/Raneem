@@ -4934,7 +4934,13 @@
       "below": "below requirement",
       "above": "meets or exceeds",
       "acceptedProof": "Accepted proof",
-      "additionalLanguage": "Additional language"
+      "additionalLanguage": "Additional language",
+      "conversionFormula": "Official conversion procedure",
+      "publishedThreshold": "Published grade threshold",
+      "compensation": "Alternative route",
+      "admissionMode": "Admission mode",
+      "applicationChannel": "Application channel",
+      "entranceProcedure": "Entrance procedure"
     },
     "readyToUse": "Ready to use",
     "recent": "Recently opened",
