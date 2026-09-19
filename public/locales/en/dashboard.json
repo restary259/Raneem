@@ -1431,6 +1431,7 @@
       "title": "Applications Inbox",
       "subtitle": "Partnership and contact form submissions",
       "source": {
+        "whatsapp": "WhatsApp",
         "all": "All",
         "partnership": "Partnership",
         "contact": "Contact"
