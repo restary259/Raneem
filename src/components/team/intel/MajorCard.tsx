@@ -19,6 +19,14 @@ import type { SubjectEntry } from '@/lib/intel/subjects';
 import type { ProgramIntel } from '@/data/intel/types';
 
 const GRADE_SCALE = [95, 90, 85, 80, 75, 70, 65, 60, 55];
+const CEFR_LABELS = {
+  A1: { en: 'Beginner', ar: 'مبتدئ' },
+  A2: { en: 'Elementary', ar: 'أساسي' },
+  B1: { en: 'Intermediate', ar: 'متوسط' },
+  B2: { en: 'Upper-intermediate', ar: 'متوسط أعلى' },
+  C1: { en: 'Advanced', ar: 'متقدم' },
+  C2: { en: 'Mastery', ar: 'إتقان' },
+} as const;
 
 function Empty() {
   const { t } = useTranslation('dashboard');
