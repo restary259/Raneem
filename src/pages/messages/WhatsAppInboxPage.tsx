@@ -52,7 +52,6 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  useChatFullscreen(!!mobile && !!selectedId);
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [notes, setNotes] = useState<WhatsAppNote[]>([]);
   const [query, setQuery] = useState("");
@@ -81,6 +80,8 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const [startName, setStartName] = useState("");
   const [starting, setStarting] = useState(false);
   const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
+
+  useChatFullscreen(!!mobile && !!selectedId);
 
   const load = useCallback(async () => {
     setError("");
@@ -250,9 +251,9 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
                 </div>
                 <ScrollArea className="min-h-0 flex-1">{filtered.length ? <div className="divide-y">{filtered.map((thread) => <button key={thread.id} onClick={() => setSelectedId(thread.id)} className={cn("w-full px-4 py-3 text-start transition-colors hover:bg-muted/60", selectedId === thread.id && "bg-muted")}><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-sm font-semibold">{thread.lead.student_name || thread.lead.whatsapp_number}</span>{thread.unread_count > 0 && <Badge className="h-5 min-w-5 justify-center px-1.5">{thread.unread_count}</Badge>}</div><div dir="ltr" className="mt-0.5 text-start text-xs text-muted-foreground">{thread.lead.whatsapp_number}</div><p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{thread.last_message_preview || t("conversation.noMessages")}</p><div className="mt-2 flex items-center justify-between gap-2"><Badge variant="outline" className="font-normal">{t(`state.${thread.state}`)}</Badge><span className="text-[10px] text-muted-foreground">{fmt(thread.updated_at, i18n.language)}</span></div></button>)}</div> : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="h-full" />}</ScrollArea>
               </aside>
-              <main className={cn("flex min-h-0 flex-col", mobile && !selectedId && "hidden")}>
+              <main className={cn("flex min-h-0 min-w-0 flex-col overflow-hidden", mobile && !selectedId && "hidden", mobile && selectedId && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:w-full max-md:rounded-none max-md:border-0 max-md:bg-background max-md:shadow-none")}>
                 {!active ? <EmptyState title={t("empty.select")} icon={MessageCircle} className="h-full" /> : <>
-                  <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2.5"><Button className="md:hidden" size="icon" variant="ghost" onClick={() => setSelectedId(null)}><Back className="h-4 w-4" /></Button><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</h2><p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p></div><Button className="xl:hidden" size="sm" variant="outline" onClick={() => setDetailsOpen(true)}><UserRound className="me-1.5 h-4 w-4" />{t("profile.title")}</Button><Select value={active.state} onValueChange={(v) => saveConversation({ state: v })}><SelectTrigger className="h-9 w-[145px]"><SelectValue /></SelectTrigger><SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2.5"><Button className="md:hidden" size="icon" variant="ghost" onClick={() => setSelectedId(null)}><Back className="h-4 w-4" /></Button><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</h2><p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p></div><Button className="xl:hidden" size="sm" variant="outline" onClick={() => setDetailsOpen(true)}><UserRound className="me-1.5 h-4 w-4" />{t("profile.title")}</Button><Select value={active.state} onValueChange={(v) => saveConversation({ state: v })}><SelectTrigger className="h-9 w-[145px]"><SelectValue /></SelectTrigger><SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent></Select></div>
                   <Conversation className="min-h-0"><ConversationContent className="gap-3">{messages.length ? messages.map((m, index) => {
                     const previous = index > 0 ? messages[index - 1] : null;
                     const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
