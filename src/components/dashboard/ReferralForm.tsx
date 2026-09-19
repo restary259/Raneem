@@ -158,7 +158,7 @@ const ReferralForm: React.FC<ReferralFormProps> = ({ userId }) => {
                       onClick={() => setReferralType(type)}
                       className={`flex items-center gap-2 p-3 rounded-xl border text-start text-sm transition-all ${
                         selected
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          ? "bg-primary text-primary-foreground border-primary shadow-xs"
                           : "bg-card border-border hover:border-primary/40"
                       }`}
                     >

@@ -198,7 +198,7 @@ export function CaseCard({
       className={cn(
         "relative overflow-hidden rounded-lg border border-border bg-card p-3 shadow-surface transition-all",
         interactive &&
-          "cursor-pointer hover:-translate-y-0.5 hover:shadow-surface-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "cursor-pointer hover:-translate-y-0.5 hover:shadow-surface-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
     >

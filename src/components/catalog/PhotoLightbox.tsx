@@ -66,7 +66,7 @@ export function PhotoLightbox({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-background/98 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex flex-col bg-background/98 backdrop-blur-xs"
       // A parent Radix modal may set pointer-events:none on <body>; re-enable
       // it here so this viewer stays interactive wherever it is opened from.
       style={{ pointerEvents: "auto", touchAction: "pan-y" }}
@@ -134,7 +134,7 @@ export function PhotoLightbox({
               type="button"
               onClick={prev}
               aria-label={t("catalog.previous", "Previous")}
-              className="absolute start-2 top-1/2 -translate-y-1/2 rounded-full border border-border bg-card/90 p-2.5 text-foreground shadow-sm transition-colors hover:bg-accent sm:start-6"
+              className="absolute start-2 top-1/2 -translate-y-1/2 rounded-full border border-border bg-card/90 p-2.5 text-foreground shadow-xs transition-colors hover:bg-accent sm:start-6"
             >
               <ChevronLeft className="h-6 w-6 rtl:rotate-180" />
             </button>
@@ -142,7 +142,7 @@ export function PhotoLightbox({
               type="button"
               onClick={next}
               aria-label={t("catalog.next", "Next")}
-              className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full border border-border bg-card/90 p-2.5 text-foreground shadow-sm transition-colors hover:bg-accent sm:end-6"
+              className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full border border-border bg-card/90 p-2.5 text-foreground shadow-xs transition-colors hover:bg-accent sm:end-6"
             >
               <ChevronRight className="h-6 w-6 rtl:rotate-180" />
             </button>

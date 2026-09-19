@@ -29,7 +29,7 @@ const TrustSection = () => {
           {Array.isArray(pillars) && pillars.map((pillar, index) => (
             <Card 
               key={index} 
-              className={`border border-border shadow-sm text-center hover:shadow-lg hover:-translate-y-1 ${inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}`}
+              className={`border border-border shadow-xs text-center hover:shadow-lg hover:-translate-y-1 ${inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}`}
               style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
             >
               <CardContent className="p-6 flex flex-col items-center gap-3">

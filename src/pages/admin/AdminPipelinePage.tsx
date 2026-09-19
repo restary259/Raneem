@@ -215,7 +215,7 @@ function ChipBtn({ active, onClick, children }: { active: boolean; onClick: () =
       onClick={onClick}
       className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
         active
-          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+          ? "bg-primary text-primary-foreground border-primary shadow-xs"
           : "bg-card border-border hover:border-primary/50 text-foreground"
       }`}
     >
@@ -1104,7 +1104,7 @@ const AdminPipelinePage = () => {
                         onChange={(e) => setDraft((d) => d && { ...d, intake_notes: e.target.value })}
                         placeholder="Any notes about this student..."
                         rows={3}
-                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm resize-none focus:outline-hidden focus:ring-2 focus:ring-primary/30 focus:border-primary"
                       />
                     </div>
 

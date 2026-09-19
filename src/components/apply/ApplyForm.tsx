@@ -386,7 +386,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
 
   // ── Form card (shared) ─────────────────────────────────────────
   const formCard = (
-    <div className="w-full bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-fade-in">
+    <div className="w-full bg-card border border-border rounded-2xl shadow-xs overflow-hidden animate-fade-in">
       <div className="px-5 py-4 border-b border-border bg-muted/30">
         <h2 className="text-sm font-semibold">{stepTitles[step - 1]}</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -429,7 +429,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
               <div className="grid grid-cols-1 gap-2">
                 {PASSPORT_TYPES.map((pt) => (
-                  <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                  <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
                     {isAr ? pt.label : pt.labelEn}
                   </button>
                 ))}
@@ -447,7 +447,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
               <div className="grid grid-cols-2 gap-2">
                 {EDUCATION_LEVELS.map((lvl) => (
-                  <button key={lvl.value} type="button" onClick={() => setEducationLevel(lvl.value)} className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${educationLevel === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                  <button key={lvl.value} type="button" onClick={() => setEducationLevel(lvl.value)} className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${educationLevel === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
                     {isAr ? lvl.label : lvl.labelEn}
                   </button>
                 ))}
@@ -510,7 +510,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <FieldGroup label={isAr ? "هل تتقدم مع فرد من العائلة أو صديق؟" : "Are you applying with a family member or a friend?"}>
               <div className="grid grid-cols-1 gap-2">
                 {APPLYING_WITH_OPTIONS.map((opt) => (
-                  <button key={opt.value} type="button" onClick={() => { setApplyingWith(opt.value); if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]); if (opt.value === "multiple" && companions.length < 2) setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]); }} className={`w-full text-start px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${applyingWith === opt.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                  <button key={opt.value} type="button" onClick={() => { setApplyingWith(opt.value); if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]); if (opt.value === "multiple" && companions.length < 2) setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]); }} className={`w-full text-start px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${applyingWith === opt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
                     {isAr ? opt.label : opt.labelEn}
                   </button>
                 ))}
@@ -536,7 +536,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                     <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
                       <div className="grid grid-cols-1 gap-2">
                         {PASSPORT_TYPES.map((pt) => (
-                          <button key={pt.value} type="button" onClick={() => updateCompanion(idx, "passportType", pt.value)} className={`w-full text-start px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${c.passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? pt.label : pt.labelEn}</button>
+                          <button key={pt.value} type="button" onClick={() => updateCompanion(idx, "passportType", pt.value)} className={`w-full text-start px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${c.passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? pt.label : pt.labelEn}</button>
                         ))}
                       </div>
                     </FieldGroup>
@@ -546,7 +546,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                     <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
                       <div className="grid grid-cols-2 gap-2">
                         {EDUCATION_LEVELS.map((lvl) => (
-                          <button key={lvl.value} type="button" onClick={() => updateCompanion(idx, "education", lvl.value)} className={`px-2 py-2 rounded-xl border text-[11px] font-medium transition-all ${c.education === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? lvl.label : lvl.labelEn}</button>
+                          <button key={lvl.value} type="button" onClick={() => updateCompanion(idx, "education", lvl.value)} className={`px-2 py-2 rounded-xl border text-[11px] font-medium transition-all ${c.education === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? lvl.label : lvl.labelEn}</button>
                         ))}
                       </div>
                     </FieldGroup>

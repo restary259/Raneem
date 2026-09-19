@@ -205,7 +205,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const tabClass = (active: boolean) =>
     cn(
       'flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors relative',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+      'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
       active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
     );
 

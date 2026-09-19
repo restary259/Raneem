@@ -12,7 +12,7 @@ const Header = () => {
   const { dir } = useDirection();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/95 shadow-sm backdrop-blur" dir={dir}>
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 shadow-xs backdrop-blur" dir={dir}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo Side */}

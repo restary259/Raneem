@@ -58,7 +58,7 @@ export function AccommodationCard({
         }
       }}
       className={cn(
-        "group cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "group cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         !accommodation.is_active && "opacity-60",
       )}
     >

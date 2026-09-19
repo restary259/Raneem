@@ -49,7 +49,7 @@ export default function SectionCard({
                 onClick={() => setOpen((v) => !v)}
                 aria-expanded={isOpen}
                 aria-controls={bodyId}
-                className="flex min-w-0 items-center gap-2 rounded-md text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-w-0 items-center gap-2 rounded-md text-start focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {Icon && <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
                 <span className="min-w-0">

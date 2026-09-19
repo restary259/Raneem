@@ -12,7 +12,7 @@ const OfficeLocations = () => {
   return (
     <div className="space-y-8">
        <h3 className="text-3xl font-bold text-center">{t('officeLocations.title')}</h3>
-        <Card className="bg-background/80 backdrop-blur-sm border border-white/20 shadow-lg animate-fade-in transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <Card className="bg-background/80 backdrop-blur-xs border border-white/20 shadow-lg animate-fade-in transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
           <CardHeader>
             <CardTitle className="text-primary">{t('officeLocations.city')}</CardTitle>
           </CardHeader>

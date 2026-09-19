@@ -40,7 +40,7 @@ const SearchAndFilter = ({
   }, [showFilters]);
 
   return (
-    <section className="educational-sticky-section sticky bg-white border-b shadow-sm z-40">
+    <section className="educational-sticky-section sticky bg-white border-b shadow-xs z-40">
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="relative">
@@ -81,7 +81,7 @@ const SearchAndFilter = ({
       {showFilters && (
         <>
           {/* Backdrop */}
-          <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={() => setShowFilters(false)} />
+          <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-xs" onClick={() => setShowFilters(false)} />
           
           {/* Bottom Sheet (mobile) / Centered Modal (desktop) */}
           <div className="fixed inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center z-[61]">

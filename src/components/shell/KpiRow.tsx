@@ -44,7 +44,7 @@ export default function KpiRow({ items, columns = 4, className }: KpiRowProps) {
             className={cn(
               "rounded-lg border border-border/70 bg-card p-3 text-start transition-colors",
               item.onClick &&
-                "hover:border-border hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                "hover:border-border hover:bg-accent/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
           >
             <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
