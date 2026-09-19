@@ -48,10 +48,10 @@ describe('Major Intelligence displayed links', () => {
     async () => {
       const urls = Array.from(
         new Set(
-          ALL_MAJOR_INTEL.flatMap((major) =>
-            (major.universityRecommendations ?? []).map((recommendation) => recommendation.programUrl),
+          ALL_MAJOR_INTEL.flatMap((major) => [
+            ...(major.universityRecommendations ?? []).map((recommendation) => recommendation.programUrl),
             ...major.programs.map((program) => program.programUrl),
-          ),
+          ]),
         ),
       );
 
