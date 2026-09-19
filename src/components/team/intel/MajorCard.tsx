@@ -399,7 +399,11 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                           <span className={recommendation.tuition.kind === 'verify'
                             ? 'mt-1 block text-xs text-muted-foreground'
                             : 'mt-1 block text-xs font-medium'}>
-                            {recommendation.tuition.amount ?? recommendation.tuition.label}
+                            {recommendation.tuition.amount
+                              ? `${recommendation.tuition.amount} · ${isAr ? recommendation.tuition.labelAR : recommendation.tuition.label}`
+                              : isAr
+                                ? recommendation.tuition.labelAR
+                                : recommendation.tuition.label}
                           </span>
                         </span>
                         <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
