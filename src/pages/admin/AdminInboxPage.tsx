@@ -54,9 +54,9 @@ const AdminInboxPage = () => {
   }, []);
 
   const changeTab = useCallback((value: string) => {
-    const next = INBOX_TABS.includes(value as InboxTab) ? value as InboxTab : "whatsapp";
+    const next = INBOX_TABS.includes(value as InboxTab) ? value as InboxTab : "all";
     setTab(next);
-    setSearchParams(next === "whatsapp" ? { tab: "whatsapp" } : { tab: next }, { replace: true });
+    setSearchParams({ tab: next }, { replace: true });
   }, [setSearchParams]);
 
   const load = useCallback(async () => {
