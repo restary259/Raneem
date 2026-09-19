@@ -8,6 +8,7 @@ import { totalUnreadDirectMessages } from "@/services/DirectMessageService";
 export function useUnreadCaseMessages(enabled = true): number {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
+  const [whatsappCount, setWhatsappCount] = useState(0);
 
   const load = useCallback(async () => {
     if (!enabled || !user?.id) return;
@@ -16,11 +17,11 @@ export function useUnreadCaseMessages(enabled = true): number {
         totalUnreadCaseMessages(user.id).catch(() => 0),
         totalUnreadDirectMessages(user.id).catch(() => 0),
       ]);
-      setCount(cases + direct);
+      setCount(cases + direct + whatsappCount);
     } catch {
       /* non-blocking badge */
     }
-  }, [enabled, user?.id]);
+  }, [enabled, user?.id, whatsappCount]);
 
   useEffect(() => {
     load();
@@ -42,7 +43,7 @@ export function useUnreadCaseMessages(enabled = true): number {
     if (!enabled || !user?.id) return;
     return subscribeTables(
       "unread-case-messages",
-      ["case_messages", "case_message_reads", "direct_messages", "direct_thread_participants"],
+      ["case_messages", "case_message_reads", "direct_messages", "direct_thread_participants", "whatsapp_conversations", "whatsapp_messages"],
       () => loadRef.current(),
     );
   }, [enabled, user?.id]);
