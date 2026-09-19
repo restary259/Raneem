@@ -59,6 +59,11 @@ const AdminInboxPage = () => {
     setSearchParams({ tab: next }, { replace: true });
   }, [setSearchParams]);
 
+  // WhatsApp now lives in the unified messaging page; keep old links working.
+  useEffect(() => {
+    if (requestedTab === "whatsapp") navigate("/admin/messages?tab=whatsapp", { replace: true });
+  }, [requestedTab, navigate]);
+
   const load = useCallback(async () => {
     setLoading(true);
     const { data, error } = await (supabase as any)
