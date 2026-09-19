@@ -195,33 +195,45 @@ export function evaluateProgram(
   const lang = program.languageRequirement;
   if (lang.status === 'verified' && lang.value) {
     const required = lang.value.minimumLevel;
-    const have = intake.germanLevel;
-    const status: CheckStatus = !have
-      ? 'NOT_DETERMINABLE'
-      : GERMAN_LEVEL_ORDER.indexOf(have) >= GERMAN_LEVEL_ORDER.indexOf(required)
-        ? intake.germanCertificate
-          ? 'MEETS'
-          : 'NOT_DETERMINABLE'
-        : 'DOES_NOT_MEET';
-    rows.push({
-      key: 'language',
-      requirement: `${required} · ${lang.value.certificates.join(' / ')}`,
-      studentValue: have ? `${have}${intake.germanCertificate ? ` · ${intake.germanCertificate}` : ''}` : null,
-      status,
-      note:
-        status === 'NOT_DETERMINABLE' && have
-          ? 'Level reported but no certificate recorded. Only an accepted certificate proves the level.'
-          : lang.note,
-      noteAR:
-        status === 'NOT_DETERMINABLE' && have
-          ? 'المستوى مذكور دون شهادة مسجّلة. الشهادة المقبولة وحدها تثبت المستوى.'
-          : lang.noteAR,
-      sourceId: lang.sourceId,
-    });
+    const isEnglish = lang.value.language === 'English';
+    if (isEnglish) {
+      rows.push({
+        key: 'language',
+        requirement: `English ${required} · ${lang.value.certificates.join(' / ')}`,
+        studentValue: null,
+        status: 'NOT_DETERMINABLE',
+        note: 'This programme requires English. The current saved intake schema captures German evidence only, so English eligibility must be checked from the student certificate manually.',
+        noteAR: 'هذا البرنامج يتطلب الإنجليزية. نموذج بيانات الطالب الحالي يحفظ إثبات الألمانية فقط، لذلك يجب التحقق من أهلية الإنجليزية يدوياً من شهادة الطالب.',
+        sourceId: lang.sourceId,
+      });
+    } else {
+      const have = intake.germanLevel;
+      const status: CheckStatus = !have
+        ? 'NOT_DETERMINABLE'
+        : GERMAN_LEVEL_ORDER.indexOf(have) >= GERMAN_LEVEL_ORDER.indexOf(required)
+          ? intake.germanCertificate
+            ? 'MEETS'
+            : 'NOT_DETERMINABLE'
+          : 'DOES_NOT_MEET';
+      rows.push({
+        key: 'language',
+        requirement: `German ${required} · ${lang.value.certificates.join(' / ')}`,
+        studentValue: have ? `${have}${intake.germanCertificate ? ` · ${intake.germanCertificate}` : ''}` : null,
+        status,
+        note:
+          status === 'NOT_DETERMINABLE' && have
+            ? 'Level reported but no certificate recorded. Only an accepted certificate proves the level.'
+            : lang.note,
+        noteAR:
+          status === 'NOT_DETERMINABLE' && have
+            ? 'المستوى مذكور دون شهادة مسجّلة. الشهادة المقبولة وحدها تثبت المستوى.'
+            : lang.noteAR,
+        sourceId: lang.sourceId,
+      });
+    }
   } else {
     rows.push(factRow('language', lang, null, intake.germanLevel ?? null, 'NOT_DETERMINABLE'));
   }
-
   // Grade — CALCULATED can only rule out, never rule in.
   const grade = program.gradeRequirement;
   const calc = calculateGermanGrade(intake);
