@@ -119,7 +119,8 @@ const SHARED_FOREIGN_QUALIFICATION = fact(
 
 const SHARED_LANGUAGE = fact(
   {
-    minimumLevel: 'C1',
+    language: 'German' as const,
+    minimumLevel: 'C1' as const,
     certificates: [
       'TestDaF with at least level 4 in all four parts',
       'DSH-2 or better',
@@ -143,11 +144,13 @@ const SHARED_LANGUAGE = fact(
 );
 
 const SHARED_APPLICATION = fact(
-  'Applications are submitted online through the C@MPUS campus-management portal. The University of Stuttgart states that applications are free of application fees.',
+  'university' as const,
   'OFFICIAL_PROCEDURE',
   'stuttgart-international-application',
   CHECKED,
   {
+    note:
+      'Applications are submitted online through the C@MPUS campus-management portal. The University of Stuttgart states that applications are free of application fees.',
     noteAR:
       'يتم التقديم إلكترونياً عبر بوابة C@MPUS، وتذكر جامعة شتوتغارت أن التقديم لا يفرض رسوم طلب.',
   },
@@ -180,9 +183,10 @@ const SHARED_FEES = fact(
 );
 
 function makeProgram(
-  base: Omit<ProgramIntel, 'teachingLanguage' | 'applicationChannel' | 'foreignQualification' | 'languageRequirement' | 'documents' | 'fees'>,
+  base: Omit<ProgramIntel, 'teachingLanguage' | 'applicationChannel' | 'foreignQualification' | 'documents' | 'fees'>,
 ): ProgramIntel {
   return {
+    languageRequirement: SHARED_LANGUAGE,
     ...base,
     teachingLanguage: unverified(
       'OFFICIAL_LANGUAGE',
@@ -191,7 +195,6 @@ function makeProgram(
     ),
     applicationChannel: SHARED_APPLICATION,
     foreignQualification: SHARED_FOREIGN_QUALIFICATION,
-    languageRequirement: SHARED_LANGUAGE,
     documents: SHARED_DOCUMENTS,
     fees: SHARED_FEES,
   };
