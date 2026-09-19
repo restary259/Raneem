@@ -25,9 +25,9 @@ import { cn } from "@/lib/utils";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  addInternalNote, createWhatsAppTemplate, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
-  type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
+  addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
+  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
+  type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
 const STATES: ConversationState[] = ["new", "open", "waiting", "resolved"];
@@ -35,6 +35,8 @@ const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documen
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
 const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+const fmtDay = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "full" }).format(new Date(value));
+const KNOWN_TYPES = ["image", "video", "audio", "document", "sticker", "location", "contacts", "reaction"];
 
 export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boolean }) {
   const { t, i18n } = useTranslation("whatsapp");
@@ -74,12 +76,13 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const [startNumber, setStartNumber] = useState("");
   const [startName, setStartName] = useState("");
   const [starting, setStarting] = useState(false);
+  const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const [threadRows, staffRows, templateRows] = await Promise.all([listWhatsAppThreads(), listWhatsAppStaff(), listWhatsAppTemplates()]);
-      setThreads(threadRows); setStaff(staffRows); setTemplates(templateRows);
+      const [threadRows, staffRows, templateRows, inboundStatus] = await Promise.all([listWhatsAppThreads(), listWhatsAppStaff(), listWhatsAppTemplates(), getWhatsAppInboundStatus()]);
+      setThreads(threadRows); setStaff(staffRows); setTemplates(templateRows); setInbound(inboundStatus);
     } catch (e) { setError(e instanceof Error ? e.message : t("errors.load")); }
     finally { setLoading(false); }
   }, [t]);
@@ -113,6 +116,7 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
     Promise.all([listConversationMessages(selectedId), listConversationNotes(selectedId)])
       .then(([m, n]) => { setMessages(m); setNotes(n); })
       .catch(() => toast({ variant: "destructive", description: t("errors.load") }));
+    void markConversationRead(selectedId).catch(() => undefined);
   }, [selectedId, t, toast]);
   useEffect(() => {
     if (!selectedId) return;
@@ -213,13 +217,22 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const responseSamples = threads.filter((x) => x.first_response_at).map((x) => (new Date(x.first_response_at!).getTime() - new Date(x.created_at).getTime()) / 60000).filter((x) => x >= 0);
   const responseAvg = responseSamples.length ? Math.round(responseSamples.reduce((a, b) => a + b, 0) / responseSamples.length) : null;
 
+  const receiving = (inbound?.inboundCount ?? 0) > 0;
+  const statusLabel = receiving ? t("status.receiving") : t("status.waiting");
+
   if (loading) return <LoadingState variant="cards" rows={4} label={t("title")} />;
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
   return (
     <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto w-full max-w-[1800px] pb-20 md:pb-4", embedded && "pb-4")}>
-      {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions connectedLabel={t("connected")} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
-      {embedded && <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions connectedLabel={t("connected")} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>}
+      {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
+      {embedded && <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>}
+      <div className={cn("mb-3 rounded-lg border p-3 text-xs", receiving ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5")}>
+        <p className="font-medium">{t("number")} · {statusLabel}</p>
+        <p className="mt-1 text-muted-foreground">{receiving ? t("status.receivingHelp") : t("status.waitingHelp")}</p>
+        {inbound?.lastInboundAt && <p className="mt-1 text-muted-foreground">{t("status.lastInbound", { time: fmt(inbound.lastInboundAt, i18n.language) })}</p>}
+        {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
+      </div>
       <Tabs defaultValue="inbox" className="space-y-3">
         <TabsList className="grid w-full grid-cols-3 md:w-[470px]"><TabsTrigger value="inbox">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>
         <TabsContent value="inbox" className="m-0">
@@ -236,7 +249,24 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
               <main className={cn("flex min-h-0 flex-col", mobile && !selectedId && "hidden")}>
                 {!active ? <EmptyState title={t("empty.select")} icon={MessageCircle} className="h-full" /> : <>
                   <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2.5"><Button className="md:hidden" size="icon" variant="ghost" onClick={() => setSelectedId(null)}><Back className="h-4 w-4" /></Button><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</h2><p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p></div><Button className="xl:hidden" size="sm" variant="outline" onClick={() => setDetailsOpen(true)}><UserRound className="me-1.5 h-4 w-4" />{t("profile.title")}</Button><Select value={active.state} onValueChange={(v) => saveConversation({ state: v })}><SelectTrigger className="h-9 w-[145px]"><SelectValue /></SelectTrigger><SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent></Select></div>
-                  <Conversation className="min-h-0"><ConversationContent className="gap-3">{messages.length ? messages.map((m) => <Message key={m.id} from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}><MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}><p className="whitespace-pre-wrap">{m.body}</p><span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span></MessageContent></Message>) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}</ConversationContent><ConversationScrollButton /></Conversation>
+                  <Conversation className="min-h-0"><ConversationContent className="gap-3">{messages.length ? messages.map((m, index) => {
+                    const previous = index > 0 ? messages[index - 1] : null;
+                    const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                    const text = m.body?.trim();
+                    const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
+                    return (
+                      <div key={m.id} className="space-y-3">
+                        {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
+                        <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
+                          <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
+                            {m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
+                            {text ? <p className="whitespace-pre-wrap">{text}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
+                            <span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span>
+                          </MessageContent>
+                        </Message>
+                      </div>
+                    );
+                  }) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}</ConversationContent><ConversationScrollButton /></Conversation>
                   <div className="border-t p-3">{requiresApprovedTemplate(active.last_inbound_at) ? <div className="space-y-2"><p className="text-xs text-muted-foreground">{t("conversation.windowClosed")}</p><Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}><SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger><SelectContent>{approvedTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent></Select>{selectedTemplate && <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{selectedTemplateText}</p>{Array.from({ length: parameterCount }, (_, index) => <Input key={index} className="mt-2" value={templateParameters[index] ?? ""} onChange={(event) => setTemplateParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>}<div className="flex justify-end"><Button disabled={!templateId || templateParameters.length < parameterCount || templateParameters.some((value) => !value.trim()) || sending} onClick={() => void sendReply()}><MessageCircle className="me-2 h-4 w-4" />{t("conversation.send")}</Button></div></div> : <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg"><PromptInputTextarea value={composer} onChange={(event) => setComposer(event.target.value)} placeholder={t("conversation.composer")} /><PromptInputFooter><span className="text-[11px] text-muted-foreground">{t("conversation.windowOpen")}</span><PromptInputSubmit status={sending ? "submitted" : undefined} disabled={!composer.trim() || sending} aria-label={t("conversation.send")} /></PromptInputFooter></PromptInput>}</div>
                 </>}
               </main>
@@ -265,8 +295,8 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   );
 }
 
-function WhatsAppActions({ connectedLabel, refreshLabel, startLabel, onRefresh, onStart }: { connectedLabel: string; refreshLabel: string; startLabel: string; onRefresh: () => void; onStart: () => void }) {
-  return <div className="flex flex-wrap items-center gap-2"><Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5" />{connectedLabel}</Badge><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
+function WhatsAppActions({ receiving, connectedLabel, statusLabel, refreshLabel, startLabel, onRefresh, onStart }: { receiving: boolean; connectedLabel: string; statusLabel: string; refreshLabel: string; startLabel: string; onRefresh: () => void; onStart: () => void }) {
+  return <div className="flex flex-wrap items-center gap-2"><Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5" />{connectedLabel}</Badge><Badge variant="outline" className={cn("gap-1.5", receiving ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-300" : "border-amber-500/40 text-amber-700 dark:text-amber-300")}>{statusLabel}</Badge><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
 }
 
 function Field({ label, value, onBlur, type = "text" }: { label: string; value: string; onBlur: (value: string) => void; type?: string }) {
