@@ -177,3 +177,7 @@ export function attachUniversityRecommendations(major:MajorIntel):MajorIntel{
 export function recommendationIntegrity(publicMajorIds:string[]):string[]{
   return publicMajorIds.filter(id=>getUniversityRecommendations(id).length<4);
 }
+
+export function getRecommendedUniversityMeta(universityId:string):UMeta|undefined{
+  return U[universityId];
+}
