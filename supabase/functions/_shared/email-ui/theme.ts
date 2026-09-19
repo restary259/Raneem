@@ -22,7 +22,7 @@ export const LOGO_URL = `${SITE_URL}/lovable-uploads/78047579-6b53-42e9-bf6f-a9e
 export const LOGO_WIDTH = 132
 
 /** Contact — mirrors src/lib/contactConfig.ts */
-export const SUPPORT_WHATSAPP_URL = 'https://api.whatsapp.com/message/IVC4VCAEJ6TBD1'
+export const SUPPORT_WHATSAPP_URL = 'https://wa.me/4917623790623'
 export const SUPPORT_PHONE = '0507368283'
 
 /**
