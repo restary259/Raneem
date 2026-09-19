@@ -24,9 +24,14 @@ describe('Major Intelligence coverage', () => {
       expect(recommendations.map((item) => item.rank)).toEqual([1, 2, 3, 4]);
       expect(recommendations[0].primary).toBe(true);
       expect(new Set(recommendations.map((item) => item.universityId)).size).toBe(4);
+      for (const recommendation of recommendations) {
+        expect(recommendation.source.url.startsWith('https://')).toBe(true);
+        expect(recommendation.source.authority).toBe('university');
+      }
 
-      const exactTU9 = recommendations.some((item) => item.tu9 && item.match === 'exact');
-      if (exactTU9) expect(recommendations[0].tu9).toBe(true);
+      const exactTU9 = recommendations.filter((item) => item.tu9 && item.match === 'exact');
+      expect(exactTU9.length).toBeLessThanOrEqual(1);
+      if (exactTU9.length === 1) expect(recommendations[0].tu9).toBe(true);
     }
   });
 
