@@ -195,8 +195,8 @@ const CYBER_PROGRAM: ProgramIntel = {
     CYBER_SOURCE.id,
     CHECKED,
     {
-      note: 'The programme page lists B2 advanced English as recommended.',
-      noteAR: 'صفحة البرنامج تذكر B2 متقدم بالإنجليزية كمستوى موصى به.',
+      note: 'The detailed programme requirements state that C1 English is required; a separate overview page has a B2 recommendation, so the detailed programme rule is used here.',
+      noteAR: 'متطلبات البرنامج التفصيلية تنص على أن C1 بالإنجليزية مطلوب؛ توجد صفحة عامة منفصلة تذكر توصية B2، لذلك نستخدم شرط البرنامج التفصيلي هنا.',
     },
   ),
   gradeRequirement: unverified(
@@ -273,7 +273,7 @@ const DATA_PROGRAM: ProgramIntel = {
     'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت من صفحة البرنامج.',
   ),
   languageRequirement: fact(
-    { minimumLevel: 'B2', certificates: ['German B2'] },
+    { language: 'German', minimumLevel: 'B2', certificates: ['German B2'] },
     'OFFICIAL_LANGUAGE',
     DATA_SOURCE.id,
     CHECKED,
