@@ -72,7 +72,6 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
  */
 const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
-    { key: 'nav.whatsapp', icon: MessageCircleMore, href: '/admin/whatsapp' },
     { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
     { key: 'nav.team', icon: Users, href: '/admin/members' },
     { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },

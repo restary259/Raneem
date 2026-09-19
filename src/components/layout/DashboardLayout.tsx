@@ -117,8 +117,6 @@ const PARTNER_APPLY_NAV_ITEM: NavItem = {
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.comms" },
-    { key: "nav.whatsapp", icon: MessageCircleMore, href: "/admin/whatsapp", group: "nav.group.comms" },
-
     { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
     // Pipeline hub: board + submissions review.
     { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
