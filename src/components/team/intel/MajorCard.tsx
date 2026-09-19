@@ -19,6 +19,14 @@ import type { SubjectEntry } from '@/lib/intel/subjects';
 import type { ProgramIntel } from '@/data/intel/types';
 
 const GRADE_SCALE = [95, 90, 85, 80, 75, 70, 65, 60, 55];
+const CEFR_LABELS = {
+  A1: { en: 'Beginner', ar: 'مبتدئ' },
+  A2: { en: 'Elementary', ar: 'أساسي' },
+  B1: { en: 'Intermediate', ar: 'متوسط' },
+  B2: { en: 'Upper-intermediate', ar: 'متوسط أعلى' },
+  C1: { en: 'Advanced', ar: 'متقدم' },
+  C2: { en: 'Mastery', ar: 'إتقان' },
+} as const;
 
 function Empty() {
   const { t } = useTranslation('dashboard');
@@ -53,6 +61,8 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
 
   const name = isAr ? subject.nameAR : subject.nameEN;
   const category = isAr ? subject.categoryAR : subject.categoryEN;
+  const languageLabel = (language: 'German' | 'English') =>
+    t('intel.language.' + language.toLowerCase(), language);
 
   return (
     <Card className="border-border">
@@ -109,7 +119,10 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                     <Row label={isAr ? program.universityNameAR : program.universityName}>
                       {teaching ? (
                         <span className="font-medium">
-                          {t('intel.card.teachingLanguage', 'Teaching language')}: {teaching}
+                          {t('intel.card.teachingLanguage', 'Teaching language')}: {teaching
+                            .split(' / ')
+                            .map((language) => languageLabel(language as 'German' | 'English'))
+                            .join(' / ')}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">
@@ -121,7 +134,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                       <>
                         <Row label={t('intel.card.requiredLevel', 'Required CEFR level')}>
                           <span className="font-semibold">
-                            {value.language} {value.minimumLevel}
+                            {languageLabel(value.language)} {value.minimumLevel}
                           </span>
                         </Row>
                         <div>
@@ -160,7 +173,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                         {value.additionalLanguage && (
                           <Row label={t('intel.card.additionalLanguage', 'Additional language')}>
                             <span className="font-medium">
-                              {value.additionalLanguage.language} {value.additionalLanguage.minimumLevel}
+                              {languageLabel(value.additionalLanguage.language)} {value.additionalLanguage.minimumLevel}
                             </span>
                             {value.additionalLanguage.certificates.length > 0 && (
                               <span className="text-muted-foreground"> · {value.additionalLanguage.certificates.join(' · ')}</span>
@@ -180,7 +193,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
             <p className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
               {t(
                 'intel.card.languageTiming',
-                'Language course planning: reaching B2 takes about 10 months of full-time language school, and about 12 months including sitting Telc, TestDaF or DSH.',
+                'German-course planning only: reaching B2 takes about 10 months of full-time study, and about 12 months including a Telc, TestDaF or DSH exam.',
               )}
             </p>
           </TabsContent>
@@ -208,10 +221,39 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                   </div>
                 ))}
               </div>
+              {intel?.gradeConversion?.status === 'verified' && intel.gradeConversion.value && (
+                <div className="mt-3 rounded-md border border-border/70 bg-background/70 p-2.5">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {t('intel.card.conversionFormula', 'Official conversion procedure')}
+                  </p>
+                  <p className="mt-1 overflow-x-auto text-xs font-mono">
+                    {isAr ? intel.gradeConversion.noteAR ?? intel.gradeConversion.value : intel.gradeConversion.value}
+                  </p>
+                </div>
+              )}
               <p className="mt-2 text-xs text-sky-700 dark:text-sky-400">
                 {t('intel.calculatedOnly', 'Calculated — not an admission decision')}
               </p>
             </div>
+            {programs.map((program) => {
+              const grade = program.gradeRequirement;
+              if (grade.status !== 'verified' || !grade.value?.maximumGermanGrade) return null;
+              return (
+                <div key={program.id} className="rounded-md border border-border p-3">
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    {isAr ? program.universityNameAR : program.universityName}
+                  </p>
+                  <Row label={t('intel.card.publishedThreshold', 'Published grade threshold')}>
+                    ≤ {grade.value.maximumGermanGrade.toFixed(1)}
+                  </Row>
+                  {grade.value.compensation && (
+                    <Row label={t('intel.card.compensation', 'Alternative route')}>
+                      {isAr ? grade.value.compensationAR ?? grade.value.compensation : grade.value.compensation}
+                    </Row>
+                  )}
+                </div>
+              );
+            })}
           </TabsContent>
 
           {/* Our schools & cities ------------------------------------------ */}
@@ -258,14 +300,31 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
               <div>
                 {programs.map((program) => {
                   const value = program.deadline.status === 'verified' ? program.deadline.value : null;
+                  const mode = program.admissionMode.status === 'verified' ? program.admissionMode.value : null;
+                  const channel = program.applicationChannel.status === 'verified' ? program.applicationChannel.value : null;
+                  const entrance = program.entranceRequirement.status === 'verified' ? program.entranceRequirement.value : null;
                   return (
-                    <Row key={program.id} label={isAr ? program.universityNameAR : program.universityName}>
-                      {value ? (
-                        `${isAr ? value.semesterAR : value.semester} — ${value.deadline}`
-                      ) : (
-                        <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>
+                    <div key={program.id} className="rounded-md border border-border p-3">
+                      <Row label={isAr ? program.universityNameAR : program.universityName}>
+                        <span className="font-medium">{isAr ? program.programNameAR : program.programName}</span>
+                      </Row>
+                      <Row label={t('intel.card.admissionMode', 'Admission mode')}>
+                        {mode ? t('intel.admission.' + mode, mode) : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
+                      </Row>
+                      <Row label={t('intel.card.applicationChannel', 'Application channel')}>
+                        {channel ? t('intel.channel.' + channel, channel) : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
+                      </Row>
+                      <Row label={t('intel.row.deadline', 'Application deadline')}>
+                        {value ? (isAr ? value.semesterAR : value.semester) + ' — ' + value.deadline : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
+                      </Row>
+                      {entrance && (
+                        <Row label={t('intel.card.entranceProcedure', 'Entrance procedure')}>
+                          {isAr
+                            ? program.entranceRequirement.noteAR ?? entrance
+                            : program.entranceRequirement.note ?? entrance}
+                        </Row>
                       )}
-                    </Row>
+                    </div>
                   );
                 })}
               </div>
@@ -273,7 +332,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
             <p className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
               {t(
                 'intel.card.startTiming',
-                'Recommended start: begin the language course about 12 months before the application deadline — 10 months of study plus the Telc, TestDaF or DSH exam and its result.',
+                'German-route planning only: begin the language course about 12 months before the application deadline — roughly 10 months of study plus the language exam and result.',
               )}
             </p>
           </TabsContent>
