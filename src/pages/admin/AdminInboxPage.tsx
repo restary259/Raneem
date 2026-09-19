@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import ContactsManager from "@/components/admin/ContactsManager";
 import RecruitApplicationsPanel from "@/components/admin/RecruitApplicationsPanel";
 import DataRequestsPanel from "@/components/admin/DataRequestsPanel";
-import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
