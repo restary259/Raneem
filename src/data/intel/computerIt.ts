@@ -190,7 +190,7 @@ const CYBER_PROGRAM: ProgramIntel = {
     'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت من صفحة البرنامج المفحوصة.',
   ),
   languageRequirement: fact(
-    { minimumLevel: 'B2', certificates: ['B2 advanced English (recommended)'] },
+    { language: 'English' as const, minimumLevel: 'B2' as const, certificates: ['B2 advanced English (recommended)'] },
     'OFFICIAL_LANGUAGE',
     CYBER_SOURCE.id,
     CHECKED,
@@ -273,7 +273,7 @@ const DATA_PROGRAM: ProgramIntel = {
     'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت من صفحة البرنامج.',
   ),
   languageRequirement: fact(
-    { minimumLevel: 'B2', certificates: ['German B2'] },
+    { language: 'German' as const, minimumLevel: 'B2' as const, certificates: ['German B2'] },
     'OFFICIAL_LANGUAGE',
     DATA_SOURCE.id,
     CHECKED,

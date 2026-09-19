@@ -80,7 +80,7 @@ function sourceFor(r: Route): IntelSource {
 function makeProgram(r: Route): ProgramIntel {
   const language = r.language
     ? fact(r.language, 'OFFICIAL_LANGUAGE', r.id, CHECKED, { note: r.note, noteAR: r.noteAR })
-    : unverified(
+    : unverified<LanguageRequirementValue>(
         'OFFICIAL_LANGUAGE',
         'The named route is recorded, but its programme-specific minimum language level was not verified in this pass.',
         'تم تسجيل المسار المحدد، لكن لم يتم التحقق من الحد الأدنى للغة الخاص بالبرنامج في هذا المرور.',
