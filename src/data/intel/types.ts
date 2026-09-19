@@ -98,6 +98,19 @@ export interface MajorAliases {
   de: string[];
 }
 
+export type RecommendationMatch = 'exact' | 'related';
+
+export interface UniversityRecommendation {
+  universityId: string;
+  rank: 1 | 2 | 3 | 4;
+  primary: boolean;
+  tu9: boolean;
+  match: RecommendationMatch;
+  focus: string;
+  focusAR: string;
+  source: IntelSource;
+}
+
 export interface MajorIntel {
   id: string;
   canonicalEN: string;
@@ -108,6 +121,8 @@ export interface MajorIntel {
   /** `not_verified` majors render an honest empty state, never public prose. */
   status: 'verified' | 'not_verified';
   lastVerified?: string;
+  /** DARB-ranked university recommendations shown to the team. */
+  universityRecommendations?: UniversityRecommendation[];
   /** Nationwide Bagrut access rule (anabin). */
   bagrutAccess?: VerifiedFact<{ mathUnits: number; englishUnits: number; furtherUnits: number }>;
   /** The conversion formula itself — a procedure, not an admission decision. */

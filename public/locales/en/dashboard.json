@@ -2424,7 +2424,6 @@
     "lessonsPerWeek": "lessons/week",
     "noAccommodationsDesc": "Accommodation entries are managed by administrators.",
     "filteredFromSchool": "Showing only the rooms linked to the option you opened.",
-
     "noPhotos": "No photos available",
     "noPrograms": "No courses listed for this school",
     "noProgramsDesc": "Courses are managed by administrators.",
@@ -4935,7 +4934,10 @@
       "above": "meets or exceeds",
       "acceptedProof": "Accepted proof",
       "additionalLanguage": "Additional language",
-      "language": { "german": "German", "english": "English" },
+      "language": {
+        "german": "German",
+        "english": "English"
+      },
       "conversionFormula": "Official conversion procedure",
       "publishedThreshold": "Published grade threshold",
       "compensation": "Alternative route",
@@ -5087,6 +5089,16 @@
       "germanLevel": "Language requirement per programme",
       "germanCertificate": "Only a certificate proves the level",
       "documents": "Application and visa handling"
+    },
+    "recommendations": {
+      "title": "Recommended universities",
+      "subtitle": "DARB-ranked options: prioritize TU9 when the requested major has a concrete TU9 route.",
+      "count": "4+ options",
+      "primary": "Primary",
+      "tu9": "TU9 priority",
+      "exact": "Exact programme route",
+      "related": "Related route — verify exact programme",
+      "verifiedRoutes": "Verified programme routes on file"
     }
   },
   "partnerSchools": {
