@@ -99,6 +99,16 @@ export interface MajorAliases {
 }
 
 export type RecommendationMatch = 'exact' | 'related';
+export type RecommendationLinkKind = 'programme' | 'catalogue';
+export type RecommendationCostKind = 'bw_non_eu' | 'private' | 'programme_specific' | 'verify';
+
+export interface UniversityRecommendationCost {
+  kind: RecommendationCostKind;
+  label: string;
+  labelAR: string;
+  amount?: string;
+  source: IntelSource;
+}
 
 export interface UniversityRecommendation {
   universityId: string;
@@ -108,6 +118,12 @@ export interface UniversityRecommendation {
   match: RecommendationMatch;
   focus: string;
   focusAR: string;
+  programName: string;
+  programNameAR: string;
+  programUrl: string;
+  linkKind: RecommendationLinkKind;
+  linkCheckedAt: string;
+  tuition: UniversityRecommendationCost;
   source: IntelSource;
 }
 
