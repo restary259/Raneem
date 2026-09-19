@@ -5408,6 +5408,27 @@ export type Database = {
           },
         ]
       }
+      whatsapp_deliveries: {
+        Row: {
+          delivery_id: string
+          event_count: number
+          event_header: string | null
+          processed_at: string
+        }
+        Insert: {
+          delivery_id: string
+          event_count?: number
+          event_header?: string | null
+          processed_at?: string
+        }
+        Update: {
+          delivery_id?: string
+          event_count?: number
+          event_header?: string | null
+          processed_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_events: {
         Row: {
           actor_id: string | null
@@ -5449,6 +5470,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_ingest_log: {
+        Row: {
+          created_at: string
+          delivery_id: string | null
+          event_type: string
+          id: string
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          delivery_id?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+        }
+        Relationships: []
       }
       whatsapp_internal_notes: {
         Row: {
@@ -5573,29 +5618,39 @@ export type Database = {
           body: string
           conversation_id: string
           created_at: string
+          delivery_id: string | null
           delivery_status: string
           direction: string
           error_message: string | null
           error_status: number | null
           id: string
+          media_provider_id: string | null
           message_type: string
           provider_message_id: string | null
+          raw_payload: Json | null
+          reply_to_provider_id: string | null
           sent_at: string | null
+          status_updated_at: string | null
           template_name: string | null
         }
         Insert: {
           authored_by?: string | null
-          body: string
+          body?: string
           conversation_id: string
           created_at?: string
+          delivery_id?: string | null
           delivery_status?: string
           direction: string
           error_message?: string | null
           error_status?: number | null
           id?: string
+          media_provider_id?: string | null
           message_type?: string
           provider_message_id?: string | null
+          raw_payload?: Json | null
+          reply_to_provider_id?: string | null
           sent_at?: string | null
+          status_updated_at?: string | null
           template_name?: string | null
         }
         Update: {
@@ -5603,14 +5658,19 @@ export type Database = {
           body?: string
           conversation_id?: string
           created_at?: string
+          delivery_id?: string | null
           delivery_status?: string
           direction?: string
           error_message?: string | null
           error_status?: number | null
           id?: string
+          media_provider_id?: string | null
           message_type?: string
           provider_message_id?: string | null
+          raw_payload?: Json | null
+          reply_to_provider_id?: string | null
           sent_at?: string | null
+          status_updated_at?: string | null
           template_name?: string | null
         }
         Relationships: [
@@ -5629,6 +5689,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_pending_statuses: {
+        Row: {
+          created_at: string
+          delivery_status: string
+          error_message: string | null
+          error_status: number | null
+          provider_message_id: string
+          raw_payload: Json | null
+          status_updated_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_status: string
+          error_message?: string | null
+          error_status?: number | null
+          provider_message_id: string
+          raw_payload?: Json | null
+          status_updated_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_status?: string
+          error_message?: string | null
+          error_status?: number | null
+          provider_message_id?: string
+          raw_payload?: Json | null
+          status_updated_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       whatsapp_templates: {
         Row: {
@@ -6886,6 +6979,8 @@ export type Database = {
         Returns: boolean
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
+      whatsapp_ingest_event: { Args: { p_payload: Json }; Returns: Json }
+      whatsapp_status_rank: { Args: { p_status: string }; Returns: number }
     }
     Enums: {
       app_role:
