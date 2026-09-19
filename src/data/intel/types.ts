@@ -122,7 +122,8 @@ export interface UniversityRecommendation {
   programNameAR: string;
   programUrl: string;
   linkKind: RecommendationLinkKind;
-  linkCheckedAt: string;
+  /** Date of last real URL check; null until independently checked. */
+  linkCheckedAt: string | null;
   tuition: UniversityRecommendationCost;
   source: IntelSource;
 }
