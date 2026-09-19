@@ -274,10 +274,22 @@ export default function SchoolCalculator({
                 </span>
               </li>
             ))}
+            {coursePriceMissing && (
+              <li className="border-t border-border pt-1 text-amber-700 dark:text-amber-400">
+                {t(
+                  "partnerSchools.coursePriceMissing",
+                  "This course has no published weekly price — request a quote from the school.",
+                )}
+              </li>
+            )}
             {courseQuote.band && (
               <li className="flex justify-between border-t border-border pt-1">
                 <span>
-                  {weeksLabel} × {formatEur(courseQuote.pricePerWeek)} ({formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})
+                  {courseQuote.openingWeeks
+                    ? `${courseQuote.openingWeeks} × ${formatEur(courseQuote.openingPricePerWeek)} + ${
+                        weeks - courseQuote.openingWeeks
+                      } × ${formatEur(courseQuote.pricePerWeek)}`
+                    : `${weeksLabel} × ${formatEur(courseQuote.pricePerWeek)} (${formatBandLabel(courseQuote.band, lang === "ar" ? "ar" : "en")})`}
                 </span>
                 <span>{courseTotalLabel}</span>
               </li>
@@ -285,8 +297,12 @@ export default function SchoolCalculator({
             {withAcc && accQuote?.tier && (
               <li className="flex justify-between">
                 <span>
-                  {lang === "ar" && acc?.name_ar ? acc.name_ar : acc?.name_en} · {stayWeeks} {t("partnerSchools.weeks", "weeks")}
-                  {accQuote.perWeek ? ` × ${formatEur(accQuote.perWeek)}` : ""}
+                  {lang === "ar" && acc?.name_ar ? acc.name_ar : acc?.name_en} ·{" "}
+                  {accQuote.openingWeeks
+                    ? `${accQuote.openingWeeks} × ${formatEur(accQuote.openingPerWeek)} + ${
+                        stayWeeks - accQuote.openingWeeks
+                      } × ${formatEur(accQuote.perWeek)}`
+                    : `${stayWeeks} ${t("partnerSchools.weeks", "weeks")}${accQuote.perWeek ? ` × ${formatEur(accQuote.perWeek)}` : ""}`}
                 </span>
                 <span>{formatEur(accQuote.total)}</span>
               </li>
