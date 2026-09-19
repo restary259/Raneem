@@ -72,10 +72,23 @@ export default function SchoolCalculator({
     () => courseTiers.filter((tier) => tier.course_id === course?.id),
     [courseTiers, course],
   );
-  const courseQuote = useMemo(() => quoteCourse(tiers, weeks, "booking"), [tiers, weeks]);
+  // Schools that charge a higher rate for the opening weeks publish the rule on the row.
+  const courseRule = useMemo(
+    () => ({
+      surchargeWeeks: course?.surcharge_weeks ?? null,
+      surchargeWaivedFromWeeks: course?.surcharge_waived_from_weeks ?? null,
+    }),
+    [course],
+  );
+  const pricedCourseIds = useMemo(
+    () => new Set(courseTiers.map((tier) => tier.course_id)),
+    [courseTiers],
+  );
+  const coursePriceMissing = course ? !pricedCourseIds.has(course.id) : true;
+  const courseQuote = useMemo(() => quoteCourse(tiers, weeks, "booking", courseRule), [tiers, weeks, courseRule]);
   const courseQuoteMax = useMemo(
-    () => (isRange ? quoteCourse(tiers, weeksMax, "booking") : null),
-    [tiers, weeksMax, isRange],
+    () => (isRange ? quoteCourse(tiers, weeksMax, "booking", courseRule) : null),
+    [tiers, weeksMax, isRange, courseRule],
   );
   const weeksLabel = isRange ? `${weeks}–${weeksMax}` : String(weeks);
   const courseTotalLabel = courseQuoteMax
