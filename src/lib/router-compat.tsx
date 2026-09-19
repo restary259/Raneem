@@ -155,3 +155,32 @@ export const Outlet = TSOutlet;
 // ---------- NavLink (minimal) ----------
 
 export const NavLink = Link;
+
+// ---------- MemoryRouter (test-only helper) ----------
+// Renders arbitrary children inside a real TanStack router backed by a memory
+// history, so components using the compat hooks work in unit tests.
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter as tsCreateRouter,
+  RouterProvider,
+} from "@tanstack/react-router";
+
+export function MemoryRouter({
+  children,
+  initialEntries,
+}: {
+  children?: ReactNode;
+  initialEntries?: string[];
+}) {
+  const router = useMemo(() => {
+    const rootRoute = createRootRoute({ component: () => <>{children}</> });
+    return tsCreateRouter({
+      routeTree: rootRoute,
+      history: createMemoryHistory({ initialEntries: initialEntries ?? ["/"] }),
+    });
+    // Test helper: children/entries are fixed for the lifetime of the render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return <RouterProvider router={router} />;
+}

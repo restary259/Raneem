@@ -171,6 +171,7 @@ const AdminSubmissionsPage = () => {
     });
     const docsMap: Record<string, any[]> = {};
     (docsRes.data || []).forEach((d) => {
+      if (!d.case_id) return;
       if (!docsMap[d.case_id]) docsMap[d.case_id] = [];
       docsMap[d.case_id].push(d);
     });
