@@ -19,13 +19,9 @@ export interface SubjectEntry {
   intel?: MajorIntel;
 }
 
-/** Public dataset ids that the Computer Science intelligence entry covers. */
-const CS_ALIAS_IDS = new Set(['computer-science', 'informatik', 'software-engineering']);
-
 function intelFor(id: string): MajorIntel | undefined {
   const direct = getMajorIntel(id);
   if (direct && direct.status === 'verified') return direct;
-  if (CS_ALIAS_IDS.has(id)) return getMajorIntel('computer-science');
   return direct;
 }
 
