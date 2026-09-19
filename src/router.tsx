@@ -39,8 +39,15 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { queryClient },
-    scrollRestoration: true,
+    // The old app scrolled to top on every pathname change (AppShell effect
+    // preserves that); router scroll restoration would fight it.
+    scrollRestoration: false,
     defaultPreloadStaleTime: 0,
+    // SPA mode: route components render client-side only, exactly like the
+    // pre-migration Vite SPA. This preserves behaviour for browser-only code
+    // (i18n HTTP backend + suspense, PDF/Excel exports, realtime, localStorage)
+    // while the server still returns the document shell.
+    defaultSsr: false,
   });
 
   return router;
