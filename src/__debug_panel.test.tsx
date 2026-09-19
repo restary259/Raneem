@@ -2,7 +2,13 @@ import { describe, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-vi.mock('sonner', () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
+vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (_k: string, fallback?: any) =>
+      typeof fallback === 'string' ? fallback : (fallback?.defaultValue ?? _k),
+  }),
+}));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: { getUser: () => Promise.resolve({ data: { user: { id: 'admin-1' } } }) },
