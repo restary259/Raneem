@@ -4951,7 +4951,13 @@
       "below": "أقل من المطلوب",
       "above": "مستوفى أو أعلى",
       "acceptedProof": "الإثباتات المقبولة",
-      "additionalLanguage": "لغة إضافية"
+      "additionalLanguage": "لغة إضافية",
+      "conversionFormula": "إجراء تحويل المعدل الرسمي",
+      "publishedThreshold": "حد المعدل المنشور",
+      "compensation": "مسار بديل",
+      "admissionMode": "نمط القبول",
+      "applicationChannel": "قناة التقديم",
+      "entranceProcedure": "إجراء القبول"
     },
     "readyToUse": "جاهزة للاستخدام",
     "recent": "فُتحت مؤخراً",
