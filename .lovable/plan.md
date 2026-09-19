@@ -94,7 +94,7 @@ duplicated when the same event arrives twice.
   `tsconfig*.json`, `src/main.tsx`, `src/App.tsx`, `src/index.css`,
   `index.html`, `vercel.json`, `public/service-worker.js`.
 - `index.html` head content, the head scripts and `src/main.tsx` start-up code
-  move into the new root route's head/初期 setup; the CSP, HSTS and cache headers
+  move into the new root route's head and start-up setup; the CSP, HSTS and cache headers
   from `vercel.json` are re-created in app code.
 - Browser-only code (`window`, `document`, `localStorage`, service worker,
   notifications, file/blob handling) must be guarded so it does not run during
