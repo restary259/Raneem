@@ -53,6 +53,8 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
 
   const name = isAr ? subject.nameAR : subject.nameEN;
   const category = isAr ? subject.categoryAR : subject.categoryEN;
+  const languageLabel = (language: 'German' | 'English') =>
+    t('intel.language.' + language.toLowerCase(), language);
 
   return (
     <Card className="border-border">
@@ -109,7 +111,10 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                     <Row label={isAr ? program.universityNameAR : program.universityName}>
                       {teaching ? (
                         <span className="font-medium">
-                          {t('intel.card.teachingLanguage', 'Teaching language')}: {teaching}
+                          {t('intel.card.teachingLanguage', 'Teaching language')}: {teaching
+                            .split(' / ')
+                            .map((language) => languageLabel(language as 'German' | 'English'))
+                            .join(' / ')}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">
@@ -121,7 +126,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                       <>
                         <Row label={t('intel.card.requiredLevel', 'Required CEFR level')}>
                           <span className="font-semibold">
-                            {value.language} {value.minimumLevel}
+                            {languageLabel(value.language)} {value.minimumLevel}
                           </span>
                         </Row>
                         <div>
@@ -160,7 +165,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                         {value.additionalLanguage && (
                           <Row label={t('intel.card.additionalLanguage', 'Additional language')}>
                             <span className="font-medium">
-                              {value.additionalLanguage.language} {value.additionalLanguage.minimumLevel}
+                              {languageLabel(value.additionalLanguage.language)} {value.additionalLanguage.minimumLevel}
                             </span>
                             {value.additionalLanguage.certificates.length > 0 && (
                               <span className="text-muted-foreground"> · {value.additionalLanguage.certificates.join(' · ')}</span>
@@ -213,7 +218,9 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                   <p className="text-xs font-medium text-muted-foreground">
                     {t('intel.card.conversionFormula', 'Official conversion procedure')}
                   </p>
-                  <p className="mt-1 overflow-x-auto text-xs font-mono">{intel.gradeConversion.value}</p>
+                  <p className="mt-1 overflow-x-auto text-xs font-mono">
+                    {isAr ? intel.gradeConversion.noteAR ?? intel.gradeConversion.value : intel.gradeConversion.value}
+                  </p>
                 </div>
               )}
               <p className="mt-2 text-xs text-sky-700 dark:text-sky-400">
@@ -303,7 +310,11 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                         {value ? (isAr ? value.semesterAR : value.semester) + ' — ' + value.deadline : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
                       </Row>
                       {entrance && (
-                        <Row label={t('intel.card.entranceProcedure', 'Entrance procedure')}>{entrance}</Row>
+                        <Row label={t('intel.card.entranceProcedure', 'Entrance procedure')}>
+                          {isAr
+                            ? program.entranceRequirement.noteAR ?? entrance
+                            : program.entranceRequirement.note ?? entrance}
+                        </Row>
                       )}
                     </div>
                   );
