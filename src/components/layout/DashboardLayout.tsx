@@ -464,7 +464,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
           <SidebarNav role={role} />
         </Sidebar>
 
-        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <div className="flex min-h-0 flex-1 min-w-0 flex-col overflow-hidden">
           {/* Top header */}
           <header className="h-14 border-b border-border/50 flex items-center justify-between px-4 shrink-0 bg-background/95 backdrop-blur sticky top-0 z-10">
             <SidebarTrigger />
@@ -533,7 +533,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
           <main
             ref={mainRef}
             className={cn(
-              "flex-1 min-w-0 overflow-y-auto overflow-x-hidden md:pb-0",
+              "min-h-0 flex-1 min-w-0 overflow-y-auto overflow-x-hidden overscroll-y-none md:pb-0",
               chatFullscreen
                 ? "pb-0"
                 : "pb-[calc(4rem+env(safe-area-inset-bottom))]",
