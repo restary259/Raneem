@@ -26,4 +26,9 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [errorMiddleware, csrfMiddleware],
+  // SPA mode: route components render client-side only, exactly like the
+  // pre-migration Vite SPA. This preserves behaviour for browser-only code
+  // (i18n HTTP backend + suspense, PDF/Excel exports, realtime, localStorage)
+  // while the server still returns the document shell.
+  defaultSsr: false,
 }));
