@@ -4103,7 +4103,6 @@ export type Database = {
           extra_day_price: number | null
           from_weeks: number
           id: string
-          night_price: number | null
           price_per_week: number | null
           sort_order: number
           to_weeks: number | null
@@ -4115,7 +4114,6 @@ export type Database = {
           extra_day_price?: number | null
           from_weeks: number
           id?: string
-          night_price?: number | null
           price_per_week?: number | null
           sort_order?: number
           to_weeks?: number | null
@@ -4127,7 +4125,6 @@ export type Database = {
           extra_day_price?: number | null
           from_weeks?: number
           id?: string
-          night_price?: number | null
           price_per_week?: number | null
           sort_order?: number
           to_weeks?: number | null
@@ -4298,7 +4295,6 @@ export type Database = {
           name_en: string
           notes: string | null
           price_version_id: string
-          registration_fee: number | null
           schedule_text_ar: string | null
           schedule_text_en: string | null
           sort_order: number
@@ -4325,7 +4321,6 @@ export type Database = {
           name_en: string
           notes?: string | null
           price_version_id: string
-          registration_fee?: number | null
           schedule_text_ar?: string | null
           schedule_text_en?: string | null
           sort_order?: number
@@ -4352,7 +4347,6 @@ export type Database = {
           name_en?: string
           notes?: string | null
           price_version_id?: string
-          registration_fee?: number | null
           schedule_text_ar?: string | null
           schedule_text_en?: string | null
           sort_order?: number
