@@ -34,9 +34,17 @@ export interface SubjectRequirement {
 }
 
 export interface LanguageRequirementValue {
+  /** Primary language for the programme requirement. */
+  language: 'German' | 'English';
   minimumLevel: GermanLevel;
   /** Certificate names exactly as the university lists them. */
   certificates: string[];
+  /** Optional additional language requirement, e.g. English B1 alongside German. */
+  additionalLanguage?: {
+    language: 'German' | 'English';
+    minimumLevel: GermanLevel;
+    certificates: string[];
+  };
 }
 
 export interface GradeRequirementValue {
