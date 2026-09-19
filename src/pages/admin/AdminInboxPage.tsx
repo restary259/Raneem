@@ -33,6 +33,7 @@ const isPartnership = (row: Submission) =>
 
 const AdminInboxPage = () => {
   const { t } = useTranslation("dashboard");
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const { author, locale: exportLocale, rtl } = useExportContext();
