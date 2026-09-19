@@ -4249,7 +4249,8 @@
     "section": {
       "direct": "محادثات مباشرة",
       "cases": "الملفات",
-      "partners": "الشركاء"
+      "partners": "الشركاء",
+      "whatsapp": "واتساب"
     },
     "delete": {
       "button": "حذف الرسالة"
