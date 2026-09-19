@@ -240,11 +240,7 @@ const AdminInboxPage = () => {
           />
         </div>
 
-        <TabsContent value="whatsapp" forceMount className={tab === "whatsapp" ? "mt-0" : "hidden"}>
-          <WhatsAppInboxPage embedded />
-        </TabsContent>
-
-        {tab !== "whatsapp" && (loading ? (
+        {(loading ? (
           <LoadingState variant="table" rows={6} />
         ) : searched.length === 0 && tab !== "recruits" && tab !== "dataRequests" ? (
           <EmptyState
