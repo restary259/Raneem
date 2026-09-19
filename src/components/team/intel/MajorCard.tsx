@@ -16,8 +16,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTeamCatalog } from '@/hooks/useTeamCatalog';
 import { bagrutToGermanGrade } from '@/utils/gradeConverter';
 import type { SubjectEntry } from '@/lib/intel/subjects';
-import type { ProgramIntel } from '@/data/intel/types';
+import type { AdmissionMode, ApplicationChannel, ProgramIntel } from '@/data/intel/types';
 import { getRecommendedUniversityMeta } from '@/data/intel/universityRecommendations';
+
+/** Static key maps — the i18n parity guard needs literal keys in source. */
+const ADMISSION_MODE_KEYS: Record<AdmissionMode, string> = {
+  open: 'intel.admission.open',
+  nc: 'intel.admission.nc',
+  aptitude_test: 'intel.admission.aptitude_test',
+  selection_procedure: 'intel.admission.selection_procedure',
+  unknown: 'intel.admission.unknown',
+};
+const CHANNEL_KEYS: Record<ApplicationChannel, string> = {
+  university: 'intel.channel.university',
+  uni_assist: 'intel.channel.uni_assist',
+  hochschulstart: 'intel.channel.hochschulstart',
+  other: 'intel.channel.other',
+};
 
 const GRADE_SCALE = [95, 90, 85, 80, 75, 70, 65, 60, 55];
 const CEFR_LABELS = {
@@ -310,10 +325,10 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                         <span className="font-medium">{isAr ? program.programNameAR : program.programName}</span>
                       </Row>
                       <Row label={t('intel.card.admissionMode', 'Admission mode')}>
-                        {mode ? t('intel.admission.' + mode, mode) : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
+                        {mode ? t(ADMISSION_MODE_KEYS[mode], mode) : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
                       </Row>
                       <Row label={t('intel.card.applicationChannel', 'Application channel')}>
-                        {channel ? t('intel.channel.' + channel, channel) : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
+                        {channel ? t(CHANNEL_KEYS[channel], channel) : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
                       </Row>
                       <Row label={t('intel.row.deadline', 'Application deadline')}>
                         {value ? (isAr ? value.semesterAR : value.semester) + ' — ' + value.deadline : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
