@@ -64,7 +64,6 @@ import {
   ClipboardEdit,
   Hotel,
   School,
-  MessageCircleMore,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";

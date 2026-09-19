@@ -13,7 +13,7 @@ import {
   TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
   Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
-  Hotel, MessageCircleMore,
+  Hotel,
 } from 'lucide-react';
 
 interface NavItem {
