@@ -40,7 +40,7 @@ const AdminInboxPage = () => {
   const [rows, setRows] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const requestedTab = searchParams.get("tab");
-  const initialTab = INBOX_TABS.includes(requestedTab as InboxTab) ? requestedTab as InboxTab : "whatsapp";
+  const initialTab = INBOX_TABS.includes(requestedTab as InboxTab) ? requestedTab as InboxTab : "all";
   const [tab, setTab] = useState<InboxTab>(initialTab);
   const [search, setSearch] = useState("");
   const [recruitCount, setRecruitCount] = useState(0);
