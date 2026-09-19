@@ -122,7 +122,7 @@ export default function CaseMessagesInboxPage() {
   const load = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const [caseRows, directRows, muteRows, whatsappRows] = await Promise.all([
+      const [caseRows, directRows, muteRows] = await Promise.all([
         listMyCaseThreads(user.id),
         listMyDirectThreads(user.id).catch(() => [] as DirectThread[]),
         listMutedThreads(user.id).catch(() => []),

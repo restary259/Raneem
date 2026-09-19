@@ -200,7 +200,7 @@ serve(async (req) => {
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
       const { data: conversation, error } = await admin
         .from("whatsapp_conversations")
-        .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number)")
+        .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number, marketing_consent_status)")
         .eq("id", conversationId)
         .maybeSingle();
       if (error) throw error;
@@ -221,6 +221,14 @@ serve(async (req) => {
         const { data: template, error: templateError } = await admin.from("whatsapp_templates").select("*").eq("id", templateId).maybeSingle();
         if (templateError) throw templateError;
         if (!template || template.approval_status !== "APPROVED") return json({ error: "Only an approved WhatsApp template can be sent" }, 400, corsHeaders);
+        // Marketing consent is tracked separately from service consent: a
+        // marketing template may only go to a contact who explicitly granted it.
+        if (String(template.category ?? "").toUpperCase() === "MARKETING") {
+          const marketingConsent = String((lead as { marketing_consent_status?: string } | null)?.marketing_consent_status ?? "unknown");
+          if (marketingConsent !== "granted") {
+            return json({ error: "This contact has not granted marketing consent, so only service templates can be sent" }, 409, corsHeaders);
+          }
+        }
         const parameters = Array.isArray(input?.parameters) ? input.parameters.map((value: unknown) => String(value).trim()) : [];
         const expected = [...templateBody(template.components).matchAll(/{{\s*(\d+)\s*}}/g)].length;
         if (parameters.length !== expected || parameters.some((value: string) => !value)) return json({ error: "Complete every template field before sending" }, 400, corsHeaders);

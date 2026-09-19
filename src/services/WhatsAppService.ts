@@ -75,6 +75,34 @@ export async function getWhatsAppInboundStatus(): Promise<WhatsAppInboundStatus>
   };
 }
 
+export type IdentitySuggestion = Database["public"]["Functions"]["whatsapp_identity_suggestions"]["Returns"][number];
+
+/**
+ * Phone-based match suggestions against existing leads, cases and profiles.
+ * Read-only: nothing is linked until staff confirm it.
+ */
+export async function getIdentitySuggestions(whatsappLeadId: string): Promise<IdentitySuggestion[]> {
+  const { data, error } = await supabase.rpc("whatsapp_identity_suggestions", { p_whatsapp_lead_id: whatsappLeadId });
+  fail(error);
+  return (data ?? []) as IdentitySuggestion[];
+}
+
+/** Staff confirmation of an identity match. Never creates a lead or a case. */
+export async function linkWhatsAppIdentity(whatsappLeadId: string, target: { lead_id?: string; case_id?: string; profile_id?: string }) {
+  const { error } = await supabase.rpc("whatsapp_link_identity", {
+    p_whatsapp_lead_id: whatsappLeadId,
+    p_lead_id: target.lead_id ?? null,
+    p_case_id: target.case_id ?? null,
+    p_profile_id: target.profile_id ?? null,
+  });
+  fail(error);
+}
+
+export async function unlinkWhatsAppIdentity(whatsappLeadId: string) {
+  const { error } = await supabase.rpc("whatsapp_unlink_identity", { p_whatsapp_lead_id: whatsappLeadId });
+  fail(error);
+}
+
 export async function updateLead(id: string, patch: Tables["whatsapp_leads"]["Update"]) {
   const { error } = await supabase.from("whatsapp_leads").update(patch).eq("id", id); fail(error);
 }
