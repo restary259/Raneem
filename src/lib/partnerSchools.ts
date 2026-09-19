@@ -170,7 +170,9 @@ export function quoteAccommodation(
   tiers: AccommodationPriceTier[],
   weeks: number,
 ): AccommodationQuote {
-  if (weeks <= 0) return { weeks: 0, total: 0, perWeek: null, tier: null };
+  // A zero/invalid duration is not a free stay. Keep the quote unresolved so
+  // callers cannot accidentally calculate a €0 accommodation cost.
+  if (weeks <= 0) return { weeks, total: null, perWeek: null, tier: null };
   const tier =
     tiers.find((t) => weeks >= t.from_weeks && (t.to_weeks == null || weeks <= t.to_weeks)) ?? null;
   if (!tier) return { weeks, total: null, perWeek: null, tier: null };
@@ -189,7 +191,7 @@ export function quoteAccommodation(
 /**
  * Quotes a stay that may be shorter than a week: weeks = 0 means a single
  * night, priced from the published nightly rate when the school prints one.
- * Falls back to the plain weekly quote (0 for a zero-week stay) otherwise.
+ * Without a published nightly rate, the quote remains unresolved.
  */
 export function quoteStay(
   tiers: AccommodationPriceTier[],
