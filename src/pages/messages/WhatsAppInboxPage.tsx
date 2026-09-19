@@ -76,12 +76,13 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const [startNumber, setStartNumber] = useState("");
   const [startName, setStartName] = useState("");
   const [starting, setStarting] = useState(false);
+  const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const [threadRows, staffRows, templateRows] = await Promise.all([listWhatsAppThreads(), listWhatsAppStaff(), listWhatsAppTemplates()]);
-      setThreads(threadRows); setStaff(staffRows); setTemplates(templateRows);
+      const [threadRows, staffRows, templateRows, inboundStatus] = await Promise.all([listWhatsAppThreads(), listWhatsAppStaff(), listWhatsAppTemplates(), getWhatsAppInboundStatus()]);
+      setThreads(threadRows); setStaff(staffRows); setTemplates(templateRows); setInbound(inboundStatus);
     } catch (e) { setError(e instanceof Error ? e.message : t("errors.load")); }
     finally { setLoading(false); }
   }, [t]);
