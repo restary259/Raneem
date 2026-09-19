@@ -60,7 +60,8 @@ import DataRequestsPanel from '../DataRequestsPanel';
 
 const selectStatus = async (optionName: string) => {
   const combo = screen.getByRole('combobox');
-  await userEvent.click(combo);
+  const user = userEvent.setup();
+  await user.click(combo);
   // eslint-disable-next-line no-console
   console.log('DBG expanded:', combo.getAttribute('aria-expanded'), 'listbox:', !!screen.queryByRole('listbox'), 'opts:', screen.queryAllByRole('option').map((o) => o.textContent));
   await userEvent.click(await screen.findByRole('option', { name: optionName }));
