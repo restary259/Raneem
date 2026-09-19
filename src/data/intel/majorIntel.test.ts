@@ -28,6 +28,18 @@ describe('Major Intelligence coverage', () => {
         expect(recommendation.source.url.startsWith('https://')).toBe(true);
         expect(recommendation.source.authority).toBe('university');
       }
+      const exactRoutes = recommendations.filter((item) => item.match === 'exact');
+      for (const recommendation of exactRoutes) {
+        expect(recommendation.linkKind).toBe('programme');
+        expect(recommendation.linkCheckedAt).toBeTruthy();
+        expect(recommendation.programUrl).toMatch(/^https:\/\//);
+      }
+
+      const bwRecommendations = recommendations.filter((item) => item.tuition.kind === 'bw_non_eu');
+      for (const recommendation of bwRecommendations) {
+        expect(recommendation.tuition.amount).toBe('€1,500 / semester');
+      }
+
       const exactTU9 = recommendations.filter((item) => item.tu9 && item.match === 'exact');
       expect(exactTU9.length).toBeLessThanOrEqual(1);
       if (exactTU9.length === 1) expect(recommendations[0].tu9).toBe(true);
