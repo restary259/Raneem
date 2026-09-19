@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -44,6 +45,9 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const { toast } = useToast();
   const mobile = useIsMobile();
   const rtl = i18n.language === "ar";
+  // Match the case/direct inbox behavior: on mobile an open WhatsApp thread
+  // owns the whole viewport and the dashboard bottom navigation stays hidden.
+  useChatFullscreen(!!mobile && !!selectedId);
   const Back = rtl ? ArrowRight : ArrowLeft;
   const [threads, setThreads] = useState<WhatsAppThread[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
