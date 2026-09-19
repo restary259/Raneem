@@ -1,57 +1,61 @@
-# Partner Schools — data, calculation and QA audit
+# Partner Schools — audit findings and repair plan
 
-Audit-first. No redesign. Four schools in scope: KAPITO (Münster), F+U Academy (Heidelberg), GoAcademy! (Düsseldorf), Alpha Aktiv (Heidelberg). Perfekt Deutsch Dortmund is not in the system and stays out of scope.
+No redesign. Four schools in scope: KAPITO (Münster), F+U Academy (Heidelberg), GoAcademy! (Düsseldorf), Alpha Aktiv (Heidelberg). Perfekt Deutsch Dortmund is not in the system and stays out of scope.
 
-Delivered in two stages: **Stage 1 = audit report** (no changes to data or code), then, after you approve it, **Stage 2 = fixes**.
+## What the audit found so far
 
-## Confirmed starting state
+Checked against the official uploaded brochures and price lists, plus the live database.
 
-Read from the live database before writing this plan:
+### Critical — GoAcademy! prices are calculated the wrong way
 
-| School | Courses | Housing | Levels | Start dates | Policies | Sources | Last verified |
-|---|---|---|---|---|---|---|---|
-| KAPITO | 4 | 10 | 5 | 24 | 6 | 4 | 18 Sep 2026 |
-| F+U Academy | 9 | 22 | 6 | 12 | 11 | 1 | 18 Sep 2026 |
-| GoAcademy! | 7 | 7 | 5 | **0** | 16 | 5 | **never** |
-| Alpha Aktiv | 11 | 14 | 5 | 12 | 5 | 2 | 18 Sep 2026 |
+The GoAcademy 2026 price list charges a higher rate for the first four weeks and a lower rate afterwards, in the same booking. Our system instead applies one single rate to the whole booking, so the team is quoting too little.
 
-Price versions: KAPITO has 2026 (archived) and 2027 (current); the other three have a single 2026 current version. No duplicate current versions.
+Official rules, printed in the price list:
 
-Issues already visible without further digging, to be confirmed and quantified in Stage 1:
+- Course: weeks 1–4 at €190, weeks 5–24 at €175, and "if you book 25 or more weeks you only pay €165 per week from the beginning".
+- Accommodation: weeks 1–4 at the higher rate, further weeks at the middle rate, 24+ weeks at the lowest rate, plus "for bookings of at least 12 weeks the surcharge for the first 4 weeks is waived" and "for bookings of at least 24 weeks the price applies from the first week".
 
-- GoAcademy! has no start dates at all and no verification date on the school record.
-- F+U Academy has no website URL stored and only one source document.
-- Seven courses across GoAcademy! and Alpha Aktiv have **no price rows** (evening, doctors, nursing, private lessons, telc prep). They still appear in the calculator's course dropdown.
-- Alpha Aktiv stamps the €50 registration fee on every course including private and evening classes; the brochure needs re-checking on whether it applies to all of them.
-- A zero-week accommodation stay currently returns €0 rather than "not applicable", which risks reading as free housing.
+Effect today, examples:
 
-## Stage 1 — the audit report
+| Booking | Correct total | What our calculator shows | Gap |
+|---|---|---|---|
+| 12-week course | €2,160 | €2,100 | €60 short |
+| 20-week course | €3,560 | €3,500 | €60 short |
+| 8 weeks standard shared room | €1,240 | €1,160 | €80 short |
 
-For every school, every course, every housing option, every start date, every policy and every source, each field gets one status: **verified / unverified / missing / conflicting / outdated**, checked against the official uploaded 2026–2027 brochures and price lists plus the schools' current official pages. Anything the source does not print stays unverified — no inference, no borrowing a value from a sibling school.
+KAPITO, F+U and Alpha Aktiv genuinely do use one flat rate for the whole booking (their own printed examples confirm it), so they must keep working exactly as they do now.
 
-Then the calculation trace: inputs → course band lookup → accommodation tier → fees → total, checked by hand against each school's own printed example, plus every tier boundary (week before, week at, week after each band edge) and the empty/missing cases.
+### Verified correct (no change needed)
 
-Output is a table of numbered findings: ID, school, category, field, current value, verified value, status, source, recommended fix, severity. No data or code changes in this stage.
+- KAPITO 2027 course bands (€210 / €190 / €180 / €170 / €160) and the extension bands, the fixed 1–4 week room prices (€290 / €390 / €525 / €660), €165 per week from week 5, apartment from €270, studio from €300, summer supplement 5 Jul – 27 Aug 2027 at €30 per week — all match the official 2027 sheet.
+- GoAcademy accommodation rates themselves (€165/145/130, €220/195/180, €185/165/150, €245/225/210, €360/310/270, family €310/270/250 and €390/320/300), placement fee €90, deposit €250, transfer €100 / €150 — all match.
+- F+U and Alpha Aktiv week-band structures match their brochures.
 
-## Stage 2 — the fixes (after you approve the report)
+### Data gaps and smaller issues
 
-Applied strictly in this order, and only where an official source backs the change:
+1. GoAcademy has no start dates at all and no verification date on the school record.
+2. GoAcademy courses show no registration fee even though its own policy records €60.
+3. F+U Academy has no website address stored and only one source document.
+4. F+U "Residence A twin" has no price and no rate rows at all.
+5. Alpha Aktiv "host family" has no price (the brochure does not print one) — correct to leave blank, but it should say so clearly.
+6. KAPITO's 2027 accommodation arranging fee is blank because the 2027 sheet does not reprint it.
+7. Security deposits for KAPITO are still unconfirmed.
+8. Courses with no published price (evening classes, doctors, nursing, private lessons, exam prep) still appear in the calculator's course list and quote nothing.
+9. An accommodation stay of zero weeks currently shows €0, which reads as free housing.
 
-1. **Data corrections** — wrong prices, wrong durations, wrong fees, duplicates, orphan rows, ordering. Each as a proper migration, never a one-off hand edit.
-2. **Removals** — any value the sources do not support becomes null, so the page shows "not recorded — verify with the school" instead of a plausible wrong number.
-3. **Filling gaps from official sources** — GoAcademy! start dates and verification date, F+U website and missing source documents, any missing course/housing facts the uploaded documents actually print.
-4. **Calculator corrections** — only where the trace shows a real error: tier boundary handling, fee inclusion, and making a missing price or missing duration read as "not recorded" rather than zero. Courses with no published price will not offer a total.
-5. **Text and Arabic** — any new label added gets both English and Arabic, right-to-left checked. Existing wording untouched unless it states something the source does not.
-6. **Tests and QA** — tier-boundary tests per school, missing-price and missing-duration tests, plus a pass through every tab of all four school pages in English and Arabic, including the catalog links.
+## The fix plan
+
+1. Support first-weeks-surcharge pricing in the shared pricing helper, driven by data (a "charge the first weeks separately" marker plus the week count at which the surcharge is waived), so GoAcademy calculates correctly and the other three schools are untouched.
+2. Mark GoAcademy's course and accommodation rates accordingly through a migration, and stamp its €60 registration fee on the courses that publish it.
+3. Add GoAcademy's official start-date rule and verification date. Dates that only exist as coloured marks in the brochure stay out — the page keeps saying "not recorded".
+4. Fill F+U's website and add the missing source entries; leave the unpriced twin room visibly blank rather than guessing.
+5. Calculator behaviour: courses with no published price are clearly marked and produce no total instead of a silent zero; a zero-week stay reads "not applicable" instead of €0.
+6. New tests covering each band edge (the week before, at and after every boundary), the surcharge waiver points at 12 and 24 weeks, and the missing-price cases.
+7. Full pass over every school tab in English and Arabic, right-to-left layout, and the "view in catalog" links.
 
 ## Technical notes
 
-- Reuses the existing tables (`partner_schools`, `school_price_versions`, `school_courses`, `school_course_price_tiers`, `school_level_durations`, `school_accommodations`, `school_accommodation_price_tiers`, `school_start_dates`, `school_policies`, `school_notes`, `school_sources`). No new tables, no parallel architecture, no schema redesign unless a finding proves a column is genuinely missing.
-- Pricing logic stays in `src/lib/partnerSchools.ts`; the UI keeps reading it. `quoteCourse`/`quoteAccommodation` already return `null` for an unpriced band — the gap is the zero-week accommodation path and the presence of unpriced courses in the picker.
-- Catalog JSON under `src/data/schoolCatalog/` versus the partner-school tables: the report states which is authoritative per field and flags any place a stale JSON value can override verified database data.
-- Access rules are not touched.
-- Database changes ship as migrations; on this setup they are applied through the migration tool, not by hand.
-
-## Final report sections
-
-Executive summary; data issues; calculation issues; database issues; source/verification issues; fixes implemented; still missing; must be confirmed with the school; calculation test results; regression results; files changed; migrations created; remaining risks; next actions.
+- Pricing stays in `src/lib/partnerSchools.ts`; `quoteCourse` / `quoteAccommodation` gain a progressive branch selected per row, default unchanged.
+- Schema change is additive: `surcharge_weeks` and `surcharge_waived_from_weeks` (nullable) on the course and accommodation tier owners; existing rows stay NULL and behave exactly as today.
+- All data changes go through migrations. No RLS, layout, navigation or design-system changes.
+- Anything the official source does not print stays null and renders "not recorded — verify with the school".
