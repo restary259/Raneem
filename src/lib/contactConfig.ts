@@ -1,15 +1,23 @@
 /**
  * Centralized contact configuration.
  * All WhatsApp links and contact details should be imported from here.
+ *
+ * One canonical DARB business number is used for every public touchpoint
+ * (hero, floating button, contact page, offices, student overview, broadcast,
+ * email footer). The community group is a separate, clearly-labelled channel.
  */
 
-/** WhatsApp Business direct message link (support / payout requests) */
-export const WHATSAPP_SUPPORT_URL = "https://api.whatsapp.com/message/IVC4VCAEJ6TBD1";
+/** The single customer-facing DARB WhatsApp Business number (digits only). */
+export const WHATSAPP_BUSINESS_NUMBER = "972507368283";
 
-/** WhatsApp direct number link (alternative format) */
-export const WHATSAPP_PHONE_URL = "https://wa.me/972507368283";
+/** Canonical WhatsApp link — use this for every public "message us" action. */
+export const WHATSAPP_BUSINESS_URL = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}`;
 
-/** WhatsApp community group link (for students — used on Apply page) */
+/** Deprecated aliases kept so existing imports resolve to the canonical number. */
+export const WHATSAPP_SUPPORT_URL = WHATSAPP_BUSINESS_URL;
+export const WHATSAPP_PHONE_URL = WHATSAPP_BUSINESS_URL;
+
+/** WhatsApp community group link (community only — never customer support) */
 export const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo";
 
 /** Support email */
