@@ -206,6 +206,9 @@ export default function SchoolCalculator({
                 {courses.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {lang === "ar" && c.name_ar ? c.name_ar : c.name_en}
+                    {pricedCourseIds.has(c.id)
+                      ? ""
+                      : ` — ${t("partnerSchools.noPublishedPrice", "no published weekly price")}`}
                   </SelectItem>
                 ))}
               </SelectContent>
