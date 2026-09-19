@@ -139,8 +139,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
     },
   ],
   team_member: [
-    { key: "nav.messages", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
-    { key: "nav.whatsapp", icon: MessageCircleMore, href: "/team/whatsapp", group: "nav.group.comms" },
+    { key: "nav.staffInbox", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
 
     { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
     // Cases hub: active cases + student accounts. "Submit new student" is an

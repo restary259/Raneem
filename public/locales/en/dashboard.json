@@ -2600,8 +2600,9 @@
     "currency": "Currency converter",
     "mainSite": "Main Site",
     "backToMainSite": "Back to Main Website",
-    "inbox": "Applications",
+    "inbox": "Inbox",
     "messages": "Messages",
+    "staffInbox": "Inbox",
     "myWork": "My work",
     "catalog": "Catalog",
     "group": {
@@ -4046,6 +4047,8 @@
   "messagesInbox": {
     "title": "Case messages",
     "subtitle": "All conversations across your cases, newest first.",
+    "staffTab": "Messages",
+    "whatsappTab": "WhatsApp",
     "searchPlaceholder": "Search by student, reference or text",
     "empty": "No conversations yet.",
     "selectThread": "Select a conversation to read it.",
