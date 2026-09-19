@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
-import { Inbox, Search, Download, FileText, MessageCircleMore } from "lucide-react";
+import { Inbox, Search, Download, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
