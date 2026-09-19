@@ -49,6 +49,32 @@ export async function updateConversation(id: string, patch: Tables["whatsapp_con
   const { error } = await supabase.from("whatsapp_conversations").update(patch).eq("id", id); fail(error);
 }
 
+/** Clears the unread badge when staff open a conversation. Touches nothing else. */
+export async function markConversationRead(id: string) {
+  const { error } = await supabase.from("whatsapp_conversations").update({ unread_count: 0 }).eq("id", id).gt("unread_count", 0);
+  fail(error);
+}
+
+export interface WhatsAppInboundStatus { lastInboundAt: string | null; inboundCount: number; unrecognisedCount: number }
+
+/**
+ * Honest receiving status: derived only from what is actually stored.
+ * The unrecognised counter reads whatsapp_ingest_log (admin-only); a denied
+ * read is reported as 0 rather than failing the page.
+ */
+export async function getWhatsAppInboundStatus(): Promise<WhatsAppInboundStatus> {
+  const [inbound, latest, unrecognised] = await Promise.all([
+    supabase.from("whatsapp_messages").select("id", { count: "exact", head: true }).eq("direction", "inbound"),
+    supabase.from("whatsapp_messages").select("created_at").eq("direction", "inbound").order("created_at", { ascending: false }).limit(1),
+    supabase.from("whatsapp_ingest_log").select("id", { count: "exact", head: true }),
+  ]);
+  return {
+    lastInboundAt: latest.data?.[0]?.created_at ?? null,
+    inboundCount: inbound.count ?? 0,
+    unrecognisedCount: unrecognised.count ?? 0,
+  };
+}
+
 export async function updateLead(id: string, patch: Tables["whatsapp_leads"]["Update"]) {
   const { error } = await supabase.from("whatsapp_leads").update(patch).eq("id", id); fail(error);
 }
