@@ -47,12 +47,12 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const rtl = i18n.language === "ar";
   // Match the case/direct inbox behavior: on mobile an open WhatsApp thread
   // owns the whole viewport and the dashboard bottom navigation stays hidden.
-  useChatFullscreen(!!mobile && !!selectedId);
   const Back = rtl ? ArrowRight : ArrowLeft;
   const [threads, setThreads] = useState<WhatsAppThread[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useChatFullscreen(!!mobile && !!selectedId);
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [notes, setNotes] = useState<WhatsAppNote[]>([]);
   const [query, setQuery] = useState("");
