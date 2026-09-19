@@ -116,6 +116,7 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
     Promise.all([listConversationMessages(selectedId), listConversationNotes(selectedId)])
       .then(([m, n]) => { setMessages(m); setNotes(n); })
       .catch(() => toast({ variant: "destructive", description: t("errors.load") }));
+    void markConversationRead(selectedId).catch(() => undefined);
   }, [selectedId, t, toast]);
   useEffect(() => {
     if (!selectedId) return;
