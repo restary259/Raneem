@@ -222,8 +222,14 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
 
   return (
     <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto w-full max-w-[1800px] pb-20 md:pb-4", embedded && "pb-4")}>
-      {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions connectedLabel={t("connected")} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
-      {embedded && <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions connectedLabel={t("connected")} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>}
+      {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
+      {embedded && <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>}
+      <div className={cn("mb-3 rounded-lg border p-3 text-xs", receiving ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5")}>
+        <p className="font-medium">{t("number")} · {statusLabel}</p>
+        <p className="mt-1 text-muted-foreground">{receiving ? t("status.receivingHelp") : t("status.waitingHelp")}</p>
+        {inbound?.lastInboundAt && <p className="mt-1 text-muted-foreground">{t("status.lastInbound", { time: fmt(inbound.lastInboundAt, i18n.language) })}</p>}
+        {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
+      </div>
       <Tabs defaultValue="inbox" className="space-y-3">
         <TabsList className="grid w-full grid-cols-3 md:w-[470px]"><TabsTrigger value="inbox">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>
         <TabsContent value="inbox" className="m-0">
