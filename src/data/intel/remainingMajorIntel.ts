@@ -509,10 +509,10 @@ const R: Record<string, Route> = {
     note: 'Mapped route: Marketing is a published focus within the Business Studies programme.', noteAR: 'مسار مطابق: التسويق تركيز منشور داخل برنامج إدارة الأعمال.',
   },
   'finance-accounting': {
-    id: 'hsb-european-finance-accounting-ba', universityName: 'Hochschule Bremen', universityNameAR: 'جامعة بريمن للعلوم التطبيقية',
-    city: 'Bremen', cityAR: 'بريمن', programName: 'European Finance and Accounting (B.A.)', programNameDE: 'European Finance and Accounting', programNameAR: 'المالية والمحاسبة الأوروبية (بكالوريوس)',
+    id: 'hsb-international-finance-accounting-bsc', universityName: 'Hochschule Bremen', universityNameAR: 'جامعة بريمن للعلوم التطبيقية',
+    city: 'Bremen', cityAR: 'بريمن', programName: 'International Finance and Accounting (B.Sc.)', programNameDE: 'International Finance and Accounting', programNameAR: 'المالية والمحاسبة الدولية (بكالوريوس)',
     url: 'https://www.hs-bremen.de/en/study/degree-programme/international-finance-and-accounting-b-sc/',
-    title: 'Hochschule Bremen — European Finance and Accounting B.A.', titleAR: 'جامعة بريمن للعلوم التطبيقية — بكالوريوس المالية والمحاسبة الأوروبية',
+    title: 'Hochschule Bremen — International Finance and Accounting B.Sc.', titleAR: 'جامعة بريمن للعلوم التطبيقية — بكالوريوس المالية والمحاسبة الدولية',
     language: { language: 'German', minimumLevel: 'C1', certificates: GERMAN_C1_CERTS, additionalLanguage: { language: 'English', minimumLevel: 'B1', certificates: ['English B1.2'] } },
     admission: 'nc', channel: 'university',
   },
