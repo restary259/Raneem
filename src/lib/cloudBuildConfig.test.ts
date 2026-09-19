@@ -5,12 +5,13 @@ import { describe, expect, it } from 'vitest';
 const viteConfig = readFileSync(resolve(process.cwd(), 'vite.config.ts'), 'utf8');
 
 describe('Lovable Cloud production binding', () => {
-  it('provides compile-time fallbacks for every public Cloud variable', () => {
-    expect(viteConfig).toContain('VITE_SUPABASE_URL: "https://mzbadxfvxioedzdjxamc.supabase.co"');
-    expect(viteConfig).toContain('VITE_SUPABASE_PUBLISHABLE_KEY:');
-    expect(viteConfig).toContain('VITE_SUPABASE_PROJECT_ID: "mzbadxfvxioedzdjxamc"');
-    expect(viteConfig).toContain('env[key] || fallback');
-    expect(viteConfig).toContain('`import.meta.env.${key}`');
+  it('builds through the Lovable config wrapper, which injects the VITE_* Cloud variables at build time', () => {
+    // Pre-migration this file carried inline compile-time fallbacks for
+    // VITE_SUPABASE_URL / _PUBLISHABLE_KEY / _PROJECT_ID. On TanStack Start,
+    // @lovable.dev/vite-tanstack-config performs the VITE_* env injection
+    // itself — the guard is now that the wrapper stays in place.
+    expect(viteConfig).toContain('@lovable.dev/vite-tanstack-config');
+    expect(viteConfig).toContain('export default defineConfig(');
   });
 
   it('never embeds a private backend credential', () => {
