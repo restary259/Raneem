@@ -7,13 +7,14 @@
  * "not filled in yet" line — never public marketing prose.
  */
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ExternalLink, Globe, MapPin } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ExternalLink, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTeamCatalog } from '@/hooks/useTeamCatalog';
+import { usePartnerCountries } from '@/hooks/usePartnerSchools';
 import { bagrutToGermanGrade } from '@/utils/gradeConverter';
 import type { SubjectEntry } from '@/lib/intel/subjects';
 import type { AdmissionMode, ApplicationChannel, ProgramIntel } from '@/data/intel/types';
@@ -65,14 +66,18 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; onBack: () => void }) {
   const { t, i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
-  const { data } = useTeamCatalog();
+  const { data } = usePartnerCountries();
   const intel = subject.intel?.status === 'verified' ? subject.intel : undefined;
   const programs: ProgramIntel[] = intel?.programs ?? [];
 
-  const schools = useMemo(() => data?.schools ?? [], [data]);
+  const partnerSchools = useMemo(() => data?.schools ?? [], [data]);
+  const partnerCountryById = useMemo(
+    () => new Map((data?.countries ?? []).map((country) => [country.id, country.slug])),
+    [data],
+  );
   const cities = useMemo(
-    () => Array.from(new Set(schools.map((s) => s.city).filter((c): c is string => Boolean(c)))).sort(),
-    [schools],
+    () => Array.from(new Set(partnerSchools.map((s) => s.city).filter((c): c is string => Boolean(c)))).sort(),
+    [partnerSchools],
   );
 
   const name = isAr ? subject.nameAR : subject.nameEN;
@@ -276,7 +281,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
 
           {/* Our schools & cities ------------------------------------------ */}
           <TabsContent value="schools" className="mt-4 space-y-3">
-            {schools.length === 0 ? (
+            {partnerSchools.length === 0 ? (
               <Empty />
             ) : (
               <>
@@ -288,23 +293,39 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                     </Badge>
                   ))}
                 </div>
-                <div>
-                  {schools.map((school) => (
-                    <Row key={school.id} label={isAr ? school.name_ar : school.name_en}>
-                      <span className="text-muted-foreground">{school.city ?? '—'}</span>
-                      {school.website && (
-                        <a
-                          href={school.website}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="ms-2 inline-flex items-center gap-1 text-primary underline underline-offset-2"
-                        >
-                          <Globe className="h-3.5 w-3.5" aria-hidden />
-                          {t('intel.card.website', 'Website')}
-                        </a>
-                      )}
-                    </Row>
-                  ))}
+                <div className="space-y-1">
+                  {partnerSchools.map((school) => {
+                    const countrySlug = partnerCountryById.get(school.country_id);
+                    const href = countrySlug ? `/team/partner-schools/${countrySlug}/${school.slug}` : null;
+                    return href ? (
+                      <Link
+                        key={school.id}
+                        to={href}
+                        className="block rounded-md border border-border p-3 transition-colors hover:bg-accent"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="min-w-0">
+                            <span className="block font-medium">{school.name}</span>
+                            <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <MapPin className="h-3.5 w-3.5" aria-hidden />
+                              {school.city ?? '—'}
+                            </span>
+                            {school.standard_course_note_en || school.standard_course_note_ar ? (
+                              <span className="mt-1.5 block text-xs text-muted-foreground">
+                                {isAr ? school.standard_course_note_ar ?? school.standard_course_note_en : school.standard_course_note_en ?? school.standard_course_note_ar}
+                              </span>
+                            ) : null}
+                          </span>
+                          <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180" aria-hidden />
+                        </div>
+                      </Link>
+                    ) : (
+                      <div key={school.id} className="rounded-md border border-dashed border-border p-3 text-sm">
+                        <span className="block font-medium">{school.name}</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">{school.city ?? '—'}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </>
             )}
