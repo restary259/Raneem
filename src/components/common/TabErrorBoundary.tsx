@@ -15,13 +15,13 @@ interface State {
 }
 
 class TabErrorBoundary extends Component<Props, State> {
-  public state: State = { hasError: false };
+  public override state: State = { hasError: false };
 
   public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('TabErrorBoundary caught:', error, errorInfo);
   }
 
@@ -29,7 +29,7 @@ class TabErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: undefined });
   };
 
-  public render() {
+  public override render() {
     if (this.state.hasError) {
       const t = (key: string, fallback?: string) => i18n.t(key, { defaultValue: fallback });
       return (
