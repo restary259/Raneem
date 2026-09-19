@@ -146,13 +146,15 @@ const R:Record<string,[string,string,string,string]>={
   "travel-tourism":["worms","hsb","harz","hm"],
 };
 
-const EXACT_TU9_PRIMARY = new Set([
-  "computer-engineering","aerospace-engineering","renewable-energy","software-engineering",
-  "industrial-engineering","chemical-engineering","mechanical-engineering","civil-engineering",
-  "electrical-it","electrical-engineering","environmental-engineering","computer-science",
-  "cybersecurity","data-science","environmental-science","mathematics","physics","chemistry",
-  "biology","psychology","sociology","political-science","philosophy","history",
-  "business-administration","economics","architecture","forestry","medicine"
+const PRIMARY_EXACT = new Set([
+  "public-health","bioinformatics","biomedical-engineering","pharmacy","dentistry","medicine","physiotherapy","veterinary","nursing",
+  "computer-engineering","aerospace-engineering","renewable-energy","software-engineering","industrial-engineering","chemical-engineering",
+  "mechanical-engineering","civil-engineering","electrical-it","electrical-engineering","environmental-engineering","computer-science",
+  "cybersecurity","data-science","environmental-science","mathematics","physics","chemistry","biology","psychology","sociology",
+  "political-science","philosophy","social-work","linguistics","history","business-administration","economics","international-law",
+  "criminal-law","business-law","architecture","fine-arts","graphic-design","music","theater","film-media",
+  "elementary-education","special-education","agricultural-science","forestry","marine-science","sustainable-development",
+  "tourism-management","hotel-management","event-management","travel-tourism"
 ]);
 
 function source(majorId:string,uid:string):IntelSource{
@@ -162,7 +164,7 @@ function source(majorId:string,uid:string):IntelSource{
 
 function build(majorId:string,uid:string,rank:1|2|3|4):UniversityRecommendation{
   const u=U[uid];
-  const exact=rank===1 && EXACT_TU9_PRIMARY.has(majorId) && u.tu9;
+  const exact=rank===1 && PRIMARY_EXACT.has(majorId);
   const match:RecommendationMatch=exact?'exact':'related';
   return {universityId:uid,rank,primary:rank===1,tu9:u.tu9,match,focus:'',focusAR:'',source:source(majorId,uid)};
 }
