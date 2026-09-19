@@ -2442,7 +2442,6 @@
     "lessonsPerWeek": "حصة/أسبوع",
     "noAccommodationsDesc": "تُدار مدخلات أماكن الإقامة من قبل المسؤولين.",
     "filteredFromSchool": "نعرض فقط الغرف المرتبطة بالخيار الذي فتحته.",
-
     "noPhotos": "لا توجد صور متاحة",
     "noPrograms": "لا توجد دورات لهذه المدرسة",
     "noProgramsDesc": "تُدار الدورات من قبل المسؤولين.",
@@ -4952,7 +4951,10 @@
       "above": "مستوفى أو أعلى",
       "acceptedProof": "الإثباتات المقبولة",
       "additionalLanguage": "لغة إضافية",
-      "language": { "german": "الألمانية", "english": "الإنجليزية" },
+      "language": {
+        "german": "الألمانية",
+        "english": "الإنجليزية"
+      },
       "conversionFormula": "إجراء تحويل المعدل الرسمي",
       "publishedThreshold": "حد المعدل المنشور",
       "compensation": "مسار بديل",
@@ -5105,6 +5107,16 @@
       "germanLevel": "شرط اللغة لكل برنامج",
       "germanCertificate": "الشهادة وحدها تثبت المستوى",
       "documents": "معالجة التقديم والتأشيرة"
+    },
+    "recommendations": {
+      "title": "الجامعات الموصى بها",
+      "subtitle": "خيارات مرتبة من درب: نعطي أولوية لـ TU9 عندما يوجد مسار فعلي مناسب للتخصص.",
+      "count": "4+ خيارات",
+      "primary": "الاختيار الأساسي",
+      "tu9": "أولوية TU9",
+      "exact": "مسار تخصص مطابق",
+      "related": "مسار مرتبط — تحقق من التخصص الدقيق",
+      "verifiedRoutes": "مسارات البرامج الموثقة لدينا"
     }
   },
   "partnerSchools": {
