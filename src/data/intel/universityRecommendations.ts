@@ -5,7 +5,7 @@
  * while the linked catalogue is the university's official source.
  */
 import type { IntelSource } from './factTypes';
-import type { MajorIntel, UniversityRecommendation, RecommendationMatch } from './types';
+import type { MajorIntel, ProgramIntel, UniversityRecommendation, UniversityRecommendationCost, RecommendationMatch } from './types';
 
 type UMeta = { name:string; nameAR:string; city:string; tu9:boolean; url:string };
 const U: Record<string,UMeta> = {
@@ -146,36 +146,196 @@ const R:Record<string,[string,string,string,string]>={
   "travel-tourism":["worms","hsb","harz","hm"],
 };
 
-const PRIMARY_EXACT = new Set([
-  "public-health","bioinformatics","pharmacy","dentistry","medicine","physiotherapy","veterinary","nursing",
-  "computer-engineering","aerospace-engineering","renewable-energy","software-engineering","industrial-engineering","chemical-engineering",
-  "mechanical-engineering","civil-engineering","electrical-it","electrical-engineering","environmental-engineering","computer-science",
-  "cybersecurity","data-science","environmental-science","mathematics","physics","chemistry","biology","psychology","sociology",
-  "political-science","philosophy","social-work","history","business-administration","economics","business-law","architecture",
-  "fine-arts","music","elementary-education","special-education","agricultural-science","forestry","tourism-management","travel-tourism"
+const CHECKED = '2026-09-19';
+
+const SRC_BW_TUITION: IntelSource = {
+  id: 'bw-non-eu-tuition',
+  url: 'https://mwk.baden-wuerttemberg.de/en/higher-education/studying-in-bw/study-financing/tuition-fees-for-international-students',
+  title: 'Baden-Württemberg Ministry — tuition fees for international students',
+  titleAR: 'وزارة العلوم في بادن-فورتمبيرغ — الرسوم الدراسية للطلاب الدوليين',
+  authority: 'government',
+  checkedAt: CHECKED,
+};
+const SRC_TUM_TUITION: IntelSource = {
+  id: 'tum-tuition',
+  url: 'https://www.tum.de/en/studies/fees',
+  title: 'TUM — Study fees and costs',
+  titleAR: 'TUM — الرسوم وتكاليف الدراسة',
+  authority: 'university',
+  checkedAt: CHECKED,
+};
+const SRC_FRESENIUS_TUITION: IntelSource = {
+  id: 'fresenius-tuition',
+  url: 'https://www.hs-fresenius.com/faq/',
+  title: 'Fresenius University of Applied Sciences — tuition FAQ',
+  titleAR: 'جامعة Fresenius للعلوم التطبيقية — الأسئلة الشائعة حول الرسوم',
+  authority: 'university',
+  checkedAt: CHECKED,
+};
+
+const BW_UNIVERSITIES = new Set([
+  'stuttgart',
+  'kit',
+  'mannheim',
+  'freiburg',
+  'hohenheim',
+  'tuebingen',
+  'reutlingen',
+  'pforzheim',
 ]);
 
-function source(majorId:string,uid:string):IntelSource{
-  const u=U[uid];
-  return {id:`major-rec-${majorId}-${uid}`,url:u.url,title:`${u.name} — official study/programme catalogue`,titleAR:`${u.nameAR} — دليل البرامج الدراسية الرسمي`,authority:'university',checkedAt:'2026-09-19'};
+function tuitionFor(universityId: string): UniversityRecommendationCost {
+  if (BW_UNIVERSITIES.has(universityId)) {
+    return {
+      kind: 'bw_non_eu',
+      label: 'Baden-Württemberg: €1,500/semester tuition for non-EU international students; exemptions can apply.',
+      labelAR: 'بادن-فورتمبيرغ: رسوم دراسية €1,500 للفصل للطلاب الدوليين من خارج EU؛ قد تنطبق إعفاءات.',
+      amount: '€1,500 / semester',
+      source: SRC_BW_TUITION,
+    };
+  }
+
+  if (universityId === 'tum') {
+    return {
+      kind: 'programme_specific',
+      label: 'TUM charges tuition for students from non-EU/EEA countries; the amount is programme-specific.',
+      labelAR: 'TUM تفرض رسوماً دراسية على الطلاب من خارج EU/EEA؛ المبلغ يختلف حسب البرنامج.',
+      source: SRC_TUM_TUITION,
+    };
+  }
+
+  if (universityId === 'fresenius') {
+    return {
+      kind: 'private',
+      label: 'Private university: tuition fees apply and vary by programme.',
+      labelAR: 'جامعة خاصة: تُفرض رسوم دراسية وتختلف حسب البرنامج.',
+      source: SRC_FRESENIUS_TUITION,
+    };
+  }
+
+  return {
+    kind: 'verify',
+    label: 'Tuition status: verify the current university/programme fee schedule before advising.',
+    labelAR: 'حالة الرسوم: تحقّق من جدول رسوم الجامعة/البرنامج الحالي قبل تقديم النصيحة.',
+    source: {
+      id: `recommendation-fees-${universityId}`,
+      url: U[universityId].url,
+      title: `${U[universityId].name} — official study catalogue`,
+      titleAR: `${U[universityId].nameAR} — دليل الدراسة الرسمي`,
+      authority: 'university',
+      checkedAt: CHECKED,
+    },
+  };
 }
 
-function build(majorId:string,uid:string,rank:1|2|3|4):UniversityRecommendation{
-  const u=U[uid];
-  const exact=rank===1 && PRIMARY_EXACT.has(majorId);
-  const match:RecommendationMatch=exact?'exact':'related';
-  return {universityId:uid,rank,primary:rank===1,tu9:u.tu9,match,focus:'',focusAR:'',source:source(majorId,uid)};
+function normalizeName(value: string): string {
+  return value.toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();
 }
 
-export function getUniversityRecommendations(majorId:string):UniversityRecommendation[]{
-  const ids=R[majorId];
-  return ids ? ids.map((uid,i)=>build(majorId,uid,(i+1) as 1|2|3|4)) : [];
+function sameUniversity(universityId: string, program: ProgramIntel): boolean {
+  const u = U[universityId];
+  const university = normalizeName(program.universityName);
+  const configured = normalizeName(u.name);
+  if (university === configured || university.includes(configured) || configured.includes(university)) return true;
+
+  const city = normalizeName(u.city.split('/')[0]);
+  const programCity = normalizeName(program.city.split('/')[0]);
+  if (!city || city !== programCity) return false;
+
+  const ignored = new Set(['university', 'universitat', 'technical', 'technische', 'of', 'the', 'and', 'für', 'applied', 'sciences']);
+  const distinctive = configured
+    .split(' ')
+    .filter((token) => token.length >= 5 && !ignored.has(token))
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 2);
+
+  return distinctive.some((token) => university.includes(token));
 }
-export function attachUniversityRecommendations(major:MajorIntel):MajorIntel{
-  return {...major,universityRecommendations:getUniversityRecommendations(major.id)};
+
+function officialProgramFor(universityId: string, programs: ProgramIntel[]): ProgramIntel | undefined {
+  return programs.find((program) => sameUniversity(universityId, program));
 }
-export function recommendationIntegrity(publicMajorIds:string[]):string[]{
-  return publicMajorIds.filter(id=>getUniversityRecommendations(id).length<4);
+
+function build(
+  majorId: string,
+  uid: string,
+  rank: 1 | 2 | 3 | 4,
+  programs: ProgramIntel[],
+): UniversityRecommendation {
+  const u = U[uid];
+  const matchedProgram = officialProgramFor(uid, programs);
+  const match: RecommendationMatch = matchedProgram ? 'exact' : 'related';
+  const programUrl = matchedProgram?.programUrl ?? u.url;
+  const programName = matchedProgram?.programName ?? u.name;
+  const programNameAR = matchedProgram?.programNameAR ?? u.nameAR;
+  const source: IntelSource = matchedProgram
+    ? {
+        id: `major-rec-${majorId}-${uid}-programme`,
+        url: matchedProgram.programUrl,
+        title: `${matchedProgram.universityName} — ${matchedProgram.programName}`,
+        titleAR: `${matchedProgram.universityNameAR} — ${matchedProgram.programNameAR}`,
+        authority: 'university',
+        checkedAt: matchedProgram.lastVerified,
+      }
+    : {
+        id: `major-rec-${majorId}-${uid}-catalogue`,
+        url: u.url,
+        title: `${u.name} — official degree-programme catalogue`,
+        titleAR: `${u.nameAR} — دليل البرامج الرسمي`,
+        authority: 'university',
+        checkedAt: CHECKED,
+      };
+
+  return {
+    universityId: uid,
+    rank,
+    primary: rank === 1,
+    tu9: u.tu9,
+    match,
+    focus: matchedProgram?.programName ?? '',
+    focusAR: matchedProgram?.programNameAR ?? '',
+    programName,
+    programNameAR,
+    programUrl,
+    linkKind: matchedProgram ? 'programme' : 'catalogue',
+    linkCheckedAt: matchedProgram ? matchedProgram.lastVerified : null,
+    tuition: tuitionFor(uid),
+    source,
+  };
+}
+
+export function getUniversityRecommendations(
+  majorId: string,
+  programs: ProgramIntel[] = [],
+): UniversityRecommendation[] {
+  const ids = R[majorId];
+  if (!ids) return [];
+
+  const candidates = ids.map((uid, index) =>
+    build(majorId, uid, (index + 1) as 1 | 2 | 3 | 4, programs),
+  );
+
+  const score = (recommendation: UniversityRecommendation) =>
+    (recommendation.tu9 ? 100 : 0) + (recommendation.match === 'exact' ? 10 : 0);
+
+  return candidates
+    .sort((a, b) => score(b) - score(a))
+    .map((recommendation, index) => ({
+      ...recommendation,
+      rank: (index + 1) as 1 | 2 | 3 | 4,
+      primary: index === 0,
+    }));
+}
+
+export function attachUniversityRecommendations(major: MajorIntel): MajorIntel {
+  return {
+    ...major,
+    universityRecommendations: getUniversityRecommendations(major.id, major.programs),
+  };
+}
+
+export function recommendationIntegrity(publicMajorIds: string[]): string[] {
+  return publicMajorIds.filter((id) => getUniversityRecommendations(id).length < 4);
 }
 
 export function getRecommendedUniversityMeta(universityId:string):UMeta|undefined{
