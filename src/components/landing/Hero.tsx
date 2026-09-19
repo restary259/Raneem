@@ -57,7 +57,7 @@ const Hero = () => {
           src="/lovable-uploads/hero-poster.webp"
           alt=""
           aria-hidden="true"
-          {...{ fetchpriority: "high" }}
+          fetchPriority="high"
           decoding="async"
           className="absolute top-0 left-0 w-full h-full object-cover"
         />
