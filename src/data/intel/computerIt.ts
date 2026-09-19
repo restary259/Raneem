@@ -190,7 +190,7 @@ const CYBER_PROGRAM: ProgramIntel = {
     'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت من صفحة البرنامج المفحوصة.',
   ),
   languageRequirement: fact(
-    { minimumLevel: 'B2', certificates: ['B2 advanced English (recommended)'] },
+    { language: 'English', minimumLevel: 'C1', certificates: ['C1 English'] },
     'OFFICIAL_LANGUAGE',
     CYBER_SOURCE.id,
     CHECKED,
