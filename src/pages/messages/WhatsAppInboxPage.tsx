@@ -40,7 +40,17 @@ const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "a
 const fmtDay = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "full" }).format(new Date(value));
 const KNOWN_TYPES = ["image", "video", "audio", "document", "sticker", "location", "contacts", "reaction"];
 
-export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boolean }) {
+export default function WhatsAppInboxPage({
+  embedded = false,
+  conversationOnly = false,
+  conversationId,
+  onConversationClose,
+}: {
+  embedded?: boolean;
+  conversationOnly?: boolean;
+  conversationId?: string;
+  onConversationClose?: () => void;
+}) {
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -53,7 +63,7 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   const [threads, setThreads] = useState<WhatsAppThread[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(conversationId ?? null);
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [notes, setNotes] = useState<WhatsAppNote[]>([]);
   const [query, setQuery] = useState("");
@@ -117,6 +127,10 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   }, [refreshThreads]);
 
   const active = threads.find((x) => x.id === selectedId) ?? null;
+  useEffect(() => {
+    if (!conversationId || !threads.some((thread) => thread.id === conversationId)) return;
+    setSelectedId((current) => (current === conversationId ? current : conversationId));
+  }, [conversationId, threads]);
   const approvedTemplates = useMemo(() => templates.filter((item) => item.approval_status === "APPROVED"), [templates]);
   const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
   const selectedTemplateText = useMemo(() => {
@@ -215,6 +229,10 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
     finally { setTemplateCreating(false); }
   };
   const closeConversation = () => {
+    if (conversationOnly) {
+      onConversationClose?.();
+      return;
+    }
     setSelectedId(null);
     const next = new URLSearchParams(searchParams);
     next.delete("conversation");
@@ -254,6 +272,75 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   if (loading) return <LoadingState variant="cards" rows={4} label={t("title")} />;
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
+  const conversationOnlyView = (
+    <Card className={cn("min-h-0 h-full w-full overflow-hidden rounded-xl shadow-none", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0")}>
+      <div className="flex h-full min-h-0 flex-col">
+        {!active ? (
+          <EmptyState title={t("empty.select")} icon={MessageCircle} className="flex-1" />
+        ) : (
+          <>
+            <div className="flex shrink-0 items-center gap-2 border-b bg-card p-2 md:p-3">
+              <Button size="icon" variant="ghost" onClick={closeConversation} aria-label={t("actions.back")}>
+                <Back className="h-4 w-4" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</p>
+                <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
+              </div>
+              <Select value={active.state} onValueChange={(v) => saveConversation({ state: v })}>
+                <SelectTrigger className="h-9 w-[130px]"><SelectValue /></SelectTrigger>
+                <SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <Conversation className="min-h-0 flex-1">
+              <ConversationContent className="gap-3">
+                {messages.length ? messages.map((m, index) => {
+                  const previous = index > 0 ? messages[index - 1] : null;
+                  const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                  const body = m.body?.trim();
+                  const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
+                  return (
+                    <div key={m.id} className="space-y-3">
+                      {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
+                      <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
+                        <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
+                          {m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
+                          {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
+                          <span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span>
+                        </MessageContent>
+                      </Message>
+                    </div>
+                  );
+                }) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+            <div className="shrink-0 border-t p-3">
+              {requiresApprovedTemplate(active.last_inbound_at) ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">{t("conversation.windowClosed")}</p>
+                  <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
+                    <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
+                    <SelectContent>{approvedTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent>
+                  </Select>
+                  {selectedTemplate && <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{selectedTemplateText}</p>{Array.from({ length: parameterCount }, (_, index) => <Input key={index} className="mt-2" value={templateParameters[index] ?? ""} onChange={(event) => setTemplateParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>}
+                  <div className="flex justify-end"><Button disabled={!templateId || templateParameters.length < parameterCount || templateParameters.some((value) => !value.trim()) || sending} onClick={() => void sendReply()}><MessageCircle className="me-2 h-4 w-4" />{t("conversation.send")}</Button></div>
+                </div>
+              ) : (
+                <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
+                  <PromptInputTextarea value={composer} onChange={(event) => setComposer(event.target.value)} placeholder={t("conversation.composer")} />
+                  <PromptInputFooter><span className="text-[11px] text-muted-foreground">{t("conversation.windowOpen")}</span><PromptInputSubmit status={sending ? "submitted" : undefined} disabled={!composer.trim() || sending} aria-label={t("conversation.send")} /></PromptInputFooter>
+                </PromptInput>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </Card>
+  );
+
+  if (conversationOnly) return conversationOnlyView;
+
   return (
     <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto flex w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden", embedded ? "pb-0" : "pb-20 md:pb-4")}>
       {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
@@ -264,54 +351,8 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
         {inbound?.lastInboundAt && <p className="mt-1 text-muted-foreground">{t("status.lastInbound", { time: fmt(inbound.lastInboundAt, i18n.language) })}</p>}
         {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
       </div>
-      <Tabs defaultValue="inbox" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-        <TabsList className="grid w-full max-w-[470px] shrink-0 grid-cols-3 overflow-hidden"><TabsTrigger value="inbox">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>
-        <TabsContent value="inbox" className="m-0 min-h-0 flex-1">
-          <Card className="h-[min(720px,calc(100dvh-14rem))] min-h-[520px] max-h-[calc(100dvh-14rem)] overflow-hidden rounded-xl shadow-none">
-            <div className="grid h-full md:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(430px,1fr)_340px]">
-              <aside className={cn("flex min-h-0 flex-col border-e", mobile && selectedId && "hidden")}>
-                <div className="space-y-2 border-b p-3">
-                  <div className="relative"><Search className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("filters.search")} className="ps-9" /></div>
-                  <div className="grid grid-cols-2 gap-2"><Select value={stateFilter} onValueChange={setStateFilter}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.all")}</SelectItem>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent></Select><Select value={ownerFilter} onValueChange={setOwnerFilter}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allOwners")}</SelectItem><SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>)}</SelectContent></Select></div>
-                  <label className="flex items-center justify-between rounded-md border px-3 py-2 text-xs"><span>{t("filters.unread")}</span><Switch checked={unreadOnly} onCheckedChange={setUnreadOnly} /></label>
-                </div>
-                <ScrollArea className="min-h-0 flex-1">{filtered.length ? <div className="divide-y">{filtered.map((thread) => <button key={thread.id} onClick={() => selectConversation(thread.id)} className={cn("w-full px-4 py-3 text-start transition-colors hover:bg-muted/60", selectedId === thread.id && "bg-muted")}><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate text-sm font-semibold">{thread.lead.student_name || thread.lead.whatsapp_number}</span>{thread.unread_count > 0 && <Badge className="h-5 min-w-5 justify-center px-1.5">{thread.unread_count}</Badge>}</div><div dir="ltr" className="mt-0.5 text-start text-xs text-muted-foreground">{thread.lead.whatsapp_number}</div><p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{thread.last_message_preview || t("conversation.noMessages")}</p><div className="mt-2 flex items-center justify-between gap-2"><Badge variant="outline" className="font-normal">{t(`state.${thread.state}`)}</Badge><span className="text-[10px] text-muted-foreground">{fmt(thread.updated_at, i18n.language)}</span></div></button>)}</div> : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="h-full" />}</ScrollArea>
-              </aside>
-              <main className={cn("flex min-h-0 min-w-0 flex-col overflow-hidden", mobile && !selectedId && "hidden", mobile && selectedId && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:w-full max-md:rounded-none max-md:border-0 max-md:bg-background max-md:shadow-none")}>
-                {!active ? <EmptyState title={t("empty.select")} icon={MessageCircle} className="h-full" /> : <>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2.5"><Button className="md:hidden" size="icon" variant="ghost" onClick={closeConversation}><Back className="h-4 w-4" /></Button><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</h2><p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p></div><Button className="xl:hidden" size="sm" variant="outline" onClick={() => setDetailsOpen(true)}><UserRound className="me-1.5 h-4 w-4" />{t("profile.title")}</Button><Select value={active.state} onValueChange={(v) => saveConversation({ state: v })}><SelectTrigger className="h-9 w-[145px]"><SelectValue /></SelectTrigger><SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent></Select></div>
-                  <Conversation className="min-h-0"><ConversationContent className="gap-3">{messages.length ? messages.map((m, index) => {
-                    const previous = index > 0 ? messages[index - 1] : null;
-                    const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
-                    const text = m.body?.trim();
-                    const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
-                    return (
-                      <div key={m.id} className="space-y-3">
-                        {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
-                        <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                          <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
-                            {m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
-                            {text ? <p className="whitespace-pre-wrap">{text}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                            <span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span>
-                          </MessageContent>
-                        </Message>
-                      </div>
-                    );
-                  }) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}</ConversationContent><ConversationScrollButton /></Conversation>
-                  <div className="border-t p-3">{requiresApprovedTemplate(active.last_inbound_at) ? <div className="space-y-2"><p className="text-xs text-muted-foreground">{t("conversation.windowClosed")}</p><Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}><SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger><SelectContent>{approvedTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent></Select>{selectedTemplate && <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{selectedTemplateText}</p>{Array.from({ length: parameterCount }, (_, index) => <Input key={index} className="mt-2" value={templateParameters[index] ?? ""} onChange={(event) => setTemplateParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>}<div className="flex justify-end"><Button disabled={!templateId || templateParameters.length < parameterCount || templateParameters.some((value) => !value.trim()) || sending} onClick={() => void sendReply()}><MessageCircle className="me-2 h-4 w-4" />{t("conversation.send")}</Button></div></div> : <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg"><PromptInputTextarea value={composer} onChange={(event) => setComposer(event.target.value)} placeholder={t("conversation.composer")} /><PromptInputFooter><span className="text-[11px] text-muted-foreground">{t("conversation.windowOpen")}</span><PromptInputSubmit status={sending ? "submitted" : undefined} disabled={!composer.trim() || sending} aria-label={t("conversation.send")} /></PromptInputFooter></PromptInput>}</div>
-                </>}
-              </main>
-              <aside className={cn("hidden min-h-0 border-s xl:block", detailsOpen && "fixed inset-0 z-50 block bg-background xl:static")}>{active ? <ScrollArea className="h-full"><div className="space-y-5 p-4">
-                <div className="flex items-center gap-2 xl:hidden"><Button size="icon" variant="ghost" onClick={() => setDetailsOpen(false)}><Back className="h-4 w-4" /></Button><h2 className="font-semibold">{t("profile.title")}</h2></div>
-                <section className="space-y-3"><h3 className="text-sm font-semibold">{t("profile.title")}</h3><Field label={t("profile.studentName")} value={active.lead.student_name} onBlur={(v) => saveLead({ student_name: v })} /><Field label={t("profile.country")} value={active.lead.country ?? ""} onBlur={(v) => saveLead({ country: v || null })} /><Field label={t("profile.targetCountry")} value={active.lead.target_country ?? ""} onBlur={(v) => saveLead({ target_country: v || null })} /><Field label={t("profile.program")} value={active.lead.desired_program ?? ""} onBlur={(v) => saveLead({ desired_program: v || null })} /><Field label={t("profile.budget")} value={active.lead.budget_range ?? ""} onBlur={(v) => saveLead({ budget_range: v || null })} /><Field label={t("profile.start")} type="date" value={active.lead.intended_start_date ?? ""} onBlur={(v) => saveLead({ intended_start_date: v || null })} /><Field label={t("profile.language")} value={active.lead.language_level ?? ""} onBlur={(v) => saveLead({ language_level: v || null })} /><Field label={t("profile.source")} value={active.lead.source ?? ""} onBlur={(v) => saveLead({ source: v || "whatsapp" })} />
-                <div className="grid grid-cols-2 gap-2"><div><Label className="text-xs">{t("profile.stage")}</Label><Select value={active.lead.lead_stage} onValueChange={(v) => saveLead({ lead_stage: v })}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{STAGES.map((s) => <SelectItem key={s} value={s}>{t(`stage.${s}`)}</SelectItem>)}</SelectContent></Select></div><div><Label className="text-xs">{t("profile.advisor")}</Label><Select value={active.assigned_to ?? "unassigned"} onValueChange={async (v) => { const advisor = v === "unassigned" ? null : v; await Promise.all([saveConversation({ assigned_to: advisor }), saveLead({ assigned_advisor: advisor })]); }}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>{staff.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>)}</SelectContent></Select></div></div><div><Label className="text-xs">{t("profile.consent")}</Label><Select value={active.lead.consent_status} onValueChange={(v) => saveLead({ consent_status: v })}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{CONSENT.map((value) => <SelectItem key={value} value={value}>{t(`consent.${value}`)}</SelectItem>)}</SelectContent></Select></div><TagEditor label={t("profile.tags")} tags={active.lead.tags ?? []} onChange={(tags) => saveLead({ tags })} addLabel={t("profile.addTag")} />
-                <div className="flex items-start justify-between gap-3 rounded-lg border bg-muted/30 p-3"><div><Label>{t("conversation.takeover")}</Label><p className="mt-1 text-[11px] text-muted-foreground">{t("conversation.takeoverHelp")}</p></div><Switch checked={active.human_takeover} onCheckedChange={(checked) => saveConversation({ human_takeover: checked, takeover_by: checked ? user?.id : null, takeover_at: checked ? new Date().toISOString() : null })} /></div></section>
-                <section className="space-y-2 border-t pt-4"><h3 className="text-sm font-semibold">{t("notes.title")}</h3><Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("notes.placeholder")} /><Button size="sm" variant="outline" disabled={!note.trim()} onClick={addNote}>{t("notes.add")}</Button>{notes.length ? notes.map((n) => <div key={n.id} className="rounded-lg bg-amber-50 p-2.5 text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-100"><p className="whitespace-pre-wrap">{n.body}</p><span className="mt-1 block text-[10px] opacity-60">{fmt(n.created_at, i18n.language)}</span></div>) : <p className="text-xs text-muted-foreground">{t("notes.empty")}</p>}</section>
-                <section className="space-y-3 border-t pt-4"><div className="flex items-center gap-2"><Bot className="h-4 w-4" /><h3 className="text-sm font-semibold">{t("ai.title")}</h3></div><p className="text-[11px] text-muted-foreground">{t("ai.safe")}</p><Textarea value={aiInstruction} onChange={(e) => setAiInstruction(e.target.value)} placeholder={t("ai.instruction")} /><div className="grid grid-cols-3 gap-1"><Button size="sm" variant="outline" disabled={aiLoading} onClick={() => generate("welcome")}>{t("ai.welcome")}</Button><Button size="sm" variant="outline" disabled={aiLoading} onClick={() => generate("qualification")}>{t("ai.qualification")}</Button><Button size="sm" variant="outline" disabled={aiLoading} onClick={() => generate("summary")}>{t("ai.summary")}</Button></div>{aiLoading && <Shimmer className="text-xs">{t("ai.generating")}</Shimmer>}{aiResult && <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-xs">{aiResult.escalation_required && <Badge variant="destructive">{t("ai.escalation")}</Badge>}<p className="whitespace-pre-wrap leading-5">{aiResult.draft}</p>{aiResult.summary && <p className="border-t pt-2 text-muted-foreground">{aiResult.summary}</p>}<Button size="sm" onClick={() => setComposer(aiResult.draft)}>{t("ai.use")}</Button></div>}</section>
-              </div></ScrollArea> : <EmptyState title={t("empty.select")} icon={UserRound} className="h-full" />}</aside>
-            </div>
-          </Card>
-        </TabsContent>
+      <Tabs defaultValue="dashboard" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+        <TabsList className="grid w-full max-w-[470px] shrink-0 grid-cols-2 overflow-hidden"><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>
         <TabsContent value="dashboard" className="m-0 min-w-0 space-y-4"><div className="grid gap-3 sm:grid-cols-3"><Metric icon={Sparkles} label={t("dashboard.newLeads")} value={newLeads} /><Metric icon={UsersRound} label={t("dashboard.unassigned")} value={unassigned} /><Metric icon={Clock3} label={t("dashboard.response")} value={responseAvg === null ? "—" : `${responseAvg} ${t("dashboard.minutes")}`} /></div><Card className="rounded-xl p-5 shadow-none"><h2 className="mb-4 font-semibold">{t("dashboard.byStage")}</h2>{threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{t(`stage.${s}`)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}</Card></TabsContent>
         <TabsContent value="templates" className="m-0 min-w-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-4"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>
       </Tabs>
