@@ -96,17 +96,19 @@ export default function SchoolCalculator({
     () => (withAcc ? quoteStay(accTiers, stayWeeks) : null),
     [withAcc, accTiers, stayWeeks],
   );
-  const arrangementFee = withAcc ? Number(acc?.arrangement_fee ?? 0) : 0;
-  const registrationFee = Number(course?.registration_fee ?? 0);
+  const arrangementFee = withAcc ? (acc?.arrangement_fee ?? null) : null;
+  const registrationFee = course?.registration_fee ?? null;
 
   const supplementWeeks = withAcc
     ? summerWeeks(startDate || null, stayWeeks, version?.summer_from ?? null, version?.summer_to ?? null)
     : 0;
   const supplement = supplementWeeks * Number(version?.summer_supplement_per_week ?? 0);
 
-  const payable =
-    (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + arrangementFee + registrationFee + supplement;
   const incomplete = courseQuote.total == null || (withAcc && accQuote?.total == null) || missingLevels.length > 0;
+  // Never turn missing source data into a €0 line item or total.
+  const payable = incomplete
+    ? null
+    : (courseQuote.total ?? 0) + (accQuote?.total ?? 0) + (arrangementFee ?? 0) + (registrationFee ?? 0) + supplement;
 
   const answer = [
     `${from} → ${to}`,
@@ -124,10 +126,10 @@ export default function SchoolCalculator({
           total: formatEur(accQuote?.total ?? null),
         })
       : "",
-    withAcc && arrangementFee
+    withAcc && arrangementFee != null
       ? t("partnerSchools.copyArrangement", "Accommodation arrangement: {{total}}", { total: formatEur(arrangementFee) })
       : "",
-    registrationFee
+    registrationFee != null
       ? t("partnerSchools.copyRegistration", "Registration fee: {{total}}", { total: formatEur(registrationFee) })
       : "",
     supplement
@@ -276,7 +278,7 @@ export default function SchoolCalculator({
                 <span>{formatEur(accQuote.total)}</span>
               </li>
             )}
-            {registrationFee > 0 && (
+            {registrationFee != null && (
               <li className="flex justify-between">
                 <span>{t("partnerSchools.registrationFee", "Registration fee")}</span>
                 <span>{formatEur(registrationFee)}</span>
@@ -307,13 +309,13 @@ export default function SchoolCalculator({
 
         <div className="space-y-1.5 border-t border-border pt-3 text-sm">
           <Row label={t("partnerSchools.course", "Course")} value={courseTotalLabel} />
-          {registrationFee > 0 && (
+          {registrationFee != null && (
             <Row label={t("partnerSchools.registrationFee", "Registration fee")} value={formatEur(registrationFee)} />
           )}
           {withAcc && (
             <>
               <Row label={t("partnerSchools.accommodation", "Accommodation")} value={formatEur(accQuote?.total ?? null)} />
-              {arrangementFee > 0 && (
+              {arrangementFee != null && (
                 <Row label={t("partnerSchools.arrangementFee", "Accommodation arrangement")} value={formatEur(arrangementFee)} />
               )}
             </>
