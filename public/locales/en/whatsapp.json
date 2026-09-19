@@ -3,21 +3,183 @@
   "subtitle": "Lead conversations, ownership and follow-up in one staff workspace.",
   "connected": "WhatsApp Business authorized",
   "number": "+49 176 23790623",
-  "tabs": { "inbox": "Inbox", "dashboard": "Dashboard", "templates": "Templates" },
-  "filters": { "search": "Search name or number…", "all": "All states", "allOwners": "All owners", "unassigned": "Unassigned", "unread": "Unread only" },
-  "state": { "new": "New", "open": "Open", "waiting": "Waiting", "resolved": "Resolved" },
-  "stage": { "new": "New", "qualified": "Qualified", "consultation_booked": "Consultation booked", "documents_pending": "Documents pending", "application_in_progress": "Application in progress", "won": "Won", "lost": "Lost" },
-  "empty": { "title": "No WhatsApp conversations yet", "description": "Conversations appear here as soon as WhatsApp delivers a message to this app. Chats that happened before incoming delivery was switched on cannot be imported, so nothing is shown for them.", "select": "Select a conversation to open the student profile and messages." },
-  "status": { "receiving": "Receiving messages", "waiting": "Not receiving yet", "waitingHelp": "No incoming WhatsApp message has reached this app. Open Connectors → WhatsApp Business → Incoming messages and select the receiving project.", "receivingHelp": "Incoming messages are arriving and are stored automatically.", "lastInbound": "Last incoming message: {{time}}", "unrecognised": "{{count}} unrecognised events stored for review" },
-  "messageType": { "image": "Photo", "video": "Video", "audio": "Voice note", "document": "Document", "sticker": "Sticker", "location": "Location", "contacts": "Contact card", "reaction": "Reaction", "unknown": "Unsupported message type" },
-  "conversation": { "messages": "Conversation", "noMessages": "No provider messages recorded for this conversation.", "takeover": "Human takeover", "takeoverHelp": "Keeps the assigned advisor visibly responsible. AI never sends automatically.", "composer": "Write a human reply…", "windowOpen": "A human reply is allowed inside the 24-hour service window.", "windowClosed": "Use an approved template for business-initiated messages outside WhatsApp’s service window.", "chooseTemplate": "Choose an approved template", "templateField": "Template field {{number}}", "send": "Send with WhatsApp", "sent": "Message accepted by WhatsApp" },
-  "profile": { "title": "Lead profile", "studentName": "Student name", "number": "WhatsApp number", "country": "Country", "targetCountry": "Target country", "program": "Desired study / language program", "budget": "Budget range", "start": "Intended start date", "language": "Language level", "advisor": "Assigned advisor", "source": "Source", "consent": "Consent status", "stage": "Lead stage", "tags": "Tags", "addTag": "Add tag", "save": "Save profile", "saved": "Profile saved" },
-  "consent": { "unknown": "Unknown", "granted": "Granted", "declined": "Declined", "withdrawn": "Withdrawn" },
-  "notes": { "title": "Internal notes", "placeholder": "Add a private staff note…", "add": "Add note", "empty": "No internal notes." },
-  "ai": { "title": "AI assist", "safe": "Drafts only. Never auto-sends or promises prices, acceptance, timelines, or legal/visa outcomes.", "welcome": "Welcome draft", "qualification": "Qualification draft", "summary": "Lead summary", "instruction": "Optional instruction for the draft…", "generate": "Generate", "generating": "Drafting…", "use": "Use in composer", "escalation": "Advisor review required", "empty": "Generate a draft or summary after selecting a conversation." },
-  "dashboard": { "newLeads": "New WhatsApp leads", "unassigned": "Unassigned conversations", "response": "Average first response", "minutes": "min", "byStage": "Leads by stage", "noData": "No lead metrics yet." },
-  "templates": { "title": "Approved outbound templates", "required": "Business-initiated WhatsApp messages require a Meta-approved template.", "noneTitle": "No approved templates available", "noneDescription": "The connected WhatsApp Business account currently returns no templates. Submit a template here for provider review before using it.", "status": "Approval", "language": "Language", "purposeLabel": "Purpose", "sync": "Sync provider templates", "synced": "Synced {{count}} supported templates", "createTitle": "Submit a message template", "createHelp": "WhatsApp reviews every template. Submission does not make it immediately available.", "bodyPlaceholder": "Write the exact message for provider review…", "submit": "Submit for review", "submitted": "Template submitted for provider review", "arabic": "Arabic", "english": "English", "utility": "Utility", "marketing": "Marketing", "purpose": { "inquiry_follow_up": "Inquiry follow-up", "consultation_confirmation": "Consultation confirmation", "document_reminder": "Document reminder", "application_update": "Application update" } },
-  "actions": { "retry": "Retry", "back": "Back", "refresh": "Refresh" },
-  "start": { "action": "New conversation", "title": "Start a WhatsApp conversation", "description": "Create or reopen one lead record for this number. Unknown student details stay blank.", "nameOptional": "Optional — leave blank if unknown", "create": "Open conversation", "created": "WhatsApp lead and conversation created", "existing": "Existing WhatsApp conversation opened" },
-  "errors": { "load": "WhatsApp workspace could not be loaded.", "save": "Changes could not be saved.", "send": "The WhatsApp message could not be sent.", "templates": "WhatsApp templates could not be updated.", "ai": "AI assist could not create a safe draft.", "start": "The WhatsApp conversation could not be created." }
+  "tabs": {
+    "inbox": "Inbox",
+    "dashboard": "Dashboard",
+    "templates": "Templates"
+  },
+  "filters": {
+    "search": "Search name or number…",
+    "all": "All states",
+    "allOwners": "All owners",
+    "unassigned": "Unassigned",
+    "unread": "Unread only"
+  },
+  "state": {
+    "new": "New",
+    "open": "Open",
+    "waiting": "Waiting",
+    "resolved": "Resolved"
+  },
+  "stage": {
+    "new": "New",
+    "qualified": "Qualified",
+    "consultation_booked": "Consultation booked",
+    "documents_pending": "Documents pending",
+    "application_in_progress": "Application in progress",
+    "won": "Won",
+    "lost": "Lost"
+  },
+  "empty": {
+    "title": "No WhatsApp conversations yet",
+    "description": "Conversations appear here as soon as WhatsApp delivers a message to this app. Chats that happened before incoming delivery was switched on cannot be imported, so nothing is shown for them.",
+    "select": "Select a conversation to open the student profile and messages."
+  },
+  "status": {
+    "receiving": "Receiving messages",
+    "waiting": "Not receiving yet",
+    "waitingHelp": "No incoming WhatsApp message has reached this app. Open Connectors → WhatsApp Business → Incoming messages and select the receiving project.",
+    "receivingHelp": "Incoming messages are arriving and are stored automatically.",
+    "lastInbound": "Last incoming message: {{time}}",
+    "unrecognised": "{{count}} unrecognised events stored for review"
+  },
+  "messageType": {
+    "image": "Photo",
+    "video": "Video",
+    "audio": "Voice note",
+    "document": "Document",
+    "sticker": "Sticker",
+    "location": "Location",
+    "contacts": "Contact card",
+    "reaction": "Reaction",
+    "unknown": "Unsupported message type"
+  },
+  "conversation": {
+    "messages": "Conversation",
+    "noMessages": "No provider messages recorded for this conversation.",
+    "takeover": "Human takeover",
+    "takeoverHelp": "Keeps the assigned advisor visibly responsible. AI never sends automatically.",
+    "composer": "Write a human reply…",
+    "windowOpen": "A human reply is allowed inside the 24-hour service window.",
+    "windowClosed": "Use an approved template for business-initiated messages outside WhatsApp’s service window.",
+    "chooseTemplate": "Choose an approved template",
+    "templateField": "Template field {{number}}",
+    "send": "Send with WhatsApp",
+    "sent": "Message accepted by WhatsApp"
+  },
+  "profile": {
+    "title": "Lead profile",
+    "studentName": "Student name",
+    "number": "WhatsApp number",
+    "country": "Country",
+    "targetCountry": "Target country",
+    "program": "Desired study / language program",
+    "budget": "Budget range",
+    "start": "Intended start date",
+    "language": "Language level",
+    "advisor": "Assigned advisor",
+    "source": "Source",
+    "consent": "Consent status",
+    "stage": "Lead stage",
+    "tags": "Tags",
+    "addTag": "Add tag",
+    "save": "Save profile",
+    "saved": "Profile saved"
+  },
+  "consent": {
+    "unknown": "Unknown",
+    "granted": "Granted",
+    "declined": "Declined",
+    "withdrawn": "Withdrawn"
+  },
+  "notes": {
+    "title": "Internal notes",
+    "placeholder": "Add a private staff note…",
+    "add": "Add note",
+    "empty": "No internal notes."
+  },
+  "ai": {
+    "title": "AI assist",
+    "safe": "Drafts only. Never auto-sends or promises prices, acceptance, timelines, or legal/visa outcomes.",
+    "welcome": "Welcome draft",
+    "qualification": "Qualification draft",
+    "summary": "Lead summary",
+    "instruction": "Optional instruction for the draft…",
+    "generate": "Generate",
+    "generating": "Drafting…",
+    "use": "Use in composer",
+    "escalation": "Advisor review required",
+    "empty": "Generate a draft or summary after selecting a conversation."
+  },
+  "dashboard": {
+    "newLeads": "New WhatsApp leads",
+    "unassigned": "Unassigned conversations",
+    "response": "Average first response",
+    "minutes": "min",
+    "byStage": "Leads by stage",
+    "noData": "No lead metrics yet."
+  },
+  "templates": {
+    "title": "Approved outbound templates",
+    "required": "Business-initiated WhatsApp messages require a Meta-approved template.",
+    "noneTitle": "No approved templates available",
+    "noneDescription": "The connected WhatsApp Business account currently returns no templates. Submit a template here for provider review before using it.",
+    "status": "Approval",
+    "language": "Language",
+    "purposeLabel": "Purpose",
+    "sync": "Sync provider templates",
+    "synced": "Synced {{count}} supported templates",
+    "createTitle": "Submit a message template",
+    "createHelp": "WhatsApp reviews every template. Submission does not make it immediately available.",
+    "bodyPlaceholder": "Write the exact message for provider review…",
+    "submit": "Submit for review",
+    "submitted": "Template submitted for provider review",
+    "arabic": "Arabic",
+    "english": "English",
+    "utility": "Utility",
+    "marketing": "Marketing",
+    "purpose": {
+      "inquiry_follow_up": "Inquiry follow-up",
+      "consultation_confirmation": "Consultation confirmation",
+      "document_reminder": "Document reminder",
+      "application_update": "Application update"
+    }
+  },
+  "actions": {
+    "retry": "Retry",
+    "back": "Back",
+    "refresh": "Refresh"
+  },
+  "start": {
+    "action": "New conversation",
+    "title": "Start a WhatsApp conversation",
+    "description": "Create or reopen one lead record for this number. Unknown student details stay blank.",
+    "nameOptional": "Optional — leave blank if unknown",
+    "create": "Open conversation",
+    "created": "WhatsApp lead and conversation created",
+    "existing": "Existing WhatsApp conversation opened"
+  },
+  "errors": {
+    "load": "WhatsApp workspace could not be loaded.",
+    "save": "Changes could not be saved.",
+    "send": "The WhatsApp message could not be sent.",
+    "templates": "WhatsApp templates could not be updated.",
+    "ai": "AI assist could not create a safe draft.",
+    "start": "The WhatsApp conversation could not be created."
+  },
+  "identity": {
+    "suggestionTitle": "Possible match in DARB — confirm only if it is the same person",
+    "confirm": "Link",
+    "dismiss": "Not a match",
+    "unlink": "Remove link",
+    "linked": "Linked to the DARB record",
+    "unlinked": "Link removed",
+    "linkedTitle": "Linked to an existing DARB record",
+    "noName": "No name recorded",
+    "kind": {
+      "case": "Case",
+      "profile": "Account",
+      "lead": "Lead"
+    }
+  }
 }

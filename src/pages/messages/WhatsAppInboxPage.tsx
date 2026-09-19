@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
+import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -292,6 +293,7 @@ export default function WhatsAppInboxPage({
                 <SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
             <Conversation className="min-h-0 flex-1">
               <ConversationContent className="gap-3">
                 {messages.length ? messages.map((m, index) => {
