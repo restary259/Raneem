@@ -64,6 +64,7 @@ import {
   ClipboardEdit,
   Hotel,
   School,
+  MessageCircleMore,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
@@ -116,6 +117,7 @@ const PARTNER_APPLY_NAV_ITEM: NavItem = {
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.comms" },
+    { key: "nav.whatsapp", icon: MessageCircleMore, href: "/admin/whatsapp", group: "nav.group.comms" },
 
     { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
     // Pipeline hub: board + submissions review.
@@ -140,6 +142,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ],
   team_member: [
     { key: "nav.messages", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
+    { key: "nav.whatsapp", icon: MessageCircleMore, href: "/team/whatsapp", group: "nav.group.comms" },
 
     { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
     // Cases hub: active cases + student accounts. "Submit new student" is an

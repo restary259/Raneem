@@ -68,6 +68,7 @@ const AdminSettingsPage = lazy(() => import("./pages/admin/AdminSettingsPage"));
 const AdminCommissionHubPage = lazy(() => import("./pages/admin/AdminCommissionHubPage"));
 const AdminInboxPage = lazy(() => import("./pages/admin/AdminInboxPage"));
 const CaseMessagesInboxPage = lazy(() => import("./pages/messages/CaseMessagesInboxPage"));
+const WhatsAppInboxPage = lazy(() => import("./pages/messages/WhatsAppInboxPage"));
 const StudentMessagesPage = lazy(() => import("./pages/messages/StudentMessagesPage"));
 const PartnerMessagesPage = lazy(() => import("./pages/messages/PartnerMessagesPage"));
 
@@ -312,6 +313,7 @@ const App = () => {
               <Route path="activity" element={<AdminActivityPage />} />
               <Route path="inbox" element={<AdminInboxPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
+              <Route path="whatsapp" element={<WhatsAppInboxPage />} />
 
               <Route path="settings" element={<AdminSettingsPage />} />
               <Route path="commission" element={<AdminCommissionHubPage />} />
@@ -334,6 +336,7 @@ const App = () => {
               <Route path="cases" element={<TeamCasesHubPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="messages" element={<CaseMessagesInboxPage />} />
+              <Route path="whatsapp" element={<WhatsAppInboxPage />} />
               <Route path="appointments" element={<TeamAppointmentsPage />} />
 
               <Route path="appointments/today" element={<Navigate to="/team" replace />} />
