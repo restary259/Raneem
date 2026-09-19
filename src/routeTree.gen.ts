@@ -9,27 +9,2192 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
+import { Route as ActivateRouteImport } from './routes/activate'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AgentRouteImport } from './routes/agent'
+import { Route as AiAdvisorRouteImport } from './routes/ai-advisor'
+import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as BroadcastRouteImport } from './routes/broadcast'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as EducationalDestinationsRouteImport } from './routes/educational-destinations'
+import { Route as EducationalProgramsRouteImport } from './routes/educational-programs'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as LocationsRouteImport } from './routes/locations'
+import { Route as PartnerRouteImport } from './routes/partner'
+import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as PartnershipRouteImport } from './routes/partnership'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as QuizRouteImport } from './routes/quiz'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ServicesRouteImport } from './routes/services'
+import { Route as StudentRouteImport } from './routes/student'
+import { Route as StudentAuthRouteImport } from './routes/student-auth'
+import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
+import { Route as TeamRouteImport } from './routes/team'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminActivityRouteImport } from './routes/admin.activity'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
+import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
+import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
+import { Route as AdminMembersRouteImport } from './routes/admin.members'
+import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
+import { Route as AdminProgramsRouteImport } from './routes/admin.programs'
+import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSpreadsheetRouteImport } from './routes/admin.spreadsheet'
+import { Route as AdminStudentsRouteImport } from './routes/admin.students'
+import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
+import { Route as AdminTeamRouteImport } from './routes/admin.team'
+import { Route as AdminWhatsappRouteImport } from './routes/admin.whatsapp'
+import { Route as AgentIndexRouteImport } from './routes/agent.index'
+import { Route as AgentAnalyticsRouteImport } from './routes/agent.analytics'
+import { Route as AgentApplyRouteImport } from './routes/agent.apply'
+import { Route as AgentBankDetailsRouteImport } from './routes/agent.bank-details'
+import { Route as AgentEarningsRouteImport } from './routes/agent.earnings'
+import { Route as AgentMessagesRouteImport } from './routes/agent.messages'
+import { Route as AgentNetworkRouteImport } from './routes/agent.network'
+import { Route as AgentProfileRouteImport } from './routes/agent.profile'
+import { Route as AgentRecruitRouteImport } from './routes/agent.recruit'
+import { Route as AgentStudentsRouteImport } from './routes/agent.students'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as InvoiceTokenRouteImport } from './routes/invoice.$token'
+import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as PartnerIndexRouteImport } from './routes/partner.index'
+import { Route as PartnerApplyRouteImport } from './routes/partner.apply'
+import { Route as PartnerEarningsRouteImport } from './routes/partner.earnings'
+import { Route as PartnerMessagesRouteImport } from './routes/partner.messages'
+import { Route as PartnerProfileRouteImport } from './routes/partner.profile'
+import { Route as PartnerStudentsRouteImport } from './routes/partner.students'
+import { Route as ResourcesIndexRouteImport } from './routes/resources.index'
+import { Route as ResourcesBagrutCalculatorRouteImport } from './routes/resources.bagrut-calculator'
+import { Route as ResourcesCostCalculatorRouteImport } from './routes/resources.cost-calculator'
+import { Route as ResourcesCurrencyConverterRouteImport } from './routes/resources.currency-converter'
+import { Route as ResourcesLebenslaufBuilderRouteImport } from './routes/resources.lebenslauf-builder'
+import { Route as StudentIndexRouteImport } from './routes/student.index'
+import { Route as StudentChecklistRouteImport } from './routes/student.checklist'
+import { Route as StudentContactsRouteImport } from './routes/student.contacts'
+import { Route as StudentDocumentsRouteImport } from './routes/student.documents'
+import { Route as StudentFeesRouteImport } from './routes/student.fees'
+import { Route as StudentMessagesRouteImport } from './routes/student.messages'
+import { Route as StudentMyDataRouteImport } from './routes/student.my-data'
+import { Route as StudentProfileRouteImport } from './routes/student.profile'
+import { Route as StudentReferRouteImport } from './routes/student.refer'
+import { Route as StudentVisaRouteImport } from './routes/student.visa'
+import { Route as TeamIndexRouteImport } from './routes/team.index'
+import { Route as TeamAnalyticsRouteImport } from './routes/team.analytics'
+import { Route as TeamBagrutRouteImport } from './routes/team.bagrut'
+import { Route as TeamCatalogRouteImport } from './routes/team.catalog'
+import { Route as TeamMajorsRouteImport } from './routes/team.majors'
+import { Route as TeamMessagesRouteImport } from './routes/team.messages'
+import { Route as TeamSpreadsheetRouteImport } from './routes/team.spreadsheet'
+import { Route as TeamSubmitRouteImport } from './routes/team.submit'
+import { Route as TeamWhatsappRouteImport } from './routes/team.whatsapp'
+import { Route as AdminCasesIdRouteImport } from './routes/admin.cases.$id'
+import { Route as StudentToolsBagrutRouteImport } from './routes/student.tools.bagrut'
+import { Route as StudentToolsCvRouteImport } from './routes/student.tools.cv'
+import { Route as TeamAppointmentsIndexRouteImport } from './routes/team.appointments.index'
+import { Route as TeamAppointmentsTodayRouteImport } from './routes/team.appointments.today'
+import { Route as TeamCasesIndexRouteImport } from './routes/team.cases.index'
+import { Route as TeamCasesIdRouteImport } from './routes/team.cases.$id'
+import { Route as TeamPartnerSchoolsIndexRouteImport } from './routes/team.partner-schools.index'
+import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.index'
+import { Route as TeamStudentsIdRouteImport } from './routes/team.students.$id'
+import { Route as TeamToolsCurrencyRouteImport } from './routes/team.tools.currency'
+import { Route as TeamToolsCvRouteImport } from './routes/team.tools.cv'
+import { Route as TeamPartnerSchoolsCountryIndexRouteImport } from './routes/team.partner-schools.$country.index'
+import { Route as TeamPartnerSchoolsCountrySchoolRouteImport } from './routes/team.partner-schools.$country.$school'
 
-export interface FileRoutesByFullPath {}
-export interface FileRoutesByTo {}
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivateRoute = ActivateRouteImport.update({
+  id: '/activate',
+  path: '/activate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentRoute = AgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAdvisorRoute = AiAdvisorRouteImport.update({
+  id: '/ai-advisor',
+  path: '/ai-advisor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplyRoute = ApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BroadcastRoute = BroadcastRouteImport.update({
+  id: '/broadcast',
+  path: '/broadcast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EducationalDestinationsRoute = EducationalDestinationsRouteImport.update({
+  id: '/educational-destinations',
+  path: '/educational-destinations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EducationalProgramsRoute = EducationalProgramsRouteImport.update({
+  id: '/educational-programs',
+  path: '/educational-programs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsRoute = LocationsRouteImport.update({
+  id: '/locations',
+  path: '/locations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnershipRoute = PartnershipRouteImport.update({
+  id: '/partnership',
+  path: '/partnership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentAuthRoute = StudentAuthRouteImport.update({
+  id: '/student-auth',
+  path: '/student-auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentDashboardRoute = StudentDashboardRouteImport.update({
+  id: '/student-dashboard',
+  path: '/student-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCommissionRoute = AdminCommissionRouteImport.update({
+  id: '/commission',
+  path: '/commission',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinancialsRoute = AdminFinancialsRouteImport.update({
+  id: '/financials',
+  path: '/financials',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInboxRoute = AdminInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPipelineRoute = AdminPipelineRouteImport.update({
+  id: '/pipeline',
+  path: '/pipeline',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProgramsRoute = AdminProgramsRouteImport.update({
+  id: '/programs',
+  path: '/programs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReferralsRoute = AdminReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSpreadsheetRoute = AdminSpreadsheetRouteImport.update({
+  id: '/spreadsheet',
+  path: '/spreadsheet',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStudentsRoute = AdminStudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSubmissionsRoute = AdminSubmissionsRouteImport.update({
+  id: '/submissions',
+  path: '/submissions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTeamRoute = AdminTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWhatsappRoute = AdminWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AgentIndexRoute = AgentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentAnalyticsRoute = AgentAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentApplyRoute = AgentApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentBankDetailsRoute = AgentBankDetailsRouteImport.update({
+  id: '/bank-details',
+  path: '/bank-details',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentEarningsRoute = AgentEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentMessagesRoute = AgentMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentNetworkRoute = AgentNetworkRouteImport.update({
+  id: '/network',
+  path: '/network',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentProfileRoute = AgentProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentRecruitRoute = AgentRecruitRouteImport.update({
+  id: '/recruit',
+  path: '/recruit',
+  getParentRoute: () => AgentRoute,
+} as any)
+const AgentStudentsRoute = AgentStudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => AgentRoute,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvoiceTokenRoute = InvoiceTokenRouteImport.update({
+  id: '/invoice/$token',
+  path: '/invoice/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerIndexRoute = PartnerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PartnerRoute,
+} as any)
+const PartnerApplyRoute = PartnerApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => PartnerRoute,
+} as any)
+const PartnerEarningsRoute = PartnerEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => PartnerRoute,
+} as any)
+const PartnerMessagesRoute = PartnerMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => PartnerRoute,
+} as any)
+const PartnerProfileRoute = PartnerProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => PartnerRoute,
+} as any)
+const PartnerStudentsRoute = PartnerStudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => PartnerRoute,
+} as any)
+const ResourcesIndexRoute = ResourcesIndexRouteImport.update({
+  id: '/resources/',
+  path: '/resources/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesBagrutCalculatorRoute =
+  ResourcesBagrutCalculatorRouteImport.update({
+    id: '/resources/bagrut-calculator',
+    path: '/resources/bagrut-calculator',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ResourcesCostCalculatorRoute = ResourcesCostCalculatorRouteImport.update({
+  id: '/resources/cost-calculator',
+  path: '/resources/cost-calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesCurrencyConverterRoute =
+  ResourcesCurrencyConverterRouteImport.update({
+    id: '/resources/currency-converter',
+    path: '/resources/currency-converter',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ResourcesLebenslaufBuilderRoute =
+  ResourcesLebenslaufBuilderRouteImport.update({
+    id: '/resources/lebenslauf-builder',
+    path: '/resources/lebenslauf-builder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentChecklistRoute = StudentChecklistRouteImport.update({
+  id: '/checklist',
+  path: '/checklist',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentContactsRoute = StudentContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentDocumentsRoute = StudentDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentFeesRoute = StudentFeesRouteImport.update({
+  id: '/fees',
+  path: '/fees',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentMessagesRoute = StudentMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentMyDataRoute = StudentMyDataRouteImport.update({
+  id: '/my-data',
+  path: '/my-data',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentProfileRoute = StudentProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentReferRoute = StudentReferRouteImport.update({
+  id: '/refer',
+  path: '/refer',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentVisaRoute = StudentVisaRouteImport.update({
+  id: '/visa',
+  path: '/visa',
+  getParentRoute: () => StudentRoute,
+} as any)
+const TeamIndexRoute = TeamIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamAnalyticsRoute = TeamAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamBagrutRoute = TeamBagrutRouteImport.update({
+  id: '/bagrut',
+  path: '/bagrut',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamCatalogRoute = TeamCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamMajorsRoute = TeamMajorsRouteImport.update({
+  id: '/majors',
+  path: '/majors',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamMessagesRoute = TeamMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamSpreadsheetRoute = TeamSpreadsheetRouteImport.update({
+  id: '/spreadsheet',
+  path: '/spreadsheet',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamSubmitRoute = TeamSubmitRouteImport.update({
+  id: '/submit',
+  path: '/submit',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamWhatsappRoute = TeamWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => TeamRoute,
+} as any)
+const AdminCasesIdRoute = AdminCasesIdRouteImport.update({
+  id: '/cases/$id',
+  path: '/cases/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const StudentToolsBagrutRoute = StudentToolsBagrutRouteImport.update({
+  id: '/tools/bagrut',
+  path: '/tools/bagrut',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentToolsCvRoute = StudentToolsCvRouteImport.update({
+  id: '/tools/cv',
+  path: '/tools/cv',
+  getParentRoute: () => StudentRoute,
+} as any)
+const TeamAppointmentsIndexRoute = TeamAppointmentsIndexRouteImport.update({
+  id: '/appointments/',
+  path: '/appointments/',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamAppointmentsTodayRoute = TeamAppointmentsTodayRouteImport.update({
+  id: '/appointments/today',
+  path: '/appointments/today',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamCasesIndexRoute = TeamCasesIndexRouteImport.update({
+  id: '/cases/',
+  path: '/cases/',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamCasesIdRoute = TeamCasesIdRouteImport.update({
+  id: '/cases/$id',
+  path: '/cases/$id',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamPartnerSchoolsIndexRoute = TeamPartnerSchoolsIndexRouteImport.update({
+  id: '/partner-schools/',
+  path: '/partner-schools/',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamStudentsIndexRoute = TeamStudentsIndexRouteImport.update({
+  id: '/students/',
+  path: '/students/',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamStudentsIdRoute = TeamStudentsIdRouteImport.update({
+  id: '/students/$id',
+  path: '/students/$id',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamToolsCurrencyRoute = TeamToolsCurrencyRouteImport.update({
+  id: '/tools/currency',
+  path: '/tools/currency',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamToolsCvRoute = TeamToolsCvRouteImport.update({
+  id: '/tools/cv',
+  path: '/tools/cv',
+  getParentRoute: () => TeamRoute,
+} as any)
+const TeamPartnerSchoolsCountryIndexRoute =
+  TeamPartnerSchoolsCountryIndexRouteImport.update({
+    id: '/partner-schools/$country/',
+    path: '/partner-schools/$country/',
+    getParentRoute: () => TeamRoute,
+  } as any)
+const TeamPartnerSchoolsCountrySchoolRoute =
+  TeamPartnerSchoolsCountrySchoolRouteImport.update({
+    id: '/partner-schools/$country/$school',
+    path: '/partner-schools/$country/$school',
+    getParentRoute: () => TeamRoute,
+  } as any)
+
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
+  '/activate': typeof ActivateRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/agent': typeof AgentRouteWithChildren
+  '/ai-advisor': typeof AiAdvisorRoute
+  '/apply': typeof ApplyRoute
+  '/broadcast': typeof BroadcastRoute
+  '/contact': typeof ContactRoute
+  '/educational-destinations': typeof EducationalDestinationsRoute
+  '/educational-programs': typeof EducationalProgramsRoute
+  '/faq': typeof FaqRoute
+  '/locations': typeof LocationsRoute
+  '/partner': typeof PartnerRouteWithChildren
+  '/partners': typeof PartnersRoute
+  '/partnership': typeof PartnershipRoute
+  '/privacy': typeof PrivacyRoute
+  '/quiz': typeof QuizRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/services': typeof ServicesRoute
+  '/student': typeof StudentRouteWithChildren
+  '/student-auth': typeof StudentAuthRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/team': typeof TeamRouteWithChildren
+  '/terms': typeof TermsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/commission': typeof AdminCommissionRoute
+  '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/inbox': typeof AdminInboxRoute
+  '/admin/members': typeof AdminMembersRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/programs': typeof AdminProgramsRoute
+  '/admin/referrals': typeof AdminReferralsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/spreadsheet': typeof AdminSpreadsheetRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
+  '/admin/team': typeof AdminTeamRoute
+  '/admin/whatsapp': typeof AdminWhatsappRoute
+  '/agent/analytics': typeof AgentAnalyticsRoute
+  '/agent/apply': typeof AgentApplyRoute
+  '/agent/bank-details': typeof AgentBankDetailsRoute
+  '/agent/earnings': typeof AgentEarningsRoute
+  '/agent/messages': typeof AgentMessagesRoute
+  '/agent/network': typeof AgentNetworkRoute
+  '/agent/profile': typeof AgentProfileRoute
+  '/agent/recruit': typeof AgentRecruitRoute
+  '/agent/students': typeof AgentStudentsRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/partner/apply': typeof PartnerApplyRoute
+  '/partner/earnings': typeof PartnerEarningsRoute
+  '/partner/messages': typeof PartnerMessagesRoute
+  '/partner/profile': typeof PartnerProfileRoute
+  '/partner/students': typeof PartnerStudentsRoute
+  '/resources/bagrut-calculator': typeof ResourcesBagrutCalculatorRoute
+  '/resources/cost-calculator': typeof ResourcesCostCalculatorRoute
+  '/resources/currency-converter': typeof ResourcesCurrencyConverterRoute
+  '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
+  '/student/checklist': typeof StudentChecklistRoute
+  '/student/contacts': typeof StudentContactsRoute
+  '/student/documents': typeof StudentDocumentsRoute
+  '/student/fees': typeof StudentFeesRoute
+  '/student/messages': typeof StudentMessagesRoute
+  '/student/my-data': typeof StudentMyDataRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/refer': typeof StudentReferRoute
+  '/student/visa': typeof StudentVisaRoute
+  '/team/analytics': typeof TeamAnalyticsRoute
+  '/team/bagrut': typeof TeamBagrutRoute
+  '/team/catalog': typeof TeamCatalogRoute
+  '/team/majors': typeof TeamMajorsRoute
+  '/team/messages': typeof TeamMessagesRoute
+  '/team/spreadsheet': typeof TeamSpreadsheetRoute
+  '/team/submit': typeof TeamSubmitRoute
+  '/team/whatsapp': typeof TeamWhatsappRoute
+  '/admin/': typeof AdminIndexRoute
+  '/agent/': typeof AgentIndexRoute
+  '/blog/': typeof BlogIndexRoute
+  '/partner/': typeof PartnerIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
+  '/student/': typeof StudentIndexRoute
+  '/team/': typeof TeamIndexRoute
+  '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/student/tools/bagrut': typeof StudentToolsBagrutRoute
+  '/student/tools/cv': typeof StudentToolsCvRoute
+  '/team/appointments/today': typeof TeamAppointmentsTodayRoute
+  '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/students/$id': typeof TeamStudentsIdRoute
+  '/team/tools/currency': typeof TeamToolsCurrencyRoute
+  '/team/tools/cv': typeof TeamToolsCvRoute
+  '/team/appointments/': typeof TeamAppointmentsIndexRoute
+  '/team/cases/': typeof TeamCasesIndexRoute
+  '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
+  '/team/students/': typeof TeamStudentsIndexRoute
+  '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
+  '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
+  '/activate': typeof ActivateRoute
+  '/ai-advisor': typeof AiAdvisorRoute
+  '/apply': typeof ApplyRoute
+  '/broadcast': typeof BroadcastRoute
+  '/contact': typeof ContactRoute
+  '/educational-destinations': typeof EducationalDestinationsRoute
+  '/educational-programs': typeof EducationalProgramsRoute
+  '/faq': typeof FaqRoute
+  '/locations': typeof LocationsRoute
+  '/partners': typeof PartnersRoute
+  '/partnership': typeof PartnershipRoute
+  '/privacy': typeof PrivacyRoute
+  '/quiz': typeof QuizRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/services': typeof ServicesRoute
+  '/student-auth': typeof StudentAuthRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/terms': typeof TermsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/commission': typeof AdminCommissionRoute
+  '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/inbox': typeof AdminInboxRoute
+  '/admin/members': typeof AdminMembersRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/programs': typeof AdminProgramsRoute
+  '/admin/referrals': typeof AdminReferralsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/spreadsheet': typeof AdminSpreadsheetRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
+  '/admin/team': typeof AdminTeamRoute
+  '/admin/whatsapp': typeof AdminWhatsappRoute
+  '/agent/analytics': typeof AgentAnalyticsRoute
+  '/agent/apply': typeof AgentApplyRoute
+  '/agent/bank-details': typeof AgentBankDetailsRoute
+  '/agent/earnings': typeof AgentEarningsRoute
+  '/agent/messages': typeof AgentMessagesRoute
+  '/agent/network': typeof AgentNetworkRoute
+  '/agent/profile': typeof AgentProfileRoute
+  '/agent/recruit': typeof AgentRecruitRoute
+  '/agent/students': typeof AgentStudentsRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/partner/apply': typeof PartnerApplyRoute
+  '/partner/earnings': typeof PartnerEarningsRoute
+  '/partner/messages': typeof PartnerMessagesRoute
+  '/partner/profile': typeof PartnerProfileRoute
+  '/partner/students': typeof PartnerStudentsRoute
+  '/resources/bagrut-calculator': typeof ResourcesBagrutCalculatorRoute
+  '/resources/cost-calculator': typeof ResourcesCostCalculatorRoute
+  '/resources/currency-converter': typeof ResourcesCurrencyConverterRoute
+  '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
+  '/student/checklist': typeof StudentChecklistRoute
+  '/student/contacts': typeof StudentContactsRoute
+  '/student/documents': typeof StudentDocumentsRoute
+  '/student/fees': typeof StudentFeesRoute
+  '/student/messages': typeof StudentMessagesRoute
+  '/student/my-data': typeof StudentMyDataRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/refer': typeof StudentReferRoute
+  '/student/visa': typeof StudentVisaRoute
+  '/team/analytics': typeof TeamAnalyticsRoute
+  '/team/bagrut': typeof TeamBagrutRoute
+  '/team/catalog': typeof TeamCatalogRoute
+  '/team/majors': typeof TeamMajorsRoute
+  '/team/messages': typeof TeamMessagesRoute
+  '/team/spreadsheet': typeof TeamSpreadsheetRoute
+  '/team/submit': typeof TeamSubmitRoute
+  '/team/whatsapp': typeof TeamWhatsappRoute
+  '/admin': typeof AdminIndexRoute
+  '/agent': typeof AgentIndexRoute
+  '/blog': typeof BlogIndexRoute
+  '/partner': typeof PartnerIndexRoute
+  '/resources': typeof ResourcesIndexRoute
+  '/student': typeof StudentIndexRoute
+  '/team': typeof TeamIndexRoute
+  '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/student/tools/bagrut': typeof StudentToolsBagrutRoute
+  '/student/tools/cv': typeof StudentToolsCvRoute
+  '/team/appointments/today': typeof TeamAppointmentsTodayRoute
+  '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/students/$id': typeof TeamStudentsIdRoute
+  '/team/tools/currency': typeof TeamToolsCurrencyRoute
+  '/team/tools/cv': typeof TeamToolsCvRoute
+  '/team/appointments': typeof TeamAppointmentsIndexRoute
+  '/team/cases': typeof TeamCasesIndexRoute
+  '/team/partner-schools': typeof TeamPartnerSchoolsIndexRoute
+  '/team/students': typeof TeamStudentsIndexRoute
+  '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
+  '/team/partner-schools/$country': typeof TeamPartnerSchoolsCountryIndexRoute
+}
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
+  '/activate': typeof ActivateRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/agent': typeof AgentRouteWithChildren
+  '/ai-advisor': typeof AiAdvisorRoute
+  '/apply': typeof ApplyRoute
+  '/broadcast': typeof BroadcastRoute
+  '/contact': typeof ContactRoute
+  '/educational-destinations': typeof EducationalDestinationsRoute
+  '/educational-programs': typeof EducationalProgramsRoute
+  '/faq': typeof FaqRoute
+  '/locations': typeof LocationsRoute
+  '/partner': typeof PartnerRouteWithChildren
+  '/partners': typeof PartnersRoute
+  '/partnership': typeof PartnershipRoute
+  '/privacy': typeof PrivacyRoute
+  '/quiz': typeof QuizRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/services': typeof ServicesRoute
+  '/student': typeof StudentRouteWithChildren
+  '/student-auth': typeof StudentAuthRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/team': typeof TeamRouteWithChildren
+  '/terms': typeof TermsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/commission': typeof AdminCommissionRoute
+  '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/inbox': typeof AdminInboxRoute
+  '/admin/members': typeof AdminMembersRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/pipeline': typeof AdminPipelineRoute
+  '/admin/programs': typeof AdminProgramsRoute
+  '/admin/referrals': typeof AdminReferralsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/spreadsheet': typeof AdminSpreadsheetRoute
+  '/admin/students': typeof AdminStudentsRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
+  '/admin/team': typeof AdminTeamRoute
+  '/admin/whatsapp': typeof AdminWhatsappRoute
+  '/agent/analytics': typeof AgentAnalyticsRoute
+  '/agent/apply': typeof AgentApplyRoute
+  '/agent/bank-details': typeof AgentBankDetailsRoute
+  '/agent/earnings': typeof AgentEarningsRoute
+  '/agent/messages': typeof AgentMessagesRoute
+  '/agent/network': typeof AgentNetworkRoute
+  '/agent/profile': typeof AgentProfileRoute
+  '/agent/recruit': typeof AgentRecruitRoute
+  '/agent/students': typeof AgentStudentsRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/partner/apply': typeof PartnerApplyRoute
+  '/partner/earnings': typeof PartnerEarningsRoute
+  '/partner/messages': typeof PartnerMessagesRoute
+  '/partner/profile': typeof PartnerProfileRoute
+  '/partner/students': typeof PartnerStudentsRoute
+  '/resources/bagrut-calculator': typeof ResourcesBagrutCalculatorRoute
+  '/resources/cost-calculator': typeof ResourcesCostCalculatorRoute
+  '/resources/currency-converter': typeof ResourcesCurrencyConverterRoute
+  '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
+  '/student/checklist': typeof StudentChecklistRoute
+  '/student/contacts': typeof StudentContactsRoute
+  '/student/documents': typeof StudentDocumentsRoute
+  '/student/fees': typeof StudentFeesRoute
+  '/student/messages': typeof StudentMessagesRoute
+  '/student/my-data': typeof StudentMyDataRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/refer': typeof StudentReferRoute
+  '/student/visa': typeof StudentVisaRoute
+  '/team/analytics': typeof TeamAnalyticsRoute
+  '/team/bagrut': typeof TeamBagrutRoute
+  '/team/catalog': typeof TeamCatalogRoute
+  '/team/majors': typeof TeamMajorsRoute
+  '/team/messages': typeof TeamMessagesRoute
+  '/team/spreadsheet': typeof TeamSpreadsheetRoute
+  '/team/submit': typeof TeamSubmitRoute
+  '/team/whatsapp': typeof TeamWhatsappRoute
+  '/admin/': typeof AdminIndexRoute
+  '/agent/': typeof AgentIndexRoute
+  '/blog/': typeof BlogIndexRoute
+  '/partner/': typeof PartnerIndexRoute
+  '/resources/': typeof ResourcesIndexRoute
+  '/student/': typeof StudentIndexRoute
+  '/team/': typeof TeamIndexRoute
+  '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/student/tools/bagrut': typeof StudentToolsBagrutRoute
+  '/student/tools/cv': typeof StudentToolsCvRoute
+  '/team/appointments/today': typeof TeamAppointmentsTodayRoute
+  '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/students/$id': typeof TeamStudentsIdRoute
+  '/team/tools/currency': typeof TeamToolsCurrencyRoute
+  '/team/tools/cv': typeof TeamToolsCvRoute
+  '/team/appointments/': typeof TeamAppointmentsIndexRoute
+  '/team/cases/': typeof TeamCasesIndexRoute
+  '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
+  '/team/students/': typeof TeamStudentsIndexRoute
+  '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
+  '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: never
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/accessibility'
+    | '/activate'
+    | '/admin'
+    | '/agent'
+    | '/ai-advisor'
+    | '/apply'
+    | '/broadcast'
+    | '/contact'
+    | '/educational-destinations'
+    | '/educational-programs'
+    | '/faq'
+    | '/locations'
+    | '/partner'
+    | '/partners'
+    | '/partnership'
+    | '/privacy'
+    | '/quiz'
+    | '/reset-password'
+    | '/services'
+    | '/student'
+    | '/student-auth'
+    | '/student-dashboard'
+    | '/team'
+    | '/terms'
+    | '/admin/activity'
+    | '/admin/analytics'
+    | '/admin/commission'
+    | '/admin/financials'
+    | '/admin/inbox'
+    | '/admin/members'
+    | '/admin/messages'
+    | '/admin/pipeline'
+    | '/admin/programs'
+    | '/admin/referrals'
+    | '/admin/settings'
+    | '/admin/spreadsheet'
+    | '/admin/students'
+    | '/admin/submissions'
+    | '/admin/team'
+    | '/admin/whatsapp'
+    | '/agent/analytics'
+    | '/agent/apply'
+    | '/agent/bank-details'
+    | '/agent/earnings'
+    | '/agent/messages'
+    | '/agent/network'
+    | '/agent/profile'
+    | '/agent/recruit'
+    | '/agent/students'
+    | '/blog/$slug'
+    | '/invoice/$token'
+    | '/join/$code'
+    | '/partner/apply'
+    | '/partner/earnings'
+    | '/partner/messages'
+    | '/partner/profile'
+    | '/partner/students'
+    | '/resources/bagrut-calculator'
+    | '/resources/cost-calculator'
+    | '/resources/currency-converter'
+    | '/resources/lebenslauf-builder'
+    | '/student/checklist'
+    | '/student/contacts'
+    | '/student/documents'
+    | '/student/fees'
+    | '/student/messages'
+    | '/student/my-data'
+    | '/student/profile'
+    | '/student/refer'
+    | '/student/visa'
+    | '/team/analytics'
+    | '/team/bagrut'
+    | '/team/catalog'
+    | '/team/majors'
+    | '/team/messages'
+    | '/team/spreadsheet'
+    | '/team/submit'
+    | '/team/whatsapp'
+    | '/admin/'
+    | '/agent/'
+    | '/blog/'
+    | '/partner/'
+    | '/resources/'
+    | '/student/'
+    | '/team/'
+    | '/admin/cases/$id'
+    | '/student/tools/bagrut'
+    | '/student/tools/cv'
+    | '/team/appointments/today'
+    | '/team/cases/$id'
+    | '/team/students/$id'
+    | '/team/tools/currency'
+    | '/team/tools/cv'
+    | '/team/appointments/'
+    | '/team/cases/'
+    | '/team/partner-schools/'
+    | '/team/students/'
+    | '/team/partner-schools/$country/$school'
+    | '/team/partner-schools/$country/'
   fileRoutesByTo: FileRoutesByTo
-  to: never
-  id: '__root__'
+  to:
+    | '/'
+    | '/about'
+    | '/accessibility'
+    | '/activate'
+    | '/ai-advisor'
+    | '/apply'
+    | '/broadcast'
+    | '/contact'
+    | '/educational-destinations'
+    | '/educational-programs'
+    | '/faq'
+    | '/locations'
+    | '/partners'
+    | '/partnership'
+    | '/privacy'
+    | '/quiz'
+    | '/reset-password'
+    | '/services'
+    | '/student-auth'
+    | '/student-dashboard'
+    | '/terms'
+    | '/admin/activity'
+    | '/admin/analytics'
+    | '/admin/commission'
+    | '/admin/financials'
+    | '/admin/inbox'
+    | '/admin/members'
+    | '/admin/messages'
+    | '/admin/pipeline'
+    | '/admin/programs'
+    | '/admin/referrals'
+    | '/admin/settings'
+    | '/admin/spreadsheet'
+    | '/admin/students'
+    | '/admin/submissions'
+    | '/admin/team'
+    | '/admin/whatsapp'
+    | '/agent/analytics'
+    | '/agent/apply'
+    | '/agent/bank-details'
+    | '/agent/earnings'
+    | '/agent/messages'
+    | '/agent/network'
+    | '/agent/profile'
+    | '/agent/recruit'
+    | '/agent/students'
+    | '/blog/$slug'
+    | '/invoice/$token'
+    | '/join/$code'
+    | '/partner/apply'
+    | '/partner/earnings'
+    | '/partner/messages'
+    | '/partner/profile'
+    | '/partner/students'
+    | '/resources/bagrut-calculator'
+    | '/resources/cost-calculator'
+    | '/resources/currency-converter'
+    | '/resources/lebenslauf-builder'
+    | '/student/checklist'
+    | '/student/contacts'
+    | '/student/documents'
+    | '/student/fees'
+    | '/student/messages'
+    | '/student/my-data'
+    | '/student/profile'
+    | '/student/refer'
+    | '/student/visa'
+    | '/team/analytics'
+    | '/team/bagrut'
+    | '/team/catalog'
+    | '/team/majors'
+    | '/team/messages'
+    | '/team/spreadsheet'
+    | '/team/submit'
+    | '/team/whatsapp'
+    | '/admin'
+    | '/agent'
+    | '/blog'
+    | '/partner'
+    | '/resources'
+    | '/student'
+    | '/team'
+    | '/admin/cases/$id'
+    | '/student/tools/bagrut'
+    | '/student/tools/cv'
+    | '/team/appointments/today'
+    | '/team/cases/$id'
+    | '/team/students/$id'
+    | '/team/tools/currency'
+    | '/team/tools/cv'
+    | '/team/appointments'
+    | '/team/cases'
+    | '/team/partner-schools'
+    | '/team/students'
+    | '/team/partner-schools/$country/$school'
+    | '/team/partner-schools/$country'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/accessibility'
+    | '/activate'
+    | '/admin'
+    | '/agent'
+    | '/ai-advisor'
+    | '/apply'
+    | '/broadcast'
+    | '/contact'
+    | '/educational-destinations'
+    | '/educational-programs'
+    | '/faq'
+    | '/locations'
+    | '/partner'
+    | '/partners'
+    | '/partnership'
+    | '/privacy'
+    | '/quiz'
+    | '/reset-password'
+    | '/services'
+    | '/student'
+    | '/student-auth'
+    | '/student-dashboard'
+    | '/team'
+    | '/terms'
+    | '/admin/activity'
+    | '/admin/analytics'
+    | '/admin/commission'
+    | '/admin/financials'
+    | '/admin/inbox'
+    | '/admin/members'
+    | '/admin/messages'
+    | '/admin/pipeline'
+    | '/admin/programs'
+    | '/admin/referrals'
+    | '/admin/settings'
+    | '/admin/spreadsheet'
+    | '/admin/students'
+    | '/admin/submissions'
+    | '/admin/team'
+    | '/admin/whatsapp'
+    | '/agent/analytics'
+    | '/agent/apply'
+    | '/agent/bank-details'
+    | '/agent/earnings'
+    | '/agent/messages'
+    | '/agent/network'
+    | '/agent/profile'
+    | '/agent/recruit'
+    | '/agent/students'
+    | '/blog/$slug'
+    | '/invoice/$token'
+    | '/join/$code'
+    | '/partner/apply'
+    | '/partner/earnings'
+    | '/partner/messages'
+    | '/partner/profile'
+    | '/partner/students'
+    | '/resources/bagrut-calculator'
+    | '/resources/cost-calculator'
+    | '/resources/currency-converter'
+    | '/resources/lebenslauf-builder'
+    | '/student/checklist'
+    | '/student/contacts'
+    | '/student/documents'
+    | '/student/fees'
+    | '/student/messages'
+    | '/student/my-data'
+    | '/student/profile'
+    | '/student/refer'
+    | '/student/visa'
+    | '/team/analytics'
+    | '/team/bagrut'
+    | '/team/catalog'
+    | '/team/majors'
+    | '/team/messages'
+    | '/team/spreadsheet'
+    | '/team/submit'
+    | '/team/whatsapp'
+    | '/admin/'
+    | '/agent/'
+    | '/blog/'
+    | '/partner/'
+    | '/resources/'
+    | '/student/'
+    | '/team/'
+    | '/admin/cases/$id'
+    | '/student/tools/bagrut'
+    | '/student/tools/cv'
+    | '/team/appointments/today'
+    | '/team/cases/$id'
+    | '/team/students/$id'
+    | '/team/tools/currency'
+    | '/team/tools/cv'
+    | '/team/appointments/'
+    | '/team/cases/'
+    | '/team/partner-schools/'
+    | '/team/students/'
+    | '/team/partner-schools/$country/$school'
+    | '/team/partner-schools/$country/'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren {}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  AccessibilityRoute: typeof AccessibilityRoute
+  ActivateRoute: typeof ActivateRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  AgentRoute: typeof AgentRouteWithChildren
+  AiAdvisorRoute: typeof AiAdvisorRoute
+  ApplyRoute: typeof ApplyRoute
+  BroadcastRoute: typeof BroadcastRoute
+  ContactRoute: typeof ContactRoute
+  EducationalDestinationsRoute: typeof EducationalDestinationsRoute
+  EducationalProgramsRoute: typeof EducationalProgramsRoute
+  FaqRoute: typeof FaqRoute
+  LocationsRoute: typeof LocationsRoute
+  PartnerRoute: typeof PartnerRouteWithChildren
+  PartnersRoute: typeof PartnersRoute
+  PartnershipRoute: typeof PartnershipRoute
+  PrivacyRoute: typeof PrivacyRoute
+  QuizRoute: typeof QuizRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  ServicesRoute: typeof ServicesRoute
+  StudentRoute: typeof StudentRouteWithChildren
+  StudentAuthRoute: typeof StudentAuthRoute
+  StudentDashboardRoute: typeof StudentDashboardRoute
+  TeamRoute: typeof TeamRouteWithChildren
+  TermsRoute: typeof TermsRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  InvoiceTokenRoute: typeof InvoiceTokenRoute
+  JoinCodeRoute: typeof JoinCodeRoute
+  ResourcesBagrutCalculatorRoute: typeof ResourcesBagrutCalculatorRoute
+  ResourcesCostCalculatorRoute: typeof ResourcesCostCalculatorRoute
+  ResourcesCurrencyConverterRoute: typeof ResourcesCurrencyConverterRoute
+  ResourcesLebenslaufBuilderRoute: typeof ResourcesLebenslaufBuilderRoute
+  BlogIndexRoute: typeof BlogIndexRoute
+  ResourcesIndexRoute: typeof ResourcesIndexRoute
 }
 
-const rootRouteChildren: RootRouteChildren = {}
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activate': {
+      id: '/activate'
+      path: '/activate'
+      fullPath: '/activate'
+      preLoaderRoute: typeof ActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agent': {
+      id: '/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof AgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-advisor': {
+      id: '/ai-advisor'
+      path: '/ai-advisor'
+      fullPath: '/ai-advisor'
+      preLoaderRoute: typeof AiAdvisorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apply': {
+      id: '/apply'
+      path: '/apply'
+      fullPath: '/apply'
+      preLoaderRoute: typeof ApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/broadcast': {
+      id: '/broadcast'
+      path: '/broadcast'
+      fullPath: '/broadcast'
+      preLoaderRoute: typeof BroadcastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/educational-destinations': {
+      id: '/educational-destinations'
+      path: '/educational-destinations'
+      fullPath: '/educational-destinations'
+      preLoaderRoute: typeof EducationalDestinationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/educational-programs': {
+      id: '/educational-programs'
+      path: '/educational-programs'
+      fullPath: '/educational-programs'
+      preLoaderRoute: typeof EducationalProgramsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations': {
+      id: '/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof LocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partnership': {
+      id: '/partnership'
+      path: '/partnership'
+      fullPath: '/partnership'
+      preLoaderRoute: typeof PartnershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-auth': {
+      id: '/student-auth'
+      path: '/student-auth'
+      fullPath: '/student-auth'
+      preLoaderRoute: typeof StudentAuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-dashboard': {
+      id: '/student-dashboard'
+      path: '/student-dashboard'
+      fullPath: '/student-dashboard'
+      preLoaderRoute: typeof StudentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/activity': {
+      id: '/admin/activity'
+      path: '/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/commission': {
+      id: '/admin/commission'
+      path: '/commission'
+      fullPath: '/admin/commission'
+      preLoaderRoute: typeof AdminCommissionRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/financials': {
+      id: '/admin/financials'
+      path: '/financials'
+      fullPath: '/admin/financials'
+      preLoaderRoute: typeof AdminFinancialsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/inbox': {
+      id: '/admin/inbox'
+      path: '/inbox'
+      fullPath: '/admin/inbox'
+      preLoaderRoute: typeof AdminInboxRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pipeline': {
+      id: '/admin/pipeline'
+      path: '/pipeline'
+      fullPath: '/admin/pipeline'
+      preLoaderRoute: typeof AdminPipelineRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/programs': {
+      id: '/admin/programs'
+      path: '/programs'
+      fullPath: '/admin/programs'
+      preLoaderRoute: typeof AdminProgramsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/referrals': {
+      id: '/admin/referrals'
+      path: '/referrals'
+      fullPath: '/admin/referrals'
+      preLoaderRoute: typeof AdminReferralsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/spreadsheet': {
+      id: '/admin/spreadsheet'
+      path: '/spreadsheet'
+      fullPath: '/admin/spreadsheet'
+      preLoaderRoute: typeof AdminSpreadsheetRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/students': {
+      id: '/admin/students'
+      path: '/students'
+      fullPath: '/admin/students'
+      preLoaderRoute: typeof AdminStudentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/submissions': {
+      id: '/admin/submissions'
+      path: '/submissions'
+      fullPath: '/admin/submissions'
+      preLoaderRoute: typeof AdminSubmissionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/team': {
+      id: '/admin/team'
+      path: '/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AdminTeamRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/whatsapp': {
+      id: '/admin/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/admin/whatsapp'
+      preLoaderRoute: typeof AdminWhatsappRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/agent/': {
+      id: '/agent/'
+      path: '/'
+      fullPath: '/agent/'
+      preLoaderRoute: typeof AgentIndexRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/analytics': {
+      id: '/agent/analytics'
+      path: '/analytics'
+      fullPath: '/agent/analytics'
+      preLoaderRoute: typeof AgentAnalyticsRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/apply': {
+      id: '/agent/apply'
+      path: '/apply'
+      fullPath: '/agent/apply'
+      preLoaderRoute: typeof AgentApplyRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/bank-details': {
+      id: '/agent/bank-details'
+      path: '/bank-details'
+      fullPath: '/agent/bank-details'
+      preLoaderRoute: typeof AgentBankDetailsRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/earnings': {
+      id: '/agent/earnings'
+      path: '/earnings'
+      fullPath: '/agent/earnings'
+      preLoaderRoute: typeof AgentEarningsRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/messages': {
+      id: '/agent/messages'
+      path: '/messages'
+      fullPath: '/agent/messages'
+      preLoaderRoute: typeof AgentMessagesRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/network': {
+      id: '/agent/network'
+      path: '/network'
+      fullPath: '/agent/network'
+      preLoaderRoute: typeof AgentNetworkRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/profile': {
+      id: '/agent/profile'
+      path: '/profile'
+      fullPath: '/agent/profile'
+      preLoaderRoute: typeof AgentProfileRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/recruit': {
+      id: '/agent/recruit'
+      path: '/recruit'
+      fullPath: '/agent/recruit'
+      preLoaderRoute: typeof AgentRecruitRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/agent/students': {
+      id: '/agent/students'
+      path: '/students'
+      fullPath: '/agent/students'
+      preLoaderRoute: typeof AgentStudentsRouteImport
+      parentRoute: typeof AgentRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invoice/$token': {
+      id: '/invoice/$token'
+      path: '/invoice/$token'
+      fullPath: '/invoice/$token'
+      preLoaderRoute: typeof InvoiceTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner/': {
+      id: '/partner/'
+      path: '/'
+      fullPath: '/partner/'
+      preLoaderRoute: typeof PartnerIndexRouteImport
+      parentRoute: typeof PartnerRoute
+    }
+    '/partner/apply': {
+      id: '/partner/apply'
+      path: '/apply'
+      fullPath: '/partner/apply'
+      preLoaderRoute: typeof PartnerApplyRouteImport
+      parentRoute: typeof PartnerRoute
+    }
+    '/partner/earnings': {
+      id: '/partner/earnings'
+      path: '/earnings'
+      fullPath: '/partner/earnings'
+      preLoaderRoute: typeof PartnerEarningsRouteImport
+      parentRoute: typeof PartnerRoute
+    }
+    '/partner/messages': {
+      id: '/partner/messages'
+      path: '/messages'
+      fullPath: '/partner/messages'
+      preLoaderRoute: typeof PartnerMessagesRouteImport
+      parentRoute: typeof PartnerRoute
+    }
+    '/partner/profile': {
+      id: '/partner/profile'
+      path: '/profile'
+      fullPath: '/partner/profile'
+      preLoaderRoute: typeof PartnerProfileRouteImport
+      parentRoute: typeof PartnerRoute
+    }
+    '/partner/students': {
+      id: '/partner/students'
+      path: '/students'
+      fullPath: '/partner/students'
+      preLoaderRoute: typeof PartnerStudentsRouteImport
+      parentRoute: typeof PartnerRoute
+    }
+    '/resources/': {
+      id: '/resources/'
+      path: '/resources'
+      fullPath: '/resources/'
+      preLoaderRoute: typeof ResourcesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/bagrut-calculator': {
+      id: '/resources/bagrut-calculator'
+      path: '/resources/bagrut-calculator'
+      fullPath: '/resources/bagrut-calculator'
+      preLoaderRoute: typeof ResourcesBagrutCalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/cost-calculator': {
+      id: '/resources/cost-calculator'
+      path: '/resources/cost-calculator'
+      fullPath: '/resources/cost-calculator'
+      preLoaderRoute: typeof ResourcesCostCalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/currency-converter': {
+      id: '/resources/currency-converter'
+      path: '/resources/currency-converter'
+      fullPath: '/resources/currency-converter'
+      preLoaderRoute: typeof ResourcesCurrencyConverterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources/lebenslauf-builder': {
+      id: '/resources/lebenslauf-builder'
+      path: '/resources/lebenslauf-builder'
+      fullPath: '/resources/lebenslauf-builder'
+      preLoaderRoute: typeof ResourcesLebenslaufBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/': {
+      id: '/student/'
+      path: '/'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/checklist': {
+      id: '/student/checklist'
+      path: '/checklist'
+      fullPath: '/student/checklist'
+      preLoaderRoute: typeof StudentChecklistRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/contacts': {
+      id: '/student/contacts'
+      path: '/contacts'
+      fullPath: '/student/contacts'
+      preLoaderRoute: typeof StudentContactsRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/documents': {
+      id: '/student/documents'
+      path: '/documents'
+      fullPath: '/student/documents'
+      preLoaderRoute: typeof StudentDocumentsRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/fees': {
+      id: '/student/fees'
+      path: '/fees'
+      fullPath: '/student/fees'
+      preLoaderRoute: typeof StudentFeesRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/messages': {
+      id: '/student/messages'
+      path: '/messages'
+      fullPath: '/student/messages'
+      preLoaderRoute: typeof StudentMessagesRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/my-data': {
+      id: '/student/my-data'
+      path: '/my-data'
+      fullPath: '/student/my-data'
+      preLoaderRoute: typeof StudentMyDataRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/profile': {
+      id: '/student/profile'
+      path: '/profile'
+      fullPath: '/student/profile'
+      preLoaderRoute: typeof StudentProfileRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/refer': {
+      id: '/student/refer'
+      path: '/refer'
+      fullPath: '/student/refer'
+      preLoaderRoute: typeof StudentReferRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/visa': {
+      id: '/student/visa'
+      path: '/visa'
+      fullPath: '/student/visa'
+      preLoaderRoute: typeof StudentVisaRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/team/': {
+      id: '/team/'
+      path: '/'
+      fullPath: '/team/'
+      preLoaderRoute: typeof TeamIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/analytics': {
+      id: '/team/analytics'
+      path: '/analytics'
+      fullPath: '/team/analytics'
+      preLoaderRoute: typeof TeamAnalyticsRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/bagrut': {
+      id: '/team/bagrut'
+      path: '/bagrut'
+      fullPath: '/team/bagrut'
+      preLoaderRoute: typeof TeamBagrutRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/catalog': {
+      id: '/team/catalog'
+      path: '/catalog'
+      fullPath: '/team/catalog'
+      preLoaderRoute: typeof TeamCatalogRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/majors': {
+      id: '/team/majors'
+      path: '/majors'
+      fullPath: '/team/majors'
+      preLoaderRoute: typeof TeamMajorsRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/messages': {
+      id: '/team/messages'
+      path: '/messages'
+      fullPath: '/team/messages'
+      preLoaderRoute: typeof TeamMessagesRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/spreadsheet': {
+      id: '/team/spreadsheet'
+      path: '/spreadsheet'
+      fullPath: '/team/spreadsheet'
+      preLoaderRoute: typeof TeamSpreadsheetRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/submit': {
+      id: '/team/submit'
+      path: '/submit'
+      fullPath: '/team/submit'
+      preLoaderRoute: typeof TeamSubmitRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/whatsapp': {
+      id: '/team/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/team/whatsapp'
+      preLoaderRoute: typeof TeamWhatsappRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/admin/cases/$id': {
+      id: '/admin/cases/$id'
+      path: '/cases/$id'
+      fullPath: '/admin/cases/$id'
+      preLoaderRoute: typeof AdminCasesIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/student/tools/bagrut': {
+      id: '/student/tools/bagrut'
+      path: '/tools/bagrut'
+      fullPath: '/student/tools/bagrut'
+      preLoaderRoute: typeof StudentToolsBagrutRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/tools/cv': {
+      id: '/student/tools/cv'
+      path: '/tools/cv'
+      fullPath: '/student/tools/cv'
+      preLoaderRoute: typeof StudentToolsCvRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/team/appointments/': {
+      id: '/team/appointments/'
+      path: '/appointments'
+      fullPath: '/team/appointments/'
+      preLoaderRoute: typeof TeamAppointmentsIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/appointments/today': {
+      id: '/team/appointments/today'
+      path: '/appointments/today'
+      fullPath: '/team/appointments/today'
+      preLoaderRoute: typeof TeamAppointmentsTodayRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/cases/': {
+      id: '/team/cases/'
+      path: '/cases'
+      fullPath: '/team/cases/'
+      preLoaderRoute: typeof TeamCasesIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/cases/$id': {
+      id: '/team/cases/$id'
+      path: '/cases/$id'
+      fullPath: '/team/cases/$id'
+      preLoaderRoute: typeof TeamCasesIdRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/partner-schools/': {
+      id: '/team/partner-schools/'
+      path: '/partner-schools'
+      fullPath: '/team/partner-schools/'
+      preLoaderRoute: typeof TeamPartnerSchoolsIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/students/': {
+      id: '/team/students/'
+      path: '/students'
+      fullPath: '/team/students/'
+      preLoaderRoute: typeof TeamStudentsIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/students/$id': {
+      id: '/team/students/$id'
+      path: '/students/$id'
+      fullPath: '/team/students/$id'
+      preLoaderRoute: typeof TeamStudentsIdRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/tools/currency': {
+      id: '/team/tools/currency'
+      path: '/tools/currency'
+      fullPath: '/team/tools/currency'
+      preLoaderRoute: typeof TeamToolsCurrencyRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/tools/cv': {
+      id: '/team/tools/cv'
+      path: '/tools/cv'
+      fullPath: '/team/tools/cv'
+      preLoaderRoute: typeof TeamToolsCvRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/partner-schools/$country/': {
+      id: '/team/partner-schools/$country/'
+      path: '/partner-schools/$country'
+      fullPath: '/team/partner-schools/$country/'
+      preLoaderRoute: typeof TeamPartnerSchoolsCountryIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
+    '/team/partner-schools/$country/$school': {
+      id: '/team/partner-schools/$country/$school'
+      path: '/partner-schools/$country/$school'
+      fullPath: '/team/partner-schools/$country/$school'
+      preLoaderRoute: typeof TeamPartnerSchoolsCountrySchoolRouteImport
+      parentRoute: typeof TeamRoute
+    }
+  }
+}
+
+interface AdminRouteChildren {
+  AdminActivityRoute: typeof AdminActivityRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminCommissionRoute: typeof AdminCommissionRoute
+  AdminFinancialsRoute: typeof AdminFinancialsRoute
+  AdminInboxRoute: typeof AdminInboxRoute
+  AdminMembersRoute: typeof AdminMembersRoute
+  AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminPipelineRoute: typeof AdminPipelineRoute
+  AdminProgramsRoute: typeof AdminProgramsRoute
+  AdminReferralsRoute: typeof AdminReferralsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSpreadsheetRoute: typeof AdminSpreadsheetRoute
+  AdminStudentsRoute: typeof AdminStudentsRoute
+  AdminSubmissionsRoute: typeof AdminSubmissionsRoute
+  AdminTeamRoute: typeof AdminTeamRoute
+  AdminWhatsappRoute: typeof AdminWhatsappRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminCasesIdRoute: typeof AdminCasesIdRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminActivityRoute: AdminActivityRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminCommissionRoute: AdminCommissionRoute,
+  AdminFinancialsRoute: AdminFinancialsRoute,
+  AdminInboxRoute: AdminInboxRoute,
+  AdminMembersRoute: AdminMembersRoute,
+  AdminMessagesRoute: AdminMessagesRoute,
+  AdminPipelineRoute: AdminPipelineRoute,
+  AdminProgramsRoute: AdminProgramsRoute,
+  AdminReferralsRoute: AdminReferralsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminSpreadsheetRoute: AdminSpreadsheetRoute,
+  AdminStudentsRoute: AdminStudentsRoute,
+  AdminSubmissionsRoute: AdminSubmissionsRoute,
+  AdminTeamRoute: AdminTeamRoute,
+  AdminWhatsappRoute: AdminWhatsappRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminCasesIdRoute: AdminCasesIdRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface AgentRouteChildren {
+  AgentAnalyticsRoute: typeof AgentAnalyticsRoute
+  AgentApplyRoute: typeof AgentApplyRoute
+  AgentBankDetailsRoute: typeof AgentBankDetailsRoute
+  AgentEarningsRoute: typeof AgentEarningsRoute
+  AgentMessagesRoute: typeof AgentMessagesRoute
+  AgentNetworkRoute: typeof AgentNetworkRoute
+  AgentProfileRoute: typeof AgentProfileRoute
+  AgentRecruitRoute: typeof AgentRecruitRoute
+  AgentStudentsRoute: typeof AgentStudentsRoute
+  AgentIndexRoute: typeof AgentIndexRoute
+}
+
+const AgentRouteChildren: AgentRouteChildren = {
+  AgentAnalyticsRoute: AgentAnalyticsRoute,
+  AgentApplyRoute: AgentApplyRoute,
+  AgentBankDetailsRoute: AgentBankDetailsRoute,
+  AgentEarningsRoute: AgentEarningsRoute,
+  AgentMessagesRoute: AgentMessagesRoute,
+  AgentNetworkRoute: AgentNetworkRoute,
+  AgentProfileRoute: AgentProfileRoute,
+  AgentRecruitRoute: AgentRecruitRoute,
+  AgentStudentsRoute: AgentStudentsRoute,
+  AgentIndexRoute: AgentIndexRoute,
+}
+
+const AgentRouteWithChildren = AgentRoute._addFileChildren(AgentRouteChildren)
+
+interface PartnerRouteChildren {
+  PartnerApplyRoute: typeof PartnerApplyRoute
+  PartnerEarningsRoute: typeof PartnerEarningsRoute
+  PartnerMessagesRoute: typeof PartnerMessagesRoute
+  PartnerProfileRoute: typeof PartnerProfileRoute
+  PartnerStudentsRoute: typeof PartnerStudentsRoute
+  PartnerIndexRoute: typeof PartnerIndexRoute
+}
+
+const PartnerRouteChildren: PartnerRouteChildren = {
+  PartnerApplyRoute: PartnerApplyRoute,
+  PartnerEarningsRoute: PartnerEarningsRoute,
+  PartnerMessagesRoute: PartnerMessagesRoute,
+  PartnerProfileRoute: PartnerProfileRoute,
+  PartnerStudentsRoute: PartnerStudentsRoute,
+  PartnerIndexRoute: PartnerIndexRoute,
+}
+
+const PartnerRouteWithChildren =
+  PartnerRoute._addFileChildren(PartnerRouteChildren)
+
+interface StudentRouteChildren {
+  StudentChecklistRoute: typeof StudentChecklistRoute
+  StudentContactsRoute: typeof StudentContactsRoute
+  StudentDocumentsRoute: typeof StudentDocumentsRoute
+  StudentFeesRoute: typeof StudentFeesRoute
+  StudentMessagesRoute: typeof StudentMessagesRoute
+  StudentMyDataRoute: typeof StudentMyDataRoute
+  StudentProfileRoute: typeof StudentProfileRoute
+  StudentReferRoute: typeof StudentReferRoute
+  StudentVisaRoute: typeof StudentVisaRoute
+  StudentIndexRoute: typeof StudentIndexRoute
+  StudentToolsBagrutRoute: typeof StudentToolsBagrutRoute
+  StudentToolsCvRoute: typeof StudentToolsCvRoute
+}
+
+const StudentRouteChildren: StudentRouteChildren = {
+  StudentChecklistRoute: StudentChecklistRoute,
+  StudentContactsRoute: StudentContactsRoute,
+  StudentDocumentsRoute: StudentDocumentsRoute,
+  StudentFeesRoute: StudentFeesRoute,
+  StudentMessagesRoute: StudentMessagesRoute,
+  StudentMyDataRoute: StudentMyDataRoute,
+  StudentProfileRoute: StudentProfileRoute,
+  StudentReferRoute: StudentReferRoute,
+  StudentVisaRoute: StudentVisaRoute,
+  StudentIndexRoute: StudentIndexRoute,
+  StudentToolsBagrutRoute: StudentToolsBagrutRoute,
+  StudentToolsCvRoute: StudentToolsCvRoute,
+}
+
+const StudentRouteWithChildren =
+  StudentRoute._addFileChildren(StudentRouteChildren)
+
+interface TeamRouteChildren {
+  TeamAnalyticsRoute: typeof TeamAnalyticsRoute
+  TeamBagrutRoute: typeof TeamBagrutRoute
+  TeamCatalogRoute: typeof TeamCatalogRoute
+  TeamMajorsRoute: typeof TeamMajorsRoute
+  TeamMessagesRoute: typeof TeamMessagesRoute
+  TeamSpreadsheetRoute: typeof TeamSpreadsheetRoute
+  TeamSubmitRoute: typeof TeamSubmitRoute
+  TeamWhatsappRoute: typeof TeamWhatsappRoute
+  TeamIndexRoute: typeof TeamIndexRoute
+  TeamAppointmentsTodayRoute: typeof TeamAppointmentsTodayRoute
+  TeamCasesIdRoute: typeof TeamCasesIdRoute
+  TeamStudentsIdRoute: typeof TeamStudentsIdRoute
+  TeamToolsCurrencyRoute: typeof TeamToolsCurrencyRoute
+  TeamToolsCvRoute: typeof TeamToolsCvRoute
+  TeamAppointmentsIndexRoute: typeof TeamAppointmentsIndexRoute
+  TeamCasesIndexRoute: typeof TeamCasesIndexRoute
+  TeamPartnerSchoolsIndexRoute: typeof TeamPartnerSchoolsIndexRoute
+  TeamStudentsIndexRoute: typeof TeamStudentsIndexRoute
+  TeamPartnerSchoolsCountrySchoolRoute: typeof TeamPartnerSchoolsCountrySchoolRoute
+  TeamPartnerSchoolsCountryIndexRoute: typeof TeamPartnerSchoolsCountryIndexRoute
+}
+
+const TeamRouteChildren: TeamRouteChildren = {
+  TeamAnalyticsRoute: TeamAnalyticsRoute,
+  TeamBagrutRoute: TeamBagrutRoute,
+  TeamCatalogRoute: TeamCatalogRoute,
+  TeamMajorsRoute: TeamMajorsRoute,
+  TeamMessagesRoute: TeamMessagesRoute,
+  TeamSpreadsheetRoute: TeamSpreadsheetRoute,
+  TeamSubmitRoute: TeamSubmitRoute,
+  TeamWhatsappRoute: TeamWhatsappRoute,
+  TeamIndexRoute: TeamIndexRoute,
+  TeamAppointmentsTodayRoute: TeamAppointmentsTodayRoute,
+  TeamCasesIdRoute: TeamCasesIdRoute,
+  TeamStudentsIdRoute: TeamStudentsIdRoute,
+  TeamToolsCurrencyRoute: TeamToolsCurrencyRoute,
+  TeamToolsCvRoute: TeamToolsCvRoute,
+  TeamAppointmentsIndexRoute: TeamAppointmentsIndexRoute,
+  TeamCasesIndexRoute: TeamCasesIndexRoute,
+  TeamPartnerSchoolsIndexRoute: TeamPartnerSchoolsIndexRoute,
+  TeamStudentsIndexRoute: TeamStudentsIndexRoute,
+  TeamPartnerSchoolsCountrySchoolRoute: TeamPartnerSchoolsCountrySchoolRoute,
+  TeamPartnerSchoolsCountryIndexRoute: TeamPartnerSchoolsCountryIndexRoute,
+}
+
+const TeamRouteWithChildren = TeamRoute._addFileChildren(TeamRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  AccessibilityRoute: AccessibilityRoute,
+  ActivateRoute: ActivateRoute,
+  AdminRoute: AdminRouteWithChildren,
+  AgentRoute: AgentRouteWithChildren,
+  AiAdvisorRoute: AiAdvisorRoute,
+  ApplyRoute: ApplyRoute,
+  BroadcastRoute: BroadcastRoute,
+  ContactRoute: ContactRoute,
+  EducationalDestinationsRoute: EducationalDestinationsRoute,
+  EducationalProgramsRoute: EducationalProgramsRoute,
+  FaqRoute: FaqRoute,
+  LocationsRoute: LocationsRoute,
+  PartnerRoute: PartnerRouteWithChildren,
+  PartnersRoute: PartnersRoute,
+  PartnershipRoute: PartnershipRoute,
+  PrivacyRoute: PrivacyRoute,
+  QuizRoute: QuizRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  ServicesRoute: ServicesRoute,
+  StudentRoute: StudentRouteWithChildren,
+  StudentAuthRoute: StudentAuthRoute,
+  StudentDashboardRoute: StudentDashboardRoute,
+  TeamRoute: TeamRouteWithChildren,
+  TermsRoute: TermsRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  InvoiceTokenRoute: InvoiceTokenRoute,
+  JoinCodeRoute: JoinCodeRoute,
+  ResourcesBagrutCalculatorRoute: ResourcesBagrutCalculatorRoute,
+  ResourcesCostCalculatorRoute: ResourcesCostCalculatorRoute,
+  ResourcesCurrencyConverterRoute: ResourcesCurrencyConverterRoute,
+  ResourcesLebenslaufBuilderRoute: ResourcesLebenslaufBuilderRoute,
+  BlogIndexRoute: BlogIndexRoute,
+  ResourcesIndexRoute: ResourcesIndexRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
