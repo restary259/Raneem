@@ -1,0 +1,450 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./styles/neon.css";
+@import "./styles/cv-print.css";
+
+/* `dark:` variants must also fire inside the third (aurora) dark theme. */
+@custom-variant dark (&:is(.dark *, .dark, .aurora *, .aurora));
+
+/*
+ * DARB design system — ported verbatim from the pre-migration src/index.css +
+ * tailwind.config.ts. Color values stay HSL triplets consumed via
+ * hsl(var(--token)); the @theme inline block maps them to Tailwind utilities.
+ */
+
+@theme inline {
+  --font-sans: "IBM Plex Sans Arabic", "Tajawal", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  --font-editorial: "Instrument Serif", "Noto Naskh Arabic", serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-ring-offset-background: hsl(var(--background));
+
+  --color-brand: hsl(var(--brand));
+  --color-brand-strong: hsl(var(--brand-strong));
+  --color-brand-foreground: hsl(var(--brand-foreground));
+  --color-trust: hsl(var(--trust));
+  --color-editorial-paper: hsl(var(--editorial-paper));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --shadow-surface: var(--surface-shadow);
+  --shadow-surface-lg: var(--surface-shadow-lg);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out forwards;
+  --animate-scale-in: scale-in 0.3s ease-out forwards;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-marquee2: marquee2 40s linear infinite;
+  --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
+  --animate-fade-in-left: fade-in-left 0.5s ease-out forwards;
+  --animate-fade-in-right: fade-in-right 0.5s ease-out forwards;
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+@keyframes marquee2 {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0%); }
+}
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-left {
+  0% { opacity: 0; transform: translateX(20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-in-right {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* v3 container config (center + padding + 1400px cap) re-created for v4. */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (min-width: 640px) { max-width: 640px; padding-inline: 1.5rem; }
+  @media (min-width: 768px) { max-width: 768px; }
+  @media (min-width: 1024px) { max-width: 1024px; padding-inline: 2rem; }
+  @media (min-width: 1280px) { max-width: 1280px; }
+  @media (min-width: 1400px) { max-width: 1400px; }
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  --muted: 221.2 63.6% 97%;
+  --muted-foreground: 215.4 16.3% 38%;
+
+  --accent: 222.2 47.6% 11.2%;
+  --accent-foreground: 210 40% 98%;
+
+  /* Brand highlight (CTA + stats) — DARB orange, matches the Student Login button */
+  --brand: 24.6 95% 53.1%;
+  --brand-foreground: 0 0% 100%;
+  /* AA-safe orange: >=4.5:1 with white text and on white backgrounds */
+  --brand-strong: 24.6 95% 38%;
+  --trust: 160.7 72.3% 31.4%;
+  --editorial-paper: 210 20% 98%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+
+  --radius: 0.5rem;
+
+  --primary: 222.2 47.6% 11.2%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 47.6% 11.2%;
+
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 222.2 84% 4.9%;
+  --sidebar-primary: 222.2 47.6% 11.2%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 221.2 63.6% 97%;
+  --sidebar-accent-foreground: 222.2 47.6% 11.2%;
+  --sidebar-border: 214.3 31.8% 91.4%;
+  --sidebar-ring: 222.2 84% 4.9%;
+
+  /* Semantic pipeline status hues — see src/lib/statusTokens.ts */
+  --status-new: 215 16% 42%;
+  --status-contacted: 217 82% 46%;
+  --status-appointment: 268 62% 52%;
+  --status-profile: 190 78% 34%;
+  --status-payment: 33 90% 40%;
+  --status-submitted: 245 62% 55%;
+  --status-enrolled: 152 62% 32%;
+  --status-danger: 0 72% 47%;
+  /* Confirmed money — distinct from amber "payment due" and the enrolled pipeline stage */
+  --status-paid: 152 72% 36%;
+
+  /* Elevation + motion primitives shared by all themes */
+  --surface-shadow: 0 1px 2px hsl(222 47% 11% / 0.05), 0 8px 24px -12px hsl(222 47% 11% / 0.12);
+  --surface-shadow-lg: 0 2px 4px hsl(222 47% 11% / 0.06), 0 18px 44px -18px hsl(222 47% 11% / 0.22);
+}
+
+.dark {
+  /* Neutral, low-chroma dark surfaces (Lovable-style) rather than blue slate. */
+  --background: 240 6% 7%;
+  --foreground: 240 10% 96%;
+
+  --card: 240 5% 10%;
+  --card-foreground: 240 10% 96%;
+
+  --popover: 240 5% 11%;
+  --popover-foreground: 240 10% 96%;
+
+  --muted: 240 4% 15%;
+  --muted-foreground: 240 5% 65%;
+
+  --accent: 240 4% 17%;
+  --accent-foreground: 240 10% 96%;
+
+  /* Brand highlight stays DARB orange in dark mode */
+  --brand: 24.6 95% 56%;
+  --brand-foreground: 0 0% 100%;
+  --brand-strong: 24.6 95% 42%;
+
+  --destructive: 0 62% 48%;
+  --destructive-foreground: 240 10% 98%;
+
+  --border: 240 4% 18%;
+  --input: 240 4% 22%;
+  --ring: 240 5% 65%;
+
+  /* Dashboard accent: neutral near-white, not gold. Gold stays --brand. */
+  --primary: 0 0% 96%;
+  --primary-foreground: 240 6% 10%;
+
+  --secondary: 240 4% 15%;
+  --secondary-foreground: 240 10% 96%;
+
+  --sidebar-background: 240 6% 9%;
+  --sidebar-foreground: 240 8% 90%;
+  --sidebar-primary: 0 0% 96%;
+  --sidebar-primary-foreground: 240 6% 10%;
+  --sidebar-accent: 240 4% 15%;
+  --sidebar-accent-foreground: 240 10% 96%;
+  --sidebar-border: 240 4% 16%;
+  --sidebar-ring: 240 5% 65%;
+
+  /* Status hues lifted for contrast on dark surfaces */
+  --status-new: 220 9% 70%;
+  --status-contacted: 213 92% 68%;
+  --status-appointment: 268 90% 76%;
+  --status-profile: 187 84% 60%;
+  --status-payment: 38 94% 62%;
+  --status-submitted: 245 90% 76%;
+  --status-enrolled: 152 62% 55%;
+  --status-danger: 0 84% 68%;
+  --status-paid: 152 62% 55%;
+
+  --surface-shadow: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -12px hsl(0 0% 0% / 0.6);
+  --surface-shadow-lg: 0 2px 6px hsl(0 0% 0% / 0.45), 0 18px 44px -18px hsl(0 0% 0% / 0.7);
+}
+
+/* ── Aurora: a third, premium theme (deep indigo-slate + teal/violet) ──
+   Owned by next-themes exactly like light/dark; dashboards only. */
+.aurora {
+  --background: 232 32% 9%;
+  --foreground: 226 34% 96%;
+
+  --card: 232 28% 12%;
+  --card-foreground: 226 34% 96%;
+
+  --popover: 232 28% 13%;
+  --popover-foreground: 226 34% 96%;
+
+  --muted: 232 22% 18%;
+  --muted-foreground: 226 18% 70%;
+
+  --accent: 232 24% 20%;
+  --accent-foreground: 226 34% 96%;
+
+  --brand: 24.6 95% 58%;
+  --brand-foreground: 0 0% 100%;
+  --brand-strong: 24.6 95% 44%;
+
+  --destructive: 352 74% 55%;
+  --destructive-foreground: 226 34% 98%;
+
+  --border: 232 22% 22%;
+  --input: 232 22% 24%;
+  --ring: 174 72% 56%;
+
+  --primary: 174 72% 56%;
+  --primary-foreground: 232 40% 10%;
+
+  --secondary: 232 22% 18%;
+  --secondary-foreground: 226 34% 96%;
+
+  --sidebar-background: 233 34% 11%;
+  --sidebar-foreground: 226 24% 88%;
+  --sidebar-primary: 174 72% 56%;
+  --sidebar-primary-foreground: 232 40% 10%;
+  --sidebar-accent: 232 24% 18%;
+  --sidebar-accent-foreground: 226 34% 96%;
+  --sidebar-border: 232 22% 20%;
+  --sidebar-ring: 174 72% 56%;
+
+  --status-new: 226 18% 72%;
+  --status-contacted: 205 92% 68%;
+  --status-appointment: 272 88% 78%;
+  --status-profile: 174 72% 58%;
+  --status-payment: 38 94% 64%;
+  --status-submitted: 248 92% 78%;
+  --status-enrolled: 160 68% 55%;
+  --status-danger: 352 88% 70%;
+  --status-paid: 152 64% 56%;
+
+  --surface-shadow: 0 1px 2px hsl(232 60% 3% / 0.5), 0 10px 28px -14px hsl(232 60% 3% / 0.75);
+  --surface-shadow-lg: 0 2px 6px hsl(232 60% 3% / 0.55), 0 22px 52px -20px hsl(232 60% 3% / 0.85);
+}
+
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+/* Mobile safe area + prevent sideways page scroll */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: hidden;
+}
+
+/* Utility classes */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Scroll containers: momentum + no scroll chaining ─────────────────────
+   Every vertical scroll region in the app (dashboard main, drawers, sheets,
+   dialog bodies, chat lists, capped lists) gets iOS momentum scrolling and
+   `overscroll-behavior-y: contain`, so reaching the end of an inner list can
+   never scroll the page behind it and never triggers the browser's
+   pull-to-refresh from inside an overlay. Horizontal scrollers (tab rows,
+   photo galleries) are deliberately untouched. */
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-auto,
+.overflow-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.dir-rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Selection styling */
+::selection {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+/* ── Mobile interaction performance (no visual change) ────────────────────
+   Removes the 300ms tap delay and prevents double-tap zoom on controls only.
+   Scrolling and intentional horizontal scroll areas are untouched. */
+button,
+a,
+[role="button"],
+label,
+summary,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* iOS Safari auto-zooms any focused control whose font-size is < 16px.
+   Force the computed size to 16px on touch phones only; the rendered size on
+   desktop and the layout everywhere stay exactly as designed. */
+@media (max-width: 767px) and (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Respect the OS "reduce motion" setting. The dashboards add hover/press
+   transitions and skeleton shimmer everywhere; users who opt out get the same
+   layout with motion collapsed to an instant state change. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* KPI grid in TeamAnalytics — container-query based so the column count tracks
+   the grid's own available width (after the sidebar takes its 16rem), not the
+   viewport. 7 across only when the grid actually has room for readable cards. */
+.kpi-grid {
+  container-type: inline-size;
+}
+@container (min-width: 30rem) { .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
+@container (min-width: 48rem) { .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
+@container (min-width: 64rem) { .kpi-grid { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; } }
+
+/* Hide Lovable platform badge/watermark — DARB-branded app only.
+   Mirrors the print-only rule in src/styles/cv-print.css so the badge is
+   hidden on-screen everywhere, not just when printing. The iframe selector
+   is scoped to the platform's domains (not a bare "lovable" substring) so a
+   Supabase storage attachment preview whose filename happens to contain
+   "lovable" is never hidden. */
+[data-lovable-badge],
+#lovable-badge,
+iframe[src*="lovable.dev"],
+iframe[src*="lovable.app"],
+div[class*="lovable-badge"],
+a[href*="lovable.dev"] {
+  display: none !important;
+}
