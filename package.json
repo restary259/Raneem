@@ -16,8 +16,7 @@
   },
   "overrides": {
     "@radix-ui/react-dialog": "1.1.23",
-    "@radix-ui/react-dismissable-layer": "1.1.19",
-    "rolldown": "1.2.1"
+    "@radix-ui/react-dismissable-layer": "1.1.19"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
