@@ -43,7 +43,6 @@ const KNOWN_TYPES = ["image", "video", "audio", "document", "sticker", "location
 export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boolean }) {
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const mobile = useIsMobile();
