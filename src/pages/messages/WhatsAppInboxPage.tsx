@@ -85,6 +85,14 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
 
   useChatFullscreen(!!mobile && !!selectedId);
 
+  // URL deep-link support is intentionally separate from data effects so a
+  // shared WhatsApp URL reopens the exact thread after the workspace loads.
+  useEffect(() => {
+    const requested = searchParams.get("conversation");
+    if (!requested || !threads.some((thread) => thread.id === requested)) return;
+    setSelectedId((current) => (current === requested ? current : requested));
+  }, [searchParams, threads]);
+
   const load = useCallback(async () => {
     setError("");
     try {
@@ -109,11 +117,6 @@ export default function WhatsAppInboxPage({ embedded = false }: { embedded?: boo
   }, [refreshThreads]);
 
   const active = threads.find((x) => x.id === selectedId) ?? null;
-  useEffect(() => {
-    const requested = searchParams.get("conversation");
-    if (!requested) return;
-    if (threads.some((thread) => thread.id === requested)) setSelectedId(requested);
-  }, [searchParams, threads]);
   const approvedTemplates = useMemo(() => templates.filter((item) => item.approval_status === "APPROVED"), [templates]);
   const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
   const selectedTemplateText = useMemo(() => {
