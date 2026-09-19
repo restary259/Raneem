@@ -35,12 +35,10 @@ describe('alias search', () => {
     }
   });
 
-  it('returns unverified majors as honest stubs', () => {
-    const stub = getMajorIntel('architecture');
-    if (stub) {
-      expect(stub.status).toBe('not_verified');
-      expect(stub.programs).toHaveLength(0);
-    }
+  it('covers every public major; unknown ids resolve to nothing', () => {
+    expect(getMajorIntel('no-such-major')).toBeUndefined();
+    const unverified = ALL_MAJOR_INTEL.filter((m) => m.status === 'not_verified');
+    expect(unverified).toHaveLength(0);
   });
 });
 
