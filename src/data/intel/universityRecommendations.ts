@@ -119,7 +119,7 @@ const R:Record<string,[string,string,string,string]>={
   "entrepreneurship":["tum","leuphana","tu_dresden","pforzheim"],
   "supply-chain":["tu_dresden","tu_bs","kit","worms"],
   "human-resources":["tu_dresden","mannheim","cologne","hsb"],
-  "economics":["tu_berlin","tu_dresden","mannheim","bonn"],
+  "economics":["tu_dresden","mannheim","bonn","tu_berlin"],
   "international-law":["leipzig","humboldt","heidelberg","muenster"],
   "criminal-law":["leipzig","humboldt","heidelberg","muenster"],
   "business-law":["mannheim","frankfurt","muenster","cologne"],
@@ -147,14 +147,12 @@ const R:Record<string,[string,string,string,string]>={
 };
 
 const PRIMARY_EXACT = new Set([
-  "public-health","bioinformatics","biomedical-engineering","pharmacy","dentistry","medicine","physiotherapy","veterinary","nursing",
+  "public-health","bioinformatics","pharmacy","dentistry","medicine","physiotherapy","veterinary","nursing",
   "computer-engineering","aerospace-engineering","renewable-energy","software-engineering","industrial-engineering","chemical-engineering",
   "mechanical-engineering","civil-engineering","electrical-it","electrical-engineering","environmental-engineering","computer-science",
   "cybersecurity","data-science","environmental-science","mathematics","physics","chemistry","biology","psychology","sociology",
-  "political-science","philosophy","social-work","linguistics","history","business-administration","economics","international-law",
-  "criminal-law","business-law","architecture","fine-arts","graphic-design","music","theater","film-media",
-  "elementary-education","special-education","agricultural-science","forestry","marine-science","sustainable-development",
-  "tourism-management","hotel-management","event-management","travel-tourism"
+  "political-science","philosophy","social-work","history","business-administration","economics","business-law","architecture",
+  "fine-arts","music","elementary-education","special-education","agricultural-science","forestry","tourism-management","travel-tourism"
 ]);
 
 function source(majorId:string,uid:string):IntelSource{
