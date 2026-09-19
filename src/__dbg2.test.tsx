@@ -2,7 +2,8 @@ import { describe, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
+const toastFn = vi.fn();
+vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: toastFn }) }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (_k: string, fallback?: any) =>
