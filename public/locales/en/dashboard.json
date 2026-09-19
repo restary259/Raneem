@@ -5098,7 +5098,14 @@
       "tu9": "TU9 priority",
       "exact": "Exact programme route",
       "related": "Related route — verify exact programme",
-      "verifiedRoutes": "Verified programme routes on file"
+      "verifiedRoutes": "Verified programme routes on file",
+      "openProgramme": "Official programme page",
+      "openCatalogue": "Official programme catalogue",
+      "cost": "Cost",
+      "bwNonEu": "Baden-Württemberg tuition: €1,500/semester for non-EU students",
+      "programmeSpecificTuition": "Tuition applies; amount is programme-specific",
+      "privateTuition": "Private university: tuition fees apply; amount varies by programme",
+      "verifyTuition": "Tuition: verify current university/programme fees"
     }
   },
   "partnerSchools": {
