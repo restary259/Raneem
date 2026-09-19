@@ -1,0 +1,52 @@
+import { MessageCircleMore, MessageSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
+import SegmentedTabs from "@/components/shell/SegmentedTabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import CaseMessagesInboxPage from "@/pages/messages/CaseMessagesInboxPage";
+import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
+
+type TeamInboxTab = "messages" | "whatsapp";
+
+const isTeamInboxTab = (value: string | null): value is TeamInboxTab =>
+  value === "messages" || value === "whatsapp";
+
+export default function TeamInboxPage() {
+  const { t } = useTranslation("dashboard");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const tab: TeamInboxTab = isTeamInboxTab(requestedTab) ? requestedTab : "messages";
+
+  const changeTab = (value: string) => {
+    const next: TeamInboxTab = value === "whatsapp" ? "whatsapp" : "messages";
+    setSearchParams({ tab: next }, { replace: true });
+  };
+
+  return (
+    <Tabs value={tab} onValueChange={changeTab} className="min-h-0">
+      <div className="sticky top-14 z-20 border-b bg-background/95 px-2 py-2 backdrop-blur sm:px-6">
+        <SegmentedTabs
+          items={[
+            {
+              value: "messages",
+              icon: MessageSquare,
+              label: t("messagesInbox.staffTab", "Messages"),
+            },
+            {
+              value: "whatsapp",
+              icon: MessageCircleMore,
+              label: t("messagesInbox.whatsappTab", "WhatsApp"),
+            },
+          ]}
+        />
+      </div>
+
+      <TabsContent value="messages" className="mt-0">
+        <CaseMessagesInboxPage />
+      </TabsContent>
+      <TabsContent value="whatsapp" className="mt-0 px-2 sm:px-6">
+        <WhatsAppInboxPage embedded />
+      </TabsContent>
+    </Tabs>
+  );
+}
