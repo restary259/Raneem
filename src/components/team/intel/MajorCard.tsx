@@ -136,7 +136,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                 const req = program.languageRequirement;
                 const value = req.status === 'verified' ? req.value : null;
                 const teaching =
-                  program.teachingLanguage.status === 'verified' ? program.teachingLanguage.value.join(' / ') : null;
+                  program.teachingLanguage.status === 'verified' ? program.teachingLanguage.value?.join(' / ') ?? null : null;
                 return (
                   <div key={program.id} className="space-y-2 rounded-md border border-border p-3">
                     <Row label={isAr ? program.universityNameAR : program.universityName}>
@@ -225,9 +225,9 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
           <TabsContent value="bagrut" className="mt-4 space-y-3">
             {intel?.bagrutAccess?.status === 'verified' ? (
               <div>
-                <Row label={t('intel.row.math', 'Mathematics units')}>{intel.bagrutAccess.value.mathUnits}</Row>
-                <Row label={t('intel.row.english', 'English units')}>{intel.bagrutAccess.value.englishUnits}</Row>
-                <Row label={t('intel.row.further', 'Further subject units')}>{intel.bagrutAccess.value.furtherUnits}</Row>
+                <Row label={t('intel.row.math', 'Mathematics units')}>{intel.bagrutAccess.value?.mathUnits}</Row>
+                <Row label={t('intel.row.english', 'English units')}>{intel.bagrutAccess.value?.englishUnits}</Row>
+                <Row label={t('intel.row.further', 'Further subject units')}>{intel.bagrutAccess.value?.furtherUnits}</Row>
               </div>
             ) : (
               <Empty />

@@ -11,7 +11,7 @@ interface Props {
   onSubmit: () => void;
   placeholder: string;
   isLoading: boolean;
-  inputRef?: React.RefObject<HTMLInputElement>;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
   /** Accent classes for the send button, which differs per surface. */
   sendClassName?: string;
   className?: string;

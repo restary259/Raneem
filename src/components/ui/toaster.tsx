@@ -60,7 +60,7 @@ export function Toaster() {
     // a length check would miss rapid successive toasts.
     const newest = toasts[0];
     if (newest && newest.id !== prevIdRef.current) {
-      playNotificationSound(newest.variant);
+      playNotificationSound(newest.variant ?? undefined);
     }
     prevIdRef.current = newest?.id ?? null;
   }, [toasts]);

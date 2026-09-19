@@ -404,13 +404,13 @@ const AdminSettingsPage = () => {
   });
 
   const distinctCountries = Array.from(
-    new Map(contacts.map((c) => c.country).filter(Boolean).map((c) => [c.toLowerCase(), c])).values()
+    new Map(contacts.map((c) => c.country).filter((c): c is string => Boolean(c)).map((c) => [c.toLowerCase(), c])).values()
   ).sort() as string[];
 
   // Cities for the form's city datalist (the city filter was removed; only the
   // school_city / city_only form fields still use this list).
   const distinctCities = Array.from(
-    new Map([...contacts.map((c) => c.city), ...schools.map((s) => s.city)].filter(Boolean).map((c) => [c.toLowerCase(), c])).values()
+    new Map([...contacts.map((c) => c.city), ...schools.map((s) => s.city)].filter((c): c is string => Boolean(c)).map((c) => [c.toLowerCase(), c])).values()
   ).sort() as string[];
 
   const createVisaField = async () => {

@@ -50,7 +50,7 @@ export function identityConflictMessage(
 
   const key = result.existing_role ? ROLE_KEYS[result.existing_role] : undefined;
   const existing = key
-    ? t(key, result.existing_role)
+    ? t(key, result.existing_role ?? "another")
     : t("admin.team.someRole", "another");
 
   if (
