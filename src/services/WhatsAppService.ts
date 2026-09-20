@@ -217,7 +217,7 @@ export function syncWhatsAppTemplates() {
   return invokeWhatsAppConnector<{ synced: number }>({ action: "sync_templates" });
 }
 
-export function createWhatsAppTemplate(input: { purpose: string; language: "ar" | "en"; category: "UTILITY" | "MARKETING"; body: string }) {
+export function createWhatsAppTemplate(input: { purpose: string; language: "ar" | "en" | "he"; category: "UTILITY" | "MARKETING"; body: string }) {
   return invokeWhatsAppConnector<{ created: boolean; provider_name: string; approval_status: "PENDING" }>({ action: "create_template", ...input });
 }
 
