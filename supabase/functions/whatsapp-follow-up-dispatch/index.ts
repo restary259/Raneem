@@ -94,6 +94,7 @@ serve(async (req) => {
             action: "send",
             conversation_id: task.conversation_id,
             template_id: task.template_id,
+            follow_up_task_id: task.id,
             parameters,
           }),
         });
@@ -112,6 +113,39 @@ serve(async (req) => {
         results.push({ id: task.id, kind: task.kind, result: "sent" });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown follow-up error";
+
+        // Recover either the task's provider id or the stored outbound message.
+        // This closes the gap where WhatsApp accepted the message but local
+        // bookkeeping failed before the task was marked sent.
+        const [{ data: currentTask }, { data: storedMessage }] = await Promise.all([
+          admin
+            .from("whatsapp_follow_up_tasks")
+            .select("provider_message_id")
+            .eq("id", task.id)
+            .maybeSingle(),
+          admin
+            .from("whatsapp_messages")
+            .select("provider_message_id")
+            .eq("follow_up_task_id", task.id)
+            .maybeSingle(),
+        ]);
+
+        const recoveredProviderId =
+          currentTask?.provider_message_id ??
+          storedMessage?.provider_message_id ??
+          null;
+
+        if (recoveredProviderId) {
+          await admin.rpc("whatsapp_complete_follow_up_task", {
+            p_task_id: task.id,
+            p_status: "sent",
+            p_error: "Recovered after local bookkeeping error",
+          }).catch(() => undefined);
+          sent += 1;
+          results.push({ id: task.id, kind: task.kind, result: "recovered" });
+          continue;
+        }
+
         failed += 1;
         const terminal = task.attempt_count >= task.max_attempts;
         await admin.rpc("whatsapp_complete_follow_up_task", {
