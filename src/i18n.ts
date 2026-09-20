@@ -33,6 +33,9 @@ i18n
     },
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',
+      // Cloudflare Workers have no window, so i18next-http-backend otherwise
+      // assumes a Node/server runtime and creates a global setInterval().
+      reloadInterval: false,
     },
     react: {
       useSuspense: true,
