@@ -97,10 +97,34 @@
     "endBody": "ספרו לנו מה אתם רוצים ללמוד ומאיפה אתם מתחילים. נעזור לכם לחבר את שנת השפה לצעד הבא.",
     "endButton": "תכננו את שנת השפה",
     "cities": {
-      "heidelberg": {"region": "באדן-וירטמברג", "description": "עיר אוניברסיטאית קומפקטית על נהר הנקר, עם עיר עתיקה ואווירה סטודנטיאלית בינלאומית.", "highlight1": "עיר אוניברסיטאית היסטורית", "highlight2": "הנקר והעיר העתיקה", "highlight3": "סביבה קרובה לחיי האוניברסיטה"},
-      "dusseldorf": {"region": "נורדריין-וסטפאליה", "description": "עיר בינלאומית ומחוברת עם חיי תרבות, עסקים ואורח חיים לאורך הריין.", "highlight1": "עיר בינלאומית", "highlight2": "הריין ומרכז העיר", "highlight3": "קישורי תחבורה חזקים"},
-      "dortmund": {"region": "נורדריין-וסטפאליה", "description": "עיר אוניברסיטאית גדולה באזור הרוהר, עם סביבה עירונית מעשית ומיקום מרכזי לבית הספר.", "highlight1": "עיר אוניברסיטאית ברוהר", "highlight2": "מיקום לימודים מרכזי", "highlight3": "חוויה יומיומית בגרמניה"},
-      "berlin": {"region": "ברלין", "description": "בירת גרמניה: בינלאומית, תרבותית ומלאה באוניברסיטאות וברשתות מקצועיות.", "highlight1": "בירה בינלאומית", "highlight2": "תרבות ואירועים", "highlight3": "מערכת אוניברסיטאית גדולה"}
+      "heidelberg": {
+        "region": "באדן-וירטמברג",
+        "description": "עיר אוניברסיטאית קומפקטית על נהר הנקר, עם עיר עתיקה ואווירה סטודנטיאלית בינלאומית.",
+        "highlight1": "עיר אוניברסיטאית היסטורית",
+        "highlight2": "הנקר והעיר העתיקה",
+        "highlight3": "סביבה קרובה לחיי האוניברסיטה"
+      },
+      "dusseldorf": {
+        "region": "נורדריין-וסטפאליה",
+        "description": "עיר בינלאומית ומחוברת עם חיי תרבות, עסקים ואורח חיים לאורך הריין.",
+        "highlight1": "עיר בינלאומית",
+        "highlight2": "הריין ומרכז העיר",
+        "highlight3": "קישורי תחבורה חזקים"
+      },
+      "dortmund": {
+        "region": "נורדריין-וסטפאליה",
+        "description": "עיר אוניברסיטאית גדולה באזור הרוהר, עם סביבה עירונית מעשית ומיקום מרכזי לבית הספר.",
+        "highlight1": "עיר אוניברסיטאית ברוהר",
+        "highlight2": "מיקום לימודים מרכזי",
+        "highlight3": "חוויה יומיומית בגרמניה"
+      },
+      "berlin": {
+        "region": "ברלין",
+        "description": "בירת גרמניה: בינלאומית, תרבותית ומלאה באוניברסיטאות וברשתות מקצועיות.",
+        "highlight1": "בירה בינלאומית",
+        "highlight2": "תרבות ואירועים",
+        "highlight3": "מערכת אוניברסיטאית גדולה"
+      }
     },
     "sources": {
       "cityLife": "מידע עירוני רשמי",
@@ -112,11 +136,86 @@
       "schoolInfo": "מידע VICTORIA Academy"
     },
     "schools": {
-      "fu": {"description": "Academy of Languages של F+U בהיידלברג מציעה תוכניות גרמנית ומגוון בחינות בינלאומיות; החומרים שפורסמו על ידה מציינים TestDaF, TELC, TestAS, IELTS, TOEFL, TOEIC ו-LCCI.", "credentialsNote": "אזכור ה-Excellence Award הוא פרס היסטורי משנת 2019 שמופיע בחומרי F+U שפורסמו."},
-      "alpha": {"description": "Alpha Aktiv מציעה קורסי גרמנית מ-A1 עד C2, הכנה לאוניברסיטה ולהבחינות, ומרכז בחינות מורשה.", "credentialsNote": "האתר הנוכחי של Alpha Aktiv מציין AZAV, DIN EN ISO 9001 ואת המעמד telc Kompetenzzentrum Hochschule."},
-      "goacademy": {"description": "GoAcademy! Düsseldorf – International House משלבת קורסי גרמנית אינטנסיביים, הכנה למסלול אוניברסיטאי, הכנה לבחינות ומגורים לסטודנטים.", "credentialsNote": "פרס Star Award הוא פרס לשנת 2026 שמופיע באתר הנוכחי של GoAcademy; סימונים אחרים מתארים חברות, הסמכות ומעמד כמרכז בחינות."},
-      "perfekt": {"description": "Perfekt Deutsch במרכז דורטמונד מתמקדת בקורסי גרמנית אינטנסיביים להכנה ללימודים ובבחינות שפה רשמיות.", "credentialsNote": "האתר הנוכחי מציין מעמד של מרכז בחינות מורשה ל-telc ול-TestDaF ומציג גם TestAS ו-OnSET."},
-      "victoria": {"description": "VICTORIA | Academy of Languages בברלין מתמקדת בגרמנית כהכנה לאוניברסיטה ומציעה מגוון רחב של בחינות שפה.", "credentialsNote": "החומרים שפורסמו על ידי VICTORIA מציינים telc Kompetenzzentrum Hochschule ומרכז בחינות ל-TestDaF, TOEFL ובחינות נוספות."}
+      "fu": {
+        "description": "Academy of Languages של F+U בהיידלברג מציעה תוכניות גרמנית ומגוון בחינות בינלאומיות; החומרים שפורסמו על ידה מציינים TestDaF, TELC, TestAS, IELTS, TOEFL, TOEIC ו-LCCI.",
+        "credentialsNote": "אזכור ה-Excellence Award הוא פרס היסטורי משנת 2019 שמופיע בחומרי F+U שפורסמו."
+      },
+      "alpha": {
+        "description": "Alpha Aktiv מציעה קורסי גרמנית מ-A1 עד C2, הכנה לאוניברסיטה ולהבחינות, ומרכז בחינות מורשה.",
+        "credentialsNote": "האתר הנוכחי של Alpha Aktiv מציין AZAV, DIN EN ISO 9001 ואת המעמד telc Kompetenzzentrum Hochschule."
+      },
+      "goacademy": {
+        "description": "GoAcademy! Düsseldorf – International House משלבת קורסי גרמנית אינטנסיביים, הכנה למסלול אוניברסיטאי, הכנה לבחינות ומגורים לסטודנטים.",
+        "credentialsNote": "פרס Star Award הוא פרס לשנת 2026 שמופיע באתר הנוכחי של GoAcademy; סימונים אחרים מתארים חברות, הסמכות ומעמד כמרכז בחינות."
+      },
+      "perfekt": {
+        "description": "Perfekt Deutsch במרכז דורטמונד מתמקדת בקורסי גרמנית אינטנסיביים להכנה ללימודים ובבחינות שפה רשמיות.",
+        "credentialsNote": "האתר הנוכחי מציין מעמד של מרכז בחינות מורשה ל-telc ול-TestDaF ומציג גם TestAS ו-OnSET."
+      },
+      "victoria": {
+        "description": "VICTORIA | Academy of Languages בברלין מתמקדת בגרמנית כהכנה לאוניברסיטה ומציעה מגוון רחב של בחינות שפה.",
+        "credentialsNote": "החומרים שפורסמו על ידי VICTORIA מציינים telc Kompetenzzentrum Hochschule ומרכז בחינות ל-TestDaF, TOEFL ובחינות נוספות."
+      }
+    },
+    "selectionEyebrow": "למה המוסדות האלה?",
+    "selectionTitle": "שנת שפה שנבנית סביב המסלול שלכם לאוניברסיטה",
+    "selectionBody": "DARB בוחנת את הדברים המעשיים שחשובים לסטודנט בינלאומי: התקדמות ברמות גרמנית, גישה לבחינות, הכנה אקדמית, תמיכה, מגורים והעיר עצמה.",
+    "selection1": "המסלול האקדמי",
+    "selection1Body": "המוסד מציע מסלול ברור לרמת השפה או הבחינה הנדרשת לצעד האקדמי הבא.",
+    "selection2": "גישה לבחינות",
+    "selection2Body": "כאשר זמין, אנו מציגים מרכזי בחינות רשמיים ואפשרויות הכנה כדי שתוכלו לתכנן את השנה בצורה מציאותית.",
+    "selection3": "תמיכה בסטודנטים",
+    "selection3Body": "אנו בוחנים תמיכה מעשית סביב מגורים, התמצאות, פעילויות והגעה — לא רק שעות בכיתה.",
+    "selection4": "התאמת העיר",
+    "selection4Body": "העיר שבה אתם גרים משפיעה על שנת השפה, ולכן אנו מציגים גם תחבורה וחיים סביב המוסד.",
+    "atGlance": "במבט מהיר",
+    "languageYearFocus": "מוקד שנת השפה",
+    "exams": "מסלול בחינות",
+    "studentServices": "תמיכת סטודנטים",
+    "schoolSource": "מקור ופרטים עדכניים",
+    "notDarbCredential": "הסמכה של המוסד / הגוף המעניק",
+    "sourceNote": "פתחו את אתר המוסד הרשמי לפרטי קורס, בחינה, מחיר וזמינות עדכניים.",
+    "schoolFacts": {
+      "fu": {
+        "focusYear": "תוכניות שפה בינלאומיות בהיידלברג",
+        "focusExams": "TestDaF, telc, TestAS ובחינות בינלאומיות נוספות",
+        "focusSupport": "מגורים, פעילויות וייעוץ למועמדים בינלאומיים",
+        "serviceHousing": "אפשרויות מגורים",
+        "serviceActivities": "פעילויות פנאי",
+        "serviceAdvice": "ייעוץ למעוניינים בלימודים"
+      },
+      "alpha": {
+        "focusLevels": "גרמנית A1–C2 ובעוצמות שונות",
+        "focusAcademic": "הכנה לבית ספר, אוניברסיטה וStudienkolleg",
+        "focusTesting": "מרכז בחינות מוכר עם דגש אוניברסיטאי ל-telc",
+        "serviceFoundation": "הכנת Foundation / Studienkolleg",
+        "serviceExams": "הכנה ובחינות",
+        "serviceAdvice": "הכנה אקדמית"
+      },
+      "goacademy": {
+        "focusLevels": "גרמנית A1–C1 עם מסלולים אינטנסיביים",
+        "focusPathway": "University Pathway עם תמיכה בבחירה, הגשה והרשמה",
+        "focusAccommodation": "מגורים לסטודנטים בינלאומיים",
+        "servicePathway": "מסלול אוניברסיטאי",
+        "serviceHousing": "מגורים",
+        "serviceLms": "מערכת למידה מקוונת"
+      },
+      "perfekt": {
+        "focusLocation": "שלושה מוקדי לימוד במרכז דורטמונד",
+        "focusStudy": "קורסי גרמנית אינטנסיביים כהכנה ללימודים",
+        "focusFlexibility": "אפשרויות בוקר, צהריים, ערב ואונליין",
+        "serviceCity": "מיקומים מרכזיים בדורטמונד",
+        "serviceAccommodation": "סיוע במגורים דרך שירות שותף",
+        "serviceGallery": "גלריית בית הספר ופעילויות"
+      },
+      "victoria": {
+        "focusCampus": "קמפוס מרכזי בברלין מיטה",
+        "focusUniversity": "מכון השפות של VICTORIA | International University of Applied Sciences",
+        "focusModular": "פורמטים גמישים ומודולריים",
+        "serviceHousing": "מגורים במרכז ברלין",
+        "serviceActivities": "פעילויות מאורגנות",
+        "serviceUniversity": "סביבה אקדמית המקושרת לאוניברסיטה"
+      }
     }
   },
   "loader": {
