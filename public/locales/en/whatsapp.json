@@ -51,7 +51,9 @@
     "waitingHelp": "No incoming WhatsApp message has reached this app. Open Connectors → WhatsApp Business → Incoming messages and select the receiving project.",
     "receivingHelp": "Incoming messages are arriving and are stored automatically.",
     "lastInbound": "Last incoming message: {{time}}",
-    "unrecognised": "{{count}} unrecognised events stored for review"
+    "unrecognised": "{{count}} unrecognised events stored for review",
+    "businessHoursOpen": "DARB office open",
+    "businessHoursClosed": "After hours"
   },
   "messageType": {
     "image": "Photo",
