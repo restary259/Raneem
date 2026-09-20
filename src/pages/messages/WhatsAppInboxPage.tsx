@@ -382,7 +382,7 @@ export default function WhatsAppInboxPage({
               {filtered.length ? filtered.map((thread) => (
                 <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{thread.last_message_at && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt(thread.last_message_at, i18n.language)}</span>}</div>
+                    <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
                     <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
                   </div>
                   {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
