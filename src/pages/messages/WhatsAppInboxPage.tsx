@@ -25,6 +25,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
+import WhatsAppCrmContextPanel from "@/components/messages/WhatsAppCrmContextPanel";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -452,6 +453,7 @@ export default function WhatsAppInboxPage({
                   <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
                   <Badge variant="secondary" className="mt-2">{t(`stage.${active.lead.lead_stage}`, active.lead.lead_stage)}</Badge>
                 </div>
+                <WhatsAppCrmContextPanel lead={active.lead} />
                 <ScrollArea className="min-h-0 flex-1">
                   <dl className="space-y-3 p-4 text-sm">
                     {([
