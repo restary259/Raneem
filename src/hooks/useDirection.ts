@@ -4,7 +4,7 @@ import { isRtlLng } from '@/i18n';
 
 export const useDirection = () => {
   const { i18n } = useTranslation();
-  const isRtl = isRtlLng(i18n.language);
+const isRtl = isRtlLng(i18n.language);
   return {
     dir: isRtl ? 'rtl' as const : 'ltr' as const,
     isRtl,

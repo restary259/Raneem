@@ -3,10 +3,10 @@ import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, Linkedin, ShieldCheck, Lightbulb, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import ServiceProcess from "@/components/services/ServiceProcess";
 import SEOHead from "@/components/common/SEOHead";
-import PageHero from "@/components/common/PageHero";
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 
@@ -31,9 +31,10 @@ const WhoWeArePage = () => {
             <SEOHead title={t('seo.whoWeAreTitle', { ns: 'common' })} description={t('seo.whoWeAreDesc', { ns: 'common' })} />
             <Header />
             <main className="flex-grow">
-                <PageHero
-                    variant="image"
-                    imageUrl="https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80"
+                <DarbPageHero
+                    eyebrow={t('whoWeAre.heroBadge', 'ABOUT DARB')}
+                    imageUrl={DARB_PUBLIC_HERO_IMAGES.office}
+                    imageAlt={t('whoWeAre.imageAlt', 'Bright professional education consultation environment')}
                     title={t('whoWeAre.heroTitle')}
                     subtitle={t('whoWeAre.heroSubtitle')}
                 />
@@ -131,16 +132,6 @@ const WhoWeArePage = () => {
 
                 <ServiceProcess title={t('whoWeAre.processTitle')} description={t('whoWeAre.processDesc')} className="bg-secondary/20" />
                 
-                <section className="bg-secondary text-secondary-foreground py-16 md:py-20">
-                    <div className="container mx-auto px-4 text-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                        <p className="text-2xl md:text-3xl font-semibold mb-4">
-                            {t('whoWeAre.ctaLine1')}
-                        </p>
-                        <p className="text-xl font-serif text-secondary-foreground/80">
-                            {t('whoWeAre.ctaLine2')}
-                        </p>
-                    </div>
-                </section>
             </main>
             <Footer />
         </div>;

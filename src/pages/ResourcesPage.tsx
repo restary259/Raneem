@@ -1,13 +1,15 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
-import PageHero from '@/components/common/PageHero';
-import { DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
+import { Calculator, DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 import { useInView } from 'react-intersection-observer';
 
@@ -67,8 +69,9 @@ const ResourcesPage = () => {
   const { t } = useTranslation(['resources', 'common']);
 
   const tools = [
-    { id: 'currency-converter', title: t('currencyComparator.title'), description: t('currencyComparator.description'), icon: DollarSign, path: '/resources/currency-converter' },
     { id: 'bagrut-calculator', title: t('gpaCalculator.title'), description: t('gpaCalculator.description'), icon: GraduationCap, path: '/resources/bagrut-calculator' },
+    { id: 'cost-calculator', title: t('costCalculator.title'), description: t('costCalculator.description'), icon: Calculator, path: '/resources/cost-calculator' },
+    { id: 'currency-converter', title: t('currencyComparator.title'), description: t('currencyComparator.description'), icon: DollarSign, path: '/resources/currency-converter' },
     { id: 'lebenslauf-builder', title: t('lebenslaufBuilder.title'), description: t('lebenslaufBuilder.description'), icon: FileText, path: '/resources/lebenslauf-builder' },
   ];
 
@@ -94,7 +97,7 @@ const ResourcesPage = () => {
             name: 'Darb Study Pathways',
             logo: {
               '@type': 'ImageObject',
-              url: 'https://darb.agency/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+              url: `https://darb.agency${darbLogoAsset.url}`,
             },
           },
         }}
@@ -102,8 +105,10 @@ const ResourcesPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <PageHero
-        variant="light"
+      <DarbPageHero
+        eyebrow={t('resourcesPage.badge', 'DARB RESOURCES')}
+        imageUrl={DARB_PUBLIC_HERO_IMAGES.resources}
+        imageAlt={t('resourcesPage.imageAlt', 'Student using digital study resources')}
         title={t('resourcesPage.title')}
         subtitle={t('resourcesPage.subtitle')}
       />
@@ -145,6 +150,7 @@ const ResourcesPage = () => {
           </div>
         </div>
       </section>
+
 
       <Footer />
     </div>

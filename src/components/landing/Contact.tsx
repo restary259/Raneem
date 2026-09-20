@@ -1,310 +1,223 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
-import Map from "./Map";
-import OfficeLocations from "./OfficeLocations";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
 import { Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/lib/router-compat";
+import { DARB_CONTACT_ADVISOR_SRC } from "@/assets/darbContactAdvisor";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
-import TikTokIcon from "../icons/TikTokIcon";
-import { whatsappBusinessUrl } from '@/lib/contactConfig';
-import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import FieldGroup from "@/components/common/FieldGroup";
-import ConsentBlock from "@/components/common/ConsentBlock";
+import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { recordConsent } from "@/lib/consent";
+import ConsentBlock from "@/components/common/ConsentBlock";
+import FieldGroup from "@/components/common/FieldGroup";
+import TikTokIcon from "../icons/TikTokIcon";
+import Map from "./Map";
+import OfficeLocations from "./OfficeLocations";
 
-const PASSPORT_TYPES = [
-  { value: 'israeli_blue', labelAr: 'جواز أزرق (إسرائيلي)', labelEn: 'Israeli Blue Passport' },
-  { value: 'israeli_red', labelAr: 'جواز أحمر (لم الشمل)', labelEn: 'Israeli Red Passport' },
-  { value: 'other', labelAr: 'أخرى', labelEn: 'Other' },
-];
+const TOPICS = ["admissions", "language_courses", "visa", "accommodation", "partnership", "general"] as const;
 
-const EDUCATION_LEVELS = [
-  { value: 'bagrut', labelAr: 'بجروت', labelEn: 'Bagrut' },
-  { value: 'bachelor', labelAr: 'بكالوريوس', labelEn: 'Bachelor' },
-  { value: 'master', labelAr: 'ماجستير', labelEn: 'Master' },
-  { value: 'other', labelAr: 'أخرى', labelEn: 'Other' },
-];
+const contactSchema = z.object({
+  fullName: z.string().trim().min(2).max(100),
+  email: z.string().trim().max(255).refine((value) => value === "" || z.string().email().safeParse(value).success),
+  phone: z.string().trim().max(30),
+  topic: z.enum(TOPICS),
+  message: z.string().trim().min(5).max(2000),
+}).refine((value) => value.email.length > 0 || value.phone.length > 0, { path: ["contact"] });
 
-const UNIT_OPTIONS = ['3', '4', '5'];
+type FieldErrors = Partial<Record<"fullName" | "email" | "phone" | "topic" | "message" | "contact" | "consent", string>>;
 
-const isValidPhone = (p: string) => {
-  const cleaned = p.replace(/[\s\-()]/g, '');
-  return /^05\d{8}$/.test(cleaned) ||
-    /^\+9725\d{8}$/.test(cleaned) ||
-    /^\+?\d{7,15}$/.test(cleaned);
-};
-
+const isValidPhone = (phone: string) => /^\+?[\d\s()-]{7,30}$/.test(phone);
 
 const Contact = () => {
-  const { t, i18n } = useTranslation(['contact', 'common']);
+  const { t, i18n } = useTranslation(["contact", "common"]);
   const { dir } = useDirection();
-  const isAr = i18n.language === 'ar';
-
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [passportType, setPassportType] = useState('');
-  const [city, setCity] = useState('');
-  const [educationLevel, setEducationLevel] = useState('');
-  const [englishUnits, setEnglishUnits] = useState('');
-  const [mathUnits, setMathUnits] = useState('');
-  const [preferredMajor, setPreferredMajor] = useState('');
-  const [honeypot, setHoneypot] = useState('');
+  const isAr = i18n.language === "ar";
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [topic, setTopic] = useState<(typeof TOPICS)[number] | "">("");
+  const [message, setMessage] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
 
-  const showBagrut = educationLevel === 'bagrut';
-
-  const handlePhoneChange = (val: string) => {
-    setPhone(val);
-    if (val.trim() && !isValidPhone(val)) {
-      setPhoneError(isAr ? 'رقم هاتف غير صالح (مثال: 0501234567)' : 'Invalid phone (e.g. 0501234567)');
-    } else {
-      setPhoneError('');
+  const validate = () => {
+    const parsed = contactSchema.safeParse({ fullName, email, phone, topic, message });
+    const next: FieldErrors = {};
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof FieldErrors;
+        if (!next[key]) next[key] = t(`contact.validation.${key}`);
+      }
     }
+    if (phone.trim() && !isValidPhone(phone.trim())) next.phone = t("contact.validation.phone");
+    if (!consentAgreed) next.consent = t("contact.validation.consent");
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
-
-  const canSubmit = !!fullName.trim() && !!phone.trim() && isValidPhone(phone) && consentAgreed;
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
-      if (honeypot) return { success: true, duplicate: false };
+      if (!validate()) throw new Error(t("contact.validation.review"));
+      if (honeypot) return;
 
-      // Save lead in the legacy leads table (non-critical)
-      try {
-        const { error } = await supabase.rpc('insert_lead_from_apply', {
-          p_full_name: fullName.trim(),
-          p_phone: phone.trim(),
-          p_passport_type: passportType || null,
-          p_city: city.trim() || null,
-          p_education_level: educationLevel || null,
-          p_german_level: 'beginner',
-          p_preferred_city: city.trim() || null,
-          p_accommodation: false,
-          p_source_type: 'contact_form',
-          p_english_units: englishUnits ? parseInt(englishUnits) : null,
-          p_math_units: mathUnits ? parseInt(mathUnits) : null,
-          p_preferred_major: preferredMajor.trim() || null,
-        } as any);
-        if (error) console.warn('[Contact] lead RPC warning (non-critical):', error.message);
-      } catch (leadErr: any) {
-        console.warn('[Contact] lead RPC failed (non-critical):', leadErr.message);
-      }
+      const submissionId = crypto.randomUUID();
+      const { error } = await supabase.from("contact_submissions").insert({
+        id: submissionId,
+        form_source: "contact_form",
+        status: "new",
+        data: {
+          full_name: fullName.trim(),
+          email: email.trim() || null,
+          phone: phone.trim() || null,
+          topic,
+          message: message.trim(),
+          locale: isAr ? "ar" : "en",
+        },
+      });
+      if (error) throw error;
 
-      // Create a case in the unified pipeline — check if duplicate
-      let isDuplicate = false;
       void recordConsent({
-        sourceForm: 'contact_form',
-        subjectName: fullName,
-        phone,
+        sourceForm: "contact_form",
+        subjectName: fullName.trim(),
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
         serviceContact: true,
         marketing: marketingConsent,
-        marketingChannels: marketingConsent ? { email: true, whatsapp: true, sms: false } : undefined,
-        locale: isAr ? 'ar' : 'en',
+        marketingChannels: marketingConsent ? { email: Boolean(email.trim()), whatsapp: Boolean(phone.trim()), sms: false } : undefined,
+        locale: isAr ? "ar" : "en",
       });
-
-      try {
-        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const resp = await fetch(`https://${projectId}.supabase.co/functions/v1/create-case-from-apply`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
-          body: JSON.stringify({
-            full_name: fullName.trim(),
-            phone_number: phone.trim(),
-            source: 'contact_form',
-            city: city.trim() || null,
-            education_level: educationLevel || null,
-            passport_type: passportType || null,
-            english_units: englishUnits ? parseInt(englishUnits) : null,
-            math_units: mathUnits ? parseInt(mathUnits) : null,
-            degree_interest: preferredMajor.trim() || null,
-          }),
-        });
-        if (resp.ok) {
-          const body = await resp.json().catch(() => ({}));
-          isDuplicate = body?.duplicate === true;
-        } else if (resp.status === 409) {
-          isDuplicate = true;
-        } else {
-          console.warn('[Contact] case creation warning:', resp.status);
-        }
-      } catch (caseErr) {
-        console.warn('[Contact] case creation warning:', caseErr);
-      }
-
-      return { success: true, duplicate: isDuplicate };
     },
-    onSuccess: (result) => {
-      if (result.duplicate) {
-        toast({
-          title: isAr ? '📋 بياناتك موجودة لدينا!' : '📋 We already have your details!',
-          description: isAr
-            ? 'يبدو أن رقمك موجود في نظامنا بالفعل. سيتواصل معك فريقنا قريباً.'
-            : 'Your phone number is already in our system. Our team will reach out soon.',
-        });
-      } else {
-        toast({
-          title: isAr ? '✅ تم إرسال بياناتك بنجاح!' : '✅ Sent successfully!',
-          description: isAr ? 'شكراً! سيتواصل معك فريقنا قريباً عبر واتساب.' : 'Thank you! Our team will contact you soon via WhatsApp.',
-        });
-      }
-      // Reset
-      setFullName(''); setPhone(''); setPassportType(''); setCity('');
-      setEducationLevel(''); setEnglishUnits(''); setMathUnits(''); setPreferredMajor('');
-      setConsentAgreed(false); setMarketingConsent(false);
+    onSuccess: () => {
+      toast({ title: t("contact.toast.successTitle"), description: t("contact.toast.successDescription") });
+      setFullName("");
+      setEmail("");
+      setPhone("");
+      setTopic("");
+      setMessage("");
+      setConsentAgreed(false);
+      setMarketingConsent(false);
+      setErrors({});
     },
-    onError: (error: any) => {
-      toast({ variant: "destructive", title: isAr ? 'حدث خطأ' : 'Error', description: error.message });
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: t("contact.toast.errorTitle"), description: error.message });
     },
   });
 
   return (
-    <section id="contact" className="py-12 md:py-24 bg-secondary">
+    <section id="contact" className="bg-background py-14 md:py-20">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
-          <div className={`lg:col-span-2 ${dir === 'rtl' ? 'text-right' : 'text-left'} p-4 sm:p-6 md:p-8 bg-background/80 border border-white/20 rounded-2xl shadow-2xl animate-scale-in`}>
-            <div className={`text-center ${dir === 'rtl' ? 'md:text-right' : 'md:text-left'} max-w-2xl mb-8`}>
-              <h2 className="text-3xl md:text-4xl font-bold">{t('contact.title')}</h2>
-              <p className="mt-4 text-lg text-muted-foreground">{t('contact.subtitle')}</p>
+        <div className="mx-auto mb-12 max-w-5xl text-center md:mb-16">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t("support.eyebrow")}</p>
+          <div className="mx-auto mt-4 h-px w-14 bg-primary/70" />
+          <h2 className="mx-auto mt-7 max-w-4xl text-3xl font-semibold tracking-tight text-foreground md:text-5xl md:leading-[1.08]">
+            {t("support.title")}
+          </h2>
+          <div className="mx-auto mt-7 flex flex-col items-center">
+            <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-background shadow-[0_14px_40px_rgba(17,17,17,0.14)] ring-1 ring-border md:h-36 md:w-36">
+              <img src={DARB_CONTACT_ADVISOR_SRC} alt={t("support.title")} className="h-full w-full object-cover" loading="eager" />
+            </div>
+            <p className="mt-5 text-base text-muted-foreground md:text-lg">{t("support.subtitle")}</p>
+          </div>
+          <div className="mx-auto mt-7 grid max-w-4xl gap-3 sm:grid-cols-3">
+            <a href="#contact-form" className="inline-flex min-h-12 items-center justify-center border border-border bg-background px-5 text-sm font-semibold tracking-wide text-foreground transition-colors hover:border-primary hover:text-primary">
+              {t("support.contact")}
+            </a>
+            <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center bg-primary px-5 text-sm font-semibold tracking-wide text-primary-foreground transition-colors hover:bg-primary/90">
+              {t("support.whatsapp")}
+            </a>
+            <Button asChild className="min-h-12 rounded-none px-5 text-sm font-semibold tracking-wide">
+              <Link to="/apply">{t("support.apply")}</Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid items-start gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
+          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9 scroll-mt-28`}>
+            <div className={`mb-8 max-w-2xl text-center ${dir === "rtl" ? "md:text-right" : "md:text-left"}`}>
+              <h2 className="text-3xl font-bold md:text-4xl">{t("contact.title")}</h2>
+              <p className="mt-4 text-lg text-muted-foreground">{t("contact.subtitle")}</p>
             </div>
 
             <div className="space-y-5">
-              {/* Name + Phone */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <FieldGroup label={isAr ? 'الاسم الكامل *' : 'Full Name *'}>
-                  <Input value={fullName} onChange={e => setFullName(e.target.value)}
-                    placeholder={isAr ? 'أدخل اسمك الكامل' : 'Enter your full name'} dir={dir} className="h-11" />
+              <div className="grid gap-4 md:grid-cols-2">
+                <FieldGroup label={`${t("contact.form.fullName")} *`}>
+                  <Input value={fullName} maxLength={100} onChange={(event) => setFullName(event.target.value)} placeholder={t("contact.form.namePlaceholder")} dir={dir} className="h-11 rounded-none" aria-invalid={Boolean(errors.fullName)} />
+                  {errors.fullName ? <p className="mt-1 text-xs text-destructive">{errors.fullName}</p> : null}
                 </FieldGroup>
-                <FieldGroup label={isAr ? 'رقم الهاتف / واتساب *' : 'Phone / WhatsApp *'}>
-                  <Input value={phone} onChange={e => handlePhoneChange(e.target.value)}
-                    placeholder="05X-XXXXXXX" dir="ltr" type="tel"
-                    className={`h-11 ${phoneError ? 'border-destructive' : ''}`} />
-                  {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
+                <FieldGroup label={t("contact.form.email")}>
+                  <Input value={email} maxLength={255} onChange={(event) => setEmail(event.target.value)} placeholder={t("contact.form.emailPlaceholder")} dir="ltr" type="email" className="h-11 rounded-none" aria-invalid={Boolean(errors.email)} />
+                  {errors.email ? <p className="mt-1 text-xs text-destructive">{errors.email}</p> : null}
                 </FieldGroup>
               </div>
 
-              {/* Passport Type */}
-              <FieldGroup label={isAr ? 'نوع جواز السفر' : 'Passport Type'}>
-                <div className="grid grid-cols-3 gap-2">
-                  {PASSPORT_TYPES.map(pt => (
-                    <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)}
-                      className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
-                        passportType === pt.value
-                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
-                          : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
-                      }`}>
-                      {isAr ? pt.labelAr : pt.labelEn}
-                    </button>
-                  ))}
+              <FieldGroup label={t("contact.form.whatsapp")}>
+                <Input value={phone} maxLength={30} onChange={(event) => setPhone(event.target.value)} placeholder={t("contact.form.whatsappPlaceholder")} dir="ltr" type="tel" className="h-11 rounded-none" aria-invalid={Boolean(errors.phone || errors.contact)} />
+                {errors.phone || errors.contact ? <p className="mt-1 text-xs text-destructive">{errors.phone || errors.contact}</p> : null}
+              </FieldGroup>
+
+              <FieldGroup label={`${t("contact.form.topic")} *`}>
+                <Select value={topic || undefined} onValueChange={(value) => setTopic(value as typeof topic)}>
+                  <SelectTrigger className="h-11 rounded-none" aria-invalid={Boolean(errors.topic)}><SelectValue placeholder={t("contact.form.topicPlaceholder")} /></SelectTrigger>
+                  <SelectContent>
+                    {TOPICS.map((value) => <SelectItem key={value} value={value}>{t(`contact.form.topicOptions.${value}`)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {errors.topic ? <p className="mt-1 text-xs text-destructive">{errors.topic}</p> : null}
+              </FieldGroup>
+
+              <FieldGroup label={`${t("contact.form.message")} *`}>
+                <Textarea value={message} maxLength={2000} onChange={(event) => setMessage(event.target.value)} placeholder={t("contact.form.messagePlaceholder")} dir={dir} rows={7} className="min-h-40 resize-y rounded-none" aria-invalid={Boolean(errors.message)} />
+                <div className="mt-1 flex justify-between gap-3 text-xs text-muted-foreground">
+                  {errors.message ? <span className="text-destructive">{errors.message}</span> : <span />}
+                  <span>{message.length.toLocaleString("en-US")} / 2,000</span>
                 </div>
               </FieldGroup>
 
-              {/* City */}
-              <FieldGroup label={isAr ? 'المدينة (اختياري)' : 'City (optional)'}>
-                <Input value={city} onChange={e => setCity(e.target.value)}
-                  placeholder={isAr ? 'مثال: حيفا' : 'e.g. Haifa'} dir={dir} className="h-11" />
-              </FieldGroup>
-
-              {/* Education Level */}
-              <FieldGroup label={isAr ? 'المستوى التعليمي' : 'Education Level'}>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {EDUCATION_LEVELS.map(lvl => (
-                    <button key={lvl.value} type="button" onClick={() => {
-                      setEducationLevel(lvl.value);
-                      if (lvl.value !== 'bagrut') { setEnglishUnits(''); setMathUnits(''); }
-                    }}
-                      className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
-                        educationLevel === lvl.value
-                          ? 'bg-primary text-primary-foreground border-primary shadow-xs'
-                          : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
-                      }`}>
-                      {isAr ? lvl.labelAr : lvl.labelEn}
-                    </button>
-                  ))}
-                </div>
-              </FieldGroup>
-
-              {/* Bagrut Units — only for bagrut */}
-              {showBagrut && (
-                <div className="grid md:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
-                  <FieldGroup label={isAr ? 'وحدات الإنجليزي' : 'English Units'}>
-                    <div className="flex gap-2">
-                      {UNIT_OPTIONS.map(u => (
-                        <button key={u} type="button" onClick={() => setEnglishUnits(u)}
-                          className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
-                            englishUnits === u ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/40'
-                          }`}>{u}</button>
-                      ))}
-                    </div>
-                  </FieldGroup>
-                  <FieldGroup label={isAr ? 'وحدات الرياضيات' : 'Math Units'}>
-                    <div className="flex gap-2">
-                      {UNIT_OPTIONS.map(u => (
-                        <button key={u} type="button" onClick={() => setMathUnits(u)}
-                          className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
-                            mathUnits === u ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/40'
-                          }`}>{u}</button>
-                      ))}
-                    </div>
-                  </FieldGroup>
-                </div>
-              )}
-
-              {/* Preferred Major */}
-              <FieldGroup label={isAr ? 'التخصص المفضل (اختياري)' : 'Preferred Major (optional)'}>
-                <Input value={preferredMajor} onChange={e => setPreferredMajor(e.target.value)}
-                  placeholder={isAr ? 'مثال: هندسة، طب، تجارة...' : 'e.g. Engineering, Medicine, Business...'}
-                  dir={dir} className="h-11" />
-              </FieldGroup>
-
-              {/* Honeypot */}
-              <input type="text" name="website" value={honeypot} onChange={e => setHoneypot(e.target.value)}
-                style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
-                tabIndex={-1} autoComplete="off" aria-hidden="true" />
+              <input type="text" name="website" value={honeypot} onChange={(event) => setHoneypot(event.target.value)} className="absolute -start-[9999px] h-0 w-0 opacity-0" tabIndex={-1} autoComplete="off" aria-hidden="true" />
 
               <ConsentBlock
                 isAr={isAr}
-                collected={isAr
-                  ? 'الاسم الكامل، رقم الهاتف، المدينة، نوع جواز السفر والمعلومات الدراسية'
-                  : 'full name, phone number, city, passport type and education details'}
+                collected={t("contact.consent.collected")}
+                purpose={t("contact.consent.purpose")}
+                agreeLabel={t("contact.consent.agree")}
                 agreed={consentAgreed}
                 onAgreedChange={setConsentAgreed}
                 marketing={marketingConsent}
                 onMarketingChange={setMarketingConsent}
+                error={errors.consent}
               />
 
-              <Button type="button" className="w-full font-bold h-12" size="lg" variant="default"
-                disabled={isPending || !canSubmit}
-                onClick={() => mutate()}>
-                {isPending
-                  ? (isAr ? 'جارٍ الإرسال...' : 'Sending...')
-                  : (isAr ? 'أرسل الآن' : 'Send Now')}
+              <Button type="button" className="h-12 w-full rounded-none font-bold" size="lg" disabled={isPending} onClick={() => mutate()}>
+                {isPending ? t("contact.form.sending") : t("contact.form.submit")}
               </Button>
             </div>
           </div>
 
-          <div className="space-y-8">
+          <aside className="space-y-8">
             <OfficeLocations />
-            <div className="bg-background/90 border border-white/20 p-6 rounded-2xl shadow-lg animate-fade-in">
-              <h3 className="text-xl font-semibold mb-4 text-center">{t('contact.follow')}</h3>
-              <div className="flex justify-center items-center gap-6">
-                <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
-                <a href="https://www.tiktok.com/@darb_studyingrmany" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
-                <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Facebook className="h-7 w-7" /></a>
-                <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><MessageCircle className="h-7 w-7" /></a>
+            <div>
+              <h3 className="text-2xl font-bold text-primary">{t("contact.mapTitle")}</h3>
+              <p className="mt-2 text-muted-foreground">{t("contact.mapSubtitle")}</p>
+              <div className="mt-5 h-[320px] overflow-hidden border border-border shadow-surface md:h-[390px]"><Map /></div>
+            </div>
+            <div className="border border-border bg-muted/25 p-6">
+              <h3 className="mb-4 text-center text-xl font-semibold">{t("contact.follow")}</h3>
+              <div className="flex items-center justify-center gap-6">
+                <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground transition-colors hover:text-accent"><Instagram className="h-7 w-7" /></a>
+                <a href="https://www.tiktok.com/@darb_studyingrmany" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="text-muted-foreground transition-colors hover:text-accent"><TikTokIcon className="h-7 w-7" /></a>
+                <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="text-muted-foreground transition-colors hover:text-accent"><Facebook className="h-7 w-7" /></a>
+                <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="text-muted-foreground transition-colors hover:text-accent"><MessageCircle className="h-7 w-7" /></a>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="mt-16 md:mt-24 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold">{t('contact.mapTitle')}</h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">{t('contact.mapSubtitle')}</p>
-          <div className="mt-8 h-[300px] sm:h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 animate-scale-in"><Map /></div>
+          </aside>
         </div>
       </div>
     </section>

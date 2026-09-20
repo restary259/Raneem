@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from '@/lib/router-compat';
 import { ExternalLink, HelpCircle, ShieldCheck } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import SEOHead from '@/components/common/SEOHead';
-import PageHero from '@/components/common/PageHero';
-import { Button } from '@/components/ui/button';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
+import DarbContactCta from '@/components/common/DarbContactCta';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Accordion,
@@ -73,8 +73,10 @@ const FaqPage: React.FC = () => {
       <Header />
 
       <main>
-        <PageHero
-          badge={t('hero.badge')}
+        <DarbPageHero
+          eyebrow={t('hero.badge')}
+          imageUrl={DARB_PUBLIC_HERO_IMAGES.studyPath}
+          imageAlt={t('hero.imageAlt', 'A bright study environment in Germany')}
           title={t('hero.title')}
           subtitle={t('hero.subtitle')}
         />
@@ -134,18 +136,7 @@ const FaqPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <div className="mt-10 text-center">
-              <h2 className="text-2xl font-bold mb-2">{t('meta.ctaTitle')}</h2>
-              <p className="text-muted-foreground mb-6">{t('meta.ctaText')}</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <Button asChild size="lg">
-                  <Link to="/apply">{t('meta.ctaButton')}</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/contact">{t('meta.ctaSecondary')}</Link>
-                </Button>
-              </div>
-            </div>
+            <DarbContactCta className="mt-14" />
           </div>
         </section>
       </main>

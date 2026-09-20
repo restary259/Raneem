@@ -5,7 +5,7 @@ import ServicesHero from "@/components/services/ServicesHero";
 import ServicesGrid from "@/components/services/ServicesGrid";
 import ServiceProcess from "@/components/services/ServiceProcess";
 import ServiceDisclosure from "@/components/services/ServiceDisclosure";
-import ConsultationCta from "@/components/services/ConsultationCta";
+import DarbContactCta from "@/components/common/DarbContactCta";
 import SEOHead from "@/components/common/SEOHead";
 import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";
@@ -22,7 +22,7 @@ const ServicesPage = () => {
         <ServicesGrid />
         <ServiceDisclosure />
         <ServiceProcess />
-        <ConsultationCta />
+        <DarbContactCta />
       </main>
       <Footer />
     </div>

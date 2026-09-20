@@ -12,7 +12,6 @@ const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_TOOL_ROUNDS = 3;
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const ANON_LIMIT = 30;
 const AUTH_LIMIT = 100;
 const WINDOW = 60 * 60 * 1000;
 
@@ -254,27 +253,29 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const authHeader = req.headers.get("Authorization");
-    let userId: string | null = null;
-    let limit = ANON_LIMIT;
 
-    if (authHeader?.startsWith("Bearer ") && authHeader.length > 50) {
-      try {
-        const supabase = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-          { global: { headers: { Authorization: authHeader } } },
-        );
-        const { data } = await supabase.auth.getClaims(authHeader.replace("Bearer ", ""));
-        if (data?.claims?.sub) {
-          userId = data.claims.sub;
-          limit = AUTH_LIMIT;
-        }
-      } catch { /* anonymous */ }
+    // Sign-in is required: anonymous callers must never reach the paid AI gateway.
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Sign in to use the AI advisor." }, 401);
     }
 
-    if (checkRateLimit(userId || ip, limit)) {
+    let userId: string | null = null;
+    try {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data, error } = await supabase.auth.getClaims(authHeader.replace("Bearer ", ""));
+      if (!error && data?.claims?.sub) userId = data.claims.sub;
+    } catch { /* fall through to the 401 below */ }
+
+    if (!userId) {
+      return json({ error: "Sign in to use the AI advisor." }, 401);
+    }
+
+    if (checkRateLimit(userId, AUTH_LIMIT)) {
       return json({ error: "Rate limit exceeded. Please try again later." }, 429);
     }
 

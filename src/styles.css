@@ -448,3 +448,150 @@ div[class*="lovable-badge"],
 a[href*="lovable.dev"] {
   display: none !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   DARB public responsive sizing
+   Fluid values keep the same design proportionate across short laptops,
+   standard desktops, and large displays. Breakpoints still control layout;
+   these tokens control scale.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --darb-header-utility-height: clamp(32px, 2.45vw, 36px);
+  --darb-header-main-height: clamp(72px, 6vw, 96px);
+  --darb-header-height: calc(var(--darb-header-utility-height) + var(--darb-header-main-height));
+
+  --darb-hero-compact-height: clamp(340px, calc(100svh - 9rem), 520px);
+  --darb-hero-standard-height: clamp(440px, calc(100svh - 6rem), 700px);
+  --darb-hero-panel-width: min(90vw, 760px);
+}
+
+.darb-header-utility {
+  height: var(--darb-header-utility-height);
+}
+
+.darb-header-main {
+  height: var(--darb-header-main-height);
+  min-height: var(--darb-header-main-height);
+}
+
+.darb-header-logo {
+  height: clamp(48px, 5vw, 80px);
+}
+
+.darb-home-hero {
+  height: clamp(500px, calc(100svh - var(--darb-header-height)), 820px);
+  min-height: 500px;
+  max-height: 820px;
+}
+
+.darb-home-hero-panel {
+  width: var(--darb-hero-panel-width);
+  padding-inline: clamp(1.5rem, 3.5vw, 3.5rem);
+  padding-block: clamp(1.75rem, 4vh, 3rem);
+}
+
+.darb-home-hero-eyebrow {
+  font-size: clamp(0.72rem, 0.72vw, 0.9rem);
+}
+
+.darb-home-hero-title {
+  font-size: clamp(2.5rem, 4.3vw, 4.5rem);
+}
+
+.darb-home-hero-subtitle {
+  font-size: clamp(0.95rem, 1.1vw, 1.2rem);
+}
+
+.darb-home-hero-actions {
+  margin-top: clamp(1.25rem, 2.6vh, 1.75rem);
+}
+
+.darb-home-hero-button {
+  min-height: clamp(44px, 3.5vw, 52px);
+  padding-inline: clamp(1.1rem, 2vw, 1.75rem);
+}
+
+.darb-page-hero-compact {
+  height: var(--darb-hero-compact-height);
+  min-height: var(--darb-hero-compact-height);
+}
+
+.darb-page-hero-standard {
+  height: var(--darb-hero-standard-height);
+  min-height: var(--darb-hero-standard-height);
+}
+
+.darb-page-hero-inner {
+  min-height: 100%;
+  padding-top: calc(var(--darb-header-height) + clamp(0.75rem, 2vh, 1.5rem));
+  padding-bottom: clamp(2.5rem, 6vh, 4rem);
+}
+
+.darb-page-hero-panel {
+  width: var(--darb-hero-panel-width);
+  padding-inline: clamp(1.5rem, 3.5vw, 3.5rem);
+  padding-block: clamp(1.5rem, 3.5vh, 2.75rem);
+}
+
+.darb-page-hero-title {
+  font-size: clamp(2.35rem, 4.1vw, 4.25rem);
+}
+
+.darb-page-hero-subtitle {
+  font-size: clamp(0.95rem, 1.08vw, 1.15rem);
+}
+
+@media (min-width: 1024px) and (max-height: 760px) {
+  .darb-home-hero-panel,
+  .darb-page-hero-panel {
+    padding-block: clamp(1.35rem, 2.8vh, 2.15rem);
+  }
+
+  .darb-home-hero-title,
+  .darb-page-hero-title {
+    font-size: clamp(2.35rem, 4vw, 3.9rem);
+  }
+
+  .darb-home-hero-subtitle,
+  .darb-page-hero-subtitle {
+    margin-top: clamp(0.85rem, 1.8vh, 1.25rem);
+  }
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --darb-header-utility-height: 0px;
+    --darb-header-main-height: clamp(64px, 17vw, 80px);
+    --darb-header-height: var(--darb-header-main-height);
+  }
+
+  .darb-home-hero {
+    height: auto;
+    min-height: clamp(540px, 92svh, 760px);
+    max-height: none;
+  }
+
+  .darb-page-hero-compact {
+    height: clamp(360px, 70svh, 520px);
+    min-height: clamp(360px, 70svh, 520px);
+  }
+
+  .darb-page-hero-standard {
+    height: clamp(440px, 82svh, 700px);
+    min-height: clamp(440px, 82svh, 700px);
+  }
+
+  .darb-page-hero-inner {
+    padding-top: clamp(1.5rem, 6vh, 3.5rem);
+  }
+
+  .darb-home-hero-panel,
+  .darb-page-hero-panel {
+    width: min(94vw, 760px);
+  }
+
+  .darb-home-hero-title,
+  .darb-page-hero-title {
+    font-size: clamp(2.15rem, 8vw, 3.8rem);
+  }
+}

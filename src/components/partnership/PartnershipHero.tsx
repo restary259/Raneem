@@ -1,21 +1,22 @@
-
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import PageHero from "@/components/common/PageHero";
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 
 const PartnershipHero = () => {
-  const { t } = useTranslation('partnership');
+  const { t } = useTranslation("partnership");
   return (
-    <PageHero
-      variant="image"
-      imageUrl="https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80"
-      title={t('partnershipHero.title')}
-      subtitle={t('partnershipHero.subtitle')}
+    <DarbPageHero
+      eyebrow={t("partnershipHero.eyebrow", "DARB PARTNERSHIP")}
+      imageUrl={DARB_PUBLIC_HERO_IMAGES.collaboration}
+      imageAlt={t("partnershipHero.imageAlt", "Professional collaboration in an education environment")}
+      title={t("partnershipHero.title")}
+      subtitle={t("partnershipHero.subtitle")}
     >
-      <Button size="lg" variant="accent" asChild className="transition-transform duration-300 hover:scale-105">
-        <a href="#register">{t('partnershipHero.button')}</a>
+      <Button size="lg" variant="accent" asChild>
+        <a href="#register">{t("partnershipHero.button")}</a>
       </Button>
-    </PageHero>
+    </DarbPageHero>
   );
 };
 export default PartnershipHero;

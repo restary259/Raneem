@@ -1,6 +1,8 @@
 
 import React from 'react';
 import Header from '@/components/landing/Header';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Trash2, GraduationCap, BookOpen, Target, MessageCircle } from 'lucide-react';
@@ -41,6 +43,7 @@ const AIQuizChat = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col" dir={dir}>
       <Header />
+      <DarbPageHero compact eyebrow={t('quiz.title')} imageUrl={DARB_PUBLIC_HERO_IMAGES.studyPath} imageAlt={t('quiz.imageAlt', 'Bright university library and study environment')} title={t('quiz.title')} subtitle={t('quiz.description')} />
 
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
         {!isOnline && <ChatOfflineBanner message={t('chat.offlineBanner')} />}

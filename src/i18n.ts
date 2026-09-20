@@ -23,7 +23,7 @@ i18n
   .use(initReactI18next)
   .init({
     lng: savedLang || 'ar',
-    fallbackLng: 'ar',
+fallbackLng: { he: ['en'], default: ['ar'] },
     supportedLngs: ['ar', 'en', 'he'],
     // Only the namespace every route needs is loaded up front. The rest are
     // fetched on demand by useTranslation(<ns>) through the HTTP backend, so a
@@ -56,7 +56,7 @@ i18n
 i18n.on('languageChanged', (lng) => {
   // SSR guard — this module is evaluated on the server too (TanStack Start).
   if (typeof document === 'undefined') return;
-  const dir = isRtlLng(lng) ? 'rtl' : 'ltr';
+const dir = isRtlLng(lng) ? 'rtl' : 'ltr';
   document.documentElement.dir = dir;
   document.documentElement.lang = lng;
   localStorage.setItem('i18n_lang', lng);

@@ -5,6 +5,8 @@ import Locations from "@/components/landing/Locations";
 import SEOHead from "@/components/common/SEOHead";
 import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 
 const LocationsPage = () => {
   const { dir } = useDirection();
@@ -14,7 +16,15 @@ const LocationsPage = () => {
       <SEOHead title={t('seo.locationsTitle')} description={t('seo.locationsDesc')} />
       <Header />
       <main className="flex-grow">
+        <DarbPageHero
+          eyebrow={t('locations.title')}
+          imageUrl={DARB_PUBLIC_HERO_IMAGES.city}
+          imageAlt={t('locations.imageAlt', 'Bright German city representing DARB destinations')}
+          title={t('locations.title')}
+          subtitle={t('seo.locationsDesc')}
+        />
         <Locations />
+
       </main>
       <Footer />
     </div>

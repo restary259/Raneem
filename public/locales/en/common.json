@@ -21,7 +21,16 @@
     "broadcastDesc": "Watch educational and live videos from our experts",
     "studentLogin": "Student Login",
     "faq": "FAQ",
-    "faqDesc": "Answers to the most common questions about studying in Germany"
+    "faqDesc": "Answers to the most common questions about studying in Germany",
+    "studyGermany": "Study in Germany",
+    "studyPath": "Find Your Study Path",
+    "aboutDarb": "About DARB",
+    "aiAdvisor": "AI Study Advisor",
+    "bagrutCalculator": "Bagrut Calculator",
+    "costCalculator": "Cost Calculator",
+    "currencyConverter": "Currency Converter",
+    "cvBuilder": "CV Builder",
+    "blog": "Blog"
   },
   "desktopNav": {
     "about": {
@@ -54,6 +63,23 @@
     "title": "404",
     "subtitle": "Oops! Page not found",
     "button": "Back to Home"
+  },
+  "contactCta": {
+    "eyebrow": "CONTACT DARB",
+    "title": "Need a hand with your next step?",
+    "subtitle": "Have a question about studying in Germany? Talk to DARB and get clear guidance on your next step.",
+    "whatsapp": "WhatsApp",
+    "contact": "Contact Us",
+    "apply": "Start Your Application",
+    "phoneLabel": "WhatsApp",
+    "emailLabel": "Email",
+    "compactTitle": "Prefer to speak with our team?",
+    "compactSubtitle": "We can help clarify your options and next step.",
+    "partnerEyebrow": "WORK WITH DARB",
+    "partnerTitle": "Interested in working with DARB?",
+    "partnerSubtitle": "Join our partner network and speak with our team about working together.",
+    "partnerContact": "Contact DARB",
+    "partnerApply": "Become a Partner"
   },
   "callToAction": {
     "title": "Ready to Start Your Journey?",
@@ -94,6 +120,7 @@
     "errorPrefix": "Sorry, an error occurred:",
     "offlineReply": "You're currently offline. You can review previous conversations or try common questions.",
     "connectionError": "Failed to connect to AI assistant",
+    "signInRequired": "Please sign in to use the AI advisor.",
     "send": "Send"
   },
   "quickQuestions": [

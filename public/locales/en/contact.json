@@ -1,11 +1,12 @@
 {
   "contactHero": {
-    "title": "We're Here to Help – Contact Us Today",
-    "subtitle": "Whether you're asking about admissions, visas, or housing — the Darb team is ready to answer and guide you every step of the way."
+    "title": "Contact",
+    "subtitle": "",
+    "imageAlt": "Sunny Düsseldorf skyline along the Rhine in Germany"
   },
   "contact": {
-    "title": "Fill Out the Form to Get in Touch",
-    "subtitle": "Our team is ready to answer all your questions and help you achieve your academic goals.",
+    "title": "How can we help?",
+    "subtitle": "Send us your question and the Darb team will get back to you.",
     "form": {
       "name": "Full Name",
       "namePlaceholder": "Your full name",
@@ -15,13 +16,37 @@
       "whatsappPlaceholder": "With country code",
       "destination": "Country of Interest",
       "destinationPlaceholder": "Choose a country",
-      "destinationOptions": { "germany": "Germany", "romania": "Romania", "jordan": "Jordan" },
+      "destinationOptions": {
+        "germany": "Germany",
+        "romania": "Romania",
+        "jordan": "Jordan"
+      },
       "service": "Required Service",
       "servicePlaceholder": "Choose a service",
-      "serviceOptions": ["University Application", "Translation & Authentication", "Language Courses", "Visas & Residence", "Housing Services", "Reception & Follow-up", "Personal Consultations", "General Inquiry"],
+      "serviceOptions": [
+        "University Application",
+        "Translation & Authentication",
+        "Language Courses",
+        "Visas & Residence",
+        "Housing Services",
+        "Reception & Follow-up",
+        "Personal Consultations",
+        "General Inquiry"
+      ],
       "message": "Additional Message (optional)",
-      "messagePlaceholder": "Write your message here...",
+      "messagePlaceholder": "Write your question or message here...",
       "submit": "Send Now",
+      "sending": "Sending...",
+      "topic": "What can we help with?",
+      "topicPlaceholder": "Choose a topic",
+      "topicOptions": {
+        "admissions": "University admissions",
+        "language_courses": "Language courses",
+        "visa": "Visa and residence",
+        "accommodation": "Accommodation",
+        "partnership": "Partnership",
+        "general": "General question"
+      },
       "fullName": "Full Name",
       "phone": "Phone Number",
       "phonePlaceholder": "With country code",
@@ -48,11 +73,20 @@
         "bachelor": "Bachelor's Degree",
         "master": "Master's Degree"
       },
-      "yesNo": { "yes": "Yes", "no": "No" }
+      "yesNo": {
+        "yes": "Yes",
+        "no": "No"
+      }
     },
     "toast": {
       "successTitle": "Your message was sent successfully!",
-      "successDescription": "Thank you for reaching out. One of our advisors will respond to you soon."
+      "successDescription": "Thank you for reaching out. One of our advisors will respond to you soon.",
+      "errorTitle": "Message not sent"
+    },
+    "consent": {
+      "collected": "full name, email or phone number, topic and message",
+      "purpose": "We use these details only to answer your enquiry and contact you about it.",
+      "agree": "I agree to Darb processing my details and contacting me about this enquiry. *"
     },
     "follow": "Follow Us",
     "mapTitle": "Our Location on the Map",
@@ -60,7 +94,23 @@
     "validation": {
       "cityRequired": "City is required",
       "educationRequired": "Education level is required",
-      "stillInSchoolRequired": "Please select if you're still in school"
+      "stillInSchoolRequired": "Please select if you're still in school",
+      "fullName": "Enter your full name.",
+      "email": "Enter a valid email address.",
+      "phone": "Enter a valid phone number.",
+      "topic": "Choose an enquiry topic.",
+      "message": "Write a message of at least 5 characters.",
+      "contact": "Enter an email address or phone number.",
+      "consent": "Your consent is required before sending.",
+      "review": "Please review the highlighted fields."
     }
+  },
+  "support": {
+    "eyebrow": "CONTACT",
+    "title": "Do you need more information or have any questions?",
+    "subtitle": "We are happy to help you!",
+    "contact": "CONTACT US",
+    "whatsapp": "WHATSAPP",
+    "apply": "START YOUR APPLICATION"
   }
 }

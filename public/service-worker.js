@@ -1,4 +1,4 @@
-// DARB service worker — v5.0.0 (TanStack Start migration)
+// DARB service worker — v5.0.2 (larger brand icon refresh)
 //
 // This worker replaces the old caching worker at the SAME URL so returning
 // browsers pick it up automatically on their next online visit.
@@ -13,7 +13,7 @@
 //     are carried over verbatim, so existing push subscriptions keep working
 //     without users re-granting permission.
 
-const CACHE_VERSION = '5.0.0';
+const CACHE_VERSION = '5.0.2';
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());
@@ -47,7 +47,7 @@ self.addEventListener('message', event => {
 // ---------------------------------------------------------------------------
 // Web Push (preserved verbatim from the pre-migration worker)
 // ---------------------------------------------------------------------------
-const NOTIFICATION_ICON = '/icons/icon-192.png';
+const NOTIFICATION_ICON = '/icons/icon-192-v2.png';
 // Android / Samsung Internet render `badge` as a monochrome mask, so it must be
 // a white-on-transparent silhouette rather than the colour logo. iOS ignores it.
 const NOTIFICATION_BADGE = '/icons/badge-96.png';

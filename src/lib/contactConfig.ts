@@ -31,7 +31,7 @@ export const WHATSAPP_PHONE_URL = WHATSAPP_BUSINESS_URL;
 export const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/J2njR5IJZj9JxLxV7GqxNo";
 
 /** Support email */
-export const SUPPORT_EMAIL = "darbsocial27@gmail.com";
+export const SUPPORT_EMAIL = "info@darb.agency";
 
 /** Support phone number */
-export const SUPPORT_PHONE = "0507368283";
+export const SUPPORT_PHONE = "+49 176 23790623";

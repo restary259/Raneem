@@ -17,12 +17,15 @@ import ThemeScope from "@/components/common/ThemeScope";
 import { AuthProvider } from "@/contexts/AuthContext";
 import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
+import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
 
 const FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap";
 
-const OG_IMAGE = "https://darb.agency/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png";
-const APP_ICON = "/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png";
+const APP_LOGO = darbLogoAsset.url;
+const OG_IMAGE = `https://darb.agency${darbLogoShareAsset.url}`;
+const BRAND_LOGO = `https://darb.agency${APP_LOGO}`;
 
 const SITE_JSONLD = JSON.stringify({
   "@context": "https://schema.org",
@@ -33,7 +36,7 @@ const SITE_JSONLD = JSON.stringify({
       name: "درب التعليمية",
       alternateName: "Darb Agency",
       url: "https://darb.agency/",
-      logo: OG_IMAGE,
+      logo: BRAND_LOGO,
     },
     {
       "@type": "WebSite",
@@ -52,7 +55,7 @@ const ORG_JSONLD = JSON.stringify({
   name: "درب للدراسة في الخارج",
   alternateName: "Darb Study Pathways",
   url: "https://darb.agency",
-  logo: OG_IMAGE,
+  logo: BRAND_LOGO,
   description: "Education consultancy agency helping Arab students study in Germany",
   sameAs: [
     "https://www.instagram.com/darb_studyingermany/",
@@ -91,7 +94,7 @@ const SPLASH_CSS = `
 .pwa-loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; color: #1a1a2e; font-family: 'Tajawal', sans-serif; opacity: 1; transition: opacity 0.5s ease; }
 .pwa-loading.hidden { opacity: 0; pointer-events: none; }
 .pwa-loading .loading-content { text-align: center; max-width: 300px; }
-.pwa-loading .loading-logo { width: 80px; height: 80px; margin: 0 auto 1rem; animation: pwa-pulse 2s infinite; }
+.pwa-loading .loading-logo { width: 112px; height: 112px; margin: 0 auto 1rem; animation: pwa-pulse 2s infinite; }
 .pwa-loading .loading-logo img { width: 100%; height: 100%; object-fit: contain; }
 @keyframes pwa-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 .pwa-loading .loading-text { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
@@ -153,10 +156,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "manifest", href: "/manifest.json", crossOrigin: "use-credentials" },
-      { rel: "icon", href: APP_ICON, type: "image/png" },
-      { rel: "apple-touch-icon", href: APP_ICON },
-      { rel: "apple-touch-icon", sizes: "152x152", href: APP_ICON },
-      { rel: "apple-touch-icon", sizes: "180x180", href: APP_ICON },
+      { rel: "icon", href: "/favicon-v2.png", type: "image/png", sizes: "64x64" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon-v2.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: FONTS_HREF },
@@ -190,7 +191,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <div id="pwa-loading" className="pwa-loading">
           <div className="loading-content">
             <div className="loading-logo">
-              <img src={APP_ICON} alt="درب" />
+              <img src={APP_LOGO} alt="درب" />
             </div>
             <div className="loading-text">درب</div>
             <div className="loading-subtitle">رفيقك الدراسي العالمي</div>

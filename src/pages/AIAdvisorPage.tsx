@@ -1,6 +1,8 @@
-
 import React from 'react';
 import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Button } from '@/components/ui/button';
 import { Bot, Trash2, GraduationCap, FileText, Globe, Home as HomeIcon } from 'lucide-react';
 import { useAIChat } from '@/hooks/useAIChat';
@@ -38,68 +40,102 @@ const AIAdvisorPage = () => {
   } = useAIChat(true);
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden" dir={dir}>
+    <div className="min-h-screen overflow-x-hidden bg-background" dir={dir}>
       <SEOHead title={t('seo.advisorTitle')} description={t('seo.advisorDesc')} />
       <Header />
 
-      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full min-h-0">
-        {!isOnline && <ChatOfflineBanner message={t('chat.offlineBanner')} className="flex-shrink-0" />}
+      <DarbPageHero
+        compact
+        eyebrow={t('advisor.title')}
+        imageUrl={DARB_PUBLIC_HERO_IMAGES.advisor}
+        imageAlt={t('advisor.imageAlt', 'Student researching university options')}
+        title={t('advisor.title')}
+        subtitle={t('advisor.description')}
+      />
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 md:py-12 space-y-6 md:space-y-8">
-              <div className="text-center space-y-3">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand to-brand/70 flex items-center justify-center mx-auto shadow-lg">
-                  <Bot className="h-8 w-8 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold text-foreground">{t('advisor.title')}</h1>
-                <p className="text-muted-foreground max-w-md">
-                  {t('advisor.description')}
-                </p>
-              </div>
-
-              <ChatCategoryGrid categories={CATEGORIES} />
-
-              <div className="w-full max-w-lg space-y-2">
-                <p className="text-sm text-muted-foreground font-medium text-center">{t('chat.startQuestion')}</p>
-                <ChatQuickQuestions questions={quickQuestions} onSelect={sendMessage} />
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex justify-center">
-                <Button variant="ghost" size="sm" onClick={clearHistory} className="text-muted-foreground text-xs gap-1">
-                  <Trash2 className="h-3 w-3" />
-                  {t('chat.clearHistory')}
-                </Button>
-              </div>
-
-              <ChatMessageList
-                messages={messages}
-                isLoading={isLoading}
-                userAvatarClassName="bg-brand-strong/10"
-                userIconClassName="text-brand-strong"
-                userBubbleClassName="bg-brand-strong/5"
-              />
-            </>
+      <main className="container mx-auto w-full max-w-5xl px-3 py-5 sm:px-4 md:py-8">
+        <section
+          aria-label={t('advisor.title')}
+          className="overflow-hidden rounded-xl border border-border bg-background shadow-surface"
+        >
+          {!isOnline && (
+            <ChatOfflineBanner
+              message={t('chat.offlineBanner')}
+              className="border-b flex-shrink-0"
+            />
           )}
-          <div ref={messagesEndRef} />
-        </div>
 
-        {/* Sticky input bar - close to bottom like ChatGPT */}
-        <div className="border-t bg-background p-3 md:p-4 flex-shrink-0 pb-safe">
-          <ChatComposer
-            value={input}
-            onChange={setInput}
-            onSubmit={() => sendMessage(input)}
-            placeholder={t('chat.placeholder')}
-            isLoading={isLoading}
-            inputRef={inputRef}
-            sendClassName="bg-brand-strong text-brand-foreground hover:bg-brand-strong/90"
-            className="max-w-2xl mx-auto"
-          />
-        </div>
+          <div
+            className="min-h-[420px] overflow-y-auto p-3 sm:p-5 md:min-h-[500px] md:p-6"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {messages.length === 0 ? (
+              <div className="flex min-h-[390px] flex-col items-center justify-center gap-5 py-6 md:min-h-[455px] md:gap-7">
+                <div className="space-y-3 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-strong/10 text-brand-strong">
+                    <Bot className="h-7 w-7" />
+                  </div>
+                  <h1 className="text-xl font-bold text-foreground md:text-2xl">
+                    {t('advisor.title')}
+                  </h1>
+                  <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground md:text-base">
+                    {t('advisor.description')}
+                  </p>
+                </div>
+
+                <ChatCategoryGrid categories={CATEGORIES} />
+
+                <div className="w-full max-w-lg space-y-2">
+                  <p className="text-center text-sm font-medium text-muted-foreground">
+                    {t('chat.startQuestion')}
+                  </p>
+                  <ChatQuickQuestions questions={quickQuestions} onSelect={sendMessage} />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearHistory}
+                    className="gap-1 text-xs text-muted-foreground"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    {t('chat.clearHistory')}
+                  </Button>
+                </div>
+
+                <ChatMessageList
+                  messages={messages}
+                  isLoading={isLoading}
+                  userAvatarClassName="bg-brand-strong/10"
+                  userIconClassName="text-brand-strong"
+                  userBubbleClassName="bg-brand-strong/5"
+                />
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+
+          {/* Keep the composer visible and reachable on every viewport instead of
+              letting the page-level footer consume the flex layout. */}
+          <div className="sticky bottom-0 z-10 border-t bg-background/95 p-3 backdrop-blur-sm sm:p-4 md:p-5">
+            <ChatComposer
+              value={input}
+              onChange={setInput}
+              onSubmit={() => sendMessage(input)}
+              placeholder={t('chat.placeholder')}
+              isLoading={isLoading}
+              inputRef={inputRef}
+              sendClassName="bg-brand-strong text-brand-foreground hover:bg-brand-strong/90"
+              className="mx-auto w-full max-w-3xl"
+            />
+          </div>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 };

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChatMessage, saveChatHistory, loadChatHistory, clearChatHistory, OFFLINE_FAQ } from '@/utils/chatCache';
+import { supabase } from '@/integrations/supabase/client';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
@@ -65,15 +66,29 @@ export const useAIChat = (persistHistory = false, mode: 'general' | 'quiz' = 'ge
 
     let assistantSoFar = '';
 
+    // The AI advisor requires sign-in: the endpoint rejects anonymous calls (401).
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      setMessages(prev => [...prev, { role: 'assistant', content: t('chat.signInRequired') }]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ messages: allMessages, mode, language: i18n.language }),
       });
+
+      if (resp.status === 401) {
+        setMessages(prev => [...prev, { role: 'assistant', content: t('chat.signInRequired') }]);
+        return;
+      }
 
       if (!resp.ok || !resp.body) {
         const errorData = await resp.json().catch(() => ({}));

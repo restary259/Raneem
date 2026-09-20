@@ -66,7 +66,7 @@ const AppShell = () => {
   }, []);
 
   useEffect(() => {
-    const dir = isRtlLng(i18n.language) ? "rtl" : "ltr";
+const dir = isRtlLng(i18n.language) ? "rtl" : "ltr";
     document.documentElement.lang = i18n.language;
     document.documentElement.dir = dir;
 
@@ -116,7 +116,7 @@ const AppShell = () => {
   return (
     <TooltipProvider>
       <div
-        className={`min-h-screen w-full relative ${isDashboardPath ? "" : "pb-20 md:pb-0"}`}
+        className={`min-h-screen w-full relative ${isDashboardPath || isApplyPage ? "" : "pb-20 md:pb-0"}`}
         dir={dir}
       >
         <Toaster />
@@ -143,7 +143,7 @@ const AppShell = () => {
             <CookieBanner />
           </Suspense>
         )}
-        {!isDashboardPath && <BottomNav />}
+        {!isDashboardPath && !isApplyPage && <BottomNav />}
       </div>
     </TooltipProvider>
   );

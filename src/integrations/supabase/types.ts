@@ -3494,7 +3494,6 @@ export type Database = {
       profiles: {
         Row: {
           agent_can_create_accounts: boolean
-          whatsapp_inbox_enabled: boolean
           agent_can_invite_directly: boolean
           agent_id: string | null
           apply_form_enabled: boolean
@@ -3560,9 +3559,9 @@ export type Database = {
           updated_at: string
           updated_by_student_at: string | null
           visa_status: string
+          whatsapp_inbox_enabled: boolean
         }
         Insert: {
-          whatsapp_inbox_enabled?: boolean
           agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
@@ -3629,9 +3628,9 @@ export type Database = {
           updated_at?: string
           updated_by_student_at?: string | null
           visa_status?: string
+          whatsapp_inbox_enabled?: boolean
         }
         Update: {
-          whatsapp_inbox_enabled?: boolean
           agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
@@ -3698,6 +3697,7 @@ export type Database = {
           updated_at?: string
           updated_by_student_at?: string | null
           visa_status?: string
+          whatsapp_inbox_enabled?: boolean
         }
         Relationships: [
           {
@@ -6854,6 +6854,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_whatsapp_inbox_access: { Args: { p_user: string }; Returns: boolean }
       insert_lead_from_apply: {
         Args: {
           p_accommodation?: boolean
@@ -6882,7 +6883,6 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
-      has_whatsapp_inbox_access: { Args: { p_user: string }; Returns: boolean }
       is_whatsapp_staff: { Args: { p_user: string }; Returns: boolean }
       issue_case_invoice: { Args: { p_case_id: string }; Returns: Json }
       list_agent_directory: {
@@ -7459,7 +7459,7 @@ export type Database = {
           case_reference: string
           full_name: string
           id: string
-          phone_number: string | null
+          phone_number: string
           status: string
         }[]
       }

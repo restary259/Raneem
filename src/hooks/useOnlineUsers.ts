@@ -22,7 +22,7 @@ export function useOnlineUsers(): Set<string> {
     }
 
     let cancelled = false;
-    let pollId: ReturnType<typeof window.setInterval> | null = null;
+    let pollId: number | null = null;
 
     const channel = supabase.channel("presence:staff", {
       config: { presence: { key: user.id } },

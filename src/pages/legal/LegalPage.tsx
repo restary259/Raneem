@@ -5,7 +5,8 @@ import { ShieldCheck } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import SEOHead from '@/components/common/SEOHead';
-import PageHero from '@/components/common/PageHero';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 
 export interface LegalSection {
   id: string;
@@ -36,11 +37,7 @@ const LegalPage: React.FC<LegalPageProps> = ({ docKey, relatedTo }) => {
       <Header />
 
       <main>
-        <PageHero
-          badge={t(`${docKey}.hero.badge`)}
-          title={t(`${docKey}.hero.title`)}
-          subtitle={t(`${docKey}.hero.subtitle`)}
-        />
+        <DarbPageHero compact eyebrow={t(docKey + ".hero.badge")} imageUrl={DARB_PUBLIC_HERO_IMAGES.academic} imageAlt={t(docKey + ".hero.imageAlt", "DARB information and documents")} title={t(docKey + ".hero.title")} subtitle={t(docKey + ".hero.subtitle")} />
 
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4 max-w-3xl">

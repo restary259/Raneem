@@ -91,6 +91,8 @@ interface PanelProps {
   agentFlagsError: boolean;
   whatsappInboxEnabled: boolean;
   setWhatsappInboxEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  internalTeamChatEnabled: boolean;
+  setInternalTeamChatEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   onRetryAgentFlags: () => void;
   slots: PanelSlot;
   bodyClassName: string;
@@ -139,6 +141,8 @@ function MemberDetailPanel({
   agentFlagsError,
   whatsappInboxEnabled,
   setWhatsappInboxEnabled,
+  internalTeamChatEnabled,
+  setInternalTeamChatEnabled,
   onRetryAgentFlags,
   slots,
   bodyClassName,
@@ -321,43 +325,78 @@ function MemberDetailPanel({
           <CashDebtsCard teamMemberId={member.requester_id} t={t} onChanged={onChanged} />
         )}
 
-        {/* Team member feature access */}
+        {/* Team member communication access */}
         {member.role === "team_member" && (
           <Card>
             <CardContent className="p-4">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("admin.members.sectionAccess", "Access")}
               </h3>
-              <div className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="h-9 w-9 shrink-0 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <MessageCircle className="h-4 w-4 text-emerald-600" />
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
+                    <MessageCircle className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-tight">
+                      {t("admin.members.whatsappInboxTitle", "WhatsApp inbox")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t("admin.members.whatsappInboxDesc", "Allow this team member to access the shared WhatsApp chat box.")}
+                    </p>
+                  </div>
+                  <ProfileFeatureToggle
+                    userId={member.requester_id}
+                    column="whatsapp_inbox_enabled"
+                    value={whatsappInboxEnabled}
+                    onChanged={setWhatsappInboxEnabled}
+                    enableTitle={t("admin.members.whatsappInboxEnableTitle", "Enable WhatsApp inbox?")}
+                    enableBody={t("admin.members.whatsappInboxEnableBody", {
+                      name: member.full_name,
+                      defaultValue: "{{name}} will be able to open the shared WhatsApp inbox and message assigned or unassigned conversations.",
+                    })}
+                    disableTitle={t("admin.members.whatsappInboxDisableTitle", "Disable WhatsApp inbox?")}
+                    disableBody={t("admin.members.whatsappInboxDisableBody", {
+                      name: member.full_name,
+                      defaultValue: "{{name}} will no longer see the shared WhatsApp inbox. They can still use the WhatsApp button from a case profile to open that case's attached number.",
+                    })}
+                    enabledToast={t("admin.members.whatsappInboxEnabled", "WhatsApp inbox enabled")}
+                    disabledToast={t("admin.members.whatsappInboxDisabled", "WhatsApp inbox disabled")}
+                  />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium leading-tight">
-                    {t("admin.members.whatsappInboxTitle", "WhatsApp inbox")}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {t("admin.members.whatsappInboxDesc", "Allow this team member to access the shared WhatsApp chat box.")}
-                  </p>
+
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Users className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-tight">
+                      {t("admin.members.internalTeamChatTitle", "Internal team chat")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t("admin.members.internalTeamChatDesc", "Allow direct chats with other team members.")}
+                    </p>
+                  </div>
+                  <ProfileFeatureToggle
+                    userId={member.requester_id}
+                    column="internal_team_chat_enabled"
+                    value={internalTeamChatEnabled}
+                    onChanged={setInternalTeamChatEnabled}
+                    enableTitle={t("admin.members.internalTeamChatEnableTitle", "Enable internal team chat?")}
+                    enableBody={t("admin.members.internalTeamChatEnableBody", {
+                      name: member.full_name,
+                      defaultValue: "{{name}} will be able to start direct chats with other team members. This does not grant manager or admin permissions.",
+                    })}
+                    disableTitle={t("admin.members.internalTeamChatDisableTitle", "Disable internal team chat?")}
+                    disableBody={t("admin.members.internalTeamChatDisableBody", {
+                      name: member.full_name,
+                      defaultValue: "{{name}} will no longer be able to start new team-member chats.",
+                    })}
+                    enabledToast={t("admin.members.internalTeamChatEnabled", "Internal team chat enabled")}
+                    disabledToast={t("admin.members.internalTeamChatDisabled", "Internal team chat disabled")}
+                  />
                 </div>
-                <ProfileFeatureToggle
-                  userId={member.requester_id}
-                  column="whatsapp_inbox_enabled"
-                  value={whatsappInboxEnabled}
-                  onChanged={setWhatsappInboxEnabled}
-                  enableTitle={t("admin.members.whatsappInboxEnableTitle", "Enable WhatsApp inbox?")}
-                  enableBody={t("admin.members.whatsappInboxEnableBody", {
-                    name: member.full_name,
-                    defaultValue: "{{name}} will be able to open the shared WhatsApp inbox and message assigned or unassigned conversations.",
-                  })}
-                  disableTitle={t("admin.members.whatsappInboxDisableTitle", "Disable WhatsApp inbox?")}
-                  disableBody={t("admin.members.whatsappInboxDisableBody", {
-                    name: member.full_name,
-                    defaultValue: "{{name}} will no longer see the shared WhatsApp inbox. They can still use the WhatsApp button from a case profile to open that case's attached number.",
-                  })}
-                  enabledToast={t("admin.members.whatsappInboxEnabled", "WhatsApp inbox enabled")}
-                  disabledToast={t("admin.members.whatsappInboxDisabled", "WhatsApp inbox disabled")}
-                />
               </div>
             </CardContent>
           </Card>
@@ -641,19 +680,21 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   const [agentFlagsError, setAgentFlagsError] = useState(false);
   const [agentFlagsRetry, setAgentFlagsRetry] = useState(0);
   const [whatsappInboxEnabled, setWhatsappInboxEnabled] = useState(false);
+  const [internalTeamChatEnabled, setInternalTeamChatEnabled] = useState(false);
 
   useEffect(() => {
     setAgentFlags(null);
     setAgentFlagsError(false);
     setWhatsappInboxEnabled(false);
+    setInternalTeamChatEnabled(false);
 
     if (!member?.requester_id) return;
 
     let stale = false;
     const loadProfileFlags = async () => {
       const select = member.role === "agent"
-        ? "agent_can_invite_directly, agent_can_create_accounts, whatsapp_inbox_enabled"
-        : "whatsapp_inbox_enabled";
+        ? "agent_can_invite_directly, agent_can_create_accounts, whatsapp_inbox_enabled, internal_team_chat_enabled"
+        : "whatsapp_inbox_enabled, internal_team_chat_enabled";
       const { data, error } = await supabase
         .from("profiles")
         .select(select)
@@ -669,6 +710,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
       }
 
       setWhatsappInboxEnabled(!!(data as any)?.whatsapp_inbox_enabled);
+      setInternalTeamChatEnabled(!!(data as any)?.internal_team_chat_enabled);
 
       if (member.role === "agent") {
         setAgentFlags({
@@ -776,6 +818,8 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     agentFlagsError,
     whatsappInboxEnabled,
     setWhatsappInboxEnabled,
+    internalTeamChatEnabled,
+    setInternalTeamChatEnabled,
     onRetryAgentFlags: () => setAgentFlagsRetry((n) => n + 1),
   };
 

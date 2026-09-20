@@ -44,7 +44,19 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import TeamWorkPage from "@/pages/team/TeamWorkPage";
+
+// The page reads through the shared query cache now, so each test gets its own
+// client (retries off) to keep runs isolated and fast.
+const renderPage = () =>
+  render(
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <TeamWorkPage />
+    </QueryClientProvider>,
+  );
 
 describe("TeamWorkPage — Cash owed to Admin KPI", () => {
   beforeEach(() => {
@@ -67,7 +79,7 @@ describe("TeamWorkPage — Cash owed to Admin KPI", () => {
       return Promise.resolve({ data: null, error: null });
     });
 
-    render(<TeamWorkPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("Cash owed to Admin")).toBeInTheDocument();
@@ -88,7 +100,7 @@ describe("TeamWorkPage — Cash owed to Admin KPI", () => {
       return Promise.resolve({ data: null, error: null });
     });
 
-    render(<TeamWorkPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("Cash owed to Admin")).toBeInTheDocument();

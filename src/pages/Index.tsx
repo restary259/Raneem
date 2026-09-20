@@ -1,7 +1,7 @@
 
-import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import HomepageExperience from "@/components/landing/HomepageExperience";
+import Header from "@/components/landing/Header";
 import SEOHead from "@/components/common/SEOHead";
 import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";

@@ -16,7 +16,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
 import {
   Accordion,
   AccordionContent,
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/accordion";
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
+import germanyHero from "@/assets/germany-home-hero.jpg";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
@@ -89,48 +89,49 @@ const HomepageExperience = () => {
 
   return (
     <div className="homepage-experience">
-      <section className="relative flex min-h-[660px] items-end overflow-hidden bg-primary pb-12 pt-28 text-primary-foreground sm:min-h-[720px] md:h-[calc(100svh-4rem)] md:min-h-[640px] md:max-h-[800px] md:items-center md:py-20">
+      <section className="darb-home-hero relative flex items-center overflow-hidden bg-primary text-primary-foreground">
         <img
-          src="/lovable-uploads/hero-poster.webp"
+          src={germanyHero}
           alt={t("homepage.hero.imageAlt")}
           fetchPriority="high"
           decoding="async"
+          width={1920}
+          height={1080}
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-primary/80" />
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary via-primary/75 to-transparent" />
+        <div className="absolute inset-0 bg-primary/10" />
 
-        <div className="container relative z-10 mx-auto">
-          <div className="max-w-4xl">
-            <p className="mb-5 inline-flex items-center gap-2 border-s-2 border-brand ps-3 text-sm font-semibold text-primary-foreground/90">
-              <span className="h-2 w-2 rounded-full bg-trust" aria-hidden="true" />
-              {t("homepage.hero.eyebrow")}
-            </p>
-            <h1 className="max-w-4xl text-4xl font-bold leading-[1.12] text-primary-foreground sm:text-6xl lg:text-7xl">
+        <div className="container relative z-10 mx-auto flex justify-center px-4">
+          <div className="darb-home-hero-panel bg-primary/80 text-center shadow-surface-lg backdrop-blur-[2px]">
+            <p className="darb-home-hero-eyebrow font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
+            <h1 className="darb-home-hero-title mx-auto mt-3 max-w-2xl font-bold leading-[1.15] text-primary-foreground">
               {t("homepage.hero.title")}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-primary-foreground/85 sm:text-xl">
+            <p className="darb-home-hero-subtitle mx-auto mt-5 max-w-2xl leading-8 text-primary-foreground/90">
               {t("homepage.hero.subtitle")}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="accent" className="h-14 rounded-md px-7 text-base shadow-surface-lg">
-                <Link to="/apply">
-                  {t("homepage.actions.apply")}
-                  <Arrow className="h-5 w-5" />
-                </Link>
+            <div className="darb-home-hero-actions flex flex-col justify-center gap-3 sm:flex-row">
+              <Button asChild size="lg" variant="accent" className="darb-home-hero-button rounded-none text-base">
+                <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 rounded-md border-primary-foreground/35 bg-primary/30 px-7 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="h-5 w-5" />
-                  {t("homepage.actions.whatsapp")}
+              <Button asChild size="lg" variant="outline" className="darb-home-hero-button rounded-none border-primary-foreground/50 bg-primary/50 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+                <a
+                  href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="h-5 w-5" />{t("homepage.actions.whatsapp")}
                 </a>
               </Button>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-sm text-primary-foreground/70">
-              <CircleCheck className="h-4 w-4 text-trust" />
-              {t("homepage.hero.reassurance")}
+            <p className="mt-5 flex items-center justify-center gap-2 text-sm text-primary-foreground/75">
+              <CircleCheck className="h-4 w-4 text-brand" />{t("homepage.hero.reassurance")}
             </p>
           </div>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 z-20 grid h-3 grid-cols-7" aria-hidden="true">
+          <span className="bg-destructive" /><span className="bg-brand" /><span className="bg-trust" /><span className="bg-primary" /><span className="bg-secondary" /><span className="bg-brand" /><span className="bg-primary" />
         </div>
       </section>
 
@@ -327,22 +328,7 @@ const HomepageExperience = () => {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-primary py-20 text-primary-foreground sm:py-28">
-        <div className="container relative">
-          <p className="text-xs font-bold uppercase text-brand">{t("homepage.final.eyebrow")}</p>
-          <h2 className="mt-4 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">{t("homepage.final.title")}</h2>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-primary-foreground/70">{t("homepage.final.body")}</p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" variant="accent" className="h-14 rounded-md px-7 text-base">
-              <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="h-14 rounded-md border-primary-foreground/30 bg-transparent px-7 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer"><MessageCircle className="h-5 w-5" />{t("homepage.actions.whatsapp")}</a>
-            </Button>
-          </div>
-        </div>
-      </section>
-    </div>
+ </div>
   );
 };
 

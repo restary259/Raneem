@@ -13,17 +13,14 @@ export const SITE_URL = 'https://darb.agency'
 
 /**
  * Email assets must be served from a URL that is already live in production.
- * `/email/*` was 404 until the next publish, which is what produced broken
- * image placeholders in delivered mail, so the logo points at the brand asset
- * that is already deployed under /lovable-uploads (verified HTTP 200,
- * image/png, public, no auth and no signed/expiring URL).
+ * Managed brand asset: public, stable, and shared with the website.
  */
-export const LOGO_URL = `${SITE_URL}/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png`
+export const LOGO_URL = `${SITE_URL}/__l5e/assets-v1/d24b5a0a-5de4-449f-b3b2-1709ca2a28c8/darb-logo.png`
 export const LOGO_WIDTH = 132
 
 /** Contact — mirrors src/lib/contactConfig.ts */
 export const SUPPORT_WHATSAPP_URL = 'https://wa.me/4917623790623'
-export const SUPPORT_PHONE = '0507368283'
+export const SUPPORT_PHONE = '+49 176 23790623'
 
 /**
  * Socials — text links only. Icon images were hosted on a path that is not yet

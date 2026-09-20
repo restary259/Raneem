@@ -12,12 +12,12 @@ const BottomNav = () => {
   const { t } = useTranslation();
   const { dir } = useDirection();
 
-  // Hide on influencer apply flow and dashboard pages
-  const searchParams = new URLSearchParams(location.search);
-  const isInfluencerApply = location.pathname === '/apply' && searchParams.has('ref');
+  // Keep /apply as a distraction-free lead-capture surface on every mobile entry,
+  // whether it comes from Instagram directly or through a partner referral.
+  const isApply = location.pathname === '/apply';
   const isDashboard = ['/student-dashboard', '/admin', '/team-dashboard'].includes(location.pathname);
 
-  if (!isMobile || isInfluencerApply || isDashboard) {
+  if (!isMobile || isApply || isDashboard) {
     return null;
   }
 

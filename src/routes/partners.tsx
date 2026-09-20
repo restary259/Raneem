@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import EducationalDestinationsPage from "@/pages/EducationalDestinationsPage";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/partners")({
-  component: EducationalDestinationsPage,
+  component: () => <Navigate to="/partnership" replace />,
 });

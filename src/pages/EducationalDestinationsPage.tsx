@@ -2,13 +2,15 @@ import React from 'react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { GraduationCap, Building2, Heart } from 'lucide-react';
 import UniversityCard from '@/components/educational/UniversityCard';
 import LanguageSchoolCard from '@/components/educational/LanguageSchoolCard';
 import ServiceCard from '@/components/educational/ServiceCard';
 import { universities, languageSchools, services } from '@/data/educationalDestinations';
 import SEOHead from '@/components/common/SEOHead';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
+
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 
@@ -19,15 +21,13 @@ const EducationalDestinationsPage = () => {
   return <div className="min-h-screen bg-background" dir={dir}>
       <SEOHead title={t('seo.edDestTitle')} description={t('seo.edDestDesc')} />
       <Header />
-      <section className="py-20 bg-gradient-to-b from-brand/5 to-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-6 bg-brand-strong/10 text-brand-strong">{t('educational.edHeroBadge')}</Badge>
-            <h1 className="text-5xl font-bold text-foreground mb-6">{t('educational.edHeroTitle')}</h1>
-            <p className="text-xl text-muted-foreground mb-8">{t('educational.edHeroSubtitle')}</p>
-          </div>
-        </div>
-      </section>
+      <DarbPageHero
+        eyebrow={t('educational.edHeroBadge')}
+        imageUrl={DARB_PUBLIC_HERO_IMAGES.destinations}
+        imageAlt={t('educational.edImageAlt', 'Students on a bright German university campus')}
+        title={t('educational.edHeroTitle')}
+        subtitle={t('educational.edHeroSubtitle')}
+      />
       <div className="container mx-auto px-4">
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-3">
@@ -54,16 +54,7 @@ const EducationalDestinationsPage = () => {
           </div>
         </div>
       </div>
-      <section className="py-20 text-white bg-slate-900">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">{t('educational.edCtaTitle')}</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">{t('educational.edCtaSubtitle')}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white hover:bg-gray-100 text-zinc-950">{t('educational.edCtaButton1')}</Button>
-            <Button size="lg" variant="outline" className="border-white text-slate-950 bg-slate-50">{t('educational.edCtaButton2')}</Button>
-          </div>
-        </div>
-      </section>
+
       <Footer />
     </div>;
 };
