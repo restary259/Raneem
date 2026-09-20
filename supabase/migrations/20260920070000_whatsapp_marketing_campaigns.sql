@@ -151,7 +151,7 @@ BEGIN
     RAISE EXCEPTION 'Only active approved marketing templates can be used';
   END IF;
 
-  IF v_template_body ~ '\\{\\{' THEN
+  IF position('{{' in v_template_body) > 0 THEN
     RAISE EXCEPTION 'Marketing campaign templates with variables are not supported yet';
   END IF;
 
