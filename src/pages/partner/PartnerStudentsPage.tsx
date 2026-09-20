@@ -17,6 +17,9 @@ import {
   type ResolvedPartnerVisibilityMode,
 } from "@/lib/partnerVisibility";
 
+// Stable empty fallback so the memoized filter below keeps its identity.
+const EMPTY_CASES: any[] = [];
+
 export default function PartnerStudentsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
