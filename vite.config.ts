@@ -26,7 +26,8 @@ export default defineConfig({
           import.meta.dirname,
           "node_modules/entities/lib/encode.js",
         ),
-        entities: path.resolve(import.meta.dirname, "node_modules/entities"),
+        // No bare "entities" alias: parse5 v8 imports subpaths such as
+        // "entities/escape" that only exist in v5+.
       },
     },
   },
