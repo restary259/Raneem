@@ -30,11 +30,15 @@ const Header = () => {
       dir={dir}
       data-scrolled={scrolled ? 'true' : 'false'}
     >
-      <div className={`hidden border-b lg:block ${scrolled ? 'border-border bg-muted/35' : 'border-primary-foreground/20 bg-primary/20'}`}>
-        <div className={`container flex h-9 items-center justify-end gap-5 text-xs ${scrolled ? 'text-muted-foreground' : 'text-primary-foreground'}`}>
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center gap-1.5 hover:text-brand-strong"><Mail className="h-3.5 w-3.5" />{SUPPORT_EMAIL}</a>
-          <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="flex items-center gap-1.5 hover:text-brand-strong"><Phone className="h-3.5 w-3.5" />{SUPPORT_PHONE}</a>
-          <LanguageSwitcher />
+      <div className="hidden border-b border-primary-foreground/20 lg:block">
+        <div className={`container grid h-9 grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${scrolled ? 'text-muted-foreground' : 'text-primary-foreground'}`}>
+          <div className="justify-self-start"><LanguageSwitcher /></div>
+          <a href="tel:+4917623790623" dir="ltr" className="justify-self-center whitespace-nowrap">
+            +49 176 23790623
+          </a>
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="justify-self-end whitespace-nowrap">
+            {SUPPORT_EMAIL}
+          </a>
         </div>
       </div>
       <div className="container mx-auto px-4">
