@@ -93,6 +93,8 @@
   "profile": {
     "title": "Lead profile",
     "studentName": "Student name",
+    "editName": "Edit name",
+    "enterName": "Enter a name",
     "number": "WhatsApp number",
     "country": "Country",
     "targetCountry": "Target country",

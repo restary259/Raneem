@@ -93,6 +93,8 @@
   "profile": {
     "title": "ملف الطالب",
     "studentName": "اسم الطالب",
+    "editName": "تعديل الاسم",
+    "enterName": "إدخال اسم",
     "number": "رقم واتساب",
     "country": "البلد",
     "targetCountry": "بلد الدراسة",

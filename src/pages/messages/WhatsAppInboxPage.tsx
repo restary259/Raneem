@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -138,6 +138,10 @@ export default function WhatsAppInboxPage({
   const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  // Editable contact name — lets staff give an inbound WhatsApp contact a name
+  // instead of only seeing their phone number.
+  const [nameDraft, setNameDraft] = useState("");
+  const [editingName, setEditingName] = useState(false);
 
   useChatFullscreen(!!mobile && !!selectedId);
 
@@ -332,6 +336,28 @@ export default function WhatsAppInboxPage({
     try { await updateLead(active.lead.id, patch); await load(); toast({ description: t("profile.saved") }); }
     catch { toast({ variant: "destructive", description: t("errors.save") }); }
   };
+  useEffect(() => {
+    setNameDraft(active?.lead.student_name ?? "");
+    setEditingName(false);
+  }, [selectedId, active?.lead.student_name]);
+  const startEditingName = () => {
+    setNameDraft(active?.lead.student_name ?? "");
+    setEditingName(true);
+  };
+  const saveName = async () => {
+    if (!active) { setEditingName(false); return; }
+    const value = (nameDraft ?? "").trim().slice(0, 200);
+    try {
+      setEditingName(false);
+      if (value && value !== (active.lead.student_name ?? "")) {
+        await saveLead({ student_name: value });
+      } else {
+        setNameDraft(active.lead.student_name ?? "");
+      }
+    } catch {
+      setNameDraft(active.lead.student_name ?? "");
+    }
+  };
   const addNote = async () => {
     if (!active || !user || !note.trim()) return;
     try { await addInternalNote(active.id, user.id, note); setNote(""); setNotes(await listConversationNotes(active.id)); }
@@ -472,7 +498,28 @@ export default function WhatsAppInboxPage({
                 <Back className="h-4 w-4" />
               </Button>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</p>
+                {editingName ? (
+                  <Input
+                    autoFocus
+                    dir="auto"
+                    className="h-7 max-w-[200px] bg-background text-sm font-semibold"
+                    value={nameDraft}
+                    placeholder={active.lead.whatsapp_number}
+                    maxLength={200}
+                    onChange={(event) => setNameDraft(event.target.value)}
+                    onBlur={() => void saveName()}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void saveName();
+                      if (event.key === "Escape") { setNameDraft(active.lead.student_name ?? ""); setEditingName(false); }
+                    }}
+                    aria-label={t("profile.editName")}
+                  />
+                ) : (
+                  <button type="button" onClick={startEditingName} className="flex min-w-0 max-w-full items-center gap-1.5 text-start" aria-label={active.lead.student_name ? t("profile.editName") : t("profile.enterName")}>
+                    <p className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</p>
+                    <Pencil className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  </button>
+                )}
                 <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
               </div>
               <Badge variant={active.lead.marketing_consent_status === "withdrawn" ? "destructive" : active.lead.marketing_consent_status === "granted" ? "secondary" : "outline"} className="hidden shrink-0 text-[10px] md:inline-flex">
@@ -642,7 +689,30 @@ export default function WhatsAppInboxPage({
               <>
                 <div className="shrink-0 border-b p-4">
                   <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-muted-foreground" /><h3 className="font-semibold">{t("profile.title")}</h3></div>
-                  <p className="mt-2 truncate text-sm font-medium">{active.lead.student_name || "—"}</p>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    {editingName ? (
+                      <Input
+                        autoFocus
+                        dir="auto"
+                        className="h-8 text-sm font-medium"
+                        value={nameDraft}
+                        placeholder={active.lead.whatsapp_number}
+                        maxLength={200}
+                        onChange={(event) => setNameDraft(event.target.value)}
+                        onBlur={() => void saveName()}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") void saveName();
+                          if (event.key === "Escape") { setNameDraft(active.lead.student_name ?? ""); setEditingName(false); }
+                        }}
+                        aria-label={t("profile.editName")}
+                      />
+                    ) : (
+                      <button type="button" onClick={startEditingName} className="flex min-w-0 items-center gap-1.5 text-start" aria-label={t("profile.editName")}>
+                        <p className="truncate text-sm font-medium">{active.lead.student_name || "—"}</p>
+                        <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
                   <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
                   <Badge variant="secondary" className="mt-2">{t(`stage.${active.lead.lead_stage}`, active.lead.lead_stage)}</Badge>
                 </div>
