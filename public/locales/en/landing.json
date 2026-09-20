@@ -240,7 +240,9 @@
           "title": "Guidance through arrival",
           "description": "We support your preparation and help you understand the first steps of settling in."
         }
-      ]
+      ],
+      "explore": "Explore",
+      "selected": "Selected"
     },
     "students": {
       "eyebrow": "Darb students",
