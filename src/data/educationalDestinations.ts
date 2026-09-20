@@ -1,3 +1,5 @@
+import { ALPHA_AKTIV_LOGO_SRC } from "@/assets/alphaAktivLogo";
+
 export interface LanguageSchoolDestination {
   name: string;
   city: "heidelberg" | "dusseldorf" | "dortmund" | "berlin";
@@ -110,7 +112,7 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     descriptionKey: "destinations.schools.alpha.description",
     officialUrl: "https://www.alpha-heidelberg.de/",
     activityUrl: "https://www.alpha-heidelberg.de/en/exams/",
-    logoUrl: "/lovable-uploads/171c7fae-8d36-4d06-a429-e3726c4417b8.webp",
+    logoUrl: ALPHA_AKTIV_LOGO_SRC,
     credentials: ["telc Competence Center University", "TestDaF", "TestAS", "IELTS", "TOEFL", "AZAV", "DIN EN ISO 9001"],
     credentialsNoteKey: "destinations.schools.alpha.credentialsNote",
     focusKeys: ["destinations.schools.alpha.focusLevels", "destinations.schools.alpha.focusAcademic", "destinations.schools.alpha.focusTesting"],
