@@ -46,7 +46,6 @@ const AIAdvisorPage = () => {
 
       <DarbPageHero
         compact
-        className="min-h-[380px] md:min-h-[470px]"
         eyebrow={t('advisor.title')}
         imageUrl={DARB_PUBLIC_HERO_IMAGES.advisor}
         imageAlt={t('advisor.imageAlt', 'Student researching university options')}
