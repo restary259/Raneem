@@ -3494,6 +3494,7 @@ export type Database = {
       profiles: {
         Row: {
           agent_can_create_accounts: boolean
+          whatsapp_inbox_enabled: boolean
           agent_can_invite_directly: boolean
           agent_id: string | null
           apply_form_enabled: boolean
@@ -6879,6 +6880,7 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      has_whatsapp_inbox_access: { Args: { p_user: string }; Returns: boolean }
       is_whatsapp_staff: { Args: { p_user: string }; Returns: boolean }
       issue_case_invoice: { Args: { p_case_id: string }; Returns: Json }
       list_agent_directory: {
