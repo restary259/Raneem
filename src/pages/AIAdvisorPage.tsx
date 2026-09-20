@@ -1,6 +1,9 @@
 
 import React from 'react';
 import Header from '@/components/landing/Header';
+import Footer from '@/components/landing/Footer';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Button } from '@/components/ui/button';
 import { Bot, Trash2, GraduationCap, FileText, Globe, Home as HomeIcon } from 'lucide-react';
 import { useAIChat } from '@/hooks/useAIChat';
@@ -42,6 +45,7 @@ const AIAdvisorPage = () => {
       <SEOHead title={t('seo.advisorTitle')} description={t('seo.advisorDesc')} />
       <Header />
 
+      <DarbPageHero compact eyebrow={t('advisor.title')} imageUrl={DARB_PUBLIC_HERO_IMAGES.advisor} imageAlt={t('advisor.imageAlt', 'Student researching university options')} title={t('advisor.title')} subtitle={t('advisor.description')} />
       <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full min-h-0">
         {!isOnline && <ChatOfflineBanner message={t('chat.offlineBanner')} className="flex-shrink-0" />}
 
@@ -100,6 +104,7 @@ const AIAdvisorPage = () => {
           />
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
