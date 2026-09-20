@@ -51,7 +51,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
             "md:flex-row md:items-center md:justify-between",
           )}
         >
-          <div className="w-full max-w-2xl text-center md:text-left">
+          <div className="w-full max-w-2xl text-center md:text-start">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
               {partner ? t("contactCta.partnerEyebrow") : t("contactCta.eyebrow")}
             </p>
@@ -99,7 +99,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
               </Link>
             </div>
 
-            <div className="mt-5 flex flex-col items-center gap-1 text-xs text-muted-foreground md:flex-row md:items-start md:gap-4">
+            <div className="mt-5 flex flex-col items-center gap-1 text-xs text-muted-foreground md:flex-row md:items-start md:gap-4" dir="ltr">
               <a
                 href={whatsappBusinessUrl(
                   "مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.",
