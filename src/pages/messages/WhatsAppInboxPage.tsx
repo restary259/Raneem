@@ -407,7 +407,7 @@ export default function WhatsAppInboxPage({
   if (inboxOnly) {
     const advisorName = active?.lead.assigned_advisor ? staff.find((member) => member.id === active.lead.assigned_advisor)?.full_name ?? null : null;
     return (
-      <div dir={rtl ? "rtl" : "ltr"} className="mx-auto flex h-full w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden">
+      <div dir={rtl ? "rtl" : "ltr"} className="mx-auto flex h-full w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden pb-0">
         <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>
         <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[300px_minmax(0,1fr)_300px]">
           {/* Conversations */}
@@ -432,8 +432,14 @@ export default function WhatsAppInboxPage({
               )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
             </ScrollArea>
           </Card>
-          {/* Chat */}
-          <div className="min-h-0 min-w-0">{conversationOnlyView}</div>
+          {/* Chat — desktop only when browsing the inbox; mobile uses the dedicated
+              conversation-only view after a thread is selected. */}
+          <div className={cn(
+            "min-h-0 min-w-0",
+            active ? "block" : "hidden lg:block",
+          )}>
+            {conversationOnlyView}
+          </div>
           {/* Lead */}
           <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
             {!active ? (
@@ -480,20 +486,57 @@ export default function WhatsAppInboxPage({
             )}
           </Card>
         </div>
-        {/* Mobile: list or chat fills the surface */}
-        <div className="lg:hidden">
+        {/* Mobile follows the internal Messages pattern:
+            list first, then a full-surface conversation after selection. */}
+        <div className="flex min-h-0 flex-1 lg:hidden">
           {!active && (
-            <Card className="mt-3 overflow-hidden rounded-xl shadow-none">
-              <div className="space-y-2 border-b p-3">
-                <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
+            <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-none">
+              <div className="shrink-0 space-y-2 border-b p-3">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="ps-8"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder={t("filters.search")}
+                  />
+                </div>
               </div>
-              <ScrollArea className="max-h-[60vh]">
-                {filtered.map((thread) => (
-                  <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className="flex w-full items-start gap-2 border-b p-3 text-start">
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}<p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</p></div>
-                    {thread.unread_count > 0 && <Badge className="rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
+              <ScrollArea className="min-h-0 flex-1">
+                {filtered.length ? filtered.map((thread) => (
+                  <button
+                    key={thread.id}
+                    type="button"
+                    onClick={() => selectConversation(thread.id)}
+                    className="flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {thread.lead.student_name || thread.lead.whatsapp_number}
+                      </p>
+                      {thread.lead.student_name && (
+                        <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">
+                          {thread.lead.whatsapp_number}
+                        </p>
+                      )}
+                      <p className="truncate text-xs text-muted-foreground">
+                        {thread.last_message_preview ?? ""}
+                      </p>
+                    </div>
+                    {thread.unread_count > 0 && (
+                      <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">
+                        {thread.unread_count}
+                      </Badge>
+                    )}
                   </button>
-                ))}
+                )) : (
+                  <EmptyState
+                    title={t("empty.title")}
+                    description={t("empty.description")}
+                    icon={MessageCircle}
+                    className="p-6"
+                  />
+                )}
               </ScrollArea>
             </Card>
           )}
