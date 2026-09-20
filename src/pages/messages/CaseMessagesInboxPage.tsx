@@ -76,7 +76,7 @@ export default function CaseMessagesInboxPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [selected, setSelected] = useState<{ type: "case" | "direct"; id: string } | null>(null);
+  const [selected, setSelected] = useState<{ type: "case" | "direct" | "whatsapp"; id: string } | null>(null);
 
   const [staffOpen, setStaffOpen] = useState(false);
   const online = useOnlineUsers();
@@ -216,7 +216,7 @@ export default function CaseMessagesInboxPage() {
   const isMuted = selected ? muted.has(`${selected.type}:${selected.id}`) : false;
 
   const toggleMute = async () => {
-    if (!selected || !user?.id) return;
+    if (!selected || !user?.id || selected.type === "whatsapp") return;
     try {
       await setThreadMuted(user.id, selected.type, selected.id, !isMuted);
       setMuted((prev) => {
@@ -472,7 +472,6 @@ export default function CaseMessagesInboxPage() {
                     allowInternal
                     className="flex min-h-0 flex-1 flex-col"
                   />
-                ) : (
                 ) : (
                   <DirectMessages
                     key={activeDirect!.threadId}

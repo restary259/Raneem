@@ -212,7 +212,7 @@ export default function StudentOverview({
     if (!phoneUsable || openingWhatsApp) return;
     setOpeningWhatsApp(true);
     try {
-      const result = await startWhatsAppConversation(phone, String(profile.full_name ?? ""), {
+      const result = await startWhatsAppConversation(phone ?? "", String(profile.full_name ?? ""), {
         ...(caseId ? { case_id: caseId } : {}),
         ...(!caseId && profile.id ? { profile_id: String(profile.id) } : {}),
       });

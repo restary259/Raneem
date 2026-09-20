@@ -5349,13 +5349,10 @@ export type Database = {
           last_inbound_at: string | null
           last_message_preview: string | null
           last_outbound_at: string | null
-          last_team_response_at: string | null
           lead_id: string
           priority: string
-          service_window_expires_at: string | null
-          sla_due_at: string | null
           snoozed_until: string | null
-          source_channel: string
+          source_channel: string | null
           state: string
           takeover_at: string | null
           takeover_by: string | null
@@ -5375,13 +5372,10 @@ export type Database = {
           last_inbound_at?: string | null
           last_message_preview?: string | null
           last_outbound_at?: string | null
-          last_team_response_at?: string | null
           lead_id: string
           priority?: string
-          service_window_expires_at?: string | null
-          sla_due_at?: string | null
           snoozed_until?: string | null
-          source_channel?: string
+          source_channel?: string | null
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
@@ -5401,13 +5395,10 @@ export type Database = {
           last_inbound_at?: string | null
           last_message_preview?: string | null
           last_outbound_at?: string | null
-          last_team_response_at?: string | null
           lead_id?: string
           priority?: string
-          service_window_expires_at?: string | null
-          sla_due_at?: string | null
           snoozed_until?: string | null
-          source_channel?: string
+          source_channel?: string | null
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
@@ -6619,22 +6610,6 @@ export type Database = {
           id: string
         }[]
       }
-      whatsapp_crm_context: {
-        Args: { p_whatsapp_lead_id: string }
-        Returns: {
-          case_full_name: string | null
-          case_id: string | null
-          case_reference: string | null
-          case_status: string | null
-          lead_full_name: string | null
-          lead_id: string | null
-          lead_source_type: string | null
-          lead_status: string | null
-          profile_full_name: string | null
-          profile_id: string | null
-          profile_student_status: string | null
-        }[]
-      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -7094,6 +7069,22 @@ export type Database = {
         Returns: boolean
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
+      whatsapp_crm_context: {
+        Args: { p_whatsapp_lead_id: string }
+        Returns: {
+          case_full_name: string
+          case_id: string
+          case_reference: string
+          case_status: string
+          lead_full_name: string
+          lead_id: string
+          lead_source_type: string
+          lead_status: string
+          profile_full_name: string
+          profile_id: string
+          profile_student_status: string
+        }[]
+      }
       whatsapp_identity_suggestions: {
         Args: { p_whatsapp_lead_id: string }
         Returns: {
