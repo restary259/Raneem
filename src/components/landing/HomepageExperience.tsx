@@ -89,7 +89,7 @@ const HomepageExperience = () => {
   const [activeService, setActiveService] = useState(0);
   const [activeLevel, setActiveLevel] = useState("C1");
   const [activeExam, setActiveExam] = useState("TestDaF");
-  const levelDetails = t("homepage.languagePrep.levels", { returnObjects: true }) as Record<string, { label: string; description: string }>;
+  const levelDetails = t("homepage.languagePrep.levels", { returnObjects: true }) as Record<string, { label: string; description: string; hours: string; duration: string }>;
   const examDetails = t("homepage.languagePrep.exams", { returnObjects: true }) as Record<string, { label: string; description: string }>;
 
   return (
@@ -365,9 +365,19 @@ const HomepageExperience = () => {
                     );
                   })}
                 </div>
-                <div className="mt-4 min-h-[92px] rounded-md border border-primary-foreground/10 bg-background/5 p-4">
+                <div className="mt-4 min-h-[118px] rounded-md border border-primary-foreground/10 bg-background/5 p-4">
                   <p className="text-xs font-bold text-brand">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
                   <p className="mt-2 text-sm leading-6 text-primary-foreground/70">{levelDetails[activeLevel]?.description}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/10 bg-primary-foreground/[0.04] px-3 py-1.5 text-xs font-semibold text-primary-foreground/80">
+                      <span aria-hidden="true">⏱</span>
+                      {levelDetails[activeLevel]?.hours}
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/[0.08] px-3 py-1.5 text-xs font-semibold text-primary-foreground/80">
+                      <span aria-hidden="true">◷</span>
+                      {levelDetails[activeLevel]?.duration}
+                    </span>
+                  </div>
                 </div>
               </div>
 
