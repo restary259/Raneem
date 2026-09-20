@@ -385,7 +385,29 @@
     "languagePrep": {
       "eyebrow": "LANGUAGE PREPARATION",
       "title": "German becomes a clear progression",
-      "body": "Build the language level, take the right exam, then move toward the academic route that fits your profile."
+      "body": "Build the language level, take the right exam, then move toward the academic route that fits your profile.",
+      "levels": {
+        "A1": {
+          "label": "A1 · Starter",
+          "description": "Basic everyday German for simple communication."
+        },
+        "A2": {
+          "label": "A2 · Elementary",
+          "description": "Handle familiar situations and build a stronger base."
+        },
+        "B1": {
+          "label": "B1 · Intermediate",
+          "description": "Communicate independently in everyday and study-related situations."
+        },
+        "B2": {
+          "label": "B2 · Upper intermediate",
+          "description": "Follow more complex German and prepare for academic communication."
+        },
+        "C1": {
+          "label": "C1 · Academic",
+          "description": "Advanced German for higher-education contexts and academic exams."
+        }
+      }
     },
     "trust": {
       "eyebrow": "CLARITY BUILDS TRUST",
