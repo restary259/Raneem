@@ -1,4 +1,4 @@
-// DARB service worker — v5.0.0 (TanStack Start migration)
+// DARB service worker — v5.0.1 (brand icon refresh)
 //
 // This worker replaces the old caching worker at the SAME URL so returning
 // browsers pick it up automatically on their next online visit.
@@ -13,7 +13,7 @@
 //     are carried over verbatim, so existing push subscriptions keep working
 //     without users re-granting permission.
 
-const CACHE_VERSION = '5.0.0';
+const CACHE_VERSION = '5.0.1';
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());

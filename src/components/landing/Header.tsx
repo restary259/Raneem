@@ -6,6 +6,7 @@ import DesktopNav from './DesktopNav';
 import MobileNav from './MobileNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useDirection } from '@/hooks/useDirection';
+import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
 
 const Header = () => {
   const { t } = useTranslation();
@@ -19,7 +20,7 @@ const Header = () => {
           <div className="flex items-center flex-shrink-0 min-w-0">
             <Link to="/" className="flex items-center gap-2 whitespace-nowrap flex-shrink-0">
               <img 
-                src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png" 
+                src={darbLogoAsset.url}
                 alt={t('loader.brand')} 
                 className="h-8 w-auto flex-shrink-0 object-contain md:h-10"
                 style={{ minWidth: '2rem' }}

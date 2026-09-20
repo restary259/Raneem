@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/landing/Header';
@@ -94,7 +95,7 @@ const ResourcesPage = () => {
             name: 'Darb Study Pathways',
             logo: {
               '@type': 'ImageObject',
-              url: 'https://darb.agency/lovable-uploads/78047579-6b53-42e9-bf6f-a9e19a9e4aba.png',
+              url: `https://darb.agency${darbLogoAsset.url}`,
             },
           },
         }}
