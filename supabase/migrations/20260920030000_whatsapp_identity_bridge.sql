@@ -210,7 +210,7 @@ BEGIN
   UPDATE public.whatsapp_leads
   SET linked_lead_id = v_new_id,
       identity_confirmed_by = NULL,
-      identity_confirmed_at = now(),
+      identity_confirmed_at = NULL,
       updated_at = now()
   WHERE id = p_whatsapp_lead_id;
 
