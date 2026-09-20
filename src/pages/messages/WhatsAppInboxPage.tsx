@@ -122,16 +122,25 @@ export default function WhatsAppInboxPage({
     try { setThreads(await listWhatsAppThreads()); }
     catch { toast({ variant: "destructive", description: t("errors.load") }); }
   }, [t, toast]);
+  // A burst of inbound rows (message + conversation + status) must cost one refetch, not three.
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queueRefreshThreads = useCallback(() => {
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => { void refreshThreads(); }, 300);
+  }, [refreshThreads]);
 
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
     const channel = supabase.channel("whatsapp-workspace")
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, refreshThreads)
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, refreshThreads)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "whatsapp_messages" }, refreshThreads)
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, queueRefreshThreads)
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, queueRefreshThreads)
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages" }, queueRefreshThreads)
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, [refreshThreads]);
+    return () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      void supabase.removeChannel(channel);
+    };
+  }, [queueRefreshThreads]);
 
   const active = threads.find((x) => x.id === selectedId) ?? null;
   useEffect(() => {
