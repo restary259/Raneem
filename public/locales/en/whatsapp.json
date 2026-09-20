@@ -285,7 +285,9 @@
     "scheduleHelp": "Choose an approved utility template and a future time. The follow-up stays server-side and will be cancelled if the student replies.",
     "when": "Send at",
     "invalidTime": "Choose a future time.",
-    "scheduled": "Follow-up scheduled."
+    "scheduled": "Follow-up scheduled.",
+    "custom": "Custom",
+    "customHelp": "Choose exactly when this conversation should return to the team queue."
   },
   "quickActions": {
     "title": "Quick replies"
