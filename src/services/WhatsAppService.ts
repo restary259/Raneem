@@ -347,6 +347,24 @@ export async function createWhatsAppMarketingCampaign(input: {
   return String(data);
 }
 
+/**
+ * Kicks the server-side marketing worker after an immediate campaign is created.
+ * The worker remains cron-driven for subsequent batches/retries, so a transient
+ * kick failure does not cancel or lose the campaign.
+ */
+export async function dispatchWhatsAppMarketingCampaigns() {
+  const { data, error } = await supabase.functions.invoke("whatsapp-marketing-dispatch", {
+    body: {},
+  });
+  if (error) throw new Error(await readFunctionError(error));
+  return data as {
+    processed: number;
+    sent: number;
+    cancelled: number;
+    failed: number;
+  };
+}
+
 export async function listWhatsAppMarketingCampaigns(limit = 50): Promise<WhatsAppMarketingCampaign[]> {
   const { data, error } = await supabase.rpc("whatsapp_list_marketing_campaigns", {
     p_limit: limit,
