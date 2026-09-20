@@ -2,7 +2,6 @@ import React from 'react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { GraduationCap, Building2, Heart } from 'lucide-react';
 import UniversityCard from '@/components/educational/UniversityCard';
 import LanguageSchoolCard from '@/components/educational/LanguageSchoolCard';
@@ -10,6 +9,7 @@ import ServiceCard from '@/components/educational/ServiceCard';
 import { universities, languageSchools, services } from '@/data/educationalDestinations';
 import SEOHead from '@/components/common/SEOHead';
 import DarbPageHero from '@/components/common/DarbPageHero';
+import DarbContactCta from '@/components/common/DarbContactCta';
 import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 
 import { useTranslation } from 'react-i18next';
@@ -55,16 +55,7 @@ const EducationalDestinationsPage = () => {
           </div>
         </div>
       </div>
-      <section className="py-20 text-white bg-slate-900">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">{t('educational.edCtaTitle')}</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">{t('educational.edCtaSubtitle')}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white hover:bg-gray-100 text-zinc-950">{t('educational.edCtaButton1')}</Button>
-            <Button size="lg" variant="outline" className="border-white text-slate-950 bg-slate-50">{t('educational.edCtaButton2')}</Button>
-          </div>
-        </div>
-      </section>
+      <DarbContactCta />
       <Footer />
     </div>;
 };
