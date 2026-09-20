@@ -61,7 +61,7 @@ export default function SegmentedTabs({ items, className }: SegmentedTabsProps) 
         onScroll={measure}
         className="overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <TabsList className={cn("flex h-10 w-fit min-w-full mx-auto justify-center gap-1 sm:gap-2", className)}>
+        <TabsList className={cn("flex h-10 w-fit min-w-full mx-auto justify-center gap-1 bg-transparent p-0 sm:gap-2", className)}>
           {items.map((item) => (
             <TabsTrigger
               key={item.value}
