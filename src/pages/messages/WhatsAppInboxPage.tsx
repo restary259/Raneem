@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, AlertCircle, ArrowLeft, ArrowRight, Bot, CalendarClock, Check, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, PanelRightClose, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,6 +25,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { formatThreadTime, initials } from "@/lib/chatFormat";
+import { deliveryStatusKind, groupWhatsAppMessages } from "@/lib/whatsappChat";
 import { formatDuration, isWhatsAppSlaOverdue, isWhatsAppSnoozed, normalizeWhatsAppState, serviceWindowRemaining } from "@/lib/whatsappOperational";
 import { isDarbBusinessHours } from "@/lib/whatsappBusinessHours";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
@@ -158,6 +161,8 @@ export default function WhatsAppInboxPage({
   // instead of only seeing their phone number.
   const [nameDraft, setNameDraft] = useState("");
   const [editingName, setEditingName] = useState(false);
+  // Desktop toggle that collapses the "Student file" panel so the chat can use the full width.
+  const [showLeadPanel, setShowLeadPanel] = useState(true);
 
   useChatFullscreen(!!mobile && !!selectedId);
 
@@ -299,6 +304,18 @@ export default function WhatsAppInboxPage({
       return true;
     });
   }, [threads, query, teamMode, inboxTab, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now, user?.id]);
+
+  // Consecutive same-direction messages join one bubble group (WhatsApp-style).
+  const messageGroups = useMemo(() => groupWhatsAppMessages(messages), [messages]);
+
+  // Local preview thumbnail for an attachment the staff member has not sent yet.
+  const attachmentPreviewUrl = useMemo(
+    () => (attachment?.type.startsWith("image/") ? URL.createObjectURL(attachment) : null),
+    [attachment],
+  );
+  useEffect(() => {
+    if (attachmentPreviewUrl) return () => URL.revokeObjectURL(attachmentPreviewUrl);
+  }, [attachmentPreviewUrl]);
 
   const saveConversation = async (patch: Parameters<typeof updateConversation>[1]) => {
     if (!active) return;
@@ -566,6 +583,11 @@ export default function WhatsAppInboxPage({
               <Button size="icon" variant="ghost" onClick={closeConversation} aria-label={t("actions.back")}>
                 <Back className="h-4 w-4" />
               </Button>
+              <Avatar className="h-9 w-9 shrink-0">
+                <AvatarFallback className="bg-brand/10 text-[10px] text-brand">
+                  {active.lead.student_name?.trim() ? initials(active.lead.student_name) : <UserRound className="h-4 w-4 text-muted-foreground" />}
+                </AvatarFallback>
+              </Avatar>
               <div className="min-w-0 flex-1">
                 {editingName ? (
                   <Input
@@ -589,8 +611,21 @@ export default function WhatsAppInboxPage({
                     <Pencil className="h-3 w-3 shrink-0 text-muted-foreground" />
                   </button>
                 )}
-                <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
+                <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                  <span dir="ltr" className="truncate text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</span>
+                  <span
+                    className={cn("h-1.5 w-1.5 shrink-0 rounded-full", businessHoursOpen ? "bg-emerald-500" : "bg-red-500")}
+                    title={businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}
+                    aria-label={businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}
+                  />
+                  <span className="hidden shrink-0 text-[10px] text-muted-foreground md:inline">{businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}</span>
+                </div>
               </div>
+              {!conversationOnly && (
+                <Button size="icon" variant="ghost" className="hidden lg:inline-flex" onClick={() => setShowLeadPanel((value) => !value)} aria-label={t("conversation.panelToggle")} title={t("conversation.panelToggle")}>
+                  <PanelRightClose className="h-4 w-4" />
+                </Button>
+              )}
               {!teamMode && (
                   <Badge variant={active.lead.marketing_consent_status === "withdrawn" ? "destructive" : active.lead.marketing_consent_status === "granted" ? "secondary" : "outline"} className="hidden shrink-0 text-[10px] md:inline-flex">
                     {t(`consent.${active.lead.marketing_consent_status ?? "unknown"}`, active.lead.marketing_consent_status ?? "unknown")}
@@ -612,21 +647,57 @@ export default function WhatsAppInboxPage({
             <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
             <Conversation className="min-h-0 flex-1">
               <ConversationContent className="gap-3">
-                {messages.length ? messages.map((m, index) => {
-                  const previous = index > 0 ? messages[index - 1] : null;
-                  const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
-                  const body = m.body?.trim();
-                  const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
+                {messageGroups.length ? messageGroups.map((group, groupIndex) => {
+                  const previousGroup = groupIndex > 0 ? messageGroups[groupIndex - 1] : null;
+                  const newDay = !previousGroup || previousGroup.day !== group.day;
+                  const inbound = group.direction === "inbound";
+                  const last = group.messages[group.messages.length - 1];
+                  const displayName = active?.lead.student_name?.trim();
                   return (
-                    <div key={m.id} className="space-y-3">
-                      {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
-                      <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                        <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
-                          {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
-                          {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span>
-                        </MessageContent>
-                      </Message>
+                    <div key={last.id}>
+                      {newDay && (
+                        <div className="flex justify-center pb-2">
+                          <span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(group.messages[0].created_at, i18n.language)}</span>
+                        </div>
+                      )}
+                      <div className={cn("flex w-full items-end gap-1.5", inbound ? "justify-start" : "justify-end")}>
+                        {inbound && (
+                          <Avatar className="mb-6 h-6 w-6 shrink-0">
+                            <AvatarFallback className="bg-muted text-[9px]">{displayName ? initials(displayName) : <UserRound className="h-3 w-3 text-muted-foreground" />}</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div className="flex w-full min-w-0 flex-col gap-1">
+                          {group.messages.map((m, messageIndex) => {
+                            const isLastInGroup = messageIndex === group.messages.length - 1;
+                            const body = m.body?.trim();
+                            const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
+                            const kind = deliveryStatusKind(m.delivery_status);
+                            return (
+                              <Message key={m.id} from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
+                                <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
+                                  {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
+                                  {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
+                                  {isLastInGroup && (
+                                    <span className="flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
+                                      {fmt(m.created_at, i18n.language)}
+                                      {kind === "failed" ? (
+                                        <>
+                                          <AlertCircle className="h-3 w-3 text-red-500" aria-hidden />
+                                          <span className="text-red-500">{m.delivery_status}</span>
+                                        </>
+                                      ) : kind === "sent" ? (
+                                        <Check className="h-3 w-3" aria-hidden />
+                                      ) : (
+                                        <span>{m.delivery_status}</span>
+                                      )}
+                                    </span>
+                                  )}
+                                </MessageContent>
+                              </Message>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   );
                 }) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}
@@ -671,10 +742,20 @@ export default function WhatsAppInboxPage({
                       <Paperclip className="h-4 w-4" />
                     </Button>
                     {attachment ? (
-                      <span className="flex min-w-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
-                        <span className="truncate max-w-[160px]">{attachment.name}</span>
-                        <button type="button" onClick={() => setAttachment(null)} aria-label={t("actions.remove", "Remove")}><X className="h-3 w-3" /></button>
-                      </span>
+                      attachmentPreviewUrl ? (
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <span className="relative inline-flex">
+                            <img src={attachmentPreviewUrl} alt={attachment.name} className="h-10 w-10 rounded-md border object-cover" />
+                            <button type="button" onClick={() => setAttachment(null)} aria-label={t("actions.remove", "Remove")} className="absolute -top-1.5 -end-1.5 rounded-full bg-background p-0.5 shadow-sm"><X className="h-3 w-3" /></button>
+                          </span>
+                          <span className="max-w-[160px] truncate text-[11px] text-muted-foreground">{attachment.name}</span>
+                        </span>
+                      ) : (
+                        <span className="flex min-w-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                          <span className="max-w-[160px] truncate">{attachment.name}</span>
+                          <button type="button" onClick={() => setAttachment(null)} aria-label={t("actions.remove", "Remove")}><X className="h-3 w-3" /></button>
+                        </span>
+                      )
                     ) : (
                       <span className="truncate text-[11px] text-muted-foreground">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span>
                     )}
@@ -683,7 +764,8 @@ export default function WhatsAppInboxPage({
                 </PromptInputFooter>
               </PromptInput>
               {windowClosed && (
-                <div className="space-y-2">
+                <div className="space-y-2 rounded-md border border-amber-500/20 p-2">
+                  <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-300">{t("conversation.templateHeading")}</h4>
                   {sendableTemplates.length ? (
                     <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
                       <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
@@ -728,7 +810,7 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-      <div className={cn("grid min-h-0 flex-1 gap-3", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+      <div className={cn("grid min-h-0 flex-1 gap-3", active ? (showLeadPanel ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[300px_minmax(0,1fr)]") : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
         <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
@@ -755,9 +837,21 @@ export default function WhatsAppInboxPage({
               instead of stretching the row past the panel. */}
           <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
             {filtered.length ? filtered.map((thread) => (
-              <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
+              <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-center gap-2.5 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
+                <Avatar className="h-9 w-9 shrink-0">
+                  <AvatarFallback className="bg-muted text-[10px]">{thread.lead.student_name ? initials(thread.lead.student_name) : <UserRound className="h-4 w-4 text-muted-foreground" />}</AvatarFallback>
+                </Avatar>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      {(thread.unread_count ?? 0) > 0 && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden />}
+                      <p className={cn("truncate text-sm", (thread.unread_count ?? 0) > 0 ? "font-semibold" : "font-medium")}>{thread.lead.student_name || thread.lead.whatsapp_number}</p>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1.5 self-start">
+                      {threadNeedsReply(thread) && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title={t("quick.needsReply")} aria-label={t("quick.needsReply")} />}
+                      <span className="text-[10px] text-muted-foreground">{formatThreadTime(thread.last_inbound_at ?? thread.last_outbound_at)}</span>
+                    </span>
+                  </div>
                   {thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}
                   <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
                   {!simplified && (
@@ -784,7 +878,7 @@ export default function WhatsAppInboxPage({
         </div>
         {/* Lead — quiet for the team (name, stage, CRM context, notes);
             full contact + operational metadata for admins. */}
-        <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", active ? "hidden lg:flex" : "hidden")}>
+        <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", active && showLeadPanel ? "hidden lg:flex" : "hidden")}>
           {!active ? null : (
             <>
               <div className="shrink-0 border-b p-4">
@@ -917,12 +1011,24 @@ export default function WhatsAppInboxPage({
                   key={thread.id}
                   type="button"
                   onClick={() => selectConversation(thread.id)}
-                  className="flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50"
+                  className="flex w-full items-center gap-2.5 border-b p-3 text-start transition-colors hover:bg-muted/50"
                 >
+                  <Avatar className="h-9 w-9 shrink-0">
+                    <AvatarFallback className="bg-muted text-[10px]">{thread.lead.student_name ? initials(thread.lead.student_name) : <UserRound className="h-4 w-4 text-muted-foreground" />}</AvatarFallback>
+                  </Avatar>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {thread.lead.student_name || thread.lead.whatsapp_number}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        {(thread.unread_count ?? 0) > 0 && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" aria-hidden />}
+                        <p className={cn("truncate text-sm", (thread.unread_count ?? 0) > 0 ? "font-semibold" : "font-medium")}>
+                          {thread.lead.student_name || thread.lead.whatsapp_number}
+                        </p>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1.5 self-start">
+                        {threadNeedsReply(thread) && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title={t("quick.needsReply")} aria-label={t("quick.needsReply")} />}
+                        <span className="shrink-0 text-[10px] text-muted-foreground">{formatThreadTime(thread.last_inbound_at ?? thread.last_outbound_at)}</span>
+                      </span>
+                    </div>
                     {thread.lead.student_name && (
                       <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">
                         {thread.lead.whatsapp_number}
