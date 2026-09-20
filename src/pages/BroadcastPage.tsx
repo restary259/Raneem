@@ -2,6 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import Header from '@/components/landing/Header';
 import HeroVideo from '@/components/broadcast/HeroVideo';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import VideoCategories from '@/components/broadcast/VideoCategories';
 import VideoGallery from '@/components/broadcast/VideoGallery';
 import SubmitVideo from '@/components/broadcast/SubmitVideo';
@@ -40,6 +42,14 @@ const BroadcastPage = () => {
       <SEOHead title={t('seo.broadcastTitle', { ns: 'common' })} description={t('seo.broadcastDesc', { ns: 'common' })} />
       <Header />
       <main>
+        <DarbPageHero
+          compact
+          eyebrow={t('broadcastHero.eyebrow', { ns: 'broadcast', defaultValue: 'DARB BROADCAST' })}
+          imageUrl={DARB_PUBLIC_HERO_IMAGES.journal}
+          imageAlt={t('broadcastHero.imageAlt', { ns: 'broadcast', defaultValue: 'Bright German study and media environment' })}
+          title={t('broadcastHero.title', { ns: 'broadcast', defaultValue: 'Germany through the DARB journey' })}
+          subtitle={t('broadcastHero.subtitle', { ns: 'broadcast', defaultValue: 'Educational videos, updates and stories for students preparing for Germany.' })}
+        />
         <HeroVideo post={featuredVideo} />
         
         <section className="py-8 md:py-16">
