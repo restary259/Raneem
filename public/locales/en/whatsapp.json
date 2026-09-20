@@ -65,7 +65,8 @@
     "chooseTemplate": "Choose an approved template",
     "templateField": "Template field {{number}}",
     "send": "Send with WhatsApp",
-    "sent": "Message accepted by WhatsApp"
+    "sent": "Message accepted by WhatsApp",
+    "noTemplateReleased": "No approved template has been released yet. Ask an administrator to make one available."
   },
   "profile": {
     "title": "Lead profile",
@@ -143,7 +144,9 @@
       "consultation_confirmation": "Consultation confirmation",
       "document_reminder": "Document reminder",
       "application_update": "Application update"
-    }
+    },
+    "active": "Active",
+    "availableToTeam": "Available to team"
   },
   "actions": {
     "retry": "Retry",
