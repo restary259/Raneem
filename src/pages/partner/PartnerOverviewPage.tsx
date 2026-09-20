@@ -42,71 +42,78 @@ const startOfCurrentMonth = () => {
 };
 
 export default function PartnerOverviewPage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [cases, setCases] = useState<any[]>([]);
-  const [paidRewards, setPaidRewards] = useState<any[]>([]);
-  // null while the rate hasn't loaded — never invent a monetary default.
-  const [commissionRate, setCommissionRate] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
-  const [isPoolMode, setIsPoolMode] = useState(false);
-  const [visibilityMode, setVisibilityMode] = useState<ResolvedPartnerVisibilityMode>('partner_sources');
+  const userId = useAuthedUserId();
 
-  const load = useCallback(async (uid: string) => {
-    const [profRes, settingsRes, overrideRes, roleRes] = await Promise.all([
-      (supabase as any).from("profiles").select("full_name,email").eq("id", uid).maybeSingle(),
-      (supabase as any)
-        .from("platform_settings")
-        .select("partner_commission_rate,ambassador_commission_rate,partner_dashboard_show_all_cases")
-        .limit(1)
-        .maybeSingle(),
-      fetchPartnerVisibilityOverride(uid),
-      (supabase as any).rpc("get_my_role"),
-    ]);
+  // Cache-backed: the overview is the partner landing page and is revisited
+  // constantly, so it now renders from cache and refreshes in the background.
+  const { data, loading: isLoading } = useCachedData(
+    ["partner", "overview", userId],
+    async () => {
+      const uid = userId as string;
+      const [profRes, settingsRes, override, roleRes] = await Promise.all([
+        (supabase as any).from("profiles").select("full_name,email").eq("id", uid).maybeSingle(),
+        (supabase as any)
+          .from("platform_settings")
+          .select("partner_commission_rate,ambassador_commission_rate,partner_dashboard_show_all_cases")
+          .limit(1)
+          .maybeSingle(),
+        fetchPartnerVisibilityOverride(uid),
+        (supabase as any).rpc("get_my_role"),
+      ]);
 
-    if (profRes.data) setProfile(profRes.data);
+      const isAmbassador = roleRes.data === "ambassador";
+      const rate = isAmbassador
+        ? (settingsRes.data?.ambassador_commission_rate ?? 0)
+        : (settingsRes.data?.partner_commission_rate ?? 0);
+      const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
 
-    const isAmbassador = roleRes.data === "ambassador";
-    const rate = isAmbassador
-      ? (settingsRes.data?.ambassador_commission_rate ?? 0)
-      : (settingsRes.data?.partner_commission_rate ?? 0);
-    const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
-    const override = overrideRes;
-    setCommissionRate(Number(override?.commission_amount ?? rate));
+      const mode = resolvePartnerVisibilityMode(override, globalShowAll);
+      const sources = resolveVisibilitySources(override, globalShowAll);
 
-    const mode = resolvePartnerVisibilityMode(override, globalShowAll);
-    const sources = resolveVisibilitySources(override, globalShowAll);
-    setIsPoolMode(mode === 'partner_sources');
-    setVisibilityMode(mode);
+      // Rewards and cases are independent of each other — fetched together
+      // instead of one after the other.
+      const [rewardsRes, casesRes] = await Promise.all([
+        (supabase as any)
+          .from("rewards")
+          .select("amount,status,paid_at,admin_notes")
+          .eq("user_id", uid)
+          .eq("status", "paid")
+          .like("admin_notes", "Partner commission from case%"),
+        // Cases through the partner reader (reduced columns — no phone/notes)
+        (supabase as any).rpc("get_partner_pool_cases", { p_sources: sources }),
+      ]);
+      if (casesRes.error) console.error("cases fetch error:", casesRes.error);
 
-    // Fetch actual paid rewards from rewards table
-    const { data: rewardsData } = await (supabase as any)
-      .from("rewards")
-      .select("amount,status,paid_at,admin_notes")
-      .eq("user_id", uid)
-      .eq("status", "paid")
-      .like("admin_notes", "Partner commission from case%");
-    setPaidRewards(rewardsData || []);
+      return {
+        profile: profRes.data ?? null,
+        // null while the rate hasn't loaded — never invent a monetary default.
+        commissionRate: Number(override?.commission_amount ?? rate),
+        isPoolMode: mode === "partner_sources",
+        visibilityMode: mode as ResolvedPartnerVisibilityMode,
+        paidRewards: (rewardsRes.data || []) as any[],
+        cases: (casesRes.data || []) as any[],
+      };
+    },
+    { enabled: !!userId },
+  );
 
-    // Fetch cases through the partner reader (reduced columns — no phone/notes)
-    const { data: casesData, error: casesErr } = await (supabase as any).rpc(
-      "get_partner_pool_cases",
-      { p_sources: sources }
-    );
-    if (casesErr) console.error("cases fetch error:", casesErr);
-    setCases(casesData || []);
-    setIsLoading(false);
-  }, []);
+  const profile = data?.profile ?? null;
+  const cases = data?.cases ?? EMPTY_ROWS;
+  const paidRewards = data?.paidRewards ?? EMPTY_ROWS;
+  const commissionRate = data?.commissionRate ?? null;
+  const isPoolMode = data?.isPoolMode ?? false;
+  const visibilityMode: ResolvedPartnerVisibilityMode = data?.visibilityMode ?? "partner_sources";
 
-  const userId = useAuthedUserId(load);
-
-  useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("platform_settings", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("rewards", () => { if (userId) load(userId); }, !!userId);
+  // Targeted invalidation: a row change refreshes this one cached snapshot
+  // rather than re-running the page's whole load and blanking the KPIs.
+  useRealtimeInvalidate("partner_commission_overrides", ["partner", "overview", userId], !!userId);
+  useRealtimeInvalidate("platform_settings", ["partner", "overview", userId], !!userId);
+  useRealtimeInvalidate("cases", ["partner", "overview", userId], !!userId);
+  useRealtimeInvalidate("rewards", ["partner", "overview", userId], !!userId);
 
   if (!userId || isLoading) {
     return (
