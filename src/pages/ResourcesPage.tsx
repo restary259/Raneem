@@ -9,7 +9,7 @@ import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
 import DarbPageHero from '@/components/common/DarbPageHero';
 import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
-import { DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
+import { Calculator, DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 import { useInView } from 'react-intersection-observer';
 
@@ -69,8 +69,9 @@ const ResourcesPage = () => {
   const { t } = useTranslation(['resources', 'common']);
 
   const tools = [
-    { id: 'currency-converter', title: t('currencyComparator.title'), description: t('currencyComparator.description'), icon: DollarSign, path: '/resources/currency-converter' },
     { id: 'bagrut-calculator', title: t('gpaCalculator.title'), description: t('gpaCalculator.description'), icon: GraduationCap, path: '/resources/bagrut-calculator' },
+    { id: 'cost-calculator', title: t('costCalculator.title'), description: t('costCalculator.description'), icon: Calculator, path: '/resources/cost-calculator' },
+    { id: 'currency-converter', title: t('currencyComparator.title'), description: t('currencyComparator.description'), icon: DollarSign, path: '/resources/currency-converter' },
     { id: 'lebenslauf-builder', title: t('lebenslaufBuilder.title'), description: t('lebenslaufBuilder.description'), icon: FileText, path: '/resources/lebenslauf-builder' },
   ];
 
