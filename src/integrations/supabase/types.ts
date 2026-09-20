@@ -3560,7 +3560,6 @@ export type Database = {
           updated_by_student_at: string | null
           visa_status: string
           whatsapp_inbox_enabled: boolean
-          internal_team_chat_enabled: boolean
         }
         Insert: {
           agent_can_create_accounts?: boolean
@@ -3630,7 +3629,6 @@ export type Database = {
           updated_by_student_at?: string | null
           visa_status?: string
           whatsapp_inbox_enabled?: boolean
-          internal_team_chat_enabled?: boolean
         }
         Update: {
           agent_can_create_accounts?: boolean
@@ -3700,7 +3698,6 @@ export type Database = {
           updated_by_student_at?: string | null
           visa_status?: string
           whatsapp_inbox_enabled?: boolean
-          internal_team_chat_enabled?: boolean
         }
         Relationships: [
           {
@@ -6788,14 +6785,6 @@ export type Database = {
           source_url: string
         }[]
       }
-      get_team_chat_directory: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          full_name: string
-          id: string
-          role: string
-        }[]
-      }
       get_staff_directory: {
         Args: never
         Returns: {
@@ -6866,7 +6855,6 @@ export type Database = {
         Returns: boolean
       }
       has_whatsapp_inbox_access: { Args: { p_user: string }; Returns: boolean }
-      has_internal_team_chat_access: { Args: { p_user: string }; Returns: boolean }
       insert_lead_from_apply: {
         Args: {
           p_accommodation?: boolean
@@ -7259,7 +7247,6 @@ export type Database = {
       }
       settle_cash_collection: { Args: { p_case_id: string }; Returns: Json }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
-      start_team_chat_thread: { Args: { p_other_user: string }; Returns: string }
       start_student_team_member_thread: { Args: never; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
       submit_case_payment: {
