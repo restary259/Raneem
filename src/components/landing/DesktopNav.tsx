@@ -13,7 +13,7 @@ import {
 import ListItem from './ListItem';
 import { useDirection } from '@/hooks/useDirection';
 
-const DesktopNav = () => {
+const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   const { t } = useTranslation();
   const { dir } = useDirection();
 
@@ -57,8 +57,12 @@ const DesktopNav = () => {
     </NavigationMenuContent>
   );
 
-  const triggerClass = 'nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold';
-  const linkClass = navigationMenuTriggerStyle() + ' nav-item rounded-none border-b-2 border-brand bg-muted/60 font-semibold text-brand-strong hover:bg-muted';
+  const triggerClass = transparent
+    ? 'nav-item rounded-none border-b-2 border-brand bg-primary/95 text-primary-foreground hover:bg-primary font-semibold'
+    : 'nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold';
+  const linkClass = navigationMenuTriggerStyle() + (transparent
+    ? ' nav-item rounded-none border-b-2 border-brand bg-primary/95 font-semibold text-primary-foreground hover:bg-primary'
+    : ' nav-item rounded-none border-b-2 border-brand bg-muted/60 font-semibold text-brand-strong hover:bg-muted');
 
   return (
     <div className="flex justify-center w-full" dir={dir}>
