@@ -76,7 +76,7 @@
     "step4Title": "הכנה לאוניברסיטה",
     "step4Body": "חברו את תוכנית השפה כבר מההתחלה לאוניברסיטה ולתחום הלימודים העתידי שלכם.",
     "citiesEyebrow": "יעדי שנת השפה",
-    "citiesTitle": "ארבע ערים. ארבע דרכים שונות לחוות את גרמניה.",
+    "citiesTitle": "חמש ערים. חמש דרכים שונות לחוות את גרמניה.",
     "citiesBody": "אלה הערים שמוצגות כיום במסגרת מסלול שנת השפה של DARB.",
     "exploreCity": "לגלות את העיר",
     "cityLife": "העיר וחיי בית הספר",
@@ -124,6 +124,13 @@
         "highlight1": "בירה בינלאומית",
         "highlight2": "תרבות ואירועים",
         "highlight3": "מערכת אוניברסיטאית גדולה"
+      },
+      "munster": {
+        "region": "נורדריין-וסטפאליה",
+        "description": "עיר אוניברסיטאית חיה עם מרכז היסטורי, תרבות אופניים חזקה ואווירה סטודנטיאלית בינלאומית.",
+        "highlight1": "עיר אוניברסיטאית",
+        "highlight2": "העיר העתיקה ההיסטורית",
+        "highlight3": "חיי יום-יום ידידותיים לאופניים"
       }
     },
     "sources": {
@@ -133,7 +140,8 @@
       "schoolCulture": "GoAcademy — עיר ותרבות",
       "schoolHome": "אתר המוסד",
       "schoolGallery": "גלריית Perfekt Deutsch",
-      "schoolInfo": "מידע VICTORIA Academy"
+      "schoolInfo": "מידע VICTORIA Academy",
+      "schoolKapitoCourses": "קורסים ובחינות KAPITO"
     },
     "schools": {
       "fu": {
@@ -185,6 +193,16 @@
         "serviceHousing": "מגורים במרכז ברלין",
         "serviceActivities": "פעילויות מאורגנות",
         "serviceUniversity": "סביבה אקדמית המקושרת לאוניברסיטה"
+      },
+      "kapito": {
+        "description": "KAPITO במינסטר מציעה קורסי גרמנית מ-A1 עד C1, הכנה ללימודים באוניברסיטה וסביבת למידה אישית לסטודנטים בינלאומיים.",
+        "credentialsNote": "האתר הנוכחי של KAPITO מציין שהיא מרכז בחינות מורשה ל-telc ול-TestDaF, ומציעה הכנה ל-telc, TestDaF ו-DSH.",
+        "focusLevels": "קורסי גרמנית A1–C1",
+        "focusUniversity": "גרמנית והכנה ללימודים באוניברסיטה",
+        "focusSupport": "תמיכה אישית בסביבת לימודים בינלאומית",
+        "serviceHousing": "אפשרויות לסיוע וארגון מגורים",
+        "serviceGuidance": "סיוע בנושא ויזה, ביטוח ושאלות לימודים",
+        "serviceActivities": "תוכנית תרבות ופנאי ותמיכה בשיעורי בית"
       }
     },
     "selectionEyebrow": "למה המוסדות האלה?",
@@ -245,6 +263,14 @@
         "serviceHousing": "מגורים במרכז ברלין",
         "serviceActivities": "פעילויות מאורגנות",
         "serviceUniversity": "סביבה אקדמית המקושרת לאוניברסיטה"
+      },
+      "kapito": {
+        "focusLevels": "קורסי גרמנית A1–C1",
+        "focusUniversity": "גרמנית והכנה ללימודים באוניברסיטה",
+        "focusSupport": "תמיכה אישית בסביבת לימודים בינלאומית",
+        "serviceHousing": "אפשרויות לסיוע וארגון מגורים",
+        "serviceGuidance": "סיוע בנושא ויזה, ביטוח ושאלות לימודים",
+        "serviceActivities": "תוכנית תרבות ופנאי ותמיכה בשיעורי בית"
       }
     },
     "journey": {
@@ -266,7 +292,7 @@
       "stage6Body": "עברו מהכנה לשונית לשלב ההגשה עבור הצעד האקדמי הבא."
     },
     "compareEyebrow": "תמונת מצב של הערים",
-    "compareTitle": "השוו בין ארבע הערים במבט אחד",
+    "compareTitle": "השוו בין חמש הערים במבט אחד",
     "compareBody": "תמונה עובדתית של יעדי DARB המוצגים כיום: אזור, מספר מוסדות השפה המוצגים, הקשר עירוני והמקור הרשמי לעיר.",
     "compareHeaders": {
       "city": "עיר",
