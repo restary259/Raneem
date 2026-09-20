@@ -37,24 +37,30 @@ export default function AgentStudentsPage() {
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const locale = i18n.language === "ar" ? "ar" : "en-US";
-  const [cases, setCases] = useState<AgentStudentCase[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
-  const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    // Single RPC: complete case list with server-attributed `src`.
-    // Replaces the previous two-step fetch (network RPC + direct cases query
-    // with a hard .limit(200)) and the client-side classifySource() fallthrough.
-    const { data, error } = await (supabase as any).rpc("get_my_agent_students");
-    if (error) console.error("agent students fetch error:", error);
-    setCases((data ?? []) as AgentStudentCase[]);
-    setLoading(false);
-  }, []);
+  const userId = useAuthedUserId();
 
-  const userId = useAuthedUserId(() => { load(); });
-  useRealtimeSubscription("cases", () => { load(); }, !!userId);
+  // Cache-backed so returning to this tab renders the previous list at once.
+  const { data, loading } = useCachedData(
+    ["agent", "students", userId],
+    async () => {
+      // Single RPC: complete case list with server-attributed `src`.
+      // Replaces the previous two-step fetch (network RPC + direct cases query
+      // with a hard .limit(200)) and the client-side classifySource() fallthrough.
+      const { data: rows, error } = await (supabase as any).rpc("get_my_agent_students");
+      if (error) console.error("agent students fetch error:", error);
+      return (rows ?? []) as AgentStudentCase[];
+    },
+    { enabled: !!userId },
+  );
+
+  const cases = data ?? EMPTY_CASES;
+
+  // Targeted invalidation instead of a page-wide reload.
+  useRealtimeInvalidate("cases", ["agent", "students", userId], !!userId);
 
   const sourceLabel = (s: SourceFilter) => {
     switch (s) {
