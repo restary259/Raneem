@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_follow_up_tasks (
   template_id uuid REFERENCES public.whatsapp_templates(id) ON DELETE SET NULL,
   template_parameters jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_by uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  origin text NOT NULL DEFAULT 'staff' CHECK (origin IN ('staff','appointment','case_event','after_hours','system')),
+  dedupe_key text,
   attempt_count integer NOT NULL DEFAULT 0 CHECK (attempt_count >= 0),
   max_attempts integer NOT NULL DEFAULT 3 CHECK (max_attempts BETWEEN 1 AND 10),
   last_error text,
@@ -24,6 +26,9 @@ CREATE INDEX IF NOT EXISTS whatsapp_follow_up_tasks_due_idx
 
 CREATE INDEX IF NOT EXISTS whatsapp_follow_up_tasks_conversation_idx
   ON public.whatsapp_follow_up_tasks (conversation_id, status, due_at);
+CREATE UNIQUE INDEX IF NOT EXISTS whatsapp_follow_up_tasks_dedupe_idx
+  ON public.whatsapp_follow_up_tasks (dedupe_key)
+  WHERE dedupe_key IS NOT NULL;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_follow_up_tasks TO authenticated;
 GRANT ALL ON public.whatsapp_follow_up_tasks TO service_role;
@@ -73,10 +78,10 @@ BEGIN
     AND status IN ('pending','processing');
 
   INSERT INTO public.whatsapp_follow_up_tasks (
-    conversation_id, kind, due_at, created_by
+    conversation_id, kind, due_at, created_by, origin
   )
   VALUES (
-    p_conversation_id, 'snooze_resume', p_until, auth.uid()
+    p_conversation_id, 'snooze_resume', p_until, auth.uid(), 'staff'
   )
   RETURNING id INTO v_task_id;
 
@@ -164,10 +169,10 @@ BEGIN
   END IF;
 
   INSERT INTO public.whatsapp_follow_up_tasks (
-    conversation_id, kind, due_at, template_id, template_parameters, created_by
+    conversation_id, kind, due_at, template_id, template_parameters, created_by, origin
   )
   VALUES (
-    p_conversation_id, 'template', p_due_at, p_template_id, coalesce(p_parameters,'[]'::jsonb), auth.uid()
+    p_conversation_id, 'template', p_due_at, p_template_id, coalesce(p_parameters,'[]'::jsonb), auth.uid(), 'staff'
   )
   RETURNING id INTO v_task_id;
 
