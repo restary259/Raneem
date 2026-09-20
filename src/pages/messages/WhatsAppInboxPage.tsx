@@ -346,10 +346,36 @@ export default function WhatsAppInboxPage({
               </ConversationContent>
               <ConversationScrollButton />
             </Conversation>
-            <div className="shrink-0 border-t p-3">
-              {requiresApprovedTemplate(active.last_inbound_at) ? (
+            <div className="shrink-0 space-y-2 border-t p-3">
+              {/* The typing area is always visible. Outside WhatsApp's 24-hour
+                  service window it is locked and the template picker takes over. */}
+              <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
+                <PromptInputTextarea
+                  value={composer}
+                  onChange={(event) => setComposer(event.target.value)}
+                  disabled={windowClosed || sending}
+                  placeholder={windowClosed ? t("conversation.composerLocked", "Replies are locked until the contact writes again — send an approved template below.") : t("conversation.composer")}
+                />
+                <PromptInputFooter>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <input ref={fileRef} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" onChange={(event) => { setAttachment(event.target.files?.[0] ?? null); event.target.value = ""; }} />
+                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8" disabled={windowClosed || sending} onClick={() => fileRef.current?.click()} aria-label={t("conversation.attach", "Attach a photo or file")}>
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    {attachment ? (
+                      <span className="flex min-w-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                        <span className="truncate max-w-[160px]">{attachment.name}</span>
+                        <button type="button" onClick={() => setAttachment(null)} aria-label={t("actions.remove", "Remove")}><X className="h-3 w-3" /></button>
+                      </span>
+                    ) : (
+                      <span className="truncate text-[11px] text-muted-foreground">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span>
+                    )}
+                  </div>
+                  <PromptInputSubmit status={sending ? "submitted" : undefined} disabled={windowClosed || sending || (!composer.trim() && !attachment)} aria-label={t("conversation.send")} />
+                </PromptInputFooter>
+              </PromptInput>
+              {windowClosed && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">{t("conversation.windowClosed")}</p>
                   {sendableTemplates.length ? (
                     <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
                       <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
@@ -361,11 +387,6 @@ export default function WhatsAppInboxPage({
                   {selectedTemplate && <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{selectedTemplateText}</p>{Array.from({ length: parameterCount }, (_, index) => <Input key={index} className="mt-2" value={templateParameters[index] ?? ""} onChange={(event) => setTemplateParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>}
                   <div className="flex justify-end"><Button disabled={!templateId || templateParameters.length < parameterCount || templateParameters.some((value) => !value.trim()) || sending} onClick={() => void sendReply()}><MessageCircle className="me-2 h-4 w-4" />{t("conversation.send")}</Button></div>
                 </div>
-              ) : (
-                <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
-                  <PromptInputTextarea value={composer} onChange={(event) => setComposer(event.target.value)} placeholder={t("conversation.composer")} />
-                  <PromptInputFooter><span className="text-[11px] text-muted-foreground">{t("conversation.windowOpen")}</span><PromptInputSubmit status={sending ? "submitted" : undefined} disabled={!composer.trim() || sending} aria-label={t("conversation.send")} /></PromptInputFooter>
-                </PromptInput>
               )}
             </div>
           </>
