@@ -381,6 +381,7 @@ BEGIN
       processed_at = CASE WHEN p_status IN ('sent','failed','cancelled') THEN now() ELSE NULL END,
       updated_at = now()
   WHERE id = p_recipient_id
+    AND status = 'processing'
   RETURNING campaign_id INTO v_campaign_id;
 
   UPDATE public.whatsapp_campaigns
