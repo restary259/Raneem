@@ -26,6 +26,7 @@ import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
 import { filterApplyNavItem } from "@/lib/partnerNav";
+import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
 
 import {
   LayoutDashboard,
@@ -231,16 +232,21 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const baseItems = NAV_CONFIG[role] ?? [];
+  const { canAccess: canAccessWhatsAppInbox } = useWhatsAppInboxAccess();
   // Partner/ambassador/agent: hide the built-in Apply form when the admin
   // toggle (profiles.apply_form_enabled) is off for this member.
   const applyGatedRole = role === "social_media_partner" || role === "ambassador" || role === "agent";
   const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
   const items: NavItem[] = useMemo(
-    () => filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled),
-    [baseItems, applyGatedRole, applyFormEnabled],
+    () => {
+      const filtered = filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled);
+      if (role !== "team_member" || canAccessWhatsAppInbox) return filtered;
+      return filtered.filter((item) => item.key !== "nav.staffInbox");
+    },
+    [baseItems, applyGatedRole, applyFormEnabled, role, canAccessWhatsAppInbox],
   );
 
-  const unreadMessages = useUnreadCaseMessages(true);
+  const unreadMessages = useUnreadCaseMessages(role === "team_member" ? canAccessWhatsAppInbox : true);
 
   const isItemActive = (item: NavItem): boolean => {
     if (!item.href) return false;
@@ -418,6 +424,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   // button + unread badge. Students have their own messages route too, but they
   // are gated through StudentOnboardingGate and rarely need the header shortcut
   // while in the checklist flow; the sidebar item remains their primary path.
+  const { canAccess: canAccessWhatsAppInbox } = useWhatsAppInboxAccess();
   const canMessage =
     role === "admin" ||
     role === "team_member" ||
@@ -474,7 +481,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
               <LanguageSwitcher />
               <ThemePicker />
 
-              {canMessage && (
+              {canMessage && (role !== "team_member" || canAccessWhatsAppInbox) && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
