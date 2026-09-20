@@ -40,7 +40,8 @@ ALTER TABLE public.whatsapp_conversations
   ADD COLUMN IF NOT EXISTS campaign_key text,
   ADD COLUMN IF NOT EXISTS last_customer_message_at timestamptz,
   ADD COLUMN IF NOT EXISTS last_team_response_at timestamptz,
-  ADD COLUMN IF NOT EXISTS sla_due_at timestamptz;
+  ADD COLUMN IF NOT EXISTS sla_due_at timestamptz,
+  ADD COLUMN IF NOT EXISTS service_window_expires_at timestamptz;
 
 DO $$
 BEGIN
@@ -122,6 +123,7 @@ BEGIN
     UPDATE public.whatsapp_conversations
     SET last_customer_message_at = NEW.created_at,
         last_inbound_at = GREATEST(coalesce(last_inbound_at, NEW.created_at), NEW.created_at),
+        service_window_expires_at = NEW.created_at + interval '24 hours',
         last_message_preview = left(coalesce(nullif(NEW.body, ''), NEW.message_type, 'Message'), 240),
         language_code = CASE
           WHEN coalesce(language_code, '') IN ('', 'unknown') THEN public.whatsapp_detect_language(NEW.body)
