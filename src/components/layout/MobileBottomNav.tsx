@@ -13,7 +13,7 @@ import {
   TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
   Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
-  Hotel,
+  Hotel, Megaphone,
 } from 'lucide-react';
 
 interface NavItem {
@@ -75,6 +75,7 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
     { key: 'nav.team', icon: Users, href: '/admin/members' },
     { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },
+    { key: 'nav.whatsappCampaigns', icon: Megaphone, href: '/admin/whatsapp-campaigns' },
     { key: 'nav.programs', icon: BookOpen, href: '/admin/programs' },
     { key: 'nav.activity', icon: Activity, href: '/admin/activity' },
     { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
@@ -164,6 +165,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.staffInbox': t('nav.staffInbox', 'Inbox'),
     'nav.whatsapp': t('nav.whatsapp', 'WhatsApp'),
     'nav.inbox': t('nav.inbox', 'Applications'),
+    'nav.whatsappCampaigns': t('nav.whatsappCampaigns', 'WhatsApp campaigns'),
     'nav.network': t('nav.network', 'Network'),
     'nav.recruit': t('nav.recruit', 'Recruit'),
     'nav.apply': t('nav.apply', 'Apply'),
