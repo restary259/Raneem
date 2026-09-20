@@ -43,7 +43,8 @@ BEGIN
   ORDER BY updated_at DESC
   LIMIT 1;
 
-  IF v_confirmation_template_id IS NULL THEN
+  IF v_confirmation_template_id IS NULL
+     AND NEW.event_type NOT IN ('appointment_scheduled','appointment_rescheduled') THEN
     RETURN NEW;
   END IF;
 
@@ -89,27 +90,29 @@ BEGIN
   LOOP
     v_dedupe := 'case_event:' || NEW.id::text || ':' || NEW.event_type || ':' || v_conversation_id::text;
 
-    INSERT INTO public.whatsapp_follow_up_tasks (
-      conversation_id,
-      kind,
-      due_at,
-      template_id,
-      template_parameters,
-      origin,
-      dedupe_key,
-      max_attempts
-    )
-    VALUES (
-      v_conversation_id,
-      'template',
-      now(),
-      v_confirmation_template_id,
-      '[]'::jsonb,
-      v_origin,
-      v_dedupe || ':confirmation',
-      3
-    )
-    ON CONFLICT (dedupe_key) DO NOTHING;
+    IF v_confirmation_template_id IS NOT NULL THEN
+      INSERT INTO public.whatsapp_follow_up_tasks (
+        conversation_id,
+        kind,
+        due_at,
+        template_id,
+        template_parameters,
+        origin,
+        dedupe_key,
+        max_attempts
+      )
+      VALUES (
+        v_conversation_id,
+        'template',
+        now(),
+        v_confirmation_template_id,
+        '[]'::jsonb,
+        v_origin,
+        v_dedupe || ':confirmation',
+        3
+      )
+      ON CONFLICT (dedupe_key) DO NOTHING;
+    END IF;
 
     IF v_scheduled_at IS NOT NULL THEN
       -- Keep reminder templates deliberately variable-free until DARB adds
