@@ -101,7 +101,7 @@ const HomepageExperience = () => {
         />
         <div className="absolute inset-0 bg-primary/10" />
 
-        <div className="container relative z-10 mx-auto flex justify-center px-4">
+        <div className="darb-home-hero-content container relative z-10 mx-auto flex w-full justify-center px-4">
           <div className="darb-home-hero-panel bg-primary/80 text-center shadow-surface-lg backdrop-blur-[2px]">
             <p className="darb-home-hero-eyebrow font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
             <h1 className="darb-home-hero-title mx-auto mt-3 max-w-2xl font-bold leading-[1.15] text-primary-foreground">
