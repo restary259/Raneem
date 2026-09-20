@@ -55,7 +55,7 @@ const EducationalDestinationsPage = () => {
           </div>
         </div>
       </div>
-      <DarbContactCta />
+      <DarbContactCta variant="compact" />
       <Footer />
     </div>;
 };
