@@ -7,7 +7,8 @@ import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
-import PageHero from '@/components/common/PageHero';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 import { useInView } from 'react-intersection-observer';
@@ -103,8 +104,10 @@ const ResourcesPage = () => {
       <Header />
       
       {/* Hero Section */}
-      <PageHero
-        variant="light"
+      <DarbPageHero
+        eyebrow={t('resourcesPage.badge', 'DARB RESOURCES')}
+        imageUrl={DARB_PUBLIC_HERO_IMAGES.resources}
+        imageAlt={t('resourcesPage.imageAlt', 'Student using digital study resources')}
         title={t('resourcesPage.title')}
         subtitle={t('resourcesPage.subtitle')}
       />
