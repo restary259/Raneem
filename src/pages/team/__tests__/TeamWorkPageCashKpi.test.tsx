@@ -78,7 +78,7 @@ describe("TeamWorkPage — Cash owed to Admin KPI", () => {
       return Promise.resolve({ data: null, error: null });
     });
 
-    render(<TeamWorkPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("Cash owed to Admin")).toBeInTheDocument();
@@ -99,7 +99,7 @@ describe("TeamWorkPage — Cash owed to Admin KPI", () => {
       return Promise.resolve({ data: null, error: null });
     });
 
-    render(<TeamWorkPage />);
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByText("Cash owed to Admin")).toBeInTheDocument();
