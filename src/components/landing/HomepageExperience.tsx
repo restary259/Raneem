@@ -120,7 +120,7 @@ const HomepageExperience = () => {
         <div className="absolute inset-0 bg-primary/10" />
 
         <div className="absolute inset-x-0 top-0 z-20">
-          <div className="border-b border-primary-foreground/15 bg-primary/90">
+          <div className="border-b border-primary-foreground/20 bg-transparent">
             <div className="container flex h-10 items-center justify-center gap-3 text-xs font-medium sm:text-sm">
               <div className="inline-flex items-center gap-3" aria-label="Language selector">
                 <button
