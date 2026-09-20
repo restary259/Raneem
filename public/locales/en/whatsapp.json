@@ -259,7 +259,12 @@
     "hour": "1 hour",
     "tomorrow": "Tomorrow",
     "threeDays": "3 days",
-    "unsnooze": "Resume"
+    "unsnooze": "Resume",
+    "schedule": "Schedule follow-up",
+    "scheduleHelp": "Choose an approved utility template and a future time. The follow-up stays server-side and will be cancelled if the student replies.",
+    "when": "Send at",
+    "invalidTime": "Choose a future time.",
+    "scheduled": "Follow-up scheduled."
   },
   "quickActions": {
     "title": "Quick replies"
