@@ -21,6 +21,7 @@ import { Message, MessageContent } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -93,6 +94,7 @@ export default function WhatsAppInboxPage({
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, role } = useAuth();
+  const { canAccess: canAccessWhatsAppInbox, loading: whatsappAccessLoading } = useWhatsAppInboxAccess();
   const { toast } = useToast();
   const mobile = useIsMobile();
   const rtl = i18n.language === "ar";
@@ -197,8 +199,15 @@ export default function WhatsAppInboxPage({
     refreshTimer.current = setTimeout(() => { void refreshThreads(); }, 300);
   }, [refreshThreads]);
 
-  useEffect(() => { void load(); }, [load]);
   useEffect(() => {
+    if (role === "team_member" && (whatsappAccessLoading || !canAccessWhatsAppInbox)) {
+      setLoading(false);
+      return;
+    }
+    void load();
+  }, [load, role, whatsappAccessLoading, canAccessWhatsAppInbox]);
+  useEffect(() => {
+    if (role === "team_member" && (whatsappAccessLoading || !canAccessWhatsAppInbox)) return;
     const channel = supabase.channel("whatsapp-workspace")
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, queueRefreshThreads)
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, queueRefreshThreads)
@@ -555,6 +564,24 @@ export default function WhatsAppInboxPage({
   const receiving = (inbound?.inboundCount ?? 0) > 0;
   const businessHoursOpen = isDarbBusinessHours(new Date(now));
   const statusLabel = receiving ? t("status.receiving") : t("status.waiting");
+
+  if (role === "team_member" && whatsappAccessLoading) {
+    return <LoadingState variant="cards" rows={4} label={t("title")} />;
+  }
+
+  if (role === "team_member" && !canAccessWhatsAppInbox) {
+    return (
+      <div dir={rtl ? "rtl" : "ltr"} className="flex min-h-[320px] items-center justify-center p-6">
+        <Card className="w-full max-w-md rounded-xl border-dashed p-6 text-center shadow-none">
+          <MessageCircle className="mx-auto h-8 w-8 text-muted-foreground" />
+          <h1 className="mt-3 text-base font-semibold">{t("access.title", "WhatsApp inbox unavailable")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("access.description", "Your administrator has not enabled the shared WhatsApp inbox for your account. Use the WhatsApp button inside a case profile to contact that case directly.")}
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) return <LoadingState variant="cards" rows={4} label={t("title")} />;
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
