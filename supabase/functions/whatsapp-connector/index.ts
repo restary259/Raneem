@@ -271,6 +271,18 @@ serve(async (req) => {
           conversation = racedConversation;
         } else conversation = insertedConversation;
       }
+      if (!isAdmin && auth.userId && conversation.assigned_to == null) {
+        const { data: assignedConversation, error: assignError } = await admin
+          .from("whatsapp_conversations")
+          .update({ assigned_to: auth.userId, updated_at: new Date().toISOString() })
+          .eq("id", conversation.id)
+          .is("assigned_to", null)
+          .select("*")
+          .maybeSingle();
+        if (assignError) throw assignError;
+        if (assignedConversation) conversation = assignedConversation;
+      }
+
       return json({ created, lead, conversation }, 200, corsHeaders);
     }
 
