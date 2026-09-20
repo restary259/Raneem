@@ -203,8 +203,8 @@ BEGIN
     RETURN jsonb_build_object('status','auto_linked_existing_lead','lead_id',v_existing_id);
   END IF;
 
-  INSERT INTO public.leads (full_name,phone,source_type,status,notes)
-  VALUES (COALESCE(v_name,v_number),v_number,'whatsapp','new','Created from inbound WhatsApp contact.')
+  INSERT INTO public.leads (full_name,phone,source_type,source_id,status,notes)
+  VALUES (COALESCE(v_name,v_number),v_number,'whatsapp',p_whatsapp_lead_id,'new','Created from inbound WhatsApp contact.')
   RETURNING id INTO v_new_id;
 
   UPDATE public.whatsapp_leads
