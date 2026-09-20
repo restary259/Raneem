@@ -79,6 +79,11 @@ const HomepageExperience = () => {
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
   const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
+  // Keep the gallery slices available for any cached/deployed module version
+  // that still references the earlier homepage gallery structure.
+  const half = Math.ceil(students.length / 2);
+  const topStudents = students.slice(0, half);
+  const bottomStudents = students.slice(half);
 
   return (
     <div className="homepage-experience">
