@@ -1,9 +1,9 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useDirection } from "@/hooks/useDirection";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useCachedData, useRealtimeInvalidate } from "@/hooks/useCachedData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,9 @@ interface AgentStudentCase {
 type SourceFilter = "all" | "partner" | "ambassador" | "self" | "unknown";
 
 const fmtDate = (iso: string, locale: string) => new Date(iso).toLocaleDateString(locale);
+
+/** Stable empty fallback so the memoized filter keeps its identity. */
+const EMPTY_CASES: AgentStudentCase[] = [];
 
 /** Agent students: cases attributable to the agent, fetched in full from the
  *  `get_my_agent_students` RPC (no client-side truncation) with a
