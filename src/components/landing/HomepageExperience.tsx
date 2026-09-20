@@ -149,74 +149,121 @@ const HomepageExperience = () => {
         </div>
       </div>
 
-      <section aria-labelledby="homepage-network-title" className="overflow-hidden bg-primary text-primary-foreground">
+      <section aria-labelledby="homepage-network-title" className="darb-network-section overflow-hidden border-y border-border bg-background text-primary">
         <div className="container py-12 sm:py-14 lg:py-16">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[0.68rem] font-bold uppercase tracking-[0.28em] text-brand">{t("homepage.network.eyebrow")}</p>
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.28em] text-brand-strong">{t("homepage.network.eyebrow")}</p>
               <h2 id="homepage-network-title" className="mt-2 max-w-2xl text-2xl font-bold leading-tight sm:text-3xl">
                 {t("homepage.network.title")}
               </h2>
             </div>
-            <p className="max-w-sm text-sm leading-6 text-primary-foreground/60 sm:text-end">{t("homepage.network.body")}</p>
+            <div className="hidden shrink-0 rounded-full border border-border bg-editorial-paper px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:block">
+              TU9 · 9 universities
+            </div>
           </div>
 
-          <div className="mt-9">
-            <div className="flex items-center justify-between">
-              <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary-foreground/45">{t("homepage.network.tu9Label")}</p>
-              <a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-brand hover:opacity-80">{t("homepage.network.viewTu9")}</a>
+          <div className="mt-8">
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-muted-foreground">{t("homepage.network.tu9Label")}</p>
+              <a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-brand-strong transition-colors hover:text-brand">
+                {t("homepage.network.viewTu9")}
+              </a>
             </div>
-            <div className="mt-4 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-9 lg:overflow-visible lg:px-0">
-              {tu9Universities.map((uni) => (
-                <a
-                  key={uni.name}
-                  href={uni.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={uni.name}
-                  className="group flex min-w-[112px] snap-start flex-col items-center justify-center rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.035] px-2 py-4 transition-colors hover:border-brand/40 hover:bg-primary-foreground/[0.07] lg:min-w-0"
+
+            <div className="darb-logo-marquee rounded-md border border-border bg-background" dir="ltr" aria-label={t("homepage.network.tu9Label")}>
+              <div className="darb-logo-marquee-track">
+                {[...tu9Universities, ...tu9Universities].map((uni, index) => (
+                  <a
+                    key={`${uni.name}-${index}`}
+                    href={uni.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={uni.name}
+                    className="darb-logo-tile group"
+                  >
+                    <div className="flex h-14 w-full items-center justify-center sm:h-16">
+                      <img
+                        src={uni.logoUrl}
+                        alt={uni.name}
+                        loading="eager"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        className="max-h-11 w-auto max-w-[126px] object-contain opacity-75 transition-all duration-300 group-hover:scale-[1.04] group-hover:opacity-100"
+                        onError={(event) => {
+                          const image = event.currentTarget;
+                          image.style.display = "none";
+                          const fallback = image.nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.hidden = false;
+                        }}
+                      />
+                      <span hidden className="max-w-[130px] text-center text-xs font-bold leading-4 text-primary">
+                        {uni.city}
+                      </span>
+                    </div>
+                    <span className="mt-2 text-[0.62rem] font-semibold tracking-wide text-muted-foreground transition-colors group-hover:text-primary">
+                      {uni.city}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 border-t border-border pt-7">
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-muted-foreground">{t("homepage.network.schoolsLabel")}</p>
+              <Link to="/educational-programs" className="text-xs font-bold text-brand-strong transition-colors hover:text-brand">
+                {t("homepage.network.viewSchools")}
+              </Link>
+            </div>
+
+            <div className="darb-logo-marquee darb-logo-marquee-schools rounded-md border border-border bg-editorial-paper" dir="ltr" aria-label={t("homepage.network.schoolsLabel")}>
+              <div className="darb-logo-marquee-track">
+                {[...languageYearSchools, ...languageYearSchools].map((school, index) => (
+                  <a
+                    key={`${school.name}-${index}`}
+                    href={school.officialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={school.name}
+                    className="darb-school-logo-tile group"
+                  >
+                    {school.logoUrl ? (
+                      <img
+                        src={school.logoUrl}
+                        alt={school.name}
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        className="max-h-12 w-auto max-w-[170px] object-contain opacity-80 transition-all duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
+                        onError={(event) => {
+                          const image = event.currentTarget;
+                          image.style.display = "none";
+                          const fallback = image.nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.hidden = false;
+                        }}
+                      />
+                    ) : null}
+                    <span hidden className="max-w-[160px] text-center text-xs font-bold leading-4 text-primary">{school.name}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-7 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
+            <p className="shrink-0 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted-foreground">{t("homepage.network.examsLabel")}</p>
+            <div className="flex flex-wrap gap-2">
+              {ecosystemExams.map((exam) => (
+                <span
+                  key={exam}
+                  className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-brand/40 hover:text-primary"
                 >
-                  <div className="flex h-12 w-full items-center justify-center">
-                    <img src={uni.logoUrl} alt={uni.name} loading="lazy" decoding="async" className="max-h-10 w-auto max-w-[100px] object-contain opacity-70 brightness-0 invert transition-opacity group-hover:opacity-100" />
-                  </div>
-                  <span className="mt-2 text-[0.66rem] font-semibold tracking-wide text-primary-foreground/55 group-hover:text-primary-foreground/90">{uni.city}</span>
-                </a>
+                  {exam}
+                </span>
               ))}
             </div>
-          </div>
-
-          <div className="mt-8 border-t border-primary-foreground/10 pt-7">
-            <div className="flex items-center justify-between">
-              <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary-foreground/45">{t("homepage.network.schoolsLabel")}</p>
-              <Link to="/educational-programs" className="text-xs font-semibold text-brand hover:opacity-80">{t("homepage.network.viewSchools")}</Link>
-            </div>
-            <div className="mt-4 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-6 lg:overflow-visible lg:px-0">
-              {languageYearSchools.map((school) => (
-                <a
-                  key={school.name}
-                  href={school.officialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={school.name}
-                  className="group flex min-w-[150px] snap-start items-center justify-center rounded-xl bg-background px-3 py-4 transition-transform hover:-translate-y-0.5 hover:shadow-surface lg:min-w-0"
-                >
-                  {school.logoUrl ? (
-                    <img src={school.logoUrl} alt={school.name} loading="lazy" decoding="async" className="max-h-12 w-auto max-w-[150px] object-contain" />
-                  ) : (
-                    <span className="text-sm font-semibold text-primary">{school.name}</span>
-                  )}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-7 flex flex-wrap items-center gap-2 border-t border-primary-foreground/10 pt-6">
-            <p className="me-2 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-primary-foreground/40">{t("homepage.network.examsLabel")}</p>
-            {ecosystemExams.map((exam) => (
-              <span key={exam} className="rounded-full border border-primary-foreground/15 bg-primary-foreground/[0.04] px-3 py-1.5 text-xs font-semibold text-primary-foreground/75">
-                {exam}
-              </span>
-            ))}
           </div>
         </div>
       </section>
