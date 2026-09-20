@@ -7136,6 +7136,10 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: Json
       }
+      whatsapp_set_conversation_assignment: {
+        Args: { p_assigned_to?: string; p_conversation_id: string }
+        Returns: string
+      }
       whatsapp_schedule_template_follow_up: {
         Args: {
           p_conversation_id: string
