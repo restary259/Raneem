@@ -385,7 +385,7 @@ const HomepageExperience = () => {
                 <div className="mt-5 space-y-2">
                   {["telc", "TestDaF", "TestAS", "onSET"].map((exam, index) => {
                     const isActive = activeExam === exam;
-                    const accents = ["bg-trust", "bg-brand", "bg-secondary", "bg-primary"];
+                    const accents = ["bg-trust text-white", "bg-brand-strong text-white", "bg-secondary text-secondary-foreground", "bg-primary text-primary-foreground"];
                     return (
                       <button
                         key={exam}
@@ -396,7 +396,7 @@ const HomepageExperience = () => {
                       >
                         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-[0.58rem] font-black tracking-tight ${accents[index]}`}>{exam === "TestDaF" ? "TD" : exam === "TestAS" ? "TA" : exam === "onSET" ? "OS" : "t"</span>
                         <span className="font-semibold">{exam}</span>
-                        <Arrow className={`ms-auto h-4 w-4 transition-transform ${isActive ? "translate-x-0 opacity-100" : "opacity-30 group-hover:opacity-70"} rtl:rotate-180`} />
+                        <Arrow className={`ms-auto h-4 w-4 transition-transform ${isActive ? "translate-x-0 opacity-100" : "opacity-30"} rtl:rotate-180`} />
                       </button>
                     );
                   })}
