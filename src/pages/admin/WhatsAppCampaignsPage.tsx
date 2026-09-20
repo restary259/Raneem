@@ -187,6 +187,7 @@ export default function WhatsAppCampaignsPage() {
           await dispatchWhatsAppMarketingCampaigns();
         } catch {
           // Leave the campaign queued; the server-side cron will pick it up.
+          toast({ variant: "destructive", description: t("campaigns.kickFailed") });
         }
       }
 
