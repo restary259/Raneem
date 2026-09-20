@@ -201,6 +201,19 @@ serve(async (req) => {
       return json({ created: true, provider_name: name, approval_status: "PENDING" }, 200, corsHeaders);
     }
 
+    if (action === "set_template_flags") {
+      const templateId = String(input?.template_id ?? "");
+      if (!templateId) return json({ error: "Template is required" }, 400, corsHeaders);
+      const patch: Record<string, boolean> = {};
+      if (typeof input?.is_active === "boolean") patch.is_active = input.is_active;
+      if (typeof input?.available_to_team === "boolean") patch.available_to_team = input.available_to_team;
+      if (!Object.keys(patch).length) return json({ error: "Nothing to update" }, 400, corsHeaders);
+      const { data: updated, error } = await admin.from("whatsapp_templates").update(patch).eq("id", templateId).select("*").maybeSingle();
+      if (error) throw error;
+      if (!updated) return json({ error: "Template not found" }, 404, corsHeaders);
+      return json({ template: updated }, 200, corsHeaders);
+    }
+
     if (action === "send") {
       const conversationId = String(input?.conversation_id ?? "");
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
