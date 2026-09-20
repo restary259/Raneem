@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "darb-agency"
+const SITE_NAME = "Darb Study International"
 const ROOT_DOMAIN = "darb.agency"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
