@@ -191,14 +191,15 @@ BEGIN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
-  IF p_status NOT IN ('sent','cancelled','failed') THEN
+  IF p_status NOT IN ('pending','sent','cancelled','failed') THEN
     RAISE EXCEPTION 'Invalid follow-up status';
   END IF;
 
   UPDATE public.whatsapp_follow_up_tasks
   SET status = p_status,
+      due_at = CASE WHEN p_status = 'pending' THEN now() + interval '5 minutes' ELSE due_at END,
       last_error = left(p_error, 1000),
-      processed_at = now(),
+      processed_at = CASE WHEN p_status = 'pending' THEN NULL ELSE now() END,
       updated_at = now()
   WHERE id = p_task_id;
 END;
