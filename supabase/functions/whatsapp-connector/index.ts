@@ -135,6 +135,11 @@ serve(async (req) => {
     const action = String(input?.action ?? "");
     // Template management (sync, create, activate, release to team) is an
     // admin-only capability. Team members may only send approved templates.
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
     const isAdmin = auth.isServiceRole === true || (auth.roles ?? []).includes("admin");
     if (["sync_templates", "create_template", "set_template_flags"].includes(action) && !isAdmin) {
       return json({ error: "Only an administrator can manage WhatsApp templates" }, 403, corsHeaders);
@@ -158,11 +163,6 @@ serve(async (req) => {
         );
       }
     }
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
-
     if (action === "start_conversation") {
       const whatsappNumber = normalizeWhatsAppNumber(input?.whatsapp_number);
       const studentName = String(input?.student_name ?? "").trim().slice(0, 200);
