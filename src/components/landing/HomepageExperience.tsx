@@ -23,7 +23,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
-import DarbContactCta from "@/components/common/DarbContactCta";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
 
@@ -329,7 +328,7 @@ const HomepageExperience = () => {
         </div>
       </section>
 
-      <DarbContactCta /> </div>
+ </div>
   );
 };
 
