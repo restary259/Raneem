@@ -45,13 +45,18 @@ const INTENTS = ["medicine", "engineering", "computer_science", "language_course
 const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
 
 const QUICK_REPLIES_AR = [
-  { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب. كيف فينا نساعدك اليوم؟" },
-  { id: "major", label: "السؤال عن التخصص", text: "أكيد. شو التخصص أو مجال الدراسة اللي مهتم فيه؟" },
-  { id: "appointment", label: "اقتراح موعد", text: "ممكن نرتّبلك استشارة مع فريق درب. أي يوم ووقت بناسبك؟" },
-  { id: "apply", label: "إرسال رابط التقديم", text: "بتقدر تبدأ طلبك مع درب من هون: https://darb.agency/apply" },
-  { id: "documents", label: "رفع المستندات بشكل آمن", text: "يفضّل ترفع المستندات من خلال بوابة درب الآمنة بدل إرسال ملفات حساسة عبر واتساب." },
-  { id: "payment", label: "متابعة الدفع", text: "بقدر أساعدك بخطوات الدفع. خبرني بأي جزء بدك توضيح." },
+  { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب 🙌 شو حابب تعرف عن الدراسة بألمانيا؟" },
+  { id: "major", label: "السؤال عن التخصص", text: "أكيد! شو التخصص أو مجال الدراسة اللي عم تفكّر تدرسه بألمانيا؟" },
+  { id: "appointment", label: "اقتراح موعد", text: "أكيد، فينا نرتّبلك استشارة مع فريق درب. أي يوم ووقت بناسبك؟" },
+  { id: "apply", label: "إرسال رابط التقديم", text: "بتقدر تعبّي طلبك مع درب من هون: https://darb.agency/apply" },
+  { id: "documents", label: "رفع المستندات بشكل آمن", text: "للحفاظ على خصوصية معلوماتك، ارفع المستندات من خلال بوابة درب الآمنة، مش عبر واتساب." },
+  { id: "payment", label: "متابعة الدفع", text: "أكيد، بساعدك بخطوات الدفع. شو النقطة اللي بدك توضيح عنها؟" },
 ];
+
+const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
+  appointment_confirmation: "أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا.",
+  appointment_reminder: "أهلاً! تذكير من درب: عندك موعد معنا بكرا بخصوص الدراسة بألمانيا. إذا احتجت تغيّر الموعد، ابعتلنا.",
+};
 const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documents_pending", "application_in_progress", "won", "lost"];
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["lead_received", "lead_followup", "inquiry_follow_up", "appointment_invitation", "appointment_confirmation", "consultation_confirmation", "appointment_reminder", "documents_missing", "document_reminder", "profile_incomplete", "document_received", "payment_instruction", "payment_reminder", "payment_confirmed", "application_started", "application_submitted", "application_update", "student_welcome", "enrollment_confirmation", "next_steps", "support_followup", "case_update"] as const;
@@ -128,6 +133,13 @@ export default function WhatsAppInboxPage({
   const [templateCategory, setTemplateCategory] = useState<"UTILITY" | "MARKETING">("UTILITY");
   const [templateBody, setTemplateBody] = useState("");
   const [templateCreating, setTemplateCreating] = useState(false);
+
+  useEffect(() => {
+    if (templateLanguage !== "ar" || templateBody.trim()) return;
+    const preset = APPOINTMENT_TEMPLATE_PRESETS_AR[templatePurpose];
+    if (preset) setTemplateBody(preset);
+  }, [templateLanguage, templatePurpose, templateBody]);
+
   const [startOpen, setStartOpen] = useState(false);
   const [startQuery, setStartQuery] = useState("");
   const [startResults, setStartResults] = useState<WhatsAppCaseSearchResult[]>([]);
