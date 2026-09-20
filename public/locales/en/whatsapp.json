@@ -315,7 +315,7 @@
     "campaignKey": "Campaign key",
     "source": "Source",
     "schedule": "Send time",
-    "scheduleHelp": "Leave blank to start now. Scheduling must be at least a minute in the future.",
+    "scheduleHelp": "Leave blank to start now. Scheduling is available from 5 minutes in the future.",
     "audience": "Audience size",
     "optedIn": "opted-in contacts",
     "launchButton": "Launch campaign",
