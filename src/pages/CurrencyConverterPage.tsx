@@ -6,8 +6,6 @@ import CurrencyConverter from '@/components/calculator/CurrencyConverter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import DarbPageHero from "@/components/common/DarbPageHero";
 import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
-import DarbPageHero from "@/components/common/DarbPageHero";
-import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import { DollarSign } from 'lucide-react';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';

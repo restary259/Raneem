@@ -6,8 +6,6 @@ import GpaCalculator from '@/components/calculator/GpaCalculator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import DarbPageHero from "@/components/common/DarbPageHero";
 import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
-import DarbPageHero from "@/components/common/DarbPageHero";
-import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import { GraduationCap } from 'lucide-react';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
