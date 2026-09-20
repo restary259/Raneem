@@ -18,12 +18,14 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
 
 const FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap";
 
 const APP_LOGO = darbLogoAsset.url;
-const OG_IMAGE = `https://darb.agency${APP_LOGO}`;
+const OG_IMAGE = `https://darb.agency${darbLogoShareAsset.url}`;
+const BRAND_LOGO = `https://darb.agency${APP_LOGO}`;
 
 const SITE_JSONLD = JSON.stringify({
   "@context": "https://schema.org",
@@ -34,7 +36,7 @@ const SITE_JSONLD = JSON.stringify({
       name: "درب التعليمية",
       alternateName: "Darb Agency",
       url: "https://darb.agency/",
-      logo: OG_IMAGE,
+      logo: BRAND_LOGO,
     },
     {
       "@type": "WebSite",
@@ -53,7 +55,7 @@ const ORG_JSONLD = JSON.stringify({
   name: "درب للدراسة في الخارج",
   alternateName: "Darb Study Pathways",
   url: "https://darb.agency",
-  logo: OG_IMAGE,
+  logo: BRAND_LOGO,
   description: "Education consultancy agency helping Arab students study in Germany",
   sameAs: [
     "https://www.instagram.com/darb_studyingermany/",
