@@ -32,7 +32,7 @@ import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
+  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -247,12 +247,22 @@ export default function WhatsAppInboxPage({
 
   const snoozeConversation = async (durationMs: number) => {
     if (!active) return;
-    await saveConversation({ state: "snoozed", snoozed_until: new Date(Date.now() + durationMs).toISOString() });
+    try {
+      await snoozeWhatsAppConversation(active.id, new Date(Date.now() + durationMs).toISOString());
+      await load();
+    } catch (error) {
+      toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    }
   };
 
   const unsnoozeConversation = async () => {
     if (!active) return;
-    await saveConversation({ state: "waiting_for_team", snoozed_until: null });
+    try {
+      await resumeWhatsAppConversation(active.id);
+      await load();
+    } catch (error) {
+      toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    }
   };
   const saveLead = async (patch: Parameters<typeof updateLead>[1]) => {
     if (!active) return;
