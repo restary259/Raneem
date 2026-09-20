@@ -133,10 +133,7 @@ BEGIN
           WHEN coalesce(intent, '') IN ('', 'other') THEN public.whatsapp_detect_intent(NEW.body)
           ELSE intent
         END,
-        sla_due_at = CASE
-          WHEN first_response_at IS NULL THEN NEW.created_at + interval '30 minutes'
-          ELSE sla_due_at
-        END,
+        sla_due_at = NEW.created_at + interval '30 minutes',
         snoozed_until = NULL,
         state = 'waiting_for_team',
         updated_at = now()
