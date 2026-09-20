@@ -49,7 +49,7 @@ interface Props {
   link?: string
 }
 
-const ils = (v?: string) => `₪${v ?? '0.00'}`
+const ils = (v?: string | null) => `₪${v ?? '0.00'}`
 
 /** "1,650.00" → 1650. Used only to decide which balance rows to show. */
 const num = (v?: string | null) => {
