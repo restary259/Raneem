@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import DarbPageHero from "@/components/common/DarbPageHero";
 import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import { GraduationCap } from 'lucide-react';
-import DarbContactCta from '@/components/common/DarbContactCta';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
 
@@ -42,7 +41,6 @@ const BagrutCalculatorPage = () => {
           </Card>
         </div>
       </section>
-      <DarbContactCta variant="compact" />
       <Footer />
     </div>
   );
