@@ -76,7 +76,7 @@ export default function CaseMessagesInboxPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [selected, setSelected] = useState<{ type: "case" | "direct"; id: string } | null>(null);
+  const [selected, setSelected] = useState<{ type: "case" | "direct" | "whatsapp"; id: string } | null>(null);
 
   const [staffOpen, setStaffOpen] = useState(false);
   const online = useOnlineUsers();
