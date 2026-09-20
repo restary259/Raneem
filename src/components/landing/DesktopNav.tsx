@@ -42,7 +42,7 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
 
   const renderDropdown = (items: { title: string; href: string; description: string }[], widthClass = 'md:w-[500px]') => (
     <NavigationMenuContent>
-      <ul className={`grid w-[400px] gap-3 p-4 ${dir === 'rtl' ? 'text-right' : 'text-left'} ${widthClass} bg-white shadow-lg border rounded-md`}>
+      <ul className={`grid w-[400px] gap-2 p-3 ${dir === "rtl" ? "text-right" : "text-left"} ${widthClass} rounded-md border border-border bg-background/95 shadow-surface-lg backdrop-blur-md`}>
         {items.map((item) => (
           <ListItem key={item.href} to={item.href} title={item.title}>
             {item.description}
@@ -53,11 +53,11 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   );
 
   const triggerClass = transparent
-    ? 'nav-item rounded-none border-b-2 border-brand bg-primary/95 text-primary-foreground hover:bg-primary font-semibold'
-    : 'nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold';
+    ? 'nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:border-primary-foreground/15 hover:bg-primary-foreground/10 hover:text-primary-foreground data-[state=open]:border-brand/50 data-[state=open]:bg-primary-foreground/10'
+    : 'nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-foreground transition-all duration-200 hover:border-border hover:bg-muted hover:text-brand-strong data-[state=open]:border-brand/40 data-[state=open]:bg-muted';
   const linkClass = navigationMenuTriggerStyle() + (transparent
-    ? ' nav-item rounded-none border-b-2 border-brand bg-primary/95 font-semibold text-primary-foreground hover:bg-primary'
-    : ' nav-item rounded-none border-b-2 border-brand bg-muted/60 font-semibold text-brand-strong hover:bg-muted');
+    ? ' nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:border-primary-foreground/15 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+    : ' nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-foreground transition-all duration-200 hover:border-border hover:bg-muted hover:text-brand-strong');
 
   return (
     <div className="flex justify-center w-full" dir={dir}>
