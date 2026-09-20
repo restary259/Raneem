@@ -32,7 +32,7 @@ Drill-down flow driven by local state with the breadcrumb always visible:
 Country strip → Schools grid → School page (Programs | Accommodation tabs) → Accommodation lightbox
 ```
 
-- Schools grid: large school image, name, city, and "N programs · M accommodations".
+- Country screen: country cards first, including a single-country catalog; selecting a country opens that country's schools. Schools grid: large school image, name, city, and "N programs · M accommodations".
 - School page: hero with school image/website, then two tabs — Programs (comparison cards: name, type, CEFR, lessons/hours per week, duration, weekly price ladder) and Accommodation (large photo-first cards with price/week, room type, meals).
 - Accommodation card click opens the shared `PhotoLightbox` with details panel (name, school + city, room type, meals, deposit, placement fee, distance note, description, weekly price tier ladder).
 - Global search + city/school/room-type filters kept, restricted to what's useful while sitting with a student.
