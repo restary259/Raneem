@@ -7435,6 +7435,7 @@ export type Database = {
         Args: { p_filters?: Json }
         Returns: number
       }
+      whatsapp_normalize_msisdn: { Args: { p_value: string }; Returns: string }
       whatsapp_resume_conversation: {
         Args: { p_conversation_id: string }
         Returns: Json
