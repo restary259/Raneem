@@ -248,4 +248,5 @@ The operational inbox layer is also staged on main: conversation priority, snooz
 - Campaign cron dispatch is staged at the database layer and remains intentionally unapplied.
 - Service-role connector calls are accepted for internal dispatchers without weakening normal staff authorization.
 - Marketing campaign schema/RPC types and EN/AR UI labels are included; the new admin route is exposed in desktop and mobile admin navigation.
+- Campaign recipient IDs are now persisted on outbound campaign messages and the dispatcher recovers provider-accepted sends before retrying, preventing duplicate provider sends after local worker failures.
 
