@@ -56,12 +56,22 @@ export async function listWhatsAppStaff() {
 }
 
 export async function updateConversation(id: string, patch: Tables["whatsapp_conversations"]["Update"]) {
-  const { error } = await supabase.from("whatsapp_conversations").update(patch).eq("id", id); fail(error);
+  const allowed: Record<string, unknown> = {};
+  for (const key of ["state", "priority", "intent", "language_code", "campaign_key"]) {
+    if (key in patch) allowed[key] = patch[key];
+  }
+  const { error } = await supabase.rpc("whatsapp_update_conversation", {
+    p_conversation_id: id,
+    p_patch: allowed,
+  });
+  fail(error);
 }
 
-/** Clears the unread badge when staff open a conversation. Touches nothing else. */
+/** Clears the unread badge through a staff-only RPC. */
 export async function markConversationRead(id: string) {
-  const { error } = await supabase.from("whatsapp_conversations").update({ unread_count: 0 }).eq("id", id).gt("unread_count", 0);
+  const { error } = await supabase.rpc("whatsapp_mark_conversation_read", {
+    p_conversation_id: id,
+  });
   fail(error);
 }
 
@@ -165,7 +175,15 @@ export async function unlinkWhatsAppIdentity(whatsappLeadId: string) {
 }
 
 export async function updateLead(id: string, patch: Tables["whatsapp_leads"]["Update"]) {
-  const { error } = await supabase.from("whatsapp_leads").update(patch).eq("id", id); fail(error);
+  const allowed: Record<string, unknown> = {};
+  for (const key of ["student_name", "country", "target_country", "desired_program", "language_level", "budget_range", "intended_start_date", "tags", "consent_status", "source"]) {
+    if (key in patch) allowed[key] = patch[key];
+  }
+  const { error } = await supabase.rpc("whatsapp_update_lead_fields", {
+    p_whatsapp_lead_id: id,
+    p_patch: allowed,
+  });
+  fail(error);
 }
 
 export async function addInternalNote(conversationId: string, authorId: string, body: string) {
