@@ -260,6 +260,20 @@ serve(async (req) => {
         storedBody = templateBody(template.components) || template.provider_name;
         templateName = template.provider_name;
         messageType = "template";
+      } else if (mediaPath) {
+        // Attachment: the file already sits in the staff-only bucket, so we hand
+        // WhatsApp a short-lived signed URL instead of making the file public.
+        if (!insideWindow) return json({ error: "An approved template is required outside the 24-hour service window" }, 409, corsHeaders);
+        if (!MEDIA_TYPES.includes(mediaType)) return json({ error: "Unsupported attachment type" }, 400, corsHeaders);
+        const { data: signed, error: signedError } = await admin.storage.from("whatsapp-media").createSignedUrl(mediaPath, 60 * 30);
+        if (signedError || !signed?.signedUrl) return json({ error: "The attachment could not be prepared for sending" }, 400, corsHeaders);
+        mediaUrl = signed.signedUrl;
+        const media: Record<string, unknown> = { link: mediaUrl };
+        if (storedBody && mediaType !== "audio") media.caption = storedBody.slice(0, 1024);
+        if (mediaType === "document" && mediaFilename) media.filename = mediaFilename;
+        providerBody = { messaging_product: "whatsapp", to, type: mediaType, [mediaType]: media };
+        messageType = mediaType;
+        storedBody = storedBody || mediaFilename || "";
       } else {
         if (!insideWindow) return json({ error: "An approved template is required outside the 24-hour service window" }, 409, corsHeaders);
         if (!storedBody || storedBody.length > 4096) return json({ error: "Enter a reply of up to 4096 characters" }, 400, corsHeaders);
@@ -281,6 +295,9 @@ serve(async (req) => {
         delivery_status: "accepted",
         authored_by: auth.userId,
         sent_at: now,
+        media_url: mediaPath,
+        media_mime_type: mediaMime,
+        media_filename: mediaFilename,
       }).select("*").single();
       if (insertError) throw insertError;
       const { error: updateError } = await admin.from("whatsapp_conversations").update({
