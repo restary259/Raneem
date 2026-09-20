@@ -473,7 +473,6 @@ export default function CaseMessagesInboxPage() {
                     className="flex min-h-0 flex-1 flex-col"
                   />
                 ) : (
-                ) : (
                   <DirectMessages
                     key={activeDirect!.threadId}
                     threadId={activeDirect!.threadId}
