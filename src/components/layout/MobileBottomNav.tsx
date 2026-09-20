@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { AppRole } from '@/contexts/AuthContext';
 import { useApplyFormEnabled } from '@/hooks/useApplyFormEnabled';
 import { filterApplyNavItem } from '@/lib/partnerNav';
+import { useWhatsAppInboxAccess } from '@/hooks/useWhatsAppInboxAccess';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   LayoutDashboard, GitBranch, Users, BookOpen,
@@ -125,7 +126,8 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const location = useLocation();
   const { t } = useTranslation('dashboard');
   const [moreOpen, setMoreOpen] = useState(false);
-  const items = MOBILE_NAV_CONFIG[role] ?? [];
+  const { canAccess: canAccessWhatsAppInbox } = useWhatsAppInboxAccess();
+  const items = (MOBILE_NAV_CONFIG[role] ?? []).filter((item) => role !== 'team_member' || canAccessWhatsAppInbox || item.key !== 'nav.staffInbox');
   // Mirror the sidebar: hide Apply when the member's apply_form_enabled admin
   // toggle is off (partner/ambassador/agent).
   const applyGatedRole = role === 'social_media_partner' || role === 'ambassador' || role === 'agent';
