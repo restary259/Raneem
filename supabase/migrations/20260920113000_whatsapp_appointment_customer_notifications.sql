@@ -250,7 +250,7 @@ BEGIN
           v_dedupe || ':confirmation',
           3
         )
-        ON CONFLICT (dedupe_key) DO NOTHING;
+        ON CONFLICT DO NOTHING;
       END IF;
     END LOOP;
 
@@ -282,7 +282,7 @@ BEGIN
       v_dedupe || ':confirmation',
       3
     )
-    ON CONFLICT (dedupe_key) DO NOTHING;
+    ON CONFLICT DO NOTHING;
   END IF;
 
   -- Exactly one customer-facing reminder: 24h before the appointment.
@@ -323,7 +323,7 @@ BEGIN
         v_dedupe || ':reminder24',
         3
       )
-      ON CONFLICT (dedupe_key) DO NOTHING;
+      ON CONFLICT DO NOTHING;
     END IF;
   END IF;
 
