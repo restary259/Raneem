@@ -513,7 +513,7 @@ export default function WhatsAppInboxPage({
                       {isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="text-[9px]">{t("sla.overdue")}</Badge>}
                     </div>
                   </div>
-                  {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>
+                  {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
                 </button>
               )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
             </ScrollArea>
