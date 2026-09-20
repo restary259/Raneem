@@ -278,7 +278,7 @@ serve(async (req) => {
 
     if (action === "create_template") {
       const purpose = String(input?.purpose ?? "") as Purpose;
-      const language = input?.language === "ar" ? "ar" : "en_US";
+      const language = input?.language === "ar" ? "ar" : input?.language === "he" ? "he" : "en_US";
       const category = input?.category === "MARKETING" ? "MARKETING" : "UTILITY";
       const body = String(input?.body ?? "").trim();
       if (!PURPOSES.includes(purpose) || body.length < 20 || body.length > 1024) {
