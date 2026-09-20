@@ -31,10 +31,10 @@ const Header = () => {
       data-scrolled={scrolled ? 'true' : 'false'}
     >
       {/* Desktop utility bar */}
-      <div className="hidden border-b border-primary-foreground/20 lg:block">
+      <div className="darb-header-utility hidden border-b border-primary-foreground/20 lg:block">
         <div
           dir="ltr"
-          className={`container grid h-9 grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
+          className={`container grid h-full grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
             scrolled ? 'text-muted-foreground' : 'text-primary-foreground'
           }`}
         >
@@ -51,14 +51,14 @@ const Header = () => {
       </div>
 
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex min-h-20 items-center justify-between lg:h-24 lg:min-h-0" dir="ltr">
+        <div className="darb-header-main flex items-center justify-between" dir="ltr">
           {/* Logo */}
           <div className="flex min-w-0 flex-shrink-0 items-center">
             <Link to="/" className="flex flex-shrink-0 items-center whitespace-nowrap">
               <img
                 src={darbLogoAsset.url}
                 alt={t('loader.brand')}
-                className="h-12 w-auto flex-shrink-0 object-contain lg:h-20"
+                className="darb-header-logo w-auto flex-shrink-0 object-contain"
                 fetchPriority="high"
               />
             </Link>
