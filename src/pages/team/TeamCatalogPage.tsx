@@ -266,6 +266,12 @@ export default function TeamCatalogPage() {
                         <Globe2 className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="truncate">{countryLabel(c.country)}</span>
                       </div>
+                      <p className="mt-1 max-w-prose text-sm leading-6 text-muted-foreground">
+                        {t(
+                          "catalog.countryCardDesc",
+                          "Schools, courses and accommodation available in this country.",
+                        )}
+                      </p>
                       <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Building2 className="h-3.5 w-3.5" />
                         {c.schools.length} {t("partnerSchools.schools", "schools")}
