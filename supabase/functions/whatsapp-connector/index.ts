@@ -240,6 +240,10 @@ serve(async (req) => {
         const { data: template, error: templateError } = await admin.from("whatsapp_templates").select("*").eq("id", templateId).maybeSingle();
         if (templateError) throw templateError;
         if (!template || template.approval_status !== "APPROVED") return json({ error: "Only an approved WhatsApp template can be sent" }, 400, corsHeaders);
+        if (template.is_active === false) return json({ error: "This template is switched off" }, 409, corsHeaders);
+        if (!isAdmin && template.available_to_team === false) {
+          return json({ error: "This template has not been released to the team" }, 403, corsHeaders);
+        }
         // Marketing consent is tracked separately from service consent: a
         // marketing template may only go to a contact who explicitly granted it.
         if (String(template.category ?? "").toUpperCase() === "MARKETING") {
