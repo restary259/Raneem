@@ -479,8 +479,11 @@ a[href*="lovable.dev"] {
 }
 
 .darb-home-hero {
-  height: clamp(500px, calc(100svh - var(--darb-header-height)), 820px);
-  min-height: 500px;
+  /* Keep enough vertical room for the fixed desktop header + hero panel.
+     The previous 500px floor allowed the panel to extend into the proof
+     section on shorter desktop viewports. */
+  height: clamp(620px, calc(100svh - var(--darb-header-height)), 820px);
+  min-height: 620px;
   max-height: 820px;
 }
 
