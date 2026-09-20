@@ -5898,6 +5898,7 @@ export type Database = {
         Row: {
           authored_by: string | null
           body: string
+          campaign_recipient_id: string | null
           conversation_id: string
           created_at: string
           delivery_id: string | null
@@ -5922,6 +5923,7 @@ export type Database = {
         Insert: {
           authored_by?: string | null
           body?: string
+          campaign_recipient_id?: string | null
           conversation_id: string
           created_at?: string
           delivery_id?: string | null
@@ -5946,6 +5948,7 @@ export type Database = {
         Update: {
           authored_by?: string | null
           body?: string
+          campaign_recipient_id?: string | null
           conversation_id?: string
           created_at?: string
           delivery_id?: string | null
@@ -5973,6 +5976,13 @@ export type Database = {
             columns: ["authored_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_campaign_recipient_id_fkey"
+            columns: ["campaign_recipient_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaign_recipients"
             referencedColumns: ["id"]
           },
           {
