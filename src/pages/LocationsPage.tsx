@@ -25,7 +25,7 @@ const LocationsPage = () => {
           subtitle={t('seo.locationsDesc')}
         />
         <Locations />
-        <DarbContactCta />
+        <DarbContactCta variant="compact" />
       </main>
       <Footer />
     </div>
