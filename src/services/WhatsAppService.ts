@@ -226,6 +226,15 @@ export function setWhatsAppTemplateFlags(templateId: string, flags: { is_active?
   return invokeWhatsAppConnector<{ template: WhatsAppTemplate }>({ action: "set_template_flags", template_id: templateId, ...flags });
 }
 
+export async function setWhatsAppConversationAssignment(conversationId: string, assignedTo: string | null) {
+  const { data, error } = await supabase.rpc("whatsapp_set_conversation_assignment", {
+    p_conversation_id: conversationId,
+    p_assigned_to: assignedTo,
+  });
+  fail(error);
+  return data;
+}
+
 export async function snoozeWhatsAppConversation(conversationId: string, until: string) {
   const { data, error } = await supabase.rpc("whatsapp_snooze_conversation", {
     p_conversation_id: conversationId,
