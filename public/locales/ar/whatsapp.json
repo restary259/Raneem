@@ -65,7 +65,8 @@
     "chooseTemplate": "اختر قالباً معتمداً",
     "templateField": "حقل القالب {{number}}",
     "send": "إرسال عبر واتساب",
-    "sent": "قبل واتساب الرسالة للإرسال"
+    "sent": "قبل واتساب الرسالة للإرسال",
+    "noTemplateReleased": "لا يوجد قالب معتمد متاح بعد. اطلب من المدير إتاحة قالب."
   },
   "profile": {
     "title": "ملف الطالب",
@@ -143,7 +144,9 @@
       "consultation_confirmation": "تأكيد الاستشارة",
       "document_reminder": "تذكير بالوثائق",
       "application_update": "تحديث الطلب"
-    }
+    },
+    "active": "مُفعّل",
+    "availableToTeam": "متاح للفريق"
   },
   "actions": {
     "retry": "إعادة المحاولة",

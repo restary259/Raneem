@@ -77,6 +77,12 @@ serve(async (req) => {
 
     const input = await req.json();
     const action = String(input?.action ?? "");
+    // Template management (sync, create, activate, release to team) is an
+    // admin-only capability. Team members may only send approved templates.
+    const isAdmin = auth.isServiceRole === true || (auth.roles ?? []).includes("admin");
+    if (["sync_templates", "create_template", "set_template_flags"].includes(action) && !isAdmin) {
+      return json({ error: "Only an administrator can manage WhatsApp templates" }, 403, corsHeaders);
+    }
     const admin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -195,6 +201,19 @@ serve(async (req) => {
       return json({ created: true, provider_name: name, approval_status: "PENDING" }, 200, corsHeaders);
     }
 
+    if (action === "set_template_flags") {
+      const templateId = String(input?.template_id ?? "");
+      if (!templateId) return json({ error: "Template is required" }, 400, corsHeaders);
+      const patch: Record<string, boolean> = {};
+      if (typeof input?.is_active === "boolean") patch.is_active = input.is_active;
+      if (typeof input?.available_to_team === "boolean") patch.available_to_team = input.available_to_team;
+      if (!Object.keys(patch).length) return json({ error: "Nothing to update" }, 400, corsHeaders);
+      const { data: updated, error } = await admin.from("whatsapp_templates").update(patch).eq("id", templateId).select("*").maybeSingle();
+      if (error) throw error;
+      if (!updated) return json({ error: "Template not found" }, 404, corsHeaders);
+      return json({ template: updated }, 200, corsHeaders);
+    }
+
     if (action === "send") {
       const conversationId = String(input?.conversation_id ?? "");
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
@@ -221,6 +240,10 @@ serve(async (req) => {
         const { data: template, error: templateError } = await admin.from("whatsapp_templates").select("*").eq("id", templateId).maybeSingle();
         if (templateError) throw templateError;
         if (!template || template.approval_status !== "APPROVED") return json({ error: "Only an approved WhatsApp template can be sent" }, 400, corsHeaders);
+        if (template.is_active === false) return json({ error: "This template is switched off" }, 409, corsHeaders);
+        if (!isAdmin && template.available_to_team === false) {
+          return json({ error: "This template has not been released to the team" }, 403, corsHeaders);
+        }
         // Marketing consent is tracked separately from service consent: a
         // marketing template may only go to a contact who explicitly granted it.
         if (String(template.category ?? "").toUpperCase() === "MARKETING") {

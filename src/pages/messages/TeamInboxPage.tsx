@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 import CaseMessagesInboxPage from "@/pages/messages/CaseMessagesInboxPage";
 import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
 
@@ -13,6 +14,7 @@ const isTeamInboxTab = (value: string | null): value is TeamInboxTab =>
 
 export default function TeamInboxPage() {
   const { t } = useTranslation("dashboard");
+  const { role } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const tab: TeamInboxTab = isTeamInboxTab(requestedTab) ? requestedTab : "messages";
@@ -45,7 +47,7 @@ export default function TeamInboxPage() {
         <CaseMessagesInboxPage />
       </TabsContent>
       <TabsContent value="whatsapp" className="m-0 min-h-0 min-w-0 flex-1 px-2 sm:px-6">
-        <WhatsAppInboxPage embedded />
+        <WhatsAppInboxPage embedded canManageTemplates={role === "admin"} />
       </TabsContent>
     </Tabs>
   );

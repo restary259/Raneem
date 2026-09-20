@@ -140,6 +140,11 @@ export function createWhatsAppTemplate(input: { purpose: string; language: "ar" 
   return invokeWhatsAppConnector<{ created: boolean; provider_name: string; approval_status: "PENDING" }>({ action: "create_template", ...input });
 }
 
+// Admin-only: switch a template on/off, or release it to the team.
+export function setWhatsAppTemplateFlags(templateId: string, flags: { is_active?: boolean; available_to_team?: boolean }) {
+  return invokeWhatsAppConnector<{ template: WhatsAppTemplate }>({ action: "set_template_flags", template_id: templateId, ...flags });
+}
+
 export function startWhatsAppConversation(whatsappNumber: string, studentName = "") {
   return invokeWhatsAppConnector<{ created: boolean; lead: WhatsAppLead; conversation: WhatsAppConversation }>({
     action: "start_conversation",

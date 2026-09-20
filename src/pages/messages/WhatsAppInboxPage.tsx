@@ -29,7 +29,7 @@ import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
+  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -46,11 +46,14 @@ export default function WhatsAppInboxPage({
   conversationOnly = false,
   conversationId,
   onConversationClose,
+  canManageTemplates = false,
 }: {
   embedded?: boolean;
   conversationOnly?: boolean;
   conversationId?: string;
   onConversationClose?: () => void;
+  /** Admin only: show the Templates tab (sync, create, activate, release). */
+  canManageTemplates?: boolean;
 }) {
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -132,7 +135,11 @@ export default function WhatsAppInboxPage({
     if (!conversationId || !threads.some((thread) => thread.id === conversationId)) return;
     setSelectedId((current) => (current === conversationId ? current : conversationId));
   }, [conversationId, threads]);
-  const approvedTemplates = useMemo(() => templates.filter((item) => item.approval_status === "APPROVED"), [templates]);
+  // Team members may only pick templates an admin switched on AND released.
+  const sendableTemplates = useMemo(
+    () => templates.filter((item) => item.approval_status === "APPROVED" && item.is_active !== false && (canManageTemplates || item.available_to_team !== false)),
+    [templates, canManageTemplates],
+  );
   const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
   const selectedTemplateText = useMemo(() => {
     if (!selectedTemplate || !Array.isArray(selectedTemplate.components)) return "";
@@ -219,6 +226,12 @@ export default function WhatsAppInboxPage({
     try { const result = await syncWhatsAppTemplates(); setTemplates(await listWhatsAppTemplates()); toast({ description: t("templates.synced", { count: result.synced }) }); }
     catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.templates") }); }
     finally { setTemplateSyncing(false); }
+  };
+  const toggleTemplateFlag = async (id: string, flags: { is_active?: boolean; available_to_team?: boolean }) => {
+    const previous = templates;
+    setTemplates((current) => current.map((item) => (item.id === id ? { ...item, ...flags } : item)));
+    try { await setWhatsAppTemplateFlags(id, flags); }
+    catch (e) { setTemplates(previous); toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.templates") }); }
   };
   const createTemplate = async () => {
     if (!templateBody.trim()) return;
@@ -321,10 +334,14 @@ export default function WhatsAppInboxPage({
               {requiresApprovedTemplate(active.last_inbound_at) ? (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">{t("conversation.windowClosed")}</p>
-                  <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
-                    <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
-                    <SelectContent>{approvedTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent>
-                  </Select>
+                  {sendableTemplates.length ? (
+                    <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
+                      <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
+                      <SelectContent>{sendableTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-muted-foreground">{t("conversation.noTemplateReleased", "No approved template has been released yet. Ask an administrator to make one available.")}</p>
+                  )}
                   {selectedTemplate && <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{selectedTemplateText}</p>{Array.from({ length: parameterCount }, (_, index) => <Input key={index} className="mt-2" value={templateParameters[index] ?? ""} onChange={(event) => setTemplateParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>}
                   <div className="flex justify-end"><Button disabled={!templateId || templateParameters.length < parameterCount || templateParameters.some((value) => !value.trim()) || sending} onClick={() => void sendReply()}><MessageCircle className="me-2 h-4 w-4" />{t("conversation.send")}</Button></div>
                 </div>
@@ -354,9 +371,9 @@ export default function WhatsAppInboxPage({
         {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
       </div>
       <Tabs defaultValue="dashboard" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-        <TabsList className="grid w-full max-w-[470px] shrink-0 grid-cols-2 overflow-hidden"><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>
+        {canManageTemplates && <TabsList className="grid w-full max-w-[470px] shrink-0 grid-cols-2 overflow-hidden"><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>}
         <TabsContent value="dashboard" className="m-0 min-w-0 space-y-4"><div className="grid gap-3 sm:grid-cols-3"><Metric icon={Sparkles} label={t("dashboard.newLeads")} value={newLeads} /><Metric icon={UsersRound} label={t("dashboard.unassigned")} value={unassigned} /><Metric icon={Clock3} label={t("dashboard.response")} value={responseAvg === null ? "—" : `${responseAvg} ${t("dashboard.minutes")}`} /></div><Card className="rounded-xl p-5 shadow-none"><h2 className="mb-4 font-semibold">{t("dashboard.byStage")}</h2>{threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{t(`stage.${s}`)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}</Card></TabsContent>
-        <TabsContent value="templates" className="m-0 min-w-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-4"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>
+        {canManageTemplates && <TabsContent value="templates" className="m-0 min-w-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-5"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge><div className="flex flex-col gap-2"><label className="flex items-center gap-2 text-xs"><Switch checked={x.is_active !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { is_active: value })} /><span>{t("templates.active", "Active")}</span></label><label className="flex items-center gap-2 text-xs"><Switch checked={x.available_to_team !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { available_to_team: value })} /><span>{t("templates.availableToTeam", "Available to team")}</span></label></div></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>}
       </Tabs>
       <Dialog open={startOpen} onOpenChange={setStartOpen}>
         <DialogContent dir={rtl ? "rtl" : "ltr"}>
