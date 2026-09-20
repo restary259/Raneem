@@ -350,6 +350,7 @@
     "allIntents": "All intents",
     "allLanguages": "All languages",
     "allStages": "All stages",
-    "optional": "Optional"
+    "optional": "Optional",
+    "kickFailed": "The campaign was created, but the first dispatch kick failed; the scheduler will retry automatically."
   }
 }
