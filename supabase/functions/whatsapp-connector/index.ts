@@ -5,7 +5,30 @@ import { requireAuth } from "../_shared/auth.ts";
 import { serverErrorResponse } from "../_shared/errors.ts";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/whatsapp";
-const PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
+const PURPOSES = [
+  "lead_received",
+  "lead_followup",
+  "inquiry_follow_up",
+  "appointment_invitation",
+  "appointment_confirmation",
+  "consultation_confirmation",
+  "appointment_reminder",
+  "documents_missing",
+  "document_reminder",
+  "profile_incomplete",
+  "document_received",
+  "payment_instruction",
+  "payment_reminder",
+  "payment_confirmed",
+  "application_started",
+  "application_submitted",
+  "application_update",
+  "student_welcome",
+  "enrollment_confirmation",
+  "next_steps",
+  "support_followup",
+  "case_update",
+] as const;
 const MEDIA_TYPES = ["image", "video", "audio", "document"];
 
 type Purpose = typeof PURPOSES[number];
