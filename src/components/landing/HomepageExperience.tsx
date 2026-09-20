@@ -159,7 +159,7 @@ const HomepageExperience = () => {
               </h2>
             </div>
             <div className="hidden shrink-0 rounded-full border border-border bg-editorial-paper px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:block">
-              TU9 · 9 universities
+              {t("homepage.network.badge")}
             </div>
           </div>
 
