@@ -25,8 +25,8 @@ export default function TeamInboxPage() {
   };
 
   return (
-    <Tabs value={tab} onValueChange={changeTab} className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-20 shrink-0 bg-background/95 px-2 py-2 backdrop-blur sm:px-6">
+    <Tabs value={tab} onValueChange={changeTab} className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden">
+      <div className="sticky top-0 z-20 shrink-0 border-0 border-b-0 bg-background px-2 py-2 shadow-none sm:px-6">
         <SegmentedTabs
           items={[
             {
