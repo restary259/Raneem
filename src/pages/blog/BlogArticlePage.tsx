@@ -177,7 +177,7 @@ const BlogArticlePage: React.FC = () => {
             </div>
           </section>
         </article>
-        <DarbContactCta />
+        <DarbContactCta variant="compact" />
       </main>
       <Footer />
     </div>
