@@ -27,8 +27,8 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       className={cn(
         "relative overflow-hidden bg-primary text-primary-foreground",
         compact
-          ? "min-h-[360px] md:min-h-[470px]"
-          : "min-h-[430px] md:min-h-[580px]",
+          ? "min-h-[380px] md:min-h-[470px]"
+          : "min-h-[480px] md:min-h-[600px]",
         className,
       )}
     >
@@ -42,7 +42,14 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
       <div className="absolute inset-0 bg-primary/15" />
-      <div className="container relative z-10 flex min-h-[430px] items-center justify-center px-4 pb-16 pt-28 md:min-h-[580px] md:pb-20 md:pt-40">
+      <div
+        className={cn(
+          "container relative z-10 flex items-center justify-center px-4",
+          compact
+            ? "min-h-[380px] pb-14 pt-24 md:min-h-[470px] md:pb-16 md:pt-28"
+            : "min-h-[480px] pb-16 pt-28 md:min-h-[600px] md:pb-20 md:pt-36",
+        )}
+      >
         <div
           className={cn(
             "w-full bg-primary/70 text-center shadow-surface-lg backdrop-blur-[2px]",
