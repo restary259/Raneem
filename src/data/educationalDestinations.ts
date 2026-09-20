@@ -168,6 +168,33 @@ export const tu9Universities = [
   { name: "University of Stuttgart", city: "Stuttgart", url: "https://www.uni-stuttgart.de/" }
 ];
 
+// Backward-compatible exports for legacy tooling (including AI knowledge generation).
+export const universities = {
+  germany: tu9Universities.map((uni) => ({
+    name: uni.name,
+    location: uni.city + ", Germany",
+    description: "",
+    majors: [],
+    ranking: "",
+    students: "",
+    officialUrl: uni.url,
+  })),
+};
+
+export const languageSchools = {
+  germany: languageYearSchools.map((school) => ({
+    name: school.name,
+    location: school.location,
+    logoUrl: school.logoUrl ?? "",
+    description: "",
+    programs: school.examKeys,
+  })),
+};
+
+export const services = {
+  germany: [],
+};
+
 export const countries = [
   { code: "germany", name: "Germany", flag: "🇩🇪", color: "bg-red-600" }
 ];
