@@ -115,7 +115,7 @@ const AppShell = () => {
   return (
     <TooltipProvider>
       <div
-        className={`min-h-screen w-full relative ${isDashboardPath ? "" : "pb-20 md:pb-0"}`}
+        className={`min-h-screen w-full relative ${isDashboardPath || isApplyPage ? "" : "pb-20 md:pb-0"}`}
         dir={dir}
       >
         <Toaster />
@@ -142,7 +142,7 @@ const AppShell = () => {
             <CookieBanner />
           </Suspense>
         )}
-        {!isDashboardPath && <BottomNav />}
+        {!isDashboardPath && !isApplyPage && <BottomNav />}
       </div>
     </TooltipProvider>
   );
