@@ -6,7 +6,7 @@ import MobileNav from './MobileNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useDirection } from '@/hooks/useDirection';
 import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
-import { SUPPORT_EMAIL, whatsappBusinessUrl } from '@/lib/contactConfig';
+import { SUPPORT_EMAIL, SUPPORT_PHONE, whatsappBusinessUrl } from '@/lib/contactConfig';
 
 const Header = () => {
   const { t } = useTranslation();
