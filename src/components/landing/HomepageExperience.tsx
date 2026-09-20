@@ -74,6 +74,7 @@ const StudentFigure = ({
 
 const HomepageExperience = () => {
   const { t } = useTranslation("landing");
+  const { i18n } = useTranslation("common");
   const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
