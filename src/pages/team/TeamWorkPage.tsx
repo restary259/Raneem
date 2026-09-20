@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useCachedData } from "@/hooks/useCachedData";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,12 @@ import { LoadingState, EmptyState } from "@/components/shell";
 
 const STALE_DAYS = 7;
 const DAY_MS = 86_400_000;
+
+// Stable empty fallbacks — a fresh [] each render would break memo equality
+// in the lists below.
+const EMPTY_APPTS: ApptRow[] = [];
+const EMPTY_CASES: CaseRow[] = [];
+const EMPTY_RETURNED: ReturnedRow[] = [];
 
 interface ApptRow {
   id: string;
@@ -427,7 +434,7 @@ export default function TeamWorkPage() {
           open={!!outcomeApptId}
           onClose={() => setOutcomeApptId(null)}
           appointmentId={outcomeApptId}
-          onSuccess={fetchData}
+          onSuccess={refetch}
         />
       )}
     </div>
