@@ -108,6 +108,8 @@ import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.in
 import { Route as TeamStudentsIdRouteImport } from './routes/team.students.$id'
 import { Route as TeamToolsCurrencyRouteImport } from './routes/team.tools.currency'
 import { Route as TeamToolsCvRouteImport } from './routes/team.tools.cv'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as TeamPartnerSchoolsCountryIndexRouteImport } from './routes/team.partner-schools.$country.index'
 import { Route as TeamPartnerSchoolsCountrySchoolRouteImport } from './routes/team.partner-schools.$country.$school'
@@ -610,6 +612,16 @@ const TeamToolsCvRoute = TeamToolsCvRouteImport.update({
   path: '/tools/cv',
   getParentRoute: () => TeamRoute,
 } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -729,6 +741,8 @@ export interface FileRoutesByFullPath {
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
   '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
@@ -828,6 +842,8 @@ export interface FileRoutesByTo {
   '/team/cases': typeof TeamCasesIndexRoute
   '/team/partner-schools': typeof TeamPartnerSchoolsIndexRoute
   '/team/students': typeof TeamStudentsIndexRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
   '/team/partner-schools/$country': typeof TeamPartnerSchoolsCountryIndexRoute
@@ -933,6 +949,8 @@ export interface FileRoutesById {
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
   '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
@@ -1039,6 +1057,8 @@ export interface FileRouteTypes {
     | '/team/cases/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/team/partner-schools/$country/$school'
     | '/team/partner-schools/$country/'
@@ -1138,6 +1158,8 @@ export interface FileRouteTypes {
     | '/team/cases'
     | '/team/partner-schools'
     | '/team/students'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/team/partner-schools/$country/$school'
     | '/team/partner-schools/$country'
@@ -1242,6 +1264,8 @@ export interface FileRouteTypes {
     | '/team/cases/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/team/partner-schools/$country/$school'
     | '/team/partner-schools/$country/'
@@ -1283,6 +1307,8 @@ export interface RootRouteChildren {
   ResourcesLebenslaufBuilderRoute: typeof ResourcesLebenslaufBuilderRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -1981,6 +2007,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamToolsCvRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -2215,6 +2255,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesLebenslaufBuilderRoute: ResourcesLebenslaufBuilderRoute,
   BlogIndexRoute: BlogIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
