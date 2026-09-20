@@ -1,4 +1,5 @@
 import { Link } from "@/lib/router-compat";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -84,6 +85,9 @@ const HomepageExperience = () => {
   const half = Math.ceil(students.length / 2);
   const topStudents = students.slice(0, half);
   const bottomStudents = students.slice(half);
+  const [activeStep, setActiveStep] = useState(0);
+  const [activeLevel, setActiveLevel] = useState("C1");
+  const levelDetails = t("homepage.languagePrep.levels", { returnObjects: true }) as Record<string, { label: string; description: string }>;
 
   return (
     <div className="homepage-experience">
@@ -109,10 +113,10 @@ const HomepageExperience = () => {
               {t("homepage.hero.subtitle")}
             </p>
             <div className="darb-home-hero-actions flex flex-col justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="accent" className="darb-home-hero-button rounded-none text-base">
+              <Button asChild size="lg" variant="accent" className="darb-home-hero-button rounded-md text-base shadow-[0_8px_24px_-12px_hsl(var(--brand)/0.65)]">
                 <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="darb-home-hero-button rounded-none border-primary-foreground/50 bg-primary/50 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+              <Button asChild size="lg" variant="outline" className="darb-home-hero-button rounded-md border-primary-foreground/35 bg-primary/10 text-base text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground hover:text-primary">
                 <a
                   href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")}
                   target="_blank"
@@ -233,9 +237,9 @@ const HomepageExperience = () => {
                 <Link
                   key={route.title}
                   to="/apply"
-                  className="group relative min-h-[220px] overflow-hidden rounded-2xl border border-border bg-editorial-paper p-6 transition-all hover:-translate-y-1 hover:shadow-surface-lg"
+                  className="group relative min-h-[220px] overflow-hidden rounded-md border border-border bg-editorial-paper p-6 transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-surface-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-surface transition-transform duration-300 group-hover:scale-105">
                     <Icon className="h-6 w-6" />
                   </div>
                   <p className="mt-10 text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">0{index + 1}</p>
@@ -261,18 +265,28 @@ const HomepageExperience = () => {
 
           <div className="relative mt-10">
             <div className="absolute left-[6%] right-[6%] top-7 hidden h-px border-t border-dashed border-border md:block" aria-hidden="true" />
-            <ol className="grid gap-4 md:grid-cols-4 md:gap-2">
+            <ol className="grid gap-3 md:grid-cols-4 md:gap-2">
               {steps.map((step, index) => {
                 const Icon = journeyIcons[index] ?? Check;
+                const isActive = activeStep === index;
                 return (
-                  <li key={step.title} className="relative rounded-2xl border border-border bg-background p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-background text-primary shadow-surface">
-                        <Icon className="h-6 w-6" />
+                  <li key={step.title} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setActiveStep(index)}
+                      aria-pressed={isActive}
+                      className={isActive ? "group relative w-full rounded-md border border-brand bg-background p-5 text-start shadow-surface-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "group relative w-full rounded-md border border-border bg-background p-5 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className={isActive ? "relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-brand bg-brand text-brand-foreground" : "relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-background text-primary"}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <span className="text-[0.68rem] font-bold tracking-[0.18em] text-brand-strong">0{index + 1}</span>
                       </div>
-                      <span className="text-[0.68rem] font-bold tracking-[0.18em] text-brand-strong">0{index + 1}</span>
-                    </div>
-                    <h3 className="mt-8 text-lg font-bold text-primary">{step.title}</h3>
+                      <h3 className="mt-7 text-lg font-bold text-primary">{step.title}</h3>
+                      <p className={isActive ? "mt-2 text-sm leading-6 text-muted-foreground opacity-100" : "mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground opacity-65"}>{step.description}</p>
+                      <span className={isActive ? "absolute bottom-4 end-4 h-1.5 w-1.5 rounded-full bg-brand scale-125" : "absolute bottom-4 end-4 h-1.5 w-1.5 rounded-full bg-brand scale-75 opacity-40"} aria-hidden="true" />
+                    </button>
                   </li>
                 );
               })}
@@ -325,20 +339,31 @@ const HomepageExperience = () => {
               <h2 id="homepage-language-title" className="mt-2 max-w-xl text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.languagePrep.title")}</h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/65 sm:text-base">{t("homepage.languagePrep.body")}</p>
             </div>
-            <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/[0.035] p-5 sm:p-7">
-              <div className="flex items-end justify-between gap-2">
-                {["A1", "A2", "B1", "B2", "C1"].map((level, index) => (
-                  <div key={level} className="flex-1 text-center">
-                    <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full border ${index === 4 ? "border-brand bg-brand text-brand-foreground" : "border-primary-foreground/20 bg-primary-foreground/[0.04]"}`}>
+            <div className="rounded-md border border-primary-foreground/10 bg-primary-foreground/[0.035] p-5 shadow-surface-lg sm:p-7">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {["A1", "A2", "B1", "B2", "C1"].map((level) => {
+                  const isActive = activeLevel === level;
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setActiveLevel(level)}
+                      aria-pressed={isActive}
+                      className={isActive ? "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-brand px-2 py-3 text-brand-foreground shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-primary-foreground/[0.04] px-2 py-3 text-primary-foreground/65 transition-colors hover:bg-primary-foreground/[0.08] hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
+                    >
                       <span className="text-sm font-bold">{level}</span>
-                    </div>
-                    {index < 4 ? <div className="mx-auto mt-2 h-px w-full bg-primary-foreground/15" /> : <div className="mt-2 h-px w-full bg-brand/50" />}
-                  </div>
-                ))}
+                      <span className="mt-1 h-px w-full bg-current opacity-20" />
+                    </button>
+                  );
+                })}
               </div>
-              <div className="mt-6 flex flex-wrap justify-center gap-2">
-                {`TestDaF|telc|DSH|OnSET`.split("|").map((exam) => (
-                  <span key={exam} className="rounded-full border border-primary-foreground/15 px-3 py-1.5 text-xs font-semibold text-primary-foreground/75">{exam}</span>
+              <div className="mt-5 min-h-[82px] rounded-md border border-primary-foreground/10 bg-background/5 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
+                <p className="mt-2 text-sm leading-6 text-primary-foreground/70">{levelDetails[activeLevel]?.description}</p>
+              </div>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {["TestDaF", "telc", "DSH", "OnSET"].map((exam) => (
+                  <span key={exam} className="rounded-full border border-primary-foreground/15 px-3 py-1.5 text-xs font-semibold text-primary-foreground/75 transition-colors hover:border-brand/50 hover:text-primary-foreground">{exam}</span>
                 ))}
               </div>
             </div>
