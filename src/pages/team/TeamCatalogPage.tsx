@@ -341,7 +341,7 @@ export default function TeamCatalogPage() {
                 </div>
               )}
             </>
-          ) : (
+          ) : school ? (
             /* ── School detail ── */
             <div className="space-y-5">
               <Button variant="ghost" size="sm" onClick={backToSchools} className="-ms-2">
