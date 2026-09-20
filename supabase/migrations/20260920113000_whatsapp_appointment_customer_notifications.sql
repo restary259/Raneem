@@ -1,5 +1,34 @@
 -- Customer-facing WhatsApp appointment automation.
 
+-- Seed the Arabic appointment template definitions as PENDING drafts.
+-- They become sendable only after the matching Meta templates are approved.
+INSERT INTO public.whatsapp_templates (
+  purpose, provider_name, language_code, category, approval_status,
+  components, is_active, available_to_team
+) VALUES
+(
+  'appointment_confirmation',
+  'darb_appointment_confirmation_ar',
+  'ar',
+  'UTILITY',
+  'PENDING',
+  '[{"type":"BODY","text":"أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا."}]'::jsonb,
+  true,
+  false
+),
+(
+  'appointment_reminder',
+  'darb_appointment_reminder_ar',
+  'ar',
+  'UTILITY',
+  'PENDING',
+  '[{"type":"BODY","text":"أهلاً! تذكير من درب: عندك موعد معنا بكرا بخصوص الدراسة بألمانيا. إذا احتجت تغيّر الموعد، ابعتلنا."}]'::jsonb,
+  true,
+  false
+)
+ON CONFLICT DO NOTHING;
+
+
 -- Repair the idempotency guard used by the live follow-up worker. Some earlier
 -- deployments created the table but not this partial unique index.
 CREATE UNIQUE INDEX IF NOT EXISTS whatsapp_follow_up_tasks_dedupe_idx
