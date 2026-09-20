@@ -89,7 +89,7 @@ const HomepageExperience = () => {
 
   return (
     <div className="homepage-experience">
-      <section className="relative flex min-h-[620px] items-center overflow-hidden bg-primary text-primary-foreground md:h-[calc(100svh-8.25rem)] md:min-h-[610px] md:max-h-[820px]">
+      <section className="darb-home-hero relative flex items-center overflow-hidden bg-primary text-primary-foreground">
         <img
           src={germanyHero}
           alt={t("homepage.hero.imageAlt")}
@@ -102,16 +102,16 @@ const HomepageExperience = () => {
         <div className="absolute inset-0 bg-primary/10" />
 
         <div className="container relative z-10 mx-auto flex justify-center px-4">
-          <div className="w-full max-w-3xl bg-primary/80 px-6 py-8 text-center shadow-surface-lg backdrop-blur-[2px] sm:px-10 sm:py-10 md:px-14 md:py-12">
-            <p className="text-sm font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
-            <h1 className="mx-auto mt-3 max-w-2xl text-4xl font-bold leading-[1.15] text-primary-foreground sm:text-5xl lg:text-6xl">
+          <div className="darb-home-hero-panel bg-primary/80 text-center shadow-surface-lg backdrop-blur-[2px]">
+            <p className="darb-home-hero-eyebrow font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
+            <h1 className="darb-home-hero-title mx-auto mt-3 max-w-2xl font-bold leading-[1.15] text-primary-foreground">
               {t("homepage.hero.title")}
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-primary-foreground/90 sm:text-lg">
+            <p className="darb-home-hero-subtitle mx-auto mt-5 max-w-2xl leading-8 text-primary-foreground/90">
               {t("homepage.hero.subtitle")}
             </p>
-            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="accent" className="h-12 rounded-none px-7 text-base">
+            <div className="darb-home-hero-actions flex flex-col justify-center gap-3 sm:flex-row">
+              <Button asChild size="lg" variant="accent" className="darb-home-hero-button rounded-none text-base">
                 <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="h-12 rounded-none border-primary-foreground/50 bg-primary/50 px-7 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
