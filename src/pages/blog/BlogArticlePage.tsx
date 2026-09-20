@@ -11,7 +11,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { blogArticles, getArticle, localeContent } from '@/content/blog';
-import DarbContactCta from '@/components/common/DarbContactCta';
 
 const SITE = 'https://darb.agency';
 
@@ -177,7 +176,7 @@ const BlogArticlePage: React.FC = () => {
             </div>
           </section>
         </article>
-        <DarbContactCta variant="compact" />
+
       </main>
       <Footer />
     </div>
