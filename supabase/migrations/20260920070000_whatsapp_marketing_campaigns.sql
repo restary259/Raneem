@@ -118,6 +118,7 @@ AS $whatsapp_campaign_create$
 DECLARE
   v_campaign_id uuid;
   v_count bigint;
+  v_template_body text;
 BEGIN
   IF NOT public.has_role(auth.uid(), 'admin'::app_role) THEN
     RAISE EXCEPTION 'Forbidden';
@@ -133,15 +134,25 @@ BEGIN
 
   PERFORM public.whatsapp_validate_marketing_filters(p_filters);
 
-  IF NOT EXISTS (
-    SELECT 1
-    FROM public.whatsapp_templates
-    WHERE id = p_template_id
-      AND approval_status = 'APPROVED'
-      AND is_active = true
-      AND category = 'MARKETING'
-  ) THEN
+  SELECT coalesce((
+    SELECT component->>'text'
+    FROM jsonb_array_elements(coalesce(t.components, '[]'::jsonb)) AS component
+    WHERE upper(coalesce(component->>'type','')) = 'BODY'
+    LIMIT 1
+  ), '')
+  INTO v_template_body
+  FROM public.whatsapp_templates t
+  WHERE t.id = p_template_id
+    AND t.approval_status = 'APPROVED'
+    AND t.is_active = true
+    AND t.category = 'MARKETING';
+
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'Only active approved marketing templates can be used';
+  END IF;
+
+  IF v_template_body ~ '\\{\\{' THEN
+    RAISE EXCEPTION 'Marketing campaign templates with variables are not supported yet';
   END IF;
 
   v_count := public.whatsapp_marketing_audience_count(p_filters);
@@ -213,6 +224,64 @@ $whatsapp_campaign_cancel$;
 
 REVOKE ALL ON FUNCTION public.whatsapp_cancel_marketing_campaign(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.whatsapp_cancel_marketing_campaign(uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.whatsapp_list_marketing_campaigns(p_limit integer DEFAULT 50)
+RETURNS TABLE (
+  id uuid,
+  name text,
+  template_id uuid,
+  template_provider_name text,
+  template_language_code text,
+  status text,
+  scheduled_at timestamptz,
+  started_at timestamptz,
+  completed_at timestamptz,
+  created_at timestamptz,
+  recipient_total bigint,
+  pending_count bigint,
+  processing_count bigint,
+  sent_count bigint,
+  failed_count bigint,
+  cancelled_count bigint
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $whatsapp_campaign_list$
+BEGIN
+  IF NOT public.has_role(auth.uid(), 'admin'::app_role) THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    c.id,
+    c.name,
+    c.template_id,
+    t.provider_name,
+    t.language_code,
+    c.status,
+    c.scheduled_at,
+    c.started_at,
+    c.completed_at,
+    c.created_at,
+    count(r.id),
+    count(r.id) FILTER (WHERE r.status = 'pending'),
+    count(r.id) FILTER (WHERE r.status = 'processing'),
+    count(r.id) FILTER (WHERE r.status = 'sent'),
+    count(r.id) FILTER (WHERE r.status = 'failed'),
+    count(r.id) FILTER (WHERE r.status = 'cancelled')
+  FROM public.whatsapp_campaigns c
+  JOIN public.whatsapp_templates t ON t.id = c.template_id
+  LEFT JOIN public.whatsapp_campaign_recipients r ON r.campaign_id = c.id
+  GROUP BY c.id, t.provider_name, t.language_code
+  ORDER BY c.created_at DESC
+  LIMIT least(greatest(coalesce(p_limit,50),1),100);
+END;
+$whatsapp_campaign_list$;
+
+REVOKE ALL ON FUNCTION public.whatsapp_list_marketing_campaigns(integer) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.whatsapp_list_marketing_campaigns(integer) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.whatsapp_claim_due_marketing_recipients(p_limit integer DEFAULT 25)
 RETURNS TABLE (
@@ -299,12 +368,6 @@ BEGIN
   WHERE id = p_recipient_id
   RETURNING campaign_id INTO v_campaign_id;
 
-  IF p_status = 'pending' THEN
-    UPDATE public.whatsapp_campaign_recipients
-    SET updated_at = now()
-    WHERE id = p_recipient_id;
-  END IF;
-
   UPDATE public.whatsapp_campaigns
   SET status = CASE
       WHEN EXISTS (
@@ -330,3 +393,49 @@ $whatsapp_campaign_complete$;
 
 REVOKE ALL ON FUNCTION public.whatsapp_complete_marketing_recipient(uuid,text,text,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.whatsapp_complete_marketing_recipient(uuid,text,text,text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.dispatch_whatsapp_marketing_campaigns()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $whatsapp_marketing_cron$
+DECLARE
+  v_key text;
+BEGIN
+  SELECT decrypted_secret INTO v_key
+  FROM vault.decrypted_secrets
+  WHERE name = 'cron_dispatch_secret';
+
+  IF v_key IS NULL OR btrim(v_key) = '' THEN
+    RAISE WARNING 'dispatch_whatsapp_marketing_campaigns: vault secret cron_dispatch_secret is missing/empty';
+    RETURN;
+  END IF;
+
+  PERFORM net.http_post(
+    url := 'https://mzbadxfvxioedzdjxamc.supabase.co/functions/v1/whatsapp-marketing-dispatch',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Lovable-Context', 'cron',
+      'Authorization', 'Bearer ' || v_key
+    ),
+    body := '{}'::jsonb
+  );
+END;
+$whatsapp_marketing_cron$;
+
+REVOKE ALL ON FUNCTION public.dispatch_whatsapp_marketing_campaigns() FROM PUBLIC, anon, authenticated;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM cron.job WHERE jobname = 'whatsapp-marketing-dispatch'
+  ) THEN
+    PERFORM cron.schedule(
+      'whatsapp-marketing-dispatch',
+      '*/5 * * * *',
+      'SELECT public.dispatch_whatsapp_marketing_campaigns()'
+    );
+  END IF;
+END;
+$$;
