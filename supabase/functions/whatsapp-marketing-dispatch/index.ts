@@ -156,6 +156,7 @@ serve(async (req) => {
               action: "send",
               conversation_id: recipient.conversation_id,
               template_id: recipient.template_id,
+              campaign_recipient_id: recipient.id,
               parameters: [],
             }),
           },
