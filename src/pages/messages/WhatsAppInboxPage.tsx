@@ -47,6 +47,7 @@ export default function WhatsAppInboxPage({
   conversationId,
   onConversationClose,
   canManageTemplates = false,
+  inboxOnly = false,
 }: {
   embedded?: boolean;
   conversationOnly?: boolean;
@@ -54,6 +55,8 @@ export default function WhatsAppInboxPage({
   onConversationClose?: () => void;
   /** Admin only: show the Templates tab (sync, create, activate, release). */
   canManageTemplates?: boolean;
+  /** Team view: render only the inbox — conversations, chat, read-only lead panel with notes. */
+  inboxOnly?: boolean;
 }) {
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
