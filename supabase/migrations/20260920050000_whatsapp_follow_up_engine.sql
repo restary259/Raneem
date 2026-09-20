@@ -300,10 +300,10 @@ DECLARE
 BEGIN
   SELECT decrypted_secret INTO v_key
   FROM vault.decrypted_secrets
-  WHERE name = 'email_queue_service_role_key';
+  WHERE name = 'cron_dispatch_secret';
 
   IF v_key IS NULL OR btrim(v_key) = '' THEN
-    RAISE WARNING 'dispatch_whatsapp_follow_up_tasks: vault secret email_queue_service_role_key is missing/empty';
+    RAISE WARNING 'dispatch_whatsapp_follow_up_tasks: vault secret cron_dispatch_secret is missing/empty';
     RETURN;
   END IF;
 
