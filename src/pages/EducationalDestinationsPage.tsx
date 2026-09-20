@@ -558,18 +558,6 @@ const EducationalDestinationsPage = () => {
           </div>
         </section>
 
-        <section className="bg-background py-7">
-          <div className="container">
-            <div className="flex items-start gap-3 border border-border bg-editorial-paper p-4 sm:p-5">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-trust" />
-              <p className="text-xs leading-6 text-muted-foreground">
-                <strong className="text-primary">{t("destinations.disclosureTitle")}:</strong>{" "}
-                {t("destinations.disclosureBody")}
-              </p>
-            </div>
-          </div>
-        </section>
-
         <DarbContactCta />
       </main>
 
