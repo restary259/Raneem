@@ -6,6 +6,7 @@ import { serverErrorResponse } from "../_shared/errors.ts";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/whatsapp";
 const PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
+const MEDIA_TYPES = ["image", "video", "audio", "document"];
 
 type Purpose = typeof PURPOSES[number];
 type ProviderTemplate = {
@@ -231,6 +232,11 @@ serve(async (req) => {
       const lastInbound = conversation.last_inbound_at ? new Date(conversation.last_inbound_at).getTime() : Number.NaN;
       const insideWindow = Number.isFinite(lastInbound) && Date.now() >= lastInbound && Date.now() - lastInbound <= 24 * 60 * 60 * 1000;
       const templateId = input?.template_id ? String(input.template_id) : null;
+      const mediaPath = input?.media_path ? String(input.media_path) : null;
+      const mediaType = String(input?.media_type ?? "document");
+      const mediaMime = input?.media_mime ? String(input.media_mime) : null;
+      const mediaFilename = input?.media_filename ? String(input.media_filename).slice(0, 200) : null;
+      let mediaUrl: string | null = null;
       let providerBody: Record<string, unknown>;
       let storedBody = String(input?.body ?? "").trim();
       let messageType = "text";
