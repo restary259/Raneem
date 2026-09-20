@@ -47,11 +47,11 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
       <div className="container mx-auto px-4">
         <div
           className={cn(
-            "mx-auto flex max-w-6xl flex-col items-center gap-8 md:gap-12",
-            "md:flex-row md:items-center md:justify-between",
+            "mx-auto flex max-w-6xl flex-col items-center gap-6",
+            !compact && !partner ? "md:flex-row md:items-center md:justify-between md:gap-12" : "md:block",
           )}
         >
-          <div className="w-full max-w-2xl text-center md:text-start">
+          <div className={cn("w-full text-center md:text-start", compact || partner ? "max-w-4xl mx-auto" : "max-w-2xl")}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
               {partner ? t("contactCta.partnerEyebrow") : t("contactCta.eyebrow")}
             </p>
@@ -120,19 +120,21 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
             </div>
           </div>
 
-          <div className="shrink-0">
-            <div className="relative">
-              <div className="absolute -inset-2 rounded-full bg-primary/8" aria-hidden="true" />
-              <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-background shadow-[0_18px_45px_rgba(17,17,17,0.12)] ring-1 ring-border sm:h-36 sm:w-36 md:h-44 md:w-44">
-                <img
-                  src={DARB_CONTACT_ADVISOR_SRC}
-                  alt={t("contactCta.eyebrow")}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
+          {!compact && !partner ? (
+            <div className="shrink-0">
+              <div className="relative">
+                <div className="absolute -inset-2 rounded-full bg-primary/8" aria-hidden="true" />
+                <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-background shadow-[0_18px_45px_rgba(17,17,17,0.12)] ring-1 ring-border sm:h-36 sm:w-36 md:h-44 md:w-44">
+                  <img
+                    src={DARB_CONTACT_ADVISOR_SRC}
+                    alt={t("contactCta.eyebrow")}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </div>
     </section>
