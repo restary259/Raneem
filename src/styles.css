@@ -523,7 +523,9 @@ a[href*="lovable.dev"] {
 
 .darb-page-hero-inner {
   min-height: 100%;
-  padding-top: calc(var(--darb-header-height) + clamp(0.75rem, 2vh, 1.5rem));
+  /* Header is in normal flow on non-home pages; reserve only the visual
+     clearance needed so the hero content never collides with navigation. */
+  padding-top: clamp(5.25rem, 9vh, 7rem);
   padding-bottom: clamp(2.5rem, 6vh, 4rem);
 }
 
