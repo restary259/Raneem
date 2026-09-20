@@ -239,3 +239,13 @@ Live provider behavior and the full build/test suite still require final environ
 ### Current implementation continuation
 
 The operational inbox layer is also staged on main: conversation priority, snooze scheduling, first-response SLA, normalized conversation states, language/intent metadata, follow-up task dispatch, assigned-staff notifications, richer filtering, mobile CRM context, and scheduled utility-template follow-ups. These remain additive and must still be migrated together in the final Supabase migration pass.
+
+### Marketing campaign continuation
+
+- Admin-only WhatsApp marketing campaigns now have a staged campaign/recipient data model and RPC API.
+- The admin UI supports approved active MARKETING templates, audience filters, opt-in audience counts, immediate launch, future scheduling, progress, and cancellation.
+- The dispatcher uses the existing WhatsApp connector, re-checks marketing consent immediately before each send, re-checks template approval/activity, and retries transient provider failures with bounded backoff.
+- Campaign cron dispatch is staged at the database layer and remains intentionally unapplied.
+- Service-role connector calls are accepted for internal dispatchers without weakening normal staff authorization.
+- Marketing campaign schema/RPC types and EN/AR UI labels are included; the new admin route is exposed in desktop and mobile admin navigation.
+
