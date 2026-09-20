@@ -7449,6 +7449,16 @@ export type Database = {
         }
         Returns: string
       }
+      whatsapp_search_cases: {
+        Args: { p_query: string }
+        Returns: {
+          case_reference: string
+          full_name: string
+          id: string
+          phone_number: string | null
+          status: string
+        }[]
+      }
       whatsapp_set_conversation_assignment: {
         Args: { p_assigned_to?: string; p_conversation_id: string }
         Returns: string

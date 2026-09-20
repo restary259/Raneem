@@ -15,6 +15,30 @@ export type LeadStage = "new" | "qualified" | "consultation_booked" | "documents
 
 export interface WhatsAppThread extends WhatsAppConversation { lead: WhatsAppLead }
 
+/**
+ * Client-side mirror of the connector's normalization so the new-conversation
+ * dialog can dedupe against existing threads before calling start_conversation.
+ * Returns a normalized E.164-ish form, or null when the input is not a
+ * recognisable WhatsApp number.
+ */
+export function normalizeWhatsAppNumber(value: unknown): string | null {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (/^05\d{8}$/.test(digits)) return `972${digits.slice(1)}`;
+  if (/^00972\d{9}$/.test(digits)) return digits.slice(2);
+  if (/^972\d{9}$/.test(digits)) return digits;
+  if (digits.length >= 8 && digits.length <= 15 && !digits.startsWith("0")) return digits;
+  return null;
+}
+
+export type WhatsAppCaseSearchResult = Database["public"]["Functions"]["whatsapp_search_cases"]["Returns"][number];
+
+/** Case search for the new-conversation dialog; scoped server-side (admin=all, team=own/unassigned). */
+export async function searchWhatsAppCases(query: string): Promise<WhatsAppCaseSearchResult[]> {
+  const { data, error } = await supabase.rpc("whatsapp_search_cases", { p_query: query });
+  fail(error);
+  return (data ?? []) as WhatsAppCaseSearchResult[];
+}
+
 export type WhatsAppCrmLead = Pick<Tables["leads"]["Row"], "id" | "full_name" | "status" | "source_type" | "city" | "preferred_major" | "education_level">;
 export type WhatsAppCrmCase = Pick<Tables["cases"]["Row"], "id" | "full_name" | "status" | "case_reference" | "city" | "degree_interest" | "education_level" | "assigned_to"> & { assigned_to_name: string | null };
 export type WhatsAppCrmProfile = Pick<Tables["profiles"]["Row"], "id" | "full_name" | "student_status" | "city" | "university_name">;

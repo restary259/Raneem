@@ -6,7 +6,20 @@
   "tabs": {
     "inbox": "Inbox",
     "dashboard": "Dashboard",
-    "templates": "Templates"
+    "templates": "Templates",
+    "admin": "Admin",
+    "team": "Team view",
+    "viewToggle": "View"
+  },
+  "quick": {
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "needsReply": "Needs reply"
+  },
+  "connection": {
+    "connected": "WhatsApp connected",
+    "disconnected": "WhatsApp disconnected"
   },
   "filters": {
     "search": "Search name or number…",
@@ -211,6 +224,11 @@
     "title": "Start a WhatsApp conversation",
     "description": "Open or create one WhatsApp conversation. When the number already belongs to a DARB record, the conversation is connected to that record instead of creating a duplicate.",
     "nameOptional": "Optional — leave blank if unknown",
+    "searchPlaceholder": "Search name, case reference or phone…",
+    "byNumber": "Open a conversation with this number",
+    "searchCases": "DARB cases",
+    "searching": "Searching…",
+    "noResults": "No matching cases or numbers found",
     "create": "Open conversation",
     "created": "WhatsApp lead and conversation created",
     "existing": "Existing WhatsApp conversation opened"
