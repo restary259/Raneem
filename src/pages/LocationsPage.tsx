@@ -7,6 +7,7 @@ import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";
 import DarbPageHero from "@/components/common/DarbPageHero";
 import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
+import DarbContactCta from "@/components/common/DarbContactCta";
 
 const LocationsPage = () => {
   const { dir } = useDirection();
@@ -24,6 +25,7 @@ const LocationsPage = () => {
           subtitle={t('seo.locationsDesc')}
         />
         <Locations />
+        <DarbContactCta />
       </main>
       <Footer />
     </div>
