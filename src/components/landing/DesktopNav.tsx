@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@/lib/router-compat';
@@ -7,153 +6,88 @@ import {
   NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuList,
-  NavigationMenuTrigger,
   NavigationMenuLink,
-  navigationMenuTriggerStyle
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import ListItem from './ListItem';
 import { useDirection } from '@/hooks/useDirection';
 
-const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
+const DesktopNav = () => {
   const { t } = useTranslation();
   const { dir } = useDirection();
 
-  const aboutComponents: { title: string; href: string; description: string }[] = [
-    {
-      title: t('nav.about'),
-      href: '/about',
-      description: t('desktopNav.about.description'),
-    },
-    {
-      title: t('nav.locations'),
-      href: '/locations',
-      description: t('desktopNav.locations.description'),
-    },
+  const studyGermany = [
+    { title: t('nav.educationalDestinations'), href: '/educational-destinations', description: t('nav.educationalDestinationsDesc') },
+    { title: t('nav.majors'), href: '/educational-programs', description: t('seo.edProgDesc', { ns: 'common' }) },
   ];
 
-  const moreComponents: { title: string; href: string; description: string }[] = [
-    {
-      title: t('nav.faq'),
-      href: '/faq',
-      description: t('nav.faqDesc'),
-    },
-    {
-      title: t('nav.educationalDestinations'),
-      href: '/educational-destinations',
-      description: t('nav.educationalDestinationsDesc'),
-    },
-    {
-      title: t('nav.partnership'),
-      href: '/partnership',
-      description: t('desktopNav.partnership.description'),
-    },
-    {
-      title: t('nav.broadcast'),
-      href: '/broadcast',
-      description: t('nav.broadcastDesc'),
-    },
+  const studyPath = [
+    { title: t('nav.majors'), href: '/educational-programs', description: t('seo.edProgDesc', { ns: 'common' }) },
+    { title: t('nav.majorQuizNav'), href: '/quiz', description: t('seo.quizDesc', { ns: 'common' }) },
+    { title: t('nav.aiAdvisor'), href: '/ai-advisor', description: t('seo.advisorDesc', { ns: 'common' }) },
   ];
 
-  const navClass = transparent
-    ? 'nav-item rounded-none border-b-2 border-brand bg-primary/70 font-semibold text-primary-foreground hover:bg-primary/85 hover:text-primary-foreground'
-    : 'nav-item rounded-none border-b-2 border-brand bg-muted/60 font-semibold text-foreground hover:bg-muted hover:text-brand-strong';
+  const resources = [
+    { title: t('nav.resources'), href: '/resources', description: t('seo.resourcesDesc', { ns: 'common' }) },
+    { title: t('nav.bagrutCalculator'), href: '/resources/bagrut-calculator', description: t('resources.gpaCalculator.description', { ns: 'resources' }) },
+    { title: t('nav.costCalculator'), href: '/resources/cost-calculator', description: t('resources.costCalculator.description', { ns: 'resources' }) },
+    { title: t('nav.currencyConverter'), href: '/resources/currency-converter', description: t('resources.currencyComparator.description', { ns: 'resources' }) },
+    { title: t('nav.cvBuilder'), href: '/resources/lebenslauf-builder', description: t('resources.lebenslaufBuilder.description', { ns: 'resources' }) },
+    { title: t('nav.faq'), href: '/faq', description: t('nav.faqDesc') },
+    { title: t('nav.broadcast'), href: '/broadcast', description: t('nav.broadcastDesc') },
+    { title: t('nav.blog'), href: '/blog', description: t('footer.blog') },
+  ];
 
+  const about = [
+    { title: t('nav.about'), href: '/about', description: t('desktopNav.about.description') },
+    { title: t('nav.locations'), href: '/locations', description: t('desktopNav.locations.description') },
+    { title: t('nav.partnership'), href: '/partnership', description: t('desktopNav.partnership.description') },
+  ];
+
+  const renderDropdown = (items: { title: string; href: string; description: string }[], widthClass = 'md:w-[500px]') => (
+    <NavigationMenuContent>
+      <ul className={`grid w-[400px] gap-3 p-4 ${dir === 'rtl' ? 'text-right' : 'text-left'} ${widthClass} bg-white shadow-lg border rounded-md`}>
+        {items.map((item) => (
+          <ListItem key={item.href} to={item.href} title={item.title}>
+            {item.description}
+          </ListItem>
+        ))}
+      </ul>
+    </NavigationMenuContent>
+  );
+
+  const triggerClass = 'nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold';
+  const linkClass = navigationMenuTriggerStyle() + ' nav-item rounded-none border-b-2 border-brand bg-muted/60 font-semibold text-brand-strong hover:bg-muted';
 
   return (
     <div className="flex justify-center w-full" dir={dir}>
       <NavigationMenu>
         <NavigationMenuList className="flex items-stretch gap-1">
-          {/* المزيد (dropdown) - First item */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className={navClass}>
-              {t('nav.more')}
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <ul className={`grid w-[400px] gap-3 p-4 ${dir === 'rtl' ? 'text-right' : 'text-left'} md:w-[400px] bg-white shadow-lg border rounded-md`}>
-                {moreComponents.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    to={component.href}
-                    title={component.title}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-              </ul>
-            </NavigationMenuContent>
+            <NavigationMenuTrigger className={triggerClass}>{t('nav.studyGermany')}</NavigationMenuTrigger>
+            {renderDropdown(studyGermany)}
           </NavigationMenuItem>
-
-          {/* تواصل معنا */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} ${navClass}`}>
-              <Link to="/contact">
-                {t('nav.contact')}
-              </Link>
+            <NavigationMenuTrigger className={triggerClass}>{t('nav.studyPath')}</NavigationMenuTrigger>
+            {renderDropdown(studyPath)}
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuLink asChild className={linkClass}>
+              <Link to="/services">{t('nav.services')}</Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
-
-          {/* موارد */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} ${navClass}`}>
-              <Link to="/resources">
-                {t('nav.resources')}
-              </Link>
-            </NavigationMenuLink>
+            <NavigationMenuTrigger className={triggerClass}>{t('nav.resources')}</NavigationMenuTrigger>
+            {renderDropdown(resources, 'md:w-[600px] md:grid-cols-2 lg:w-[680px]')}
           </NavigationMenuItem>
-
-          {/* اختيار التخصص */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} ${navClass}`}>
-              <Link to="/quiz">
-                {t('nav.majorQuizNav')}
-              </Link>
-            </NavigationMenuLink>
+            <NavigationMenuTrigger className={triggerClass}>{t('nav.aboutDarb')}</NavigationMenuTrigger>
+            {renderDropdown(about)}
           </NavigationMenuItem>
-
-          {/* التخصصات */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} ${navClass}`}>
-              <Link to="/educational-programs">
-                {t('nav.majors')}
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-
-          {/* خدماتنا */}
-          <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} ${navClass}`}>
-              <Link to="/services">
-                {t('nav.services')}
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-
-          {/* من نحن (dropdown) */}
-          <NavigationMenuItem>
-            <NavigationMenuTrigger className={navClass}>
-              {t('nav.about')}
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <ul className={`grid w-[400px] gap-3 p-4 ${dir === 'rtl' ? 'text-right' : 'text-left'} md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-white shadow-lg border rounded-md`}>
-                {aboutComponents.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    to={component.href}
-                    title={component.title}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-              </ul>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-
-          {/* الرئيسية - Last item */}
-          <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} ${navClass}`}>
-              <Link to="/">
-                {t('nav.home')}
-              </Link>
+            <NavigationMenuLink asChild className={linkClass}>
+              <Link to="/contact">{t('nav.contact')}</Link>
             </NavigationMenuLink>
           </NavigationMenuItem>
         </NavigationMenuList>
