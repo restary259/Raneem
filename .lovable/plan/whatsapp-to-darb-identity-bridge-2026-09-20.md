@@ -223,7 +223,7 @@ Rollback strategy:
 Implemented in the DARB application:
 
 - WhatsApp inbound identity resolution now has a staged migration path for exact canonical-phone matching against existing cases, leads and profiles.
-- Unknown inbound WhatsApp contacts are designed to create one core `leads` row with `source_type = 'whatsapp'` and `status = 'new'`, guarded by an advisory lock.
+- Unknown inbound WhatsApp contacts are designed to create one core `leads` row with `source_type = 'whatsapp'` and `status = 'new'`, guarded by an advisory lock, with `source_id` retaining the originating `whatsapp_leads.id` for attribution.
 - Automatic identity links are explicitly distinguishable from staff-confirmed links: automatic resolution leaves `identity_confirmed_by` / `identity_confirmed_at` null; staff confirmation records the authenticated staff member and timestamp.
 - The team WhatsApp inbox now shows a DARB CRM context panel for linked lead/case/profile records and follows existing DARB case/student routes.
 - The CRM context is now served through a staff-only SECURITY DEFINER RPC that returns only the linked lead/case/profile display fields required by the inbox; the inbox does not broaden direct profile reads for team members.
