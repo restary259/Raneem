@@ -401,7 +401,7 @@ const HomepageExperience = () => {
                     {service.description}
                   </p>
                   <span className={isActive ? "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-brand-strong" : "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted-foreground/60"}>
-                    {isActive ? "Selected" : "Explore"}
+                    {isActive ? t("homepage.services.selected") : t("homepage.services.explore")}
                   </span>
                 </button>
               );
