@@ -173,39 +173,45 @@ const HomepageExperience = () => {
 
             <div className="darb-logo-marquee rounded-md border border-border bg-background" dir="ltr" aria-label={t("homepage.network.tu9Label")}>
               <div className="darb-logo-marquee-track">
-                {[...tu9Universities, ...tu9Universities].map((uni, index) => (
-                  <a
-                    key={`${uni.name}-${index}`}
-                    href={uni.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={uni.name}
-                    className="darb-logo-tile group"
-                  >
-                    <div className="flex h-14 w-full items-center justify-center sm:h-16">
-                      <img
-                        src={uni.logoUrl}
-                        alt={uni.name}
-                        loading="eager"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        className="max-h-11 w-auto max-w-[126px] object-contain opacity-75 transition-all duration-300 group-hover:scale-[1.04] group-hover:opacity-100"
-                        onError={(event) => {
-                          const image = event.currentTarget;
-                          image.style.display = "none";
-                          const fallback = image.nextElementSibling as HTMLElement | null;
-                          if (fallback) fallback.hidden = false;
-                        }}
-                      />
-                      <span hidden className="max-w-[130px] text-center text-xs font-bold leading-4 text-primary">
+                {[...tu9Universities, ...tu9Universities].map((uni, index) => {
+                  const isPrimarySet = index < tu9Universities.length;
+                  return (
+                    <a
+                      key={`${uni.name}-${index}`}
+                      href={uni.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={uni.name}
+                      className="darb-logo-tile group"
+                      tabIndex={isPrimarySet ? 0 : -1}
+                      aria-hidden={isPrimarySet ? undefined : true}
+                    >
+                      <div className="flex h-14 w-full items-center justify-center sm:h-16">
+                        <img
+                          src={uni.logoUrl}
+                          alt={isPrimarySet ? uni.name : ""}
+                          loading={isPrimarySet ? "eager" : "lazy"}
+                          fetchPriority={isPrimarySet ? "high" : "low"}
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          className="max-h-11 w-auto max-w-[126px] object-contain opacity-75 transition-all duration-300 group-hover:scale-[1.04] group-hover:opacity-100"
+                          onError={(event) => {
+                            const image = event.currentTarget;
+                            image.style.display = "none";
+                            const fallback = image.nextElementSibling as HTMLElement | null;
+                            if (fallback) fallback.hidden = false;
+                          }}
+                        />
+                        <span hidden className="max-w-[130px] text-center text-xs font-bold leading-4 text-primary">
+                          {uni.city}
+                        </span>
+                      </div>
+                      <span className="mt-2 text-[0.62rem] font-semibold tracking-wide text-muted-foreground transition-colors group-hover:text-primary">
                         {uni.city}
                       </span>
-                    </div>
-                    <span className="mt-2 text-[0.62rem] font-semibold tracking-wide text-muted-foreground transition-colors group-hover:text-primary">
-                      {uni.city}
-                    </span>
-                  </a>
-                ))}
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </div>
