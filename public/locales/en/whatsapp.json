@@ -167,10 +167,29 @@
       "inquiry_follow_up": "Inquiry follow-up",
       "consultation_confirmation": "Consultation confirmation",
       "document_reminder": "Document reminder",
-      "application_update": "Application update"
+      "application_update": "Application update",
+      "lead_received": "Lead received",
+      "lead_followup": "Lead follow-up",
+      "appointment_invitation": "Appointment invitation",
+      "appointment_confirmation": "Appointment confirmation",
+      "appointment_reminder": "Appointment reminder",
+      "documents_missing": "Missing documents",
+      "profile_incomplete": "Profile incomplete",
+      "document_received": "Document received",
+      "payment_instruction": "Payment instructions",
+      "payment_reminder": "Payment reminder",
+      "payment_confirmed": "Payment confirmed",
+      "application_started": "Application started",
+      "application_submitted": "Application submitted",
+      "student_welcome": "Student welcome",
+      "enrollment_confirmation": "Enrollment confirmation",
+      "next_steps": "Next steps",
+      "support_followup": "Support follow-up",
+      "case_update": "Case update"
     },
     "active": "Active",
-    "availableToTeam": "Available to team"
+    "availableToTeam": "Available to team",
+    "hebrew": "Hebrew"
   },
   "actions": {
     "retry": "Retry",
