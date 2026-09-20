@@ -126,7 +126,7 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     descriptionKey: "destinations.schools.goacademy.description",
     officialUrl: "https://goacademy.de/en/",
     activityUrl: "https://goacademy.de/en/language-courses/german/german-intensive-course",
-    logoUrl: "/lovable-uploads/f66f6ad1-4686-44a0-8341-178c0bacebaf.webp",
+    logoUrl: "https://fdsv.de/wp-content/uploads/2019/04/GoAcademy-GmbH-4000-x1488px.png",
     credentials: ["Study Travel Star Award Winner 2026", "International House", "IALC", "TÜV Rheinland / DIN ISO 9001:2015", "AZAV", "telc", "TestDaF", "TestAS", "TOEFL", "TOEIC"],
     credentialsNoteKey: "destinations.schools.goacademy.credentialsNote",
     focusKeys: ["destinations.schools.goacademy.focusLevels", "destinations.schools.goacademy.focusPathway", "destinations.schools.goacademy.focusAccommodation"],
