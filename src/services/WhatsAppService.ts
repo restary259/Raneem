@@ -240,10 +240,17 @@ export function setWhatsAppTemplateFlags(templateId: string, flags: { is_active?
   return invokeWhatsAppConnector<{ template: WhatsAppTemplate }>({ action: "set_template_flags", template_id: templateId, ...flags });
 }
 
-export function startWhatsAppConversation(whatsappNumber: string, studentName = "") {
+export function startWhatsAppConversation(
+  whatsappNumber: string,
+  studentName = "",
+  target?: { case_id?: string; lead_id?: string; profile_id?: string },
+) {
   return invokeWhatsAppConnector<{ created: boolean; lead: WhatsAppLead; conversation: WhatsAppConversation }>({
     action: "start_conversation",
     whatsapp_number: whatsappNumber,
     student_name: studentName,
+    ...(target?.case_id ? { case_id: target.case_id } : {}),
+    ...(target?.lead_id ? { lead_id: target.lead_id } : {}),
+    ...(target?.profile_id ? { profile_id: target.profile_id } : {}),
   });
 }
