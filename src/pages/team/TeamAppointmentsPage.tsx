@@ -540,7 +540,7 @@ export default function TeamAppointmentsPage() {
 
   /* ══ RENDER ══════════════════════════════════════════════════════════ */
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* ── HEADER ── */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -759,97 +759,76 @@ export default function TeamAppointmentsPage() {
 
       {/* ══ MONTH VIEW ══ */}
       {!loading && view === "month" && (
-        <div className="flex min-h-0 flex-1 overflow-auto p-0">
-          <div className="flex h-full min-h-0 min-w-[700px] flex-1 flex-col">
-            <div className="grid shrink-0 grid-cols-7 border-b border-border bg-background">
-              {[
-                t("team.appointments.dayAbbrevSun"),
-                t("team.appointments.dayAbbrevMon"),
-                t("team.appointments.dayAbbrevTue"),
-                t("team.appointments.dayAbbrevWed"),
-                t("team.appointments.dayAbbrevThu"),
-                t("team.appointments.dayAbbrevFri"),
-                t("team.appointments.dayAbbrevSat"),
-              ].map((d) => (
-                <div
-                  key={d}
-                  className="flex h-9 items-center justify-center border-e border-border/30 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground last:border-e-0"
-                >
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            <div
-              className="grid min-h-0 flex-1"
-              style={{
-                gridTemplateRows: `repeat(${monthWeeks.length}, minmax(0, 1fr))`,
-              }}
-            >
-              {monthWeeks.map((weekStart) => {
-                const wDays = eachDayOfInterval({
-                  start: weekStart,
-                  end: endOfWeek(weekStart, { weekStartsOn: 0 }),
-                });
-
-                return (
-                  <div
-                    key={weekStart.toISOString()}
-                    className="grid min-h-0 grid-cols-7 border-b border-border/40 last:border-b-0"
-                  >
-                    {wDays.map((day) => {
-                      const dayAppts = getDay(day);
-                      const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day);
-
-                      return (
-                        <div
-                          key={day.toISOString()}
-                          className={cn(
-                            "flex min-h-0 min-w-0 flex-col overflow-hidden border-e border-border/30 p-1.5 transition-colors last:border-e-0",
-                            !isSameMonth(day, currentDate) && "bg-muted/10 text-muted-foreground opacity-35",
-                            isToday(day) && "bg-violet-50/40",
-                            isOver ? "bg-violet-100/50" : "hover:bg-muted/15",
-                          )}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setDragOverSlot({ day, hour: 9 });
-                          }}
-                          onDrop={(e) => handleDrop(e, day, 9)}
-                          onDragLeave={() => setDragOverSlot(null)}
-                          onClick={() => openNew(day)}
-                        >
-                          <div
-                            className={cn(
-                              "mx-auto mb-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors",
-                              isToday(day) ? "bg-primary text-primary-foreground" : "hover:bg-muted",
-                            )}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCurrentDate(day);
-                              setView("day");
-                            }}
-                          >
-                            {format(day, "d")}
-                          </div>
-
-                          <div className="min-h-0 overflow-hidden">
-                            {dayAppts.slice(0, 3).map((a) => (
-                              <ApptBlock key={a.id} appt={a} compact />
-                            ))}
-                            {dayAppts.length > 3 && (
-                              <p className="truncate text-center text-[9px] font-medium text-muted-foreground">
-                                {t("team.appointments.moreCount", { count: dayAppts.length - 3 })}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
+        <div className="flex-1 overflow-auto p-3">
+          <div className="grid grid-cols-7 mb-1">
+            {[
+              t("team.appointments.dayAbbrevSun"),
+              t("team.appointments.dayAbbrevMon"),
+              t("team.appointments.dayAbbrevTue"),
+              t("team.appointments.dayAbbrevWed"),
+              t("team.appointments.dayAbbrevThu"),
+              t("team.appointments.dayAbbrevFri"),
+              t("team.appointments.dayAbbrevSat"),
+            ].map((d) => (
+              <div
+                key={d}
+                className="text-[10px] text-center text-muted-foreground font-semibold uppercase tracking-wide py-1"
+              >
+                {d}
+              </div>
+            ))}
           </div>
+          {monthWeeks.map((weekStart) => {
+            const wDays = eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, { weekStartsOn: 0 }) });
+            return (
+              <div key={weekStart.toISOString()} className="grid grid-cols-7 border-t border-border/40">
+                {wDays.map((day) => {
+                  const dayAppts = getDay(day);
+                  const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day);
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={cn(
+                        "min-h-[100px] border-e border-border/30 p-1.5 transition-colors cursor-pointer",
+                        !isSameMonth(day, currentDate) && "opacity-35 bg-muted/10",
+                        isToday(day) && "bg-violet-50/40",
+                        isOver ? "bg-violet-100/50" : "hover:bg-muted/15",
+                      )}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverSlot({ day, hour: 9 });
+                      }}
+                      onDrop={(e) => handleDrop(e, day, 9)}
+                      onDragLeave={() => setDragOverSlot(null)}
+                      onClick={() => openNew(day)}
+                    >
+                      <div
+                        className={cn(
+                          "w-6 h-6 flex items-center justify-center rounded-full text-xs font-medium mb-1 mx-auto transition-colors",
+                          isToday(day) ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentDate(day);
+                          setView("day");
+                        }}
+                      >
+                        {format(day, "d")}
+                      </div>
+                      {dayAppts.slice(0, 3).map((a) => (
+                        <ApptBlock key={a.id} appt={a} compact />
+                      ))}
+                      {dayAppts.length > 3 && (
+                        <p className="text-[9px] text-muted-foreground text-center font-medium mt-0.5">
+                          {t("team.appointments.moreCount", { count: dayAppts.length - 3 })}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       )}
 
