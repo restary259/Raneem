@@ -587,7 +587,7 @@ export default function WhatsAppInboxPage({
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
   const conversationOnlyView = (
-    <Card className={cn("min-h-0 h-full w-full overflow-hidden rounded-xl shadow-none", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0")}>
+    <Card className={cn("min-h-0 h-full max-h-full w-full overflow-hidden rounded-xl shadow-none", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0")}>
       <div className="flex h-full min-h-0 flex-col">
         {!active ? (
           <EmptyState title={t("empty.select")} description={t("empty.description")} icon={MessageCircle} className="flex-1" />
@@ -641,8 +641,9 @@ export default function WhatsAppInboxPage({
             </div>
             <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
             <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
-            <Conversation className="min-h-0 flex-1">
-              <ConversationContent className="gap-3">
+            <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+              <Conversation className="flex min-h-0 min-w-0 max-h-full flex-1 overflow-hidden">
+                <ConversationContent className="min-h-0 min-w-0 flex-1 gap-3 overflow-y-auto overscroll-contain">
                 {messages.length ? messages.map((m, index) => {
                   const previous = index > 0 ? messages[index - 1] : null;
                   const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
@@ -661,9 +662,10 @@ export default function WhatsAppInboxPage({
                     </div>
                   );
                 }) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}
-              </ConversationContent>
-              <ConversationScrollButton />
-            </Conversation>
+                </ConversationContent>
+                <ConversationScrollButton />
+              </Conversation>
+            </div>
             <div className="shrink-0 space-y-2 border-t p-3">
               <div className={cn("flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs", windowClosed ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5")}>
                 <div className="flex items-center gap-2"><Clock3 className="h-3.5 w-3.5" /><span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span></div>
