@@ -6622,17 +6622,27 @@ export type Database = {
       whatsapp_crm_context: {
         Args: { p_whatsapp_lead_id: string }
         Returns: {
+          case_assigned_to: string | null
+          case_assigned_to_name: string | null
+          case_city: string | null
+          case_degree_interest: string | null
+          case_education_level: string | null
           case_full_name: string | null
           case_id: string | null
           case_reference: string | null
           case_status: string | null
+          lead_city: string | null
+          lead_education_level: string | null
           lead_full_name: string | null
           lead_id: string | null
+          lead_preferred_major: string | null
           lead_source_type: string | null
           lead_status: string | null
+          profile_city: string | null
           profile_full_name: string | null
           profile_id: string | null
           profile_student_status: string | null
+          profile_university_name: string | null
         }[]
       }
       has_permission: {
