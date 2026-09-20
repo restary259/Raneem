@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { requireAuth } from "../_shared/auth.ts";
+import { isCronDispatcher } from "../_shared/cronAuth.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { serverErrorResponse } from "../_shared/errors.ts";
 
@@ -18,9 +19,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers });
 
   try {
-    const auth = await requireAuth(req);
-    if (!auth.ok) return json({ error: auth.error }, auth.status, headers);
-    if (!auth.isServiceRole) return json({ error: "Service role required" }, 403, headers);
+    const cron = await isCronDispatcher(req);
+    if (!cron) {
+      const auth = await requireAuth(req, ["admin"]);
+      if (!auth.ok) return json({ error: auth.error }, auth.status, headers);
+    }
 
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
