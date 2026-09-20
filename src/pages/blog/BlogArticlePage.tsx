@@ -5,7 +5,8 @@ import { CalendarDays, ExternalLink, Info } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import SEOHead from '@/components/common/SEOHead';
-import PageHero from '@/components/common/PageHero';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -77,7 +78,7 @@ const BlogArticlePage: React.FC = () => {
       />
       <Header />
       <main className="flex-1">
-        <PageHero title={content.title} subtitle={content.excerpt} badge={t(`categories.${article.category}`)} />
+        <DarbPageHero eyebrow={t("categories." + article.category)} imageUrl={DARB_PUBLIC_HERO_IMAGES.journal} imageAlt={content.title} title={content.title} subtitle={content.excerpt} />
 
         <article className="container mx-auto px-4 sm:px-6 py-10 md:py-14 max-w-3xl">
           <nav aria-label="breadcrumb" className="mb-6 text-sm text-muted-foreground flex flex-wrap gap-2">
