@@ -409,6 +409,28 @@
           "label": "C1 · Academic",
           "description": "Advanced German for higher-education contexts and academic exams."
         }
+      },
+      "levelLabel": "LANGUAGE LEVEL",
+      "examEyebrow": "EXAM SUPPORT",
+      "examTitle": "Registration & preparation",
+      "examBadge": "DARB SUPPORT",
+      "exams": {
+        "telc": {
+          "label": "telc · Registration support",
+          "description": "We can help you choose a suitable telc exam, coordinate the registration process and prepare the documents you need."
+        },
+        "TestDaF": {
+          "label": "TestDaF · Registration support",
+          "description": "We can help you plan your TestDaF route, coordinate registration with the relevant centre and prepare for the exam stage."
+        },
+        "TestAS": {
+          "label": "TestAS · Registration support",
+          "description": "We can help you understand when TestAS is relevant, coordinate the registration steps and prepare your application timeline."
+        },
+        "onSET": {
+          "label": "onSET · Language assessment",
+          "description": "We can guide you on using onSET as a language-level assessment when it fits your route and explain the next step."
+        }
       }
     },
     "trust": {
