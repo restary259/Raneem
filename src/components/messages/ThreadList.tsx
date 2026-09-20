@@ -48,7 +48,7 @@ export interface ThreadListItem {
   preview: string;
   timestamp: string | null;
   unread: number;
-  type: "case" | "direct" | "whatsapp";
+  type: "case" | "direct";
   /** Sidebar section this thread belongs to. */
   category?: ThreadCategory;
   /** Direct threads only — used for the presence dot. */
