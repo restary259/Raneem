@@ -88,10 +88,10 @@ export default function WhatsAppCampaignsPage() {
   const [campaigns, setCampaigns] = useState<WhatsAppMarketingCampaign[]>([]);
   const [name, setName] = useState("");
   const [templateId, setTemplateId] = useState("");
-  const [intent, setIntent] = useState("");
-  const [language, setLanguage] = useState("");
+  const [intent, setIntent] = useState("all");
+  const [language, setLanguage] = useState("all");
   const [campaignKey, setCampaignKey] = useState("");
-  const [leadStage, setLeadStage] = useState("");
+  const [leadStage, setLeadStage] = useState("all");
   const [source, setSource] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [audienceCount, setAudienceCount] = useState<number | null>(null);
@@ -111,10 +111,10 @@ export default function WhatsAppCampaignsPage() {
 
   const filters = useMemo<WhatsAppMarketingFilter>(() => {
     const next: WhatsAppMarketingFilter = {};
-    if (intent) next.intent = intent;
-    if (language) next.language_code = language;
+    if (intent !== "all") next.intent = intent;
+    if (language !== "all") next.language_code = language;
     if (campaignKey.trim()) next.campaign_key = campaignKey.trim();
-    if (leadStage) next.lead_stage = leadStage;
+    if (leadStage !== "all") next.lead_stage = leadStage;
     if (source.trim()) next.source = source.trim();
     return next;
   }, [intent, language, campaignKey, leadStage, source]);
