@@ -4,6 +4,7 @@ import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import SEOHead from "@/components/common/SEOHead";
 import DarbPageHero from "@/components/common/DarbPageHero";
+import DarbContactCta from "@/components/common/DarbContactCta";
 import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import { Link } from "@/lib/router-compat";
 import { useDirection } from "@/hooks/useDirection";
@@ -568,6 +569,8 @@ const EducationalDestinationsPage = () => {
             </div>
           </div>
         </section>
+
+        <DarbContactCta />
       </main>
 
       <Footer />
