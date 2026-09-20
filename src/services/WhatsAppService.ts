@@ -173,7 +173,7 @@ export async function addInternalNote(conversationId: string, authorId: string, 
 }
 
 export interface AiAssistResult { draft: string; summary: string; escalation_required: boolean; escalation_reasons: string[] }
-export async function requestWhatsAppAiAssist(input: { mode: "welcome" | "qualification" | "summary"; lead: WhatsAppLead; messages: WhatsAppMessage[]; instruction?: string; language: "ar" | "en" }) {
+export async function requestWhatsAppAiAssist(input: { mode: "welcome" | "qualification" | "summary"; lead: WhatsAppLead; messages: WhatsAppMessage[]; instruction?: string; language: "ar" | "en" | "he" }) {
   const { data, error } = await supabase.functions.invoke("whatsapp-ai-assist", { body: input });
   if (error) throw new Error(await readFunctionError(error));
   return data as AiAssistResult;
