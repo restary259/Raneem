@@ -102,7 +102,7 @@
     "step4Title": "Prepare for university",
     "step4Body": "Keep your language plan connected to your future university and major choices.",
     "citiesEyebrow": "LANGUAGE-YEAR DESTINATIONS",
-    "citiesTitle": "Four cities. Four different ways to experience Germany.",
+    "citiesTitle": "Five cities. Five different ways to experience Germany.",
     "citiesBody": "These are the cities currently featured in the DARB language-year pathway.",
     "exploreCity": "Explore city",
     "cityLife": "City & school life",
@@ -150,6 +150,13 @@
         "highlight1": "International capital",
         "highlight2": "Culture & events",
         "highlight3": "Large university ecosystem"
+      },
+      "munster": {
+        "region": "North Rhine-Westphalia",
+        "description": "A lively university city known for its historic centre, strong cycling culture and international student atmosphere.",
+        "highlight1": "University city",
+        "highlight2": "Historic old town",
+        "highlight3": "Bike-friendly everyday life"
       }
     },
     "sources": {
@@ -159,7 +166,8 @@
       "schoolCulture": "GoAcademy city & culture",
       "schoolHome": "Official school site",
       "schoolGallery": "Perfekt Deutsch gallery",
-      "schoolInfo": "VICTORIA Academy information"
+      "schoolInfo": "VICTORIA Academy information",
+      "schoolKapitoCourses": "KAPITO courses & exams"
     },
     "schools": {
       "fu": {
@@ -211,6 +219,16 @@
         "serviceHousing": "Downtown accommodation",
         "serviceActivities": "Organized activities",
         "serviceUniversity": "University-linked academic environment"
+      },
+      "kapito": {
+        "description": "KAPITO in Münster offers German courses from A1 to C1, university-oriented study preparation and a personal learning environment for international students.",
+        "credentialsNote": "KAPITO's current site identifies it as a licensed test centre for telc and TestDaF and lists preparation for telc, TestDaF and DSH.",
+        "focusLevels": "German A1–C1 courses",
+        "focusUniversity": "University-oriented German and study preparation",
+        "focusSupport": "Personal support in an international learning environment",
+        "serviceHousing": "Accommodation placement options",
+        "serviceGuidance": "Support with visa, insurance and study questions",
+        "serviceActivities": "Cultural programme and homework tutoring"
       }
     },
     "selectionEyebrow": "WHY THESE INSTITUTIONS",
@@ -271,6 +289,14 @@
         "serviceHousing": "Downtown accommodation",
         "serviceActivities": "Organized activities",
         "serviceUniversity": "University-linked academic environment"
+      },
+      "kapito": {
+        "focusLevels": "German A1–C1 courses",
+        "focusUniversity": "University-oriented German and study preparation",
+        "focusSupport": "Personal support in an international learning environment",
+        "serviceHousing": "Accommodation placement options",
+        "serviceGuidance": "Support with visa, insurance and study questions",
+        "serviceActivities": "Cultural programme and homework tutoring"
       }
     },
     "journey": {
@@ -292,7 +318,7 @@
       "stage6Body": "Move from language preparation into the application stage for your next academic step."
     },
     "compareEyebrow": "CITY SNAPSHOT",
-    "compareTitle": "Compare the four cities at a glance",
+    "compareTitle": "Compare the five cities at a glance",
     "compareBody": "A factual view of the current DARB destination set: region, featured language institutions, city context and the official city source.",
     "compareHeaders": {
       "city": "City",
