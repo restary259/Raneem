@@ -55,43 +55,43 @@ export default function TeamWorkPage() {
   const { t, i18n } = useTranslation("dashboard");
   const isRtl = i18n.language === "ar";
 
-  const [loading, setLoading] = useState(true);
-  const [todayAppts, setTodayAppts] = useState<ApptRow[]>([]);
-  const [overdueAppts, setOverdueAppts] = useState<ApptRow[]>([]);
-  const [overdueCount, setOverdueCount] = useState(0);
-  const [returned, setReturned] = useState<ReturnedRow[]>([]);
-  const [returnedCount, setReturnedCount] = useState(0);
-  const [staleCases, setStaleCases] = useState<CaseRow[]>([]);
-  const [totalCases, setTotalCases] = useState(0);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
-  // Confirmed cash payments collected from students but not yet handed to
-  // admin. null = not loaded yet. Only admin can settle; this is read-only.
-  const [cashOwed, setCashOwed] = useState<number | null>(null);
 
-  const fetchData = useCallback(async () => {
-    if (!user) return;
-    let ignore = false;
-    setLoading(true);
-    try {
+  // Served from the shared query cache, so coming back to My Work renders the
+  // previous snapshot immediately and refreshes behind it instead of blanking.
+  const { data, loading, refetch } = useCachedData(
+    ["team", "work", user?.id],
+    async () => {
       const dayStart = new Date();
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date();
       dayEnd.setHours(23, 59, 59, 999);
       const nowIso = new Date().toISOString();
       const staleBefore = new Date(Date.now() - STALE_DAYS * DAY_MS).toISOString();
+      const uid = user!.id;
 
-      const [todayRes, overdueRes, overdueCountRes, casesRes, staleRes] = await Promise.all([
+      // Every independent read runs in one parallel batch — the returned-
+      // submission reads used to wait on the first wave for no reason.
+      const [
+        todayRes,
+        overdueRes,
+        overdueCountRes,
+        casesRes,
+        staleRes,
+        returnedRes,
+        returnedCountRes,
+      ] = await Promise.all([
         supabase
           .from("appointments")
           .select("id, case_id, scheduled_at, duration_minutes, outcome, notes, case:cases(full_name)")
-          .eq("team_member_id", user.id)
+          .eq("team_member_id", uid)
           .gte("scheduled_at", dayStart.toISOString())
           .lte("scheduled_at", dayEnd.toISOString())
           .order("scheduled_at"),
         supabase
           .from("appointments")
           .select("id, case_id, scheduled_at, duration_minutes, outcome, notes, case:cases(full_name)")
-          .eq("team_member_id", user.id)
+          .eq("team_member_id", uid)
           .lt("scheduled_at", dayStart.toISOString())
           .is("outcome", null)
           .order("scheduled_at", { ascending: false })
@@ -104,43 +104,26 @@ export default function TeamWorkPage() {
         supabase
           .from("appointments")
           .select("id", { count: "exact", head: true })
-          .eq("team_member_id", user.id)
+          .eq("team_member_id", uid)
           .lt("scheduled_at", nowIso)
           .is("outcome", null),
         supabase
           .from("cases")
           .select("id", { count: "exact", head: true })
-          .eq("assigned_to", user.id)
+          .eq("assigned_to", uid)
           .is("deleted_at", null)
           .eq("archived", false),
         supabase
           .from("cases")
           .select("id, full_name, status, last_activity_at, case_reference")
-          .eq("assigned_to", user.id)
+          .eq("assigned_to", uid)
           .is("deleted_at", null)
           .eq("archived", false)
           .lt("last_activity_at", staleBefore)
           .not("status", "in", "(enrollment_paid,cancelled)")
           .order("last_activity_at")
           .limit(10),
-      ]);
-
-      if (todayRes.error) throw todayRes.error;
-      if (overdueRes.error) throw overdueRes.error;
-      if (overdueCountRes.error) throw overdueCountRes.error;
-      if (casesRes.error) throw casesRes.error;
-      if (staleRes.error) throw staleRes.error;
-
-      if (ignore) return;
-      setTodayAppts((todayRes.data as unknown as ApptRow[]) ?? []);
-      setOverdueAppts((overdueRes.data as unknown as ApptRow[]) ?? []);
-      setOverdueCount(overdueCountRes.count ?? 0);
-      setTotalCases(casesRes.count ?? 0);
-      setStaleCases((staleRes.data as CaseRow[]) ?? []);
-
-      const caseIds = ((staleRes.data as CaseRow[]) ?? []).map((c) => c.id);
-      // Returned submissions are scoped by RLS to the cases assigned to this member.
-      const [returnedRes, returnedCountRes] = await Promise.all([
+        // Returned submissions are scoped by RLS to the cases assigned to this member.
         supabase
           .from("case_submissions")
           .select("id, case_id, review_note, reviewed_at, case:cases(full_name, case_reference)")
@@ -155,41 +138,49 @@ export default function TeamWorkPage() {
           .eq("review_status", "changes_requested")
           .is("deleted_at", null),
       ]);
+
+      if (todayRes.error) throw todayRes.error;
+      if (overdueRes.error) throw overdueRes.error;
+      if (overdueCountRes.error) throw overdueCountRes.error;
+      if (casesRes.error) throw casesRes.error;
+      if (staleRes.error) throw staleRes.error;
       if (returnedRes.error) throw returnedRes.error;
       if (returnedCountRes.error) throw returnedCountRes.error;
-      if (ignore) return;
-      setReturned((returnedRes.data as unknown as ReturnedRow[]) ?? []);
-      setReturnedCount(returnedCountRes.count ?? 0);
-      void caseIds;
 
       // Cash owed to admin = sum of confirmed cash payments still unsettled.
       // Scoped server-side to auth.uid(); settles drop it automatically.
+      let cashOwed: number | null = null;
       try {
         const { data: debts } = await supabase.rpc("get_my_cash_debts");
-        if (!ignore) {
-          setCashOwed(
-            (debts ?? [])
-              .filter((d) => d.debt_status === "pending")
-              .reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0),
-          );
-        }
+        cashOwed = (debts ?? [])
+          .filter((d) => d.debt_status === "pending")
+          .reduce((sum, d) => sum + Number(d.amount_owed_to_admin ?? 0), 0);
       } catch (cashErr) {
         console.warn("get_my_cash_debts failed:", cashErr);
-        if (!ignore) setCashOwed(null);
       }
-    } catch (err) {
-      console.error("TeamWorkPage fetchData error:", err);
-    } finally {
-      if (!ignore) setLoading(false);
-    }
-    return () => { ignore = true; };
-  }, [user]);
 
-  useEffect(() => {
-    let cleanup: (() => void) | undefined;
-    fetchData().then((fn) => { cleanup = fn; });
-    return () => { cleanup?.(); };
-  }, [fetchData]);
+      return {
+        todayAppts: (todayRes.data as unknown as ApptRow[]) ?? [],
+        overdueAppts: (overdueRes.data as unknown as ApptRow[]) ?? [],
+        overdueCount: overdueCountRes.count ?? 0,
+        totalCases: casesRes.count ?? 0,
+        staleCases: (staleRes.data as CaseRow[]) ?? [],
+        returned: (returnedRes.data as unknown as ReturnedRow[]) ?? [],
+        returnedCount: returnedCountRes.count ?? 0,
+        cashOwed,
+      };
+    },
+    { enabled: !!user, staleTime: 30_000 },
+  );
+
+  const todayAppts = data?.todayAppts ?? EMPTY_APPTS;
+  const overdueAppts = data?.overdueAppts ?? EMPTY_APPTS;
+  const overdueCount = data?.overdueCount ?? 0;
+  const returned = data?.returned ?? EMPTY_RETURNED;
+  const returnedCount = data?.returnedCount ?? 0;
+  const staleCases = data?.staleCases ?? EMPTY_CASES;
+  const totalCases = data?.totalCases ?? 0;
+  const cashOwed = data?.cashOwed ?? null;
 
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
