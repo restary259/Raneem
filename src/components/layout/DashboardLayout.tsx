@@ -418,7 +418,6 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   // button + unread badge. Students have their own messages route too, but they
   // are gated through StudentOnboardingGate and rarely need the header shortcut
   // while in the checklist flow; the sidebar item remains their primary path.
-  const { canAccess: canAccessWhatsAppInbox } = useWhatsAppInboxAccess();
   const canMessage =
     role === "admin" ||
     role === "team_member" ||
