@@ -92,7 +92,36 @@ serve(async (req) => {
     if (action === "start_conversation") {
       const whatsappNumber = normalizeWhatsAppNumber(input?.whatsapp_number);
       const studentName = String(input?.student_name ?? "").trim().slice(0, 200);
+      const requestedCaseId = input?.case_id ? String(input.case_id) : null;
+      const requestedLeadId = input?.lead_id ? String(input.lead_id) : null;
+      const requestedProfileId = input?.profile_id ? String(input.profile_id) : null;
       if (!whatsappNumber) return json({ error: "Enter a valid WhatsApp number with its country code" }, 400, corsHeaders);
+      if (requestedCaseId || requestedLeadId || requestedProfileId) {
+        const [caseResult, leadResult, profileResult] = await Promise.all([
+          requestedCaseId
+            ? admin.from("cases").select("id,full_name,phone_number,student_user_id").eq("id", requestedCaseId).maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+          requestedLeadId
+            ? admin.from("leads").select("id,full_name,phone").eq("id", requestedLeadId).maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+          requestedProfileId
+            ? admin.from("profiles").select("id,full_name,phone_number,case_id,linked_case_id").eq("id", requestedProfileId).maybeSingle()
+            : Promise.resolve({ data: null, error: null }),
+        ]);
+        if (caseResult.error) throw caseResult.error;
+        if (leadResult.error) throw leadResult.error;
+        if (profileResult.error) throw profileResult.error;
+
+        if (requestedCaseId && (!caseResult.data || normalizeWhatsAppNumber(caseResult.data.phone_number) !== whatsappNumber)) {
+          return json({ error: "The selected case does not match the WhatsApp number" }, 409, corsHeaders);
+        }
+        if (requestedLeadId && (!leadResult.data || normalizeWhatsAppNumber(leadResult.data.phone) !== whatsappNumber)) {
+          return json({ error: "The selected lead does not match the WhatsApp number" }, 409, corsHeaders);
+        }
+        if (requestedProfileId && (!profileResult.data || normalizeWhatsAppNumber(profileResult.data.phone_number) !== whatsappNumber)) {
+          return json({ error: "The selected student account does not match the WhatsApp number" }, 409, corsHeaders);
+        }
+      }
 
       const { data: existingLead, error: existingError } = await admin
         .from("whatsapp_leads")
@@ -111,6 +140,11 @@ serve(async (req) => {
           consent_status: "unknown",
           lead_stage: "new",
           created_by: auth.userId,
+          linked_case_id: requestedCaseId,
+          linked_lead_id: requestedLeadId,
+          linked_profile_id: requestedProfileId,
+          identity_confirmed_by: requestedCaseId || requestedLeadId || requestedProfileId ? auth.userId : null,
+          identity_confirmed_at: requestedCaseId || requestedLeadId || requestedProfileId ? new Date().toISOString() : null,
         }).select("*").single();
         if (leadError) {
           if (leadError.code !== "23505") throw leadError;
@@ -123,6 +157,32 @@ serve(async (req) => {
         }
       }
       if (!lead) return json({ error: "WhatsApp lead could not be created" }, 500, corsHeaders);
+
+      if (requestedCaseId || requestedLeadId || requestedProfileId) {
+        const conflicts =
+          (requestedCaseId && lead.linked_case_id && lead.linked_case_id !== requestedCaseId) ||
+          (requestedLeadId && lead.linked_lead_id && lead.linked_lead_id !== requestedLeadId) ||
+          (requestedProfileId && lead.linked_profile_id && lead.linked_profile_id !== requestedProfileId);
+        if (conflicts) return json({ error: "This WhatsApp contact is already linked to a different DARB record" }, 409, corsHeaders);
+
+        const resolvedName =
+          studentName ||
+          (requestedCaseId ? String((await admin.from("cases").select("full_name").eq("id", requestedCaseId).maybeSingle()).data?.full_name ?? "") : "") ||
+          (requestedProfileId ? String((await admin.from("profiles").select("full_name").eq("id", requestedProfileId).maybeSingle()).data?.full_name ?? "") : "") ||
+          (requestedLeadId ? String((await admin.from("leads").select("full_name").eq("id", requestedLeadId).maybeSingle()).data?.full_name ?? "") : "");
+
+        const { data: linkedLead, error: linkError } = await admin.from("whatsapp_leads").update({
+          linked_case_id: requestedCaseId ?? lead.linked_case_id,
+          linked_lead_id: requestedLeadId ?? lead.linked_lead_id,
+          linked_profile_id: requestedProfileId ?? lead.linked_profile_id,
+          identity_confirmed_by: auth.userId,
+          identity_confirmed_at: new Date().toISOString(),
+          ...(resolvedName && !lead.student_name ? { student_name: resolvedName } : {}),
+          updated_at: new Date().toISOString(),
+        }).eq("id", lead.id).select("*").single();
+        if (linkError) throw linkError;
+        lead = linkedLead;
+      }
 
       const { data: existingConversation, error: conversationReadError } = await admin.from("whatsapp_conversations").select("*").eq("lead_id", lead.id).maybeSingle();
       if (conversationReadError) throw conversationReadError;
