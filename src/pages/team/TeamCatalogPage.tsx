@@ -4,7 +4,7 @@ import { useSearchParams } from "@/lib/router-compat";
 import { RefreshCw, Building2, ChevronRight, Globe2, GraduationCap, BedDouble, ArrowLeft, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { EmptyState, LoadingState, ErrorState } from "@/components/shell";
+import { PageHeader, EmptyState, LoadingState, ErrorState } from "@/components/shell";
 import { useTeamCatalog } from "@/hooks/useTeamCatalog";
 import { useLang } from "@/hooks/useLang";
 import {
@@ -222,16 +222,14 @@ export default function TeamCatalogPage() {
   const schoolPhotoList = allPhotos(school?.photos);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6 2xl:max-w-[1600px]">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight 2xl:text-3xl">{t("nav.catalog", "Catalog")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("catalog.pageDesc", "Browse schools, their courses and accommodation. Click a photo for the full gallery.")}
-          </p>
-        </div>
-      </div>
+    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8">
+      <PageHeader
+        title={t("nav.catalog", "Catalog")}
+        subtitle={t(
+          "catalog.pageDesc",
+          "Browse schools, their courses and accommodation.",
+        )}
+      />
 
       {loading ? (
         <LoadingState variant="cards" rows={6} />
@@ -260,7 +258,7 @@ export default function TeamCatalogPage() {
                   key={c.country || "__none__"}
                   type="button"
                   onClick={() => openCountry(c.country)}
-                  className="group text-start"
+                  className="w-full text-start"
                 >
                   <Card className="flex h-full items-center justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
                     <div className="min-w-0">
@@ -268,15 +266,12 @@ export default function TeamCatalogPage() {
                         <Globe2 className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="truncate">{countryLabel(c.country)}</span>
                       </div>
-                      <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Building2 className="h-3.5 w-3.5" />
-                        {c.schools.length.toLocaleString("en-US")}{" "}
-                        {t("catalog.schools", "schools")}
+                        {c.schools.length} {t("partnerSchools.schools", "schools")}
                       </p>
                     </div>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
-                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180" />
                   </Card>
                 </button>
               ))}
@@ -286,24 +281,35 @@ export default function TeamCatalogPage() {
           {!school && activeCountry != null ? (
             /* ── Schools grid ── */
             <>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" size="sm" onClick={backToCountries}>
-                  <Globe2 className="me-1.5 h-3.5 w-3.5" />
-                  {t("catalog.backToCountries", "All countries")}
-                </Button>
-                {countries.length > 1 &&
-                  countries.map((c) => (
-                    <Button
-                      key={c.country || "__none__"}
-                      type="button"
-                      variant={(c.country || "") === activeCountry ? "secondary" : "outline"}
-                      size="sm"
-                      onClick={() => openCountry(c.country)}
-                    >
-                      {countryLabel(c.country)}
-                    </Button>
-                  ))}
-              </div>
+              <PageHeader
+                title={countryLabel(activeCountry)}
+                subtitle={t(
+                  "catalog.countrySubtitle",
+                  "Schools, courses and accommodation in this country.",
+                )}
+                actions={
+                  <Button variant="ghost" size="sm" onClick={backToCountries}>
+                    <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+                    {t("catalog.backToCountries", "Back")}
+                  </Button>
+                }
+              >
+                {countries.length > 1 && (
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {countries.map((c) => (
+                      <Button
+                        key={c.country || "__none__"}
+                        type="button"
+                        variant={(c.country || "") === activeCountry ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => openCountry(c.country)}
+                      >
+                        {countryLabel(c.country)}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </PageHeader>
 
               <CatalogFilters
                 schools={countrySchools}
@@ -344,10 +350,19 @@ export default function TeamCatalogPage() {
           ) : school ? (
             /* ── School detail ── */
             <div className="space-y-5">
-              <Button variant="ghost" size="sm" onClick={backToSchools} className="-ms-2">
-                <ArrowLeft className="me-1.5 h-4 w-4 rtl:rotate-180" />
-                {t("catalog.backToSchools", "Back to schools")}
-              </Button>
+              <PageHeader
+                title={localizedName(school, lang)}
+                subtitle={[
+                  school.city,
+                  school.country,
+                ].filter(Boolean).join(", ")}
+                actions={
+                  <Button variant="ghost" size="sm" onClick={backToSchools}>
+                    <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+                    {t("catalog.backToSchools", "Back")}
+                  </Button>
+                }
+              />
 
               {/* School hero */}
               <Card className="overflow-hidden">
