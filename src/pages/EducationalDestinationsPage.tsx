@@ -1,5 +1,4 @@
-import React from "react";
-import { ArrowUpRight, Award, Building2, CalendarDays, Check, ExternalLink, Languages, MapPin, ShieldCheck, GraduationCap, Home, BookOpenCheck } from "lucide-react";
+import { ArrowUpRight, Award, BadgeCheck, BookOpenCheck, Building2, CalendarDays, Check, ExternalLink, GraduationCap, Home, Languages, MapPin, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -10,26 +9,61 @@ import { Link } from "@/lib/router-compat";
 import { useDirection } from "@/hooks/useDirection";
 import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
 
-const schoolCityMap = {
-  heidelberg: "Heidelberg",
-  dusseldorf: "Düsseldorf",
-  dortmund: "Dortmund",
-  berlin: "Berlin",
-} as const;
-
-const schoolKeyMap = {
-  "F+U Academy of Languages": "fu",
-  "Alpha Aktiv": "alpha",
-  "GoAcademy! Düsseldorf – International House": "goacademy",
-  "Perfekt Deutsch Sprachakademie": "perfekt",
-  "VICTORIA | Academy of Languages": "victoria",
-} as const;
-
-const schoolLogoAlt = (schoolName: string) => schoolName + " logo";
+const examLabelKey = (value: string) =>
+  ({
+    telc: "destinations.examLabels.telc",
+    TestDaF: "destinations.examLabels.testDaF",
+    TestAS: "destinations.examLabels.testAS",
+    IELTS: "destinations.examLabels.ielts",
+    TOEFL: "destinations.examLabels.toefl",
+    TOEIC: "destinations.examLabels.toeic",
+    "DSH preparation": "destinations.examLabels.dshPreparation",
+    DSH: "destinations.examLabels.dsh",
+    OnSET: "destinations.examLabels.onset",
+  })[value] ?? value;
 
 const EducationalDestinationsPage = () => {
   const { t } = useTranslation("common");
   const { dir } = useDirection();
+
+  const journeyStages = [
+    {
+      number: "01",
+      icon: MapPin,
+      title: t("destinations.journey.stage1Title"),
+      body: t("destinations.journey.stage1Body"),
+    },
+    {
+      number: "02",
+      icon: Languages,
+      title: t("destinations.journey.stage2Title"),
+      body: t("destinations.journey.stage2Body"),
+    },
+    {
+      number: "03",
+      icon: Languages,
+      title: t("destinations.journey.stage3Title"),
+      body: t("destinations.journey.stage3Body"),
+    },
+    {
+      number: "04",
+      icon: BookOpenCheck,
+      title: t("destinations.journey.stage4Title"),
+      body: t("destinations.journey.stage4Body"),
+    },
+    {
+      number: "05",
+      icon: BadgeCheck,
+      title: t("destinations.journey.stage5Title"),
+      body: t("destinations.journey.stage5Body"),
+    },
+    {
+      number: "06",
+      icon: GraduationCap,
+      title: t("destinations.journey.stage6Title"),
+      body: t("destinations.journey.stage6Body"),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir={dir}>
@@ -91,6 +125,7 @@ const EducationalDestinationsPage = () => {
                 {t("destinations.selectionBody")}
               </p>
             </div>
+
             <div className="mt-9 grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
               {[
                 ["selection1", "selection1Body", GraduationCap],
@@ -104,6 +139,101 @@ const EducationalDestinationsPage = () => {
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{t(`destinations.${bodyKey}`)}</p>
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-editorial-paper py-14 sm:py-18">
+          <div className="container">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">
+                  {t("destinations.journey.eyebrow")}
+                </p>
+                <h2 className="mt-3 text-3xl font-bold leading-tight text-primary sm:text-4xl">
+                  {t("destinations.journey.title")}
+                </h2>
+                <p className="mt-4 text-base leading-7 text-muted-foreground">
+                  {t("destinations.journey.body")}
+                </p>
+              </div>
+              <p className="max-w-md text-xs leading-6 text-muted-foreground">
+                {t("destinations.journey.note")}
+              </p>
+            </div>
+
+            <div className="mt-9 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {journeyStages.map((stage) => {
+                const Icon = stage.icon;
+                return (
+                  <article key={stage.number} className="relative border border-border bg-background p-5 sm:p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="text-xs font-bold text-brand-strong">{stage.number}</span>
+                      <Icon className="h-5 w-5 text-brand-strong" />
+                    </div>
+                    <h3 className="mt-5 text-base font-bold text-primary">{stage.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{stage.body}</p>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-background py-14 sm:py-18">
+          <div className="container">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">
+                {t("destinations.compareEyebrow")}
+              </p>
+              <h2 className="mt-3 text-3xl font-bold leading-tight text-primary sm:text-4xl">
+                {t("destinations.compareTitle")}
+              </h2>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                {t("destinations.compareBody")}
+              </p>
+            </div>
+
+            <div className="mt-9 overflow-x-auto border border-border">
+              <table className="min-w-[760px] w-full border-collapse text-left text-sm rtl:text-right">
+                <thead className="bg-editorial-paper">
+                  <tr className="border-b border-border">
+                    <th className="px-4 py-4 font-bold text-primary sm:px-5">{t("destinations.compareHeaders.city")}</th>
+                    <th className="px-4 py-4 font-bold text-primary sm:px-5">{t("destinations.compareHeaders.region")}</th>
+                    <th className="px-4 py-4 font-bold text-primary sm:px-5">{t("destinations.compareHeaders.institutions")}</th>
+                    <th className="px-4 py-4 font-bold text-primary sm:px-5">{t("destinations.compareHeaders.cityContext")}</th>
+                    <th className="px-4 py-4 font-bold text-primary sm:px-5">{t("destinations.compareHeaders.source")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {languageYearCities.map((city) => {
+                    const institutionCount = languageYearSchools.filter((school) => school.city === city.id).length;
+                    return (
+                      <tr key={city.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-4 font-bold text-primary sm:px-5">{city.name}</td>
+                        <td className="px-4 py-4 text-muted-foreground sm:px-5">{t(`destinations.cities.${city.id}.region`)}</td>
+                        <td className="px-4 py-4 text-muted-foreground sm:px-5">
+                          <span className="font-semibold text-primary">{institutionCount}</span> {t("destinations.compareHeaders.featuredLabel")}
+                        </td>
+                        <td className="max-w-xl px-4 py-4 leading-6 text-muted-foreground sm:px-5">
+                          {t(city.descriptionKey)}
+                        </td>
+                        <td className="px-4 py-4 sm:px-5">
+                          <a
+                            href={city.cityUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 font-semibold text-primary hover:text-brand-strong"
+                          >
+                            {t("destinations.exploreCity")}
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -148,9 +278,7 @@ const EducationalDestinationsPage = () => {
                   </div>
 
                   <div className="p-6">
-                    <p className="text-sm leading-7 text-muted-foreground">
-                      {t(city.descriptionKey)}
-                    </p>
+                    <p className="text-sm leading-7 text-muted-foreground">{t(city.descriptionKey)}</p>
 
                     <div className="mt-5 flex flex-wrap gap-2">
                       {city.highlights.map((highlightKey) => (
@@ -208,107 +336,145 @@ const EducationalDestinationsPage = () => {
               </p>
             </div>
 
-            <div className="mt-10 grid gap-5 lg:grid-cols-2">
-              {languageYearSchools.map((school) => (
-                <article key={school.name} className="border border-border bg-background p-6 shadow-surface sm:p-7">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      {school.logoUrl ? (
-                        <div className="mb-5 flex h-16 w-44 items-center justify-center border border-border bg-white px-3 sm:w-48">
-                          <img
-                            src={school.logoUrl}
-                            alt={schoolLogoAlt(school.name)}
-                            className="max-h-11 max-w-full object-contain"
-                            loading="lazy"
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                              event.currentTarget.parentElement?.classList.add("px-3");
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="mb-5 flex h-14 w-40 items-center border border-border bg-editorial-paper px-3 text-sm font-bold text-primary">
-                          {school.name}
-                        </div>
-                      )}
+            <div className="mt-10 space-y-12">
+              {languageYearCities.map((city) => {
+                const citySchools = languageYearSchools.filter((school) => school.city === city.id);
+                if (citySchools.length === 0) return null;
 
-                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-strong">
-                        <Building2 className="h-3.5 w-3.5" />
-                        {schoolCityMap[school.city]}
+                return (
+                  <div key={city.id}>
+                    <div className="mb-5 flex flex-col gap-2 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{city.name}</p>
+                        <h3 className="mt-1 text-xl font-bold text-primary">{t(`destinations.citySchoolTitle`)} {city.name}</h3>
                       </div>
-                      <h3 className="mt-2 text-xl font-bold text-primary sm:text-2xl">{school.name}</h3>
+                      <p className="text-xs leading-6 text-muted-foreground">
+                        {citySchools.length} {t("destinations.compareHeaders.featuredLabel")}
+                      </p>
                     </div>
-                    <span className="shrink-0 border border-border bg-editorial-paper px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                      {t("destinations.institutionCredential")}
-                    </span>
-                  </div>
 
-                  <p className="mt-5 text-sm leading-7 text-muted-foreground">
-                    {t(school.descriptionKey)}
-                  </p>
+                    <div className="grid gap-5 lg:grid-cols-2">
+                      {citySchools.map((school) => (
+                        <article key={school.name} className="border border-border bg-background p-6 shadow-surface sm:p-7">
+                          <div className="flex flex-col gap-5">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0 flex-1">
+                                {school.logoUrl ? (
+                                  <div className="mb-5 flex h-16 w-44 items-center justify-center border border-border bg-white px-3 sm:w-48">
+                                    <img
+                                      src={school.logoUrl}
+                                      alt={`${school.name} logo`}
+                                      className="max-h-11 max-w-full object-contain"
+                                      loading="lazy"
+                                      onError={(event) => {
+                                        event.currentTarget.style.display = "none";
+                                      }}
+                                    />
+                                  </div>
+                                ) : null}
 
-                  <div className="mt-6">
-                    <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{t("destinations.atGlance")}</p>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      {["focus", "exam", "service"].map((kind, index) => {
-                        const icons = [GraduationCap, BookOpenCheck, Home];
-                        const Icon = icons[index];
-                        const factKey = index === 0
-                          ? school.focusKeys[0]
-                          : index === 1
-                            ? school.examKeys.join(" • ")
-                            : school.serviceKeys.map((key) => t(key)).join(" • ");
-                        return (
-                          <div key={kind} className="border border-border bg-editorial-paper p-3">
-                            <Icon className="h-4 w-4 text-brand-strong" />
-                            <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                              {kind === "focus" ? t("destinations.languageYearFocus") : kind === "exam" ? t("destinations.exams") : t("destinations.studentServices")}
-                            </p>
-                            <p className="mt-1 text-xs leading-5 text-primary">
-                              {index === 0 ? t(factKey) : factKey}
-                            </p>
+                                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-strong">
+                                  <Building2 className="h-3.5 w-3.5" />
+                                  {school.location}
+                                </div>
+                                <h4 className="mt-2 text-xl font-bold text-primary sm:text-2xl">{school.name}</h4>
+                              </div>
+
+                              <span className="shrink-0 border border-border bg-editorial-paper px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                                {t("destinations.institutionCredential")}
+                              </span>
+                            </div>
+
+                            <p className="text-sm leading-7 text-muted-foreground">{t(school.descriptionKey)}</p>
+
+                            <div className="grid gap-2 sm:grid-cols-3">
+                              <div className="border border-border bg-editorial-paper p-4">
+                                <GraduationCap className="h-4 w-4 text-brand-strong" />
+                                <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                                  {t("destinations.languageYearFocus")}
+                                </p>
+                                <ul className="mt-2 space-y-1.5">
+                                  {school.focusKeys.map((focusKey) => (
+                                    <li key={focusKey} className="text-xs leading-5 text-primary">{t(focusKey)}</li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              <div className="border border-border bg-editorial-paper p-4">
+                                <BookOpenCheck className="h-4 w-4 text-brand-strong" />
+                                <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                                  {t("destinations.exams")}
+                                </p>
+                                <ul className="mt-2 space-y-1.5">
+                                  {school.examKeys.map((exam) => (
+                                    <li key={exam} className="text-xs leading-5 text-primary">{t(examLabelKey(exam), { defaultValue: exam })}</li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              <div className="border border-border bg-editorial-paper p-4">
+                                <Home className="h-4 w-4 text-brand-strong" />
+                                <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                                  {t("destinations.studentServices")}
+                                </p>
+                                <ul className="mt-2 space-y-1.5">
+                                  {school.serviceKeys.map((serviceKey) => (
+                                    <li key={serviceKey} className="text-xs leading-5 text-primary">{t(serviceKey)}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-border pt-5">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                                  {t("destinations.credentialsTitle")}
+                                </p>
+                                <ShieldCheck className="h-4 w-4 text-trust" />
+                              </div>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {school.credentials.map((credential) => (
+                                  <span key={credential} className="inline-flex items-center gap-1.5 border border-border bg-background px-3 py-1.5 text-xs font-semibold text-primary">
+                                    {credential.includes("Award") || credential.includes("Excellence") ? (
+                                      <Award className="h-3.5 w-3.5 text-brand-strong" />
+                                    ) : (
+                                      <ShieldCheck className="h-3.5 w-3.5 text-trust" />
+                                    )}
+                                    {credential}
+                                  </span>
+                                ))}
+                              </div>
+                              <p className="mt-3 text-xs leading-6 text-muted-foreground">
+                                {t(school.credentialsNoteKey ?? "destinations.disclosureBody")}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-4 border-t border-border pt-4 text-sm">
+                              <a href={school.officialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:text-brand-strong">
+                                {t("destinations.officialSchool")}
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                              {school.activityUrl ? (
+                                <a href={school.activityUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground hover:text-brand-strong">
+                                  {t("destinations.schoolLife")}
+                                  <ArrowUpRight className="h-3.5 w-3.5" />
+                                </a>
+                              ) : null}
+                              <span className="text-xs text-muted-foreground">{t("destinations.lastVerified")}</span>
+                            </div>
                           </div>
-                        );
-                      })}
+                        </article>
+                      ))}
                     </div>
                   </div>
-
-                  <div className="mt-7 flex flex-wrap gap-2">
-                      <span key={credential} className="inline-flex items-center gap-1.5 border border-border bg-background px-3 py-1.5 text-xs font-semibold text-primary">
-                        {credential.includes("Award") || credential.includes("Excellence") ? (
-                          <Award className="h-3.5 w-3.5 text-brand-strong" />
-                        ) : credential.includes("Test") || credential.includes("telc") || credential.includes("TOEFL") || credential.includes("IELTS") || credential.includes("OnSET") || credential.includes("DSH") ? (
-                          <Languages className="h-3.5 w-3.5 text-brand-strong" />
-                        ) : (
-                          <ShieldCheck className="h-3.5 w-3.5 text-trust" />
-                        )}
-                        {credential}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 border-t border-border pt-4">
-                    <p className="text-xs leading-6 text-muted-foreground">{t(school.credentialsNoteKey ?? "destinations.disclosureBody")}</p>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap gap-4 text-sm">
-                    <a href={school.officialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:text-brand-strong">
-                      {t("destinations.officialSchool")}
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                    {school.activityUrl ? (
-                      <a href={school.activityUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground hover:text-brand-strong">
-                        {t("destinations.schoolLife")}
-                        <ArrowUpRight className="h-3.5 w-3.5" />
-                      </a>
-                    ) : null}
-                  </div>
-                </article>
-              ))}
+                );
+              })}
             </div>
 
-            <p className="mt-6 text-xs text-muted-foreground">{t("destinations.verified")}</p>
-            <p className="mt-2 max-w-3xl text-xs leading-6 text-muted-foreground">{t("destinations.sourceNote")}</p>
+            <div className="mt-7 flex flex-col gap-2 border-t border-border pt-5">
+              <p className="text-xs text-muted-foreground">{t("destinations.sourceNote")}</p>
+              <p className="text-xs leading-6 text-muted-foreground">{t("destinations.logoNotice")}</p>
+            </div>
           </div>
         </section>
 
@@ -327,7 +493,7 @@ const EducationalDestinationsPage = () => {
             </div>
 
             <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {tu9Universities.map((uni, index) => (
+              {tu9Universities.map((uni) => (
                 <a
                   key={uni.name}
                   href={uni.url}
@@ -335,7 +501,12 @@ const EducationalDestinationsPage = () => {
                   rel="noopener noreferrer"
                   className="group flex min-h-28 flex-col justify-between border border-border bg-background p-5 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-surface"
                 >
-                  <span className="text-xs font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <BadgeCheck className="h-4 w-4 text-brand-strong" />
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      {t("destinations.universityDestination")}
+                    </span>
+                  </div>
                   <div className="mt-4">
                     <h3 className="font-bold text-primary group-hover:text-brand-strong">{uni.name}</h3>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
