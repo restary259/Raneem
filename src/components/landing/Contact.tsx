@@ -163,10 +163,10 @@ const Contact = () => {
   });
 
   return (
-    <section id="contact" className="py-12 md:py-24 bg-secondary">
+    <section id="contact" className="bg-background py-14 md:py-20">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
-          <div className={`lg:col-span-2 ${dir === 'rtl' ? 'text-right' : 'text-left'} p-4 sm:p-6 md:p-8 bg-background/80 border border-white/20 rounded-2xl shadow-2xl animate-scale-in`}>
+        <div className="grid items-start gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
+          <div className={`${dir === 'rtl' ? 'text-right' : 'text-left'} border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9`}>
             <div className={`text-center ${dir === 'rtl' ? 'md:text-right' : 'md:text-left'} max-w-2xl mb-8`}>
               <h2 className="text-3xl md:text-4xl font-bold">{t('contact.title')}</h2>
               <p className="mt-4 text-lg text-muted-foreground">{t('contact.subtitle')}</p>
@@ -177,12 +177,12 @@ const Contact = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <FieldGroup label={isAr ? 'الاسم الكامل *' : 'Full Name *'}>
                   <Input value={fullName} onChange={e => setFullName(e.target.value)}
-                    placeholder={isAr ? 'أدخل اسمك الكامل' : 'Enter your full name'} dir={dir} className="h-11" />
+                    placeholder={isAr ? 'أدخل اسمك الكامل' : 'Enter your full name'} dir={dir} className="h-11 rounded-none" />
                 </FieldGroup>
                 <FieldGroup label={isAr ? 'رقم الهاتف / واتساب *' : 'Phone / WhatsApp *'}>
                   <Input value={phone} onChange={e => handlePhoneChange(e.target.value)}
                     placeholder="05X-XXXXXXX" dir="ltr" type="tel"
-                    className={`h-11 ${phoneError ? 'border-destructive' : ''}`} />
+                    className={`h-11 rounded-none ${phoneError ? 'border-destructive' : ''}`} />
                   {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
                 </FieldGroup>
               </div>
@@ -192,7 +192,7 @@ const Contact = () => {
                 <div className="grid grid-cols-3 gap-2">
                   {PASSPORT_TYPES.map(pt => (
                     <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)}
-                      className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
+                      className={`border px-3 py-2.5 text-xs font-medium transition-all duration-200 ${
                         passportType === pt.value
                           ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                           : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
@@ -206,7 +206,7 @@ const Contact = () => {
               {/* City */}
               <FieldGroup label={isAr ? 'المدينة (اختياري)' : 'City (optional)'}>
                 <Input value={city} onChange={e => setCity(e.target.value)}
-                  placeholder={isAr ? 'مثال: حيفا' : 'e.g. Haifa'} dir={dir} className="h-11" />
+                  placeholder={isAr ? 'مثال: حيفا' : 'e.g. Haifa'} dir={dir} className="h-11 rounded-none" />
               </FieldGroup>
 
               {/* Education Level */}
@@ -217,7 +217,7 @@ const Contact = () => {
                       setEducationLevel(lvl.value);
                       if (lvl.value !== 'bagrut') { setEnglishUnits(''); setMathUnits(''); }
                     }}
-                      className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${
+                      className={`border px-3 py-2.5 text-xs font-medium transition-all duration-200 ${
                         educationLevel === lvl.value
                           ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                           : 'bg-card border-border hover:border-primary/40 hover:bg-muted/50'
@@ -230,12 +230,12 @@ const Contact = () => {
 
               {/* Bagrut Units — only for bagrut */}
               {showBagrut && (
-                <div className="grid md:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
+                <div className="grid gap-4 border border-border bg-muted/30 p-4 md:grid-cols-2 animate-fade-in">
                   <FieldGroup label={isAr ? 'وحدات الإنجليزي' : 'English Units'}>
                     <div className="flex gap-2">
                       {UNIT_OPTIONS.map(u => (
                         <button key={u} type="button" onClick={() => setEnglishUnits(u)}
-                          className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
+                          className={`flex-1 border py-2.5 text-sm font-bold transition-all ${
                             englishUnits === u ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/40'
                           }`}>{u}</button>
                       ))}
@@ -245,7 +245,7 @@ const Contact = () => {
                     <div className="flex gap-2">
                       {UNIT_OPTIONS.map(u => (
                         <button key={u} type="button" onClick={() => setMathUnits(u)}
-                          className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${
+                          className={`flex-1 border py-2.5 text-sm font-bold transition-all ${
                             mathUnits === u ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary/40'
                           }`}>{u}</button>
                       ))}
@@ -258,7 +258,7 @@ const Contact = () => {
               <FieldGroup label={isAr ? 'التخصص المفضل (اختياري)' : 'Preferred Major (optional)'}>
                 <Input value={preferredMajor} onChange={e => setPreferredMajor(e.target.value)}
                   placeholder={isAr ? 'مثال: هندسة، طب، تجارة...' : 'e.g. Engineering, Medicine, Business...'}
-                  dir={dir} className="h-11" />
+                  dir={dir} className="h-11 rounded-none" />
               </FieldGroup>
 
               {/* Honeypot */}
@@ -277,7 +277,7 @@ const Contact = () => {
                 onMarketingChange={setMarketingConsent}
               />
 
-              <Button type="button" className="w-full font-bold h-12" size="lg" variant="default"
+              <Button type="button" className="h-12 w-full rounded-none font-bold" size="lg" variant="default"
                 disabled={isPending || !canSubmit}
                 onClick={() => mutate()}>
                 {isPending
@@ -287,9 +287,14 @@ const Contact = () => {
             </div>
           </div>
 
-          <div className="space-y-8">
+          <aside className="space-y-8">
             <OfficeLocations />
-            <div className="bg-background/90 border border-white/20 p-6 rounded-2xl shadow-lg animate-fade-in">
+            <div>
+              <h3 className="text-2xl font-bold text-primary">{t('contact.mapTitle')}</h3>
+              <p className="mt-2 text-muted-foreground">{t('contact.mapSubtitle')}</p>
+              <div className="mt-5 h-[320px] overflow-hidden border border-border shadow-surface md:h-[390px]"><Map /></div>
+            </div>
+            <div className="border border-border bg-muted/25 p-6">
               <h3 className="text-xl font-semibold mb-4 text-center">{t('contact.follow')}</h3>
               <div className="flex justify-center items-center gap-6">
                 <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
@@ -298,13 +303,7 @@ const Contact = () => {
                 <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><MessageCircle className="h-7 w-7" /></a>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="mt-16 md:mt-24 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold">{t('contact.mapTitle')}</h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">{t('contact.mapSubtitle')}</p>
-          <div className="mt-8 h-[300px] sm:h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl border border-white/10 animate-scale-in"><Map /></div>
+          </aside>
         </div>
       </div>
     </section>
