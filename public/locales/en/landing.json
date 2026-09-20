@@ -357,6 +357,39 @@
       "schoolsHint": "Study locations and language preparation across Germany",
       "viewSchools": "See study destinations",
       "examsLabel": "Common exams & tests"
+    },
+    "routes": {
+      "eyebrow": "FIND YOUR ROUTE",
+      "title": "Three ways to start",
+      "cta": "Start my assessment",
+      "items": [
+        {
+          "title": "University pathway",
+          "description": "I already have the academic background."
+        },
+        {
+          "title": "Language → university",
+          "description": "I need German preparation first."
+        },
+        {
+          "title": "Not sure yet",
+          "description": "Help me understand which route fits."
+        }
+      ]
+    },
+    "destinations": {
+      "eyebrow": "WHERE YOU COULD START",
+      "title": "Real German study destinations",
+      "cta": "Explore destinations"
+    },
+    "languagePrep": {
+      "eyebrow": "LANGUAGE PREPARATION",
+      "title": "German becomes a clear progression",
+      "body": "Build the language level, take the right exam, then move toward the academic route that fits your profile."
+    },
+    "trust": {
+      "eyebrow": "CLARITY BUILDS TRUST",
+      "title": "One team. Clear responsibilities."
     }
   }
 }
