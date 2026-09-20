@@ -242,6 +242,51 @@
         "serviceActivities": "Organized activities",
         "serviceUniversity": "University-linked academic environment"
       }
+    },
+    "journey": {
+      "eyebrow": "YEAR AT A GLANCE",
+      "title": "A language year with the next step already in view",
+      "body": "Your exact route depends on the university and programme. The sequence below shows how DARB connects the language year to the academic step that follows.",
+      "note": "Language level and exam requirements vary by programme and university.",
+      "stage1Title": "Choose your city",
+      "stage1Body": "Start with a city that fits your study plan and everyday life.",
+      "stage2Title": "Build A1–A2",
+      "stage2Body": "Strengthen the foundations and move through the levels your route requires.",
+      "stage3Title": "Build B1–B2",
+      "stage3Body": "Develop the German you need for daily life, study preparation and progression.",
+      "stage4Title": "Reach your target level",
+      "stage4Body": "Plan toward the language level needed for your intended programme.",
+      "stage5Title": "Take the required exam",
+      "stage5Body": "Use the relevant exam route when your university or programme requires one.",
+      "stage6Title": "University application",
+      "stage6Body": "Move from language preparation into the application stage for your next academic step."
+    },
+    "compareEyebrow": "CITY SNAPSHOT",
+    "compareTitle": "Compare the four cities at a glance",
+    "compareBody": "A factual view of the current DARB destination set: region, featured language institutions, city context and the official city source.",
+    "compareHeaders": {
+      "city": "City",
+      "region": "Region",
+      "institutions": "Featured language institutions",
+      "featuredLabel": "featured institutions",
+      "cityContext": "City context",
+      "source": "Official source"
+    },
+    "citySchoolTitle": "Language institutions in",
+    "credentialsTitle": "Institution credentials",
+    "lastVerified": "Last checked: 20 September 2026",
+    "logoNotice": "School names and logos are shown for identification. Trademark rights remain with the respective institutions, and DARB does not issue the credentials, awards or quality marks listed.",
+    "universityDestination": "University destination",
+    "examLabels": {
+      "telc": "telc",
+      "testDaF": "TestDaF",
+      "testAS": "TestAS",
+      "ielts": "IELTS",
+      "toefl": "TOEFL",
+      "toeic": "TOEIC",
+      "dshPreparation": "DSH preparation",
+      "dsh": "DSH",
+      "onset": "OnSET"
     }
   },
   "loader": {
