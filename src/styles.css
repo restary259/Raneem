@@ -511,6 +511,31 @@ a[href*="lovable.dev"] {
   }
 }
 
+.darb-flight-transition {
+  color: hsl(var(--foreground));
+}
+
+.darb-flight-plane {
+  animation: darb-flight-glide 8s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes darb-flight-glide {
+  0% { transform: translate3d(0, -50%, 0) rotate(-3deg); }
+  50% { transform: translate3d(42vw, -72%, 0) rotate(4deg); }
+  100% { transform: translate3d(86vw, -35%, 0) rotate(8deg); }
+}
+
+[dir="rtl"] .darb-flight-plane {
+  transform: scaleX(-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .darb-flight-plane {
+    animation: none;
+  }
+}
+
 .darb-home-hero-eyebrow {
   font-size: clamp(0.72rem, 0.72vw, 0.9rem);
 }
