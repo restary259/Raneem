@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 import DarbPageHero from '@/components/common/DarbPageHero';
 import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 
 const LebenslaufBuilderPage = () => {
   const { t } = useTranslation('resources');
@@ -24,6 +26,7 @@ const LebenslaufBuilderPage = () => {
         title={t('lebenslaufBuilder.title')}
         subtitle={t('lebenslaufBuilder.description')}
       />
+      <DarbPageHero compact eyebrow={t('lebenslaufBuilder.eyebrow', 'CAREER PREPARATION')} imageUrl={DARB_PUBLIC_HERO_IMAGES.resources} imageAlt={t('lebenslaufBuilder.imageAlt', 'Student preparing a professional CV')} title={t('lebenslaufBuilder.title')} subtitle={t('lebenslaufBuilder.description')} />
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="text-center mb-8">
