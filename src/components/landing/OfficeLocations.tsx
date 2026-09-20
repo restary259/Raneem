@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Phone, Clock, MessageCircle, Mail } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { WHATSAPP_SUPPORT_URL } from '@/lib/contactConfig';
+import { whatsappBusinessUrl } from '@/lib/contactConfig';
 
 const OfficeLocations = () => {
   const { t } = useTranslation('common');
@@ -34,7 +34,7 @@ const OfficeLocations = () => {
               <span>{t('officeLocations.hours')}</span>
             </div>
              <Button asChild className="w-full mt-4" variant="outline">
-                <a href={WHATSAPP_SUPPORT_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع مكتب درب.")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                     <MessageCircle className="h-5 w-5" />
                     {t('officeLocations.whatsappButton')}
                 </a>
