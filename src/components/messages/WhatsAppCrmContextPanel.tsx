@@ -108,6 +108,12 @@ export default function WhatsAppCrmContextPanel({ lead, compact = false }: { lea
         <div className="mt-3 space-y-3 text-sm">
           {context.caseRecord && (
             <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="mb-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                {context.caseRecord.city && <div><span className="block text-muted-foreground">{t("crm.city")}</span><span className="font-medium">{context.caseRecord.city}</span></div>}
+                {(context.caseRecord.degree_interest || context.leadRecord?.preferred_major) && <div><span className="block text-muted-foreground">{t("crm.major")}</span><span className="font-medium">{context.caseRecord.degree_interest || context.leadRecord?.preferred_major}</span></div>}
+                {context.caseRecord.education_level && <div><span className="block text-muted-foreground">{t("crm.education")}</span><span className="font-medium">{context.caseRecord.education_level}</span></div>}
+                {context.caseRecord.assigned_to_name && <div><span className="block text-muted-foreground">{t("crm.assignedTo")}</span><span className="font-medium">{context.caseRecord.assigned_to_name}</span></div>}
+              </div>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground">{t("crm.case")}</p>
@@ -128,6 +134,10 @@ export default function WhatsAppCrmContextPanel({ lead, compact = false }: { lea
 
           {context.profile && (
             <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="mb-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                {context.profile.city && <div><span className="block text-muted-foreground">{t("crm.city")}</span><span className="font-medium">{context.profile.city}</span></div>}
+                {context.profile.university_name && <div><span className="block text-muted-foreground">{t("crm.university")}</span><span className="font-medium">{context.profile.university_name}</span></div>}
+              </div>
               <p className="text-xs font-medium text-muted-foreground">{t("crm.studentAccount")}</p>
               <p className="mt-1 font-semibold">{context.profile.full_name || "—"}</p>
               <p className="mt-1 text-xs text-muted-foreground">
