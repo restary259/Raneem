@@ -11,6 +11,7 @@ import { broadcastData, BroadcastCategory } from '@/components/broadcast/data';
 import SEOHead from '@/components/common/SEOHead';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
+import DarbContactCta from '@/components/common/DarbContactCta';
 
 const BroadcastPage = () => {
   const { t } = useTranslation(['broadcast', 'common']);
@@ -71,6 +72,7 @@ const BroadcastPage = () => {
         </section>
         
         <SubmitVideo />
+        <DarbContactCta variant="compact" />
 
       </main>
       <footer className="py-8 text-center text-muted-foreground bg-muted/50">
