@@ -5677,7 +5677,10 @@ export type Database = {
           error_message: string | null
           error_status: number | null
           id: string
+          media_filename: string | null
+          media_mime_type: string | null
           media_provider_id: string | null
+          media_url: string | null
           message_type: string
           provider_message_id: string | null
           raw_payload: Json | null
@@ -5697,7 +5700,10 @@ export type Database = {
           error_message?: string | null
           error_status?: number | null
           id?: string
+          media_filename?: string | null
+          media_mime_type?: string | null
           media_provider_id?: string | null
+          media_url?: string | null
           message_type?: string
           provider_message_id?: string | null
           raw_payload?: Json | null
@@ -5717,7 +5723,10 @@ export type Database = {
           error_message?: string | null
           error_status?: number | null
           id?: string
+          media_filename?: string | null
+          media_mime_type?: string | null
           media_provider_id?: string | null
+          media_url?: string | null
           message_type?: string
           provider_message_id?: string | null
           raw_payload?: Json | null
