@@ -129,7 +129,7 @@ serve(async (req) => {
   try {
     const auth = await requireAuth(req, ["admin", "team_member"]);
     if (!auth.ok) return json({ error: auth.error }, auth.status, corsHeaders);
-    if (!auth.userId) return json({ error: "A staff account is required" }, 403, corsHeaders);
+    if (!auth.userId && !auth.isServiceRole) return json({ error: "A staff account is required" }, 403, corsHeaders);
 
     const input = await req.json();
     const action = String(input?.action ?? "");
