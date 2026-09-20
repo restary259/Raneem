@@ -64,6 +64,23 @@
     "subtitle": "Oops! Page not found",
     "button": "Back to Home"
   },
+  "contactCta": {
+    "eyebrow": "CONTACT DARB",
+    "title": "Need a hand with your next step?",
+    "subtitle": "Have a question about studying in Germany? Talk to DARB and get clear guidance on your next step.",
+    "whatsapp": "WhatsApp",
+    "contact": "Contact Us",
+    "apply": "Start Your Application",
+    "phoneLabel": "WhatsApp",
+    "emailLabel": "Email",
+    "compactTitle": "Prefer to speak with our team?",
+    "compactSubtitle": "We can help clarify your options and next step.",
+    "partnerEyebrow": "WORK WITH DARB",
+    "partnerTitle": "Interested in working with DARB?",
+    "partnerSubtitle": "Join our partner network and speak with our team about working together.",
+    "partnerContact": "Contact DARB",
+    "partnerApply": "Become a Partner"
+  },
   "callToAction": {
     "title": "Ready to Start Your Journey?",
     "subtitle": "Our team is ready to answer all your questions and guide you every step of the way.",
