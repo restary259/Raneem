@@ -99,9 +99,9 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     logoUrl: "/lovable-uploads/e7298181-bfde-4ee6-b5cb-a310ab735b61.png",
     credentials: ["TestDaF", "telc", "TestAS", "IELTS", "TOEFL", "TOEIC", "LCCI", "Excellence Award 2019"],
     credentialsNoteKey: "destinations.schools.fu.credentialsNote",
-    focusKeys: ["destinations.schools.fu.schoolFacts.focusYear", "destinations.schools.fu.schoolFacts.focusExams", "destinations.schools.fu.schoolFacts.focusSupport"],
+    focusKeys: ["destinations.schools.fu.focusYear", "destinations.schools.fu.focusExams", "destinations.schools.fu.focusSupport"],
     examKeys: ["TestDaF", "telc", "TestAS", "TOEFL", "TOEIC"],
-    serviceKeys: ["destinations.schools.fu.schoolFacts.serviceHousing", "destinations.schools.fu.schoolFacts.serviceActivities", "destinations.schools.fu.schoolFacts.serviceAdvice"]
+    serviceKeys: ["destinations.schools.fu.serviceHousing", "destinations.schools.fu.serviceActivities", "destinations.schools.fu.serviceAdvice"]
   },
   {
     name: "Alpha Aktiv",
@@ -113,9 +113,9 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     logoUrl: "/lovable-uploads/171c7fae-8d36-4d06-a429-e3726c4417b8.webp",
     credentials: ["telc Competence Center University", "TestDaF", "TestAS", "IELTS", "TOEFL", "AZAV", "DIN EN ISO 9001"],
     credentialsNoteKey: "destinations.schools.alpha.credentialsNote",
-    focusKeys: ["destinations.schools.alpha.schoolFacts.focusLevels", "destinations.schools.alpha.schoolFacts.focusAcademic", "destinations.schools.alpha.schoolFacts.focusTesting"],
+    focusKeys: ["destinations.schools.alpha.focusLevels", "destinations.schools.alpha.focusAcademic", "destinations.schools.alpha.focusTesting"],
     examKeys: ["telc", "TestDaF", "TestAS", "IELTS", "TOEFL", "DSH preparation"],
-    serviceKeys: ["destinations.schools.alpha.schoolFacts.serviceFoundation", "destinations.schools.alpha.schoolFacts.serviceExams", "destinations.schools.alpha.schoolFacts.serviceAdvice"]
+    serviceKeys: ["destinations.schools.alpha.serviceFoundation", "destinations.schools.alpha.serviceExams", "destinations.schools.alpha.serviceAdvice"]
   },
   {
     name: "GoAcademy! Düsseldorf – International House",
@@ -127,9 +127,9 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     logoUrl: "/lovable-uploads/f66f6ad1-4686-44a0-8341-178c0bacebaf.webp",
     credentials: ["Study Travel Star Award Winner 2026", "International House", "IALC", "TÜV Rheinland / DIN ISO 9001:2015", "AZAV", "telc", "TestDaF", "TestAS", "TOEFL", "TOEIC"],
     credentialsNoteKey: "destinations.schools.goacademy.credentialsNote",
-    focusKeys: ["destinations.schools.goacademy.schoolFacts.focusLevels", "destinations.schools.goacademy.schoolFacts.focusPathway", "destinations.schools.goacademy.schoolFacts.focusAccommodation"],
+    focusKeys: ["destinations.schools.goacademy.focusLevels", "destinations.schools.goacademy.focusPathway", "destinations.schools.goacademy.focusAccommodation"],
     examKeys: ["telc", "TestDaF", "TestAS", "DSH preparation"],
-    serviceKeys: ["destinations.schools.goacademy.schoolFacts.servicePathway", "destinations.schools.goacademy.schoolFacts.serviceHousing", "destinations.schools.goacademy.schoolFacts.serviceLms"]
+    serviceKeys: ["destinations.schools.goacademy.servicePathway", "destinations.schools.goacademy.serviceHousing", "destinations.schools.goacademy.serviceLms"]
   },
   {
     name: "Perfekt Deutsch Sprachakademie",
@@ -141,9 +141,9 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     logoUrl: "https://www.perfekt-deutsch.de/wp-content/uploads/2022/02/sprachschule-dortmund-perfekt-deutsch-logo-768x432.jpg",
     credentials: ["Licensed telc examination centre", "Licensed TestDaF centre", "TestAS", "OnSET", "AZAV"],
     credentialsNoteKey: "destinations.schools.perfekt.credentialsNote",
-    focusKeys: ["destinations.schools.perfekt.schoolFacts.focusLocation", "destinations.schools.perfekt.schoolFacts.focusStudy", "destinations.schools.perfekt.schoolFacts.focusFlexibility"],
+    focusKeys: ["destinations.schools.perfekt.focusLocation", "destinations.schools.perfekt.focusStudy", "destinations.schools.perfekt.focusFlexibility"],
     examKeys: ["telc", "TestDaF", "TestAS", "DSH"],
-    serviceKeys: ["destinations.schools.perfekt.schoolFacts.serviceCity", "destinations.schools.perfekt.schoolFacts.serviceAccommodation", "destinations.schools.perfekt.schoolFacts.serviceGallery"]
+    serviceKeys: ["destinations.schools.perfekt.serviceCity", "destinations.schools.perfekt.serviceAccommodation", "destinations.schools.perfekt.serviceGallery"]
   },
   {
     name: "VICTORIA | Academy of Languages",
@@ -155,9 +155,9 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     logoUrl: "https://www.victoria-languages.de/favicon.ico",
     credentials: ["telc Competence Center University", "TestDaF", "TOEFL", "OnSET", "International examination centre", "Certified quality management"],
     credentialsNoteKey: "destinations.schools.victoria.credentialsNote",
-    focusKeys: ["destinations.schools.victoria.schoolFacts.focusCampus", "destinations.schools.victoria.schoolFacts.focusUniversity", "destinations.schools.victoria.schoolFacts.focusModular"],
+    focusKeys: ["destinations.schools.victoria.focusCampus", "destinations.schools.victoria.focusUniversity", "destinations.schools.victoria.focusModular"],
     examKeys: ["telc", "TestDaF", "TOEFL", "OnSET"],
-    serviceKeys: ["destinations.schools.victoria.schoolFacts.serviceHousing", "destinations.schools.victoria.schoolFacts.serviceActivities", "destinations.schools.victoria.schoolFacts.serviceUniversity"]
+    serviceKeys: ["destinations.schools.victoria.serviceHousing", "destinations.schools.victoria.serviceActivities", "destinations.schools.victoria.serviceUniversity"]
   }
 ];
 
