@@ -23,6 +23,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
+import DarbContactCta from "@/components/common/DarbContactCta";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
 
@@ -328,28 +329,7 @@ const HomepageExperience = () => {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-primary py-20 text-primary-foreground sm:py-28">
-        <div className="container relative">
-          <p className="text-xs font-bold uppercase text-brand">{t("homepage.final.eyebrow")}</p>
-          <h2 className="mt-4 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">{t("homepage.final.title")}</h2>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-primary-foreground/70">{t("homepage.final.body")}</p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" variant="accent" className="h-14 rounded-md px-7 text-base">
-              <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="h-14 rounded-md border-primary-foreground/30 bg-transparent px-7 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              <a
-                href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MessageCircle className="h-5 w-5" />{t("homepage.actions.whatsapp")}
-              </a>
-            </Button>
-          </div>
-        </div>
-      </section>
-    </div>
+      <DarbContactCta /> </div>
   );
 };
 
