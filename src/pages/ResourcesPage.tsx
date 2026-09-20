@@ -117,8 +117,6 @@ const ResourcesPage = () => {
       <ToolsSection tools={tools} />
       <GuidesSection />
 
-      <DarbContactCta />
-
       {/* FAQ Section */}
       <section className="py-12 md:py-20 bg-gradient-to-b from-background to-primary/[0.03]">
         <div className="container mx-auto px-4">
@@ -154,6 +152,7 @@ const ResourcesPage = () => {
         </div>
       </section>
 
+      <DarbContactCta />
       <Footer />
     </div>
   );
