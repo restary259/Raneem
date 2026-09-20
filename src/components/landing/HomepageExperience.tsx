@@ -131,7 +131,7 @@ const HomepageExperience = () => {
         </div>
 
         <div className="absolute inset-x-0 bottom-0 z-20 grid h-3 grid-cols-7" aria-hidden="true">
-          <span className="bg-destructive" /><span className="bg-brand" /><span className="bg-accent" /><span className="bg-primary" /><span className="bg-trust" /><span className="bg-secondary" /><span className="bg-brand" />
+          <span className="bg-destructive" /><span className="bg-brand" /><span className="bg-trust" /><span className="bg-primary" /><span className="bg-secondary" /><span className="bg-brand" /><span className="bg-primary" />
         </div>
       </section>
 
