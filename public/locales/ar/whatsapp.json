@@ -164,13 +164,32 @@
     "utility": "خدمي",
     "marketing": "تسويقي",
     "purpose": {
-      "inquiry_follow_up": "متابعة استفسار",
+      "inquiry_follow_up": "متابعة الاستفسار",
       "consultation_confirmation": "تأكيد الاستشارة",
       "document_reminder": "تذكير بالوثائق",
-      "application_update": "تحديث الطلب"
+      "application_update": "تحديث الطلب",
+      "lead_received": "استلام الطلب",
+      "lead_followup": "متابعة الطلب",
+      "appointment_invitation": "دعوة لموعد",
+      "appointment_confirmation": "تأكيد الموعد",
+      "appointment_reminder": "تذكير بالموعد",
+      "documents_missing": "وثائق ناقصة",
+      "profile_incomplete": "الملف غير مكتمل",
+      "document_received": "تم استلام الوثيقة",
+      "payment_instruction": "تعليمات الدفع",
+      "payment_reminder": "تذكير بالدفع",
+      "payment_confirmed": "تم تأكيد الدفع",
+      "application_started": "بدأ الطلب",
+      "application_submitted": "تم تقديم الطلب",
+      "student_welcome": "ترحيب بالطالب",
+      "enrollment_confirmation": "تأكيد التسجيل",
+      "next_steps": "الخطوات التالية",
+      "support_followup": "متابعة الدعم",
+      "case_update": "تحديث الحالة"
     },
     "active": "مُفعّل",
-    "availableToTeam": "متاح للفريق"
+    "availableToTeam": "متاح للفريق",
+    "hebrew": "العبرية"
   },
   "actions": {
     "retry": "إعادة المحاولة",
