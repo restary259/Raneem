@@ -14,23 +14,16 @@ import {
   Plane,
   SearchCheck,
   ShieldCheck,
-  Menu,
-  Globe,
-  LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SUPPORT_EMAIL, WHATSAPP_BUSINESS_NUMBER, WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { whatsappBusinessUrl } from "@/lib/contactConfig";
+import { WHATSAPP_PHONE_URL, whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
-import { useState } from "react";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import germanyHero from "@/assets/germany-home-hero.jpg";
 
 type TextItem = { title: string; description: string };
@@ -38,15 +31,6 @@ type GalleryStudent = { name: string; destination: string; image: string; focus?
 
 const serviceIcons = [SearchCheck, FileCheck2, ShieldCheck, Home, HeartHandshake];
 const journeyIcons = [SearchCheck, FileCheck2, Plane, GraduationCap];
-
-const homepageNav = [
-  { key: "nav.home", href: "/" },
-  { key: "nav.services", href: "/services" },
-  { key: "nav.majors", href: "/educational-programs" },
-  { key: "nav.majorQuizNav", href: "/quiz" },
-  { key: "nav.resources", href: "/resources" },
-  { key: "nav.contact", href: "/contact" },
-];
 
 const SectionIntro = ({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) => (
   <div className="max-w-2xl">
@@ -90,9 +74,7 @@ const StudentFigure = ({
 
 const HomepageExperience = () => {
   const { t } = useTranslation("landing");
-  const { t: commonT, i18n } = useTranslation("common");
-  const { isRtl, sheetSide } = useDirection();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
   const steps = t("homepage.journey.steps", { returnObjects: true }) as TextItem[];
@@ -107,7 +89,7 @@ const HomepageExperience = () => {
 
   return (
     <div className="homepage-experience">
-      <section className="relative flex min-h-[700px] items-center overflow-hidden bg-primary text-primary-foreground md:h-[100svh] md:min-h-[680px] md:max-h-[920px]">
+      <section className="relative flex min-h-[620px] items-center overflow-hidden bg-primary text-primary-foreground md:h-[calc(100svh-8.25rem)] md:min-h-[610px] md:max-h-[820px]">
         <img
           src={germanyHero}
           alt={t("homepage.hero.imageAlt")}
@@ -119,90 +101,7 @@ const HomepageExperience = () => {
         />
         <div className="absolute inset-0 bg-primary/10" />
 
-        <div className="absolute inset-x-0 top-0 z-20">
-          <div className="border-b border-primary-foreground/20 bg-transparent">
-            <div className="container flex h-10 items-center justify-center gap-3 text-xs font-medium sm:text-sm">
-              <div className="inline-flex items-center gap-3" aria-label="Language selector">
-                <button
-                  type="button"
-                  onClick={() => i18n.changeLanguage("ar")}
-                  className={`underline-offset-4 hover:underline ${i18n.language === "ar" ? "font-bold text-primary-foreground" : "text-primary-foreground/80"}`}
-                  aria-label="العربية"
-                  aria-current={i18n.language === "ar" ? "true" : undefined}
-                >العربية</button>
-                <span aria-hidden="true">|</span>
-                <button
-                  type="button"
-                  onClick={() => i18n.changeLanguage("en")}
-                  className={`underline-offset-4 hover:underline ${i18n.language === "en" ? "font-bold text-primary-foreground" : "text-primary-foreground/80"}`}
-                  aria-label="English"
-                  aria-current={i18n.language === "en" ? "true" : undefined}
-                >English</button>
-                <span aria-hidden="true">|</span>
-                <button
-                  type="button"
-                  onClick={() => i18n.changeLanguage("he")}
-                  className={`underline-offset-4 hover:underline ${i18n.language === "he" ? "font-bold text-primary-foreground" : "text-primary-foreground/80"}`}
-                  aria-label="עברית"
-                  aria-current={i18n.language === "he" ? "true" : undefined}
-                >עברית</button>
-              </div>
-              <span aria-hidden="true">|</span>
-              <a href={`tel:+${WHATSAPP_BUSINESS_NUMBER}`} dir="ltr">+49 176 23790623</a>
-              <span className="hidden sm:inline" aria-hidden="true">|</span>
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="hidden sm:inline">{SUPPORT_EMAIL}</a>
-            </div>
-          </div>
-
-          <header className="container flex h-28 items-center justify-between gap-6 md:h-36">
-            <Link to="/" className="shrink-0" aria-label={commonT("loader.brand")}>
-              <img src={darbLogoAsset.url} alt={commonT("loader.brand")} className="h-20 w-auto object-contain drop-shadow-lg md:h-28" />
-            </Link>
-
-            <nav className="hidden flex-1 items-end gap-2 lg:flex" aria-label={commonT("nav.home")}>
-              {homepageNav.map((item) => (
-                <Link
-                  key={item.key}
-                  to={item.href}
-                  className="flex h-12 min-w-0 flex-1 items-center justify-center border-b-2 border-brand bg-primary/95 px-3 text-center text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary"
-                >
-                  {commonT(item.key)}
-                </Link>
-              ))}
-              <Link
-                to="/student-auth"
-                className="flex h-12 min-w-0 flex-1 items-center justify-center border-b-2 border-brand bg-primary/95 px-3 text-center text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary"
-              >
-                {commonT("nav.studentLogin")}
-              </Link>
-            </nav>
-
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="default" className="rounded-none border-b-2 border-brand bg-primary/95 lg:hidden" aria-label={commonT("nav.more")}>
-                  <Menu className="h-5 w-5" />
-                  {commonT("nav.more")}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side={sheetSide} className="w-72 bg-primary text-primary-foreground" dir={isRtl ? "rtl" : "ltr"}>
-                <SheetTitle className="text-primary-foreground">{commonT("loader.brand")}</SheetTitle>
-                <nav className="mt-10 flex flex-col gap-2">
-                  {homepageNav.map((item) => (
-                    <Link key={item.key} to={item.href} onClick={() => setMenuOpen(false)} className="border-b border-primary-foreground/20 py-3 text-base font-semibold">
-                      {commonT(item.key)}
-                    </Link>
-                  ))}
-                  <Link to="/student-auth" onClick={() => setMenuOpen(false)} className="mt-4 flex items-center justify-center gap-2 bg-brand-strong px-4 py-3 font-bold text-brand-foreground">
-                    <LogIn className="h-4 w-4" />
-                    {commonT("nav.studentLogin")}
-                  </Link>
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </header>
-        </div>
-
-        <div className="container relative z-10 mx-auto flex justify-center px-4 pt-40 md:pt-48">
+        <div className="container relative z-10 mx-auto flex justify-center px-4">
           <div className="w-full max-w-3xl bg-primary/80 px-6 py-8 text-center shadow-surface-lg backdrop-blur-[2px] sm:px-10 sm:py-10 md:px-14 md:py-12">
             <p className="text-sm font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
             <h1 className="mx-auto mt-3 max-w-2xl text-4xl font-bold leading-[1.15] text-primary-foreground sm:text-5xl lg:text-6xl">

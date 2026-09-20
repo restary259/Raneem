@@ -19,22 +19,22 @@ const MobileNav = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="p-2">
+        <Button variant="outline" size="icon" className="rounded-none border-b-2 border-brand" aria-label={t('nav.more')}>
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side={sheetSide} className="w-72" dir={dir}>
+      <SheetContent side={sheetSide} className="w-72 bg-background" dir={dir}>
         <nav className="flex flex-col gap-3 mt-6 overflow-y-auto max-h-[calc(100dvh-4rem)]">
           <div className="flex justify-center mb-3">
             <LanguageSwitcher />
           </div>
-          <Link onClick={close} to="/" className={`text-sm font-medium hover:text-brand-strong transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/" className={`border-b border-border py-3 text-sm font-semibold hover:text-brand-strong transition-colors ${textAlign}`}>
             {t('nav.home')}
           </Link>
-          <Link onClick={close} to="/about" className={`text-sm font-medium hover:text-brand-strong transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/about" className={`border-b border-border py-3 text-sm font-semibold hover:text-brand-strong transition-colors ${textAlign}`}>
             {t('nav.about')}
           </Link>
-          <Link onClick={close} to="/services" className={`text-sm font-medium hover:text-brand-strong transition-colors ${textAlign} py-2`}>
+          <Link onClick={close} to="/services" className={`border-b border-border py-3 text-sm font-semibold hover:text-brand-strong transition-colors ${textAlign}`}>
             {t('nav.services')}
           </Link>
           <Link onClick={close} to="/educational-programs" className={`text-sm font-medium hover:text-brand-strong transition-colors ${textAlign} py-2`}>
