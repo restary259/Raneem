@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { WHATSAPP_PHONE_URL } from '@/lib/contactConfig';
+import { whatsappBusinessUrl } from '@/lib/contactConfig';
 import { useTranslation } from 'react-i18next';
 
 const WhatsAppFloatingButton = () => {
@@ -22,7 +22,7 @@ const WhatsAppFloatingButton = () => {
 
   return (
     <a
-      href={WHATSAPP_PHONE_URL}
+      href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t('whatsapp.floatingLabel', 'Chat with us on WhatsApp')}
