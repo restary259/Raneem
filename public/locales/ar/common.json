@@ -164,23 +164,53 @@
     "schools": {
       "fu": {
         "description": "أكاديمية F+U للغات في هايدلبرغ تقدم برامج لغة ألمانية ومحفظة امتحانات دولية، وتشير موادها المنشورة إلى TestDaF وTELC وTestAS وIELTS وTOEFL وTOEIC وLCCI.",
-        "credentialsNote": "إشارة Excellence Award هي جائزة مؤرخة من 2019 واردة في مواد F+U المنشورة."
+        "credentialsNote": "إشارة Excellence Award هي جائزة مؤرخة من 2019 واردة في مواد F+U المنشورة.",
+        "focusYear": "برامج لغة دولية في هايدلبرغ",
+        "focusExams": "TestDaF وtelc وTestAS وامتحانات دولية أخرى",
+        "focusSupport": "السكن، النشاطات وخدمات إرشاد للطلاب الدوليين",
+        "serviceHousing": "خيارات سكن",
+        "serviceActivities": "نشاطات ترفيهية",
+        "serviceAdvice": "إرشاد للطلاب"
       },
       "alpha": {
         "description": "Alpha Aktiv تقدم دورات ألمانية من A1 إلى C2 وتحضيراً جامعياً وامتحانياً، مع عرض مركز امتحانات مرخّص.",
-        "credentialsNote": "الموقع الحالي لـ Alpha Aktiv يذكر AZAV وDIN EN ISO 9001 ولقب telc Kompetenzzentrum Hochschule."
+        "credentialsNote": "الموقع الحالي لـ Alpha Aktiv يذكر AZAV وDIN EN ISO 9001 ولقب telc Kompetenzzentrum Hochschule.",
+        "focusLevels": "ألماني من A1 إلى C2 وبدرجات مكثفة مختلفة",
+        "focusAcademic": "تحضير للمدرسة والجامعة وStudienkolleg",
+        "focusTesting": "مركز امتحانات مع تركيز جامعي في telc",
+        "serviceFoundation": "تحضير Foundation / Studienkolleg",
+        "serviceExams": "التحضير للامتحانات والامتحانات",
+        "serviceAdvice": "تحضير أكاديمي"
       },
       "goacademy": {
         "description": "GoAcademy! Düsseldorf – International House تجمع بين دورات ألمانية مكثفة، وتحضير للمسار الجامعي، وتحضير للامتحانات وسكن الطلاب.",
-        "credentialsNote": "جائزة Star Award هي جائزة 2026 مذكورة على الموقع الحالي لـ GoAcademy؛ أما العلامات الأخرى فتصف العضويات والاعتمادات ووضع مركز الامتحانات."
+        "credentialsNote": "جائزة Star Award هي جائزة 2026 مذكورة على الموقع الحالي لـ GoAcademy؛ أما العلامات الأخرى فتصف العضويات والاعتمادات ووضع مركز الامتحانات.",
+        "focusLevels": "ألماني A1–C1 مع خيارات مكثفة وعالية الكثافة",
+        "focusPathway": "University Pathway مع دعم بالتقديم والتسجيل",
+        "focusAccommodation": "سكن للطلاب الدوليين",
+        "servicePathway": "المسار الجامعي",
+        "serviceHousing": "السكن",
+        "serviceLms": "نظام تعلّم إلكتروني"
       },
       "perfekt": {
         "description": "Perfekt Deutsch في وسط دورتموند تركز على دورات ألمانية مكثفة للتحضير للدراسة وعلى الامتحانات الرسمية.",
-        "credentialsNote": "الموقع الحالي يذكر وضعها كمركز مرخّص لـ telc وTestDaF ويعرض أيضاً TestAS وOnSET ضمن خدمات الامتحانات."
+        "credentialsNote": "الموقع الحالي يذكر وضعها كمركز مرخّص لـ telc وTestDaF ويعرض أيضاً TestAS وOnSET ضمن خدمات الامتحانات.",
+        "focusLocation": "ثلاثة مواقع تعليمية في وسط دورتموند",
+        "focusStudy": "دورات ألماني مكثفة للتحضير للدراسة",
+        "focusFlexibility": "خيارات صباح، ظهر، مساء وأونلاين",
+        "serviceCity": "مواقع مركزية في دورتموند",
+        "serviceAccommodation": "دعم السكن عبر خدمة شريكة",
+        "serviceGallery": "معرض المعهد والنشاطات"
       },
       "victoria": {
         "description": "VICTORIA | Academy of Languages في برلين تركز على اللغة الألمانية للتحضير الجامعي وتقدم مجموعة واسعة من الامتحانات اللغوية.",
-        "credentialsNote": "المواد المنشورة من VICTORIA تذكر لقب telc Kompetenzzentrum Hochschule ومركز امتحانات لـ TestDaF وTOEFL وغيرها."
+        "credentialsNote": "المواد المنشورة من VICTORIA تذكر لقب telc Kompetenzzentrum Hochschule ومركز امتحانات لـ TestDaF وTOEFL وغيرها.",
+        "focusCampus": "حرم مركزي في برلين ميته",
+        "focusUniversity": "معهد اللغات التابع لـ VICTORIA | International University of Applied Sciences",
+        "focusModular": "برامج مرنة ومقسمة حسب احتياج الطالب",
+        "serviceHousing": "سكن في وسط برلين",
+        "serviceActivities": "نشاطات منظمة",
+        "serviceUniversity": "بيئة أكاديمية مرتبطة بالجامعة"
       }
     },
     "selectionEyebrow": "ليش هاي المؤسسات؟",
