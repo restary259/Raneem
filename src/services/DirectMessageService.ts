@@ -60,6 +60,22 @@ export async function listStaffDirectory(): Promise<StaffMember[]> {
   return (data ?? []) as StaffMember[];
 }
 
+/** Team-member directory for users with the optional team-chat capability. */
+export async function listTeamChatDirectory(): Promise<StaffMember[]> {
+  const { data, error } = await (supabase as any).rpc("get_team_chat_directory");
+  if (error) throw error;
+  return (data ?? []) as StaffMember[];
+}
+
+/** Open or reuse a one-to-one peer team chat. Server enforces the capability and target role. */
+export async function startTeamChatThread(otherUserId: string): Promise<string> {
+  const { data, error } = await (supabase as any).rpc("start_team_chat_thread", {
+    p_other_user: otherUserId,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
 /** Open (or reuse) a one-to-one thread. Server enforces who may talk to whom. */
 export async function startDirectThread(otherUserId: string): Promise<string> {
   const { data, error } = await (supabase as any).rpc("start_direct_thread", {
