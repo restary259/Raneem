@@ -24,7 +24,7 @@ const CostCalculatorPage = () => {
         title={t('costCalculator.title')}
         subtitle={t('costCalculator.description')}
       />
-      <DarbPageHero compact eyebrow={t('costCalculator.eyebrow', 'PLAN YOUR BUDGET')} imageUrl={DARB_PUBLIC_HERO_IMAGES.housing} imageAlt={t('costCalculator.imageAlt', 'Bright student accommodation in Germany')} title={t('costCalculator.title')} subtitle={t('costCalculator.description')} />
+      
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <Card>
