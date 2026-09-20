@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Users, Search } from "lucide-react";
 import { LoadingState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 import { useDirection } from "@/hooks/useDirection";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useCachedData, useRealtimeInvalidate } from "@/hooks/useCachedData";
 import { STATUS_COLORS } from "@/lib/caseStatus";
 import {
   fetchPartnerVisibilityOverride,
