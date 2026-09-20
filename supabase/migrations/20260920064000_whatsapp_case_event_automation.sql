@@ -10,10 +10,12 @@ SET search_path = public
 AS $whatsapp_case_automation$
 DECLARE
   v_purpose text;
-  v_template_id uuid;
+  v_confirmation_template_id uuid;
+  v_reminder_template_id uuid;
   v_conversation_id uuid;
   v_scheduled_at timestamptz;
   v_dedupe text;
+  v_origin text;
 BEGIN
   v_purpose := CASE NEW.event_type
     WHEN 'payment_received' THEN 'payment_confirmed'
@@ -31,7 +33,7 @@ BEGIN
   END IF;
 
   SELECT id
-  INTO v_template_id
+  INTO v_confirmation_template_id
   FROM public.whatsapp_templates
   WHERE purpose = v_purpose
     AND approval_status = 'APPROVED'
@@ -41,8 +43,13 @@ BEGIN
   ORDER BY updated_at DESC
   LIMIT 1;
 
-  IF v_template_id IS NULL THEN
+  IF v_confirmation_template_id IS NULL THEN
     RETURN NEW;
+  END IF;
+
+  v_origin := CASE
+    WHEN NEW.event_type IN ('appointment_scheduled','appointment_rescheduled') THEN 'appointment'
+    ELSE 'case_event'
   END IF;
 
   IF NEW.event_type IN ('appointment_scheduled','appointment_rescheduled') THEN
@@ -96,9 +103,9 @@ BEGIN
       v_conversation_id,
       'template',
       now(),
-      v_template_id,
+      v_confirmation_template_id,
       '[]'::jsonb,
-      'appointment' ,
+      v_origin,
       v_dedupe || ':confirmation',
       3
     )
@@ -108,7 +115,7 @@ BEGIN
       -- Keep reminder templates deliberately variable-free until DARB adds
       -- a centrally governed parameter mapping for approved Meta templates.
       SELECT id
-      INTO v_template_id
+      INTO v_reminder_template_id
       FROM public.whatsapp_templates
       WHERE purpose = 'appointment_reminder'
         AND approval_status = 'APPROVED'
@@ -118,27 +125,27 @@ BEGIN
       ORDER BY updated_at DESC
       LIMIT 1;
 
-      IF v_template_id IS NOT NULL AND v_scheduled_at - interval '24 hours' > now() THEN
+      IF v_reminder_template_id IS NOT NULL AND v_scheduled_at - interval '24 hours' > now() THEN
         INSERT INTO public.whatsapp_follow_up_tasks (
           conversation_id, kind, due_at, template_id, template_parameters,
           origin, dedupe_key, max_attempts
         )
         VALUES (
           v_conversation_id, 'template', v_scheduled_at - interval '24 hours',
-          v_template_id, '[]'::jsonb, 'appointment',
+          v_reminder_template_id, '[]'::jsonb, 'appointment',
           v_dedupe || ':reminder24', 3
         )
         ON CONFLICT (dedupe_key) DO NOTHING;
       END IF;
 
-      IF v_template_id IS NOT NULL AND v_scheduled_at - interval '2 hours' > now() THEN
+      IF v_reminder_template_id IS NOT NULL AND v_scheduled_at - interval '2 hours' > now() THEN
         INSERT INTO public.whatsapp_follow_up_tasks (
           conversation_id, kind, due_at, template_id, template_parameters,
           origin, dedupe_key, max_attempts
         )
         VALUES (
           v_conversation_id, 'template', v_scheduled_at - interval '2 hours',
-          v_template_id, '[]'::jsonb, 'appointment',
+          v_reminder_template_id, '[]'::jsonb, 'appointment',
           v_dedupe || ':reminder2', 3
         )
         ON CONFLICT (dedupe_key) DO NOTHING;
