@@ -227,6 +227,12 @@ export default function WhatsAppInboxPage({
     catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.templates") }); }
     finally { setTemplateSyncing(false); }
   };
+  const toggleTemplateFlag = async (id: string, flags: { is_active?: boolean; available_to_team?: boolean }) => {
+    const previous = templates;
+    setTemplates((current) => current.map((item) => (item.id === id ? { ...item, ...flags } : item)));
+    try { await setWhatsAppTemplateFlags(id, flags); }
+    catch (e) { setTemplates(previous); toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.templates") }); }
+  };
   const createTemplate = async () => {
     if (!templateBody.trim()) return;
     setTemplateCreating(true);
