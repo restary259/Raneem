@@ -87,7 +87,8 @@
     "metadata": "بيانات المحادثة",
     "campaignPlaceholder": "الحملة / رمز الدخول (اختياري)",
     "sourceChannel": "قناة المصدر",
-    "lastCustomerMessage": "آخر رسالة من الطالب"
+    "lastCustomerMessage": "آخر رسالة من الطالب",
+    "marketingConsent": "موافقة التسويق"
   },
   "profile": {
     "title": "ملف الطالب",
@@ -109,10 +110,10 @@
     "saved": "تم حفظ الملف"
   },
   "consent": {
-    "unknown": "غير معروف",
-    "granted": "تمت الموافقة",
-    "declined": "مرفوض",
-    "withdrawn": "تم سحب الموافقة"
+    "unknown": "الموافقة غير معروفة",
+    "granted": "تمت الموافقة على التسويق",
+    "declined": "تم رفض التسويق",
+    "withdrawn": "إلغاء التسويق مفعّل"
   },
   "notes": {
     "title": "ملاحظات داخلية",
