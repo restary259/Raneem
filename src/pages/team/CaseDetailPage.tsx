@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { statusColorClasses } from "@/lib/caseStatus";
-import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
+import { normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, CalendarPlus, Loader2, MessageCircle, Phone, Send, Wallet, Landmark, Banknote, XCircle, RotateCcw } from "lucide-react";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { advanceCaseStage, cancelCase } from "@/services/CaseStageService";
 import { isTerminalStatus } from "@/lib/caseStatus";
 import { submitCaseForReview, sendInvoiceEmail } from "@/services/CaseInvoiceService";
+import { startWhatsAppConversation } from "@/services/WhatsAppService";
 import { sendCaseMessage } from "@/services/CaseMessageService";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseAttentionPanel from "@/components/cases/CaseAttentionPanel";
@@ -87,6 +88,7 @@ export default function CaseDetailPage() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [openingWhatsApp, setOpeningWhatsApp] = useState(false);
 
   /** Tabbed layout (profile_completion / payment_confirmed) active view. */
   const [activeView, setActiveView] = useState<WorkflowView>("overview");
@@ -413,8 +415,35 @@ export default function CaseDetailPage() {
     !!financeReadiness &&
     financeReadiness.servicesSelected &&
     financeReadiness.serviceTotal > 0;
-  const waHref = whatsappUrl(caseData.phone_number);
   const phoneUsable = isLinkablePhone(caseData.phone_number);
+
+  const openWhatsAppInbox = async () => {
+    if (!phoneUsable || openingWhatsApp) {
+      if (!phoneUsable) {
+        toast({ variant: "destructive", description: t("case.header.noPhone", "No valid phone number on this case") });
+      }
+      return;
+    }
+
+    setOpeningWhatsApp(true);
+    try {
+      const result = await startWhatsAppConversation(caseData.phone_number, caseData.full_name, {
+        case_id: caseData.id,
+      });
+      navigate(
+        (role === "admin" ? "/admin" : "/team") +
+          "/messages?tab=whatsapp&conversation=" +
+          encodeURIComponent(result.conversation.id),
+      );
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: error instanceof Error ? error.message : t("common.actionFailed"),
+      });
+    } finally {
+      setOpeningWhatsApp(false);
+    }
+  };
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-3 p-4 sm:p-6">
@@ -443,46 +472,30 @@ export default function CaseDetailPage() {
           <div className="flex shrink-0 items-center gap-2">
             {/* Desktop: WhatsApp only */}
             {!isMobile && (
-              <Button asChild size="sm" variant="outline" className="gap-1.5">
-                <a
-                  href={waHref ?? "#"}
-                  onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                    if (!phoneUsable) {
-                      e.preventDefault();
-                      toast({ variant: "destructive", description: t("case.header.noPhone", "No valid phone number on this case") });
-                      return;
-                    }
-                    e.preventDefault();
-                    const opened = window.open(waHref!, "_blank", "noopener,noreferrer");
-                    if (!opened) window.location.href = waHref!;
-                  }}
-                  aria-disabled={!phoneUsable}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t("case.header.whatsapp")}</span>
-                </a>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => void openWhatsAppInbox()}
+                disabled={!phoneUsable || openingWhatsApp}
+              >
+                {openingWhatsApp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                <span className="hidden sm:inline">{t("case.header.whatsapp")}</span>
               </Button>
             )}
 
             {/* Mobile: WhatsApp + Call side by side */}
             {isMobile && (
               <div className="flex items-center gap-1.5">
-                <Button asChild size="sm" variant="outline" className="gap-1.5">
-                  <a
-                    href={waHref ?? "#"}
-                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                      if (!phoneUsable || !waHref) {
-                        e.preventDefault();
-                        toast({ variant: "destructive", description: t("case.header.noPhone", "No valid phone number on this case") });
-                      }
-                    }}
-                    aria-disabled={!phoneUsable}
-                  >
-                    <MessageCircle className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">{t("case.header.whatsapp")}</span>
-                  </a>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => void openWhatsAppInbox()}
+                  disabled={!phoneUsable || openingWhatsApp}
+                >
+                  {openingWhatsApp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                  <span className="hidden sm:inline">{t("case.header.whatsapp")}</span>
                 </Button>
 
                 <Button asChild size="sm" variant="outline" className="gap-1.5">
