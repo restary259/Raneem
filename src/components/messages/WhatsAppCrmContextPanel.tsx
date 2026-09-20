@@ -12,7 +12,7 @@ import {
   type WhatsAppLead,
 } from "@/services/WhatsAppService";
 
-export default function WhatsAppCrmContextPanel({ lead }: { lead: WhatsAppLead }) {
+export default function WhatsAppCrmContextPanel({ lead, compact = false }: { lead: WhatsAppLead; compact?: boolean }) {
   const { t } = useTranslation("whatsapp");
   const { role } = useAuth();
   const navigate = useNavigate();
@@ -58,14 +58,29 @@ export default function WhatsAppCrmContextPanel({ lead }: { lead: WhatsAppLead }
 
   const openStudent = () => {
     if (!context?.profile?.id) return;
-    navigate("/team/students/" + context.profile.id);
+    navigate(role === "admin" ? "/admin/students?student=" + context.profile.id : "/team/students/" + context.profile.id);
   };
 
   const linked = Boolean(lead.linked_case_id || lead.linked_lead_id || lead.linked_profile_id);
   const staffConfirmed = Boolean(lead.identity_confirmed_by);
 
+  if (compact) {
+    if (!linked) {
+      return <div className="border-b bg-muted/20 px-3 py-2 text-xs text-muted-foreground">{t("crm.pending")}</div>;
+    }
+    return (
+      <div className="flex items-center gap-2 border-b bg-muted/20 px-3 py-2 text-xs">
+        <Link2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <span className="font-medium">{t("crm.title")}</span>
+        <Badge variant="outline">{lead.linked_case_id ? t("crm.case") : lead.linked_profile_id ? t("crm.studentAccount") : t("crm.lead")}</Badge>
+        <Badge variant="secondary">{staffConfirmed ? t("crm.staffConfirmed") : t("crm.autoLinked")}</Badge>
+        {loading && <Loader2 className="ms-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+      </div>
+    );
+  }
+
   return (
-    <div className="border-b p-4">
+    <div className="border-b p-4"
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
