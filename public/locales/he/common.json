@@ -43,6 +43,23 @@
       "description": "הצטרפו לרשת שלנו כשותפים או יוצרים."
     }
   },
+  "contactCta": {
+    "eyebrow": "יצירת קשר עם DARB",
+    "title": "צריכים עזרה בצעד הבא?",
+    "subtitle": "יש לכם שאלה על לימודים בגרמניה? דברו עם DARB ונעזור לכם להבין מה הצעד הבא.",
+    "whatsapp": "WhatsApp",
+    "contact": "צור קשר",
+    "apply": "התחילו את ההרשמה",
+    "phoneLabel": "WhatsApp",
+    "emailLabel": "אימייל",
+    "compactTitle": "מעדיפים לדבר עם הצוות שלנו?",
+    "compactSubtitle": "נשמח לעזור לכם להבין את האפשרויות ואת הצעד הבא.",
+    "partnerEyebrow": "עובדים עם DARB",
+    "partnerTitle": "מעוניינים לעבוד עם DARB?",
+    "partnerSubtitle": "הצטרפו לרשת השותפים שלנו ודברו עם הצוות על שיתוף פעולה.",
+    "partnerContact": "צרו קשר עם DARB",
+    "partnerApply": "הצטרפו כשותפים"
+  },
   "loader": {
     "brand": "Darb",
     "tagline": "השותף שלכם ללימודים בחו״ל"
