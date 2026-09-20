@@ -140,7 +140,7 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     descriptionKey: "destinations.schools.perfekt.description",
     officialUrl: "https://www.perfekt-deutsch.de/",
     activityUrl: "https://www.perfekt-deutsch.de/sprachschule/galerie/",
-    logoUrl: "https://www.perfekt-deutsch.de/wp-content/uploads/2022/02/sprachschule-dortmund-perfekt-deutsch-logo-768x432.jpg",
+    logoUrl: "/lovable-uploads/schools/perfekt-deutsch/perfekt-deutsch-logo.svg",
     credentials: ["Licensed telc examination centre", "Licensed TestDaF centre", "TestAS", "OnSET", "AZAV"],
     credentialsNoteKey: "destinations.schools.perfekt.credentialsNote",
     focusKeys: ["destinations.schools.perfekt.focusLocation", "destinations.schools.perfekt.focusStudy", "destinations.schools.perfekt.focusFlexibility"],
