@@ -119,7 +119,7 @@ export const Route = createFileRoute("/api/public/whatsapp/webhook")({
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { error } = await supabaseAdmin.rpc("whatsapp_ingest_event", {
-            p_payload: { delivery_id: deliveryId, event: eventHeader, events },
+            p_payload: JSON.parse(JSON.stringify({ delivery_id: deliveryId, event: eventHeader, events })),
           });
           if (error) throw error;
         } catch (error) {
