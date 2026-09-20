@@ -50,17 +50,11 @@ const ApplyPage: React.FC = () => {
         </header>
 
         <main className="mx-auto w-full max-w-lg px-3 pb-8">
-          <section className="px-1 pt-6 pb-2 text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-              {t("applyHero.eyebrow", "START YOUR JOURNEY")}
-            </p>
-            <h1 className="mt-2 text-2xl font-bold leading-tight">
-              {t("apply.heroTitle", "Tell us about yourself")}
-            </h1>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+          <section className="px-2 pt-4 pb-2 text-center">
+            <p className="mx-auto max-w-md text-sm font-medium leading-6 text-muted-foreground">
               {t(
-                "apply.heroSubtitle",
-                "Share a few details and we’ll review your profile and contact you about your options in Germany."
+                "apply.whatsappNotice",
+                "After you submit your information, the DARB team will contact you on WhatsApp."
               )}
             </p>
           </section>
