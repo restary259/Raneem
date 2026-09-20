@@ -10,7 +10,7 @@ import AgentToolkit from "@/components/partnership/AgentToolkit";
 import TrustSection from "@/components/partnership/TrustSection";
 import RegistrationForm from "@/components/partnership/RegistrationForm";
 import NewFaq from "@/components/partnership/NewFaq";
-import ClosingCta from "@/components/partnership/ClosingCta";
+import DarbContactCta from "@/components/common/DarbContactCta";
 import SEOHead from "@/components/common/SEOHead";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
@@ -34,7 +34,7 @@ const PartnershipPage = () => {
                 <TrustSection />
                 <RegistrationForm />
                 <NewFaq />
-                <ClosingCta />
+                <DarbContactCta variant="partner" />
             </main>
             <Footer />
         </div>
