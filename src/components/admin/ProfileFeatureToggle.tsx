@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 interface Props {
   userId: string;
   /** The profiles boolean column this toggle owns (admin-only guarded column). */
-  column: 'referral_code_enabled' | 'apply_form_enabled' | 'whatsapp_inbox_enabled';
+  column: 'referral_code_enabled' | 'apply_form_enabled' | 'whatsapp_inbox_enabled' | 'internal_team_chat_enabled';
   value: boolean;
   /** Called after the flag was persisted, with the new value. */
   onChanged: (next: boolean) => void;
