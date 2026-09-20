@@ -325,10 +325,8 @@ BEGIN
     JOIN public.whatsapp_campaigns c ON c.id = r.campaign_id
     WHERE c.status = 'running'
       AND r.attempt_count < r.max_attempts
-      AND (
-        (r.status = 'pending' AND r.updated_at <= now() - make_interval(mins => least(power(2, r.attempt_count)::integer, 30)))
-        OR r.status = 'processing'
-      )
+      AND r.status = 'pending'
+      AND r.updated_at <= now() - make_interval(mins => least(power(2, r.attempt_count)::integer, 30))
     ORDER BY c.scheduled_at NULLS FIRST, r.created_at
     FOR UPDATE OF r SKIP LOCKED
     LIMIT LEAST(GREATEST(coalesce(p_limit,25),1),100)
