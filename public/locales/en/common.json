@@ -164,23 +164,53 @@
     "schools": {
       "fu": {
         "description": "F+U's Academy of Languages in Heidelberg offers German language programs and an international examination portfolio; its published materials list TestDaF, TELC, TestAS, IELTS, TOEFL, TOEIC and LCCI.",
-        "credentialsNote": "The Excellence Award reference is a dated 2019 award in F+U's published press material."
+        "credentialsNote": "The Excellence Award reference is a dated 2019 award in F+U's published press material.",
+        "focusYear": "International language programs in Heidelberg",
+        "focusExams": "TestDaF, telc, TestAS and other international exams",
+        "focusSupport": "Accommodation, leisure activities and guidance for prospective international students",
+        "serviceHousing": "Accommodation options",
+        "serviceActivities": "Leisure activities",
+        "serviceAdvice": "Study-interest guidance"
       },
       "alpha": {
         "description": "Alpha Aktiv offers German courses from A1 to C2, university preparation and exam preparation, with a licensed testing-centre offer.",
-        "credentialsNote": "Alpha Aktiv's current site identifies AZAV and DIN EN ISO 9001 quality standards and a telc Kompetenzzentrum Hochschule designation."
+        "credentialsNote": "Alpha Aktiv's current site identifies AZAV and DIN EN ISO 9001 quality standards and a telc Kompetenzzentrum Hochschule designation.",
+        "focusLevels": "German A1–C2 and multiple intensities",
+        "focusAcademic": "School, university and Studienkolleg preparation",
+        "focusTesting": "Recognized test centre with university-focused telc offer",
+        "serviceFoundation": "Foundation / Studienkolleg preparation",
+        "serviceExams": "Exam preparation and exams",
+        "serviceAdvice": "Academic preparation"
       },
       "goacademy": {
         "description": "GoAcademy! Düsseldorf – International House combines German intensive courses, university-pathway preparation, exam preparation and student accommodation.",
-        "credentialsNote": "The Star Award is a 2026 award claimed on GoAcademy's current site; other labels describe its memberships, certifications and examination-centre status."
+        "credentialsNote": "The Star Award is a 2026 award claimed on GoAcademy's current site; other labels describe its memberships, certifications and examination-centre status.",
+        "focusLevels": "German A1–C1 with intensive and high-intensive options",
+        "focusPathway": "University Pathway with application and enrolment support",
+        "focusAccommodation": "Accommodation for international students",
+        "servicePathway": "University Pathway",
+        "serviceHousing": "Accommodation",
+        "serviceLms": "Learning management system"
       },
       "perfekt": {
         "description": "Perfekt Deutsch in central Dortmund focuses on study-preparatory intensive German courses and official language examinations.",
-        "credentialsNote": "Its current site identifies licensed telc and TestDaF status and also lists TestAS and OnSET among its examination services."
+        "credentialsNote": "Its current site identifies licensed telc and TestDaF status and also lists TestAS and OnSET among its examination services.",
+        "focusLocation": "Three teaching locations in Dortmund city centre",
+        "focusStudy": "Study-preparatory intensive German courses",
+        "focusFlexibility": "Morning, afternoon, evening and online options",
+        "serviceCity": "Central Dortmund locations",
+        "serviceAccommodation": "Housing support via a partner service",
+        "serviceGallery": "School gallery and activities"
       },
       "victoria": {
         "description": "VICTORIA | Academy of Languages in Berlin focuses on German courses for university preparation and operates a broad language-exam portfolio.",
-        "credentialsNote": "VICTORIA's published material identifies it as a telc Kompetenzzentrum Hochschule and a test centre for TestDaF, TOEFL and other exams."
+        "credentialsNote": "VICTORIA's published material identifies it as a telc Kompetenzzentrum Hochschule and a test centre for TestDaF, TOEFL and other exams.",
+        "focusCampus": "Central Berlin Mitte campus",
+        "focusUniversity": "Language institute of VICTORIA | International University of Applied Sciences",
+        "focusModular": "Flexible and modular course formats",
+        "serviceHousing": "Downtown accommodation",
+        "serviceActivities": "Organized activities",
+        "serviceUniversity": "University-linked academic environment"
       }
     },
     "selectionEyebrow": "WHY THESE INSTITUTIONS",
