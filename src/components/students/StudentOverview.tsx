@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,7 @@ export default function StudentOverview({
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const isAr = i18n.language === "ar";
+  const { toast } = useToast();
 
   const caseId = caseData?.id as string | undefined;
   const hasCase = !!caseData && !!caseId;
@@ -214,12 +216,17 @@ export default function StudentOverview({
         ...(caseId ? { case_id: caseId } : {}),
         ...(!caseId && profile.id ? { profile_id: String(profile.id) } : {}),
       });
-      const adminWorkspace = variant === "sheet" || Boolean(caseHref?.(caseId ?? "").startsWith("/admin/"));
+      const adminWorkspace =
+        variant === "sheet" ||
+        (!!caseId && Boolean(caseHref?.(caseId)?.startsWith("/admin/")));
       navigate((adminWorkspace ? "/admin" : "/team") + "/messages?tab=whatsapp&conversation=" + encodeURIComponent(result.conversation.id));
     } catch (error) {
-      // Keep this action local to the student overview; other profile actions
-      // should remain usable when WhatsApp is temporarily unavailable.
-      console.error("openWhatsAppInbox failed", error);
+      toast({
+        variant: "destructive",
+        description: error instanceof Error
+          ? error.message
+          : t("common.actionFailed", "WhatsApp could not be opened."),
+      });
     } finally {
       setOpeningWhatsApp(false);
     }
