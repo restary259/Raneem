@@ -22,37 +22,32 @@ import {
 } from "@/services/WhatsAppService";
 
 const INTENTS = [
-  ["", "All intents"],
-  ["medicine", "Medicine"],
-  ["engineering", "Engineering"],
-  ["computer_science", "Computer science"],
-  ["language_course", "Language course"],
-  ["visa", "Visa"],
-  ["accommodation", "Accommodation"],
-  ["cost", "Cost"],
-  ["appointment", "Appointment"],
-  ["documents", "Documents"],
-  ["application_status", "Application status"],
-  ["existing_student", "Existing student"],
-  ["other", "Other"],
+  "",
+  "medicine",
+  "engineering",
+  "computer_science",
+  "language_course",
+  "visa",
+  "accommodation",
+  "cost",
+  "appointment",
+  "documents",
+  "application_status",
+  "existing_student",
+  "other",
 ] as const;
 
-const LANGUAGES = [
-  ["", "All languages"],
-  ["ar", "Arabic"],
-  ["he", "Hebrew"],
-  ["en", "English"],
-] as const;
+const LANGUAGES = ["", "ar", "he", "en"] as const;
 
 const STAGES = [
-  ["", "All stages"],
-  ["new", "New"],
-  ["qualified", "Qualified"],
-  ["consultation_booked", "Consultation booked"],
-  ["documents_pending", "Documents pending"],
-  ["application_in_progress", "Application in progress"],
-  ["won", "Won"],
-  ["lost", "Lost"],
+  "",
+  "new",
+  "qualified",
+  "consultation_booked",
+  "documents_pending",
+  "application_in_progress",
+  "won",
+  "lost",
 ] as const;
 
 function templateBody(template: WhatsAppTemplate) {
