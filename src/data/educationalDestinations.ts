@@ -22,6 +22,7 @@ export interface LanguageYearCity {
   highlights: string[];
   cityUrl: string;
   activityLinks: Array<{ labelKey: string; url: string }>;
+  photoCredit?: { label: string; url: string };
 }
 
 export const languageYearCities: LanguageYearCity[] = [
@@ -29,7 +30,8 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "heidelberg",
     name: "Heidelberg",
     region: "Baden-Württemberg",
-    imageUrl: "https://images.unsplash.com/photo-1768691424328-da3c7b18f990?auto=format&fit=crop&w=1800&q=82",
+    imageUrl: "https://images.unsplash.com/photo-1744049891187-99ce6f6bca57?auto=format&fit=crop&w=2400&q=88",
+    photoCredit: { label: "Photo: Christopher Politano / Unsplash", url: "https://unsplash.com/photos/heidelberg-castle-towers-over-the-historic-town-AWv1ymdCFIc" },
     descriptionKey: "destinations.cities.heidelberg.description",
     highlights: ["destinations.cities.heidelberg.highlight1", "destinations.cities.heidelberg.highlight2", "destinations.cities.heidelberg.highlight3"],
     cityUrl: "https://visit.heidelberg.de/en",
@@ -43,7 +45,8 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "dusseldorf",
     name: "Düsseldorf",
     region: "North Rhine-Westphalia",
-    imageUrl: "https://images.unsplash.com/photo-1741342276667-4185aa6d95f1?auto=format&fit=crop&w=1800&q=82",
+    imageUrl: "https://images.unsplash.com/photo-1741342276667-4185aa6d95f1?auto=format&fit=crop&w=2400&q=88",
+    photoCredit: { label: "Photo: Markus Winkler / Unsplash", url: "https://unsplash.com/photos/the-rheinturm-tower-stands-tall-in-dusseldorf-0KQwbCNwIZo" },
     descriptionKey: "destinations.cities.dusseldorf.description",
     highlights: ["destinations.cities.dusseldorf.highlight1", "destinations.cities.dusseldorf.highlight2", "destinations.cities.dusseldorf.highlight3"],
     cityUrl: "https://www.visitduesseldorf.de/en",
@@ -57,10 +60,11 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "dortmund",
     name: "Dortmund",
     region: "North Rhine-Westphalia",
-    imageUrl: "https://cdn.pixabay.com/photo/2020/07/12/16/44/aerial-view-5397894_1280.jpg",
+    imageUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Panorama%20Skyline%20Dortmund.jpg",
     descriptionKey: "destinations.cities.dortmund.description",
     highlights: ["destinations.cities.dortmund.highlight1", "destinations.cities.dortmund.highlight2", "destinations.cities.dortmund.highlight3"],
     cityUrl: "https://www.dortmund-tourismus.de/",
+    photoCredit: { label: "Photo: Lucas Kaufmann / Wikimedia Commons (CC BY-SA 4.0)", url: "https://commons.wikimedia.org/wiki/File:Panorama_Skyline_Dortmund.jpg" },
     activityLinks: [
       { labelKey: "destinations.sources.cityLife", url: "https://www.dortmund-tourismus.de/" },
       { labelKey: "destinations.sources.schoolGallery", url: "https://www.perfekt-deutsch.de/sprachschule/galerie/" },
@@ -71,7 +75,8 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "berlin",
     name: "Berlin",
     region: "Berlin",
-    imageUrl: "https://images.unsplash.com/photo-1775045309134-7525be4e2f2d?auto=format&fit=crop&w=1800&q=82",
+    imageUrl: "https://images.unsplash.com/photo-1775045309134-7525be4e2f2d?auto=format&fit=crop&w=2400&q=88",
+    photoCredit: { label: "Photo: Eugenia Pan'kiv / Unsplash", url: "https://unsplash.com/photos/brandenburg-gate-in-berlin-on-a-clear-day-AG1beo31e1M" },
     descriptionKey: "destinations.cities.berlin.description",
     highlights: ["destinations.cities.berlin.highlight1", "destinations.cities.berlin.highlight2", "destinations.cities.berlin.highlight3"],
     cityUrl: "https://www.visitberlin.de/en",
@@ -157,15 +162,15 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
 ];
 
 export const tu9Universities = [
-  { name: "RWTH Aachen University", city: "Aachen", url: "https://www.rwth-aachen.de/" },
-  { name: "TU Berlin", city: "Berlin", url: "https://www.tu.berlin/" },
-  { name: "TU Braunschweig", city: "Braunschweig", url: "https://www.tu-braunschweig.de/" },
-  { name: "TU Darmstadt", city: "Darmstadt", url: "https://www.tu-darmstadt.de/" },
-  { name: "TU Dresden", city: "Dresden", url: "https://tu-dresden.de/" },
-  { name: "Leibniz University Hannover", city: "Hannover", url: "https://www.uni-hannover.de/" },
-  { name: "Karlsruhe Institute of Technology (KIT)", city: "Karlsruhe", url: "https://www.kit.edu/" },
-  { name: "Technical University of Munich (TUM)", city: "Munich", url: "https://www.tum.de/" },
-  { name: "University of Stuttgart", city: "Stuttgart", url: "https://www.uni-stuttgart.de/" }
+  { name: "RWTH Aachen University", city: "Aachen", url: "https://www.rwth-aachen.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/RWTH-logo.png" },
+  { name: "TU Berlin", city: "Berlin", url: "https://www.tu.berlin/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/LogoDerTechnischenUniversitätBerlin2020.svg" },
+  { name: "TU Braunschweig", city: "Braunschweig", url: "https://www.tu-braunschweig.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Siegel%20TU%20Braunschweig%20transparent.svg" },
+  { name: "TU Darmstadt", city: "Darmstadt", url: "https://www.tu-darmstadt.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/TU%20Darmstadt%20Logo.svg" },
+  { name: "TU Dresden", city: "Dresden", url: "https://tu-dresden.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20TU%20Dresden%202025.svg" },
+  { name: "Leibniz University Hannover", city: "Hannover", url: "https://www.uni-hannover.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Leibniz-Universität%20Hannover.png" },
+  { name: "Karlsruhe Institute of Technology (KIT)", city: "Karlsruhe", url: "https://www.kit.edu/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20KIT.svg" },
+  { name: "Technical University of Munich (TUM)", city: "Munich", url: "https://www.tum.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20of%20the%20Technical%20University%20of%20Munich.svg" },
+  { name: "University of Stuttgart", city: "Stuttgart", url: "https://www.uni-stuttgart.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Universität%20Stuttgart%20Logo.svg" }
 ];
 
 // Backward-compatible exports for legacy tooling (including AI knowledge generation).
