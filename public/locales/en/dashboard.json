@@ -2392,6 +2392,7 @@
   },
   "catalog": {
     "pageDesc": "Browse schools and accommodations. Click a photo to see details and pricing tiers.",
+    "countrySubtitle": "Schools, courses and accommodation in this country.",
     "searchPlaceholder": "Search accommodations or schools…",
     "clearSearch": "Clear search",
     "filterCity": "City",
