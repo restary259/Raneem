@@ -14,7 +14,6 @@ import ChatOfflineBanner from '@/components/chat/ChatOfflineBanner';
 import ChatQuickQuestions from '@/components/chat/ChatQuickQuestions';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
-import DarbContactCta from '@/components/common/DarbContactCta';
 
 const AIAdvisorPage = () => {
   const { t } = useTranslation();
@@ -136,7 +135,6 @@ const AIAdvisorPage = () => {
           </div>
         </section>
       </main>
-      <DarbContactCta variant="compact" />
 
       <Footer />
     </div>
