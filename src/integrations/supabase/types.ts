@@ -3562,6 +3562,7 @@ export type Database = {
           visa_status: string
         }
         Insert: {
+          whatsapp_inbox_enabled?: boolean
           agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
@@ -3630,6 +3631,7 @@ export type Database = {
           visa_status?: string
         }
         Update: {
+          whatsapp_inbox_enabled?: boolean
           agent_can_create_accounts?: boolean
           agent_can_invite_directly?: boolean
           agent_id?: string | null
