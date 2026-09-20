@@ -33,7 +33,7 @@ import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
+  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -84,7 +84,7 @@ export default function WhatsAppInboxPage({
 }) {
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
   const mobile = useIsMobile();
   const rtl = i18n.language === "ar";
@@ -265,6 +265,16 @@ export default function WhatsAppInboxPage({
     if (!active) return;
     try {
       await resumeWhatsAppConversation(active.id);
+      await load();
+    } catch (error) {
+      toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    }
+  };
+
+  const assignConversation = async (assignedTo: string | null) => {
+    if (!active) return;
+    try {
+      await setWhatsAppConversationAssignment(active.id, assignedTo);
       await load();
     } catch (error) {
       toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
@@ -478,6 +488,13 @@ export default function WhatsAppInboxPage({
                 <span className="text-muted-foreground">{windowClosed ? t("conversation.templateRequired") : t("conversation.remaining", { time: formatDuration(windowRemaining) })}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <Select value={active.assigned_to ?? "unassigned"} onValueChange={(value) => void assignConversation(value === "unassigned" ? null : value)}>
+                  <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
+                    {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
                 <Select value={active.priority ?? "normal"} onValueChange={(value) => void saveConversation({ priority: value })}><SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger><SelectContent>{PRIORITIES.map((priority) => <SelectItem key={priority} value={priority}>{t(`priority.${priority}`, priority)}</SelectItem>)}</SelectContent></Select>
                 {activeState === "snoozed" ? <Button size="sm" variant="outline" onClick={() => void unsnoozeConversation()}><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.unsnooze")}</Button> : <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="outline"><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.action")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"}><DropdownMenuItem onSelect={() => void snoozeConversation(60 * 60 * 1000)}>{t("snooze.hour")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(24 * 60 * 60 * 1000)}>{t("snooze.tomorrow")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(3 * 24 * 60 * 60 * 1000)}>{t("snooze.threeDays")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}
                 <Button size="sm" variant="outline" onClick={() => setFollowUpOpen(true)}><CalendarClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.schedule")}</Button>
@@ -615,6 +632,13 @@ export default function WhatsAppInboxPage({
                   <div className="border-t p-4">
                     <h4 className="text-sm font-semibold">{t("conversation.metadata")}</h4>
                     <div className="mt-3 grid gap-3">
+                      <Select value={active.assigned_to ?? "unassigned"} onValueChange={(value) => void assignConversation(value === "unassigned" ? null : value)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
+                          {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                       <Select value={active.intent ?? "other"} onValueChange={(value) => void saveConversation({ intent: value })}>
                         <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>{INTENTS.map((intent) => <SelectItem key={intent} value={intent}>{t(`intent.${intent}`, intent)}</SelectItem>)}</SelectContent>
