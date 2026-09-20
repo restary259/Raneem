@@ -5779,10 +5779,12 @@ export type Database = {
       whatsapp_templates: {
         Row: {
           approval_status: string
+          available_to_team: boolean
           category: string
           components: Json
           created_at: string
           id: string
+          is_active: boolean
           language_code: string
           last_synced_at: string
           provider_name: string
@@ -5791,10 +5793,12 @@ export type Database = {
         }
         Insert: {
           approval_status?: string
+          available_to_team?: boolean
           category: string
           components?: Json
           created_at?: string
           id?: string
+          is_active?: boolean
           language_code: string
           last_synced_at?: string
           provider_name: string
@@ -5803,10 +5807,12 @@ export type Database = {
         }
         Update: {
           approval_status?: string
+          available_to_team?: boolean
           category?: string
           components?: Json
           created_at?: string
           id?: string
+          is_active?: boolean
           language_code?: string
           last_synced_at?: string
           provider_name?: string
