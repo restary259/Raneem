@@ -108,6 +108,7 @@ import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.in
 import { Route as TeamStudentsIdRouteImport } from './routes/team.students.$id'
 import { Route as TeamToolsCurrencyRouteImport } from './routes/team.tools.currency'
 import { Route as TeamToolsCvRouteImport } from './routes/team.tools.cv'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as TeamPartnerSchoolsCountryIndexRouteImport } from './routes/team.partner-schools.$country.index'
 import { Route as TeamPartnerSchoolsCountrySchoolRouteImport } from './routes/team.partner-schools.$country.$school'
 
@@ -609,6 +610,12 @@ const TeamToolsCvRoute = TeamToolsCvRouteImport.update({
   path: '/tools/cv',
   getParentRoute: () => TeamRoute,
 } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const TeamPartnerSchoolsCountryIndexRoute =
   TeamPartnerSchoolsCountryIndexRouteImport.update({
     id: '/partner-schools/$country/',
@@ -722,6 +729,7 @@ export interface FileRoutesByFullPath {
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
   '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
 }
@@ -820,6 +828,7 @@ export interface FileRoutesByTo {
   '/team/cases': typeof TeamCasesIndexRoute
   '/team/partner-schools': typeof TeamPartnerSchoolsIndexRoute
   '/team/students': typeof TeamStudentsIndexRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
   '/team/partner-schools/$country': typeof TeamPartnerSchoolsCountryIndexRoute
 }
@@ -924,6 +933,7 @@ export interface FileRoutesById {
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
   '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
 }
@@ -1029,6 +1039,7 @@ export interface FileRouteTypes {
     | '/team/cases/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/lovable/email/transactional/preview'
     | '/team/partner-schools/$country/$school'
     | '/team/partner-schools/$country/'
   fileRoutesByTo: FileRoutesByTo
@@ -1127,6 +1138,7 @@ export interface FileRouteTypes {
     | '/team/cases'
     | '/team/partner-schools'
     | '/team/students'
+    | '/lovable/email/transactional/preview'
     | '/team/partner-schools/$country/$school'
     | '/team/partner-schools/$country'
   id:
@@ -1230,6 +1242,7 @@ export interface FileRouteTypes {
     | '/team/cases/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/lovable/email/transactional/preview'
     | '/team/partner-schools/$country/$school'
     | '/team/partner-schools/$country/'
   fileRoutesById: FileRoutesById
@@ -1270,6 +1283,7 @@ export interface RootRouteChildren {
   ResourcesLebenslaufBuilderRoute: typeof ResourcesLebenslaufBuilderRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1967,6 +1981,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamToolsCvRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/team/partner-schools/$country/': {
       id: '/team/partner-schools/$country/'
       path: '/partner-schools/$country'
@@ -2194,6 +2215,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesLebenslaufBuilderRoute: ResourcesLebenslaufBuilderRoute,
   BlogIndexRoute: BlogIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
