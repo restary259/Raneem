@@ -255,8 +255,7 @@ export default function TeamCatalogPage() {
           {/* Country selection is the first step, even when only one country exists. */}
           {!school && activeCountry == null && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {countries.map((c) => (
-                {(() => {
+              {countries.map((c) => {
                   const partnerCountry = (partnerCountryData?.countries ?? []).find(
                     (pc) =>
                       pc.name_en.trim().toLowerCase() === (c.country || "").trim().toLowerCase() ||
@@ -300,8 +299,7 @@ export default function TeamCatalogPage() {
                       </Card>
                     </button>
                   );
-                })()}
-              ))}
+              })}
             </div>
           )}
 
