@@ -13,13 +13,23 @@
     "all": "All states",
     "allOwners": "All owners",
     "unassigned": "Unassigned",
-    "unread": "Unread only"
+    "unread": "Unread only",
+    "mine": "Mine",
+    "allPriorities": "All priorities",
+    "allIntents": "All intents",
+    "allLanguages": "All languages",
+    "sla": "SLA overdue",
+    "snoozed": "Snoozed"
   },
   "state": {
     "new": "New",
     "open": "Open",
     "waiting": "Waiting",
-    "resolved": "Resolved"
+    "resolved": "Resolved",
+    "waiting_for_team": "Waiting for team",
+    "waiting_for_student": "Waiting for student",
+    "snoozed": "Snoozed",
+    "closed": "Closed"
   },
   "stage": {
     "new": "New",
@@ -69,7 +79,13 @@
     "noTemplateReleased": "No approved template has been released yet. Ask an administrator to make one available.",
     "attach": "Attach a photo or file",
     "composerLocked": "Replies are locked until the contact writes again — send an approved template below.",
-    "openFile": "Open file"
+    "openFile": "Open file",
+    "templateRequired": "Approved template required",
+    "remaining": "{{time}} remaining in service window",
+    "metadata": "Conversation metadata",
+    "campaignPlaceholder": "Campaign / entry code (optional)",
+    "sourceChannel": "Source channel",
+    "lastCustomerMessage": "Last customer message"
   },
   "profile": {
     "title": "Lead profile",
@@ -121,7 +137,12 @@
     "response": "Average first response",
     "minutes": "min",
     "byStage": "Leads by stage",
-    "noData": "No lead metrics yet."
+    "noData": "No lead metrics yet.",
+    "waitingForTeam": "Waiting for team",
+    "slaOverdue": "SLA overdue",
+    "snoozed": "Snoozed",
+    "operationalTitle": "Operational queue",
+    "operationalHelp": "Live queue health for team follow-up."
   },
   "templates": {
     "title": "Approved outbound templates",
@@ -204,5 +225,43 @@
     "status": "Status",
     "source": "Source",
     "open": "Open"
+  },
+  "priority": {
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "intent": {
+    "medicine": "Medicine",
+    "engineering": "Engineering",
+    "computer_science": "Computer science",
+    "language_course": "Language course",
+    "visa": "Visa",
+    "accommodation": "Accommodation",
+    "cost": "Cost",
+    "appointment": "Appointment",
+    "documents": "Documents",
+    "application_status": "Application status",
+    "existing_student": "Existing student",
+    "other": "Other"
+  },
+  "language": {
+    "ar": "Arabic",
+    "he": "Hebrew",
+    "en": "English",
+    "unknown": "Unknown"
+  },
+  "sla": {
+    "overdue": "SLA overdue"
+  },
+  "snooze": {
+    "action": "Snooze",
+    "hour": "1 hour",
+    "tomorrow": "Tomorrow",
+    "threeDays": "3 days",
+    "unsnooze": "Resume"
+  },
+  "quickActions": {
+    "title": "Quick replies"
   }
 }
