@@ -51,7 +51,7 @@ const StudentFigure = ({
   className?: string;
 }) => (
   <figure
-    className={`relative aspect-[3/4] w-[64vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-2xl ${index % 3 === 1 ? "sm:translate-y-8" : ""} ${className ?? ""}`}
+    className={`relative aspect-[3/4] w-[64vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-md ${index % 3 === 1 ? "sm:translate-y-8" : ""} ${className ?? ""}`}
   >
     <img
       src={student.image}
@@ -86,6 +86,7 @@ const HomepageExperience = () => {
   const topStudents = students.slice(0, half);
   const bottomStudents = students.slice(half);
   const [activeStep, setActiveStep] = useState(0);
+  const [activeService, setActiveService] = useState(0);
   const [activeLevel, setActiveLevel] = useState("C1");
   const levelDetails = t("homepage.languagePrep.levels", { returnObjects: true }) as Record<string, { label: string; description: string }>;
 
@@ -314,7 +315,7 @@ const HomepageExperience = () => {
                 href={city.cityUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`group relative overflow-hidden rounded-2xl ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2 lg:col-span-2" : ""}`}
+                className={`group relative overflow-hidden rounded-md border border-border shadow-surface transition-all duration-500 hover:-translate-y-0.5 hover:shadow-surface-lg ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2 lg:col-span-2" : ""}`}
               >
                 <img src={city.imageUrl} alt={city.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
@@ -323,7 +324,7 @@ const HomepageExperience = () => {
                     <MapPin className="h-4 w-4" />
                     <span className="text-xs font-semibold">{city.region}</span>
                   </div>
-                  <h3 className="mt-1 text-2xl font-bold">{city.name}</h3>
+                  <div className="flex items-end justify-between gap-3"><h3 className="mt-1 text-2xl font-bold">{city.name}</h3><Arrow className="h-5 w-5 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100" /></div>
                 </div>
               </a>
             ))}
@@ -377,17 +378,32 @@ const HomepageExperience = () => {
             <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.services.eyebrow")}</p>
             <h2 id="homepage-services-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.services.title")}</h2>
           </div>
-          <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             {services.map((service, index) => {
               const Icon = serviceIcons[index] ?? Check;
+              const isActive = activeService === index;
               return (
-                <div key={service.title} className="bg-background p-5 sm:p-6">
+                <button
+                  key={service.title}
+                  type="button"
+                  onClick={() => setActiveService(index)}
+                  aria-pressed={isActive}
+                  className={isActive ? "group min-h-[190px] rounded-md border border-brand bg-editorial-paper p-5 text-start shadow-surface-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:p-6" : "group min-h-[190px] rounded-md border border-border bg-background p-5 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:p-6"}
+                >
                   <div className="flex items-center justify-between">
-                    <Icon className="h-6 w-6 text-brand-strong" />
+                    <div className={isActive ? "flex h-10 w-10 items-center justify-center rounded-md bg-brand text-brand-foreground" : "flex h-10 w-10 items-center justify-center rounded-md bg-editorial-paper text-brand-strong transition-colors group-hover:bg-brand group-hover:text-brand-foreground"}>
+                      <Icon className="h-5 w-5" />
+                    </div>
                     <span className="text-[0.68rem] font-bold tracking-[0.18em] text-muted-foreground">0{index + 1}</span>
                   </div>
-                  <h3 className="mt-10 text-base font-bold text-primary">{service.title}</h3>
-                </div>
+                  <h3 className="mt-9 text-base font-bold text-primary">{service.title}</h3>
+                  <p className={isActive ? "mt-2 text-sm leading-6 text-muted-foreground" : "mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground opacity-55"}>
+                    {service.description}
+                  </p>
+                  <span className={isActive ? "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-brand-strong" : "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted-foreground/60"}>
+                    {isActive ? "Selected" : "Explore"}
+                  </span>
+                </button>
               );
             })}
           </div>
