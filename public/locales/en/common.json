@@ -86,6 +86,104 @@
     "subtitle": "Our team is ready to answer all your questions and guide you every step of the way.",
     "button": "Book a Free Consultation"
   },
+  "destinations": {
+    "heroEyebrow": "YOUR GERMAN LANGUAGE YEAR",
+    "heroTitle": "Choose the city where your German year begins",
+    "heroSubtitle": "DARB works with selected language and education institutions to help students build German language skills, experience life in Germany, and prepare for the next university step.",
+    "introEyebrow": "THE DARB APPROACH",
+    "introTitle": "Language first. University next.",
+    "introBody": "Your language year is more than a course. We help you choose a city and an institution that fit your route, then connect the year in Germany to your university preparation.",
+    "step1Title": "Choose your city",
+    "step1Body": "Compare the pace, lifestyle and learning environment before deciding where to spend your year.",
+    "step2Title": "Choose your language route",
+    "step2Body": "Start from your current level and plan toward the German level and exam you need.",
+    "step3Title": "Build life in Germany",
+    "step3Body": "Use your time outside class to experience the city, culture and student environment.",
+    "step4Title": "Prepare for university",
+    "step4Body": "Keep your language plan connected to your future university and major choices.",
+    "citiesEyebrow": "LANGUAGE-YEAR DESTINATIONS",
+    "citiesTitle": "Four cities. Four different ways to experience Germany.",
+    "citiesBody": "These are the cities currently featured in the DARB language-year pathway.",
+    "exploreCity": "Explore city",
+    "cityLife": "City & school life",
+    "schoolsEyebrow": "SELECTED LANGUAGE INSTITUTIONS",
+    "schoolsTitle": "The institutions behind the language year",
+    "schoolsBody": "We work with selected institutions and show their own qualifications and examination credentials openly. The labels below belong to the respective school or awarding body — not to DARB.",
+    "institutionCredential": "Institution credential",
+    "officialSchool": "Official school site",
+    "schoolLife": "Activities & school life",
+    "verified": "Information checked 20 September 2026",
+    "tu9Eyebrow": "UNIVERSITY DESTINATION LAYER",
+    "tu9Title": "Build toward Germany's TU9 universities",
+    "tu9Body": "The language year is the preparation stage. From there, students can explore university options across Germany, including the nine TU9 member universities.",
+    "viewUniversity": "University website",
+    "disclosureTitle": "Clear about who provides what",
+    "disclosureBody": "DARB does not issue the certificates, quality marks or awards shown on this page. They identify the respective language school, examination centre, quality organisation or award body. Course places, exams and their terms remain subject to the institution's current rules.",
+    "endTitle": "Not sure which city fits your plan?",
+    "endBody": "Tell DARB what you want to study and where you are starting from. We can help you map the language year to your next step.",
+    "endButton": "Plan my language year",
+    "cities": {
+      "heidelberg": {
+        "region": "Baden-Württemberg",
+        "description": "A compact university city shaped by the Neckar, historic streets and a strong international student atmosphere.",
+        "highlight1": "Historic student city",
+        "highlight2": "Neckar & old town",
+        "highlight3": "University-focused environment"
+      },
+      "dusseldorf": {
+        "region": "North Rhine-Westphalia",
+        "description": "A connected international city with a strong business, cultural and Rhine-side lifestyle.",
+        "highlight1": "International city",
+        "highlight2": "Rhine & city centre",
+        "highlight3": "Strong transport connections"
+      },
+      "dortmund": {
+        "region": "North Rhine-Westphalia",
+        "description": "A large Ruhr university city with a practical, connected urban environment and a central language-school location.",
+        "highlight1": "Ruhr university city",
+        "highlight2": "Central learning location",
+        "highlight3": "Everyday city experience"
+      },
+      "berlin": {
+        "region": "Berlin",
+        "description": "Germany's capital: international, cultural and full of university and professional networks.",
+        "highlight1": "International capital",
+        "highlight2": "Culture & events",
+        "highlight3": "Large university ecosystem"
+      }
+    },
+    "sources": {
+      "cityLife": "Official city information",
+      "fuEvents": "F+U events & information",
+      "alphaAktiv": "Alpha Aktiv",
+      "schoolCulture": "GoAcademy city & culture",
+      "schoolHome": "Official school site",
+      "schoolGallery": "Perfekt Deutsch gallery",
+      "schoolInfo": "VICTORIA Academy information"
+    },
+    "schools": {
+      "fu": {
+        "description": "F+U's Academy of Languages in Heidelberg offers German language programs and an international examination portfolio; its published materials list TestDaF, TELC, TestAS, IELTS, TOEFL, TOEIC and LCCI.",
+        "credentialsNote": "The Excellence Award reference is a dated 2019 award in F+U's published press material."
+      },
+      "alpha": {
+        "description": "Alpha Aktiv offers German courses from A1 to C2, university preparation and exam preparation, with a licensed testing-centre offer.",
+        "credentialsNote": "Alpha Aktiv's current site identifies AZAV and DIN EN ISO 9001 quality standards and a telc Kompetenzzentrum Hochschule designation."
+      },
+      "goacademy": {
+        "description": "GoAcademy! Düsseldorf – International House combines German intensive courses, university-pathway preparation, exam preparation and student accommodation.",
+        "credentialsNote": "The Star Award is a 2026 award claimed on GoAcademy's current site; other labels describe its memberships, certifications and examination-centre status."
+      },
+      "perfekt": {
+        "description": "Perfekt Deutsch in central Dortmund focuses on study-preparatory intensive German courses and official language examinations.",
+        "credentialsNote": "Its current site identifies licensed telc and TestDaF status and also lists TestAS and OnSET among its examination services."
+      },
+      "victoria": {
+        "description": "VICTORIA | Academy of Languages in Berlin focuses on German courses for university preparation and operates a broad language-exam portfolio.",
+        "credentialsNote": "VICTORIA's published material identifies it as a telc Kompetenzzentrum Hochschule and a test centre for TestDaF, TOEFL and other exams."
+      }
+    }
+  },
   "loader": {
     "brand": "Darb",
     "tagline": "Your Global Study Companion"
