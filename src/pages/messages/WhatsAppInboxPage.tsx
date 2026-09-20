@@ -340,7 +340,10 @@ export default function WhatsAppInboxPage({
   const generate = async (mode: "welcome" | "qualification" | "summary") => {
     if (!active) return;
     setAiLoading(true);
-    try { setAiResult(await requestWhatsAppAiAssist({ mode, lead: active.lead, messages, instruction: aiInstruction, language: rtl ? "ar" : "en" })); }
+    try {
+      const aiLanguage = active.language_code === "he" ? "he" : active.language_code === "en" ? "en" : rtl ? "ar" : "en";
+      setAiResult(await requestWhatsAppAiAssist({ mode, lead: active.lead, messages, instruction: aiInstruction, language: aiLanguage }));
+    }
     catch { toast({ variant: "destructive", description: t("errors.ai") }); }
     finally { setAiLoading(false); }
   };
