@@ -8,7 +8,7 @@ import MajorCard from '@/components/educational/MajorCard';
 import HeroSection from '@/components/educational/HeroSection';
 import SearchAndFilter from '@/components/educational/SearchAndFilter';
 import NoResults from '@/components/educational/NoResults';
-import CTASection from '@/components/educational/CTASection';
+import DarbContactCta from '@/components/common/DarbContactCta';
 import SEOHead from '@/components/common/SEOHead';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
@@ -135,7 +135,7 @@ const EducationalProgramsPage = () => {
           </div>
         </div>
       </section>
-      <CTASection />
+      <DarbContactCta />
       <MajorModal isOpen={isModalOpen} onClose={handleCloseModal} major={selectedMajor} />
       <Footer />
     </div>
