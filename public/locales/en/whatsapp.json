@@ -160,7 +160,7 @@
   "start": {
     "action": "New conversation",
     "title": "Start a WhatsApp conversation",
-    "description": "Create or reopen one lead record for this number. Unknown student details stay blank.",
+    "description": "Open or create one WhatsApp conversation. When the number already belongs to a DARB record, the conversation is connected to that record instead of creating a duplicate.",
     "nameOptional": "Optional — leave blank if unknown",
     "create": "Open conversation",
     "created": "WhatsApp lead and conversation created",
