@@ -322,6 +322,10 @@
     "custom": "Custom",
     "customHelp": "Choose exactly when this conversation should return to the team queue."
   },
+  "access": {
+    "title": "WhatsApp inbox unavailable",
+    "description": "Your administrator has not enabled the shared WhatsApp inbox for your account. Use the WhatsApp button inside a case profile to contact that case directly."
+  },
   "quickActions": {
     "title": "Quick replies"
   },

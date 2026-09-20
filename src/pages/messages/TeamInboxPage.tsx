@@ -4,6 +4,8 @@ import { useSearchParams } from "@/lib/router-compat";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
+import { useEffect } from "react";
 import CaseMessagesInboxPage from "@/pages/messages/CaseMessagesInboxPage";
 import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
 
@@ -15,12 +17,23 @@ const isTeamInboxTab = (value: string | null): value is TeamInboxTab =>
 export default function TeamInboxPage() {
   const { t } = useTranslation("dashboard");
   const { role } = useAuth();
+  const { canAccess: canAccessWhatsApp, loading: whatsappAccessLoading } = useWhatsAppInboxAccess();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedTab = searchParams.get("tab");
-  const tab: TeamInboxTab = isTeamInboxTab(requestedTab) ? requestedTab : "messages";
+  const canRenderWhatsAppTab = role === "admin" || (!whatsappAccessLoading && canAccessWhatsApp);
+  const tab: TeamInboxTab =
+    canRenderWhatsAppTab && isTeamInboxTab(requestedTab)
+      ? requestedTab
+      : "messages";
+
+  useEffect(() => {
+    if (role === "team_member" && !whatsappAccessLoading && !canAccessWhatsApp && requestedTab === "whatsapp") {
+      setSearchParams({ tab: "messages" }, { replace: true });
+    }
+  }, [role, whatsappAccessLoading, canAccessWhatsApp, requestedTab, setSearchParams]);
 
   const changeTab = (value: string) => {
-    const next: TeamInboxTab = value === "whatsapp" ? "whatsapp" : "messages";
+    const next: TeamInboxTab = value === "whatsapp" && canRenderWhatsAppTab ? "whatsapp" : "messages";
     setSearchParams({ tab: next }, { replace: true });
   };
 
@@ -34,11 +47,15 @@ export default function TeamInboxPage() {
               icon: MessageSquare,
               label: t("messagesInbox.staffTab", "Messages"),
             },
-            {
-              value: "whatsapp",
-              icon: MessageCircleMore,
-              label: t("messagesInbox.whatsappTab", "WhatsApp"),
-            },
+            ...(canRenderWhatsAppTab
+              ? [
+                  {
+                    value: "whatsapp" as const,
+                    icon: MessageCircleMore,
+                    label: t("messagesInbox.whatsappTab", "WhatsApp"),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -46,9 +63,11 @@ export default function TeamInboxPage() {
       <TabsContent value="messages" className="m-0 min-h-0 min-w-0 flex-1">
         <CaseMessagesInboxPage />
       </TabsContent>
-      <TabsContent value="whatsapp" className="m-0 min-h-0 min-w-0 flex-1 px-2 sm:px-6">
-        <WhatsAppInboxPage embedded canManageTemplates={role === "admin"} inboxOnly={role !== "admin"} />
-      </TabsContent>
+      {canRenderWhatsAppTab && (
+        <TabsContent value="whatsapp" className="m-0 min-h-0 min-w-0 flex-1 px-2 sm:px-6">
+          <WhatsAppInboxPage embedded canManageTemplates={role === "admin"} inboxOnly={role !== "admin"} />
+        </TabsContent>
+      )}
     </Tabs>
   );
 }

@@ -3,8 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 /**
- * Shared realtime presence channel for signed-in staff/students.
- * Presence only — nothing is written to the database.
+ * Shared staff presence.
+ *
+ * We intentionally avoid registering presence callbacks on a channel that may
+ * be remounted/reconciled during React navigation. Instead, the channel is
+ * fully configured before subscribe() and its current presence state is polled
+ * while subscribed. This prevents the Realtime "cannot add presence callbacks
+ * after subscribe()" race from taking down the internal messaging workspace.
  */
 export function useOnlineUsers(): Set<string> {
   const { user } = useAuth();
@@ -16,27 +21,45 @@ export function useOnlineUsers(): Set<string> {
       return;
     }
 
+    let cancelled = false;
+    let pollId: ReturnType<typeof window.setInterval> | null = null;
+
     const channel = supabase.channel("presence:staff", {
       config: { presence: { key: user.id } },
     });
 
-    const sync = () => {
-      const state = channel.presenceState() as Record<string, unknown[]>;
-      setOnline(new Set(Object.keys(state)));
+    const refresh = () => {
+      if (cancelled) return;
+      try {
+        const state = channel.presenceState() as Record<string, unknown[]>;
+        setOnline(new Set(Object.keys(state)));
+      } catch {
+        // Presence state is unavailable until the channel is subscribed.
+      }
     };
 
-    channel
-      .on("presence", { event: "sync" }, sync)
-      .on("presence", { event: "join" }, sync)
-      .on("presence", { event: "leave" }, sync)
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track({ user_id: user.id, at: new Date().toISOString() });
+    channel.subscribe(async (status) => {
+      if (cancelled) return;
+
+      if (status === "SUBSCRIBED") {
+        try {
+          await channel.track({
+            user_id: user.id,
+            at: new Date().toISOString(),
+          });
+        } catch {
+          // Presence is auxiliary; never break the messaging workspace.
         }
-      });
+
+        refresh();
+        pollId = window.setInterval(refresh, 5000);
+      }
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (pollId !== null) window.clearInterval(pollId);
+      void supabase.removeChannel(channel);
     };
   }, [user?.id]);
 

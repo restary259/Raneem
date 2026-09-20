@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 interface Props {
   userId: string;
   /** The profiles boolean column this toggle owns (admin-only guarded column). */
-  column: 'referral_code_enabled' | 'apply_form_enabled';
+  column: 'referral_code_enabled' | 'apply_form_enabled' | 'whatsapp_inbox_enabled';
   value: boolean;
   /** Called after the flag was persisted, with the new value. */
   onChanged: (next: boolean) => void;
@@ -25,7 +25,7 @@ interface Props {
 
 /**
  * Admin switch for one per-profile feature flag on `profiles`
- * (referral_code_enabled / apply_form_enabled). Mirrors AgentInviteToggle:
+ * (referral_code_enabled / apply_form_enabled / whatsapp_inbox_enabled). Mirrors AgentInviteToggle:
  * the switch opens a confirmation dialog, and the report value is what the
  * database actually stored — never the requested one. The flags are
  * admin-only settable via restrict_profiles_write.

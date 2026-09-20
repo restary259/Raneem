@@ -22,6 +22,7 @@ import { Message, MessageContent } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -47,22 +48,19 @@ const PRIORITIES = ["normal", "high", "urgent"] as const;
 const INTENTS = ["medicine", "engineering", "computer_science", "language_course", "visa", "accommodation", "cost", "appointment", "documents", "application_status", "existing_student", "other"] as const;
 const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
 
-const QUICK_REPLIES_EN = [
-  { id: "hello", label: "Welcome / hello", text: "Hi! Thanks for contacting DARB. How can we help you today?" },
-  { id: "major", label: "Ask about major", text: "Absolutely. Which study program or major are you interested in?" },
-  { id: "appointment", label: "Offer appointment", text: "We can arrange a consultation with our team. What day and time works for you?" },
-  { id: "apply", label: "Send application link", text: "You can start your DARB application here: https://darb.agency/apply" },
-  { id: "documents", label: "Secure document upload", text: "Please upload your documents through your secure DARB portal rather than sending sensitive files here." },
-  { id: "payment", label: "Payment follow-up", text: "I can help you with the payment steps. Tell me which part you need clarification on." },
-];
 const QUICK_REPLIES_AR = [
-  { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب. كيف فينا نساعدك اليوم؟" },
-  { id: "major", label: "السؤال عن التخصص", text: "أكيد. شو التخصص أو مجال الدراسة اللي مهتم فيه؟" },
-  { id: "appointment", label: "اقتراح موعد", text: "ممكن نرتّبلك استشارة مع فريق درب. أي يوم ووقت بناسبك؟" },
-  { id: "apply", label: "إرسال رابط التقديم", text: "بتقدر تبدأ طلبك مع درب من هون: https://darb.agency/apply" },
-  { id: "documents", label: "رفع المستندات بشكل آمن", text: "يفضّل ترفع المستندات من خلال بوابة درب الآمنة بدل إرسال ملفات حساسة عبر واتساب." },
-  { id: "payment", label: "متابعة الدفع", text: "بقدر أساعدك بخطوات الدفع. خبرني بأي جزء بدك توضيح." },
+  { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب 🙌 شو حابب تعرف عن الدراسة بألمانيا؟" },
+  { id: "major", label: "السؤال عن التخصص", text: "أكيد! شو التخصص أو مجال الدراسة اللي عم تفكّر تدرسه بألمانيا؟" },
+  { id: "appointment", label: "اقتراح موعد", text: "أكيد، فينا نرتّبلك استشارة مع فريق درب. أي يوم ووقت بناسبك؟" },
+  { id: "apply", label: "إرسال رابط التقديم", text: "بتقدر تعبّي طلبك مع درب من هون: https://darb.agency/apply" },
+  { id: "documents", label: "رفع المستندات بشكل آمن", text: "للحفاظ على خصوصية معلوماتك، ارفع المستندات من خلال بوابة درب الآمنة، مش عبر واتساب." },
+  { id: "payment", label: "متابعة الدفع", text: "أكيد، بساعدك بخطوات الدفع. شو النقطة اللي بدك توضيح عنها؟" },
 ];
+
+const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
+  appointment_confirmation: "أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا.",
+  appointment_reminder: "أهلاً! تذكير من درب: عندك موعد معنا بكرا بخصوص الدراسة بألمانيا. إذا احتجت تغيّر الموعد، ابعتلنا.",
+};
 const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documents_pending", "application_in_progress", "won", "lost"];
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["lead_received", "lead_followup", "inquiry_follow_up", "appointment_invitation", "appointment_confirmation", "consultation_confirmation", "appointment_reminder", "documents_missing", "document_reminder", "profile_incomplete", "document_received", "payment_instruction", "payment_reminder", "payment_confirmed", "application_started", "application_submitted", "application_update", "student_welcome", "enrollment_confirmation", "next_steps", "support_followup", "case_update"] as const;
@@ -99,6 +97,7 @@ export default function WhatsAppInboxPage({
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, role } = useAuth();
+  const { canAccess: canAccessWhatsAppInbox, loading: whatsappAccessLoading } = useWhatsAppInboxAccess();
   const { toast } = useToast();
   const mobile = useIsMobile();
   const rtl = i18n.language === "ar";
@@ -139,6 +138,13 @@ export default function WhatsAppInboxPage({
   const [templateCategory, setTemplateCategory] = useState<"UTILITY" | "MARKETING">("UTILITY");
   const [templateBody, setTemplateBody] = useState("");
   const [templateCreating, setTemplateCreating] = useState(false);
+
+  useEffect(() => {
+    if (templateLanguage !== "ar" || templateBody.trim()) return;
+    const preset = APPOINTMENT_TEMPLATE_PRESETS_AR[templatePurpose];
+    if (preset) setTemplateBody(preset);
+  }, [templateLanguage, templatePurpose, templateBody]);
+
   const [startOpen, setStartOpen] = useState(false);
   const [startQuery, setStartQuery] = useState("");
   const [startResults, setStartResults] = useState<WhatsAppCaseSearchResult[]>([]);
@@ -198,8 +204,15 @@ export default function WhatsAppInboxPage({
     refreshTimer.current = setTimeout(() => { void refreshThreads(); }, 300);
   }, [refreshThreads]);
 
-  useEffect(() => { void load(); }, [load]);
   useEffect(() => {
+    if (role === "team_member" && (whatsappAccessLoading || !canAccessWhatsAppInbox)) {
+      setLoading(false);
+      return;
+    }
+    void load();
+  }, [load, role, whatsappAccessLoading, canAccessWhatsAppInbox]);
+  useEffect(() => {
+    if (role === "team_member" && (whatsappAccessLoading || !canAccessWhatsAppInbox)) return;
     const channel = supabase.channel("whatsapp-workspace")
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, queueRefreshThreads)
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, queueRefreshThreads)
@@ -304,8 +317,7 @@ export default function WhatsAppInboxPage({
       return true;
     });
   }, [threads, query, teamMode, inboxTab, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now, user?.id]);
-
-  // Consecutive same-direction messages join one bubble group (WhatsApp-style).
+// Consecutive same-direction messages join one bubble group (WhatsApp-style).
   const messageGroups = useMemo(() => groupWhatsAppMessages(messages), [messages]);
 
   // Local preview thumbnail for an attachment the staff member has not sent yet.
@@ -569,6 +581,24 @@ export default function WhatsAppInboxPage({
   const businessHoursOpen = isDarbBusinessHours(new Date(now));
   const statusLabel = receiving ? t("status.receiving") : t("status.waiting");
 
+  if (role === "team_member" && whatsappAccessLoading) {
+    return <LoadingState variant="cards" rows={4} label={t("title")} />;
+  }
+
+  if (role === "team_member" && !canAccessWhatsAppInbox) {
+    return (
+      <div dir={rtl ? "rtl" : "ltr"} className="flex min-h-[320px] items-center justify-center p-6">
+        <Card className="w-full max-w-md rounded-xl border-dashed p-6 text-center shadow-none">
+          <MessageCircle className="mx-auto h-8 w-8 text-muted-foreground" />
+          <h1 className="mt-3 text-base font-semibold">{t("access.title", "WhatsApp inbox unavailable")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("access.description", "Your administrator has not enabled the shared WhatsApp inbox for your account. Use the WhatsApp button inside a case profile to contact that case directly.")}
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) return <LoadingState variant="cards" rows={4} label={t("title")} />;
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
@@ -611,7 +641,7 @@ export default function WhatsAppInboxPage({
                     <Pencil className="h-3 w-3 shrink-0 text-muted-foreground" />
                   </button>
                 )}
-                <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+<div className="mt-0.5 flex min-w-0 items-center gap-1.5">
                   <span dir="ltr" className="truncate text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</span>
                   <span
                     className={cn("h-1.5 w-1.5 shrink-0 rounded-full", businessHoursOpen ? "bg-emerald-500" : "bg-red-500")}
@@ -724,7 +754,7 @@ export default function WhatsAppInboxPage({
                     <Button size="sm" variant="outline" onClick={() => setFollowUpOpen(true)}><CalendarClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.schedule")}</Button>
                   </>
                 )}
-                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{(rtl ? QUICK_REPLIES_AR : QUICK_REPLIES_EN).map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
+<DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLIES_AR.map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
                   service window it is locked and the template picker takes over. */}
@@ -810,7 +840,7 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-      <div className={cn("grid min-h-0 flex-1 gap-3", active ? (showLeadPanel ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[300px_minmax(0,1fr)]") : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+<div className={cn("grid min-h-0 flex-1 gap-3", active ? (showLeadPanel ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[300px_minmax(0,1fr)]") : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
         <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
@@ -837,7 +867,7 @@ export default function WhatsAppInboxPage({
               instead of stretching the row past the panel. */}
           <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
             {filtered.length ? filtered.map((thread) => (
-              <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-center gap-2.5 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
+<button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-center gap-2.5 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
                 <Avatar className="h-9 w-9 shrink-0">
                   <AvatarFallback className="bg-muted text-[10px]">{thread.lead.student_name ? initials(thread.lead.student_name) : <UserRound className="h-4 w-4 text-muted-foreground" />}</AvatarFallback>
                 </Avatar>
@@ -878,7 +908,7 @@ export default function WhatsAppInboxPage({
         </div>
         {/* Lead — quiet for the team (name, stage, CRM context, notes);
             full contact + operational metadata for admins. */}
-        <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", active && showLeadPanel ? "hidden lg:flex" : "hidden")}>
+<Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", active && showLeadPanel ? "hidden lg:flex" : "hidden")}>
           {!active ? null : (
             <>
               <div className="shrink-0 border-b p-4">

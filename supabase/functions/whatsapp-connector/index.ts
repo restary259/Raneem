@@ -135,15 +135,34 @@ serve(async (req) => {
     const action = String(input?.action ?? "");
     // Template management (sync, create, activate, release to team) is an
     // admin-only capability. Team members may only send approved templates.
-    const isAdmin = auth.isServiceRole === true || (auth.roles ?? []).includes("admin");
-    if (["sync_templates", "create_template", "set_template_flags"].includes(action) && !isAdmin) {
-      return json({ error: "Only an administrator can manage WhatsApp templates" }, 403, corsHeaders);
-    }
     const admin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
+    const isAdmin = auth.isServiceRole === true || (auth.roles ?? []).includes("admin");
+    if (["sync_templates", "create_template", "set_template_flags"].includes(action) && !isAdmin) {
+      return json({ error: "Only an administrator can manage WhatsApp templates" }, 403, corsHeaders);
+    }
+
+    // Team members may use the shared WhatsApp connector only when an admin
+    // explicitly enabled the shared inbox for their profile. Service-role
+    // automation and administrators are unaffected.
+    if (!isAdmin && auth.userId) {
+      const { data: profile, error: accessError } = await admin
+        .from("profiles")
+        .select("whatsapp_inbox_enabled")
+        .eq("id", auth.userId)
+        .maybeSingle();
+      if (accessError) throw accessError;
+      if (!profile?.whatsapp_inbox_enabled) {
+        return json(
+          { error: "Shared WhatsApp inbox access is not enabled for this team member" },
+          403,
+          corsHeaders,
+        );
+      }
+    }
     if (action === "start_conversation") {
       const whatsappNumber = normalizeWhatsAppNumber(input?.whatsapp_number);
       const studentName = String(input?.student_name ?? "").trim().slice(0, 200);
