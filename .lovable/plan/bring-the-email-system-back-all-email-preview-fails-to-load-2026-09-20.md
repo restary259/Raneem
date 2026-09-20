@@ -1,4 +1,4 @@
-# Bring the email system back
+# Bring the email system back all email preview fails to load
 
 ## What I found
 
@@ -14,15 +14,10 @@ This diagnosis is not yet proven end to end, so confirming it is the first step 
 ## Plan
 
 1. **Confirm the cause.** Trigger one login email and one app email, then read the delivery history and the handler activity to see exactly where each one stops. If the picture differs from the above, I will report it before changing anything.
-
 2. **Reconnect the login and password emails.** Recreate the handler in the location the platform now expects and move the existing six designs across unchanged: sign-up confirmation, password reset, magic link, invitation, email change, re-authentication. Same wording, same DARB branding, same Arabic/English handling. Retire the old handler so there is only one.
-
 3. **Reconnect the app emails and the preview.** Register the ten app designs in the new location so they show up again in the Emails section and can be previewed there. Keep every sending trigger pointed at the same designs so invitations, invoices, payment and appointment reminders, and new-message alerts all keep their current content.
-
 4. **Check every send path still fires.** Walk through each place the app sends mail — invitations (student, team, partner, ambassador, agent), case invoices, appointment reminders, new-message alerts, the weekly digest — and make sure each one reaches the sending service and is recorded in the delivery history.
-
 5. **Verify without spamming anyone.** No test mail to real people. I confirm through the delivery history, the handler activity log, and the preview of each design.
-
 6. **Report.** A short list: which emails are working again, which ones I could not prove are working, and anything that needs a decision from you.
 
 ## Technical notes
