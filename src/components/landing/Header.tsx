@@ -22,7 +22,7 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
+      className={`relative inset-x-0 top-0 z-50 lg:fixed transition-[background-color,box-shadow,border-color] duration-300 ${
         scrolled
           ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md'
           : 'border-b border-transparent bg-background lg:bg-transparent'
@@ -51,7 +51,7 @@ const Header = () => {
       </div>
 
       <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex min-h-20 items-center justify-between lg:h-24 lg:min-h-0">
+        <div className="flex min-h-20 items-center justify-between lg:h-24 lg:min-h-0" dir="ltr">
           {/* Logo */}
           <div className="flex min-w-0 flex-shrink-0 items-center">
             <Link to="/" className="flex flex-shrink-0 items-center whitespace-nowrap">
