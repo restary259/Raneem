@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { formatDuration, isWhatsAppSlaOverdue, isWhatsAppSnoozed, normalizeWhatsAppState, serviceWindowRemaining } from "@/lib/whatsappOperational";
+import { isDarbBusinessHours } from "@/lib/whatsappBusinessHours";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
 import WhatsAppCrmContextPanel from "@/components/messages/WhatsAppCrmContextPanel";
@@ -398,6 +399,7 @@ export default function WhatsAppInboxPage({
   const responseAvg = responseSamples.length ? Math.round(responseSamples.reduce((a, b) => a + b, 0) / responseSamples.length) : null;
 
   const receiving = (inbound?.inboundCount ?? 0) > 0;
+  const businessHoursOpen = isDarbBusinessHours(new Date(now));
   const statusLabel = receiving ? t("status.receiving") : t("status.waiting");
 
   if (loading) return <LoadingState variant="cards" rows={4} label={t("title")} />;
@@ -714,7 +716,10 @@ export default function WhatsAppInboxPage({
       {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} />} />}
       {embedded && <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>}
       <div className={cn("mb-3 rounded-lg border p-3 text-xs", receiving ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5")}>
-        <p className="font-medium">{t("number")} · {statusLabel}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium">{t("number")} · {statusLabel}</p>
+          <Badge variant={businessHoursOpen ? "outline" : "secondary"}>{businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}</Badge>
+        </div>
         <p className="mt-1 text-muted-foreground">{receiving ? t("status.receivingHelp") : t("status.waitingHelp")}</p>
         {inbound?.lastInboundAt && <p className="mt-1 text-muted-foreground">{t("status.lastInbound", { time: fmt(inbound.lastInboundAt, i18n.language) })}</p>}
         {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
