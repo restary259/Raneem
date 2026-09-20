@@ -56,9 +56,21 @@ describe("i18n coverage", () => {
       for (const m of src.matchAll(callRe)) {
         const key = m[1];
         if (!key.includes(".")) continue; // not a namespaced lookup
+        // Keys ending in "." are prefixes concatenated at runtime
+        // (e.g. t("identity.kind." + item.match_kind)); the suffix is not
+        // statically known, so the prefix must resolve to a non-empty group.
+        const dynamic = key.endsWith(".");
+        const lookupKey = dynamic ? key.slice(0, -1) : key;
         const candidates = m[2] ? [m[2]] : [...namespaces];
         for (const lang of LOCALES) {
-          const found = candidates.some((ns) => dicts[lang][ns] && hasKey(dicts[lang][ns], key));
+          const found = candidates.some((ns) => {
+            const dict = dicts[lang][ns];
+            if (!dict || !hasKey(dict, lookupKey)) return false;
+            if (!dynamic) return true;
+            let cursor = dict;
+            for (const part of lookupKey.split(".")) cursor = cursor[part];
+            return !!cursor && typeof cursor === "object" && Object.keys(cursor).length > 0;
+          });
           if (!found) missing.push(`${lang}: ${key} (${path.relative(ROOT, file)})`);
         }
       }

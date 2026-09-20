@@ -47,12 +47,15 @@ export function isWhatsAppSlaOverdue(
   if (isWhatsAppSnoozed("snoozed", input.snoozed_until, now)) return false;
   if (normalizeWhatsAppState(input.state) === "closed") return false;
 
-  // SLA applies whenever the latest customer message is waiting for a team
-  // response, including subsequent turns after the first response.
+  // SLA applies while the team has not answered the latest customer message:
+  // either the first response is still outstanding, or a later customer turn is
+  // unanswered. Relying on last_customer_message_at alone misses overdue
+  // conversations where that timestamp was never recorded.
+  const firstResponsePending = !input.first_response_at;
   const customerAt = input.last_customer_message_at ? new Date(input.last_customer_message_at).getTime() : NaN;
   const teamAt = input.last_team_response_at ? new Date(input.last_team_response_at).getTime() : NaN;
   const awaitingTeam = Number.isFinite(customerAt) && (!Number.isFinite(teamAt) || customerAt > teamAt);
-  if (!awaitingTeam) return false;
+  if (!firstResponsePending && !awaitingTeam) return false;
 
   if (!input.sla_due_at) return false;
   const due = new Date(input.sla_due_at).getTime();

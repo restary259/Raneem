@@ -145,7 +145,10 @@
     "slaOverdue": "SLA overdue",
     "snoozed": "Snoozed",
     "operationalTitle": "Operational queue",
-    "operationalHelp": "Live queue health for team follow-up."
+    "operationalHelp": "Live queue health for team follow-up.",
+    "campaigns": "Campaigns",
+    "intentDistribution": "Intent distribution",
+    "noCampaignData": "No campaign data yet."
   },
   "templates": {
     "title": "Approved outbound templates",
@@ -198,7 +201,8 @@
     "retry": "Retry",
     "back": "Back",
     "refresh": "Refresh",
-    "remove": "Remove"
+    "remove": "Remove",
+    "cancel": "Cancel"
   },
   "start": {
     "action": "New conversation",
@@ -251,7 +255,8 @@
     "major": "Major",
     "education": "Education",
     "assignedTo": "Assigned to",
-    "university": "University"
+    "university": "University",
+    "title": "Linked DARB record"
   },
   "priority": {
     "normal": "Normal",
