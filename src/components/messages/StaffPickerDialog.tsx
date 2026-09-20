@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { listStaffDirectory, type StaffMember } from "@/services/DirectMessageService";
+import { listStaffDirectory, listTeamChatDirectory, type StaffMember } from "@/services/DirectMessageService";
 
 interface Props {
   open: boolean;
@@ -23,6 +23,8 @@ interface Props {
   onlineUserIds: Set<string>;
   onSelect: (staffId: string) => void;
   hint?: string;
+  /** When true, only active team members are listed for peer team chat. */
+  teamOnly?: boolean;
 }
 
 /** Directory of staff members to start a direct conversation with. */
@@ -34,6 +36,7 @@ export default function StaffPickerDialog({
   onlineUserIds,
   onSelect,
   hint,
+  teamOnly = false,
 }: Props) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
@@ -44,7 +47,7 @@ export default function StaffPickerDialog({
   useEffect(() => {
     if (!open || loaded) return;
     setLoading(true);
-    listStaffDirectory()
+    (teamOnly ? listTeamChatDirectory() : listStaffDirectory())
       .then((rows) => {
         setStaff(rows.filter((s) => s.id !== excludeUserId));
         setLoaded(true);
@@ -53,14 +56,18 @@ export default function StaffPickerDialog({
         toast({ variant: "destructive", description: (err as Error).message });
       })
       .finally(() => setLoading(false));
-  }, [open, loaded, excludeUserId, toast]);
+  }, [open, loaded, excludeUserId, teamOnly, toast]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("messagesInbox.pickStaff")}</DialogTitle>
+          <DialogTitle>
+            {teamOnly
+              ? t("messagesInbox.pickTeamMember", "New team chat")
+              : t("messagesInbox.pickStaff")}
+          </DialogTitle>
         </DialogHeader>
         {loading ? (
           <div className="flex justify-center py-8">
@@ -68,7 +75,9 @@ export default function StaffPickerDialog({
           </div>
         ) : staff.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            {t("messagesInbox.noStaff")}
+            {teamOnly
+              ? t("messagesInbox.noTeamMembers", "No other team members available.")
+              : t("messagesInbox.noStaff")}
           </p>
         ) : (
           <ul className="max-h-[50vh] space-y-1 overflow-y-auto">
