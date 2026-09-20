@@ -226,6 +226,7 @@ Implemented in the DARB application:
 - Unknown inbound WhatsApp contacts are designed to create one core `leads` row with `source_type = 'whatsapp'` and `status = 'new'`, guarded by an advisory lock.
 - Automatic identity links are explicitly distinguishable from staff-confirmed links: automatic resolution leaves `identity_confirmed_by` / `identity_confirmed_at` null; staff confirmation records the authenticated staff member and timestamp.
 - The team WhatsApp inbox now shows a DARB CRM context panel for linked lead/case/profile records and follows existing DARB case/student routes.
+- The CRM context is now served through a staff-only SECURITY DEFINER RPC that returns only the linked lead/case/profile display fields required by the inbox; the inbox does not broaden direct profile reads for team members.
 - Staff actions launched from a DARB case/student record are routed into the DARB WhatsApp inbox and safely bind the opened conversation to the selected DARB record rather than opening an external personal WhatsApp workflow.
 - The WhatsApp connector validates any requested case/lead/profile target against the normalized WhatsApp phone before linking it and rejects conflicting existing links.
 
