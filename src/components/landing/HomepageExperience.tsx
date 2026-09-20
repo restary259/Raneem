@@ -405,6 +405,13 @@ const HomepageExperience = () => {
                 <div className="mt-3 border-t border-border pt-3">
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{examDetails[activeExam]?.label ?? activeExam}</p>
                   <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{examDetails[activeExam]?.description}</p>
+                  <Link
+                    to="/apply"
+                    className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-brand-strong transition-all hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  >
+                    {t("homepage.languagePrep.examCta")}
+                    <Arrow className="h-4 w-4 rtl:rotate-180" />
+                  </Link>
                 </div>
               </div>
             </div>
