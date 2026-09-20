@@ -47,6 +47,7 @@ export default function WhatsAppInboxPage({
   conversationId,
   onConversationClose,
   canManageTemplates = false,
+  inboxOnly = false,
 }: {
   embedded?: boolean;
   conversationOnly?: boolean;
@@ -54,6 +55,8 @@ export default function WhatsAppInboxPage({
   onConversationClose?: () => void;
   /** Admin only: show the Templates tab (sync, create, activate, release). */
   canManageTemplates?: boolean;
+  /** Team view: render only the inbox — conversations, chat, read-only lead panel with notes. */
+  inboxOnly?: boolean;
 }) {
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -359,6 +362,111 @@ export default function WhatsAppInboxPage({
   );
 
   if (conversationOnly) return conversationOnlyView;
+
+  if (inboxOnly) {
+    const advisorName = active?.lead.assigned_advisor ? staff.find((member) => member.id === active.lead.assigned_advisor)?.full_name ?? null : null;
+    return (
+      <div dir={rtl ? "rtl" : "ltr"} className="mx-auto flex h-full w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden">
+        <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>
+        <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[300px_minmax(0,1fr)_300px]">
+          {/* Conversations */}
+          <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
+            <div className="shrink-0 space-y-2 border-b p-3">
+              <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
+              <div className="flex items-center gap-2">
+                <Select value={stateFilter} onValueChange={setStateFilter}><SelectTrigger className="h-8 flex-1 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.all")}</SelectItem>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent></Select>
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={unreadOnly} onCheckedChange={setUnreadOnly} aria-label={t("filters.unread")} />{t("filters.unread")}</label>
+              </div>
+            </div>
+            <ScrollArea className="min-h-0 flex-1">
+              {filtered.length ? filtered.map((thread) => (
+                <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
+                    <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
+                  </div>
+                  {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
+                </button>
+              )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
+            </ScrollArea>
+          </Card>
+          {/* Chat */}
+          <div className="min-h-0 min-w-0">{conversationOnlyView}</div>
+          {/* Lead */}
+          <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
+            {!active ? (
+              <EmptyState title={t("empty.select")} icon={UserRound} className="flex-1" />
+            ) : (
+              <>
+                <div className="shrink-0 border-b p-4">
+                  <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-muted-foreground" /><h3 className="font-semibold">{t("profile.title")}</h3></div>
+                  <p className="mt-2 truncate text-sm font-medium">{active.lead.student_name || "—"}</p>
+                  <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
+                  <Badge variant="secondary" className="mt-2">{t(`stage.${active.lead.lead_stage}`, active.lead.lead_stage)}</Badge>
+                </div>
+                <ScrollArea className="min-h-0 flex-1">
+                  <dl className="space-y-3 p-4 text-sm">
+                    {([
+                      [t("profile.country"), active.lead.country],
+                      [t("profile.targetCountry"), active.lead.target_country],
+                      [t("profile.program"), active.lead.desired_program],
+                      [t("profile.language"), active.lead.language_level],
+                      [t("profile.budget"), active.lead.budget_range],
+                      [t("profile.start"), active.lead.intended_start_date],
+                      [t("profile.advisor"), advisorName],
+                      [t("profile.source"), active.lead.source],
+                      [t("profile.consent"), t(`consent.${active.lead.consent_status}`, active.lead.consent_status)],
+                    ] as [string, string | null][]).map(([label, value]) => (
+                      <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-0.5">{value || "—"}</dd></div>
+                    ))}
+                  </dl>
+                  <div className="border-t p-4">
+                    <h4 className="text-sm font-semibold">{t("notes.title")}</h4>
+                    <div className="mt-2 space-y-2">
+                      {notes.length ? notes.map((item) => (
+                        <div key={item.id} className="rounded-lg border bg-muted/30 p-2 text-xs">
+                          <p className="whitespace-pre-wrap">{item.body}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">{fmt(item.created_at, i18n.language)}</p>
+                        </div>
+                      )) : <p className="text-xs text-muted-foreground">{t("notes.empty")}</p>}
+                    </div>
+                    <Textarea className="mt-3 min-h-16 text-sm" value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("notes.placeholder")} />
+                    <Button size="sm" className="mt-2 w-full" disabled={!note.trim()} onClick={() => void addNote()}>{t("notes.add")}</Button>
+                  </div>
+                </ScrollArea>
+              </>
+            )}
+          </Card>
+        </div>
+        {/* Mobile: list or chat fills the surface */}
+        <div className="lg:hidden">
+          {!active && (
+            <Card className="mt-3 overflow-hidden rounded-xl shadow-none">
+              <div className="space-y-2 border-b p-3">
+                <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
+              </div>
+              <ScrollArea className="max-h-[60vh]">
+                {filtered.map((thread) => (
+                  <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className="flex w-full items-start gap-2 border-b p-3 text-start">
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p><p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</p></div>
+                    {thread.unread_count > 0 && <Badge className="rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
+                  </button>
+                ))}
+              </ScrollArea>
+            </Card>
+          )}
+        </div>
+        <Dialog open={startOpen} onOpenChange={setStartOpen}>
+          <DialogContent dir={rtl ? "rtl" : "ltr"}>
+            <DialogHeader><DialogTitle>{t("start.title")}</DialogTitle><DialogDescription>{t("start.description")}</DialogDescription></DialogHeader>
+            <div className="space-y-3"><div><Label htmlFor="wa-number">{t("profile.number")}</Label><Input id="wa-number" dir="ltr" value={startNumber} onChange={(event) => setStartNumber(event.target.value)} placeholder="0529402168" /></div><div><Label htmlFor="wa-name">{t("profile.studentName")}</Label><Input id="wa-name" value={startName} onChange={(event) => setStartName(event.target.value)} placeholder={t("start.nameOptional")} /></div></div>
+            <DialogFooter><Button disabled={!startNumber.trim() || starting} onClick={() => void startConversation()}><MessageCircle className="me-2 h-4 w-4" />{t("start.create")}</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
 
   return (
     <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto flex w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden", embedded ? "pb-0" : "pb-20 md:pb-4")}>

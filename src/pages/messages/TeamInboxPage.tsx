@@ -47,7 +47,7 @@ export default function TeamInboxPage() {
         <CaseMessagesInboxPage />
       </TabsContent>
       <TabsContent value="whatsapp" className="m-0 min-h-0 min-w-0 flex-1 px-2 sm:px-6">
-        <WhatsAppInboxPage embedded canManageTemplates={role === "admin"} />
+        <WhatsAppInboxPage embedded canManageTemplates={role === "admin"} inboxOnly={role !== "admin"} />
       </TabsContent>
     </Tabs>
   );
