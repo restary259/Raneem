@@ -73,7 +73,7 @@ const Header = () => {
           <div className="hidden flex-shrink-0 items-center gap-2 lg:flex">
             <Link
               to="/student-auth"
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-brand-strong px-4 py-2 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-strong/90 md:px-5 md:py-2.5"
+              className="flex-shrink-0 whitespace-nowrap rounded-md border border-brand bg-brand-strong px-4 py-2.5 text-sm font-bold text-brand-foreground shadow-[0_8px_22px_-12px_hsl(var(--brand)/0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand px-5 md:px-6 md:py-3"
             >
               {t('nav.studentLogin')}
             </Link>
