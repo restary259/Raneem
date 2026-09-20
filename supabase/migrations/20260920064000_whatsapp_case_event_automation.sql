@@ -55,7 +55,13 @@ BEGIN
 
   IF NEW.event_type IN ('appointment_scheduled','appointment_rescheduled') THEN
     BEGIN
-      v_scheduled_at := NULLIF(NEW.payload->>'scheduled_at', '')::timestamptz;
+      v_scheduled_at := NULLIF(
+        CASE
+          WHEN NEW.event_type = 'appointment_rescheduled' THEN NEW.payload->>'to'
+          ELSE NEW.payload->>'scheduled_at'
+        END,
+        ''
+      )::timestamptz;
     EXCEPTION WHEN OTHERS THEN
       v_scheduled_at := NULL;
     END;
