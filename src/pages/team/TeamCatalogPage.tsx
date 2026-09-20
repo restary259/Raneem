@@ -79,8 +79,7 @@ export default function TeamCatalogPage() {
   }, [data]);
 
   const countrySchools = useMemo(() => {
-    if (!data) return [];
-    if (activeCountry == null) return data.schools;
+    if (!data || activeCountry == null) return [];
     return data.schools.filter((s) => (s.country?.trim() || "") === activeCountry);
   }, [data, activeCountry]);
 
@@ -185,30 +184,40 @@ export default function TeamCatalogPage() {
         <>
           <CatalogBreadcrumb items={crumbs} />
 
-          {/* Country strip — only meaningful with more than one country. */}
-          {countries.length > 1 && !school && (
-            <div className="flex flex-wrap gap-2">
+          {/* Country selection is the first step, even when only one country exists. */}
+          {!school && activeCountry == null && (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {countries.map((c) => (
                 <button
                   key={c.country || "__none__"}
                   type="button"
-                  onClick={() => { setCountry(c.country); setSchoolId(null); }}
-                  aria-pressed={activeCountry === c.country}
-                  className={
-                    activeCountry === c.country
-                      ? "flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
-                      : "flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                  }
+                  onClick={() => {
+                    setCountry(c.country);
+                    setSchoolId(null);
+                    setFilters(EMPTY_FILTERS);
+                  }}
+                  className="group text-start"
                 >
-                  <Globe2 className="h-3.5 w-3.5" />
-                  {countryLabel(c.country)}
-                  <span className="opacity-70">({c.schools.length.toLocaleString("en-US")})</span>
+                  <Card className="flex h-full items-center justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-base font-semibold text-foreground">
+                        <Globe2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{countryLabel(c.country)}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {c.schools.length.toLocaleString("en-US")} {c.schools.length === 1 ? "school" : "schools"}
+                      </p>
+                    </div>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
+                      <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                    </span>
+                  </Card>
                 </button>
               ))}
             </div>
           )}
 
-          {!school ? (
+          {!school && activeCountry != null ? (
             /* ── Schools grid ── */
             <>
               <CatalogFilters
@@ -252,7 +261,7 @@ export default function TeamCatalogPage() {
             <div className="space-y-5">
               <Button variant="ghost" size="sm" onClick={() => setSchoolId(null)} className="-ms-2">
                 <ArrowLeft className="me-1.5 h-4 w-4 rtl:rotate-180" />
-                {t("catalog.backToSchools", "All schools")}
+                {t("catalog.backToSchools", "Back to schools")}
               </Button>
 
               {/* School hero */}
