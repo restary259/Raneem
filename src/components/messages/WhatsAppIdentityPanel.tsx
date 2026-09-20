@@ -82,7 +82,7 @@ export default function WhatsAppIdentityPanel({ lead, onChanged }: { lead: Whats
       <p className="font-medium">{t("identity.suggestionTitle")}</p>
       {visible.map((item) => (
         <div key={item.match_kind + ":" + item.match_id} className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline">{t("identity.kind." + item.match_kind, item.match_kind)}</Badge>
+          <Badge variant="outline">{t(`identity.kind.${item.match_kind}`, item.match_kind)}</Badge>
           <span className="font-medium">{item.display_name || t("identity.noName")}</span>
           {item.detail && <span className="text-muted-foreground">{item.detail}</span>}
           <span className="ms-auto flex gap-1">

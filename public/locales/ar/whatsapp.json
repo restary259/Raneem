@@ -145,7 +145,10 @@
     "slaOverdue": "تجاوز وقت الاستجابة",
     "snoozed": "مؤجّلة",
     "operationalTitle": "طابور العمل",
-    "operationalHelp": "حالة المتابعة الحالية للفريق."
+    "operationalHelp": "حالة المتابعة الحالية للفريق.",
+    "intentDistribution": "توزيع الاهتمامات",
+    "campaigns": "الحملات",
+    "noCampaignData": "لا توجد بيانات حملات بعد."
   },
   "templates": {
     "title": "قوالب الرسائل الصادرة المعتمدة",
@@ -198,7 +201,8 @@
     "retry": "إعادة المحاولة",
     "back": "رجوع",
     "refresh": "تحديث",
-    "remove": "إزالة"
+    "remove": "إزالة",
+    "cancel": "إلغاء"
   },
   "start": {
     "action": "محادثة جديدة",
@@ -251,7 +255,8 @@
     "major": "التخصص",
     "education": "التعليم",
     "assignedTo": "المسؤول",
-    "university": "الجامعة"
+    "university": "الجامعة",
+    "title": "ملف الطالب"
   },
   "priority": {
     "normal": "عادية",
