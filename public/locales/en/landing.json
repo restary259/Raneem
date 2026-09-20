@@ -391,23 +391,33 @@
       "levels": {
         "A1": {
           "label": "A1 · Starter",
-          "description": "Basic everyday German for simple communication."
+          "description": "Basic everyday German for simple communication.",
+          "hours": "≈200 guided learning hours",
+          "duration": "≈2 months · intensive pace"
         },
         "A2": {
           "label": "A2 · Elementary",
-          "description": "Handle familiar situations and build a stronger base."
+          "description": "Handle familiar situations and build a stronger base.",
+          "hours": "≈200 guided learning hours",
+          "duration": "≈2 months · intensive pace"
         },
         "B1": {
           "label": "B1 · Intermediate",
-          "description": "Communicate independently in everyday and study-related situations."
+          "description": "Communicate independently in everyday and study-related situations.",
+          "hours": "≈200 guided learning hours",
+          "duration": "≈2 months · intensive pace"
         },
         "B2": {
           "label": "B2 · Upper intermediate",
-          "description": "Follow more complex German and prepare for academic communication."
+          "description": "Follow more complex German and prepare for academic communication.",
+          "hours": "≈200 guided learning hours",
+          "duration": "≈2 months · intensive pace"
         },
         "C1": {
           "label": "C1 · Academic",
-          "description": "Advanced German for higher-education contexts and academic exams."
+          "description": "Advanced German for higher-education contexts and academic exams.",
+          "hours": "≈200 guided learning hours",
+          "duration": "≈2 months · intensive pace"
         }
       },
       "levelLabel": "LANGUAGE LEVEL",
