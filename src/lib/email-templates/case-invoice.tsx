@@ -6,7 +6,7 @@ import {
   EmailLayout,
   EmailText,
 } from './_ui/components'
-import { color, font, radius } from '../email-ui/theme.ts'
+import { color, font, radius } from './_ui/theme'
 import type { TemplateEntry } from './registry'
 
 /**

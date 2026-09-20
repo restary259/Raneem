@@ -253,7 +253,7 @@ export const EmailStatusBadge = ({
 }
 
 /** Fallback link shown under a CTA, so the email works when buttons are stripped. */
-export const EmailFallbackLink = ({ href, dir = 'rtl' as Dir }) => (
+export const EmailFallbackLink = ({ href, dir = 'rtl' as Dir }: { href: string; dir?: Dir }) => (
   <Text style={{ ...fallback, textAlign: isRtl(dir) ? 'right' : 'left' }} dir={dir}>
 
     {isRtl(dir)
