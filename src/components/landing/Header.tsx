@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import DesktopNav from './DesktopNav';
@@ -13,11 +13,25 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contactConfig';
 const Header = () => {
   const { t } = useTranslation();
   const { dir } = useDirection();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const updateHeader = () => setScrolled(window.scrollY > 24);
+    updateHeader();
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    return () => window.removeEventListener('scroll', updateHeader);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background shadow-xs" dir={dir}>
-      <div className="hidden border-b border-border bg-muted/35 lg:block">
-        <div className="container flex h-9 items-center justify-end gap-5 text-xs text-muted-foreground">
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
+        scrolled ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md' : 'border-b border-transparent bg-transparent'
+      }`}
+      dir={dir}
+      data-scrolled={scrolled ? 'true' : 'false'}
+    >
+      <div className={`hidden border-b lg:block ${scrolled ? 'border-border bg-muted/35' : 'border-primary-foreground/20 bg-primary/20'}`}>
+        <div className={`container flex h-9 items-center justify-end gap-5 text-xs ${scrolled ? 'text-muted-foreground' : 'text-primary-foreground'}`}>
           <a href={`mailto:${SUPPORT_EMAIL}`} className="flex items-center gap-1.5 hover:text-brand-strong"><Mail className="h-3.5 w-3.5" />{SUPPORT_EMAIL}</a>
           <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="flex items-center gap-1.5 hover:text-brand-strong"><Phone className="h-3.5 w-3.5" />{SUPPORT_PHONE}</a>
           <LanguageSwitcher />
@@ -40,7 +54,7 @@ const Header = () => {
 
           {/* Center: Desktop Navigation */}
           <div className="hidden lg:block flex-1 mx-5 min-w-0">
-            <DesktopNav />
+            <DesktopNav transparent={!scrolled} />
           </div>
 
           {/* Right Side: Language Switcher + Student Login */}
@@ -55,7 +69,7 @@ const Header = () => {
 
           {/* Mobile Menu */}
           <div className="lg:hidden flex-shrink-0">
-            <MobileNav />
+            <MobileNav transparent={!scrolled} />
           </div>
         </div>
       </div>
