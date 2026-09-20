@@ -122,6 +122,60 @@ $whatsapp_resume$;
 REVOKE ALL ON FUNCTION public.whatsapp_resume_conversation(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.whatsapp_resume_conversation(uuid) TO authenticated;
 
+CREATE OR REPLACE FUNCTION public.whatsapp_schedule_template_follow_up(
+  p_conversation_id uuid,
+  p_due_at timestamptz,
+  p_template_id uuid,
+  p_parameters jsonb DEFAULT '[]'::jsonb
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $whatsapp_schedule$
+DECLARE
+  v_task_id uuid;
+BEGIN
+  IF NOT public.is_whatsapp_staff(auth.uid()) THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF p_due_at <= now() OR p_due_at > now() + interval '90 days' THEN
+    RAISE EXCEPTION 'Invalid follow-up time';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.whatsapp_conversations
+    WHERE id = p_conversation_id
+  ) THEN
+    RAISE EXCEPTION 'Conversation not found';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.whatsapp_templates
+    WHERE id = p_template_id
+      AND approval_status = 'APPROVED'
+      AND is_active = true
+      AND category = 'UTILITY'
+  ) THEN
+    RAISE EXCEPTION 'Only active approved utility templates can be scheduled';
+  END IF;
+
+  INSERT INTO public.whatsapp_follow_up_tasks (
+    conversation_id, kind, due_at, template_id, template_parameters, created_by
+  )
+  VALUES (
+    p_conversation_id, 'template', p_due_at, p_template_id, coalesce(p_parameters,'[]'::jsonb), auth.uid()
+  )
+  RETURNING id INTO v_task_id;
+
+  RETURN v_task_id;
+END;
+$whatsapp_schedule$;
+
+REVOKE ALL ON FUNCTION public.whatsapp_schedule_template_follow_up(uuid,timestamptz,uuid,jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.whatsapp_schedule_template_follow_up(uuid,timestamptz,uuid,jsonb) TO authenticated;
+
 CREATE OR REPLACE FUNCTION public.whatsapp_cancel_follow_ups_for_conversation(p_conversation_id uuid)
 RETURNS void
 LANGUAGE sql
