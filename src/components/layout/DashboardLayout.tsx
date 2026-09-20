@@ -26,7 +26,6 @@ import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
 import { filterApplyNavItem } from "@/lib/partnerNav";
-import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
 
 import {
   LayoutDashboard,
@@ -232,21 +231,16 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const baseItems = NAV_CONFIG[role] ?? [];
-  const { canAccess: canAccessWhatsAppInbox } = useWhatsAppInboxAccess();
   // Partner/ambassador/agent: hide the built-in Apply form when the admin
   // toggle (profiles.apply_form_enabled) is off for this member.
   const applyGatedRole = role === "social_media_partner" || role === "ambassador" || role === "agent";
   const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
   const items: NavItem[] = useMemo(
-    () => {
-      const filtered = filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled);
-      if (role !== "team_member" || canAccessWhatsAppInbox) return filtered;
-      return filtered.filter((item) => item.key !== "nav.staffInbox");
-    },
-    [baseItems, applyGatedRole, applyFormEnabled, role, canAccessWhatsAppInbox],
+    () => filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled),
+    [baseItems, applyGatedRole, applyFormEnabled],
   );
 
-  const unreadMessages = useUnreadCaseMessages(role === "team_member" ? canAccessWhatsAppInbox : true);
+  const unreadMessages = useUnreadCaseMessages(true);
 
   const isItemActive = (item: NavItem): boolean => {
     if (!item.href) return false;
@@ -481,7 +475,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
               <LanguageSwitcher />
               <ThemePicker />
 
-              {canMessage && (role !== "team_member" || canAccessWhatsAppInbox) && (
+              {canMessage && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
