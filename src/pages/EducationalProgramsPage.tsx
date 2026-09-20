@@ -135,7 +135,7 @@ const EducationalProgramsPage = () => {
           </div>
         </div>
       </section>
-      <DarbContactCta />
+      <DarbContactCta variant="compact" />
       <MajorModal isOpen={isModalOpen} onClose={handleCloseModal} major={selectedMajor} />
       <Footer />
     </div>
