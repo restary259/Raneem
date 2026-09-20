@@ -8,7 +8,7 @@ import { Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 import TikTokIcon from "../icons/TikTokIcon";
-import { WHATSAPP_SUPPORT_URL } from '@/lib/contactConfig';
+import { whatsappBusinessUrl } from '@/lib/contactConfig';
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import FieldGroup from "@/components/common/FieldGroup";
@@ -295,7 +295,7 @@ const Contact = () => {
                 <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Instagram className="h-7 w-7" /></a>
                 <a href="https://www.tiktok.com/@darb_studyingrmany" aria-label="TikTok" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><TikTokIcon className="h-7 w-7" /></a>
                 <a href="https://www.facebook.com/people/درب-للدراسة-في-المانيا/61557861907067/" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><Facebook className="h-7 w-7" /></a>
-                <a href={WHATSAPP_SUPPORT_URL} aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><MessageCircle className="h-7 w-7" /></a>
+                <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-accent transition-colors"><MessageCircle className="h-7 w-7" /></a>
               </div>
             </div>
           </div>
