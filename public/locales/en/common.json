@@ -21,7 +21,16 @@
     "broadcastDesc": "Watch educational and live videos from our experts",
     "studentLogin": "Student Login",
     "faq": "FAQ",
-    "faqDesc": "Answers to the most common questions about studying in Germany"
+    "faqDesc": "Answers to the most common questions about studying in Germany",
+    "studyGermany": "Study in Germany",
+    "studyPath": "Find Your Study Path",
+    "aboutDarb": "About DARB",
+    "aiAdvisor": "AI Study Advisor",
+    "bagrutCalculator": "Bagrut Calculator",
+    "costCalculator": "Cost Calculator",
+    "currencyConverter": "Currency Converter",
+    "cvBuilder": "CV Builder",
+    "blog": "Blog"
   },
   "desktopNav": {
     "about": {
