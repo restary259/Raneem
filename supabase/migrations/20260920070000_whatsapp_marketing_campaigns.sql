@@ -309,14 +309,26 @@ BEGIN
     AND scheduled_at IS NOT NULL
     AND scheduled_at <= now();
 
+  -- Recover abandoned claims after a worker crash, but never recycle a
+  -- terminal recipient.
+  UPDATE public.whatsapp_campaign_recipients
+  SET status = 'pending',
+      updated_at = now()
+  WHERE status = 'processing'
+    AND attempt_count < max_attempts
+    AND updated_at < now() - interval '15 minutes';
+
   RETURN QUERY
   WITH claimed AS (
     SELECT r.id
     FROM public.whatsapp_campaign_recipients r
     JOIN public.whatsapp_campaigns c ON c.id = r.campaign_id
     WHERE c.status = 'running'
-      AND r.status = 'pending'
       AND r.attempt_count < r.max_attempts
+      AND (
+        (r.status = 'pending' AND r.updated_at <= now() - make_interval(mins => least(power(2, r.attempt_count)::integer, 30)))
+        OR r.status = 'processing'
+      )
     ORDER BY c.scheduled_at NULLS FIRST, r.created_at
     FOR UPDATE OF r SKIP LOCKED
     LIMIT LEAST(GREATEST(coalesce(p_limit,25),1),100)
