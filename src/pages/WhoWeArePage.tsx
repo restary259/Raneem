@@ -3,7 +3,7 @@ import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, Linkedin, ShieldCheck, Lightbulb, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import DarbContactCta from "@/components/common/DarbContactCta";
 import ServiceProcess from "@/components/services/ServiceProcess";
 import SEOHead from "@/components/common/SEOHead";
 import DarbPageHero from "@/components/common/DarbPageHero";
@@ -133,16 +133,7 @@ const WhoWeArePage = () => {
 
                 <ServiceProcess title={t('whoWeAre.processTitle')} description={t('whoWeAre.processDesc')} className="bg-secondary/20" />
                 
-                <section className="bg-secondary text-secondary-foreground py-16 md:py-20">
-                    <div className="container mx-auto px-4 text-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                        <p className="text-2xl md:text-3xl font-semibold mb-4">
-                            {t('whoWeAre.ctaLine1')}
-                        </p>
-                        <p className="text-xl font-serif text-secondary-foreground/80">
-                            {t('whoWeAre.ctaLine2')}
-                        </p>
-                    </div>
-                </section>
+                <DarbContactCta />
             </main>
             <Footer />
         </div>;
