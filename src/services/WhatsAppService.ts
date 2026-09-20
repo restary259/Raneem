@@ -226,6 +226,39 @@ export function setWhatsAppTemplateFlags(templateId: string, flags: { is_active?
   return invokeWhatsAppConnector<{ template: WhatsAppTemplate }>({ action: "set_template_flags", template_id: templateId, ...flags });
 }
 
+export async function snoozeWhatsAppConversation(conversationId: string, until: string) {
+  const { data, error } = await supabase.rpc("whatsapp_snooze_conversation", {
+    p_conversation_id: conversationId,
+    p_until: until,
+  });
+  fail(error);
+  return data;
+}
+
+export async function resumeWhatsAppConversation(conversationId: string) {
+  const { data, error } = await supabase.rpc("whatsapp_resume_conversation", {
+    p_conversation_id: conversationId,
+  });
+  fail(error);
+  return data;
+}
+
+export async function scheduleWhatsAppTemplateFollowUp(
+  conversationId: string,
+  dueAt: string,
+  templateId: string,
+  parameters: string[] = [],
+) {
+  const { data, error } = await supabase.rpc("whatsapp_schedule_template_follow_up", {
+    p_conversation_id: conversationId,
+    p_due_at: dueAt,
+    p_template_id: templateId,
+    p_parameters: parameters,
+  });
+  fail(error);
+  return data;
+}
+
 export function startWhatsAppConversation(
   whatsappNumber: string,
   studentName = "",
