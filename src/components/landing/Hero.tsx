@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router-compat";
-import { WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
+import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
@@ -76,7 +76,7 @@ const Hero = () => {
             <Link to="/contact">{t('hero.consultation')}</Link>
           </Button>
           <Button size="lg" asChild className="w-full sm:w-auto bg-[hsl(160_68%_42%)] text-white hover:bg-[hsl(160_68%_35%)] transition-transform duration-300 hover:scale-105">
-            <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+            <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
               {t('common:applyNow')}
             </a>
