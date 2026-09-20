@@ -87,7 +87,7 @@ export function OnboardingShell({
         <img
           src={darbLogoAsset.url}
           alt="DARB"
-          className="h-9 w-auto select-none object-contain"
+          className="h-14 w-auto select-none object-contain"
           draggable={false}
         />
         <div className="text-xs text-muted-foreground" aria-live="polite">

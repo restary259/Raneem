@@ -15,15 +15,15 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 shadow-xs backdrop-blur" dir={dir}>
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-14 md:h-16">
+        <div className="flex h-16 items-center justify-between md:h-20">
           {/* Logo Side */}
           <div className="flex items-center flex-shrink-0 min-w-0">
             <Link to="/" className="flex items-center gap-2 whitespace-nowrap flex-shrink-0">
               <img 
                 src={darbLogoAsset.url}
                 alt={t('loader.brand')} 
-                className="h-8 w-auto flex-shrink-0 object-contain md:h-10"
-                style={{ minWidth: '2rem' }}
+                className="h-12 w-auto flex-shrink-0 object-contain md:h-14"
+                style={{ minWidth: '3rem' }}
                 fetchPriority="high"
               />
               <span 
