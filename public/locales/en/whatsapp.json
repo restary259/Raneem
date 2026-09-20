@@ -187,6 +187,22 @@
       "case": "Case",
       "profile": "Account",
       "lead": "Lead"
-    }
+    },
+    "autoLinked": "Automatically matched",
+    "staffConfirmed": "Staff confirmed"
+  },
+  "crm": {
+    "autoLinked": "Automatically matched",
+    "staffConfirmed": "Staff confirmed",
+    "pending": "No DARB identity is linked yet.",
+    "loading": "Loading the linked DARB record…",
+    "loadError": "The linked DARB record could not be loaded.",
+    "noCoreRecord": "The link exists, but the DARB record is no longer available.",
+    "case": "Case",
+    "studentAccount": "Student account",
+    "lead": "Lead",
+    "status": "Status",
+    "source": "Source",
+    "open": "Open"
   }
 }
