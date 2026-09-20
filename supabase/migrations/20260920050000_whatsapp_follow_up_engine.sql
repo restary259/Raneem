@@ -262,6 +262,91 @@ $whatsapp_complete$;
 REVOKE ALL ON FUNCTION public.whatsapp_complete_follow_up_task(uuid,text,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.whatsapp_complete_follow_up_task(uuid,text,text) TO service_role;
 
+-- Notify only the assigned DARB staff member. Unassigned conversations remain
+-- visible in the queue but do not fan out push notifications to the whole team.
+CREATE OR REPLACE FUNCTION public.notify_whatsapp_inbound_staff()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $whatsapp_notify$
+DECLARE
+  v_assigned uuid;
+  v_name text;
+  v_path text;
+BEGIN
+  IF NEW.direction <> 'inbound' THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT c.assigned_to, l.student_name
+    INTO v_assigned, v_name
+  FROM public.whatsapp_conversations c
+  JOIN public.whatsapp_leads l ON l.id = c.lead_id
+  WHERE c.id = NEW.conversation_id;
+
+  IF v_assigned IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF NOT (
+    public.has_role(v_assigned, 'admin')
+    OR public.has_role(v_assigned, 'team_member')
+  ) THEN
+    RETURN NEW;
+  END IF;
+
+  v_path := CASE
+    WHEN public.has_role(v_assigned, 'admin')
+      THEN '/admin/messages?tab=whatsapp&conversation=' || NEW.conversation_id::text
+    ELSE '/team/messages?tab=whatsapp&conversation=' || NEW.conversation_id::text
+  END;
+
+  INSERT INTO public.notifications (
+    user_id,
+    title,
+    body,
+    title_ar,
+    title_en,
+    body_ar,
+    body_en,
+    category,
+    priority,
+    source,
+    link,
+    metadata,
+    dedupe_key
+  )
+  VALUES (
+    v_assigned,
+    'New WhatsApp message',
+    left(coalesce(v_name, 'WhatsApp contact') || ': ' || coalesce(NEW.body, 'New message'), 180),
+    'رسالة واتساب جديدة',
+    'New WhatsApp message',
+    left(coalesce(v_name, 'جهة اتصال واتساب') || ': ' || coalesce(NEW.body, 'رسالة جديدة'), 180),
+    left(coalesce(v_name, 'WhatsApp contact') || ': ' || coalesce(NEW.body, 'New message'), 180),
+    'messages',
+    'high',
+    'whatsapp',
+    v_path,
+    jsonb_build_object('conversation_id', NEW.conversation_id, 'whatsapp_message_id', NEW.id),
+    'whatsapp_inbound:' || NEW.id::text || ':' || v_assigned::text
+  )
+  ON CONFLICT (dedupe_key) DO NOTHING;
+
+  RETURN NEW;
+END;
+$whatsapp_notify$;
+
+REVOKE ALL ON FUNCTION public.notify_whatsapp_inbound_staff() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.notify_whatsapp_inbound_staff() TO service_role;
+
+DROP TRIGGER IF EXISTS notify_whatsapp_inbound_staff ON public.whatsapp_messages;
+CREATE TRIGGER notify_whatsapp_inbound_staff
+AFTER INSERT ON public.whatsapp_messages
+FOR EACH ROW
+EXECUTE FUNCTION public.notify_whatsapp_inbound_staff();
+
 -- Any inbound message cancels stale follow-ups and removes snooze.
 CREATE OR REPLACE FUNCTION public.whatsapp_cancel_followups_on_message()
 RETURNS trigger
