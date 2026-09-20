@@ -12,7 +12,6 @@ const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_TOOL_ROUNDS = 3;
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const ANON_LIMIT = 30;
 const AUTH_LIMIT = 100;
 const WINDOW = 60 * 60 * 1000;
 
@@ -254,7 +253,6 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const authHeader = req.headers.get("Authorization");
 
     // Sign-in is required: anonymous callers must never reach the paid AI gateway.
