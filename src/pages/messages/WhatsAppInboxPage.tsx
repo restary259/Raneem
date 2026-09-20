@@ -642,8 +642,8 @@ export default function WhatsAppInboxPage({
             <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
             <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
             <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-              <Conversation className="flex min-h-0 min-w-0 max-h-full flex-1 overflow-hidden">
-                <ConversationContent className="min-h-0 min-w-0 flex-1 gap-3 overflow-y-auto overscroll-contain">
+              <Conversation className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+                <ConversationContent className="min-h-0 min-w-0 flex-1 gap-3">
                 {messages.length ? messages.map((m, index) => {
                   const previous = index > 0 ? messages[index - 1] : null;
                   const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
