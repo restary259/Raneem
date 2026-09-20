@@ -45,7 +45,6 @@ const BroadcastPage = () => {
       <main>
         <DarbPageHero
           compact
-          className="min-h-[320px] md:min-h-[390px]"
           eyebrow={t('broadcastHero.eyebrow', { ns: 'broadcast', defaultValue: 'DARB BROADCAST' })}
           imageUrl={DARB_PUBLIC_HERO_IMAGES.city}
           imageAlt={t('broadcastHero.imageAlt', { ns: 'broadcast', defaultValue: 'Bright German study and media environment' })}
