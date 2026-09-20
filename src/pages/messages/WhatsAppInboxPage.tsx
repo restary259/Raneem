@@ -484,9 +484,9 @@ export default function WhatsAppInboxPage({
                 {activeState === "snoozed" && isWhatsAppSnoozed(active.state, active.snoozed_until, now) && <Badge variant="outline" className="gap-1 text-[10px]"><AlarmClock className="h-3 w-3" />{formatDuration(new Date(active.snoozed_until!).getTime() - now)}</Badge>}
                 {activeSlaOverdue && <Badge variant="destructive" className="gap-1 text-[10px]"><Clock3 className="h-3 w-3" />{t("sla.overdue")}</Badge>}
               </div>
-              <Select value={activeState ?? "open"} onValueChange={(v) => saveConversation({ state: v, snoozed_until: v === "snoozed" ? active.snoozed_until : null })}>
+              <Select value={activeState ?? "open"} onValueChange={(v) => saveConversation({ state: v })}>
                 <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
-                <SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent>
+                <SelectContent>{DISPLAY_STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
