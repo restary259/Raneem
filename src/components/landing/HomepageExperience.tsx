@@ -122,15 +122,31 @@ const HomepageExperience = () => {
         <div className="absolute inset-x-0 top-0 z-20">
           <div className="border-b border-primary-foreground/15 bg-primary/90">
             <div className="container flex h-10 items-center justify-center gap-3 text-xs font-medium sm:text-sm">
-              <button
-                type="button"
-                onClick={() => i18n.changeLanguage(i18n.language === "ar" ? "en" : "ar")}
-                className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline"
-                aria-label={i18n.language === "ar" ? "Switch to English" : "التبديل إلى العربية"}
-              >
-                <Globe className="h-3.5 w-3.5" />
-                {i18n.language === "ar" ? "English" : "العربية"}
-              </button>
+              <div className="inline-flex items-center gap-3" aria-label="Language selector">
+                <button
+                  type="button"
+                  onClick={() => i18n.changeLanguage("ar")}
+                  className={`underline-offset-4 hover:underline ${i18n.language === "ar" ? "font-bold text-primary-foreground" : "text-primary-foreground/80"}`}
+                  aria-label="العربية"
+                  aria-current={i18n.language === "ar" ? "true" : undefined}
+                >العربية</button>
+                <span aria-hidden="true">|</span>
+                <button
+                  type="button"
+                  onClick={() => i18n.changeLanguage("en")}
+                  className={`underline-offset-4 hover:underline ${i18n.language === "en" ? "font-bold text-primary-foreground" : "text-primary-foreground/80"}`}
+                  aria-label="English"
+                  aria-current={i18n.language === "en" ? "true" : undefined}
+                >English</button>
+                <span aria-hidden="true">|</span>
+                <button
+                  type="button"
+                  onClick={() => i18n.changeLanguage("he")}
+                  className={`underline-offset-4 hover:underline ${i18n.language === "he" ? "font-bold text-primary-foreground" : "text-primary-foreground/80"}`}
+                  aria-label="עברית"
+                  aria-current={i18n.language === "he" ? "true" : undefined}
+                >עברית</button>
+              </div>
               <span aria-hidden="true">|</span>
               <a href={`tel:+${WHATSAPP_BUSINESS_NUMBER}`} dir="ltr">+49 176 23790623</a>
               <span className="hidden sm:inline" aria-hidden="true">|</span>
