@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { whatsappBusinessUrl } from "@/lib/contactConfig";
+import { WHATSAPP_PHONE_URL, whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
 
