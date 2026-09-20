@@ -1,4 +1,11 @@
 -- Customer-facing WhatsApp appointment automation.
+
+-- Repair the idempotency guard used by the live follow-up worker. Some earlier
+-- deployments created the table but not this partial unique index.
+CREATE UNIQUE INDEX IF NOT EXISTS whatsapp_follow_up_tasks_dedupe_idx
+  ON public.whatsapp_follow_up_tasks (dedupe_key)
+  WHERE dedupe_key IS NOT NULL;
+
 --
 -- When a team member creates/reschedules an appointment:
 --   1) resolve the case phone into the canonical WhatsApp lead/conversation,
