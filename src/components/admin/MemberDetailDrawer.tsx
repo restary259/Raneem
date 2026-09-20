@@ -89,6 +89,8 @@ interface PanelProps {
   agentFlags: AgentFlags | null;
   setAgentFlags: React.Dispatch<React.SetStateAction<AgentFlags | null>>;
   agentFlagsError: boolean;
+  whatsappInboxEnabled: boolean;
+  setWhatsappInboxEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   onRetryAgentFlags: () => void;
   slots: PanelSlot;
   bodyClassName: string;
@@ -135,6 +137,8 @@ function MemberDetailPanel({
   agentFlags,
   setAgentFlags,
   agentFlagsError,
+  whatsappInboxEnabled,
+  setWhatsappInboxEnabled,
   onRetryAgentFlags,
   slots,
   bodyClassName,
@@ -770,6 +774,8 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     agentFlags,
     setAgentFlags,
     agentFlagsError,
+    whatsappInboxEnabled,
+    setWhatsappInboxEnabled,
     onRetryAgentFlags: () => setAgentFlagsRetry((n) => n + 1),
   };
 
