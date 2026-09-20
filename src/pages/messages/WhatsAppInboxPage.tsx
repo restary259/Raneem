@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, Inbox, MessageCircle, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
+  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -99,6 +99,8 @@ export default function WhatsAppInboxPage({
   const [startName, setStartName] = useState("");
   const [starting, setStarting] = useState(false);
   const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   useChatFullscreen(!!mobile && !!selectedId);
 
@@ -152,6 +154,8 @@ export default function WhatsAppInboxPage({
     () => templates.filter((item) => item.approval_status === "APPROVED" && item.is_active !== false && (canManageTemplates || item.available_to_team !== false)),
     [templates, canManageTemplates],
   );
+  // WhatsApp only allows free-form replies for 24h after the contact's last message.
+  const windowClosed = !!active && requiresApprovedTemplate(active.last_inbound_at);
   const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
   const selectedTemplateText = useMemo(() => {
     if (!selectedTemplate || !Array.isArray(selectedTemplate.components)) return "";
@@ -160,7 +164,7 @@ export default function WhatsAppInboxPage({
   }, [selectedTemplate]);
   const parameterCount = useMemo(() => [...selectedTemplateText.matchAll(/{{\s*(\d+)\s*}}/g)].length, [selectedTemplateText]);
   useEffect(() => {
-    setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]);
+    setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]); setAttachment(null);
     if (!selectedId) return;
     Promise.all([listConversationMessages(selectedId), listConversationNotes(selectedId)])
       .then(([m, n]) => { setMessages(m); setNotes(n); })
@@ -226,6 +230,9 @@ export default function WhatsAppInboxPage({
         if (!templateId) return;
         await sendWhatsAppTemplate(active.id, templateId, templateParameters);
         setTemplateId(null); setTemplateParameters([]);
+      } else if (attachment) {
+        await sendWhatsAppMedia(active.id, attachment, (submittedText ?? composer).trim());
+        setAttachment(null); setComposer("");
       } else {
         const body = (submittedText ?? composer).trim();
         if (!body) return;
@@ -335,7 +342,7 @@ export default function WhatsAppInboxPage({
                       {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
                       <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
                         <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
-                          {m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
+                          {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
                           {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
                           <span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span>
                         </MessageContent>
@@ -346,10 +353,36 @@ export default function WhatsAppInboxPage({
               </ConversationContent>
               <ConversationScrollButton />
             </Conversation>
-            <div className="shrink-0 border-t p-3">
-              {requiresApprovedTemplate(active.last_inbound_at) ? (
+            <div className="shrink-0 space-y-2 border-t p-3">
+              {/* The typing area is always visible. Outside WhatsApp's 24-hour
+                  service window it is locked and the template picker takes over. */}
+              <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
+                <PromptInputTextarea
+                  value={composer}
+                  onChange={(event) => setComposer(event.target.value)}
+                  disabled={windowClosed || sending}
+                  placeholder={windowClosed ? t("conversation.composerLocked", "Replies are locked until the contact writes again — send an approved template below.") : t("conversation.composer")}
+                />
+                <PromptInputFooter>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <input ref={fileRef} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" onChange={(event) => { setAttachment(event.target.files?.[0] ?? null); event.target.value = ""; }} />
+                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8" disabled={windowClosed || sending} onClick={() => fileRef.current?.click()} aria-label={t("conversation.attach", "Attach a photo or file")}>
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    {attachment ? (
+                      <span className="flex min-w-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                        <span className="truncate max-w-[160px]">{attachment.name}</span>
+                        <button type="button" onClick={() => setAttachment(null)} aria-label={t("actions.remove", "Remove")}><X className="h-3 w-3" /></button>
+                      </span>
+                    ) : (
+                      <span className="truncate text-[11px] text-muted-foreground">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span>
+                    )}
+                  </div>
+                  <PromptInputSubmit status={sending ? "submitted" : undefined} disabled={windowClosed || sending || (!composer.trim() && !attachment)} aria-label={t("conversation.send")} />
+                </PromptInputFooter>
+              </PromptInput>
+              {windowClosed && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">{t("conversation.windowClosed")}</p>
                   {sendableTemplates.length ? (
                     <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
                       <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
@@ -361,11 +394,6 @@ export default function WhatsAppInboxPage({
                   {selectedTemplate && <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{selectedTemplateText}</p>{Array.from({ length: parameterCount }, (_, index) => <Input key={index} className="mt-2" value={templateParameters[index] ?? ""} onChange={(event) => setTemplateParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>}
                   <div className="flex justify-end"><Button disabled={!templateId || templateParameters.length < parameterCount || templateParameters.some((value) => !value.trim()) || sending} onClick={() => void sendReply()}><MessageCircle className="me-2 h-4 w-4" />{t("conversation.send")}</Button></div>
                 </div>
-              ) : (
-                <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
-                  <PromptInputTextarea value={composer} onChange={(event) => setComposer(event.target.value)} placeholder={t("conversation.composer")} />
-                  <PromptInputFooter><span className="text-[11px] text-muted-foreground">{t("conversation.windowOpen")}</span><PromptInputSubmit status={sending ? "submitted" : undefined} disabled={!composer.trim() || sending} aria-label={t("conversation.send")} /></PromptInputFooter>
-                </PromptInput>
               )}
             </div>
           </>
@@ -524,4 +552,19 @@ function TagEditor({ label, tags, onChange, addLabel }: { label: string; tags: s
 }
 function Metric({ icon: Icon, label, value }: { icon: typeof Inbox; label: string; value: string | number }) {
   return <Card className="rounded-xl p-4 shadow-none"><div className="flex items-center justify-between"><div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div><div className="rounded-lg bg-muted p-2.5"><Icon className="h-5 w-5" /></div></div></Card>;
+}
+
+/** Attachments live in a private bucket, so each bubble asks for its own signed link. */
+function MediaBubble({ path, mime, filename, openLabel }: { path: string; mime: string | null; filename: string | null; openLabel: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void whatsAppMediaUrl(path).then((signed) => { if (!cancelled) setUrl(signed); }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [path]);
+  if (!url) return <div className="mb-1 h-24 w-40 animate-pulse rounded-md bg-muted" />;
+  if (mime?.startsWith("image/")) return <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={filename ?? ""} className="mb-1 max-h-56 rounded-md object-cover" /></a>;
+  if (mime?.startsWith("video/")) return <video src={url} controls className="mb-1 max-h-56 rounded-md" />;
+  if (mime?.startsWith("audio/")) return <audio src={url} controls className="mb-1 w-56" />;
+  return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
 }

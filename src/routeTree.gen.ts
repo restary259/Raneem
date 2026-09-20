@@ -108,6 +108,7 @@ import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.in
 import { Route as TeamStudentsIdRouteImport } from './routes/team.students.$id'
 import { Route as TeamToolsCurrencyRouteImport } from './routes/team.tools.currency'
 import { Route as TeamToolsCvRouteImport } from './routes/team.tools.cv'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -612,6 +613,12 @@ const TeamToolsCvRoute = TeamToolsCvRouteImport.update({
   path: '/tools/cv',
   getParentRoute: () => TeamRoute,
 } as any)
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -741,6 +748,7 @@ export interface FileRoutesByFullPath {
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -842,6 +850,7 @@ export interface FileRoutesByTo {
   '/team/cases': typeof TeamCasesIndexRoute
   '/team/partner-schools': typeof TeamPartnerSchoolsIndexRoute
   '/team/students': typeof TeamStudentsIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -949,6 +958,7 @@ export interface FileRoutesById {
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -1057,6 +1067,7 @@ export interface FileRouteTypes {
     | '/team/cases/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -1158,6 +1169,7 @@ export interface FileRouteTypes {
     | '/team/cases'
     | '/team/partner-schools'
     | '/team/students'
+    | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -1264,6 +1276,7 @@ export interface FileRouteTypes {
     | '/team/cases/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
@@ -1307,6 +1320,7 @@ export interface RootRouteChildren {
   ResourcesLebenslaufBuilderRoute: typeof ResourcesLebenslaufBuilderRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
+  ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -2007,6 +2021,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamToolsCvRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -2255,6 +2276,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesLebenslaufBuilderRoute: ResourcesLebenslaufBuilderRoute,
   BlogIndexRoute: BlogIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
+  ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

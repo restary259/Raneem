@@ -6,6 +6,7 @@ import { serverErrorResponse } from "../_shared/errors.ts";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/whatsapp";
 const PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
+const MEDIA_TYPES = ["image", "video", "audio", "document"];
 
 type Purpose = typeof PURPOSES[number];
 type ProviderTemplate = {
@@ -231,6 +232,11 @@ serve(async (req) => {
       const lastInbound = conversation.last_inbound_at ? new Date(conversation.last_inbound_at).getTime() : Number.NaN;
       const insideWindow = Number.isFinite(lastInbound) && Date.now() >= lastInbound && Date.now() - lastInbound <= 24 * 60 * 60 * 1000;
       const templateId = input?.template_id ? String(input.template_id) : null;
+      const mediaPath = input?.media_path ? String(input.media_path) : null;
+      const mediaType = String(input?.media_type ?? "document");
+      const mediaMime = input?.media_mime ? String(input.media_mime) : null;
+      const mediaFilename = input?.media_filename ? String(input.media_filename).slice(0, 200) : null;
+      let mediaUrl: string | null = null;
       let providerBody: Record<string, unknown>;
       let storedBody = String(input?.body ?? "").trim();
       let messageType = "text";
@@ -260,6 +266,20 @@ serve(async (req) => {
         storedBody = templateBody(template.components) || template.provider_name;
         templateName = template.provider_name;
         messageType = "template";
+      } else if (mediaPath) {
+        // Attachment: the file already sits in the staff-only bucket, so we hand
+        // WhatsApp a short-lived signed URL instead of making the file public.
+        if (!insideWindow) return json({ error: "An approved template is required outside the 24-hour service window" }, 409, corsHeaders);
+        if (!MEDIA_TYPES.includes(mediaType)) return json({ error: "Unsupported attachment type" }, 400, corsHeaders);
+        const { data: signed, error: signedError } = await admin.storage.from("whatsapp-media").createSignedUrl(mediaPath, 60 * 30);
+        if (signedError || !signed?.signedUrl) return json({ error: "The attachment could not be prepared for sending" }, 400, corsHeaders);
+        mediaUrl = signed.signedUrl;
+        const media: Record<string, unknown> = { link: mediaUrl };
+        if (storedBody && mediaType !== "audio") media.caption = storedBody.slice(0, 1024);
+        if (mediaType === "document" && mediaFilename) media.filename = mediaFilename;
+        providerBody = { messaging_product: "whatsapp", to, type: mediaType, [mediaType]: media };
+        messageType = mediaType;
+        storedBody = storedBody || mediaFilename || "";
       } else {
         if (!insideWindow) return json({ error: "An approved template is required outside the 24-hour service window" }, 409, corsHeaders);
         if (!storedBody || storedBody.length > 4096) return json({ error: "Enter a reply of up to 4096 characters" }, 400, corsHeaders);
@@ -281,6 +301,9 @@ serve(async (req) => {
         delivery_status: "accepted",
         authored_by: auth.userId,
         sent_at: now,
+        media_url: mediaPath,
+        media_mime_type: mediaMime,
+        media_filename: mediaFilename,
       }).select("*").single();
       if (insertError) throw insertError;
       const { error: updateError } = await admin.from("whatsapp_conversations").update({
