@@ -13,9 +13,8 @@ import {
 } from "@/services/WhatsAppService";
 
 /**
- * Staff-only identity bridge between a WhatsApp contact and the person that
- * already exists in DARB. Matching is a suggestion only — a link is written
- * exclusively when staff confirm it, and no case is ever created here.
+ * Identity bridge UI. Exact phone matches may already be linked automatically
+ * by the ingest pipeline. Unresolved suggestions remain explicit staff actions.
  */
 export default function WhatsAppIdentityPanel({ lead, onChanged }: { lead: WhatsAppLead; onChanged: () => void }) {
   const { t } = useTranslation("whatsapp");
@@ -67,6 +66,7 @@ export default function WhatsAppIdentityPanel({ lead, onChanged }: { lead: Whats
         <Badge variant="outline" className="gap-1">
           {lead.linked_case_id ? t("identity.kind.case") : lead.linked_profile_id ? t("identity.kind.profile") : t("identity.kind.lead")}
         </Badge>
+        <Badge variant="secondary">{lead.identity_confirmed_by ? t("identity.staffConfirmed") : t("identity.autoLinked")}</Badge>
         <Button size="sm" variant="ghost" className="ms-auto" disabled={busy} onClick={() => void unlink()}>
           <Link2Off className="me-1.5 h-3.5 w-3.5" />{t("identity.unlink")}
         </Button>
@@ -74,22 +74,22 @@ export default function WhatsAppIdentityPanel({ lead, onChanged }: { lead: Whats
     );
   }
 
-  const visible = suggestions.filter((item) => !dismissed.includes(`${item.match_kind}:${item.match_id}`));
+  const visible = suggestions.filter((item) => !dismissed.includes(item.match_kind + ":" + item.match_id));
   if (!visible.length) return null;
 
   return (
     <div className="space-y-2 border-b bg-amber-500/5 px-3 py-2 text-xs">
       <p className="font-medium">{t("identity.suggestionTitle")}</p>
       {visible.map((item) => (
-        <div key={`${item.match_kind}:${item.match_id}`} className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline">{t(`identity.kind.${item.match_kind}`, item.match_kind)}</Badge>
+        <div key={item.match_kind + ":" + item.match_id} className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">{t("identity.kind." + item.match_kind, item.match_kind)}</Badge>
           <span className="font-medium">{item.display_name || t("identity.noName")}</span>
           {item.detail && <span className="text-muted-foreground">{item.detail}</span>}
           <span className="ms-auto flex gap-1">
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void confirm(item)}>
               <Link2 className="me-1.5 h-3.5 w-3.5" />{t("identity.confirm")}
             </Button>
-            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDismissed((current) => [...current, `${item.match_kind}:${item.match_id}`])}>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDismissed((current) => [...current, item.match_kind + ":" + item.match_id])}>
               {t("identity.dismiss")}
             </Button>
           </span>
