@@ -360,7 +360,11 @@ serve(async (req) => {
       const conversationId = String(input?.conversation_id ?? "");
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
       const campaignRecipientId = input?.campaign_recipient_id ? String(input.campaign_recipient_id) : null;
+      const followUpTaskId = input?.follow_up_task_id ? String(input.follow_up_task_id) : null;
       const templateId = input?.template_id ? String(input.template_id) : null;
+      if (campaignRecipientId && followUpTaskId) {
+        return json({ error: "Campaign and follow-up idempotency keys cannot be combined" }, 400, corsHeaders);
+      }
       const { data: conversation, error } = await admin
         .from("whatsapp_conversations")
         .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number, marketing_consent_status)")
@@ -428,6 +432,58 @@ serve(async (req) => {
           return json({
             message: existingMessage ?? null,
             provider_message_id: recipient.provider_message_id,
+            deduplicated: true,
+          }, 200, corsHeaders);
+        }
+      }
+
+      if (followUpTaskId) {
+        // Scheduled follow-ups are dispatched only by the service-role worker.
+        // The task status is re-checked immediately before provider delivery so
+        // an inbound reply can cancel a claimed task before it is sent.
+        if (!auth.isServiceRole) {
+          return json({ error: "Follow-up task control is internal only" }, 403, corsHeaders);
+        }
+        if (!templateId) return json({ error: "Follow-up template is required" }, 400, corsHeaders);
+
+        const { data: task, error: taskError } = await admin
+          .from("whatsapp_follow_up_tasks")
+          .select("id,conversation_id,kind,status,template_id,provider_message_id")
+          .eq("id", followUpTaskId)
+          .maybeSingle();
+        if (taskError) throw taskError;
+        if (!task || task.conversation_id !== conversationId || task.kind !== "template") {
+          return json({ error: "Follow-up task does not match the conversation" }, 409, corsHeaders);
+        }
+        if (task.template_id !== templateId) {
+          return json({ error: "Follow-up task does not match the template" }, 409, corsHeaders);
+        }
+        if (task.status !== "processing") {
+          if (task.provider_message_id) {
+            const { data: existingMessage, error: existingMessageError } = await admin
+              .from("whatsapp_messages")
+              .select("*")
+              .eq("follow_up_task_id", followUpTaskId)
+              .maybeSingle();
+            if (existingMessageError) throw existingMessageError;
+            return json({
+              message: existingMessage ?? null,
+              provider_message_id: task.provider_message_id,
+              deduplicated: true,
+            }, 200, corsHeaders);
+          }
+          return json({ error: "Follow-up task is no longer claimable" }, 409, corsHeaders);
+        }
+        if (task.provider_message_id) {
+          const { data: existingMessage, error: existingMessageError } = await admin
+            .from("whatsapp_messages")
+            .select("*")
+            .eq("follow_up_task_id", followUpTaskId)
+            .maybeSingle();
+          if (existingMessageError) throw existingMessageError;
+          return json({
+            message: existingMessage ?? null,
+            provider_message_id: task.provider_message_id,
             deduplicated: true,
           }, 200, corsHeaders);
         }
@@ -510,6 +566,7 @@ serve(async (req) => {
         media_filename: mediaFilename,
       };
       if (campaignRecipientId) messageInsert.campaign_recipient_id = campaignRecipientId;
+      if (followUpTaskId) messageInsert.follow_up_task_id = followUpTaskId;
 
       const { data: message, error: insertError } = await admin.from("whatsapp_messages").insert(messageInsert).select("*").single();
       if (insertError) throw insertError;
@@ -524,6 +581,15 @@ serve(async (req) => {
           .eq("id", campaignRecipientId)
           .eq("status", "processing");
         if (recipientUpdateError) throw recipientUpdateError;
+      }
+
+      if (followUpTaskId && providerMessageId) {
+        const { error: taskUpdateError } = await admin
+          .from("whatsapp_follow_up_tasks")
+          .update({ provider_message_id: providerMessageId, updated_at: now })
+          .eq("id", followUpTaskId)
+          .eq("status", "processing");
+        if (taskUpdateError) throw taskUpdateError;
       }
       const { error: updateError } = await admin.from("whatsapp_conversations").update({
         last_outbound_at: now,
