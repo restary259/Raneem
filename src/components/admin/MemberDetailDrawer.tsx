@@ -26,9 +26,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound } from "lucide-react";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound, MessageCircle } from "lucide-react";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
+import ProfileFeatureToggle from "./ProfileFeatureToggle";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
 import { cn } from "@/lib/utils";
 import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
@@ -316,6 +317,48 @@ function MemberDetailPanel({
           <CashDebtsCard teamMemberId={member.requester_id} t={t} onChanged={onChanged} />
         )}
 
+        {/* Team member feature access */}
+        {member.role === "team_member" && (
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                {t("admin.members.sectionAccess", "Access")}
+              </h3>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="h-9 w-9 shrink-0 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <MessageCircle className="h-4 w-4 text-emerald-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium leading-tight">
+                    {t("admin.members.whatsappInboxTitle", "WhatsApp inbox")}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t("admin.members.whatsappInboxDesc", "Allow this team member to access the shared WhatsApp chat box.")}
+                  </p>
+                </div>
+                <ProfileFeatureToggle
+                  userId={member.requester_id}
+                  column="whatsapp_inbox_enabled"
+                  value={whatsappInboxEnabled}
+                  onChanged={setWhatsappInboxEnabled}
+                  enableTitle={t("admin.members.whatsappInboxEnableTitle", "Enable WhatsApp inbox?")}
+                  enableBody={t("admin.members.whatsappInboxEnableBody", {
+                    name: member.full_name,
+                    defaultValue: "{{name}} will be able to open the shared WhatsApp inbox and message assigned or unassigned conversations.",
+                  })}
+                  disableTitle={t("admin.members.whatsappInboxDisableTitle", "Disable WhatsApp inbox?")}
+                  disableBody={t("admin.members.whatsappInboxDisableBody", {
+                    name: member.full_name,
+                    defaultValue: "{{name}} will no longer see the shared WhatsApp inbox. They can still use the WhatsApp button from a case profile to open that case's attached number.",
+                  })}
+                  enabledToast={t("admin.members.whatsappInboxEnabled", "WhatsApp inbox enabled")}
+                  disabledToast={t("admin.members.whatsappInboxDisabled", "WhatsApp inbox disabled")}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Role-specific Actions */}
         {member.role === "agent" && (
           <Card>
@@ -593,29 +636,46 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   const [agentFlags, setAgentFlags] = useState<AgentFlags | null>(null);
   const [agentFlagsError, setAgentFlagsError] = useState(false);
   const [agentFlagsRetry, setAgentFlagsRetry] = useState(0);
+  const [whatsappInboxEnabled, setWhatsappInboxEnabled] = useState(false);
 
   useEffect(() => {
     setAgentFlags(null);
     setAgentFlagsError(false);
-    if (member?.role !== "agent" || !member.requester_id) return;
+    setWhatsappInboxEnabled(false);
+
+    if (!member?.requester_id) return;
+
     let stale = false;
-    supabase
-      .from("profiles")
-      .select("agent_can_invite_directly, agent_can_create_accounts")
-      .eq("id", member.requester_id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (stale) return;
-        if (error) {
-          console.error("Failed to load agent permission flags:", error);
-          setAgentFlagsError(true);
-          return;
-        }
+    const loadProfileFlags = async () => {
+      const select = member.role === "agent"
+        ? "agent_can_invite_directly, agent_can_create_accounts, whatsapp_inbox_enabled"
+        : "whatsapp_inbox_enabled";
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(select)
+        .eq("id", member.requester_id)
+        .maybeSingle();
+
+      if (stale) return;
+
+      if (error) {
+        console.error("Failed to load member feature flags:", error);
+        if (member.role === "agent") setAgentFlagsError(true);
+        return;
+      }
+
+      setWhatsappInboxEnabled(!!(data as any)?.whatsapp_inbox_enabled);
+
+      if (member.role === "agent") {
         setAgentFlags({
-          invite: !!data?.agent_can_invite_directly,
-          create: !!data?.agent_can_create_accounts,
+          invite: !!(data as any)?.agent_can_invite_directly,
+          create: !!(data as any)?.agent_can_create_accounts,
         });
-      });
+      }
+    };
+
+    void loadProfileFlags();
+
     return () => {
       stale = true;
     };
