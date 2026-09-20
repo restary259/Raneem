@@ -73,11 +73,13 @@ WITH CHECK (
 );
 
 DROP POLICY IF EXISTS "Staff manage WhatsApp messages" ON public.whatsapp_messages;
-CREATE POLICY "Admin manage WhatsApp messages"
+DROP POLICY IF EXISTS "Admin manage WhatsApp messages" ON public.whatsapp_messages;
+DROP POLICY IF EXISTS "Team insert WhatsApp messages for visible conversations" ON public.whatsapp_messages;
+
+CREATE POLICY "Admin read WhatsApp messages"
 ON public.whatsapp_messages
-FOR ALL TO authenticated
-USING (public.has_role(auth.uid(), 'admin'::app_role))
-WITH CHECK (public.has_role(auth.uid(), 'admin'::app_role));
+FOR SELECT TO authenticated
+USING (public.has_role(auth.uid(), 'admin'::app_role));
 
 CREATE POLICY "Team read WhatsApp messages for visible conversations"
 ON public.whatsapp_messages
@@ -92,18 +94,8 @@ USING (
   )
 );
 
-CREATE POLICY "Team insert WhatsApp messages for visible conversations"
-ON public.whatsapp_messages
-FOR INSERT TO authenticated
-WITH CHECK (
-  public.has_role(auth.uid(), 'team_member'::app_role)
-  AND EXISTS (
-    SELECT 1
-    FROM public.whatsapp_conversations c
-    WHERE c.id = whatsapp_messages.conversation_id
-      AND (c.assigned_to = auth.uid() OR c.assigned_to IS NULL)
-  )
-);
+REVOKE INSERT, UPDATE, DELETE ON public.whatsapp_messages FROM authenticated;
+GRANT SELECT ON public.whatsapp_messages TO authenticated;
 
 DROP POLICY IF EXISTS "Staff manage WhatsApp internal notes" ON public.whatsapp_internal_notes;
 CREATE POLICY "Admin manage WhatsApp internal notes"
@@ -192,6 +184,15 @@ BEGIN
     IF p_assigned_to IS NOT NULL AND p_assigned_to <> auth.uid() THEN
       RAISE EXCEPTION 'Team members can only assign a conversation to themselves';
     END IF;
+  END IF;
+
+  IF p_assigned_to IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM public.profiles p
+       WHERE p.id = p_assigned_to
+         AND p.deleted_at IS NULL
+     ) THEN
+    RAISE EXCEPTION 'Assignee profile is not active';
   END IF;
 
   IF p_assigned_to IS NOT NULL
@@ -289,3 +290,35 @@ CREATE TRIGGER process_whatsapp_marketing_opt_out
 AFTER INSERT ON public.whatsapp_messages
 FOR EACH ROW
 EXECUTE FUNCTION public.process_whatsapp_marketing_opt_out();
+
+
+-- Templates are managed through the connector by admins. Team only needs
+-- released approved templates for rendering/sending.
+DO $$
+BEGIN
+  IF to_regclass('public.whatsapp_templates') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Staff manage WhatsApp templates" ON public.whatsapp_templates;
+    DROP POLICY IF EXISTS "Admin manage WhatsApp templates" ON public.whatsapp_templates;
+    DROP POLICY IF EXISTS "Team read released WhatsApp templates" ON public.whatsapp_templates;
+
+    CREATE POLICY "Admin manage WhatsApp templates"
+    ON public.whatsapp_templates
+    FOR ALL TO authenticated
+    USING (public.has_role(auth.uid(), 'admin'::app_role))
+    WITH CHECK (public.has_role(auth.uid(), 'admin'::app_role));
+
+    CREATE POLICY "Team read released WhatsApp templates"
+    ON public.whatsapp_templates
+    FOR SELECT TO authenticated
+    USING (
+      public.has_role(auth.uid(), 'team_member'::app_role)
+      AND approval_status = 'APPROVED'
+      AND is_active = true
+      AND available_to_team = true
+    );
+
+    REVOKE INSERT, UPDATE, DELETE ON public.whatsapp_templates FROM authenticated;
+    GRANT SELECT ON public.whatsapp_templates TO authenticated;
+  END IF;
+END
+$$;
