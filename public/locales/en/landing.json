@@ -431,7 +431,8 @@
           "label": "onSET · Language assessment",
           "description": "We can guide you on using onSET as a language-level assessment when it fits your route and explain the next step."
         }
-      }
+      },
+      "examCta": "Ask about exam registration"
     },
     "trust": {
       "eyebrow": "CLARITY BUILDS TRUST",
