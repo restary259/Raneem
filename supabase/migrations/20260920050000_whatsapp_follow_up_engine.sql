@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_follow_up_tasks (
   dedupe_key text,
   attempt_count integer NOT NULL DEFAULT 0 CHECK (attempt_count >= 0),
   max_attempts integer NOT NULL DEFAULT 3 CHECK (max_attempts BETWEEN 1 AND 10),
+  provider_message_id text,
   last_error text,
   processed_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -29,6 +30,15 @@ CREATE INDEX IF NOT EXISTS whatsapp_follow_up_tasks_conversation_idx
 CREATE UNIQUE INDEX IF NOT EXISTS whatsapp_follow_up_tasks_dedupe_idx
   ON public.whatsapp_follow_up_tasks (dedupe_key)
   WHERE dedupe_key IS NOT NULL;
+
+ALTER TABLE public.whatsapp_messages
+  ADD COLUMN IF NOT EXISTS follow_up_task_id uuid
+  REFERENCES public.whatsapp_follow_up_tasks(id)
+  ON DELETE SET NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS whatsapp_messages_follow_up_task_uidx
+  ON public.whatsapp_messages(follow_up_task_id)
+  WHERE follow_up_task_id IS NOT NULL;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_follow_up_tasks TO authenticated;
 GRANT ALL ON public.whatsapp_follow_up_tasks TO service_role;
@@ -217,6 +227,15 @@ BEGIN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
+  -- Recover a worker that died after claiming a task. Terminal attempts are
+  -- never recycled.
+  UPDATE public.whatsapp_follow_up_tasks
+  SET status = 'pending',
+      updated_at = now()
+  WHERE status = 'processing'
+    AND attempt_count < max_attempts
+    AND updated_at < now() - interval '15 minutes';
+
   RETURN QUERY
   WITH claimed AS (
     SELECT t.id
@@ -262,7 +281,8 @@ BEGIN
       last_error = left(p_error, 1000),
       processed_at = CASE WHEN p_status = 'pending' THEN NULL ELSE now() END,
       updated_at = now()
-  WHERE id = p_task_id;
+  WHERE id = p_task_id
+    AND status = 'processing';
 END;
 $whatsapp_complete$;
 
