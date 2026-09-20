@@ -164,8 +164,12 @@ serve(async (req) => {
         const responseText = await response.text();
         let providerMessageId: string | null = null;
         try {
-          const payload = JSON.parse(responseText) as { message?: { provider_message_id?: string | null } };
-          providerMessageId = payload.message?.provider_message_id ?? null;
+          const payload = JSON.parse(responseText) as {
+            message?: { provider_message_id?: string | null };
+            provider_message_id?: string | null;
+            deduplicated?: boolean;
+          };
+          providerMessageId = payload.message?.provider_message_id ?? payload.provider_message_id ?? null;
         } catch {
           // Connector errors are handled below; successful responses normally
           // include the stored WhatsApp message envelope.
@@ -205,6 +209,31 @@ serve(async (req) => {
         results.push({ id: recipient.id, result: "sent", provider_message_id: providerMessageId });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown marketing dispatch error";
+
+        // The connector persists the provider id before local message bookkeeping.
+        // Recover that id here so a post-provider crash never causes a duplicate send.
+        const { data: currentRecipient } = await admin
+          .from("whatsapp_campaign_recipients")
+          .select("provider_message_id")
+          .eq("id", recipient.id)
+          .maybeSingle();
+
+        if (currentRecipient?.provider_message_id) {
+          await admin.rpc("whatsapp_complete_marketing_recipient", {
+            p_recipient_id: recipient.id,
+            p_status: "sent",
+            p_provider_message_id: currentRecipient.provider_message_id,
+            p_error: "Recovered after local bookkeeping error",
+          }).catch(() => undefined);
+          sent += 1;
+          results.push({
+            id: recipient.id,
+            result: "recovered",
+            provider_message_id: currentRecipient.provider_message_id,
+          });
+          continue;
+        }
+
         const terminal = recipient.attempt_count >= recipient.max_attempts;
         failed += 1;
         await admin.rpc("whatsapp_complete_marketing_recipient", {
