@@ -80,10 +80,6 @@ const HomepageExperience = () => {
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
   const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
 
-  const half = Math.ceil(students.length / 2);
-  const topStudents = students.slice(0, half);
-  const bottomStudents = students.slice(half);
-
   return (
     <div className="homepage-experience">
       <section className="darb-home-hero relative flex items-center overflow-hidden bg-primary text-primary-foreground">
@@ -378,7 +374,7 @@ const HomepageExperience = () => {
             </Button>
           </div>
 
-          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0">
+          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-5 sm:overflow-visible sm:px-0">
             {topStudents.map((student, index) => (
               <StudentFigure key={`${student.image}-top-${index}`} student={student} index={index} t={t} />
             ))}
@@ -472,32 +468,6 @@ const HomepageExperience = () => {
         </div>
       </section>
 
-      <section className="border-t border-border bg-background py-8 sm:py-10">
-        <div className="container">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <GraduationCap className="h-5 w-5 text-brand-strong" />
-              <span>{t("homepage.proof.students")}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <HeartHandshake className="h-5 w-5 text-trust" />
-              <span>{t("homepage.proof.partners")}</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Languages className="h-5 w-5 text-brand-strong" />
-              <span>{t("homepage.proof.arabicTitle")}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section aria-label={t("homepage.students.title")} className="border-t border-border bg-background py-10 sm:py-12">
-        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-6 lg:px-8">
-          {bottomStudents.map((student, index) => (
-            <StudentFigure key={`${student.image}-bottom-${index}`} student={student} index={index} t={t} className="!w-[56vw] !max-w-[230px] sm:!w-[230px]" />
-          ))}
-        </div>
-      </section>
     </div>
   );
 };
