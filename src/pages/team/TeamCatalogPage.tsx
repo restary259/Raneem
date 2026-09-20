@@ -468,7 +468,7 @@ export default function TeamCatalogPage() {
               )}
 
             </div>
-          )}
+          ) : null}
         </>
       )}
 
