@@ -2,6 +2,35 @@
 -- Staged only: this migration MUST NOT be applied until the final Supabase migration pass.
 -- It adds operational metadata to the existing WhatsApp channel; it does not create a second CRM.
 
+-- Canonical operational states are layered on top of the original schema.
+-- Legacy values remain accepted for compatibility with pre-existing provider functions;
+-- the operational message trigger normalizes inbound/outbound activity to the new states.
+DO $
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.whatsapp_conversations'::regclass
+      AND conname = 'whatsapp_conversations_state_check'
+  ) THEN
+    ALTER TABLE public.whatsapp_conversations
+      DROP CONSTRAINT whatsapp_conversations_state_check;
+  END IF;
+
+  ALTER TABLE public.whatsapp_conversations
+    ADD CONSTRAINT whatsapp_conversations_state_check
+    CHECK (state IN (
+      'new',
+      'open',
+      'waiting',
+      'resolved',
+      'waiting_for_team',
+      'waiting_for_student',
+      'snoozed',
+      'closed'
+    ));
+END
+$;
+
 ALTER TABLE public.whatsapp_conversations
   ADD COLUMN IF NOT EXISTS priority text NOT NULL DEFAULT 'normal',
   ADD COLUMN IF NOT EXISTS snoozed_until timestamptz,
