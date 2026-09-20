@@ -6866,6 +6866,7 @@ export type Database = {
         Returns: boolean
       }
       has_whatsapp_inbox_access: { Args: { p_user: string }; Returns: boolean }
+      has_internal_team_chat_access: { Args: { p_user: string }; Returns: boolean }
       insert_lead_from_apply: {
         Args: {
           p_accommodation?: boolean
