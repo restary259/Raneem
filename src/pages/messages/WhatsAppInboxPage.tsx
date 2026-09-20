@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, Inbox, MessageCircle, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +99,8 @@ export default function WhatsAppInboxPage({
   const [startName, setStartName] = useState("");
   const [starting, setStarting] = useState(false);
   const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   useChatFullscreen(!!mobile && !!selectedId);
 
