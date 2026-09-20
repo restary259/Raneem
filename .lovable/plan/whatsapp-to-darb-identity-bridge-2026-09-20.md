@@ -3,6 +3,8 @@
 Date: 2026-09-20
 Branch: main
 
+> Architecture note: the DARB application has already been migrated to **TanStack Start**. This plan must be interpreted against the current TanStack Start application and routes; there is no additional React/Vite-to-TanStack migration to perform.
+
 ## 1. Business invariant
 
 WhatsApp is a second entrance/channel into the existing DARB CRM, not a second people database.
@@ -233,3 +235,7 @@ Implemented in the DARB application:
 Migration execution remains deliberately postponed until the final migration phase. The staged migration has not been applied to Supabase.
 
 Live provider behavior and the full build/test suite still require final environment verification.
+
+### Current implementation continuation
+
+The operational inbox layer is also staged on main: conversation priority, snooze scheduling, first-response SLA, normalized conversation states, language/intent metadata, follow-up task dispatch, assigned-staff notifications, richer filtering, mobile CRM context, and scheduled utility-template follow-ups. These remain additive and must still be migrated together in the final Supabase migration pass.
