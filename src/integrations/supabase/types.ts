@@ -5338,14 +5338,24 @@ export type Database = {
       whatsapp_conversations: {
         Row: {
           assigned_to: string | null
+          campaign_key: string | null
           created_at: string
           first_response_at: string | null
           human_takeover: boolean
           id: string
+          intent: string | null
+          language_code: string | null
+          last_customer_message_at: string | null
           last_inbound_at: string | null
           last_message_preview: string | null
           last_outbound_at: string | null
+          last_team_response_at: string | null
           lead_id: string
+          priority: string
+          service_window_expires_at: string | null
+          sla_due_at: string | null
+          snoozed_until: string | null
+          source_channel: string
           state: string
           takeover_at: string | null
           takeover_by: string | null
@@ -5354,14 +5364,24 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          campaign_key?: string | null
           created_at?: string
           first_response_at?: string | null
           human_takeover?: boolean
           id?: string
+          intent?: string | null
+          language_code?: string | null
+          last_customer_message_at?: string | null
           last_inbound_at?: string | null
           last_message_preview?: string | null
           last_outbound_at?: string | null
+          last_team_response_at?: string | null
           lead_id: string
+          priority?: string
+          service_window_expires_at?: string | null
+          sla_due_at?: string | null
+          snoozed_until?: string | null
+          source_channel?: string
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
@@ -5370,14 +5390,24 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          campaign_key?: string | null
           created_at?: string
           first_response_at?: string | null
           human_takeover?: boolean
           id?: string
+          intent?: string | null
+          language_code?: string | null
+          last_customer_message_at?: string | null
           last_inbound_at?: string | null
           last_message_preview?: string | null
           last_outbound_at?: string | null
+          last_team_response_at?: string | null
           lead_id?: string
+          priority?: string
+          service_window_expires_at?: string | null
+          sla_due_at?: string | null
+          snoozed_until?: string | null
+          source_channel?: string
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
