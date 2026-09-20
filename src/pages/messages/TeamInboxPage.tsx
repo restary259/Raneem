@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import CaseMessagesInboxPage from "@/pages/messages/CaseMessagesInboxPage";
 import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
 
