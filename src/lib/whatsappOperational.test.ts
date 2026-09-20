@@ -18,6 +18,7 @@ describe("whatsapp operational helpers", () => {
     const now = Date.parse("2026-09-20T10:00:00Z");
     expect(isWhatsAppSlaOverdue({
       first_response_at: null,
+      last_customer_message_at: "2026-09-20T09:29:59Z",
       sla_due_at: "2026-09-20T09:59:59Z",
       state: "waiting_for_team",
     }, now)).toBe(true);
