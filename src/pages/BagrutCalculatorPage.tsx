@@ -24,7 +24,7 @@ const BagrutCalculatorPage = () => {
         title={t('gpaCalculator.title')}
         subtitle={t('gpaCalculator.description')}
       />
-      <DarbPageHero compact eyebrow={t('gpaCalculator.eyebrow', 'BAGRUT')} imageUrl={DARB_PUBLIC_HERO_IMAGES.academic} imageAlt={t('gpaCalculator.imageAlt', 'Academic documents and study materials')} title={t('gpaCalculator.title')} subtitle={t('gpaCalculator.description')} />
+      
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <Card>
