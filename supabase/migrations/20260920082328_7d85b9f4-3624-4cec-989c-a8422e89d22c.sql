@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Staff read WhatsApp messages" ON public.whatsapp_messages;

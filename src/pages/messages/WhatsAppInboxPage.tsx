@@ -464,7 +464,7 @@ export default function WhatsAppInboxPage({
     <Card className={cn("min-h-0 h-full w-full overflow-hidden rounded-xl shadow-none", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0")}>
       <div className="flex h-full min-h-0 flex-col">
         {!active ? (
-          <EmptyState title={t("empty.select")} icon={MessageCircle} className="flex-1" />
+          <EmptyState title={t("empty.select")} description={t("empty.description")} icon={MessageCircle} className="flex-1" />
         ) : (
           <>
             <div className="flex shrink-0 items-center gap-2 border-b bg-card p-2 md:p-3">
@@ -586,7 +586,10 @@ export default function WhatsAppInboxPage({
     return (
       <div dir={rtl ? "rtl" : "ltr"} className="mx-auto flex h-full w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden pb-0">
         <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div>
-        <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[300px_minmax(0,1fr)_300px]">
+        {/* The student panel only appears once a conversation is open, so the
+            inbox never shows two identical "choose a conversation" panels. */}
+        <div className={cn("grid min-h-0 flex-1 gap-3", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+
           {/* Conversations */}
           <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
             <div className="shrink-0 space-y-2 border-b p-3">
@@ -604,7 +607,9 @@ export default function WhatsAppInboxPage({
                 <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={snoozedOnly} onCheckedChange={setSnoozedOnly} aria-label={t("filters.snoozed")} />{t("filters.snoozed")}</label>
               </div>
             </div>
-            <ScrollArea className="min-h-0 flex-1">
+            {/* The viewport child must be a block so long previews truncate
+                instead of stretching the row past the panel. */}
+            <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
               {filtered.length ? filtered.map((thread) => (
                 <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
                   <div className="min-w-0 flex-1">
@@ -632,10 +637,8 @@ export default function WhatsAppInboxPage({
             {conversationOnlyView}
           </div>
           {/* Lead */}
-          <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
-            {!active ? (
-              <EmptyState title={t("empty.select")} icon={UserRound} className="flex-1" />
-            ) : (
+          <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", active ? "hidden lg:flex" : "hidden")}>
+            {!active ? null : (
               <>
                 <div className="shrink-0 border-b p-4">
                   <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-muted-foreground" /><h3 className="font-semibold">{t("profile.title")}</h3></div>
@@ -733,7 +736,7 @@ export default function WhatsAppInboxPage({
                   />
                 </div>
               </div>
-              <ScrollArea className="min-h-0 flex-1">
+              <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
                 {filtered.length ? filtered.map((thread) => (
                   <button
                     key={thread.id}
