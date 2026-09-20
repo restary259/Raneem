@@ -5815,6 +5815,123 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_campaigns: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          filters: Json
+          id: string
+          name: string
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_templates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      whatsapp_campaign_recipients: {
+        Row: {
+          attempt_count: number
+          campaign_id: string
+          conversation_id: string
+          created_at: string
+          id: string
+          last_error: string | null
+          max_attempts: number
+          processed_at: string | null
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          campaign_id: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          processed_at?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          campaign_id?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          processed_at?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_campaign_recipients_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       whatsapp_templates: {
         Row: {
           approval_status: string
@@ -7104,6 +7221,64 @@ export type Database = {
         Returns: boolean
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
+      whatsapp_cancel_marketing_campaign: {
+        Args: { p_campaign_id: string }
+        Returns: undefined
+      }
+      whatsapp_claim_due_marketing_recipients: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempt_count: number
+          campaign_id: string
+          conversation_id: string
+          id: string
+          max_attempts: number
+          template_id: string
+        }[]
+      }
+      whatsapp_complete_marketing_recipient: {
+        Args: {
+          p_error?: string
+          p_provider_message_id?: string
+          p_recipient_id: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      whatsapp_create_marketing_campaign: {
+        Args: {
+          p_filters?: Json
+          p_name: string
+          p_scheduled_at?: string
+          p_template_id: string
+        }
+        Returns: string
+      }
+      whatsapp_list_marketing_campaigns: {
+        Args: { p_limit?: number }
+        Returns: {
+          cancelled_count: number
+          completed_at: string | null
+          created_at: string
+          failed_count: number
+          id: string
+          name: string
+          pending_count: number
+          processing_count: number
+          recipient_total: number
+          scheduled_at: string | null
+          sent_count: number
+          started_at: string | null
+          status: string
+          template_id: string
+          template_language_code: string
+          template_provider_name: string
+        }[]
+      }
+      whatsapp_marketing_audience_count: {
+        Args: { p_filters?: Json }
+        Returns: number
+      }
       whatsapp_claim_due_follow_up_tasks: {
         Args: { p_limit?: number }
         Returns: {
