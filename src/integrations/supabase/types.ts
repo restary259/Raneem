@@ -5338,14 +5338,21 @@ export type Database = {
       whatsapp_conversations: {
         Row: {
           assigned_to: string | null
+          campaign_key: string | null
           created_at: string
           first_response_at: string | null
           human_takeover: boolean
           id: string
+          intent: string | null
+          language_code: string | null
+          last_customer_message_at: string | null
           last_inbound_at: string | null
           last_message_preview: string | null
           last_outbound_at: string | null
           lead_id: string
+          priority: string
+          snoozed_until: string | null
+          source_channel: string | null
           state: string
           takeover_at: string | null
           takeover_by: string | null
@@ -5354,14 +5361,21 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          campaign_key?: string | null
           created_at?: string
           first_response_at?: string | null
           human_takeover?: boolean
           id?: string
+          intent?: string | null
+          language_code?: string | null
+          last_customer_message_at?: string | null
           last_inbound_at?: string | null
           last_message_preview?: string | null
           last_outbound_at?: string | null
           lead_id: string
+          priority?: string
+          snoozed_until?: string | null
+          source_channel?: string | null
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
@@ -5370,14 +5384,21 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          campaign_key?: string | null
           created_at?: string
           first_response_at?: string | null
           human_takeover?: boolean
           id?: string
+          intent?: string | null
+          language_code?: string | null
+          last_customer_message_at?: string | null
           last_inbound_at?: string | null
           last_message_preview?: string | null
           last_outbound_at?: string | null
           lead_id?: string
+          priority?: string
+          snoozed_until?: string | null
+          source_channel?: string | null
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
@@ -7048,6 +7069,22 @@ export type Database = {
         Returns: boolean
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
+      whatsapp_crm_context: {
+        Args: { p_whatsapp_lead_id: string }
+        Returns: {
+          case_full_name: string
+          case_id: string
+          case_reference: string
+          case_status: string
+          lead_full_name: string
+          lead_id: string
+          lead_source_type: string
+          lead_status: string
+          profile_full_name: string
+          profile_id: string
+          profile_student_status: string
+        }[]
+      }
       whatsapp_identity_suggestions: {
         Args: { p_whatsapp_lead_id: string }
         Returns: {
