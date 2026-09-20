@@ -15,7 +15,6 @@ import ChatOfflineBanner from '@/components/chat/ChatOfflineBanner';
 import ChatQuickQuestions from '@/components/chat/ChatQuickQuestions';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
-import DarbContactCta from '@/components/common/DarbContactCta';
 
 const AIQuizChat = () => {
   const { t } = useTranslation();
@@ -97,7 +96,6 @@ const AIQuizChat = () => {
         </div>
       </main>
 
-      <DarbContactCta variant="compact" />
       <Footer />
     </div>
   );
