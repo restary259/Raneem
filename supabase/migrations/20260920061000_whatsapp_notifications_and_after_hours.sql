@@ -117,12 +117,23 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM public.whatsapp_messages m
+    WHERE m.conversation_id = NEW.conversation_id
+      AND m.direction = 'outbound'
+      AND m.created_at >= NEW.created_at - interval '24 hours'
+  ) THEN
+    RETURN NEW;
+  END IF;
+
   SELECT id INTO v_template_id
   FROM public.whatsapp_templates
   WHERE purpose = 'lead_received'
     AND approval_status = 'APPROVED'
     AND is_active = true
     AND category = 'UTILITY'
+    AND components::text NOT LIKE '%{{%'
   ORDER BY updated_at DESC
   LIMIT 1;
 
