@@ -359,6 +359,7 @@ serve(async (req) => {
     if (action === "send") {
       const conversationId = String(input?.conversation_id ?? "");
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
+      const campaignRecipientId = input?.campaign_recipient_id ? String(input.campaign_recipient_id) : null;
       const { data: conversation, error } = await admin
         .from("whatsapp_conversations")
         .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number, marketing_consent_status)")
@@ -369,6 +370,33 @@ serve(async (req) => {
       const lead = Array.isArray(conversation.lead) ? conversation.lead[0] : conversation.lead;
       const to = digitsOnly((lead as { whatsapp_number?: string } | null)?.whatsapp_number);
       if (to.length < 8 || to.length > 15) return json({ error: "The WhatsApp number is invalid" }, 400, corsHeaders);
+
+      if (campaignRecipientId) {
+        // Marketing campaign dispatches carry a recipient id so a worker crash
+        // after the provider accepts the message cannot cause a duplicate send.
+        const { data: recipient, error: recipientError } = await admin
+          .from("whatsapp_campaign_recipients")
+          .select("id,campaign_id,conversation_id,status,provider_message_id")
+          .eq("id", campaignRecipientId)
+          .maybeSingle();
+        if (recipientError) throw recipientError;
+        if (!recipient || recipient.conversation_id !== conversationId) {
+          return json({ error: "Campaign recipient does not match the conversation" }, 409, corsHeaders);
+        }
+        if (recipient.provider_message_id) {
+          const { data: existingMessage, error: existingMessageError } = await admin
+            .from("whatsapp_messages")
+            .select("*")
+            .eq("campaign_recipient_id", campaignRecipientId)
+            .maybeSingle();
+          if (existingMessageError) throw existingMessageError;
+          return json({
+            message: existingMessage ?? null,
+            provider_message_id: recipient.provider_message_id,
+            deduplicated: true,
+          }, 200, corsHeaders);
+        }
+      }
 
       const lastInbound = conversation.last_inbound_at ? new Date(conversation.last_inbound_at).getTime() : Number.NaN;
       const insideWindow = Number.isFinite(lastInbound) && Date.now() >= lastInbound && Date.now() - lastInbound <= 24 * 60 * 60 * 1000;
@@ -432,7 +460,16 @@ serve(async (req) => {
       const payload = JSON.parse(upstream.text || "{}") as { messages?: { id?: string }[] };
       const providerMessageId = payload.messages?.[0]?.id ?? null;
       const now = new Date().toISOString();
-      const { data: message, error: insertError } = await admin.from("whatsapp_messages").insert({
+
+      if (campaignRecipientId && providerMessageId) {
+        const { error: recipientUpdateError } = await admin
+          .from("whatsapp_campaign_recipients")
+          .update({ provider_message_id: providerMessageId, updated_at: now })
+          .eq("id", campaignRecipientId);
+        if (recipientUpdateError) throw recipientUpdateError;
+      }
+
+      const messageInsert: Record<string, unknown> = {
         conversation_id: conversationId,
         provider_message_id: providerMessageId,
         direction: "outbound",
@@ -445,7 +482,10 @@ serve(async (req) => {
         media_url: mediaPath,
         media_mime_type: mediaMime,
         media_filename: mediaFilename,
-      }).select("*").single();
+      };
+      if (campaignRecipientId) messageInsert.campaign_recipient_id = campaignRecipientId;
+
+      const { data: message, error: insertError } = await admin.from("whatsapp_messages").insert(messageInsert).select("*").single();
       if (insertError) throw insertError;
       const { error: updateError } = await admin.from("whatsapp_conversations").update({
         last_outbound_at: now,
