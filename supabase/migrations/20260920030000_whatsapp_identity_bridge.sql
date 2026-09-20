@@ -110,7 +110,7 @@ BEGIN
         linked_profile_id = CASE WHEN v_profile_count = 1 THEN v_profile_id ELSE NULL END,
         linked_lead_id = CASE WHEN v_lead_count = 1 THEN v_lead_id ELSE NULL END,
         identity_confirmed_by = NULL,
-        identity_confirmed_at = now(),
+        identity_confirmed_at = NULL,
         updated_at = now()
     WHERE id = p_whatsapp_lead_id;
 
@@ -134,7 +134,7 @@ BEGIN
     SET linked_profile_id = CASE WHEN v_profile_count = 1 THEN v_profile_id ELSE NULL END,
         linked_lead_id = CASE WHEN v_lead_count = 1 THEN v_lead_id ELSE NULL END,
         identity_confirmed_by = NULL,
-        identity_confirmed_at = now(),
+        identity_confirmed_at = NULL,
         updated_at = now()
     WHERE id = p_whatsapp_lead_id;
 
@@ -197,7 +197,7 @@ BEGIN
     UPDATE public.whatsapp_leads
     SET linked_lead_id = v_existing_id,
         identity_confirmed_by = NULL,
-        identity_confirmed_at = now(),
+        identity_confirmed_at = NULL,
         updated_at = now()
     WHERE id = p_whatsapp_lead_id;
     RETURN jsonb_build_object('status','auto_linked_existing_lead','lead_id',v_existing_id);
@@ -383,7 +383,7 @@ BEGIN
         CONTINUE;
       END IF;
 
-      -- Identity is resolved by phone number only. Never touches leads/cases.
+      -- Persist the WhatsApp message first, then resolve its phone into the existing DARB identity graph.
       INSERT INTO public.whatsapp_leads (whatsapp_number, student_name, source, consent_status, lead_stage)
       VALUES (v_phone, '', 'whatsapp', 'unknown', 'new')
       ON CONFLICT (whatsapp_number) DO NOTHING;
