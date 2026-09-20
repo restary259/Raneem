@@ -7,6 +7,19 @@
 import path from "node:path";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const CLOUD_PUBLIC_CONFIG = {
+  VITE_SUPABASE_URL: "https://mzbadxfvxioedzdjxamc.supabase.co",
+  VITE_SUPABASE_PUBLISHABLE_KEY:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16YmFkeGZ2eGlvZWR6ZGp4YW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MDM1MTIsImV4cCI6MjA4NjE3OTUxMn0.YxLzUfifPZnRmO9yknRj4G-rx_CmkMjKyT5kaoJb6Qg",
+} as const;
+
+const publicConfig = Object.fromEntries(
+  Object.entries(CLOUD_PUBLIC_CONFIG).map(([key, fallback]) => [
+    key,
+    process.env[key] || fallback,
+  ]),
+);
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -14,6 +27,17 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    // VITE_* values are compiled into both client and SSR route chunks. The
+    // published Worker receives SUPABASE_* at request time, but route modules
+    // initialize the browser client during module loading, before a request
+    // exists. Keep explicit public fallbacks so production cannot boot with an
+    // empty URL/key when the build environment omits the VITE_* aliases.
+    define: Object.fromEntries(
+      Object.entries(publicConfig).map(([key, value]) => [
+        `import.meta.env.${key}`,
+        JSON.stringify(value),
+      ]),
+    ),
     resolve: {
       alias: {
         // React Email's htmlparser2 path needs entities v4.5.0; a nested v5+
