@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
+import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -84,7 +85,7 @@ export function OnboardingShell({
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
         </Button>
         <img
-          src="/lovable-uploads/d0f50c50-ec2b-4468-b0eb-5ba9efa39809.png"
+          src={darbLogoAsset.url}
           alt="DARB"
           className="h-9 w-auto select-none object-contain"
           draggable={false}
