@@ -65,7 +65,7 @@ const AppShell = () => {
   }, []);
 
   useEffect(() => {
-    const dir = i18n.language === "ar" ? "rtl" : "ltr";
+    const dir = i18n.language === "ar" || i18n.language === "he" ? "rtl" : "ltr";
     document.documentElement.lang = i18n.language;
     document.documentElement.dir = dir;
 
