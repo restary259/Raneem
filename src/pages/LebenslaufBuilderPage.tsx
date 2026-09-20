@@ -7,8 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 import DarbPageHero from '@/components/common/DarbPageHero';
 import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
-import DarbPageHero from '@/components/common/DarbPageHero';
-import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 
 const LebenslaufBuilderPage = () => {
   const { t } = useTranslation('resources');
