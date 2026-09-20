@@ -76,8 +76,8 @@ STRICT
 SET search_path = public
 AS $$
   SELECT CASE
-    WHEN p_text ~ '[\u0600-\u06FF]' THEN
-      CASE WHEN p_text ~ '[\u0590-\u05FF]' AND p_text !~ '[\u0620-\u065F]' THEN 'he' ELSE 'ar' END
+    WHEN p_text ~ '[ء-ٟ]' THEN 'ar'
+    WHEN p_text ~ '[א-ת]' THEN 'he'
     WHEN p_text ~ '[A-Za-z]' THEN 'en'
     ELSE 'unknown'
   END;
