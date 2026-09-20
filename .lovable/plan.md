@@ -1,50 +1,40 @@
-# WhatsApp pipeline: audit findings and repair plan
+# Live site shows "This page didn't load" — verified diagnosis and fix
 
-## What I checked and found
+## What I verified (not assumed)
 
-I traced the chain from WhatsApp to the inbox against the real code, the live database and the live site.
-
-**The live site is down.** Every address on the published app answers with an error page, including the address WhatsApp must deliver to:
+**1. The error page you see is the app's own fallback.** I fetched the live site and compared it byte-for-byte with the fallback page in the code. Identical. So the site is reachable, but the server fails on every request and falls back to that page.
 
 ```text
-https://darb-agency.lovable.app/                          -> 500 error page
-https://darb-agency.lovable.app/api/public/whatsapp/webhook -> 500 error page
-local app (same code, running here)                        -> 200 "DARB WhatsApp receiver is online"
+https://darb-agency.lovable.app/                            -> 500, fallback page
+https://darb-agency.lovable.app/api/public/whatsapp/webhook -> 500, fallback page
 ```
 
-The receiving code itself answers correctly when it runs. So WhatsApp deliveries have had nowhere working to land. This matches the empty tables: 0 deliveries, 0 ingest records, 0 messages (1 lead and 1 conversation exist, created manually earlier).
+**2. The current code is not broken.** I built the app exactly the way the live site is built, then ran that production build in the same server runtime the live site uses, and requested real pages:
 
-**The database side is in good shape.** The message-type rule already accepts text, template, system, image, video, audio, document, sticker, location, contacts, reaction, interactive, button and list. The ingest routine is service-role only — signed-in users and visitors cannot call it.
+```text
+/                            -> 200, full page rendered
+/team/messages               -> 200
+/api/public/whatsapp/webhook -> 200 "DARB WhatsApp receiver is online"
+```
 
-**Two things are still unverified** and can only be confirmed once the site is live: whether this app is the selected destination for incoming WhatsApp messages in Connectors, and whether a real message completes the whole chain.
+So what is live is an older, broken deployment. The code in the project today works.
+
+**3. One real packaging risk found while doing this.** The project is marked as "no side effects". The production bundler acted on that and reported dropping side-effect-only imports, including the one that arms the server's error capture and the server runtime init module. This is exactly the kind of difference that works in preview and fails only once deployed, so it should be corrected before republishing rather than left in place.
 
 ## Plan
 
-### 1. Get the live site working again (the blocker)
-Find why the published app errors on every page: read the deployment error, reproduce it against a production build locally, and fix it. Nothing else in the chain can be proven until this is green.
+1. **Remove the "no side effects" marking** from the project manifest so the production bundler stops discarding side-effect-only imports (error capture, runtime init, stylesheets). This is a one-line change and affects packaging only, no app behaviour.
+2. **Rebuild and re-verify in the production runtime** locally: home page, a dashboard route, and the WhatsApp receiving address must all answer correctly, with no "ignoring this import" warnings left.
+3. **Republish the app** so the live site serves this working build instead of the broken one.
+4. **Re-check the live site after publishing**: home page loads, a dashboard route loads, and the WhatsApp receiving address answers "receiver is online". If anything still fails, read the deployment's server error and fix that specific error — no guessing.
 
-### 2. Republish and re-test the receiving address
-Confirm the live address answers "receiver is online" and that a signed test delivery is accepted, stored and made idempotent (a repeat of the same delivery must not duplicate anything).
+## Why this also matters for WhatsApp
 
-### 3. Point WhatsApp at this app
-In Connectors, WhatsApp Business, "Incoming messages", this app must be the selected destination. This is a manual selection you make; I will tell you exactly when to do it and verify afterwards that deliveries arrive. Selecting it moves deliveries away from any previously selected destination.
-
-### 4. Prove inbound end to end with a real message
-Send a real WhatsApp message to the business number and confirm, with evidence at each step: delivery recorded, ingest recorded, lead reused, conversation updated, message stored as incoming, unread count and last-message preview updated, and the message appearing in the inbox live without a refresh.
-
-### 5. Prove outbound end to end
-Reply from the inbox and confirm the reply is accepted, arrives on the phone, and the delivery ticks come back and update the message.
-
-### 6. Add tests and safe logging for what is still untested
-Automated tests over the receiving code for: normal text, media, button/list reply, delivery status, repeat delivery, business-sent echo, bad signature, missing signature, broken data, unknown message type, and a database failure returning a retryable error. Structured logs that record delivery id, event type, result and duration, with no phone numbers, message text, or keys.
-
-### 7. Fix whatever the real run exposes
-Any gap found in steps 4-6 gets repaired in place, smallest safe change, no rewrite of working parts and no weakening of access rules.
+Incoming WhatsApp messages are delivered to the live address. While the live site answers with an error on every request, deliveries have nowhere to land — which matches the empty delivery and message tables. Getting the live site healthy is the prerequisite before the WhatsApp chain can be tested end to end.
 
 ## Technical notes
 
-- Receiver: `src/routes/api/public/whatsapp/webhook.ts` — signature verified against a cloned request before parsing, accepts both connector-normalized and raw Meta payloads, derives a delivery id from header, payload id or content hash, returns 503 unconfigured / 401 bad signature / 500 ingest failure (retryable) / 200 only after a successful ingest call. Echoes are normalized separately from inbound.
-- Ingest: `whatsapp_ingest_event(p_payload jsonb)`, SECURITY DEFINER, execute granted only to `postgres` and `service_role` (verified live). Service key is read only inside the server handler via `@/integrations/supabase/client.server`.
-- Live check constraint on `whatsapp_messages.message_type` already covers all 14 types (verified live) — the earlier migration is applied, no drift there.
-- Remaining audit items (realtime publication vs. subscriptions, per-table access rules, outbound 24-hour/template enforcement, media bucket privacy) are re-verified in steps 4-6 against real traffic rather than by reading code alone.
-- Connection in use: Darb's WhatsApp Business, number +49 176 23790623, gateway-backed. No Meta credentials are handled directly.
+- Evidence for "current code is fine": `npm run build` succeeds (nitro `cloudflare-module` preset), and `wrangler dev dist/server/index.mjs --compatibility-flags nodejs_compat` serves `/`, `/team/messages` and the webhook route with 200s.
+- The fallback HTML comes from `renderErrorPage()` in `src/lib/error-page.ts`, returned by the SSR wrapper in `src/server.ts` and the request middleware in `src/start.ts` — all five SSR error-handling layers are correctly wired, which is why the failure is visible as a branded page rather than a raw crash.
+- The packaging fix is removing `"sideEffects": false` from `package.json`. Bundler evidence: `Ignoring this import because "dist/server/_runtime.mjs" was marked as having no side effects [ignored-bare-import]`, repeated across SSR chunks. `src/server.ts` opens with the side-effect-only `import "./lib/error-capture"`, which the same rule can drop.
+- No database, access-rule, or WhatsApp-logic changes are part of this fix.
