@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { RefreshCw, Building2, Globe2, GraduationCap, BedDouble, ArrowLeft, Images } from "lucide-react";
+import { RefreshCw, Building2, ChevronRight, Globe2, GraduationCap, BedDouble, ArrowLeft, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState, LoadingState, ErrorState } from "@/components/shell";
@@ -39,7 +39,7 @@ export default function TeamCatalogPage() {
   const { t } = useTranslation("dashboard");
   const lang = useLang();
   const { data, loading, error, refetch } = useTeamCatalog();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [filters, setFilters] = useState<CatalogFilterValues>(EMPTY_FILTERS);
   const [country, setCountry] = useState<string | null>(null);
@@ -49,18 +49,32 @@ export default function TeamCatalogPage() {
   const [schoolPhotosOpen, setSchoolPhotosOpen] = useState(false);
   const [programPhotos, setProgramPhotos] = useState<CatalogProgram | null>(null);
 
+  // Seed the filters from deep-link params only once; later URL changes
+  // (navigation/back-forward) must never clobber the user's own filters.
+  const filtersSeeded = useRef(false);
+
   useEffect(() => {
+    const requestedCountry = searchParams.get("country");
     const requestedSchool = searchParams.get("school");
+    const requestedTab = searchParams.get("tab");
     const requestedRoomType = searchParams.get("roomType") ?? "";
+
+    setCountry(requestedCountry);
+
     if (requestedSchool) {
       setSchoolId(requestedSchool);
-      setTab("accommodations");
-      setFilters((current) => ({
-        ...current,
-        schoolId: requestedSchool,
-        roomType: requestedRoomType,
-        search: "",
-      }));
+      setTab(requestedTab === "programs" ? "programs" : "accommodations");
+      if (!filtersSeeded.current) {
+        filtersSeeded.current = true;
+        setFilters((current) => ({
+          ...current,
+          schoolId: requestedSchool,
+          roomType: requestedRoomType,
+          search: "",
+        }));
+      }
+    } else {
+      setSchoolId(null);
     }
   }, [searchParams]);
 
@@ -131,22 +145,75 @@ export default function TeamCatalogPage() {
     return data.schools.find((s) => s.id === selected.school_id) ?? null;
   }, [data, selected]);
 
+  // Drill-down navigation keeps the URL in sync so browser back/forward
+  // return to the country selection / schools grid instead of leaving the page.
+  const openCountry = (value: string) => {
+    setFilters(EMPTY_FILTERS);
+    setCountry(value);
+    setSchoolId(null);
+    const next = new URLSearchParams(searchParams);
+    next.set("country", value);
+    next.delete("school");
+    next.delete("ids");
+    next.delete("tab");
+    next.delete("roomType");
+    setSearchParams(next);
+  };
+
+  const backToSchools = () => {
+    setSchoolId(null);
+    setTab("accommodations");
+    const next = new URLSearchParams(searchParams);
+    next.delete("school");
+    next.delete("ids");
+    next.delete("tab");
+    next.delete("roomType");
+    setSearchParams(next);
+  };
+
+  const backToCountries = () => {
+    setFilters(EMPTY_FILTERS);
+    setCountry(null);
+    setSchoolId(null);
+    const next = new URLSearchParams(searchParams);
+    next.delete("country");
+    next.delete("school");
+    next.delete("ids");
+    next.delete("tab");
+    next.delete("roomType");
+    setSearchParams(next);
+  };
+
+  const openSchool = (picked: CatalogSchool) => {
+    setSchoolId(picked.id);
+    setTab("accommodations");
+    const pickedCountry = picked.country?.trim() || "";
+    const next = new URLSearchParams(searchParams);
+    if (pickedCountry) next.set("country", pickedCountry);
+    else next.delete("country");
+    next.set("school", picked.id);
+    next.set("tab", "accommodations");
+    next.delete("ids");
+    next.delete("roomType");
+    setSearchParams(next);
+  };
+
   const crumbs = useMemo(() => {
     const items = [
       {
         label: t("catalog.allCountries", "Catalog"),
-        onClick: () => { setCountry(null); setSchoolId(null); },
+        onClick: backToCountries,
       },
     ];
     if (activeCountry != null) {
       items.push({
         label: countryLabel(activeCountry),
-        onClick: () => setSchoolId(null),
+        onClick: backToSchools,
       });
     }
     if (school) {
-      if (school.city) items.push({ label: school.city, onClick: () => setSchoolId(null) });
-      items.push({ label: localizedName(school, lang), onClick: () => setSchoolId(null) });
+      if (school.city) items.push({ label: school.city, onClick: backToSchools });
+      items.push({ label: localizedName(school, lang), onClick: backToSchools });
     }
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,11 +259,7 @@ export default function TeamCatalogPage() {
                 <button
                   key={c.country || "__none__"}
                   type="button"
-                  onClick={() => {
-                    setCountry(c.country);
-                    setSchoolId(null);
-                    setFilters(EMPTY_FILTERS);
-                  }}
+                  onClick={() => openCountry(c.country)}
                   className="group text-start"
                 >
                   <Card className="flex h-full items-center justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
@@ -205,12 +268,14 @@ export default function TeamCatalogPage() {
                         <Globe2 className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="truncate">{countryLabel(c.country)}</span>
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {c.schools.length.toLocaleString("en-US")}
+                      <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
+                        {c.schools.length.toLocaleString("en-US")}{" "}
+                        {t("catalog.schools", "schools")}
                       </p>
                     </div>
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
-                      <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                      <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                     </span>
                   </Card>
                 </button>
@@ -221,6 +286,25 @@ export default function TeamCatalogPage() {
           {!school && activeCountry != null ? (
             /* ── Schools grid ── */
             <>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" onClick={backToCountries}>
+                  <Globe2 className="me-1.5 h-3.5 w-3.5" />
+                  {t("catalog.backToCountries", "All countries")}
+                </Button>
+                {countries.length > 1 &&
+                  countries.map((c) => (
+                    <Button
+                      key={c.country || "__none__"}
+                      type="button"
+                      variant={(c.country || "") === activeCountry ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => openCountry(c.country)}
+                    >
+                      {countryLabel(c.country)}
+                    </Button>
+                  ))}
+              </div>
+
               <CatalogFilters
                 schools={countrySchools}
                 roomTypes={roomTypes}
@@ -250,7 +334,7 @@ export default function TeamCatalogPage() {
                         school={s}
                         programCount={stats.programs}
                         accommodationCount={stats.accommodations}
-                        onSelect={(picked) => { setSchoolId(picked.id); setTab("accommodations"); }}
+                        onSelect={openSchool}
                       />
                     );
                   })}
@@ -260,7 +344,7 @@ export default function TeamCatalogPage() {
           ) : (
             /* ── School detail ── */
             <div className="space-y-5">
-              <Button variant="ghost" size="sm" onClick={() => setSchoolId(null)} className="-ms-2">
+              <Button variant="ghost" size="sm" onClick={backToSchools} className="-ms-2">
                 <ArrowLeft className="me-1.5 h-4 w-4 rtl:rotate-180" />
                 {t("catalog.backToSchools", "Back to schools")}
               </Button>
