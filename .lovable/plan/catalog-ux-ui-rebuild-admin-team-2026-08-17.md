@@ -10,7 +10,7 @@ Rebuild the browsing experience over the existing catalog data. No schema change
 - Team: `/team/catalog` (`TeamCatalogPage`) — flat school sections with accommodation cards and a dialog gallery. No program display, no country level, no full-screen viewer.
 - Shared helpers already in place and reused: `src/lib/catalogDisplay.ts`, `programPricing.ts`, `useTeamCatalog.ts`, `ImageWithSkeleton`, shell primitives (`PageHeader`, `SectionCard`, `States`, `DataToolbar`).
 
-Because there is exactly one country today, the country level renders as a compact top strip/step rather than a full page the user must click through — it stays part of the hierarchy and breadcrumb but never becomes a dead-end single-card screen.
+Country selection is always the first step of normal Team Catalog navigation, even when there is only one country. The user must explicitly select the country before seeing its schools. Direct deep links may bypass the country card when a specific school or accommodation is explicitly requested.
 
 ## Plan
 
@@ -29,7 +29,7 @@ New shared components under `src/components/catalog/`:
 Drill-down flow driven by local state with the breadcrumb always visible:
 
 ```text
-Country strip → Schools grid → School page (Programs | Accommodation tabs) → Accommodation lightbox
+Country cards → Schools grid → School page (Programs | Accommodation tabs) → Accommodation lightbox
 ```
 
 - Country screen: country cards first, including a single-country catalog; selecting a country opens that country's schools. Schools grid: large school image, name, city, and "N programs · M accommodations".
