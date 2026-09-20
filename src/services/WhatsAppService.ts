@@ -15,8 +15,8 @@ export type LeadStage = "new" | "qualified" | "consultation_booked" | "documents
 export interface WhatsAppThread extends WhatsAppConversation { lead: WhatsAppLead }
 
 export type WhatsAppCrmLead = Pick<Tables["leads"]["Row"], "id" | "full_name" | "status" | "source_type">;
-export type WhatsAppCrmCase = Pick<Tables["cases"]["Row"], "id" | "full_name" | "status" | "case_reference">;
-export type WhatsAppCrmProfile = Pick<Tables["profiles"]["Row"], "id" | "full_name" | "student_status">;
+export type WhatsAppCrmCase = Pick<Tables["cases"]["Row"], "id" | "full_name" | "status" | "case_reference" | "student_user_id">;
+export type WhatsAppCrmProfile = Pick<Tables["profiles"]["Row"], "id" | "full_name" | "student_status" | "case_id" | "linked_case_id">;
 export interface WhatsAppCrmContext {
   leadRecord: WhatsAppCrmLead | null;
   caseRecord: WhatsAppCrmCase | null;
@@ -87,26 +87,55 @@ export async function getWhatsAppInboundStatus(): Promise<WhatsAppInboundStatus>
 export async function getWhatsAppCrmContext(
   lead: Pick<WhatsAppLead, "linked_case_id" | "linked_lead_id" | "linked_profile_id">,
 ): Promise<WhatsAppCrmContext> {
-  const [leadResult, caseResult, profileResult] = await Promise.all([
+  const [leadResult, directCaseResult, profileResult] = await Promise.all([
     lead.linked_lead_id
       ? supabase.from("leads").select("id,full_name,status,source_type").eq("id", lead.linked_lead_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     lead.linked_case_id
-      ? supabase.from("cases").select("id,full_name,status,case_reference").eq("id", lead.linked_case_id).maybeSingle()
+      ? supabase.from("cases").select("id,full_name,status,case_reference,student_user_id").eq("id", lead.linked_case_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     lead.linked_profile_id
-      ? supabase.from("profiles").select("id,full_name,student_status").eq("id", lead.linked_profile_id).maybeSingle()
+      ? supabase.from("profiles").select("id,full_name,student_status,case_id,linked_case_id").eq("id", lead.linked_profile_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ]);
 
   fail(leadResult.error);
-  fail(caseResult.error);
+  fail(directCaseResult.error);
   fail(profileResult.error);
+
+  let caseData = directCaseResult.data as WhatsAppCrmCase | null;
+  let profileData = profileResult.data as WhatsAppCrmProfile | null;
+
+  // A profile is also an identity anchor. When the WhatsApp resolver linked the
+  // profile but not its case, follow the profile's canonical case reference.
+  const derivedCaseId = caseData?.id ?? profileData?.case_id ?? profileData?.linked_case_id ?? null;
+  if (!caseData && derivedCaseId) {
+    const { data, error } = await supabase
+      .from("cases")
+      .select("id,full_name,status,case_reference,student_user_id")
+      .eq("id", derivedCaseId)
+      .maybeSingle();
+    fail(error);
+    caseData = data as WhatsAppCrmCase | null;
+  }
+
+  // Conversely, a case can identify the student account even when the resolver
+  // only had a case-level phone match.
+  const derivedProfileId = profileData?.id ?? caseData?.student_user_id ?? null;
+  if (!profileData && derivedProfileId) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id,full_name,student_status,case_id,linked_case_id")
+      .eq("id", derivedProfileId)
+      .maybeSingle();
+    fail(error);
+    profileData = data as WhatsAppCrmProfile | null;
+  }
 
   return {
     leadRecord: leadResult.data as WhatsAppCrmLead | null,
-    caseRecord: caseResult.data as WhatsAppCrmCase | null,
-    profile: profileResult.data as WhatsAppCrmProfile | null,
+    caseRecord: caseData,
+    profile: profileData,
   };
 }
 
