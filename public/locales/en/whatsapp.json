@@ -87,7 +87,8 @@
     "metadata": "Conversation metadata",
     "campaignPlaceholder": "Campaign / entry code (optional)",
     "sourceChannel": "Source channel",
-    "lastCustomerMessage": "Last customer message"
+    "lastCustomerMessage": "Last customer message",
+    "marketingConsent": "Marketing consent"
   },
   "profile": {
     "title": "Lead profile",
@@ -109,10 +110,10 @@
     "saved": "Profile saved"
   },
   "consent": {
-    "unknown": "Unknown",
-    "granted": "Granted",
-    "declined": "Declined",
-    "withdrawn": "Withdrawn"
+    "unknown": "Consent unknown",
+    "granted": "Marketing consent granted",
+    "declined": "Marketing consent declined",
+    "withdrawn": "Marketing opt-out active"
   },
   "notes": {
     "title": "Internal notes",
