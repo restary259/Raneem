@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
@@ -24,53 +23,87 @@ const Header = () => {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
-        scrolled ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md' : 'border-b border-transparent bg-transparent'
+        scrolled
+          ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md'
+          : 'border-b border-transparent bg-background lg:bg-transparent'
       }`}
       dir={dir}
       data-scrolled={scrolled ? 'true' : 'false'}
     >
+      {/* Desktop utility bar */}
       <div className="hidden border-b border-primary-foreground/20 lg:block">
-        <div dir="ltr" className={`container grid h-9 grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${scrolled ? 'text-muted-foreground' : 'text-primary-foreground'}`}>
-          <div className="justify-self-start"><LanguageSwitcher /></div>
-          <a href="tel:+4917623790623" dir="ltr" className="justify-self-center whitespace-nowrap">
-            +49 176 23790623
+        <div
+          dir="ltr"
+          className={`container grid h-9 grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
+            scrolled ? 'text-muted-foreground' : 'text-primary-foreground'
+          }`}
+        >
+          <div className="justify-self-start">
+            <LanguageSwitcher />
+          </div>
+          <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="justify-self-center whitespace-nowrap">
+            {SUPPORT_PHONE}
           </a>
           <a href={`mailto:${SUPPORT_EMAIL}`} className="justify-self-end whitespace-nowrap">
             {SUPPORT_EMAIL}
           </a>
         </div>
       </div>
-      <div className="container mx-auto px-4">
-        <div className="flex h-20 items-center justify-between lg:h-24">
-          {/* Logo Side */}
-          <div className="flex items-center flex-shrink-0 min-w-0">
-            <Link to="/" className="flex items-center gap-2 whitespace-nowrap flex-shrink-0">
-              <img 
+
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex min-h-20 items-center justify-between lg:h-24 lg:min-h-0">
+          {/* Logo */}
+          <div className="flex min-w-0 flex-shrink-0 items-center">
+            <Link to="/" className="flex flex-shrink-0 items-center whitespace-nowrap">
+              <img
                 src={darbLogoAsset.url}
-                alt={t('loader.brand')} 
-                className="h-14 w-auto flex-shrink-0 object-contain lg:h-20"
-                style={{ minWidth: '3rem' }}
+                alt={t('loader.brand')}
+                className="h-12 w-auto flex-shrink-0 object-contain lg:h-20"
                 fetchPriority="high"
               />
             </Link>
           </div>
 
-          {/* Center: Desktop Navigation */}
-          <div className="hidden lg:block flex-1 mx-5 min-w-0">
+          {/* Desktop navigation */}
+          <div className="hidden min-w-0 flex-1 lg:mx-5 lg:block">
             <DesktopNav transparent={!scrolled} />
           </div>
 
-          {/* Right Side: Language Switcher + Student Login */}
-          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
-            <Link 
-              to="/student-auth" 
+          {/* Desktop student login */}
+          <div className="hidden flex-shrink-0 items-center gap-2 lg:flex">
+            <Link
+              to="/student-auth"
               className="flex-shrink-0 whitespace-nowrap rounded-md bg-brand-strong px-4 py-2 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-strong/90 md:px-5 md:py-2.5"
             >
               {t('nav.studentLogin')}
             </Link>
           </div>
 
-          {/* Mobile header — compact contact utility row + languages + menu */}\n          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">\n            <div className={"flex min-w-0 flex-1 flex-col items-end justify-center leading-none " + (scrolled ? "text-foreground" : "text-primary-foreground")}>\n              <div className="flex max-w-full items-center gap-1.5 whitespace-nowrap text-[10px] font-medium sm:text-[11px]">\n                <a href="tel:+4917623790623" className="shrink-0">{SUPPORT_PHONE}</a>\n                <span aria-hidden="true" className="opacity-40">|</span>\n                <a href={"mailto:" + SUPPORT_EMAIL} className="min-w-0 truncate">{SUPPORT_EMAIL}</a>\n              </div>\n              <div className="mt-1">\n                <LanguageSwitcher className="[&>button]:text-[11px] [&>span]:text-[11px]" />\n              </div>\n            </div>\n            <MobileNav transparent={!scrolled} />\n          </div>
+          {/* Mobile utility header: contact line, languages, hamburger */}
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
+            <div className="flex min-w-0 flex-1 flex-col items-end justify-center text-foreground">
+              <div className="flex max-w-full items-center justify-end gap-1.5 whitespace-nowrap text-[9px] font-medium leading-none sm:text-[10px]">
+                <a
+                  href={`tel:${SUPPORT_PHONE}`}
+                  className="shrink-0"
+                  aria-label={`Call ${SUPPORT_PHONE}`}
+                >
+                  {SUPPORT_PHONE}
+                </a>
+                <span aria-hidden="true" className="text-muted-foreground">|</span>
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                  className="min-w-0 max-w-[118px] truncate text-muted-foreground"
+                  aria-label={`Email ${SUPPORT_EMAIL}`}
+                >
+                  {SUPPORT_EMAIL}
+                </a>
+              </div>
+              <LanguageSwitcher className="mt-1 [&>button]:text-[10px] [&>span]:text-[10px]" />
+            </div>
+
+            <MobileNav transparent={false} />
+          </div>
         </div>
       </div>
     </header>
