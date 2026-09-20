@@ -43,10 +43,14 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Target user is not a student" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Generate new temp password
+    // Generate new temp password with a cryptographically secure RNG
     const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
     const specials = "!@#$%";
-    const rand = (s: string) => s[Math.floor(Math.random() * s.length)];
+    const rand = (s: string) => {
+      const buf = new Uint32Array(1);
+      crypto.getRandomValues(buf);
+      return s[buf[0] % s.length];
+    };
     const tempPassword =
       rand("ABCDEFGHJKMNPQRSTUVWXYZ") +
       rand("abcdefghjkmnpqrstuvwxyz") +

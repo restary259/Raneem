@@ -52,6 +52,7 @@ import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
 import { Route as AdminTeamRouteImport } from './routes/admin.team'
 import { Route as AdminWhatsappRouteImport } from './routes/admin.whatsapp'
+import { Route as AdminWhatsappCampaignsRouteImport } from './routes/admin.whatsapp-campaigns'
 import { Route as AgentIndexRouteImport } from './routes/agent.index'
 import { Route as AgentAnalyticsRouteImport } from './routes/agent.analytics'
 import { Route as AgentApplyRouteImport } from './routes/agent.apply'
@@ -328,6 +329,11 @@ const AdminTeamRoute = AdminTeamRouteImport.update({
 const AdminWhatsappRoute = AdminWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWhatsappCampaignsRoute = AdminWhatsappCampaignsRouteImport.update({
+  id: '/whatsapp-campaigns',
+  path: '/whatsapp-campaigns',
   getParentRoute: () => AdminRoute,
 } as any)
 const AgentIndexRoute = AgentIndexRouteImport.update({
@@ -691,6 +697,7 @@ export interface FileRoutesByFullPath {
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/whatsapp': typeof AdminWhatsappRoute
+  '/admin/whatsapp-campaigns': typeof AdminWhatsappCampaignsRoute
   '/agent/analytics': typeof AgentAnalyticsRoute
   '/agent/apply': typeof AgentApplyRoute
   '/agent/bank-details': typeof AgentBankDetailsRoute
@@ -793,6 +800,7 @@ export interface FileRoutesByTo {
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/whatsapp': typeof AdminWhatsappRoute
+  '/admin/whatsapp-campaigns': typeof AdminWhatsappCampaignsRoute
   '/agent/analytics': typeof AgentAnalyticsRoute
   '/agent/apply': typeof AgentApplyRoute
   '/agent/bank-details': typeof AgentBankDetailsRoute
@@ -901,6 +909,7 @@ export interface FileRoutesById {
   '/admin/submissions': typeof AdminSubmissionsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/whatsapp': typeof AdminWhatsappRoute
+  '/admin/whatsapp-campaigns': typeof AdminWhatsappCampaignsRoute
   '/agent/analytics': typeof AgentAnalyticsRoute
   '/agent/apply': typeof AgentApplyRoute
   '/agent/bank-details': typeof AgentBankDetailsRoute
@@ -1010,6 +1019,7 @@ export interface FileRouteTypes {
     | '/admin/submissions'
     | '/admin/team'
     | '/admin/whatsapp'
+    | '/admin/whatsapp-campaigns'
     | '/agent/analytics'
     | '/agent/apply'
     | '/agent/bank-details'
@@ -1112,6 +1122,7 @@ export interface FileRouteTypes {
     | '/admin/submissions'
     | '/admin/team'
     | '/admin/whatsapp'
+    | '/admin/whatsapp-campaigns'
     | '/agent/analytics'
     | '/agent/apply'
     | '/agent/bank-details'
@@ -1219,6 +1230,7 @@ export interface FileRouteTypes {
     | '/admin/submissions'
     | '/admin/team'
     | '/admin/whatsapp'
+    | '/admin/whatsapp-campaigns'
     | '/agent/analytics'
     | '/agent/apply'
     | '/agent/bank-details'
@@ -1627,6 +1639,13 @@ declare module '@tanstack/react-router' {
       path: '/whatsapp'
       fullPath: '/admin/whatsapp'
       preLoaderRoute: typeof AdminWhatsappRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/whatsapp-campaigns': {
+      id: '/admin/whatsapp-campaigns'
+      path: '/whatsapp-campaigns'
+      fullPath: '/admin/whatsapp-campaigns'
+      preLoaderRoute: typeof AdminWhatsappCampaignsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/agent/': {
@@ -2083,6 +2102,7 @@ interface AdminRouteChildren {
   AdminSubmissionsRoute: typeof AdminSubmissionsRoute
   AdminTeamRoute: typeof AdminTeamRoute
   AdminWhatsappRoute: typeof AdminWhatsappRoute
+  AdminWhatsappCampaignsRoute: typeof AdminWhatsappCampaignsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCasesIdRoute: typeof AdminCasesIdRoute
 }
@@ -2104,6 +2124,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSubmissionsRoute: AdminSubmissionsRoute,
   AdminTeamRoute: AdminTeamRoute,
   AdminWhatsappRoute: AdminWhatsappRoute,
+  AdminWhatsappCampaignsRoute: AdminWhatsappCampaignsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCasesIdRoute: AdminCasesIdRoute,
 }

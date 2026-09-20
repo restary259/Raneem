@@ -5335,6 +5335,123 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_campaign_recipients: {
+        Row: {
+          attempt_count: number
+          campaign_id: string
+          conversation_id: string
+          created_at: string
+          id: string
+          last_error: string | null
+          max_attempts: number
+          processed_at: string | null
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          campaign_id: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          processed_at?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          campaign_id?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          processed_at?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_campaign_recipients_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_campaigns: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          filters: Json
+          id: string
+          name: string
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_conversations: {
         Row: {
           assigned_to: string | null
@@ -5355,7 +5472,7 @@ export type Database = {
           service_window_expires_at: string | null
           sla_due_at: string | null
           snoozed_until: string | null
-          source_channel: string
+          source_channel: string | null
           state: string
           takeover_at: string | null
           takeover_by: string | null
@@ -5381,7 +5498,7 @@ export type Database = {
           service_window_expires_at?: string | null
           sla_due_at?: string | null
           snoozed_until?: string | null
-          source_channel?: string
+          source_channel?: string | null
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
@@ -5407,7 +5524,7 @@ export type Database = {
           service_window_expires_at?: string | null
           sla_due_at?: string | null
           snoozed_until?: string | null
-          source_channel?: string
+          source_channel?: string | null
           state?: string
           takeover_at?: string | null
           takeover_by?: string | null
@@ -5497,6 +5614,88 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_follow_up_tasks: {
+        Row: {
+          attempt_count: number
+          conversation_id: string
+          created_at: string
+          created_by: string | null
+          dedupe_key: string | null
+          due_at: string
+          id: string
+          kind: string
+          last_error: string | null
+          max_attempts: number
+          origin: string
+          processed_at: string | null
+          provider_message_id: string | null
+          status: string
+          template_id: string | null
+          template_parameters: Json
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          conversation_id: string
+          created_at?: string
+          created_by?: string | null
+          dedupe_key?: string | null
+          due_at: string
+          id?: string
+          kind: string
+          last_error?: string | null
+          max_attempts?: number
+          origin?: string
+          processed_at?: string | null
+          provider_message_id?: string | null
+          status?: string
+          template_id?: string | null
+          template_parameters?: Json
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          conversation_id?: string
+          created_at?: string
+          created_by?: string | null
+          dedupe_key?: string | null
+          due_at?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          max_attempts?: number
+          origin?: string
+          processed_at?: string | null
+          provider_message_id?: string | null
+          status?: string
+          template_id?: string | null
+          template_parameters?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_follow_up_tasks_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_follow_up_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_follow_up_tasks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -5699,7 +5898,6 @@ export type Database = {
         Row: {
           authored_by: string | null
           body: string
-          campaign_recipient_id: string | null
           conversation_id: string
           created_at: string
           delivery_id: string | null
@@ -5707,6 +5905,7 @@ export type Database = {
           direction: string
           error_message: string | null
           error_status: number | null
+          follow_up_task_id: string | null
           id: string
           media_filename: string | null
           media_mime_type: string | null
@@ -5723,7 +5922,6 @@ export type Database = {
         Insert: {
           authored_by?: string | null
           body?: string
-          campaign_recipient_id?: string | null
           conversation_id: string
           created_at?: string
           delivery_id?: string | null
@@ -5731,6 +5929,7 @@ export type Database = {
           direction: string
           error_message?: string | null
           error_status?: number | null
+          follow_up_task_id?: string | null
           id?: string
           media_filename?: string | null
           media_mime_type?: string | null
@@ -5747,7 +5946,6 @@ export type Database = {
         Update: {
           authored_by?: string | null
           body?: string
-          campaign_recipient_id?: string | null
           conversation_id?: string
           created_at?: string
           delivery_id?: string | null
@@ -5755,6 +5953,7 @@ export type Database = {
           direction?: string
           error_message?: string | null
           error_status?: number | null
+          follow_up_task_id?: string | null
           id?: string
           media_filename?: string | null
           media_mime_type?: string | null
@@ -5777,17 +5976,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "whatsapp_messages_campaign_recipient_id_fkey"
-            columns: ["campaign_recipient_id"]
-            isOneToOne: false
-            referencedRelation: "whatsapp_campaign_recipients"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "whatsapp_messages_conversation_id_fkey"
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_follow_up_task_id_fkey"
+            columns: ["follow_up_task_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_follow_up_tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -5824,123 +6023,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      whatsapp_campaigns: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          created_by: string | null
-          filters: Json
-          id: string
-          name: string
-          scheduled_at: string | null
-          started_at: string | null
-          status: string
-          template_id: string
-          updated_at: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          filters?: Json
-          id?: string
-          name: string
-          scheduled_at?: string | null
-          started_at?: string | null
-          status?: string
-          template_id: string
-          updated_at?: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          filters?: Json
-          id?: string
-          name?: string
-          scheduled_at?: string | null
-          started_at?: string | null
-          status?: string
-          template_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "whatsapp_campaigns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "whatsapp_campaigns_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "whatsapp_templates"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      whatsapp_campaign_recipients: {
-        Row: {
-          attempt_count: number
-          campaign_id: string
-          conversation_id: string
-          created_at: string
-          id: string
-          last_error: string | null
-          max_attempts: number
-          processed_at: string | null
-          provider_message_id: string | null
-          sent_at: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          attempt_count?: number
-          campaign_id: string
-          conversation_id: string
-          created_at?: string
-          id?: string
-          last_error?: string | null
-          max_attempts?: number
-          processed_at?: string | null
-          provider_message_id?: string | null
-          sent_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          attempt_count?: number
-          campaign_id?: string
-          conversation_id?: string
-          created_at?: string
-          id?: string
-          last_error?: string | null
-          max_attempts?: number
-          processed_at?: string | null
-          provider_message_id?: string | null
-          sent_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "whatsapp_campaign_recipients_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "whatsapp_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "whatsapp_campaign_recipients_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "whatsapp_conversations"
-            referencedColumns: ["id"]
-          }
-        ]
       }
       whatsapp_templates: {
         Row: {
@@ -6276,6 +6358,8 @@ export type Database = {
         Returns: boolean
       }
       dispatch_appointment_reminders: { Args: never; Returns: undefined }
+      dispatch_whatsapp_follow_up_tasks: { Args: never; Returns: undefined }
+      dispatch_whatsapp_marketing_campaigns: { Args: never; Returns: undefined }
       edit_case_message: {
         Args: { p_body: string; p_message_id: string }
         Returns: undefined
@@ -6746,32 +6830,6 @@ export type Database = {
           id: string
         }[]
       }
-      whatsapp_crm_context: {
-        Args: { p_whatsapp_lead_id: string }
-        Returns: {
-          case_assigned_to: string | null
-          case_assigned_to_name: string | null
-          case_city: string | null
-          case_degree_interest: string | null
-          case_education_level: string | null
-          case_full_name: string | null
-          case_id: string | null
-          case_reference: string | null
-          case_status: string | null
-          lead_city: string | null
-          lead_education_level: string | null
-          lead_full_name: string | null
-          lead_id: string | null
-          lead_preferred_major: string | null
-          lead_source_type: string | null
-          lead_status: string | null
-          profile_city: string | null
-          profile_full_name: string | null
-          profile_id: string | null
-          profile_student_status: string | null
-          profile_university_name: string | null
-        }[]
-      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -7231,9 +7289,29 @@ export type Database = {
         Returns: boolean
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
+      whatsapp_apply_marketing_opt_out: {
+        Args: { p_body: string; p_whatsapp_lead_id: string }
+        Returns: boolean
+      }
+      whatsapp_cancel_follow_ups_for_conversation: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
       whatsapp_cancel_marketing_campaign: {
         Args: { p_campaign_id: string }
         Returns: undefined
+      }
+      whatsapp_claim_due_follow_up_tasks: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempt_count: number
+          conversation_id: string
+          id: string
+          kind: string
+          max_attempts: number
+          template_id: string
+          template_parameters: Json
+        }[]
       }
       whatsapp_claim_due_marketing_recipients: {
         Args: { p_limit?: number }
@@ -7245,6 +7323,10 @@ export type Database = {
           max_attempts: number
           template_id: string
         }[]
+      }
+      whatsapp_complete_follow_up_task: {
+        Args: { p_error?: string; p_status: string; p_task_id: string }
+        Returns: undefined
       }
       whatsapp_complete_marketing_recipient: {
         Args: {
@@ -7264,47 +7346,34 @@ export type Database = {
         }
         Returns: string
       }
-      whatsapp_list_marketing_campaigns: {
-        Args: { p_limit?: number }
+      whatsapp_crm_context: {
+        Args: { p_whatsapp_lead_id: string }
         Returns: {
-          cancelled_count: number
-          completed_at: string | null
-          created_at: string
-          failed_count: number
-          id: string
-          name: string
-          pending_count: number
-          processing_count: number
-          recipient_total: number
-          scheduled_at: string | null
-          sent_count: number
-          started_at: string | null
-          status: string
-          template_id: string
-          template_language_code: string
-          template_provider_name: string
+          case_assigned_to: string
+          case_assigned_to_name: string
+          case_city: string
+          case_degree_interest: string
+          case_education_level: string
+          case_full_name: string
+          case_id: string
+          case_reference: string
+          case_status: string
+          lead_city: string
+          lead_education_level: string
+          lead_full_name: string
+          lead_id: string
+          lead_preferred_major: string
+          lead_source_type: string
+          lead_status: string
+          profile_city: string
+          profile_full_name: string
+          profile_id: string
+          profile_student_status: string
+          profile_university_name: string
         }[]
       }
-      whatsapp_marketing_audience_count: {
-        Args: { p_filters?: Json }
-        Returns: number
-      }
-      whatsapp_claim_due_follow_up_tasks: {
-        Args: { p_limit?: number }
-        Returns: {
-          attempt_count: number
-          conversation_id: string
-          id: string
-          kind: string
-          max_attempts: number
-          template_id: string | null
-          template_parameters: Json
-        }[]
-      }
-      whatsapp_complete_follow_up_task: {
-        Args: { p_error?: string; p_status: string; p_task_id: string }
-        Returns: undefined
-      }
+      whatsapp_detect_intent: { Args: { p_text: string }; Returns: string }
+      whatsapp_detect_language: { Args: { p_text: string }; Returns: string }
       whatsapp_identity_suggestions: {
         Args: { p_whatsapp_lead_id: string }
         Returns: {
@@ -7327,13 +7396,38 @@ export type Database = {
         }
         Returns: undefined
       }
+      whatsapp_list_marketing_campaigns: {
+        Args: { p_limit?: number }
+        Returns: {
+          cancelled_count: number
+          completed_at: string
+          created_at: string
+          failed_count: number
+          id: string
+          name: string
+          pending_count: number
+          processing_count: number
+          recipient_total: number
+          scheduled_at: string
+          sent_count: number
+          started_at: string
+          status: string
+          template_id: string
+          template_language_code: string
+          template_provider_name: string
+        }[]
+      }
+      whatsapp_mark_conversation_read: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
+      whatsapp_marketing_audience_count: {
+        Args: { p_filters?: Json }
+        Returns: number
+      }
       whatsapp_resume_conversation: {
         Args: { p_conversation_id: string }
         Returns: Json
-      }
-      whatsapp_set_conversation_assignment: {
-        Args: { p_assigned_to?: string; p_conversation_id: string }
-        Returns: string
       }
       whatsapp_schedule_template_follow_up: {
         Args: {
@@ -7342,6 +7436,10 @@ export type Database = {
           p_parameters?: Json
           p_template_id: string
         }
+        Returns: string
+      }
+      whatsapp_set_conversation_assignment: {
+        Args: { p_assigned_to?: string; p_conversation_id: string }
         Returns: string
       }
       whatsapp_snooze_conversation: {
@@ -7361,8 +7459,8 @@ export type Database = {
         Args: { p_patch: Json; p_whatsapp_lead_id: string }
         Returns: undefined
       }
-      whatsapp_mark_conversation_read: {
-        Args: { p_conversation_id: string }
+      whatsapp_validate_marketing_filters: {
+        Args: { p_filters: Json }
         Returns: undefined
       }
     }
