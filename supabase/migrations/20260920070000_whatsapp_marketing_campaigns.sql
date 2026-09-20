@@ -128,8 +128,8 @@ BEGIN
     RAISE EXCEPTION 'Invalid campaign name';
   END IF;
 
-  IF p_scheduled_at IS NOT NULL AND p_scheduled_at <= now() THEN
-    RAISE EXCEPTION 'Scheduled time must be in the future';
+  IF p_scheduled_at IS NOT NULL AND p_scheduled_at < now() + interval '1 minute' THEN
+    RAISE EXCEPTION 'Scheduled time must be at least one minute in the future';
   END IF;
 
   PERFORM public.whatsapp_validate_marketing_filters(p_filters);
