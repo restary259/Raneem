@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, FileText, Inbox, Languages, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +40,23 @@ const STATES: ConversationState[] = ["waiting_for_team", "open", "waiting_for_st
 const PRIORITIES = ["normal", "high", "urgent"] as const;
 const INTENTS = ["medicine", "engineering", "computer_science", "language_course", "visa", "accommodation", "cost", "appointment", "documents", "application_status", "existing_student", "other"] as const;
 const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
+
+const QUICK_REPLIES_EN = [
+  { id: "hello", label: "Welcome / hello", text: "Hi! Thanks for contacting DARB. How can we help you today?" },
+  { id: "major", label: "Ask about major", text: "Absolutely. Which study program or major are you interested in?" },
+  { id: "appointment", label: "Offer appointment", text: "We can arrange a consultation with our team. What day and time works for you?" },
+  { id: "apply", label: "Send application link", text: "You can start your DARB application here: https://darb.agency/apply" },
+  { id: "documents", label: "Secure document upload", text: "Please upload your documents through your secure DARB portal rather than sending sensitive files here." },
+  { id: "payment", label: "Payment follow-up", text: "I can help you with the payment steps. Tell me which part you need clarification on." },
+];
+const QUICK_REPLIES_AR = [
+  { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب. كيف فينا نساعدك اليوم؟" },
+  { id: "major", label: "السؤال عن التخصص", text: "أكيد. شو التخصص أو مجال الدراسة اللي مهتم فيه؟" },
+  { id: "appointment", label: "اقتراح موعد", text: "ممكن نرتّبلك استشارة مع فريق درب. أي يوم ووقت بناسبك؟" },
+  { id: "apply", label: "إرسال رابط التقديم", text: "بتقدر تبدأ طلبك مع درب من هون: https://darb.agency/apply" },
+  { id: "documents", label: "رفع المستندات بشكل آمن", text: "يفضّل ترفع المستندات من خلال بوابة درب الآمنة بدل إرسال ملفات حساسة عبر واتساب." },
+  { id: "payment", label: "متابعة الدفع", text: "بقدر أساعدك بخطوات الدفع. خبرني بأي جزء بدك توضيح." },
+];
 const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documents_pending", "application_in_progress", "won", "lost"];
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
@@ -638,7 +655,32 @@ export default function WhatsAppInboxPage({
       </div>
       <Tabs defaultValue="dashboard" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         {canManageTemplates && <TabsList className="grid w-full max-w-[470px] shrink-0 grid-cols-2 overflow-hidden"><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger></TabsList>}
-        <TabsContent value="dashboard" className="m-0 min-w-0 space-y-4"><div className="grid gap-3 sm:grid-cols-3"><Metric icon={Sparkles} label={t("dashboard.newLeads")} value={newLeads} /><Metric icon={UsersRound} label={t("dashboard.unassigned")} value={unassigned} /><Metric icon={Clock3} label={t("dashboard.response")} value={responseAvg === null ? "—" : `${responseAvg} ${t("dashboard.minutes")}`} /></div><Card className="rounded-xl p-5 shadow-none"><h2 className="mb-4 font-semibold">{t("dashboard.byStage")}</h2>{threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{t(`stage.${s}`)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}</Card></TabsContent>
+        <TabsContent value="dashboard" className="m-0 min-w-0 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <Metric icon={Sparkles} label={t("dashboard.newLeads")} value={newLeads} />
+            <Metric icon={UsersRound} label={t("dashboard.unassigned")} value={unassigned} />
+            <Metric icon={Clock3} label={t("dashboard.response")} value={responseAvg === null ? "—" : `${responseAvg} ${t("dashboard.minutes")}`} />
+            <Metric icon={AlarmClock} label={t("dashboard.waitingForTeam")} value={waitingForTeam} />
+            <Metric icon={CheckCircle2} label={t("dashboard.slaOverdue")} value={slaOverdue} />
+          </div>
+          <div className="grid gap-3 lg:grid-cols-[1.3fr_0.7fr]">
+            <Card className="rounded-xl p-5 shadow-none">
+              <h2 className="mb-4 font-semibold">{t("dashboard.byStage")}</h2>
+              {threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{t(`stage.${s}`)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}
+            </Card>
+            <Card className="rounded-xl p-5 shadow-none">
+              <div className="flex items-center justify-between gap-2">
+                <div><h2 className="font-semibold">{t("dashboard.operationalTitle")}</h2><p className="mt-1 text-xs text-muted-foreground">{t("dashboard.operationalHelp")}</p></div>
+                <AlarmClock className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="flex items-center justify-between"><span>{t("dashboard.snoozed")}</span><Badge variant="secondary">{snoozed}</Badge></div>
+                <div className="flex items-center justify-between"><span>{t("dashboard.slaOverdue")}</span><Badge variant={slaOverdue ? "destructive" : "secondary"}>{slaOverdue}</Badge></div>
+                <div className="flex items-center justify-between"><span>{t("dashboard.waitingForTeam")}</span><Badge variant="secondary">{waitingForTeam}</Badge></div>
+              </div>
+            </Card>
+          </div>
+        </TabsContent>
         {canManageTemplates && <TabsContent value="templates" className="m-0 min-w-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-5"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge><div className="flex flex-col gap-2"><label className="flex items-center gap-2 text-xs"><Switch checked={x.is_active !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { is_active: value })} /><span>{t("templates.active", "Active")}</span></label><label className="flex items-center gap-2 text-xs"><Switch checked={x.available_to_team !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { available_to_team: value })} /><span>{t("templates.availableToTeam", "Available to team")}</span></label></div></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>}
       </Tabs>
       <Dialog open={startOpen} onOpenChange={setStartOpen}>
