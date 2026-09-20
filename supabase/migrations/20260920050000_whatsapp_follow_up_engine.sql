@@ -147,8 +147,10 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM public.whatsapp_conversations
     WHERE id = p_conversation_id
+      AND state NOT IN ('closed','resolved')
+      AND COALESCE(snoozed_until, now()) <= now()
   ) THEN
-    RAISE EXCEPTION 'Conversation not found';
+    RAISE EXCEPTION 'Conversation is not active for a scheduled follow-up';
   END IF;
 
   IF NOT EXISTS (
