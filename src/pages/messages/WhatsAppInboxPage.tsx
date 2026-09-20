@@ -228,6 +228,9 @@ export default function WhatsAppInboxPage({
         if (!templateId) return;
         await sendWhatsAppTemplate(active.id, templateId, templateParameters);
         setTemplateId(null); setTemplateParameters([]);
+      } else if (attachment) {
+        await sendWhatsAppMedia(active.id, attachment, (submittedText ?? composer).trim());
+        setAttachment(null); setComposer("");
       } else {
         const body = (submittedText ?? composer).trim();
         if (!body) return;
