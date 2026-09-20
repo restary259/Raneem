@@ -216,7 +216,7 @@ export default function CaseMessagesInboxPage() {
   const isMuted = selected ? muted.has(`${selected.type}:${selected.id}`) : false;
 
   const toggleMute = async () => {
-    if (!selected || !user?.id) return;
+    if (!selected || !user?.id || selected.type === "whatsapp") return;
     try {
       await setThreadMuted(user.id, selected.type, selected.id, !isMuted);
       setMuted((prev) => {
