@@ -490,6 +490,24 @@ a[href*="lovable.dev"] {
   padding-block: clamp(1.75rem, 4vh, 3rem);
 }
 
+@media (min-width: 1024px) {
+  .darb-home-hero {
+    /*
+     * Header is fixed on desktop, so it does not occupy document flow.
+     * The hero still begins at y=0 and intentionally sits behind the
+     * transparent header. Only the content panel needs an explicit anchor
+     * below the full header stack; otherwise the panel visually slides under
+     * the navigation bar.
+     */
+    align-items: flex-start;
+  }
+
+  .darb-home-hero-content {
+    flex: 1 1 auto;
+    padding-top: calc(var(--darb-header-height) + clamp(0.75rem, 1.5vw, 1.5rem));
+  }
+}
+
 .darb-home-hero-eyebrow {
   font-size: clamp(0.72rem, 0.72vw, 0.9rem);
 }
@@ -523,16 +541,8 @@ a[href*="lovable.dev"] {
 
 .darb-page-hero-inner {
   min-height: 100%;
-  padding-top: clamp(9rem, 11vw, 11.5rem);
+  padding-top: calc(var(--darb-header-height) + clamp(0.75rem, 2vh, 1.5rem));
   padding-bottom: clamp(2.5rem, 6vh, 4rem);
-}
-
-@media (min-width: 1024px) {
-  .darb-page-hero-inner {
-    /* Keep the translucent hero panel decisively below the two-row desktop
-       navigation while preserving the hero's overall height. */
-    padding-top: clamp(11rem, 12vw, 13rem);
-  }
 }
 
 .darb-page-hero-panel {
