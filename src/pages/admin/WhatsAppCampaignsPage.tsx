@@ -257,7 +257,7 @@ export default function WhatsAppCampaignsPage() {
               <Label>{t("campaigns.intent")}</Label>
               <Select value={intent} onValueChange={setIntent}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{INTENTS.map(([value, label]) => <SelectItem key={value || "all"} value={value || "all"}>{label}</SelectItem>)}</SelectContent>
+                <SelectContent>{INTENTS.map(([value, label]) => <SelectItem key={value || "all"} value={value || "all"}>{value ? t(`intent.${value}`, label) : t("campaigns.allIntents")}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
@@ -265,7 +265,7 @@ export default function WhatsAppCampaignsPage() {
               <Label>{t("campaigns.language")}</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{LANGUAGES.map(([value, label]) => <SelectItem key={value || "all"} value={value || "all"}>{label}</SelectItem>)}</SelectContent>
+                <SelectContent>{LANGUAGES.map(([value, label]) => <SelectItem key={value || "all"} value={value || "all"}>{value ? t(`language.${value}`, label) : t("campaigns.allLanguages")}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
@@ -273,13 +273,13 @@ export default function WhatsAppCampaignsPage() {
               <Label>{t("campaigns.stage")}</Label>
               <Select value={leadStage} onValueChange={setLeadStage}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STAGES.map(([value, label]) => <SelectItem key={value || "all"} value={value || "all"}>{label}</SelectItem>)}</SelectContent>
+                <SelectContent>{STAGES.map(([value, label]) => <SelectItem key={value || "all"} value={value || "all"}>{value ? t(`stage.${value}`, label) : t("campaigns.allStages")}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label>{t("campaigns.campaignKey")}</Label>
-              <Input value={campaignKey} onChange={(event) => setCampaignKey(event.target.value)} placeholder="Optional" />
+              <Input value={campaignKey} onChange={(event) => setCampaignKey(event.target.value)} placeholder={t("campaigns.optional")} />
             </div>
 
             <div className="space-y-2">
