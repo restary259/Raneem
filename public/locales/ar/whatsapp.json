@@ -245,7 +245,12 @@
     "lead": "عميل محتمل",
     "status": "الحالة",
     "source": "المصدر",
-    "open": "فتح"
+    "open": "فتح",
+    "city": "المدينة",
+    "major": "التخصص",
+    "education": "التعليم",
+    "assignedTo": "المسؤول",
+    "university": "الجامعة"
   },
   "priority": {
     "normal": "عادية",
