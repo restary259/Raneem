@@ -49,7 +49,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
               <ChevronDown className={'h-4 w-4 text-gray-500 transition-transform duration-200 ' + (studyPathOpen ? 'rotate-180' : '')} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
-              <Link onClick={close} to="/educational-programs" className={itemClass}>{t('nav.majors')}</Link>
               <Link onClick={close} to="/quiz" className={itemClass}>{t('nav.majorQuizNav')}</Link>
               <Link onClick={close} to="/ai-advisor" className={itemClass}>{t('nav.aiAdvisor')}</Link>
             </CollapsibleContent>
@@ -64,10 +63,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
               <Link onClick={close} to="/resources" className={itemClass}>{t('nav.resources')}</Link>
-              <Link onClick={close} to="/resources/bagrut-calculator" className={itemClass}>{t('nav.bagrutCalculator')}</Link>
-              <Link onClick={close} to="/resources/cost-calculator" className={itemClass}>{t('nav.costCalculator')}</Link>
-              <Link onClick={close} to="/resources/currency-converter" className={itemClass}>{t('nav.currencyConverter')}</Link>
-              <Link onClick={close} to="/resources/lebenslauf-builder" className={itemClass}>{t('nav.cvBuilder')}</Link>
               <Link onClick={close} to="/faq" className={itemClass}>{t('nav.faq')}</Link>
               <Link onClick={close} to="/broadcast" className={itemClass}>{t('nav.broadcast')}</Link>
               <Link onClick={close} to="/blog" className={itemClass}>{t('nav.blog')}</Link>
