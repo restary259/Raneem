@@ -387,7 +387,7 @@ export default function CaseMessagesInboxPage() {
               <ThreadList
                 items={items}
                 selectedId={selected?.id ?? null}
-                onSelect={(item) => setSelected({ type: item.type, id: item.id })}
+                onSelect={(item) => { if (item.type === "whatsapp") return; setSelected({ type: item.type, id: item.id }); }}
                 emptyLabel={t("messagesInbox.empty")}
                 onlineUserIds={online}
                 grouped={filter === "all"}
@@ -472,7 +472,6 @@ export default function CaseMessagesInboxPage() {
                     allowInternal
                     className="flex min-h-0 flex-1 flex-col"
                   />
-                ) : (
                 ) : (
                   <DirectMessages
                     key={activeDirect!.threadId}

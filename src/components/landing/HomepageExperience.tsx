@@ -16,6 +16,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
 import {
   Accordion,
   AccordionContent,

@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { readFunctionError } from "@/lib/functionError";
 
 type Tables = Database["public"]["Tables"];
@@ -57,12 +57,12 @@ export async function listWhatsAppStaff() {
 
 export async function updateConversation(id: string, patch: Tables["whatsapp_conversations"]["Update"]) {
   const allowed: Record<string, unknown> = {};
-  for (const key of ["state", "priority", "intent", "language_code", "campaign_key"]) {
+  for (const key of ["state", "priority", "intent", "language_code", "campaign_key"] as const) {
     if (key in patch) allowed[key] = patch[key];
   }
   const { error } = await supabase.rpc("whatsapp_update_conversation", {
     p_conversation_id: id,
-    p_patch: allowed,
+    p_patch: allowed as Json,
   });
   fail(error);
 }
@@ -176,12 +176,12 @@ export async function unlinkWhatsAppIdentity(whatsappLeadId: string) {
 
 export async function updateLead(id: string, patch: Tables["whatsapp_leads"]["Update"]) {
   const allowed: Record<string, unknown> = {};
-  for (const key of ["student_name", "country", "target_country", "desired_program", "language_level", "budget_range", "intended_start_date", "tags", "consent_status", "source"]) {
+  for (const key of ["student_name", "country", "target_country", "desired_program", "language_level", "budget_range", "intended_start_date", "tags", "consent_status", "source"] as const) {
     if (key in patch) allowed[key] = patch[key];
   }
   const { error } = await supabase.rpc("whatsapp_update_lead_fields", {
     p_whatsapp_lead_id: id,
-    p_patch: allowed,
+    p_patch: allowed as Json,
   });
   fail(error);
 }
@@ -257,7 +257,7 @@ export function setWhatsAppTemplateFlags(templateId: string, flags: { is_active?
 export async function setWhatsAppConversationAssignment(conversationId: string, assignedTo: string | null) {
   const { data, error } = await supabase.rpc("whatsapp_set_conversation_assignment", {
     p_conversation_id: conversationId,
-    p_assigned_to: assignedTo,
+    p_assigned_to: assignedTo ?? undefined,
   });
   fail(error);
   return data;
@@ -341,7 +341,7 @@ export async function createWhatsAppMarketingCampaign(input: {
     p_name: input.name.trim(),
     p_template_id: input.template_id,
     p_filters: input.filters ?? {},
-    p_scheduled_at: input.scheduled_at ?? null,
+    p_scheduled_at: input.scheduled_at ?? undefined,
   });
   fail(error);
   return String(data);

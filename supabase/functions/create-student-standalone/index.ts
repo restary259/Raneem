@@ -83,10 +83,14 @@ serve(async (req) => {
       });
     }
 
-    // Generate secure temporary password: 8 alphanum + symbols
+    // Generate secure temporary password with a cryptographically secure RNG
     const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
     const specials = "!@#$%";
-    const rand = (s: string) => s[Math.floor(Math.random() * s.length)];
+    const rand = (s: string) => {
+      const buf = new Uint32Array(1);
+      crypto.getRandomValues(buf);
+      return s[buf[0] % s.length];
+    };
     const tempPassword =
       rand("ABCDEFGHJKMNPQRSTUVWXYZ") +
       rand("abcdefghjkmnpqrstuvwxyz") +
