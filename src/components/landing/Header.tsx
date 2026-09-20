@@ -6,7 +6,7 @@ import MobileNav from './MobileNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useDirection } from '@/hooks/useDirection';
 import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
-import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contactConfig';
+import { SUPPORT_EMAIL, whatsappBusinessUrl } from '@/lib/contactConfig';
 
 const Header = () => {
   const { t } = useTranslation();
@@ -79,27 +79,26 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Mobile utility header: contact line, languages, hamburger */}
+          {/* Mobile utility header: fixed left logo, readable contact details, languages, fixed right menu */}
           <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
             <div className="flex min-w-0 flex-1 flex-col items-end justify-center text-foreground">
-              <div className="flex max-w-full items-center justify-end gap-1.5 whitespace-nowrap text-[9px] font-medium leading-none sm:text-[10px]">
-                <a
-                  href={`tel:${SUPPORT_PHONE}`}
-                  className="shrink-0"
-                  aria-label={`Call ${SUPPORT_PHONE}`}
-                >
-                  {SUPPORT_PHONE}
-                </a>
-                <span aria-hidden="true" className="text-muted-foreground">|</span>
-                <a
-                  href={`mailto:${SUPPORT_EMAIL}`}
-                  className="min-w-0 max-w-[118px] truncate text-muted-foreground"
-                  aria-label={`Email ${SUPPORT_EMAIL}`}
-                >
-                  {SUPPORT_EMAIL}
-                </a>
-              </div>
-              <LanguageSwitcher className="mt-1 [&>button]:text-[10px] [&>span]:text-[10px]" />
+              <a
+                href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="max-w-full whitespace-nowrap text-[11px] font-semibold leading-tight hover:text-brand-strong sm:text-xs"
+                aria-label="WhatsApp: +49 176 23790623"
+              >
+                +49 176 23790623
+              </a>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className="mt-0.5 max-w-full truncate text-[11px] leading-tight text-muted-foreground hover:text-foreground sm:text-xs"
+                aria-label={`Email ${SUPPORT_EMAIL}`}
+              >
+                {SUPPORT_EMAIL}
+              </a>
+              <LanguageSwitcher className="mt-1 [&>button]:text-[10px] sm:[&>button]:text-[11px] [&>span]:text-[10px] sm:[&>span]:text-[11px]" />
             </div>
 
             <MobileNav transparent={false} />
