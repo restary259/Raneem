@@ -278,7 +278,11 @@ export default function TeamCatalogPage() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 text-base font-semibold text-foreground">
                             <span aria-hidden>{partnerCountry?.flag_emoji || "🌍"}</span>
-                            <span className="truncate">{partnerCountry?.name_en && lang !== "ar" ? partnerCountry.name_en : countryLabel(c.country)}</span>
+                            <span className="truncate">
+                              {lang === "ar"
+                                ? partnerCountry?.name_ar || countryLabel(c.country)
+                                : partnerCountry?.name_en || countryLabel(c.country)}
+                            </span>
                           </div>
                           <p className="mt-1 max-w-prose text-sm leading-6 text-muted-foreground">
                             {description ||
