@@ -152,7 +152,7 @@ const ResourcesPage = () => {
         </div>
       </section>
 
-      <DarbContactCta />
+      <DarbContactCta variant="compact" />
       <Footer />
     </div>
   );
