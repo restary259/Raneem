@@ -345,6 +345,18 @@
       "eyebrow": "Your next step",
       "title": "You do not need to know the whole route today",
       "body": "Send your details so we can understand your profile, or speak with us directly on WhatsApp. We will help you identify the right first step."
+    },
+    "network": {
+      "eyebrow": "THE DARB NETWORK",
+      "title": "The ecosystem behind your route",
+      "body": "Connect the pieces that shape a Germany study journey: leading technical universities, trusted language-school destinations, and the language and aptitude tests students may encounter.",
+      "tu9Label": "TU9 universities",
+      "tu9Hint": "Germany’s leading technical university alliance",
+      "viewTu9": "Explore TU9",
+      "schoolsLabel": "Language-school network",
+      "schoolsHint": "Study locations and language preparation across Germany",
+      "viewSchools": "See study destinations",
+      "examsLabel": "Common exams & tests"
     }
   }
 }
