@@ -8,6 +8,7 @@ import Footer from '@/components/landing/Footer';
 import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
 import DarbPageHero from '@/components/common/DarbPageHero';
+import DarbContactCta from '@/components/common/DarbContactCta';
 import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Calculator, DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
@@ -115,6 +116,8 @@ const ResourcesPage = () => {
 
       <ToolsSection tools={tools} />
       <GuidesSection />
+
+      <DarbContactCta />
 
       {/* FAQ Section */}
       <section className="py-12 md:py-20 bg-gradient-to-b from-background to-primary/[0.03]">
