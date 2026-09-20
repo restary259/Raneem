@@ -17,6 +17,12 @@ export const WHATSAPP_BUSINESS_NUMBER = "4917623790623";
 /** Canonical WhatsApp link — use this for every public "message us" action. */
 export const WHATSAPP_BUSINESS_URL = `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}`;
 
+/** Canonical public WhatsApp link with optional attribution/intent text. */
+export function whatsappBusinessUrl(message?: string): string {
+  if (!message?.trim()) return WHATSAPP_BUSINESS_URL;
+  return `${WHATSAPP_BUSINESS_URL}?text=${encodeURIComponent(message.trim())}`;
+}
+
 /** Deprecated aliases kept so existing imports resolve to the canonical number. */
 export const WHATSAPP_SUPPORT_URL = WHATSAPP_BUSINESS_URL;
 export const WHATSAPP_PHONE_URL = WHATSAPP_BUSINESS_URL;
