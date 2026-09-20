@@ -182,6 +182,66 @@
         "description": "VICTORIA | Academy of Languages in Berlin focuses on German courses for university preparation and operates a broad language-exam portfolio.",
         "credentialsNote": "VICTORIA's published material identifies it as a telc Kompetenzzentrum Hochschule and a test centre for TestDaF, TOEFL and other exams."
       }
+    },
+    "selectionEyebrow": "WHY THESE INSTITUTIONS",
+    "selectionTitle": "A language year chosen around your university route",
+    "selectionBody": "DARB looks at the practical pieces that matter for an international student: progression through German levels, exam access, academic preparation, student support, accommodation and the city itself.",
+    "selection1": "Academic route",
+    "selection1Body": "The institution offers a clear route toward the language level or exam commonly needed for the next academic step.",
+    "selection2": "Exam access",
+    "selection2Body": "Where available, official test-centre and preparation options are shown so you can plan the year realistically.",
+    "selection3": "Student support",
+    "selection3Body": "We look for practical support around accommodation, orientation, activities or arrival — not just classroom hours.",
+    "selection4": "City fit",
+    "selection4Body": "The place you live shapes the language year. We therefore show the city, transport and life around the school.",
+    "atGlance": "AT A GLANCE",
+    "languageYearFocus": "Language-year focus",
+    "exams": "Exam route",
+    "studentServices": "Student support",
+    "schoolSource": "Source & current details",
+    "notDarbCredential": "School / awarding-body credential",
+    "sourceNote": "Open the official institution page for the current course, exam, price and availability details.",
+    "schoolFacts": {
+      "fu": {
+        "focusYear": "International language programs in Heidelberg",
+        "focusExams": "TestDaF, telc, TestAS and other international exams",
+        "focusSupport": "Accommodation, leisure activities and guidance for prospective international students",
+        "serviceHousing": "Accommodation options",
+        "serviceActivities": "Leisure activities",
+        "serviceAdvice": "Study-interest guidance"
+      },
+      "alpha": {
+        "focusLevels": "German A1–C2 and multiple intensities",
+        "focusAcademic": "School, university and Studienkolleg preparation",
+        "focusTesting": "Recognized test centre with university-focused telc offer",
+        "serviceFoundation": "Foundation / Studienkolleg preparation",
+        "serviceExams": "Exam preparation and exams",
+        "serviceAdvice": "Academic preparation"
+      },
+      "goacademy": {
+        "focusLevels": "German A1–C1 with intensive and high-intensive options",
+        "focusPathway": "University Pathway with application and enrolment support",
+        "focusAccommodation": "Accommodation for international students",
+        "servicePathway": "University Pathway",
+        "serviceHousing": "Accommodation",
+        "serviceLms": "Learning management system"
+      },
+      "perfekt": {
+        "focusLocation": "Three teaching locations in Dortmund city centre",
+        "focusStudy": "Study-preparatory intensive German courses",
+        "focusFlexibility": "Morning, afternoon, evening and online options",
+        "serviceCity": "Central Dortmund locations",
+        "serviceAccommodation": "Housing support via a partner service",
+        "serviceGallery": "School gallery and activities"
+      },
+      "victoria": {
+        "focusCampus": "Central Berlin Mitte campus",
+        "focusUniversity": "Language institute of VICTORIA | International University of Applied Sciences",
+        "focusModular": "Flexible and modular course formats",
+        "serviceHousing": "Downtown accommodation",
+        "serviceActivities": "Organized activities",
+        "serviceUniversity": "University-linked academic environment"
+      }
     }
   },
   "loader": {
