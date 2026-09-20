@@ -438,6 +438,23 @@ export default function AdminStudentsPage() {
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
+  useEffect(() => {
+    const requestedStudentId = new URLSearchParams(window.location.search).get("student");
+    if (!requestedStudentId) return;
+    const match = students.find((student) => student.id === requestedStudentId);
+    if (!match || selected?.id === requestedStudentId) return;
+
+    setSelected(match);
+    setEditing(false);
+    setEditingVisa(false);
+
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.delete("student");
+    window.history.replaceState(window.history.state, "", nextUrl.toString());
+  }, [students, selected?.id]);
+
+
+
   // ── FIX 4: Helper to refresh docs with uploader names ──
   const fetchDocsForStudent = useCallback(async (studentId: string) => {
     const { data: refreshedDocs } = await supabase
