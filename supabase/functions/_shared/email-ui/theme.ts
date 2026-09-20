@@ -20,7 +20,7 @@ export const LOGO_WIDTH = 132
 
 /** Contact — mirrors src/lib/contactConfig.ts */
 export const SUPPORT_WHATSAPP_URL = 'https://wa.me/4917623790623'
-export const SUPPORT_PHONE = '0507368283'
+export const SUPPORT_PHONE = '+49 176 23790623'
 
 /**
  * Socials — text links only. Icon images were hosted on a path that is not yet
