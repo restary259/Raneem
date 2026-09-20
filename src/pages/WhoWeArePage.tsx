@@ -133,7 +133,7 @@ const WhoWeArePage = () => {
 
                 <ServiceProcess title={t('whoWeAre.processTitle')} description={t('whoWeAre.processDesc')} className="bg-secondary/20" />
                 
-                <DarbContactCta />
+                <DarbContactCta variant="compact" />
             </main>
             <Footer />
         </div>;
