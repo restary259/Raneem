@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   cancelWhatsAppMarketingCampaign,
   createWhatsAppMarketingCampaign,
+  dispatchWhatsAppMarketingCampaigns,
   getWhatsAppMarketingAudienceCount,
   listWhatsAppMarketingCampaigns,
   listWhatsAppTemplates,
@@ -183,6 +184,17 @@ export default function WhatsAppCampaignsPage() {
         filters,
         scheduled_at: scheduled ? scheduled.toISOString() : null,
       });
+
+      // Start the first batch immediately for unscheduled campaigns. Cron remains
+      // the durable worker/retry path, so a failed kick cannot lose the campaign.
+      if (!scheduled) {
+        try {
+          await dispatchWhatsAppMarketingCampaigns();
+        } catch {
+          // Leave the campaign queued; the server-side cron will pick it up.
+        }
+      }
+
       toast({ description: scheduled ? t("campaigns.createdScheduled") : t("campaigns.createdNow") });
       setName("");
       setScheduledAt("");
@@ -284,7 +296,7 @@ export default function WhatsAppCampaignsPage() {
 
             <div className="space-y-2">
               <Label>{t("campaigns.source")}</Label>
-              <Input value={source} onChange={(event) => setSource(event.target.value)} placeholder="Optional" />
+              <Input value={source} onChange={(event) => setSource(event.target.value)} placeholder={t("campaigns.optional")} />
             </div>
 
             <div className="space-y-2">
@@ -303,7 +315,7 @@ export default function WhatsAppCampaignsPage() {
                 <span className="text-sm text-muted-foreground">{t("campaigns.optedIn")}</span>
               </div>
             </div>
-            <Button onClick={() => void createCampaign()} disabled={saving || !name.trim() || !templateId || !audienceCount}>
+            <Button onClick={() => void createCampaign()} disabled={saving || countLoading || !name.trim() || !templateId || !audienceCount}>
               <Send className="me-2 h-4 w-4" />
               {saving ? t("campaigns.creating") : scheduledAt ? t("campaigns.scheduleButton") : t("campaigns.launchButton")}
             </Button>
