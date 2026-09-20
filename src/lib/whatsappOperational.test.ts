@@ -23,9 +23,18 @@ describe("whatsapp operational helpers", () => {
     }, now)).toBe(true);
     expect(isWhatsAppSlaOverdue({
       first_response_at: "2026-09-20T09:30:00Z",
+      last_customer_message_at: "2026-09-20T09:20:00Z",
+      last_team_response_at: "2026-09-20T09:30:00Z",
       sla_due_at: "2026-09-20T09:59:59Z",
       state: "waiting_for_student",
     }, now)).toBe(false);
+    expect(isWhatsAppSlaOverdue({
+      first_response_at: "2026-09-20T09:30:00Z",
+      last_customer_message_at: "2026-09-20T10:00:01Z",
+      last_team_response_at: "2026-09-20T09:30:00Z",
+      sla_due_at: "2026-09-20T09:59:59Z",
+      state: "waiting_for_team",
+    }, now)).toBe(true);
   });
 
   it("calculates the remaining service-window time", () => {
