@@ -50,6 +50,38 @@ function templateBody(components: unknown) {
   return String(body?.text ?? "");
 }
 
+/**
+ * Best-effort compatibility bridge while the final migration set is still
+ * staged. Once the identity-bridge migration is applied, every staff-started
+ * conversation is resolved against the existing DARB graph before it is
+ * returned to the UI. Before that migration exists, the old start flow keeps
+ * working instead of failing on an undefined RPC.
+ */
+async function resolveDarbIdentity(admin: ReturnType<typeof createClient>, whatsappLeadId: string) {
+  const first = await admin.rpc("whatsapp_auto_resolve_identity", {
+    p_whatsapp_lead_id: whatsappLeadId,
+  });
+
+  if (first.error) {
+    // SQLSTATE 42883 = undefined_function. This is expected only while the
+    // identity-bridge migration is intentionally not yet applied.
+    if ((first.error as { code?: string }).code === "42883") return null;
+    throw first.error;
+  }
+
+  const resolution = (first.data ?? null) as { status?: string } | null;
+  if (resolution?.status !== "unknown") return resolution;
+
+  const second = await admin.rpc("whatsapp_ensure_core_lead", {
+    p_whatsapp_lead_id: whatsappLeadId,
+  });
+  if (second.error) {
+    if ((second.error as { code?: string }).code === "42883") return resolution;
+    throw second.error;
+  }
+  return second.data as { status?: string } | null;
+}
+
 async function provider(path: string, method: string, body?: unknown) {
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
   const whatsappKey = Deno.env.get("WHATSAPP_API_KEY");
@@ -157,6 +189,20 @@ serve(async (req) => {
         }
       }
       if (!lead) return json({ error: "WhatsApp lead could not be created" }, 500, corsHeaders);
+
+      // Reuse the same identity bridge for staff-started conversations. This
+      // means "new conversation" does not silently create a second DARB person
+      // when the number already belongs to a lead, case or student account.
+      if (!requestedCaseId && !requestedLeadId && !requestedProfileId) {
+        await resolveDarbIdentity(admin, lead.id);
+        const { data: refreshedLead, error: refreshError } = await admin
+          .from("whatsapp_leads")
+          .select("*")
+          .eq("id", lead.id)
+          .single();
+        if (refreshError) throw refreshError;
+        lead = refreshedLead;
+      }
 
       if (requestedCaseId || requestedLeadId || requestedProfileId) {
         const conflicts =
