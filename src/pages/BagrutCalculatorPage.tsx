@@ -6,6 +6,8 @@ import GpaCalculator from '@/components/calculator/GpaCalculator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import DarbPageHero from "@/components/common/DarbPageHero";
 import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import { GraduationCap } from 'lucide-react';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +26,7 @@ const BagrutCalculatorPage = () => {
         title={t('gpaCalculator.title')}
         subtitle={t('gpaCalculator.description')}
       />
+      <DarbPageHero compact eyebrow={t('gpaCalculator.eyebrow', 'BAGRUT')} imageUrl={DARB_PUBLIC_HERO_IMAGES.academic} imageAlt={t('gpaCalculator.imageAlt', 'Academic documents and study materials')} title={t('gpaCalculator.title')} subtitle={t('gpaCalculator.description')} />
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <Card>
