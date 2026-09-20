@@ -1,6 +1,6 @@
 # Raneem (DARB) ŌĆö Agent Notes
 
-Repository-specific context for the DARB case-management app (Vite + React + Supabase).
+Repository-specific context for the DARB case-management app (TanStack Start + React + Supabase). The application has already completed its TanStack Start migration; do not introduce a second framework migration for WhatsApp.
 
 ## White-screen / build-time env var guard (deployment safety)
 
