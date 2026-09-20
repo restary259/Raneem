@@ -70,10 +70,7 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Mobile Menu */}
-          <div className="lg:hidden flex-shrink-0">
-            <MobileNav transparent={!scrolled} />
-          </div>
+          {/* Mobile header — compact contact utility row + languages + menu */}\n          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">\n            <div className={"flex min-w-0 flex-1 flex-col items-end justify-center leading-none " + (scrolled ? "text-foreground" : "text-primary-foreground")}>\n              <div className="flex max-w-full items-center gap-1.5 whitespace-nowrap text-[10px] font-medium sm:text-[11px]">\n                <a href="tel:+4917623790623" className="shrink-0">{SUPPORT_PHONE}</a>\n                <span aria-hidden="true" className="opacity-40">|</span>\n                <a href={"mailto:" + SUPPORT_EMAIL} className="min-w-0 truncate">{SUPPORT_EMAIL}</a>\n              </div>\n              <div className="mt-1">\n                <LanguageSwitcher className="[&>button]:text-[11px] [&>span]:text-[11px]" />\n              </div>\n            </div>\n            <MobileNav transparent={!scrolled} />\n          </div>
         </div>
       </div>
     </header>
