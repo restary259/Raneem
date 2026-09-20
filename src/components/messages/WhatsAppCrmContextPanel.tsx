@@ -80,7 +80,7 @@ export default function WhatsAppCrmContextPanel({ lead, compact = false }: { lea
   }
 
   return (
-    <div className="border-b p-4"
+    <div className="border-b p-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
