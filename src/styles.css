@@ -523,10 +523,16 @@ a[href*="lovable.dev"] {
 
 .darb-page-hero-inner {
   min-height: 100%;
-  /* Header is in normal flow on non-home pages; reserve only the visual
-     clearance needed so the hero content never collides with navigation. */
-  padding-top: clamp(5.25rem, 9vh, 7rem);
+  padding-top: clamp(9rem, 11vw, 11.5rem);
   padding-bottom: clamp(2.5rem, 6vh, 4rem);
+}
+
+@media (min-width: 1024px) {
+  .darb-page-hero-inner {
+    /* Keep the translucent hero panel decisively below the two-row desktop
+       navigation while preserving the hero's overall height. */
+    padding-top: clamp(11rem, 12vw, 13rem);
+  }
 }
 
 .darb-page-hero-panel {
