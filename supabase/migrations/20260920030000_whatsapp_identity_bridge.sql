@@ -242,7 +242,7 @@ LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $whatsapp_crm$
 DECLARE
   v_linked_lead_id uuid;
   v_linked_case_id uuid;
@@ -303,7 +303,7 @@ BEGIN
     ON p.id = v_linked_profile_id
    AND p.deleted_at IS NULL;
 END;
-$;
+$whatsapp_crm$;
 
 REVOKE ALL ON FUNCTION public.whatsapp_crm_context(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.whatsapp_crm_context(uuid) TO authenticated;
