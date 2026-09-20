@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from '@/lib/router-compat';
 import { ExternalLink, HelpCircle, ShieldCheck } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
@@ -138,21 +137,7 @@ const FaqPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <div className="mt-14 border border-border bg-muted/20 px-6 py-8 text-center md:px-10 md:py-10">
-              <div className="mx-auto mb-5 h-24 w-24 overflow-hidden rounded-full border-4 border-background shadow-[0_12px_32px_rgba(17,17,17,0.12)] ring-1 ring-border">
-                <img src={DARB_CONTACT_ADVISOR_SRC} alt={t('meta.ctaTitle')} className="h-full w-full object-cover" loading="lazy" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">{t('meta.ctaTitle')}</h2>
-              <p className="mx-auto mb-6 max-w-2xl text-muted-foreground">{t('meta.ctaText')}</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <Button asChild size="lg">
-                  <Link to="/apply">{t('meta.ctaButton')}</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/contact">{t('meta.ctaSecondary')}</Link>
-                </Button>
-              </div>
-            </div>
+            <DarbContactCta className="mt-14" />
           </div>
         </section>
       </main>
