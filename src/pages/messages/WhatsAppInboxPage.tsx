@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
+  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -127,6 +127,11 @@ export default function WhatsAppInboxPage({
   const [startNumber, setStartNumber] = useState("");
   const [startName, setStartName] = useState("");
   const [starting, setStarting] = useState(false);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [followUpTemplateId, setFollowUpTemplateId] = useState<string | null>(null);
+  const [followUpParameters, setFollowUpParameters] = useState<string[]>([]);
+  const [followUpDueAt, setFollowUpDueAt] = useState("");
+  const [followUpSaving, setFollowUpSaving] = useState(false);
   const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -262,6 +267,28 @@ export default function WhatsAppInboxPage({
       await load();
     } catch (error) {
       toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    }
+  };
+
+  const scheduleFollowUp = async () => {
+    if (!active || !followUpTemplateId || !followUpDueAt || followUpSaving) return;
+    const due = new Date(followUpDueAt);
+    if (!Number.isFinite(due.getTime()) || due.getTime() <= Date.now()) {
+      toast({ variant: "destructive", description: t("snooze.invalidTime") });
+      return;
+    }
+    setFollowUpSaving(true);
+    try {
+      await scheduleWhatsAppTemplateFollowUp(active.id, due.toISOString(), followUpTemplateId, followUpParameters);
+      setFollowUpOpen(false);
+      setFollowUpTemplateId(null);
+      setFollowUpParameters([]);
+      setFollowUpDueAt("");
+      toast({ description: t("snooze.scheduled") });
+    } catch (error) {
+      toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    } finally {
+      setFollowUpSaving(false);
     }
   };
   const saveLead = async (patch: Parameters<typeof updateLead>[1]) => {
@@ -434,6 +461,7 @@ export default function WhatsAppInboxPage({
               <div className="flex flex-wrap items-center gap-2">
                 <Select value={active.priority ?? "normal"} onValueChange={(value) => void saveConversation({ priority: value })}><SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger><SelectContent>{PRIORITIES.map((priority) => <SelectItem key={priority} value={priority}>{t(`priority.${priority}`, priority)}</SelectItem>)}</SelectContent></Select>
                 {activeState === "snoozed" ? <Button size="sm" variant="outline" onClick={() => void unsnoozeConversation()}><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.unsnooze")}</Button> : <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="outline"><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.action")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"}><DropdownMenuItem onSelect={() => void snoozeConversation(60 * 60 * 1000)}>{t("snooze.hour")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(24 * 60 * 60 * 1000)}>{t("snooze.tomorrow")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(3 * 24 * 60 * 60 * 1000)}>{t("snooze.threeDays")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}
+                <Button size="sm" variant="outline" onClick={() => setFollowUpOpen(true)}><CalendarClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.schedule")}</Button>
                 <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{(rtl ? QUICK_REPLIES_AR : QUICK_REPLIES_EN).map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
@@ -721,6 +749,36 @@ export default function WhatsAppInboxPage({
         </TabsContent>
         {canManageTemplates && <TabsContent value="templates" className="m-0 min-w-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-5"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge><div className="flex flex-col gap-2"><label className="flex items-center gap-2 text-xs"><Switch checked={x.is_active !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { is_active: value })} /><span>{t("templates.active", "Active")}</span></label><label className="flex items-center gap-2 text-xs"><Switch checked={x.available_to_team !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { available_to_team: value })} /><span>{t("templates.availableToTeam", "Available to team")}</span></label></div></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>}
       </Tabs>
+      <Dialog open={followUpOpen} onOpenChange={setFollowUpOpen}>
+        <DialogContent dir={rtl ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle>{t("snooze.schedule")}</DialogTitle>
+            <DialogDescription>{t("snooze.scheduleHelp")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>{t("conversation.chooseTemplate")}</Label>
+              <Select value={followUpTemplateId ?? undefined} onValueChange={(value) => { setFollowUpTemplateId(value); setFollowUpParameters([]); }}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
+                <SelectContent>{sendableTemplates.filter((item) => item.category === "UTILITY").map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="wa-follow-up-time">{t("snooze.when")}</Label>
+              <Input id="wa-follow-up-time" type="datetime-local" className="mt-1" value={followUpDueAt} onChange={(event) => setFollowUpDueAt(event.target.value)} />
+            </div>
+            {followUpTemplateId && (() => {
+              const item = templates.find((template) => template.id === followUpTemplateId);
+              const body = Array.isArray(item?.components) ? item.components.find((part) => part && typeof part === "object" && String((part as Record<string, unknown>).type ?? "").toUpperCase() === "BODY") as Record<string, unknown> | undefined : undefined;
+              const textBody = String(body?.text ?? "");
+              const count = [...textBody.matchAll(/{{s*(d+)s*}}/g)].length;
+              return <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{textBody}</p>{Array.from({ length: count }, (_, index) => <Input key={index} className="mt-2" value={followUpParameters[index] ?? ""} onChange={(event) => setFollowUpParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>;
+            })()}
+          </div>
+          <DialogFooter><Button disabled={!followUpTemplateId || !followUpDueAt || followUpSaving} onClick={() => void scheduleFollowUp()}><CalendarClock className="me-2 h-4 w-4" />{t("snooze.schedule")}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={startOpen} onOpenChange={setStartOpen}>
         <DialogContent dir={rtl ? "rtl" : "ltr"}>
           <DialogHeader><DialogTitle>{t("start.title")}</DialogTitle><DialogDescription>{t("start.description")}</DialogDescription></DialogHeader>
