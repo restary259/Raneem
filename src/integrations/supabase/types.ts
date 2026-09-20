@@ -6589,6 +6589,22 @@ export type Database = {
           id: string
         }[]
       }
+      whatsapp_crm_context: {
+        Args: { p_whatsapp_lead_id: string }
+        Returns: {
+          case_full_name: string | null
+          case_id: string | null
+          case_reference: string | null
+          case_status: string | null
+          lead_full_name: string | null
+          lead_id: string | null
+          lead_source_type: string | null
+          lead_status: string | null
+          profile_full_name: string | null
+          profile_id: string | null
+          profile_student_status: string | null
+        }[]
+      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
