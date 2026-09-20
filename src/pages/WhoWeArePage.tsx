@@ -3,7 +3,6 @@ import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, FileText, Globe, Handshake, Star, Award, HeartHandshake, BookOpenCheck, Briefcase, Linkedin, ShieldCheck, Lightbulb, TrendingUp } from "lucide-react";
-import DarbContactCta from "@/components/common/DarbContactCta";
 import ServiceProcess from "@/components/services/ServiceProcess";
 import SEOHead from "@/components/common/SEOHead";
 import DarbPageHero from "@/components/common/DarbPageHero";
@@ -133,7 +132,6 @@ const WhoWeArePage = () => {
 
                 <ServiceProcess title={t('whoWeAre.processTitle')} description={t('whoWeAre.processDesc')} className="bg-secondary/20" />
                 
-                <DarbContactCta variant="compact" />
             </main>
             <Footer />
         </div>;
