@@ -29,7 +29,7 @@ import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads,
-  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead,
+  markConversationRead, requestWhatsAppAiAssist, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppTemplateFlags, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -552,4 +552,19 @@ function TagEditor({ label, tags, onChange, addLabel }: { label: string; tags: s
 }
 function Metric({ icon: Icon, label, value }: { icon: typeof Inbox; label: string; value: string | number }) {
   return <Card className="rounded-xl p-4 shadow-none"><div className="flex items-center justify-between"><div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div><div className="rounded-lg bg-muted p-2.5"><Icon className="h-5 w-5" /></div></div></Card>;
+}
+
+/** Attachments live in a private bucket, so each bubble asks for its own signed link. */
+function MediaBubble({ path, mime, filename, openLabel }: { path: string; mime: string | null; filename: string | null; openLabel: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void whatsAppMediaUrl(path).then((signed) => { if (!cancelled) setUrl(signed); }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [path]);
+  if (!url) return <div className="mb-1 h-24 w-40 animate-pulse rounded-md bg-muted" />;
+  if (mime?.startsWith("image/")) return <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={filename ?? ""} className="mb-1 max-h-56 rounded-md object-cover" /></a>;
+  if (mime?.startsWith("video/")) return <video src={url} controls className="mb-1 max-h-56 rounded-md" />;
+  if (mime?.startsWith("audio/")) return <audio src={url} controls className="mb-1 w-56" />;
+  return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
 }
