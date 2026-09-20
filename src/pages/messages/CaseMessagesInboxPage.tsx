@@ -55,13 +55,11 @@ import {
   startDirectThread,
   type DirectThread,
 } from "@/services/DirectMessageService";
-import WhatsAppInboxPage from "@/pages/messages/WhatsAppInboxPage";
-import { listWhatsAppThreads, type WhatsAppThread } from "@/services/WhatsAppService";
 
 const FS_CHAT =
   "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none";
 
-type Filter = "all" | "cases" | "direct" | "partners" | "whatsapp" | "unread";
+type Filter = "all" | "cases" | "direct" | "partners" | "unread";
 
 export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
@@ -74,12 +72,11 @@ export default function CaseMessagesInboxPage() {
 
   const [threads, setThreads] = useState<CaseMessageThread[]>([]);
   const [directThreads, setDirectThreads] = useState<DirectThread[]>([]);
-  const [whatsappThreads, setWhatsappThreads] = useState<WhatsAppThread[]>([]);
   const [muted, setMuted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [selected, setSelected] = useState<{ type: "case" | "direct" | "whatsapp"; id: string } | null>(null);
+  const [selected, setSelected] = useState<{ type: "case" | "direct"; id: string } | null>(null);
 
   const [staffOpen, setStaffOpen] = useState(false);
   const online = useOnlineUsers();
@@ -148,8 +145,6 @@ export default function CaseMessagesInboxPage() {
       .channel("messages-inbox")
       .on("postgres_changes", { event: "*", schema: "public", table: "case_messages" }, () => load())
       .on("postgres_changes", { event: "*", schema: "public", table: "direct_messages" }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, () => load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages" }, () => load())
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -157,16 +152,6 @@ export default function CaseMessagesInboxPage() {
   }, [load]);
 
   const items: ThreadListItem[] = useMemo(() => {
-    const whatsappItems: ThreadListItem[] = whatsappThreads.map((thread) => ({
-      id: thread.id,
-      type: "whatsapp" as const,
-      category: "whatsapp" as const,
-      title: thread.lead.student_name || thread.lead.whatsapp_number,
-      subtitle: thread.lead.whatsapp_number,
-      preview: thread.last_message_preview || t("messagesInbox.noMessagesYet"),
-      timestamp: thread.updated_at,
-      unread: thread.unread_count,
-    }));
     const caseItems: ThreadListItem[] = threads.map((thread) => ({
       id: thread.caseId,
       type: "case",
@@ -194,12 +179,11 @@ export default function CaseMessagesInboxPage() {
     }));
 
     const q = query.trim().toLowerCase();
-    return [...directItems, ...caseItems, ...whatsappItems]
+    return [...directItems, ...caseItems]
       .filter((item) => {
         if (filter === "cases" && item.category !== "cases") return false;
         if (filter === "direct" && item.category !== "direct") return false;
         if (filter === "partners" && item.category !== "partners") return false;
-        if (filter === "whatsapp" && item.category !== "whatsapp") return false;
         if (filter === "unread" && item.unread === 0) return false;
         if (!q) return true;
         return (
@@ -211,7 +195,7 @@ export default function CaseMessagesInboxPage() {
       .sort(
         (a, b) => new Date(b.timestamp ?? 0).getTime() - new Date(a.timestamp ?? 0).getTime(),
       );
-  }, [threads, directThreads, whatsappThreads, query, filter, t]);
+  }, [threads, directThreads, query, filter, t]);
 
   const caseUnread = threads.reduce((sum, thread) => sum + thread.unread, 0);
   const partnerThreads = directThreads.filter(
@@ -221,8 +205,7 @@ export default function CaseMessagesInboxPage() {
   const partnerUnread = partnerThreads.reduce((sum, thread) => sum + thread.unread, 0);
   const directUnread =
     directThreads.reduce((sum, thread) => sum + thread.unread, 0) - partnerUnread;
-  const whatsappUnread = whatsappThreads.reduce((sum, thread) => sum + thread.unread_count, 0);
-  const totalUnread = caseUnread + directUnread + partnerUnread + whatsappUnread;
+  const totalUnread = caseUnread + directUnread + partnerUnread;
 
   const activeCase =
     selected?.type === "case" ? threads.find((x) => x.caseId === selected.id) ?? null : null;
@@ -230,15 +213,10 @@ export default function CaseMessagesInboxPage() {
     selected?.type === "direct"
       ? directThreads.find((x) => x.threadId === selected.id) ?? null
       : null;
-  const activeWhatsApp =
-    selected?.type === "whatsapp"
-      ? whatsappThreads.find((x) => x.id === selected.id) ?? null
-      : null;
-
   const isMuted = selected ? muted.has(`${selected.type}:${selected.id}`) : false;
 
   const toggleMute = async () => {
-    if (!selected || !user?.id || selected.type === "whatsapp") return;
+    if (!selected || !user?.id) return;
     try {
       await setThreadMuted(user.id, selected.type, selected.id, !isMuted);
       setMuted((prev) => {
@@ -274,7 +252,6 @@ export default function CaseMessagesInboxPage() {
     { key: "direct", label: t("chat.section.direct"), count: directUnread },
     { key: "cases", label: t("chat.section.cases"), count: caseUnread },
     { key: "partners", label: t("chat.section.partners"), count: partnerUnread },
-    { key: "whatsapp", label: t("messagesInbox.whatsappTab", "WhatsApp"), count: whatsappUnread },
     { key: "unread", label: t("chat.filter.unread"), count: totalUnread },
   ];
 
@@ -282,7 +259,7 @@ export default function CaseMessagesInboxPage() {
     <div
       className={cn(
         "flex h-[calc(100dvh-7.5rem)] min-h-0 flex-col md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6",
-        /* On mobile an open conversation takes the whole surface, WhatsApp-style. */
+        /* On mobile an open conversation takes the whole surface. */
         selected ? "gap-0 p-0" : "gap-2 p-2",
       )}
     >
@@ -425,7 +402,7 @@ export default function CaseMessagesInboxPage() {
             selected ? `flex ${FS_CHAT}` : "hidden",
           )}
         >
-          {activeCase || activeDirect || activeWhatsApp ? (
+          {activeCase || activeDirect ? (
             <>
               <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card p-2 md:p-3">
                 <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -440,7 +417,7 @@ export default function CaseMessagesInboxPage() {
                   </Button>
                   <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate font-medium">
-                    {activeCase ? activeCase.caseName : activeWhatsApp ? activeWhatsApp.lead.student_name || activeWhatsApp.lead.whatsapp_number : activeDirect!.otherUserName}
+                    {activeCase ? activeCase.caseName : activeDirect!.otherUserName}
                     {activeDirect?.otherUserId && online.has(activeDirect.otherUserId) && (
                       <span className={`flex items-center gap-1 text-[11px] font-normal ${toneClasses("enrolled").text}`}>
                         <span className={`h-2 w-2 rounded-full ${toneClasses("enrolled").dot}`} />
@@ -451,9 +428,7 @@ export default function CaseMessagesInboxPage() {
                   <p className="truncate text-xs text-muted-foreground">
                     {activeCase
                       ? activeCase.caseReference ?? t("chat.type.case")
-                      : activeWhatsApp
-                        ? activeWhatsApp.lead.whatsapp_number
-                        : activeDirect!.otherUserRole
+                      : activeDirect!.otherUserRole
                         ? t(
                             `case.messages.role.${activeDirect!.otherUserRole}`,
                             activeDirect!.otherUserRole,
@@ -497,14 +472,7 @@ export default function CaseMessagesInboxPage() {
                     allowInternal
                     className="flex min-h-0 flex-1 flex-col"
                   />
-                ) : activeWhatsApp ? (
-                  <WhatsAppInboxPage
-                    key={activeWhatsApp.id}
-                    embedded
-                    conversationOnly
-                    conversationId={activeWhatsApp.id}
-                    onConversationClose={() => setSelected(null)}
-                  />
+                ) : (
                 ) : (
                   <DirectMessages
                     key={activeDirect!.threadId}
