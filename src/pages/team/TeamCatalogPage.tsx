@@ -205,7 +205,7 @@ export default function TeamCatalogPage() {
                         <span className="truncate">{countryLabel(c.country)}</span>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {c.schools.length.toLocaleString("en-US")} {c.schools.length === 1 ? "school" : "schools"}
+                        {c.schools.length.toLocaleString("en-US")}
                       </p>
                     </div>
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
