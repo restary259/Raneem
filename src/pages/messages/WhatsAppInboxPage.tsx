@@ -44,14 +44,6 @@ const PRIORITIES = ["normal", "high", "urgent"] as const;
 const INTENTS = ["medicine", "engineering", "computer_science", "language_course", "visa", "accommodation", "cost", "appointment", "documents", "application_status", "existing_student", "other"] as const;
 const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
 
-const QUICK_REPLIES_EN = [
-  { id: "hello", label: "Welcome / hello", text: "Hi! Thanks for contacting DARB. How can we help you today?" },
-  { id: "major", label: "Ask about major", text: "Absolutely. Which study program or major are you interested in?" },
-  { id: "appointment", label: "Offer appointment", text: "We can arrange a consultation with our team. What day and time works for you?" },
-  { id: "apply", label: "Send application link", text: "You can start your DARB application here: https://darb.agency/apply" },
-  { id: "documents", label: "Secure document upload", text: "Please upload your documents through your secure DARB portal rather than sending sensitive files here." },
-  { id: "payment", label: "Payment follow-up", text: "I can help you with the payment steps. Tell me which part you need clarification on." },
-];
 const QUICK_REPLIES_AR = [
   { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب. كيف فينا نساعدك اليوم؟" },
   { id: "major", label: "السؤال عن التخصص", text: "أكيد. شو التخصص أو مجال الدراسة اللي مهتم فيه؟" },
@@ -653,7 +645,7 @@ export default function WhatsAppInboxPage({
                     <Button size="sm" variant="outline" onClick={() => setFollowUpOpen(true)}><CalendarClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.schedule")}</Button>
                   </>
                 )}
-                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{(rtl ? QUICK_REPLIES_AR : QUICK_REPLIES_EN).map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
+                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLIES_AR.map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
                   service window it is locked and the template picker takes over. */}
