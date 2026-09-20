@@ -23,17 +23,12 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   ];
 
   const studyPath = [
-    { title: t('nav.majors'), href: '/educational-programs', description: t('seo.edProgDesc', { ns: 'common' }) },
     { title: t('nav.majorQuizNav'), href: '/quiz', description: t('seo.quizDesc', { ns: 'common' }) },
     { title: t('nav.aiAdvisor'), href: '/ai-advisor', description: t('seo.advisorDesc', { ns: 'common' }) },
   ];
 
   const resources = [
     { title: t('nav.resources'), href: '/resources', description: t('seo.resourcesDesc', { ns: 'common' }) },
-    { title: t('nav.bagrutCalculator'), href: '/resources/bagrut-calculator', description: t('seo.resourcesDesc', { ns: 'common' }) },
-    { title: t('nav.costCalculator'), href: '/resources/cost-calculator', description: t('seo.resourcesDesc', { ns: 'common' }) },
-    { title: t('nav.currencyConverter'), href: '/resources/currency-converter', description: t('seo.resourcesDesc', { ns: 'common' }) },
-    { title: t('nav.cvBuilder'), href: '/resources/lebenslauf-builder', description: t('seo.resourcesDesc', { ns: 'common' }) },
     { title: t('nav.faq'), href: '/faq', description: t('nav.faqDesc') },
     { title: t('nav.broadcast'), href: '/broadcast', description: t('nav.broadcastDesc') },
     { title: t('nav.blog'), href: '/blog', description: t('footer.blog') },
