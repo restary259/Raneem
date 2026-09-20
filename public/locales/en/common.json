@@ -94,6 +94,7 @@
     "errorPrefix": "Sorry, an error occurred:",
     "offlineReply": "You're currently offline. You can review previous conversations or try common questions.",
     "connectionError": "Failed to connect to AI assistant",
+    "signInRequired": "Please sign in to use the AI advisor.",
     "send": "Send"
   },
   "quickQuestions": [
