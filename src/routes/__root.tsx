@@ -94,7 +94,7 @@ const SPLASH_CSS = `
 .pwa-loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; color: #1a1a2e; font-family: 'Tajawal', sans-serif; opacity: 1; transition: opacity 0.5s ease; }
 .pwa-loading.hidden { opacity: 0; pointer-events: none; }
 .pwa-loading .loading-content { text-align: center; max-width: 300px; }
-.pwa-loading .loading-logo { width: 80px; height: 80px; margin: 0 auto 1rem; animation: pwa-pulse 2s infinite; }
+.pwa-loading .loading-logo { width: 112px; height: 112px; margin: 0 auto 1rem; animation: pwa-pulse 2s infinite; }
 .pwa-loading .loading-logo img { width: 100%; height: 100%; object-fit: contain; }
 @keyframes pwa-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 .pwa-loading .loading-text { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
@@ -156,8 +156,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "manifest", href: "/manifest.json", crossOrigin: "use-credentials" },
-      { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "64x64" },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "icon", href: "/favicon-v2.png", type: "image/png", sizes: "64x64" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon-v2.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: FONTS_HREF },

@@ -151,7 +151,7 @@ const ActivateAccountPage = () => {
           <img
             src={darbLogoAsset.url}
             alt={t("loader.brand", "Darb")}
-            className="h-12 w-auto object-contain mx-auto mb-4"
+            className="mx-auto mb-4 h-20 w-auto object-contain"
           />
           <h1 className="text-2xl font-bold text-card-foreground">{t("activate.title")}</h1>
         </div>
