@@ -159,6 +159,7 @@ AS $function$
   JOIN public.user_roles ur ON ur.user_id = p.id
   WHERE ur.role = 'team_member'
     AND p.deleted_at IS NULL
+    AND p.deactivated_at IS NULL
     AND p.id <> auth.uid()
     AND public.has_internal_team_chat_access(auth.uid())
   ORDER BY lower(p.full_name), p.id
@@ -206,7 +207,7 @@ BEGIN
     SELECT 1
     FROM public.profiles
     WHERE id = p_other_user
-      AND deleted_at IS NOT NULL
+      AND (deleted_at IS NOT NULL OR deactivated_at IS NOT NULL)
   ) THEN
     RAISE EXCEPTION 'The selected team member is unavailable';
   END IF;
