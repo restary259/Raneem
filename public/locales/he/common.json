@@ -138,23 +138,53 @@
     "schools": {
       "fu": {
         "description": "Academy of Languages של F+U בהיידלברג מציעה תוכניות גרמנית ומגוון בחינות בינלאומיות; החומרים שפורסמו על ידה מציינים TestDaF, TELC, TestAS, IELTS, TOEFL, TOEIC ו-LCCI.",
-        "credentialsNote": "אזכור ה-Excellence Award הוא פרס היסטורי משנת 2019 שמופיע בחומרי F+U שפורסמו."
+        "credentialsNote": "אזכור ה-Excellence Award הוא פרס היסטורי משנת 2019 שמופיע בחומרי F+U שפורסמו.",
+        "focusYear": "תוכניות שפה בינלאומיות בהיידלברג",
+        "focusExams": "TestDaF, telc, TestAS ובחינות בינלאומיות נוספות",
+        "focusSupport": "מגורים, פעילויות וייעוץ למועמדים בינלאומיים",
+        "serviceHousing": "אפשרויות מגורים",
+        "serviceActivities": "פעילויות פנאי",
+        "serviceAdvice": "ייעוץ למעוניינים בלימודים"
       },
       "alpha": {
         "description": "Alpha Aktiv מציעה קורסי גרמנית מ-A1 עד C2, הכנה לאוניברסיטה ולהבחינות, ומרכז בחינות מורשה.",
-        "credentialsNote": "האתר הנוכחי של Alpha Aktiv מציין AZAV, DIN EN ISO 9001 ואת המעמד telc Kompetenzzentrum Hochschule."
+        "credentialsNote": "האתר הנוכחי של Alpha Aktiv מציין AZAV, DIN EN ISO 9001 ואת המעמד telc Kompetenzzentrum Hochschule.",
+        "focusLevels": "גרמנית A1–C2 ובעוצמות שונות",
+        "focusAcademic": "הכנה לבית ספר, אוניברסיטה וStudienkolleg",
+        "focusTesting": "מרכז בחינות מוכר עם דגש אוניברסיטאי ל-telc",
+        "serviceFoundation": "הכנת Foundation / Studienkolleg",
+        "serviceExams": "הכנה ובחינות",
+        "serviceAdvice": "הכנה אקדמית"
       },
       "goacademy": {
         "description": "GoAcademy! Düsseldorf – International House משלבת קורסי גרמנית אינטנסיביים, הכנה למסלול אוניברסיטאי, הכנה לבחינות ומגורים לסטודנטים.",
-        "credentialsNote": "פרס Star Award הוא פרס לשנת 2026 שמופיע באתר הנוכחי של GoAcademy; סימונים אחרים מתארים חברות, הסמכות ומעמד כמרכז בחינות."
+        "credentialsNote": "פרס Star Award הוא פרס לשנת 2026 שמופיע באתר הנוכחי של GoAcademy; סימונים אחרים מתארים חברות, הסמכות ומעמד כמרכז בחינות.",
+        "focusLevels": "גרמנית A1–C1 עם מסלולים אינטנסיביים",
+        "focusPathway": "University Pathway עם תמיכה בבחירה, הגשה והרשמה",
+        "focusAccommodation": "מגורים לסטודנטים בינלאומיים",
+        "servicePathway": "מסלול אוניברסיטאי",
+        "serviceHousing": "מגורים",
+        "serviceLms": "מערכת למידה מקוונת"
       },
       "perfekt": {
         "description": "Perfekt Deutsch במרכז דורטמונד מתמקדת בקורסי גרמנית אינטנסיביים להכנה ללימודים ובבחינות שפה רשמיות.",
-        "credentialsNote": "האתר הנוכחי מציין מעמד של מרכז בחינות מורשה ל-telc ול-TestDaF ומציג גם TestAS ו-OnSET."
+        "credentialsNote": "האתר הנוכחי מציין מעמד של מרכז בחינות מורשה ל-telc ול-TestDaF ומציג גם TestAS ו-OnSET.",
+        "focusLocation": "שלושה מוקדי לימוד במרכז דורטמונד",
+        "focusStudy": "קורסי גרמנית אינטנסיביים כהכנה ללימודים",
+        "focusFlexibility": "אפשרויות בוקר, צהריים, ערב ואונליין",
+        "serviceCity": "מיקומים מרכזיים בדורטמונד",
+        "serviceAccommodation": "סיוע במגורים דרך שירות שותף",
+        "serviceGallery": "גלריית בית הספר ופעילויות"
       },
       "victoria": {
         "description": "VICTORIA | Academy of Languages בברלין מתמקדת בגרמנית כהכנה לאוניברסיטה ומציעה מגוון רחב של בחינות שפה.",
-        "credentialsNote": "החומרים שפורסמו על ידי VICTORIA מציינים telc Kompetenzzentrum Hochschule ומרכז בחינות ל-TestDaF, TOEFL ובחינות נוספות."
+        "credentialsNote": "החומרים שפורסמו על ידי VICTORIA מציינים telc Kompetenzzentrum Hochschule ומרכז בחינות ל-TestDaF, TOEFL ובחינות נוספות.",
+        "focusCampus": "קמפוס מרכזי בברלין מיטה",
+        "focusUniversity": "מכון השפות של VICTORIA | International University of Applied Sciences",
+        "focusModular": "פורמטים גמישים ומודולריים",
+        "serviceHousing": "מגורים במרכז ברלין",
+        "serviceActivities": "פעילויות מאורגנות",
+        "serviceUniversity": "סביבה אקדמית המקושרת לאוניברסיטה"
       }
     },
     "selectionEyebrow": "למה המוסדות האלה?",
