@@ -66,8 +66,9 @@ export default function TeamCatalogPage() {
 
   const countries = useMemo(() => (data ? groupByCountry(data.schools) : []), [data]);
 
-  // With a single country in the catalog, skip the selection step entirely.
-  const activeCountry = country ?? (countries.length === 1 ? countries[0].country : null);
+  // Country selection is always the first step of normal catalog navigation.
+  // Do not auto-select the only country (currently Germany).
+  const activeCountry = country;
 
   const countryLabel = (value: string) => value || t("catalog.otherCountry", "Other");
 
