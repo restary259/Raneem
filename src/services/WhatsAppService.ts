@@ -9,7 +9,8 @@ export type WhatsAppMessage = Tables["whatsapp_messages"]["Row"];
 export type WhatsAppNote = Tables["whatsapp_internal_notes"]["Row"];
 export type WhatsAppTemplate = Tables["whatsapp_templates"]["Row"];
 export type StaffMember = { id: string; full_name: string };
-export type ConversationState = "new" | "open" | "waiting" | "resolved";
+export type ConversationState = "new" | "open" | "waiting" | "resolved" | "waiting_for_team" | "waiting_for_student" | "snoozed" | "closed";
+export type WhatsAppPriority = "normal" | "high" | "urgent";
 export type LeadStage = "new" | "qualified" | "consultation_booked" | "documents_pending" | "application_in_progress" | "won" | "lost";
 
 export interface WhatsAppThread extends WhatsAppConversation { lead: WhatsAppLead }
