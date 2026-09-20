@@ -1,0 +1,66 @@
+{
+  "contactHero": {
+    "title": "אנחנו כאן כדי לעזור — צרו קשר עוד היום",
+    "subtitle": "בין אם אתם שואלים על קבלה, ויזות או דיור — צוות Darb מוכן לענות ולהדריך אתכם בכל שלב בדרך."
+  },
+  "contact": {
+    "title": "מלאו את הטופס כדי ליצור קשר",
+    "subtitle": "הצוות שלנו מוכן לענות על כל השאלות שלכם ולעזור לכם להשיג את המטרות האקדמיות שלכם.",
+    "form": {
+      "name": "שם מלא",
+      "namePlaceholder": "השם המלא שלכם",
+      "email": "אימייל",
+      "emailPlaceholder": "your.email@example.com",
+      "whatsapp": "מספר וואטסאפ",
+      "whatsappPlaceholder": "עם קידומת מדינה",
+      "destination": "מדינת עניין",
+      "destinationPlaceholder": "בחרו מדינה",
+      "destinationOptions": { "germany": "גרמניה", "romania": "רומניה", "jordan": "ירדן" },
+      "service": "שירות נדרש",
+      "servicePlaceholder": "בחרו שירות",
+      "serviceOptions": ["הגשת מועמדות לאוניברסיטה", "תרגום ואימות", "קורסי שפה", "ויזות ושהייה", "שירותי דיור", "קליטה ומעקב", "ייעוצים אישיים", "שאלה כללית"],
+      "message": "הודעה נוספת (אופציונלי)",
+      "messagePlaceholder": "כתבו כאן את ההודעה...",
+      "submit": "שלחו עכשיו",
+      "fullName": "שם מלא",
+      "phone": "מספר טלפון",
+      "phonePlaceholder": "עם קידומת מדינה",
+      "interestedMajor": "מסלול עניין",
+      "majorPlaceholder": "בחרו מסלול",
+      "city": "עיר",
+      "cityPlaceholder": "העיר שלכם",
+      "educationLevel": "רמת השכלה נוכחית",
+      "educationPlaceholder": "בחרו רמה",
+      "stillInSchool": "עדיין לומדים בבית ספר?",
+      "selectPlaceholder": "בחירה",
+      "englishUnits": "יחידות אנגלית",
+      "mathUnits": "יחידות מתמטיקה",
+      "majorOptions": {
+        "engineering": "הנדסה",
+        "business": "מנהל עסקים",
+        "medicine": "רפואה",
+        "humanities": "מדעי הרוח",
+        "natural-sciences": "מדעי הטבע"
+      },
+      "educationOptions": {
+        "highschool": "בית ספר תיכון",
+        "bagrut": "בגרות",
+        "bachelor": "תואר ראשון",
+        "master": "תואר שני"
+      },
+      "yesNo": { "yes": "כן", "no": "לא" }
+    },
+    "toast": {
+      "successTitle": "ההודעה נשלחה בהצלחה!",
+      "successDescription": "תודה שפניתם אלינו. אחד היועצים שלנו יחזור אליכם בקרוב."
+    },
+    "follow": "עקבו אחרינו",
+    "mapTitle": "המיקום שלנו על המפה",
+    "mapSubtitle": "חקרו את מיקומי המשרדים שלנו מסביב לעולם.",
+    "validation": {
+      "cityRequired": "העיר נדרשת",
+      "educationRequired": "רמת ההשכלה נדרשת",
+      "stillInSchoolRequired": "נא לבחור אם אתם עדיין בבית ספר"
+    }
+  }
+}

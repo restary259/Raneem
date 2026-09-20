@@ -2,6 +2,7 @@ import React, { useMemo, useCallback, lazy, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
+import { isRtlLng } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ const SOURCES = ['apply_page', 'manual', 'submit_new_student', 'social_media_par
 const AdminAnalyticsPage = () => {
   const { t, i18n } = useTranslation('dashboard');
   const { toast } = useToast();
-  const isRtl = i18n.language === 'ar';
+  const isRtl = isRtlLng(i18n.language);
 
   interface CaseRow {
     status: string;

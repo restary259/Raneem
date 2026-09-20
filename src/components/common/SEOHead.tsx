@@ -69,7 +69,7 @@ const SEOHead = ({ title, description, url, image, jsonLd, noindex }: SEOHeadPro
     setMeta('property', 'og:url', pageUrl);
     setMeta('property', 'og:type', 'website');
     setMeta('property', 'og:site_name', SITE_NAME);
-    setMeta('property', 'og:locale', document.documentElement.lang === 'en' ? 'en_US' : 'ar_AR');
+    setMeta('property', 'og:locale', document.documentElement.lang === 'en' ? 'en_US' : document.documentElement.lang === 'he' ? 'he_IL' : 'ar_AR');
 
     setMeta('name', 'twitter:title', title);
     setMeta('name', 'twitter:description', description);

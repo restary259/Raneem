@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Outlet } from "@tanstack/react-router";
 import { useNavigate, useLocation } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
+import { isRtlLng } from "@/i18n";
 import BottomNav from "@/components/common/BottomNav";
 import { registerServiceWorker } from "@/utils/pwaUtils";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
@@ -65,7 +66,7 @@ const AppShell = () => {
   }, []);
 
   useEffect(() => {
-    const dir = i18n.language === "ar" ? "rtl" : "ltr";
+    const dir = isRtlLng(i18n.language) ? "rtl" : "ltr";
     document.documentElement.lang = i18n.language;
     document.documentElement.dir = dir;
 
@@ -87,7 +88,7 @@ const AppShell = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const dir = i18n.language === "ar" ? "rtl" : "ltr";
+  const dir = isRtlLng(i18n.language) ? "rtl" : "ltr";
 
   // Mount non-critical floating widgets after the browser is idle so they never
   // compete with first paint on mobile. Behaviour/appearance is unchanged.
