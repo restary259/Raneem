@@ -5,7 +5,8 @@ import { ArrowLeft, ArrowRight, CalendarDays } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import SEOHead from '@/components/common/SEOHead';
-import PageHero from '@/components/common/PageHero';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { blogArticles, localeContent } from '@/content/blog';
@@ -49,7 +50,13 @@ const BlogIndexPage: React.FC = () => {
       />
       <Header />
       <main className="flex-1">
-        <PageHero title={t('index.title')} subtitle={t('index.subtitle')} badge={t('index.badge')} />
+        <DarbPageHero
+          eyebrow={t('index.badge')}
+          imageUrl={DARB_PUBLIC_HERO_IMAGES.journal}
+          imageAlt={t('index.imageAlt', 'Bright German library and study environment')}
+          title={t('index.title')}
+          subtitle={t('index.subtitle')}
+        />
 
         <section className="container mx-auto px-4 sm:px-6 py-12 md:py-16">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
