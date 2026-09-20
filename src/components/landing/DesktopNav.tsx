@@ -58,10 +58,10 @@ const DesktopNav = () => {
   return (
     <div className="flex justify-center w-full" dir={dir}>
       <NavigationMenu>
-        <NavigationMenuList className="flex items-center gap-1">
+        <NavigationMenuList className="flex items-stretch gap-1">
           {/* المزيد (dropdown) - First item */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="nav-item text-foreground/80 hover:text-brand-strong font-medium">
+            <NavigationMenuTrigger className="nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold">
               {t('nav.more')}
             </NavigationMenuTrigger>
             <NavigationMenuContent>
@@ -81,7 +81,7 @@ const DesktopNav = () => {
 
           {/* تواصل معنا */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item contact-glow font-medium`}>
+            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item rounded-none border-b-2 border-brand bg-muted/60 font-semibold text-brand-strong hover:bg-muted`}>
               <Link to="/contact">
                 {t('nav.contact')}
               </Link>
@@ -90,7 +90,7 @@ const DesktopNav = () => {
 
           {/* موارد */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item text-foreground/80 hover:text-brand-strong font-medium`}>
+            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold`}>
               <Link to="/resources">
                 {t('nav.resources')}
               </Link>
@@ -99,7 +99,7 @@ const DesktopNav = () => {
 
           {/* اختيار التخصص */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item text-foreground/80 hover:text-brand-strong font-medium`}>
+            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold`}>
               <Link to="/quiz">
                 {t('nav.majorQuizNav')}
               </Link>
@@ -108,7 +108,7 @@ const DesktopNav = () => {
 
           {/* التخصصات */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item text-foreground/80 hover:text-brand-strong font-medium`}>
+            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold`}>
               <Link to="/educational-programs">
                 {t('nav.majors')}
               </Link>
@@ -117,7 +117,7 @@ const DesktopNav = () => {
 
           {/* خدماتنا */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item text-foreground/80 hover:text-brand-strong font-medium`}>
+            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold`}>
               <Link to="/services">
                 {t('nav.services')}
               </Link>
@@ -126,7 +126,7 @@ const DesktopNav = () => {
 
           {/* من نحن (dropdown) */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="nav-item text-foreground/80 hover:text-brand-strong font-medium">
+            <NavigationMenuTrigger className="nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold">
               {t('nav.about')}
             </NavigationMenuTrigger>
             <NavigationMenuContent>
@@ -146,7 +146,7 @@ const DesktopNav = () => {
 
           {/* الرئيسية - Last item */}
           <NavigationMenuItem>
-            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item text-foreground/80 hover:text-brand-strong font-medium`}>
+            <NavigationMenuLink asChild className={`${navigationMenuTriggerStyle()} nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold`}>
               <Link to="/">
                 {t('nav.home')}
               </Link>
