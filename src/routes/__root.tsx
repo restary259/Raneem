@@ -160,7 +160,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: FONTS_HREF },
-      { rel: "canonical", href: "https://darb.agency/" },
       { rel: "dns-prefetch", href: "//fonts.googleapis.com" },
       { rel: "dns-prefetch", href: "//fonts.gstatic.com" },
       { rel: "stylesheet", href: appCss },
