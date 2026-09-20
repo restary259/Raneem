@@ -30,10 +30,10 @@ const DesktopNav = () => {
 
   const resources = [
     { title: t('nav.resources'), href: '/resources', description: t('seo.resourcesDesc', { ns: 'common' }) },
-    { title: t('nav.bagrutCalculator'), href: '/resources/bagrut-calculator', description: t('resources.gpaCalculator.description', { ns: 'resources' }) },
-    { title: t('nav.costCalculator'), href: '/resources/cost-calculator', description: t('resources.costCalculator.description', { ns: 'resources' }) },
-    { title: t('nav.currencyConverter'), href: '/resources/currency-converter', description: t('resources.currencyComparator.description', { ns: 'resources' }) },
-    { title: t('nav.cvBuilder'), href: '/resources/lebenslauf-builder', description: t('resources.lebenslaufBuilder.description', { ns: 'resources' }) },
+    { title: t('nav.bagrutCalculator'), href: '/resources/bagrut-calculator', description: t('seo.resourcesDesc', { ns: 'common' }) },
+    { title: t('nav.costCalculator'), href: '/resources/cost-calculator', description: t('seo.resourcesDesc', { ns: 'common' }) },
+    { title: t('nav.currencyConverter'), href: '/resources/currency-converter', description: t('seo.resourcesDesc', { ns: 'common' }) },
+    { title: t('nav.cvBuilder'), href: '/resources/lebenslauf-builder', description: t('seo.resourcesDesc', { ns: 'common' }) },
     { title: t('nav.faq'), href: '/faq', description: t('nav.faqDesc') },
     { title: t('nav.broadcast'), href: '/broadcast', description: t('nav.broadcastDesc') },
     { title: t('nav.blog'), href: '/blog', description: t('footer.blog') },
