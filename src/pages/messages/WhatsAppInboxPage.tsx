@@ -395,6 +395,23 @@ export default function WhatsAppInboxPage({
   const slaOverdue = threads.filter((x) => isWhatsAppSlaOverdue(x, now)).length;
   const snoozed = threads.filter((x) => isWhatsAppSnoozed("snoozed", x.snoozed_until, now)).length;
   const waitingForTeam = threads.filter((x) => normalizeWhatsAppState(x.state) === "waiting_for_team").length;
+  const intentSummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const thread of threads) {
+      const intent = thread.intent ?? "other";
+      counts.set(intent, (counts.get(intent) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  }, [threads]);
+  const campaignSummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const thread of threads) {
+      const campaign = thread.campaign_key?.trim();
+      if (!campaign) continue;
+      counts.set(campaign, (counts.get(campaign) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  }, [threads]);
   const responseSamples = threads.filter((x) => x.first_response_at).map((x) => (new Date(x.first_response_at!).getTime() - new Date(x.created_at).getTime()) / 60000).filter((x) => x >= 0);
   const responseAvg = responseSamples.length ? Math.round(responseSamples.reduce((a, b) => a + b, 0) / responseSamples.length) : null;
 
@@ -733,6 +750,16 @@ export default function WhatsAppInboxPage({
             <Metric icon={Clock3} label={t("dashboard.response")} value={responseAvg === null ? "—" : `${responseAvg} ${t("dashboard.minutes")}`} />
             <Metric icon={AlarmClock} label={t("dashboard.waitingForTeam")} value={waitingForTeam} />
             <Metric icon={CheckCircle2} label={t("dashboard.slaOverdue")} value={slaOverdue} />
+          </div>
+          <div className="grid gap-3 lg:grid-cols-[1.3fr_0.7fr]">
+            <Card className="rounded-xl p-5 shadow-none">
+              <h2 className="mb-4 font-semibold">{t("dashboard.intentDistribution", "Intent distribution")}</h2>
+              {intentSummary.length ? <div className="space-y-2">{intentSummary.map(([intent, count]) => <div key={intent} className="flex items-center justify-between rounded-lg border p-2.5 text-sm"><span>{t(`intent.${intent}`, intent)}</span><Badge variant="secondary">{count}</Badge></div>)}</div> : <p className="text-sm text-muted-foreground">{t("dashboard.noData")}</p>}
+            </Card>
+            <Card className="rounded-xl p-5 shadow-none">
+              <h2 className="mb-4 font-semibold">{t("dashboard.campaigns", "Campaigns")}</h2>
+              {campaignSummary.length ? <div className="space-y-2">{campaignSummary.map(([campaign, count]) => <div key={campaign} className="flex items-center justify-between rounded-lg border p-2.5 text-sm"><span className="truncate">{campaign}</span><Badge variant="secondary">{count}</Badge></div>)}</div> : <p className="text-sm text-muted-foreground">{t("dashboard.noCampaignData", "No campaign data yet.")}</p>}
+            </Card>
           </div>
           <div className="grid gap-3 lg:grid-cols-[1.3fr_0.7fr]">
             <Card className="rounded-xl p-5 shadow-none">
