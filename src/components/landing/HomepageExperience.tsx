@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { WHATSAPP_PHONE_URL } from "@/lib/contactConfig";
+import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 
 type TextItem = { title: string; description: string };
@@ -119,7 +119,7 @@ const HomepageExperience = () => {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="h-14 rounded-md border-primary-foreground/35 bg-primary/30 px-7 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer">
+                <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="h-5 w-5" />
                   {t("homepage.actions.whatsapp")}
                 </a>
