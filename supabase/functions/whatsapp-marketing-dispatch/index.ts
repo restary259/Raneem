@@ -211,26 +211,39 @@ serve(async (req) => {
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown marketing dispatch error";
 
-        // The connector persists the provider id before local message bookkeeping.
-        // Recover that id here so a post-provider crash never causes a duplicate send.
-        const { data: currentRecipient } = await admin
-          .from("whatsapp_campaign_recipients")
-          .select("provider_message_id")
-          .eq("id", recipient.id)
-          .maybeSingle();
+        // The connector records the outbound message against the recipient before
+        // final campaign bookkeeping. Recover either the recipient id or the
+        // stored message so a post-provider crash never causes a duplicate send.
+        const [{ data: currentRecipient }, { data: storedMessage }] = await Promise.all([
+          admin
+            .from("whatsapp_campaign_recipients")
+            .select("provider_message_id")
+            .eq("id", recipient.id)
+            .maybeSingle(),
+          admin
+            .from("whatsapp_messages")
+            .select("provider_message_id")
+            .eq("campaign_recipient_id", recipient.id)
+            .maybeSingle(),
+        ]);
 
-        if (currentRecipient?.provider_message_id) {
+        const recoveredProviderId =
+          currentRecipient?.provider_message_id ??
+          storedMessage?.provider_message_id ??
+          null;
+
+        if (recoveredProviderId) {
           await admin.rpc("whatsapp_complete_marketing_recipient", {
             p_recipient_id: recipient.id,
             p_status: "sent",
-            p_provider_message_id: currentRecipient.provider_message_id,
+            p_provider_message_id: recoveredProviderId,
             p_error: "Recovered after local bookkeeping error",
           }).catch(() => undefined);
           sent += 1;
           results.push({
             id: recipient.id,
             result: "recovered",
-            provider_message_id: currentRecipient.provider_message_id,
+            provider_message_id: recoveredProviderId,
           });
           continue;
         }
