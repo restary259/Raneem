@@ -255,7 +255,7 @@ const EducationalDestinationsPage = () => {
             <div className="mt-10 grid gap-5 lg:grid-cols-2">
               {languageYearCities.map((city) => (
                 <article key={city.id} className="group overflow-hidden border border-border bg-background shadow-surface transition-shadow hover:shadow-surface-lg">
-                  <div className="relative h-52 overflow-hidden">
+                  <div className="relative h-56 overflow-hidden sm:h-64">
                     <img
                       src={city.imageUrl}
                       alt={city.name}
@@ -315,6 +315,13 @@ const EducationalDestinationsPage = () => {
                         </a>
                       ))}
                     </div>
+                    {city.photoCredit ? (
+                      <div className="absolute bottom-2 left-3 z-10 text-[9px] font-medium text-white/80">
+                        <a href={city.photoCredit.url} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
+                          {city.photoCredit.label}
+                        </a>
+                      </div>
+                    ) : null}
                   </div>
                 </article>
               ))}
@@ -492,23 +499,33 @@ const EducationalDestinationsPage = () => {
               </p>
             </div>
 
-            <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {tu9Universities.map((uni) => (
                 <a
                   key={uni.name}
                   href={uni.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex min-h-28 flex-col justify-between border border-border bg-background p-5 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-surface"
+                  className="group flex min-h-40 flex-col justify-between border border-border bg-background p-5 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-surface"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <BadgeCheck className="h-4 w-4 text-brand-strong" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                      {t("destinations.universityDestination")}
-                    </span>
+                  <div className="flex h-16 items-center justify-start border-b border-border pb-4">
+                    <img
+                      src={uni.logoUrl}
+                      alt={uni.name + " logo"}
+                      className="max-h-12 max-w-[210px] object-contain object-left"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
                   </div>
-                  <div className="mt-4">
-                    <h3 className="font-bold text-primary group-hover:text-brand-strong">{uni.name}</h3>
+
+                  <div className="mt-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="font-bold text-primary group-hover:text-brand-strong">{uni.name}</h3>
+                      <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-brand-strong" />
+                    </div>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
                       {uni.city}
@@ -517,6 +534,10 @@ const EducationalDestinationsPage = () => {
                 </a>
               ))}
             </div>
+
+            <p className="mt-6 text-xs leading-6 text-muted-foreground">
+              {t("destinations.universityLogoNote")}
+            </p>
           </div>
         </section>
 
