@@ -19,7 +19,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import {
-  WHATSAPP_SUPPORT_URL,
+  whatsappBusinessUrl,
   SUPPORT_PHONE,
   SUPPORT_EMAIL,
 } from "@/lib/contactConfig";
@@ -154,7 +154,7 @@ export default function StudentOverviewSection() {
             </p>
             <div className="flex flex-wrap gap-2">
               <Button asChild className="gap-2" size="sm">
-                <a href={WHATSAPP_SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+                <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="h-4 w-4" />
                   {t("student.overview.whatsappCta", "Chat on WhatsApp")}
                 </a>
