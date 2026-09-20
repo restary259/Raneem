@@ -75,11 +75,11 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <span className="bg-destructive" />
         <span className="bg-brand" />
-        <span className="bg-accent" />
-        <span className="bg-primary" />
         <span className="bg-trust" />
+        <span className="bg-primary" />
         <span className="bg-secondary" />
         <span className="bg-brand" />
+        <span className="bg-primary" />
       </div>
     </section>
   );
