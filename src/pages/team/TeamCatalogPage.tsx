@@ -222,7 +222,7 @@ export default function TeamCatalogPage() {
   const schoolPhotoList = allPhotos(school?.photos);
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHeader
         title={t("nav.catalog", "Catalog")}
         subtitle={t(
@@ -248,7 +248,7 @@ export default function TeamCatalogPage() {
         />
       ) : (
         <>
-          <CatalogBreadcrumb items={crumbs} />
+          {school && <CatalogBreadcrumb items={crumbs} />}
 
           {/* Country selection is the first step, even when only one country exists. */}
           {!school && activeCountry == null && (
@@ -293,23 +293,7 @@ export default function TeamCatalogPage() {
                     {t("catalog.backToCountries", "Back")}
                   </Button>
                 }
-              >
-                {countries.length > 1 && (
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    {countries.map((c) => (
-                      <Button
-                        key={c.country || "__none__"}
-                        type="button"
-                        variant={(c.country || "") === activeCountry ? "secondary" : "outline"}
-                        size="sm"
-                        onClick={() => openCountry(c.country)}
-                      >
-                        {countryLabel(c.country)}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </PageHeader>
+              />
 
               <CatalogFilters
                 schools={countrySchools}
