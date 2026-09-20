@@ -350,6 +350,7 @@ DECLARE
   v_existing_at timestamptz;
   v_message_id uuid;
   v_pending record;
+  v_resolution jsonb;
 BEGIN
   IF v_delivery_id IS NULL THEN
     RAISE EXCEPTION 'delivery_id is required';
