@@ -2632,7 +2632,8 @@
     "commission": "Commission",
     "majorIntel": "Major Intelligence",
     "partnerSchools": "Partner Schools",
-    "whatsapp": "WhatsApp Inbox"
+    "whatsapp": "WhatsApp Inbox",
+    "whatsappCampaigns": "WhatsApp campaigns"
   },
   "case": {
     "status": {
