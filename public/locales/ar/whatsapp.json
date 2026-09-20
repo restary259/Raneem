@@ -13,13 +13,23 @@
     "all": "كل الحالات",
     "allOwners": "كل المسؤولين",
     "unassigned": "غير موزّع",
-    "unread": "غير المقروء فقط"
+    "unread": "غير المقروء فقط",
+    "mine": "لي",
+    "allPriorities": "كل الأولويات",
+    "allIntents": "كل المواضيع",
+    "allLanguages": "كل اللغات",
+    "sla": "تجاوز وقت الاستجابة",
+    "snoozed": "مؤجّلة"
   },
   "state": {
     "new": "جديد",
     "open": "مفتوح",
     "waiting": "بانتظار الطالب",
-    "resolved": "مغلق"
+    "resolved": "مغلق",
+    "waiting_for_team": "بانتظار الفريق",
+    "waiting_for_student": "بانتظار الطالب",
+    "snoozed": "مؤجّلة",
+    "closed": "مغلقة"
   },
   "stage": {
     "new": "جديد",
@@ -69,7 +79,13 @@
     "noTemplateReleased": "لا يوجد قالب معتمد متاح بعد. اطلب من المدير إتاحة قالب.",
     "attach": "إرفاق صورة أو ملف",
     "composerLocked": "لا يمكن إرسال رد حر حتى يكتب لك جهة الاتصال من جديد — أرسل قالباً معتمداً بالأسفل.",
-    "openFile": "فتح الملف"
+    "openFile": "فتح الملف",
+    "templateRequired": "يلزم قالب معتمد",
+    "remaining": "متبقي {{time}} من نافذة الخدمة",
+    "metadata": "بيانات المحادثة",
+    "campaignPlaceholder": "الحملة / رمز الدخول (اختياري)",
+    "sourceChannel": "قناة المصدر",
+    "lastCustomerMessage": "آخر رسالة من الطالب"
   },
   "profile": {
     "title": "ملف الطالب",
@@ -121,7 +137,12 @@
     "response": "متوسط أول رد",
     "minutes": "دقيقة",
     "byStage": "الطلاب حسب المرحلة",
-    "noData": "لا توجد إحصاءات بعد."
+    "noData": "لا توجد إحصاءات بعد.",
+    "waitingForTeam": "بانتظار الفريق",
+    "slaOverdue": "تجاوز وقت الاستجابة",
+    "snoozed": "مؤجّلة",
+    "operationalTitle": "طابور العمل",
+    "operationalHelp": "حالة المتابعة الحالية للفريق."
   },
   "templates": {
     "title": "قوالب الرسائل الصادرة المعتمدة",
@@ -204,5 +225,43 @@
     "status": "الحالة",
     "source": "المصدر",
     "open": "فتح"
+  },
+  "priority": {
+    "normal": "عادية",
+    "high": "مرتفعة",
+    "urgent": "عاجلة"
+  },
+  "intent": {
+    "medicine": "طب",
+    "engineering": "هندسة",
+    "computer_science": "علوم الحاسوب",
+    "language_course": "دورة لغة",
+    "visa": "فيزا",
+    "accommodation": "سكن",
+    "cost": "التكلفة",
+    "appointment": "موعد",
+    "documents": "وثائق",
+    "application_status": "حالة الطلب",
+    "existing_student": "طالب حالي",
+    "other": "أخرى"
+  },
+  "language": {
+    "ar": "العربية",
+    "he": "العبرية",
+    "en": "الإنجليزية",
+    "unknown": "غير معروف"
+  },
+  "sla": {
+    "overdue": "تجاوز وقت الاستجابة"
+  },
+  "snooze": {
+    "action": "تأجيل",
+    "hour": "ساعة",
+    "tomorrow": "غداً",
+    "threeDays": "3 أيام",
+    "unsnooze": "استئناف"
+  },
+  "quickActions": {
+    "title": "ردود سريعة"
   }
 }
