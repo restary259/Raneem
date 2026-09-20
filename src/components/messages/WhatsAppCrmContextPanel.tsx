@@ -32,7 +32,7 @@ export default function WhatsAppCrmContextPanel({ lead }: { lead: WhatsAppLead }
 
     setLoading(true);
     setLoadError(false);
-    void getWhatsAppCrmContext(lead)
+    void getWhatsAppCrmContext(lead.id)
       .then((next) => {
         if (!cancelled) setContext(next);
       })
