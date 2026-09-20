@@ -154,6 +154,8 @@ export default function WhatsAppInboxPage({
     () => templates.filter((item) => item.approval_status === "APPROVED" && item.is_active !== false && (canManageTemplates || item.available_to_team !== false)),
     [templates, canManageTemplates],
   );
+  // WhatsApp only allows free-form replies for 24h after the contact's last message.
+  const windowClosed = !!active && requiresApprovedTemplate(active.last_inbound_at);
   const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
   const selectedTemplateText = useMemo(() => {
     if (!selectedTemplate || !Array.isArray(selectedTemplate.components)) return "";
@@ -162,7 +164,7 @@ export default function WhatsAppInboxPage({
   }, [selectedTemplate]);
   const parameterCount = useMemo(() => [...selectedTemplateText.matchAll(/{{\s*(\d+)\s*}}/g)].length, [selectedTemplateText]);
   useEffect(() => {
-    setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]);
+    setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]); setAttachment(null);
     if (!selectedId) return;
     Promise.all([listConversationMessages(selectedId), listConversationNotes(selectedId)])
       .then(([m, n]) => { setMessages(m); setNotes(n); })
