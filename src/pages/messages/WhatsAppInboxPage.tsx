@@ -228,7 +228,8 @@ export default function WhatsAppInboxPage({
     if (q && !`${thread.lead.student_name} ${thread.lead.whatsapp_number} ${thread.last_message_preview ?? ""}`.toLowerCase().includes(q)) return false;
     if (stateFilter !== "all" && operationalState !== stateFilter) return false;
     if (ownerFilter === "unassigned" && thread.assigned_to) return false;
-    if (ownerFilter !== "all" && ownerFilter !== "unassigned" && thread.assigned_to !== ownerFilter) return false;
+    if (ownerFilter === "__mine__" && thread.assigned_to !== user?.id) return false;
+    if (ownerFilter !== "all" && ownerFilter !== "unassigned" && ownerFilter !== "__mine__" && thread.assigned_to !== ownerFilter) return false;
     if (unreadOnly && thread.unread_count === 0) return false;
     if (priorityFilter !== "all" && thread.priority !== priorityFilter) return false;
     if (intentFilter !== "all" && (thread.intent ?? "other") !== intentFilter) return false;
@@ -236,7 +237,7 @@ export default function WhatsAppInboxPage({
     if (slaOnly && !isWhatsAppSlaOverdue(thread, now)) return false;
     if (snoozedOnly && !isWhatsAppSnoozed("snoozed", thread.snoozed_until, now)) return false;
     return true;
-  }), [threads, query, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now]);
+  }), [threads, query, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now, user?.id]);
 
   const saveConversation = async (patch: Parameters<typeof updateConversation>[1]) => {
     if (!active) return;
@@ -487,11 +488,12 @@ export default function WhatsAppInboxPage({
               <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
               <div className="grid grid-cols-2 gap-2">
                 <Select value={stateFilter} onValueChange={setStateFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.all")}</SelectItem>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent></Select>
+                <Select value={ownerFilter} onValueChange={setOwnerFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allOwners")}</SelectItem><SelectItem value="__mine__">{t("filters.mine")}</SelectItem><SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>{staff.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name}</SelectItem>)}</SelectContent></Select>
                 <Select value={priorityFilter} onValueChange={setPriorityFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allPriorities")}</SelectItem>{PRIORITIES.map((p) => <SelectItem key={p} value={p}>{t(`priority.${p}`, p)}</SelectItem>)}</SelectContent></Select>
                 <Select value={intentFilter} onValueChange={setIntentFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allIntents")}</SelectItem>{INTENTS.map((intent) => <SelectItem key={intent} value={intent}>{t(`intent.${intent}`, intent)}</SelectItem>)}</SelectContent></Select>
                 <Select value={languageFilter} onValueChange={setLanguageFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allLanguages")}</SelectItem>{LANGUAGES.map((language) => <SelectItem key={language} value={language}>{t(`language.${language}`, language)}</SelectItem>)}</SelectContent></Select>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                 <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={unreadOnly} onCheckedChange={setUnreadOnly} aria-label={t("filters.unread")} />{t("filters.unread")}</label>
                 <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={slaOnly} onCheckedChange={setSlaOnly} aria-label={t("filters.sla")} />{t("filters.sla")}</label>
                 <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={snoozedOnly} onCheckedChange={setSnoozedOnly} aria-label={t("filters.snoozed")} />{t("filters.snoozed")}</label>
@@ -553,6 +555,32 @@ export default function WhatsAppInboxPage({
                       <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-0.5">{value || "—"}</dd></div>
                     ))}
                   </dl>
+                  <div className="border-t p-4">
+                    <h4 className="text-sm font-semibold">{t("conversation.metadata")}</h4>
+                    <div className="mt-3 grid gap-3">
+                      <Select value={active.intent ?? "other"} onValueChange={(value) => void saveConversation({ intent: value })}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>{INTENTS.map((intent) => <SelectItem key={intent} value={intent}>{t(`intent.${intent}`, intent)}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Select value={active.language_code ?? "unknown"} onValueChange={(value) => void saveConversation({ language_code: value })}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>{LANGUAGES.map((language) => <SelectItem key={language} value={language}>{t(`language.${language}`, language)}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Input
+                        className="h-9 text-xs"
+                        value={active.campaign_key ?? ""}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          if (value.length <= 80) void saveConversation({ campaign_key: value || null });
+                        }}
+                        placeholder={t("conversation.campaignPlaceholder")}
+                      />
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                        <div className="rounded-lg border bg-muted/20 p-2"><span className="block">{t("conversation.sourceChannel")}</span><span className="mt-1 block font-medium text-foreground">{active.source_channel ?? "whatsapp"}</span></div>
+                        <div className="rounded-lg border bg-muted/20 p-2"><span className="block">{t("conversation.lastCustomerMessage")}</span><span className="mt-1 block font-medium text-foreground">{active.last_customer_message_at ? fmt(active.last_customer_message_at, i18n.language) : "—"}</span></div>
+                      </div>
+                    </div>
+                  </div>
                   <div className="border-t p-4">
                     <h4 className="text-sm font-semibold">{t("notes.title")}</h4>
                     <div className="mt-2 space-y-2">
