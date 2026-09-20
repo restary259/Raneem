@@ -346,6 +346,10 @@
       "invalidDate": "The schedule is invalid.",
       "create": "Could not create the campaign.",
       "cancel": "Could not cancel the campaign."
-    }
+    },
+    "allIntents": "All intents",
+    "allLanguages": "All languages",
+    "allStages": "All stages",
+    "optional": "Optional"
   }
 }
