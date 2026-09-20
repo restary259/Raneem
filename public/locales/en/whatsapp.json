@@ -245,7 +245,12 @@
     "lead": "Lead",
     "status": "Status",
     "source": "Source",
-    "open": "Open"
+    "open": "Open",
+    "city": "City",
+    "major": "Major",
+    "education": "Education",
+    "assignedTo": "Assigned to",
+    "university": "University"
   },
   "priority": {
     "normal": "Normal",
