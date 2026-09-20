@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { SUPPORT_EMAIL, WHATSAPP_BUSINESS_NUMBER, WHATSAPP_PHONE_URL, whatsappBusinessUrl } from "@/lib/contactConfig";
+import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
 
@@ -74,7 +74,6 @@ const StudentFigure = ({
 
 const HomepageExperience = () => {
   const { t } = useTranslation("landing");
-  const { i18n } = useTranslation("common");
   const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
@@ -91,60 +90,6 @@ const HomepageExperience = () => {
   return (
     <div className="homepage-experience">
       <section className="relative flex min-h-[620px] items-center overflow-hidden bg-primary text-primary-foreground md:h-[calc(100svh-8.25rem)] md:min-h-[610px] md:max-h-[820px]">
-        <div
-          className="absolute inset-x-0 top-0 z-20 border-b border-primary-foreground/20 bg-transparent"
-          dir="ltr"
-        >
-          <div className="container mx-auto grid h-11 grid-cols-[1fr_auto_1fr] items-center px-4 text-xs font-medium sm:text-sm">
-            <div className="justify-self-start">
-              <div className="flex items-center gap-2 sm:gap-3" aria-label="Language selector">
-                <button
-                  type="button"
-                  onClick={() => i18n.changeLanguage("ar")}
-                  className={`underline-offset-4 hover:underline ${i18n.language === "ar" ? "font-bold text-primary-foreground" : "text-primary-foreground/75"}`}
-                  aria-label="العربية"
-                  aria-current={i18n.language === "ar" ? "true" : undefined}
-                >
-                  العربية
-                </button>
-                <span aria-hidden="true" className="text-primary-foreground/40">|</span>
-                <button
-                  type="button"
-                  onClick={() => i18n.changeLanguage("en")}
-                  className={`underline-offset-4 hover:underline ${i18n.language === "en" ? "font-bold text-primary-foreground" : "text-primary-foreground/75"}`}
-                  aria-label="English"
-                  aria-current={i18n.language === "en" ? "true" : undefined}
-                >
-                  English
-                </button>
-                <span aria-hidden="true" className="text-primary-foreground/40">|</span>
-                <button
-                  type="button"
-                  onClick={() => i18n.changeLanguage("he")}
-                  className={`underline-offset-4 hover:underline ${i18n.language === "he" ? "font-bold text-primary-foreground" : "text-primary-foreground/75"}`}
-                  aria-label="עברית"
-                  aria-current={i18n.language === "he" ? "true" : undefined}
-                >
-                  עברית
-                </button>
-              </div>
-            </div>
-            <a
-              href={`tel:+${WHATSAPP_BUSINESS_NUMBER}`}
-              className="justify-self-center whitespace-nowrap"
-              aria-label="DARB phone"
-            >
-              +49 176 23790623
-            </a>
-            <a
-              href={`mailto:${SUPPORT_EMAIL}`}
-              className="justify-self-end whitespace-nowrap"
-              aria-label="DARB email"
-            >
-              {SUPPORT_EMAIL}
-            </a>
-          </div>
-        </div>
         <img
           src={germanyHero}
           alt={t("homepage.hero.imageAlt")}
