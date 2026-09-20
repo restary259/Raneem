@@ -46,11 +46,14 @@ export default function WhatsAppInboxPage({
   conversationOnly = false,
   conversationId,
   onConversationClose,
+  canManageTemplates = false,
 }: {
   embedded?: boolean;
   conversationOnly?: boolean;
   conversationId?: string;
   onConversationClose?: () => void;
+  /** Admin only: show the Templates tab (sync, create, activate, release). */
+  canManageTemplates?: boolean;
 }) {
   const { t, i18n } = useTranslation("whatsapp");
   const [searchParams, setSearchParams] = useSearchParams();
