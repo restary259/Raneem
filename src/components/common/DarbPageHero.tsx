@@ -26,9 +26,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
     <section
       className={cn(
         "relative overflow-hidden bg-primary text-primary-foreground",
-        compact
-          ? "min-h-[380px] md:min-h-[470px]"
-          : "min-h-[480px] md:min-h-[600px]",
+        compact ? "darb-page-hero-compact" : "darb-page-hero-standard",
         className,
       )}
     >
@@ -45,17 +43,12 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       <div
         className={cn(
           "container relative z-10 flex items-center justify-center px-4",
-          compact
-            ? "min-h-[380px] pb-14 pt-24 md:min-h-[470px] md:pb-16 md:pt-28"
-            : "min-h-[480px] pb-16 pt-28 md:min-h-[600px] md:pb-20 md:pt-36",
+          "darb-page-hero-inner",
         )}
       >
         <div
           className={cn(
-            "w-full bg-primary/70 text-center shadow-surface-lg backdrop-blur-[2px]",
-            compact
-              ? "max-w-2xl px-6 py-8 md:px-12 md:py-10"
-              : "max-w-3xl px-6 py-10 md:px-14 md:py-14",
+            "darb-page-hero-panel w-full bg-primary/70 text-center shadow-surface-lg backdrop-blur-[2px]",
           )}
         >
           {eyebrow ? (
@@ -64,17 +57,12 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
             </p>
           ) : null}
           <h1
-            className={cn(
-              "font-bold leading-tight",
-              compact
-                ? "text-4xl md:text-6xl"
-                : "text-4xl md:text-7xl",
-            )}
+            className="darb-page-hero-title font-bold leading-tight"
           >
             {title}
           </h1>
           {subtitle ? (
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-primary-foreground/90 md:text-lg">
+            <p className="darb-page-hero-subtitle mx-auto mt-5 max-w-2xl text-base leading-8 text-primary-foreground/90">
               {subtitle}
             </p>
           ) : null}
