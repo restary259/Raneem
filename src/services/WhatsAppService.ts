@@ -128,6 +128,36 @@ export function sendWhatsAppText(conversationId: string, body: string) {
   return invokeWhatsAppConnector<{ message: WhatsAppMessage }>({ action: "send", conversation_id: conversationId, body });
 }
 
+const MEDIA_KIND = (mime: string) =>
+  mime.startsWith("image/") ? "image" : mime.startsWith("video/") ? "video" : mime.startsWith("audio/") ? "audio" : "document";
+
+/**
+ * Attachments live in the staff-only `whatsapp-media` bucket; the connector
+ * hands WhatsApp a short-lived signed URL, so the file is never public.
+ */
+export async function sendWhatsAppMedia(conversationId: string, file: File, caption: string) {
+  const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(-80) || "file";
+  const path = `${conversationId}/${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage.from("whatsapp-media").upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+  fail(error);
+  return invokeWhatsAppConnector<{ message: WhatsAppMessage }>({
+    action: "send",
+    conversation_id: conversationId,
+    body: caption,
+    media_path: path,
+    media_type: MEDIA_KIND(file.type || ""),
+    media_mime: file.type || null,
+    media_filename: file.name,
+  });
+}
+
+/** Signed URL so staff can open an attachment from the private bucket. */
+export async function whatsAppMediaUrl(path: string) {
+  const { data, error } = await supabase.storage.from("whatsapp-media").createSignedUrl(path, 60 * 60);
+  fail(error);
+  return data?.signedUrl ?? null;
+}
+
 export function sendWhatsAppTemplate(conversationId: string, templateId: string, parameters: string[]) {
   return invokeWhatsAppConnector<{ message: WhatsAppMessage }>({ action: "send", conversation_id: conversationId, template_id: templateId, parameters });
 }
