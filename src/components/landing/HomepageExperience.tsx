@@ -6,10 +6,13 @@ import {
   Building2,
   Check,
   CircleCheck,
+  Compass,
   FileCheck2,
   GraduationCap,
   HeartHandshake,
   Home,
+  Languages,
+  MapPin,
   MessageCircle,
   Plane,
   SearchCheck,
@@ -25,24 +28,15 @@ import {
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
-import { languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
+import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
 
 const serviceIcons = [SearchCheck, FileCheck2, ShieldCheck, Home, HeartHandshake];
-const ecosystemExams = ["TestDaF", "telc", "TestAS", "DSH", "IELTS", "TOEFL", "OnSET"];
+const routeIcons = [GraduationCap, Languages, Compass];
 const journeyIcons = [SearchCheck, FileCheck2, Plane, GraduationCap];
-
-const SectionIntro = ({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) => (
-  <div className="max-w-2xl">
-    <p className="text-xs font-bold uppercase text-brand-strong">{eyebrow}</p>
-    <h2 className="mt-3 text-3xl font-bold leading-tight text-primary sm:text-4xl lg:text-5xl">
-      {title}
-    </h2>
-    <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">{body}</p>
-  </div>
-);
+const ecosystemExams = ["TestDaF", "telc", "TestAS", "DSH", "IELTS", "TOEFL", "OnSET"];
 
 const StudentFigure = ({
   student,
@@ -56,7 +50,7 @@ const StudentFigure = ({
   className?: string;
 }) => (
   <figure
-    className={`relative aspect-[3/4] w-[70vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-md sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""} ${className ?? ""}`}
+    className={`relative aspect-[3/4] w-[64vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-2xl ${index % 3 === 1 ? "sm:translate-y-8" : ""} ${className ?? ""}`}
   >
     <img
       src={student.image}
@@ -66,8 +60,8 @@ const StudentFigure = ({
       className="h-full w-full object-cover"
       style={{ objectPosition: student.focus || "50% 40%" }}
     />
-    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent" />
-    <figcaption className="absolute inset-x-0 bottom-0 p-4">
+    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/5 to-transparent" />
+    <figcaption className="absolute inset-x-0 bottom-0 p-4 text-primary-foreground">
       {student.name ? <p className="font-bold">{student.name}</p> : null}
       <p className="text-sm text-primary-foreground/70">{student.destination}</p>
     </figcaption>
@@ -78,16 +72,17 @@ const HomepageExperience = () => {
   const { t } = useTranslation("landing");
   const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
+  const routes = t("homepage.routes.items", { returnObjects: true }) as TextItem[];
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
   const steps = t("homepage.journey.steps", { returnObjects: true }) as TextItem[];
   const students = t("studentGallery.students", { returnObjects: true }) as GalleryStudent[];
+  const included = t("homepage.scope.included", { returnObjects: true }) as string[];
+  const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
+  const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
+
   const half = Math.ceil(students.length / 2);
   const topStudents = students.slice(0, half);
   const bottomStudents = students.slice(half);
-  const included = t("homepage.scope.included", { returnObjects: true }) as string[];
-  const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
-  const parentPoints = t("homepage.parents.points", { returnObjects: true }) as string[];
-  const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
 
   return (
     <div className="homepage-experience">
@@ -137,97 +132,68 @@ const HomepageExperience = () => {
         </div>
       </section>
 
+      <div className="darb-flight-transition relative h-20 overflow-hidden bg-background" aria-hidden="true">
+        <svg className="absolute inset-x-[7%] top-1/2 h-12 w-[86%] -translate-y-1/2" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M0,90 C220,15 430,15 600,65 S980,115 1200,28" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="6 10" className="text-border" />
+        </svg>
+        <div className="darb-flight-plane absolute left-[7%] top-1/2 -translate-y-1/2 text-brand" aria-hidden="true">
+          <Plane className="h-5 w-5" />
+        </div>
+      </div>
+
       <section aria-labelledby="homepage-network-title" className="overflow-hidden bg-primary text-primary-foreground">
-        <div className="container py-14 sm:py-16 lg:py-18">
-          <div className="max-w-3xl">
-            <p className="text-[0.68rem] font-bold uppercase tracking-[0.28em] text-brand">
-              {t("homepage.network.eyebrow")}
-            </p>
-            <h2 id="homepage-network-title" className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">
-              {t("homepage.network.title")}
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/70 sm:text-base">
-              {t("homepage.network.body")}
-            </p>
+        <div className="container py-12 sm:py-14 lg:py-16">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.28em] text-brand">{t("homepage.network.eyebrow")}</p>
+              <h2 id="homepage-network-title" className="mt-2 max-w-2xl text-2xl font-bold leading-tight sm:text-3xl">
+                {t("homepage.network.title")}
+              </h2>
+            </div>
+            <p className="max-w-sm text-sm leading-6 text-primary-foreground/60 sm:text-end">{t("homepage.network.body")}</p>
           </div>
 
-          <div className="mt-10">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary-foreground/45">
-                  {t("homepage.network.tu9Label")}
-                </p>
-                <p className="mt-1 text-sm text-primary-foreground/60">{t("homepage.network.tu9Hint")}</p>
-              </div>
-              <a
-                href="https://www.tu9.de/en/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden text-xs font-semibold text-brand transition-opacity hover:opacity-80 sm:block"
-              >
-                {t("homepage.network.viewTu9")}
-              </a>
+          <div className="mt-9">
+            <div className="flex items-center justify-between">
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary-foreground/45">{t("homepage.network.tu9Label")}</p>
+              <a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-brand hover:opacity-80">{t("homepage.network.viewTu9")}</a>
             </div>
-            <div className="-mx-4 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-9 lg:overflow-visible lg:px-0">
+            <div className="mt-4 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-9 lg:overflow-visible lg:px-0">
               {tu9Universities.map((uni) => (
                 <a
                   key={uni.name}
                   href={uni.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex min-w-[118px] snap-start flex-col items-center justify-center rounded-md border border-primary-foreground/10 bg-primary-foreground/[0.035] px-3 py-4 text-center transition-colors hover:border-brand/40 hover:bg-primary-foreground/[0.07] lg:min-w-0"
                   title={uni.name}
+                  className="group flex min-w-[112px] snap-start flex-col items-center justify-center rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.035] px-2 py-4 transition-colors hover:border-brand/40 hover:bg-primary-foreground/[0.07] lg:min-w-0"
                 >
                   <div className="flex h-12 w-full items-center justify-center">
-                    <img
-                      src={uni.logoUrl}
-                      alt={uni.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="max-h-10 w-auto max-w-[105px] object-contain opacity-70 brightness-0 invert transition-opacity group-hover:opacity-100"
-                    />
+                    <img src={uni.logoUrl} alt={uni.name} loading="lazy" decoding="async" className="max-h-10 w-auto max-w-[100px] object-contain opacity-70 brightness-0 invert transition-opacity group-hover:opacity-100" />
                   </div>
-                  <span className="mt-3 line-clamp-2 text-[0.68rem] font-semibold leading-4 text-primary-foreground/60 group-hover:text-primary-foreground/90">
-                    {uni.city}
-                  </span>
+                  <span className="mt-2 text-[0.66rem] font-semibold tracking-wide text-primary-foreground/55 group-hover:text-primary-foreground/90">{uni.city}</span>
                 </a>
               ))}
             </div>
           </div>
 
-          <div className="mt-10 border-t border-primary-foreground/10 pt-8">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary-foreground/45">
-                  {t("homepage.network.schoolsLabel")}
-                </p>
-                <p className="mt-1 text-sm text-primary-foreground/60">{t("homepage.network.schoolsHint")}</p>
-              </div>
-              <a
-                href="/educational-programs"
-                className="hidden text-xs font-semibold text-brand transition-opacity hover:opacity-80 sm:block"
-              >
-                {t("homepage.network.viewSchools")}
-              </a>
+          <div className="mt-8 border-t border-primary-foreground/10 pt-7">
+            <div className="flex items-center justify-between">
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary-foreground/45">{t("homepage.network.schoolsLabel")}</p>
+              <Link to="/educational-programs" className="text-xs font-semibold text-brand hover:opacity-80">{t("homepage.network.viewSchools")}</Link>
             </div>
-            <div className="-mx-4 mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0">
+            <div className="mt-4 -mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-6 lg:overflow-visible lg:px-0">
               {languageYearSchools.map((school) => (
                 <a
                   key={school.name}
                   href={school.officialUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex min-w-[148px] snap-start items-center justify-center rounded-md bg-background px-4 py-4 transition-shadow hover:shadow-surface lg:min-w-0"
                   title={school.name}
+                  className="group flex min-w-[150px] snap-start items-center justify-center rounded-xl bg-background px-3 py-4 transition-transform hover:-translate-y-0.5 hover:shadow-surface lg:min-w-0"
                 >
                   {school.logoUrl ? (
-                    <img
-                      src={school.logoUrl}
-                      alt={school.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="max-h-12 w-auto max-w-[145px] object-contain"
-                    />
+                    <img src={school.logoUrl} alt={school.name} loading="lazy" decoding="async" className="max-h-12 w-auto max-w-[150px] object-contain" />
                   ) : (
                     <span className="text-sm font-semibold text-primary">{school.name}</span>
                   )}
@@ -236,218 +202,303 @@ const HomepageExperience = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 border-t border-primary-foreground/10 pt-7 sm:flex-row sm:items-center sm:gap-5">
-            <p className="shrink-0 text-[0.68rem] font-bold uppercase tracking-[0.22em] text-primary-foreground/45">
-              {t("homepage.network.examsLabel")}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {ecosystemExams.map((exam) => (
-                <span
-                  key={exam}
-                  className="rounded-full border border-primary-foreground/15 bg-primary-foreground/[0.04] px-3 py-1.5 text-xs font-semibold text-primary-foreground/75"
+          <div className="mt-7 flex flex-wrap items-center gap-2 border-t border-primary-foreground/10 pt-6">
+            <p className="me-2 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-primary-foreground/40">{t("homepage.network.examsLabel")}</p>
+            {ecosystemExams.map((exam) => (
+              <span key={exam} className="rounded-full border border-primary-foreground/15 bg-primary-foreground/[0.04] px-3 py-1.5 text-xs font-semibold text-primary-foreground/75">
+                {exam}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="homepage-routes-title" className="bg-background py-14 sm:py-20">
+        <div className="container">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.routes.eyebrow")}</p>
+              <h2 id="homepage-routes-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.routes.title")}</h2>
+            </div>
+            <Link to="/apply" className="hidden text-sm font-semibold text-brand-strong sm:inline-flex sm:items-center sm:gap-2">
+              {t("homepage.routes.cta")}<Arrow className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-3 md:grid-cols-3">
+            {routes.map((route, index) => {
+              const Icon = routeIcons[index] ?? Compass;
+              return (
+                <Link
+                  key={route.title}
+                  to="/apply"
+                  className="group relative min-h-[220px] overflow-hidden rounded-2xl border border-border bg-editorial-paper p-6 transition-all hover:-translate-y-1 hover:shadow-surface-lg"
                 >
-                  {exam}
-                </span>
-              ))}
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <p className="mt-10 text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">0{index + 1}</p>
+                  <h3 className="mt-2 text-xl font-bold text-primary">{route.title}</h3>
+                  <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{route.description}</p>
+                  <Arrow className="absolute bottom-6 end-6 h-5 w-5 text-brand-strong transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="homepage-journey-title" className="overflow-hidden bg-editorial-paper py-14 sm:py-20">
+        <div className="container">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.journey.eyebrow")}</p>
+              <h2 id="homepage-journey-title" className="mt-2 max-w-3xl text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.journey.title")}</h2>
+            </div>
+            <Plane className="hidden h-7 w-7 text-brand sm:block" aria-hidden="true" />
+          </div>
+
+          <div className="relative mt-10">
+            <div className="absolute left-[6%] right-[6%] top-7 hidden h-px border-t border-dashed border-border md:block" aria-hidden="true" />
+            <ol className="grid gap-4 md:grid-cols-4 md:gap-2">
+              {steps.map((step, index) => {
+                const Icon = journeyIcons[index] ?? Check;
+                return (
+                  <li key={step.title} className="relative rounded-2xl border border-border bg-background p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border border-border bg-background text-primary shadow-surface">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <span className="text-[0.68rem] font-bold tracking-[0.18em] text-brand-strong">0{index + 1}</span>
+                    </div>
+                    <h3 className="mt-8 text-lg font-bold text-primary">{step.title}</h3>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="homepage-destinations-title" className="bg-background py-14 sm:py-20">
+        <div className="container">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.destinations.eyebrow")}</p>
+              <h2 id="homepage-destinations-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.destinations.title")}</h2>
+            </div>
+            <Link to="/educational-programs" className="hidden text-sm font-semibold text-brand-strong sm:inline-flex sm:items-center sm:gap-2">
+              {t("homepage.destinations.cta")}<Arrow className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="mt-8 grid auto-rows-[180px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {languageYearCities.map((city, index) => (
+              <a
+                key={city.id}
+                href={city.cityUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group relative overflow-hidden rounded-2xl ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2 lg:col-span-2" : ""}`}
+              >
+                <img src={city.imageUrl} alt={city.name} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+                  <div className="flex items-center gap-2 text-white/65">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-xs font-semibold">{city.region}</span>
+                  </div>
+                  <h3 className="mt-1 text-2xl font-bold">{city.name}</h3>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="homepage-language-title" className="overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20">
+        <div className="container">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div>
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand">{t("homepage.languagePrep.eyebrow")}</p>
+              <h2 id="homepage-language-title" className="mt-2 max-w-xl text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.languagePrep.title")}</h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/65 sm:text-base">{t("homepage.languagePrep.body")}</p>
+            </div>
+            <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/[0.035] p-5 sm:p-7">
+              <div className="flex items-end justify-between gap-2">
+                {["A1", "A2", "B1", "B2", "C1"].map((level, index) => (
+                  <div key={level} className="flex-1 text-center">
+                    <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full border ${index === 4 ? "border-brand bg-brand text-brand-foreground" : "border-primary-foreground/20 bg-primary-foreground/[0.04]"}`}>
+                      <span className="text-sm font-bold">{level}</span>
+                    </div>
+                    {index < 4 ? <div className="mx-auto mt-2 h-px w-full bg-primary-foreground/15" /> : <div className="mt-2 h-px w-full bg-brand/50" />}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {`TestDaF|telc|DSH|OnSET`.split("|").map((exam) => (
+                  <span key={exam} className="rounded-full border border-primary-foreground/15 px-3 py-1.5 text-xs font-semibold text-primary-foreground/75">{exam}</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section aria-label={t("homepage.proof.aria")} className="border-b border-border bg-background">
-        <div className="container grid grid-cols-2 divide-x divide-border py-7 rtl:divide-x-reverse md:grid-cols-3 md:py-9">
-          <div className="px-3 text-center md:px-8">
-            <p className="text-3xl font-bold text-primary sm:text-4xl">16+</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.students")}</p>
-          </div>
-          <div className="px-3 text-center md:px-8">
-            <p className="text-3xl font-bold text-primary sm:text-4xl">6+</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.partners")}</p>
-          </div>
-          <div className="col-span-2 mt-6 border-t border-border px-3 pt-6 text-center md:col-span-1 md:mt-0 md:border-s md:border-t-0 md:pt-0">
-            <p className="text-2xl font-bold text-primary sm:text-3xl">{t("homepage.proof.arabicTitle")}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.arabicBody")}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-background py-20 sm:py-28">
+      <section aria-labelledby="homepage-services-title" className="bg-background py-14 sm:py-20">
         <div className="container">
-          <SectionIntro
-            eyebrow={t("homepage.services.eyebrow")}
-            title={t("homepage.services.title")}
-            body={t("homepage.services.body")}
-          />
-          <div className="mt-12 grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
+          <div className="max-w-3xl">
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.services.eyebrow")}</p>
+            <h2 id="homepage-services-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.services.title")}</h2>
+          </div>
+          <div className="mt-8 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
             {services.map((service, index) => {
               const Icon = serviceIcons[index] ?? Check;
               return (
-                <article key={service.title} className="bg-background p-6 sm:p-7">
-                  <Icon className="h-7 w-7 text-brand-strong" aria-hidden="true" />
-                  <h3 className="mt-8 text-lg font-bold text-primary">{service.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{service.description}</p>
-                </article>
+                <div key={service.title} className="bg-background p-5 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <Icon className="h-6 w-6 text-brand-strong" />
+                    <span className="text-[0.68rem] font-bold tracking-[0.18em] text-muted-foreground">0{index + 1}</span>
+                  </div>
+                  <h3 className="mt-10 text-base font-bold text-primary">{service.title}</h3>
+                </div>
               );
             })}
           </div>
         </div>
       </section>
 
-      <section className="overflow-hidden bg-primary py-20 text-primary-foreground sm:py-28">
-        <div className="container grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+      <section aria-labelledby="homepage-students-title" className="overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20">
+        <div className="container grid items-center gap-10 lg:grid-cols-[0.7fr_1.3fr]">
           <div>
-            <p className="text-xs font-bold uppercase text-brand">{t("homepage.students.eyebrow")}</p>
-            <h2 className="mt-3 max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-              {t("homepage.students.title")}
-            </h2>
-            <p className="mt-5 max-w-xl text-base leading-8 text-primary-foreground/70 sm:text-lg">
-              {t("homepage.students.body")}
-            </p>
-            <Button asChild variant="outline" className="mt-8 rounded-md border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              <Link to="/apply">
-                {t("homepage.actions.checkProfile")}
-                <Arrow className="h-4 w-4" />
-              </Link>
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand">{t("homepage.students.eyebrow")}</p>
+            <h2 id="homepage-students-title" className="mt-2 max-w-lg text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.students.title")}</h2>
+            <Button asChild variant="outline" className="mt-7 rounded-md border-primary-foreground/25 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+              <Link to="/apply">{t("homepage.actions.checkProfile")}<Arrow className="h-4 w-4" /></Link>
             </Button>
           </div>
 
-          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
+          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0">
             {topStudents.map((student, index) => (
-              <StudentFigure key={`${student.image}-${index}`} student={student} index={index} t={t} />
+              <StudentFigure key={`${student.image}-top-${index}`} student={student} index={index} t={t} />
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-editorial-paper py-20 sm:py-28">
+      <section aria-labelledby="homepage-trust-title" className="bg-editorial-paper py-14 sm:py-20">
         <div className="container">
-          <SectionIntro
-            eyebrow={t("homepage.journey.eyebrow")}
-            title={t("homepage.journey.title")}
-            body={t("homepage.journey.body")}
-          />
-          <ol className="relative mt-14 grid gap-4 md:grid-cols-4 md:gap-0">
-            <div className="absolute inset-x-0 top-7 hidden h-px bg-border md:block" aria-hidden="true" />
-            {steps.map((step, index) => {
-              const Icon = journeyIcons[index] ?? Check;
-              return (
-                <li key={step.title} className="relative flex gap-5 bg-editorial-paper py-3 md:block md:px-5 md:py-0">
-                  <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-background text-primary shadow-surface">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div className="md:mt-7">
-                    <p className="text-xs font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p>
-                    <h3 className="mt-2 text-lg font-bold text-primary">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{step.description}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-          <div className="mt-12">
-            <Button asChild variant="accent" className="rounded-md">
-              <Link to="/apply">{t("homepage.actions.startAssessment")}<Arrow className="h-4 w-4" /></Link>
-            </Button>
+          <div className="max-w-3xl">
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.trust.eyebrow")}</p>
+            <h2 id="homepage-trust-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.trust.title")}</h2>
           </div>
-        </div>
-      </section>
-
-      <section className="bg-background py-20 sm:py-28">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <SectionIntro
-              eyebrow={t("homepage.scope.eyebrow")}
-              title={t("homepage.scope.title")}
-              body={t("homepage.scope.body")}
-            />
-            <div className="mt-9 grid gap-8 sm:grid-cols-2">
-              <div>
-                <h3 className="flex items-center gap-2 font-bold text-primary"><CircleCheck className="h-5 w-5 text-trust" />{t("homepage.scope.includedTitle")}</h3>
-                <ul className="mt-4 space-y-3">
-                  {included.map((item) => <li key={item} className="flex gap-2 text-sm leading-6 text-muted-foreground"><Check className="mt-1 h-4 w-4 shrink-0 text-trust" />{item}</li>)}
-                </ul>
+          <div className="mt-8 grid gap-3 lg:grid-cols-2">
+            <div className="rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8">
+              <div className="flex items-center gap-3">
+                <CircleCheck className="h-6 w-6 text-brand" />
+                <h3 className="text-lg font-bold">{t("homepage.scope.includedTitle")}</h3>
               </div>
-              <div>
-                <h3 className="flex items-center gap-2 font-bold text-primary"><Building2 className="h-5 w-5 text-brand-strong" />{t("homepage.scope.decisionsTitle")}</h3>
-                <ul className="mt-4 space-y-3">
-                  {decisions.map((item) => <li key={item} className="flex gap-2 text-sm leading-6 text-muted-foreground"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />{item}</li>)}
-                </ul>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {included.map((item) => (
+                  <div key={item} className="flex items-start gap-2 text-sm text-primary-foreground/75">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" />{item}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-2xl bg-background p-6 shadow-surface sm:p-8">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-6 w-6 text-brand-strong" />
+                <h3 className="text-lg font-bold text-primary">{t("homepage.scope.decisionsTitle")}</h3>
+              </div>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {decisions.map((item) => (
+                  <div key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />{item}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-border bg-editorial-paper py-20 sm:py-24">
-        <div className="container grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">
-          <SectionIntro
-            eyebrow={t("homepage.pricing.eyebrow")}
-            title={t("homepage.pricing.title")}
-            body={t("homepage.pricing.body")}
-          />
-          <div className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3">
+      <section aria-labelledby="homepage-pricing-title" className="bg-background py-14 sm:py-20">
+        <div className="container">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.pricing.eyebrow")}</p>
+              <h2 id="homepage-pricing-title" className="mt-2 text-3xl font-bold text-primary sm:text-4xl">{t("homepage.pricing.title")}</h2>
+            </div>
+            <CircleCheck className="hidden h-7 w-7 text-trust sm:block" aria-hidden="true" />
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
             {["assess", "breakdown", "payment"].map((key, index) => (
-              <div key={key} className="bg-background p-6">
-                <p className="text-3xl font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p>
-                <h3 className="mt-5 font-bold text-primary">{t(`homepage.pricing.${key}Title`)}</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{t(`homepage.pricing.${key}Body`)}</p>
+              <div key={key} className="rounded-2xl border border-border bg-editorial-paper p-6">
+                <p className="text-3xl font-bold text-brand-strong">0{index + 1}</p>
+                <h3 className="mt-8 font-bold text-primary">{t(`homepage.pricing.${key}Title`)}</h3>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-background py-20 sm:py-28">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <SectionIntro
-              eyebrow={t("homepage.parents.eyebrow")}
-              title={t("homepage.parents.title")}
-              body={t("homepage.parents.body")}
-            />
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-              {parentPoints.map((point) => (
-                <li key={point} className="flex items-start gap-3 border-s-2 border-trust ps-4 text-sm leading-7 text-primary">
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-editorial-paper py-20 sm:py-28">
-        <div className="container grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-          <SectionIntro
-            eyebrow={t("homepage.faq.eyebrow")}
-            title={t("homepage.faq.title")}
-            body={t("homepage.faq.body")}
-          />
+      <section aria-labelledby="homepage-faq-title" className="overflow-hidden bg-editorial-paper py-14 sm:py-20">
+        <div className="container grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
           <div>
-            <Accordion type="single" collapsible className="border-t border-border">
-              {faqs.map((item, index) => (
-                <AccordionItem key={item.title} value={`faq-${index}`}>
-                  <AccordionTrigger className="text-start text-base font-bold text-primary hover:no-underline sm:text-lg">{item.title}</AccordionTrigger>
-                  <AccordionContent className="pe-8 text-sm leading-7 text-muted-foreground sm:text-base">{item.description}</AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-            <Button asChild variant="link" className="mt-5 h-auto px-0 text-brand-strong">
-              <Link to="/faq">{t("homepage.faq.all")}<Arrow className="h-4 w-4" /></Link>
-            </Button>
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.faq.eyebrow")}</p>
+            <h2 id="homepage-faq-title" className="mt-2 max-w-lg text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.faq.title")}</h2>
+          </div>
+          <Accordion type="single" collapsible className="border-t border-border">
+            {faqs.map((item, index) => (
+              <AccordionItem key={item.title} value={`faq-${index}`}>
+                <AccordionTrigger className="text-start text-base font-bold text-primary hover:no-underline sm:text-lg">{item.title}</AccordionTrigger>
+                <AccordionContent className="pe-8 text-sm leading-7 text-muted-foreground">{item.description}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-primary text-primary-foreground">
+        <div className="container flex flex-col gap-6 py-14 sm:py-16 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand">{t("homepage.final.eyebrow")}</p>
+            <h2 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.final.title")}</h2>
+          </div>
+          <Button asChild size="lg" variant="accent" className="rounded-md">
+            <Link to="/apply">{t("homepage.routes.cta")}<Arrow className="h-4 w-4" /></Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-background py-8 sm:py-10">
+        <div className="container">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <GraduationCap className="h-5 w-5 text-brand-strong" />
+              <span>{t("homepage.proof.students")}</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <HeartHandshake className="h-5 w-5 text-trust" />
+              <span>{t("homepage.proof.partners")}</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <Languages className="h-5 w-5 text-brand-strong" />
+              <span>{t("homepage.proof.arabicTitle")}</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section aria-label={t("homepage.students.title")} className="border-t border-border bg-background py-14 sm:py-16">
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-6 lg:px-8">
+      <section aria-label={t("homepage.students.title")} className="border-t border-border bg-background py-10 sm:py-12">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-6 lg:px-8">
           {bottomStudents.map((student, index) => (
-            <StudentFigure key={`${student.image}-bottom-${index}`} student={student} index={index} t={t} className="!w-[60vw] !max-w-[240px] sm:!w-[240px]" />
+            <StudentFigure key={`${student.image}-bottom-${index}`} student={student} index={index} t={t} className="!w-[56vw] !max-w-[230px] sm:!w-[230px]" />
           ))}
         </div>
       </section>
-
- </div>
+    </div>
   );
 };
 
