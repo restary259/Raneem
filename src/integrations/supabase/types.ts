@@ -7094,6 +7094,22 @@ export type Database = {
         Returns: boolean
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
+      whatsapp_claim_due_follow_up_tasks: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempt_count: number
+          conversation_id: string
+          id: string
+          kind: string
+          max_attempts: number
+          template_id: string | null
+          template_parameters: Json
+        }[]
+      }
+      whatsapp_complete_follow_up_task: {
+        Args: { p_error?: string; p_status: string; p_task_id: string }
+        Returns: undefined
+      }
       whatsapp_identity_suggestions: {
         Args: { p_whatsapp_lead_id: string }
         Returns: {
@@ -7115,6 +7131,23 @@ export type Database = {
           p_whatsapp_lead_id: string
         }
         Returns: undefined
+      }
+      whatsapp_resume_conversation: {
+        Args: { p_conversation_id: string }
+        Returns: Json
+      }
+      whatsapp_schedule_template_follow_up: {
+        Args: {
+          p_conversation_id: string
+          p_due_at: string
+          p_parameters?: Json
+          p_template_id: string
+        }
+        Returns: string
+      }
+      whatsapp_snooze_conversation: {
+        Args: { p_conversation_id: string; p_until: string }
+        Returns: Json
       }
       whatsapp_status_rank: { Args: { p_status: string }; Returns: number }
       whatsapp_unlink_identity: {
