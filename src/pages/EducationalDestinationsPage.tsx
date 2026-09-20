@@ -367,11 +367,11 @@ const EducationalDestinationsPage = () => {
                             <div className="flex items-start justify-between gap-4">
                               <div className="min-w-0 flex-1">
                                 {school.logoUrl ? (
-                                  <div className="mb-5 flex h-16 w-44 items-center justify-center border border-border bg-white px-3 sm:w-48">
+                                  <div className="mb-5 flex min-h-28 w-full items-center justify-center border border-border bg-white px-5 py-4 sm:min-h-32 sm:px-7">
                                     <img
                                       src={school.logoUrl}
                                       alt={`${school.name} logo`}
-                                      className="max-h-11 max-w-full object-contain"
+                                      className="h-auto max-h-24 w-auto max-w-[300px] object-contain sm:max-h-28 sm:max-w-[360px]"
                                       loading="lazy"
                                       onError={(event) => {
                                         event.currentTarget.style.display = "none";
@@ -384,7 +384,7 @@ const EducationalDestinationsPage = () => {
                                   <Building2 className="h-3.5 w-3.5" />
                                   {school.location}
                                 </div>
-                                <h4 className="mt-2 text-xl font-bold text-primary sm:text-2xl">{school.name}</h4>
+                                <h4 className="mt-2 text-2xl font-bold leading-tight text-primary sm:text-3xl">{school.name}</h4>
                               </div>
 
                               <span className="shrink-0 border border-border bg-editorial-paper px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
