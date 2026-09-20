@@ -321,10 +321,14 @@ export default function WhatsAppInboxPage({
               {requiresApprovedTemplate(active.last_inbound_at) ? (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">{t("conversation.windowClosed")}</p>
-                  <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
-                    <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
-                    <SelectContent>{approvedTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent>
-                  </Select>
+                  {sendableTemplates.length ? (
+                    <Select value={templateId ?? undefined} onValueChange={(value) => { setTemplateId(value); setTemplateParameters([]); }}>
+                      <SelectTrigger><SelectValue placeholder={t("conversation.chooseTemplate")} /></SelectTrigger>
+                      <SelectContent>{sendableTemplates.map((item) => <SelectItem key={item.id} value={item.id}>{t(`templates.purpose.${item.purpose}`, item.purpose)} · {item.language_code}</SelectItem>)}</SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-muted-foreground">{t("conversation.noTemplateReleased", "No approved template has been released yet. Ask an administrator to make one available.")}</p>
+                  )}
                   {selectedTemplate && <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{selectedTemplateText}</p>{Array.from({ length: parameterCount }, (_, index) => <Input key={index} className="mt-2" value={templateParameters[index] ?? ""} onChange={(event) => setTemplateParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>}
                   <div className="flex justify-end"><Button disabled={!templateId || templateParameters.length < parameterCount || templateParameters.some((value) => !value.trim()) || sending} onClick={() => void sendReply()}><MessageCircle className="me-2 h-4 w-4" />{t("conversation.send")}</Button></div>
                 </div>
