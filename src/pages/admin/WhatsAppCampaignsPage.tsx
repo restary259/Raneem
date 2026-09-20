@@ -76,13 +76,13 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
   return "default";
 }
 
-function campaignDate(value: string | null) {
+function campaignDate(value: string | null, locale: string) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-IL" : locale === "he" ? "he-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
 export default function WhatsAppCampaignsPage() {
-  const { t } = useTranslation("whatsapp");
+  const { t, i18n } = useTranslation("whatsapp");
   const { toast } = useToast();
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [campaigns, setCampaigns] = useState<WhatsAppMarketingCampaign[]>([]);
@@ -109,6 +109,11 @@ export default function WhatsAppCampaignsPage() {
     [templates],
   );
 
+  useEffect(() => {
+    if (templateId && marketingTemplates.some((item) => item.id === templateId)) return;
+    setTemplateId(marketingTemplates[0]?.id ?? "");
+  }, [marketingTemplates, templateId]);
+
   const filters = useMemo<WhatsAppMarketingFilter>(() => {
     const next: WhatsAppMarketingFilter = {};
     if (intent !== "all") next.intent = intent;
@@ -125,7 +130,6 @@ export default function WhatsAppCampaignsPage() {
       const [templateRows, campaignRows] = await Promise.all([listWhatsAppTemplates(), listWhatsAppMarketingCampaigns()]);
       setTemplates(templateRows);
       setCampaigns(campaignRows);
-      setTemplateId((current) => current || templateRows.find((item) => item.category === "MARKETING" && item.approval_status === "APPROVED" && item.is_active !== false)?.id || "");
     } catch (error) {
       toast({ variant: "destructive", description: error instanceof Error ? error.message : t("campaigns.errors.load") });
     } finally {
@@ -343,7 +347,7 @@ export default function WhatsAppCampaignsPage() {
                     </div>
                     <p className="mt-1 truncate text-xs text-muted-foreground">{campaign.template_provider_name} · {campaign.template_language_code}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {campaign.scheduled_at ? t("campaigns.scheduledFor", { date: campaignDate(campaign.scheduled_at) }) : t("campaigns.started", { date: campaignDate(campaign.started_at) })}
+                      {campaign.scheduled_at ? t("campaigns.scheduledFor", { date: campaignDate(campaign.scheduled_at, i18n.language) }) : t("campaigns.started", { date: campaignDate(campaign.started_at, i18n.language) })}
                     </p>
                   </div>
                   <div className="text-sm">
