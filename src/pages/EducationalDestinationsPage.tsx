@@ -9,6 +9,9 @@ import LanguageSchoolCard from '@/components/educational/LanguageSchoolCard';
 import ServiceCard from '@/components/educational/ServiceCard';
 import { universities, languageSchools, services } from '@/data/educationalDestinations';
 import SEOHead from '@/components/common/SEOHead';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
+
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 
@@ -19,8 +22,14 @@ const EducationalDestinationsPage = () => {
   return <div className="min-h-screen bg-background" dir={dir}>
       <SEOHead title={t('seo.edDestTitle')} description={t('seo.edDestDesc')} />
       <Header />
-      <section className="py-20 bg-gradient-to-b from-brand/5 to-background">
-        <div className="container mx-auto px-4">
+      <DarbPageHero
+        eyebrow={t('educational.edHeroBadge')}
+        imageUrl={DARB_PUBLIC_HERO_IMAGES.destinations}
+        imageAlt={t('educational.edImageAlt', 'Students on a bright German university campus')}
+        title={t('educational.edHeroTitle')}
+        subtitle={t('educational.edHeroSubtitle')}
+      />
+      <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="secondary" className="mb-6 bg-brand-strong/10 text-brand-strong">{t('educational.edHeroBadge')}</Badge>
             <h1 className="text-5xl font-bold text-foreground mb-6">{t('educational.edHeroTitle')}</h1>
