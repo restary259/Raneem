@@ -34,12 +34,26 @@ export function isWhatsAppSnoozed(state: string, snoozedUntil: string | null | u
 }
 
 export function isWhatsAppSlaOverdue(
-  input: { first_response_at: string | null; sla_due_at?: string | null; snoozed_until?: string | null; state: string },
+  input: {
+    first_response_at: string | null;
+    last_customer_message_at?: string | null;
+    last_team_response_at?: string | null;
+    sla_due_at?: string | null;
+    snoozed_until?: string | null;
+    state: string;
+  },
   now = Date.now(),
 ): boolean {
-  if (input.first_response_at) return false;
   if (isWhatsAppSnoozed("snoozed", input.snoozed_until, now)) return false;
   if (normalizeWhatsAppState(input.state) === "closed") return false;
+
+  // SLA applies whenever the latest customer message is waiting for a team
+  // response, including subsequent turns after the first response.
+  const customerAt = input.last_customer_message_at ? new Date(input.last_customer_message_at).getTime() : NaN;
+  const teamAt = input.last_team_response_at ? new Date(input.last_team_response_at).getTime() : NaN;
+  const awaitingTeam = Number.isFinite(customerAt) && (!Number.isFinite(teamAt) || customerAt > teamAt);
+  if (!awaitingTeam) return false;
+
   if (!input.sla_due_at) return false;
   const due = new Date(input.sla_due_at).getTime();
   return Number.isFinite(due) && due <= now;
