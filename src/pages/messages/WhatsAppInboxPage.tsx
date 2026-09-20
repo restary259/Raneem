@@ -170,8 +170,12 @@ export default function WhatsAppInboxPage({
   useEffect(() => {
     if (!selectedId) return;
     const channel = supabase.channel(`whatsapp-thread-${selectedId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "whatsapp_messages", filter: `conversation_id=eq.${selectedId}` }, () => {
-        void listConversationMessages(selectedId).then(setMessages);
+      // "*" so delivery/read ticks (UPDATE on the same row) land too, not just new messages.
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages", filter: `conversation_id=eq.${selectedId}` }, () => {
+        void listConversationMessages(selectedId).then(setMessages).catch(() => undefined);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_internal_notes", filter: `conversation_id=eq.${selectedId}` }, () => {
+        void listConversationNotes(selectedId).then(setNotes).catch(() => undefined);
       })
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
