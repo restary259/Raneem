@@ -16,10 +16,23 @@
       "whatsappPlaceholder": "With country code",
       "destination": "Country of Interest",
       "destinationPlaceholder": "Choose a country",
-      "destinationOptions": { "germany": "Germany", "romania": "Romania", "jordan": "Jordan" },
+      "destinationOptions": {
+        "germany": "Germany",
+        "romania": "Romania",
+        "jordan": "Jordan"
+      },
       "service": "Required Service",
       "servicePlaceholder": "Choose a service",
-      "serviceOptions": ["University Application", "Translation & Authentication", "Language Courses", "Visas & Residence", "Housing Services", "Reception & Follow-up", "Personal Consultations", "General Inquiry"],
+      "serviceOptions": [
+        "University Application",
+        "Translation & Authentication",
+        "Language Courses",
+        "Visas & Residence",
+        "Housing Services",
+        "Reception & Follow-up",
+        "Personal Consultations",
+        "General Inquiry"
+      ],
       "message": "Additional Message (optional)",
       "messagePlaceholder": "Write your question or message here...",
       "submit": "Send Now",
@@ -60,7 +73,10 @@
         "bachelor": "Bachelor's Degree",
         "master": "Master's Degree"
       },
-      "yesNo": { "yes": "Yes", "no": "No" }
+      "yesNo": {
+        "yes": "Yes",
+        "no": "No"
+      }
     },
     "toast": {
       "successTitle": "Your message was sent successfully!",
@@ -78,8 +94,8 @@
     "validation": {
       "cityRequired": "City is required",
       "educationRequired": "Education level is required",
-      "stillInSchoolRequired": "Please select if you're still in school"
-      ,"fullName": "Enter your full name.",
+      "stillInSchoolRequired": "Please select if you're still in school",
+      "fullName": "Enter your full name.",
       "email": "Enter a valid email address.",
       "phone": "Enter a valid phone number.",
       "topic": "Choose an enquiry topic.",
@@ -88,5 +104,13 @@
       "consent": "Your consent is required before sending.",
       "review": "Please review the highlighted fields."
     }
+  },
+  "support": {
+    "eyebrow": "CONTACT",
+    "title": "Do you need more information or have any questions?",
+    "subtitle": "We are happy to help you!",
+    "contact": "CONTACT US",
+    "whatsapp": "WHATSAPP",
+    "apply": "START YOUR APPLICATION"
   }
 }
