@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, FileText, Inbox, Languages, MessageCircle, Paperclip, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { formatDuration, isWhatsAppSlaOverdue, isWhatsAppSnoozed, normalizeWhatsAppState, serviceWindowRemaining } from "@/lib/whatsappOperational";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
 import WhatsAppCrmContextPanel from "@/components/messages/WhatsAppCrmContextPanel";
@@ -34,7 +36,10 @@ import {
   type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
-const STATES: ConversationState[] = ["new", "open", "waiting", "resolved"];
+const STATES: ConversationState[] = ["waiting_for_team", "open", "waiting_for_student", "snoozed", "closed"];
+const PRIORITIES = ["normal", "high", "urgent"] as const;
+const INTENTS = ["medicine", "engineering", "computer_science", "language_course", "visa", "accommodation", "cost", "appointment", "documents", "application_status", "existing_student", "other"] as const;
+const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
 const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documents_pending", "application_in_progress", "won", "lost"];
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["inquiry_follow_up", "consultation_confirmation", "document_reminder", "application_update"] as const;
@@ -78,6 +83,12 @@ export default function WhatsAppInboxPage({
   const [stateFilter, setStateFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [intentFilter, setIntentFilter] = useState("all");
+  const [languageFilter, setLanguageFilter] = useState("all");
+  const [slaOnly, setSlaOnly] = useState(false);
+  const [snoozedOnly, setSnoozedOnly] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
@@ -104,6 +115,11 @@ export default function WhatsAppInboxPage({
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   useChatFullscreen(!!mobile && !!selectedId);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // URL deep-link support is intentionally separate from data effects so a
   // shared WhatsApp URL reopens the exact thread after the workspace loads.
@@ -157,6 +173,9 @@ export default function WhatsAppInboxPage({
   );
   // WhatsApp only allows free-form replies for 24h after the contact's last message.
   const windowClosed = !!active && requiresApprovedTemplate(active.last_inbound_at);
+  const windowRemaining = active ? serviceWindowRemaining(active.last_inbound_at, now) : null;
+  const activeSlaOverdue = !!active && isWhatsAppSlaOverdue(active, now);
+  const activeState = active ? normalizeWhatsAppState(active.state) : null;
   const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
   const selectedTemplateText = useMemo(() => {
     if (!selectedTemplate || !Array.isArray(selectedTemplate.components)) return "";
@@ -188,18 +207,34 @@ export default function WhatsAppInboxPage({
 
   const filtered = useMemo(() => threads.filter((thread) => {
     const q = query.trim().toLowerCase();
+    const operationalState = normalizeWhatsAppState(thread.state);
     if (q && !`${thread.lead.student_name} ${thread.lead.whatsapp_number} ${thread.last_message_preview ?? ""}`.toLowerCase().includes(q)) return false;
-    if (stateFilter !== "all" && thread.state !== stateFilter) return false;
+    if (stateFilter !== "all" && operationalState !== stateFilter) return false;
     if (ownerFilter === "unassigned" && thread.assigned_to) return false;
     if (ownerFilter !== "all" && ownerFilter !== "unassigned" && thread.assigned_to !== ownerFilter) return false;
     if (unreadOnly && thread.unread_count === 0) return false;
+    if (priorityFilter !== "all" && thread.priority !== priorityFilter) return false;
+    if (intentFilter !== "all" && (thread.intent ?? "other") !== intentFilter) return false;
+    if (languageFilter !== "all" && (thread.language_code ?? "unknown") !== languageFilter) return false;
+    if (slaOnly && !isWhatsAppSlaOverdue(thread, now)) return false;
+    if (snoozedOnly && !isWhatsAppSnoozed("snoozed", thread.snoozed_until, now)) return false;
     return true;
-  }), [threads, query, stateFilter, ownerFilter, unreadOnly]);
+  }), [threads, query, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now]);
 
   const saveConversation = async (patch: Parameters<typeof updateConversation>[1]) => {
     if (!active) return;
     try { await updateConversation(active.id, patch); await load(); }
     catch { toast({ variant: "destructive", description: t("errors.save") }); }
+  };
+
+  const snoozeConversation = async (durationMs: number) => {
+    if (!active) return;
+    await saveConversation({ state: "snoozed", snoozed_until: new Date(Date.now() + durationMs).toISOString() });
+  };
+
+  const unsnoozeConversation = async () => {
+    if (!active) return;
+    await saveConversation({ state: "waiting_for_team", snoozed_until: null });
   };
   const saveLead = async (patch: Parameters<typeof updateLead>[1]) => {
     if (!active) return;
@@ -301,6 +336,9 @@ export default function WhatsAppInboxPage({
 
   const newLeads = threads.filter((x) => x.lead.lead_stage === "new").length;
   const unassigned = threads.filter((x) => !x.assigned_to).length;
+  const slaOverdue = threads.filter((x) => isWhatsAppSlaOverdue(x, now)).length;
+  const snoozed = threads.filter((x) => isWhatsAppSnoozed("snoozed", x.snoozed_until, now)).length;
+  const waitingForTeam = threads.filter((x) => normalizeWhatsAppState(x.state) === "waiting_for_team").length;
   const responseSamples = threads.filter((x) => x.first_response_at).map((x) => (new Date(x.first_response_at!).getTime() - new Date(x.created_at).getTime()) / 60000).filter((x) => x >= 0);
   const responseAvg = responseSamples.length ? Math.round(responseSamples.reduce((a, b) => a + b, 0) / responseSamples.length) : null;
 
@@ -325,12 +363,18 @@ export default function WhatsAppInboxPage({
                 <p className="truncate text-sm font-semibold">{active.lead.student_name || active.lead.whatsapp_number}</p>
                 <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
               </div>
-              <Select value={active.state} onValueChange={(v) => saveConversation({ state: v })}>
-                <SelectTrigger className="h-9 w-[130px]"><SelectValue /></SelectTrigger>
-                <SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent>
+              <div className="hidden items-center gap-1.5 sm:flex">
+                <Badge variant={active.priority === "urgent" ? "destructive" : "outline"} className="text-[10px] uppercase">{t(`priority.${active.priority ?? "normal"}`, active.priority ?? "normal")}</Badge>
+                {activeState === "snoozed" && isWhatsAppSnoozed(active.state, active.snoozed_until, now) && <Badge variant="outline" className="gap-1 text-[10px]"><AlarmClock className="h-3 w-3" />{formatDuration(new Date(active.snoozed_until!).getTime() - now)}</Badge>}
+                {activeSlaOverdue && <Badge variant="destructive" className="gap-1 text-[10px]"><Clock3 className="h-3 w-3" />{t("sla.overdue")}</Badge>}
+              </div>
+              <Select value={activeState ?? "open"} onValueChange={(v) => saveConversation({ state: v, snoozed_until: v === "snoozed" ? active.snoozed_until : null })}>
+                <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
+            <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
             <Conversation className="min-h-0 flex-1">
               <ConversationContent className="gap-3">
                 {messages.length ? messages.map((m, index) => {
@@ -355,6 +399,15 @@ export default function WhatsAppInboxPage({
               <ConversationScrollButton />
             </Conversation>
             <div className="shrink-0 space-y-2 border-t p-3">
+              <div className={cn("flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs", windowClosed ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5")}>
+                <div className="flex items-center gap-2"><Clock3 className="h-3.5 w-3.5" /><span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span></div>
+                <span className="text-muted-foreground">{windowClosed ? t("conversation.templateRequired") : t("conversation.remaining", { time: formatDuration(windowRemaining) })}</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={active.priority ?? "normal"} onValueChange={(value) => void saveConversation({ priority: value })}><SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger><SelectContent>{PRIORITIES.map((priority) => <SelectItem key={priority} value={priority}>{t(`priority.${priority}`, priority)}</SelectItem>)}</SelectContent></Select>
+                {activeState === "snoozed" ? <Button size="sm" variant="outline" onClick={() => void unsnoozeConversation()}><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.unsnooze")}</Button> : <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="outline"><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.action")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"}><DropdownMenuItem onSelect={() => void snoozeConversation(60 * 60 * 1000)}>{t("snooze.hour")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(24 * 60 * 60 * 1000)}>{t("snooze.tomorrow")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(3 * 24 * 60 * 60 * 1000)}>{t("snooze.threeDays")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}
+                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{(rtl ? QUICK_REPLIES_AR : QUICK_REPLIES_EN).map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
+              </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
                   service window it is locked and the template picker takes over. */}
               <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
@@ -415,9 +468,16 @@ export default function WhatsAppInboxPage({
           <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
             <div className="shrink-0 space-y-2 border-b p-3">
               <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
-              <div className="flex items-center gap-2">
-                <Select value={stateFilter} onValueChange={setStateFilter}><SelectTrigger className="h-8 flex-1 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.all")}</SelectItem>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`)}</SelectItem>)}</SelectContent></Select>
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={stateFilter} onValueChange={setStateFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.all")}</SelectItem>{STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent></Select>
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allPriorities")}</SelectItem>{PRIORITIES.map((p) => <SelectItem key={p} value={p}>{t(`priority.${p}`, p)}</SelectItem>)}</SelectContent></Select>
+                <Select value={intentFilter} onValueChange={setIntentFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allIntents")}</SelectItem>{INTENTS.map((intent) => <SelectItem key={intent} value={intent}>{t(`intent.${intent}`, intent)}</SelectItem>)}</SelectContent></Select>
+                <Select value={languageFilter} onValueChange={setLanguageFilter}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("filters.allLanguages")}</SelectItem>{LANGUAGES.map((language) => <SelectItem key={language} value={language}>{t(`language.${language}`, language)}</SelectItem>)}</SelectContent></Select>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
                 <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={unreadOnly} onCheckedChange={setUnreadOnly} aria-label={t("filters.unread")} />{t("filters.unread")}</label>
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={slaOnly} onCheckedChange={setSlaOnly} aria-label={t("filters.sla")} />{t("filters.sla")}</label>
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={snoozedOnly} onCheckedChange={setSnoozedOnly} aria-label={t("filters.snoozed")} />{t("filters.snoozed")}</label>
               </div>
             </div>
             <ScrollArea className="min-h-0 flex-1">
@@ -427,8 +487,14 @@ export default function WhatsAppInboxPage({
                     <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
                     {thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}
                     <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
+                      {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
+                      {thread.intent && <Badge variant="secondary" className="text-[9px]">{t(`intent.${thread.intent}`, thread.intent)}</Badge>}
+                      {isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="text-[9px]">{t("sla.overdue")}</Badge>}
+                    </div>
                   </div>
-                  {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
+                  {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>
                 </button>
               )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
             </ScrollArea>
@@ -524,6 +590,11 @@ export default function WhatsAppInboxPage({
                       <p className="truncate text-xs text-muted-foreground">
                         {thread.last_message_preview ?? ""}
                       </p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
+                        {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
+                        {isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="text-[9px]">{t("sla.overdue")}</Badge>}
+                      </div>
                     </div>
                     {thread.unread_count > 0 && (
                       <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">
