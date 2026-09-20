@@ -88,7 +88,9 @@ const HomepageExperience = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [activeService, setActiveService] = useState(0);
   const [activeLevel, setActiveLevel] = useState("C1");
+  const [activeExam, setActiveExam] = useState("TestDaF");
   const levelDetails = t("homepage.languagePrep.levels", { returnObjects: true }) as Record<string, { label: string; description: string }>;
+  const examDetails = t("homepage.languagePrep.exams", { returnObjects: true }) as Record<string, { label: string; description: string }>;
 
   return (
     <div className="homepage-experience">
@@ -340,32 +342,70 @@ const HomepageExperience = () => {
               <h2 id="homepage-language-title" className="mt-2 max-w-xl text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.languagePrep.title")}</h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/65 sm:text-base">{t("homepage.languagePrep.body")}</p>
             </div>
-            <div className="rounded-md border border-primary-foreground/10 bg-primary-foreground/[0.035] p-5 shadow-surface-lg sm:p-7">
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {["A1", "A2", "B1", "B2", "C1"].map((level) => {
-                  const isActive = activeLevel === level;
-                  return (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() => setActiveLevel(level)}
-                      aria-pressed={isActive}
-                      className={isActive ? "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-brand px-2 py-3 text-brand-foreground shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-primary-foreground/[0.04] px-2 py-3 text-primary-foreground/65 transition-colors hover:bg-primary-foreground/[0.08] hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
-                    >
-                      <span className="text-sm font-bold">{level}</span>
-                      <span className="mt-1 h-px w-full bg-current opacity-20" />
-                    </button>
-                  );
-                })}
+            <div className="grid gap-3 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="rounded-md border border-primary-foreground/10 bg-primary-foreground/[0.035] p-5 shadow-surface-lg sm:p-7">
+                <div className="flex items-center justify-between">
+                  <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary-foreground/45">{t("homepage.languagePrep.levelLabel")}</p>
+                  <span className="text-xs font-semibold text-brand">{activeLevel}</span>
+                </div>
+                <div className="mt-5 flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {["A1", "A2", "B1", "B2", "C1"].map((level) => {
+                    const isActive = activeLevel === level;
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setActiveLevel(level)}
+                        aria-pressed={isActive}
+                        className={isActive ? "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-brand px-2 py-3 text-brand-foreground shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-primary-foreground/[0.04] px-2 py-3 text-primary-foreground/65 transition-colors hover:bg-primary-foreground/[0.08] hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
+                      >
+                        <span className="text-sm font-bold">{level}</span>
+                        <span className="mt-1 h-px w-full bg-current opacity-20" />
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 min-h-[92px] rounded-md border border-primary-foreground/10 bg-background/5 p-4">
+                  <p className="text-xs font-bold text-brand">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
+                  <p className="mt-2 text-sm leading-6 text-primary-foreground/70">{levelDetails[activeLevel]?.description}</p>
+                </div>
               </div>
-              <div className="mt-5 min-h-[82px] rounded-md border border-primary-foreground/10 bg-background/5 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
-                <p className="mt-2 text-sm leading-6 text-primary-foreground/70">{levelDetails[activeLevel]?.description}</p>
-              </div>
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {["TestDaF", "telc", "DSH", "OnSET"].map((exam) => (
-                  <span key={exam} className="rounded-full border border-primary-foreground/15 px-3 py-1.5 text-xs font-semibold text-primary-foreground/75 transition-colors hover:border-brand/50 hover:text-primary-foreground">{exam}</span>
-                ))}
+
+              <div className="rounded-md border border-primary-foreground/10 bg-background p-5 text-primary sm:p-7">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-brand-strong">{t("homepage.languagePrep.examEyebrow")}</p>
+                    <h3 className="mt-2 text-xl font-bold">{t("homepage.languagePrep.examTitle")}</h3>
+                  </div>
+                  <div className="hidden rounded-md bg-editorial-paper px-2.5 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-muted-foreground sm:block">
+                    {t("homepage.languagePrep.examBadge")}
+                  </div>
+                </div>
+
+                <div className="mt-5 space-y-2">
+                  {["telc", "TestDaF", "TestAS", "onSET"].map((exam, index) => {
+                    const isActive = activeExam === exam;
+                    const accents = ["bg-trust", "bg-brand", "bg-secondary", "bg-primary"];
+                    return (
+                      <button
+                        key={exam}
+                        type="button"
+                        onClick={() => setActiveExam(exam)}
+                        aria-pressed={isActive}
+                        className={isActive ? "flex w-full items-center gap-3 rounded-md border border-brand/40 bg-editorial-paper px-3 py-2.5 text-start shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-start transition-colors hover:border-border hover:bg-editorial-paper/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
+                      >
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-[0.58rem] font-black tracking-tight ${accents[index]}`}>{exam === "TestDaF" ? "TD" : exam === "TestAS" ? "TA" : exam === "onSET" ? "OS" : "t"</span>
+                        <span className="font-semibold">{exam}</span>
+                        <Arrow className={`ms-auto h-4 w-4 transition-transform ${isActive ? "translate-x-0 opacity-100" : "opacity-30 group-hover:opacity-70"} rtl:rotate-180`} />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3 border-t border-border pt-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{examDetails[activeExam]?.label ?? activeExam}</p>
+                  <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{examDetails[activeExam]?.description}</p>
+                </div>
               </div>
             </div>
           </div>
