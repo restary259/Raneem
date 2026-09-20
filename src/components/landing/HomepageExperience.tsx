@@ -338,7 +338,13 @@ const HomepageExperience = () => {
               <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-14 rounded-md border-primary-foreground/30 bg-transparent px-7 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              <a href={WHATSAPP_PHONE_URL} target="_blank" rel="noopener noreferrer"><MessageCircle className="h-5 w-5" />{t("homepage.actions.whatsapp")}</a>
+              <a
+                href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="h-5 w-5" />{t("homepage.actions.whatsapp")}
+              </a>
             </Button>
           </div>
         </div>
