@@ -15,9 +15,9 @@ export type LeadStage = "new" | "qualified" | "consultation_booked" | "documents
 
 export interface WhatsAppThread extends WhatsAppConversation { lead: WhatsAppLead }
 
-export type WhatsAppCrmLead = Pick<Tables["leads"]["Row"], "id" | "full_name" | "status" | "source_type">;
-export type WhatsAppCrmCase = Pick<Tables["cases"]["Row"], "id" | "full_name" | "status" | "case_reference">;
-export type WhatsAppCrmProfile = Pick<Tables["profiles"]["Row"], "id" | "full_name" | "student_status">;
+export type WhatsAppCrmLead = Pick<Tables["leads"]["Row"], "id" | "full_name" | "status" | "source_type" | "city" | "preferred_major" | "education_level">;
+export type WhatsAppCrmCase = Pick<Tables["cases"]["Row"], "id" | "full_name" | "status" | "case_reference" | "city" | "degree_interest" | "education_level" | "assigned_to"> & { assigned_to_name: string | null };
+export type WhatsAppCrmProfile = Pick<Tables["profiles"]["Row"], "id" | "full_name" | "student_status" | "city" | "university_name">;
 export interface WhatsAppCrmContext {
   leadRecord: WhatsAppCrmLead | null;
   caseRecord: WhatsAppCrmCase | null;
@@ -105,6 +105,9 @@ export async function getWhatsAppCrmContext(
           full_name: row.lead_full_name,
           status: row.lead_status,
           source_type: row.lead_source_type,
+          city: row.lead_city,
+          preferred_major: row.lead_preferred_major,
+          education_level: row.lead_education_level,
         }
       : null,
     caseRecord: row.case_id
@@ -113,6 +116,11 @@ export async function getWhatsAppCrmContext(
           full_name: row.case_full_name,
           status: row.case_status,
           case_reference: row.case_reference,
+          city: row.case_city,
+          degree_interest: row.case_degree_interest,
+          education_level: row.case_education_level,
+          assigned_to: row.case_assigned_to,
+          assigned_to_name: row.case_assigned_to_name,
         }
       : null,
     profile: row.profile_id
@@ -120,6 +128,8 @@ export async function getWhatsAppCrmContext(
           id: row.profile_id,
           full_name: row.profile_full_name,
           student_status: row.profile_student_status,
+          city: row.profile_city,
+          university_name: row.profile_university_name,
         }
       : null,
   };
