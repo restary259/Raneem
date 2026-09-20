@@ -38,6 +38,7 @@ import {
   Activity,
   Inbox,
   MessageSquare,
+  Megaphone,
 
   Settings,
   CalendarDays,
@@ -116,6 +117,7 @@ const PARTNER_APPLY_NAV_ITEM: NavItem = {
 const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.comms" },
+    { key: "nav.whatsappCampaigns", icon: Megaphone, href: "/admin/whatsapp-campaigns", group: "nav.group.comms" },
     { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
     // Pipeline hub: board + submissions review.
     { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
