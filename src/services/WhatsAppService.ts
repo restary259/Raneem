@@ -14,6 +14,15 @@ export type LeadStage = "new" | "qualified" | "consultation_booked" | "documents
 
 export interface WhatsAppThread extends WhatsAppConversation { lead: WhatsAppLead }
 
+export type WhatsAppCrmLead = Pick<Tables["leads"]["Row"], "id" | "full_name" | "status" | "source_type">;
+export type WhatsAppCrmCase = Pick<Tables["cases"]["Row"], "id" | "full_name" | "status" | "case_reference">;
+export type WhatsAppCrmProfile = Pick<Tables["profiles"]["Row"], "id" | "full_name" | "student_status">;
+export interface WhatsAppCrmContext {
+  leadRecord: WhatsAppCrmLead | null;
+  caseRecord: WhatsAppCrmCase | null;
+  profile: WhatsAppCrmProfile | null;
+}
+
 const fail = (error: { message: string } | null) => { if (error) throw new Error(error.message); };
 
 export async function listWhatsAppThreads(): Promise<WhatsAppThread[]> {
@@ -75,11 +84,38 @@ export async function getWhatsAppInboundStatus(): Promise<WhatsAppInboundStatus>
   };
 }
 
+export async function getWhatsAppCrmContext(
+  lead: Pick<WhatsAppLead, "linked_case_id" | "linked_lead_id" | "linked_profile_id">,
+): Promise<WhatsAppCrmContext> {
+  const [leadResult, caseResult, profileResult] = await Promise.all([
+    lead.linked_lead_id
+      ? supabase.from("leads").select("id,full_name,status,source_type").eq("id", lead.linked_lead_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    lead.linked_case_id
+      ? supabase.from("cases").select("id,full_name,status,case_reference").eq("id", lead.linked_case_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    lead.linked_profile_id
+      ? supabase.from("profiles").select("id,full_name,student_status").eq("id", lead.linked_profile_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  fail(leadResult.error);
+  fail(caseResult.error);
+  fail(profileResult.error);
+
+  return {
+    leadRecord: leadResult.data as WhatsAppCrmLead | null,
+    caseRecord: caseResult.data as WhatsAppCrmCase | null,
+    profile: profileResult.data as WhatsAppCrmProfile | null,
+  };
+}
+
 export type IdentitySuggestion = Database["public"]["Functions"]["whatsapp_identity_suggestions"]["Returns"][number];
 
 /**
  * Phone-based match suggestions against existing leads, cases and profiles.
- * Read-only: nothing is linked until staff confirm it.
+ * Read-only: automatic identity resolution happens server-side for unambiguous
+ * exact phone matches; unresolved suggestions remain a staff confirmation flow.
  */
 export async function getIdentitySuggestions(whatsappLeadId: string): Promise<IdentitySuggestion[]> {
   const { data, error } = await supabase.rpc("whatsapp_identity_suggestions", { p_whatsapp_lead_id: whatsappLeadId });
@@ -132,12 +168,12 @@ const MEDIA_KIND = (mime: string) =>
   mime.startsWith("image/") ? "image" : mime.startsWith("video/") ? "video" : mime.startsWith("audio/") ? "audio" : "document";
 
 /**
- * Attachments live in the staff-only `whatsapp-media` bucket; the connector
+ * Attachments live in the staff-only whatsapp-media bucket; the connector
  * hands WhatsApp a short-lived signed URL, so the file is never public.
  */
 export async function sendWhatsAppMedia(conversationId: string, file: File, caption: string) {
   const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(-80) || "file";
-  const path = `${conversationId}/${Date.now()}-${safeName}`;
+  const path = conversationId + "/" + Date.now() + "-" + safeName;
   const { error } = await supabase.storage.from("whatsapp-media").upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
   fail(error);
   return invokeWhatsAppConnector<{ message: WhatsAppMessage }>({
