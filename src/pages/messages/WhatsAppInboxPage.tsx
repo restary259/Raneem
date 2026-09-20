@@ -383,6 +383,7 @@ export default function WhatsAppInboxPage({
                 <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
+                    {thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}
                     <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
                   </div>
                   {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
@@ -448,7 +449,7 @@ export default function WhatsAppInboxPage({
               <ScrollArea className="max-h-[60vh]">
                 {filtered.map((thread) => (
                   <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className="flex w-full items-start gap-2 border-b p-3 text-start">
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p><p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</p></div>
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}<p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</p></div>
                     {thread.unread_count > 0 && <Badge className="rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
                   </button>
                 ))}
