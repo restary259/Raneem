@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
 import { ArrowLeft, ArrowRight, Bot, CheckCircle2, Clock3, Inbox, MessageCircle, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
@@ -122,16 +122,25 @@ export default function WhatsAppInboxPage({
     try { setThreads(await listWhatsAppThreads()); }
     catch { toast({ variant: "destructive", description: t("errors.load") }); }
   }, [t, toast]);
+  // A burst of inbound rows (message + conversation + status) must cost one refetch, not three.
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queueRefreshThreads = useCallback(() => {
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => { void refreshThreads(); }, 300);
+  }, [refreshThreads]);
 
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
     const channel = supabase.channel("whatsapp-workspace")
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, refreshThreads)
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, refreshThreads)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "whatsapp_messages" }, refreshThreads)
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, queueRefreshThreads)
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, queueRefreshThreads)
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages" }, queueRefreshThreads)
       .subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, [refreshThreads]);
+    return () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      void supabase.removeChannel(channel);
+    };
+  }, [queueRefreshThreads]);
 
   const active = threads.find((x) => x.id === selectedId) ?? null;
   useEffect(() => {
@@ -161,8 +170,12 @@ export default function WhatsAppInboxPage({
   useEffect(() => {
     if (!selectedId) return;
     const channel = supabase.channel(`whatsapp-thread-${selectedId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "whatsapp_messages", filter: `conversation_id=eq.${selectedId}` }, () => {
-        void listConversationMessages(selectedId).then(setMessages);
+      // "*" so delivery/read ticks (UPDATE on the same row) land too, not just new messages.
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages", filter: `conversation_id=eq.${selectedId}` }, () => {
+        void listConversationMessages(selectedId).then(setMessages).catch(() => undefined);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_internal_notes", filter: `conversation_id=eq.${selectedId}` }, () => {
+        void listConversationNotes(selectedId).then(setNotes).catch(() => undefined);
       })
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
@@ -383,6 +396,7 @@ export default function WhatsAppInboxPage({
                 <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
+                    {thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}
                     <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
                   </div>
                   {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
@@ -448,7 +462,7 @@ export default function WhatsAppInboxPage({
               <ScrollArea className="max-h-[60vh]">
                 {filtered.map((thread) => (
                   <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className="flex w-full items-start gap-2 border-b p-3 text-start">
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p><p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</p></div>
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}<p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</p></div>
                     {thread.unread_count > 0 && <Badge className="rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
                   </button>
                 ))}
