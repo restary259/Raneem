@@ -132,7 +132,11 @@ export default function WhatsAppInboxPage({
     if (!conversationId || !threads.some((thread) => thread.id === conversationId)) return;
     setSelectedId((current) => (current === conversationId ? current : conversationId));
   }, [conversationId, threads]);
-  const approvedTemplates = useMemo(() => templates.filter((item) => item.approval_status === "APPROVED"), [templates]);
+  // Team members may only pick templates an admin switched on AND released.
+  const sendableTemplates = useMemo(
+    () => templates.filter((item) => item.approval_status === "APPROVED" && item.is_active !== false && (canManageTemplates || item.available_to_team !== false)),
+    [templates, canManageTemplates],
+  );
   const selectedTemplate = templates.find((item) => item.id === templateId) ?? null;
   const selectedTemplateText = useMemo(() => {
     if (!selectedTemplate || !Array.isArray(selectedTemplate.components)) return "";
