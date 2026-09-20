@@ -8,7 +8,7 @@ import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useDirection } from '@/hooks/useDirection';
 
-const MobileNav = () => {
+const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
   const { t } = useTranslation();
   const { dir, sheetSide, textAlign } = useDirection();
   const [open, setOpen] = useState(false);
@@ -19,7 +19,12 @@ const MobileNav = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="rounded-none border-b-2 border-brand" aria-label={t('nav.more')}>
+        <Button
+          variant="outline"
+          size="icon"
+          className={`rounded-none border-b-2 border-brand ${transparent ? 'border-x-primary-foreground/50 border-t-primary-foreground/50 bg-primary/45 text-primary-foreground hover:bg-primary/70 hover:text-primary-foreground' : ''}`}
+          aria-label={t('nav.more')}
+        >
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>

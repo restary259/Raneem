@@ -1490,6 +1490,8 @@
         "destination": "Country of interest",
         "service": "Requested service",
         "message": "Message",
+        "topic": "Enquiry topic",
+        "locale": "Language",
         "notes": "Notes",
         "experience": "Experience",
         "audience": "Audience size",
