@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader, EmptyState, LoadingState, ErrorState } from "@/components/shell";
 import { useTeamCatalog } from "@/hooks/useTeamCatalog";
+import { usePartnerCountries } from "@/hooks/usePartnerSchools";
 import { useLang } from "@/hooks/useLang";
 import {
   distinctCities,
@@ -39,6 +40,7 @@ export default function TeamCatalogPage() {
   const { t } = useTranslation("dashboard");
   const lang = useLang();
   const { data, loading, error, refetch } = useTeamCatalog();
+  const { data: partnerCountryData } = usePartnerCountries();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [filters, setFilters] = useState<CatalogFilterValues>(EMPTY_FILTERS);
@@ -254,32 +256,47 @@ export default function TeamCatalogPage() {
           {!school && activeCountry == null && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {countries.map((c) => (
-                <button
-                  key={c.country || "__none__"}
-                  type="button"
-                  onClick={() => openCountry(c.country)}
-                  className="w-full text-start"
-                >
-                  <Card className="flex h-full items-center justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 text-base font-semibold text-foreground">
-                        <Globe2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{countryLabel(c.country)}</span>
-                      </div>
-                      <p className="mt-1 max-w-prose text-sm leading-6 text-muted-foreground">
-                        {t(
-                          "catalog.countryCardDesc",
-                          "Schools, courses and accommodation available in this country.",
-                        )}
-                      </p>
-                      <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Building2 className="h-3.5 w-3.5" />
-                        {c.schools.length} {t("partnerSchools.schools", "schools")}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180" />
-                  </Card>
-                </button>
+                {(() => {
+                  const partnerCountry = (partnerCountryData?.countries ?? []).find(
+                    (pc) =>
+                      pc.name_en.trim().toLowerCase() === (c.country || "").trim().toLowerCase() ||
+                      pc.name_ar.trim() === (c.country || "").trim(),
+                  );
+                  const description =
+                    lang === "ar"
+                      ? partnerCountry?.description_ar || partnerCountry?.description_en
+                      : partnerCountry?.description_en || partnerCountry?.description_ar;
+
+                  return (
+                    <button
+                      key={c.country || "__none__"}
+                      type="button"
+                      onClick={() => openCountry(c.country)}
+                      className="w-full text-start"
+                    >
+                      <Card className="flex h-full items-center justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 text-base font-semibold text-foreground">
+                            <span aria-hidden>{partnerCountry?.flag_emoji || "🌍"}</span>
+                            <span className="truncate">{partnerCountry?.name_en && lang !== "ar" ? partnerCountry.name_en : countryLabel(c.country)}</span>
+                          </div>
+                          <p className="mt-1 max-w-prose text-sm leading-6 text-muted-foreground">
+                            {description ||
+                              t(
+                                "catalog.countryCardDesc",
+                                "Schools, courses and accommodation available in this country.",
+                              )}
+                          </p>
+                          <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Building2 className="h-3.5 w-3.5" />
+                            {c.schools.length} {t("partnerSchools.schools", "schools")}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground rtl:rotate-180" />
+                      </Card>
+                    </button>
+                  );
+                })()}
               ))}
             </div>
           )}
