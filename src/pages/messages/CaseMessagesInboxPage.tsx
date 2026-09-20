@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInternalTeamChatAccess } from "@/hooks/useInternalTeamChatAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -53,6 +54,7 @@ import {
 import {
   listMyDirectThreads,
   startDirectThread,
+  startTeamChatThread,
   type DirectThread,
 } from "@/services/DirectMessageService";
 
@@ -65,6 +67,7 @@ export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const { user, role } = useAuth();
+  const { canAccess: canStartTeamChat, loading: teamChatAccessLoading } = useInternalTeamChatAccess();
   const isAdmin = role === "admin";
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -79,6 +82,7 @@ export default function CaseMessagesInboxPage() {
   const [selected, setSelected] = useState<{ type: "case" | "direct"; id: string } | null>(null);
 
   const [staffOpen, setStaffOpen] = useState(false);
+  const [teamStaffOpen, setTeamStaffOpen] = useState(false);
   const online = useOnlineUsers();
   const isMobile = useIsMobile();
   const [prefs, setPrefs] = useState<NotificationPrefs>({ notify_in_app: true, notify_email: true });
@@ -231,6 +235,23 @@ export default function CaseMessagesInboxPage() {
     }
   };
 
+  const openTeamChatWith = async (staffId: string) => {
+    try {
+      const threadId = await startTeamChatThread(staffId);
+      setTeamStaffOpen(false);
+      setFilter("all");
+      setSelected({ type: "direct", id: threadId });
+      await load();
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        description: /team chat|team member|enabled/i.test(err.message ?? "")
+          ? t("messagesInbox.teamChatBlocked", "Internal team chat is not enabled for this account.")
+          : err.message,
+      });
+    }
+  };
+
   const openDirectWith = async (staffId: string) => {
     try {
       const threadId = await startDirectThread(staffId);
@@ -338,6 +359,24 @@ export default function CaseMessagesInboxPage() {
               </Button>
             }
           />
+
+          {role === "team_member" && canStartTeamChat && !teamChatAccessLoading && (
+            <StaffPickerDialog
+              open={teamStaffOpen}
+              onOpenChange={setTeamStaffOpen}
+              excludeUserId={user?.id}
+              onlineUserIds={online}
+              onSelect={openTeamChatWith}
+              hint={t("messagesInbox.teamChatHint", "Chat directly with other team members.")}
+              teamOnly
+              trigger={
+                <Button size="sm" variant="outline" className="gap-1">
+                  <Users className="h-4 w-4" />
+                  {t("messagesInbox.newTeamChat", "Team chat")}
+                </Button>
+              }
+            />
+          )}
         </div>
       </div>
 
