@@ -5,6 +5,8 @@ import Locations from "@/components/landing/Locations";
 import SEOHead from "@/components/common/SEOHead";
 import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 
 const LocationsPage = () => {
   const { dir } = useDirection();
