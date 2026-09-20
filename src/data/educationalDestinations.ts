@@ -2,7 +2,7 @@ import { ALPHA_AKTIV_LOGO_SRC } from "@/assets/alphaAktivLogo";
 
 export interface LanguageSchoolDestination {
   name: string;
-  city: "heidelberg" | "dusseldorf" | "dortmund" | "berlin";
+  city: "heidelberg" | "dusseldorf" | "dortmund" | "berlin" | "munster";
   location: string;
   descriptionKey: string;
   officialUrl: string;
@@ -16,7 +16,7 @@ export interface LanguageSchoolDestination {
 }
 
 export interface LanguageYearCity {
-  id: "heidelberg" | "dusseldorf" | "dortmund" | "berlin";
+  id: "heidelberg" | "dusseldorf" | "dortmund" | "berlin" | "munster";
   name: string;
   region: string;
   imageUrl: string;
@@ -74,6 +74,21 @@ export const languageYearCities: LanguageYearCity[] = [
     ]
   },
   {
+    id: "munster",
+    name: "Münster",
+    region: "North Rhine-Westphalia",
+    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/b/bb/MuensterPanorama2856alt.jpg",
+    descriptionKey: "destinations.cities.munster.description",
+    highlights: ["destinations.cities.munster.highlight1", "destinations.cities.munster.highlight2", "destinations.cities.munster.highlight3"],
+    cityUrl: "https://www.stadt-muenster.de/tourismus/startseite",
+    photoCredit: { label: "Photo: Rüdiger Wölk / Wikimedia Commons (CC BY-SA 2.5)", url: "https://commons.wikimedia.org/wiki/File:MuensterPanorama2856alt.jpg" },
+    activityLinks: [
+      { labelKey: "destinations.sources.cityLife", url: "https://www.stadt-muenster.de/tourismus/startseite" },
+      { labelKey: "destinations.sources.schoolHome", url: "https://www.kapito.com/" },
+      { labelKey: "destinations.sources.schoolKapitoCourses", url: "https://www.kapito.com/en/language-school-muenster/" }
+    ]
+  },
+  {
     id: "berlin",
     name: "Berlin",
     region: "Berlin",
@@ -98,7 +113,7 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     descriptionKey: "destinations.schools.fu.description",
     officialUrl: "https://www.fuu.de/sprachen",
     activityUrl: "https://www.fuu.de/events",
-    logoUrl: "/lovable-uploads/e7298181-bfde-4ee6-b5cb-a310ab735b61.png",
+    logoUrl: "https://www.fuu.de/f-u_fileadmin/Academy-of-languages/Academy-of-Languages-Heidelberg-Logo.png",
     credentials: ["TestDaF", "telc", "TestAS", "IELTS", "TOEFL", "TOEIC", "LCCI", "Excellence Award 2019"],
     credentialsNoteKey: "destinations.schools.fu.credentialsNote",
     focusKeys: ["destinations.schools.fu.focusYear", "destinations.schools.fu.focusExams", "destinations.schools.fu.focusSupport"],
@@ -148,13 +163,27 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     serviceKeys: ["destinations.schools.perfekt.serviceCity", "destinations.schools.perfekt.serviceAccommodation", "destinations.schools.perfekt.serviceGallery"]
   },
   {
+    name: "KAPITO Sprachschule",
+    city: "munster",
+    location: "Münster",
+    descriptionKey: "destinations.schools.kapito.description",
+    officialUrl: "https://www.kapito.com/",
+    activityUrl: "https://www.kapito.com/en/language-school-muenster/",
+    logoUrl: "/lovable-uploads/schools/kapito/kapito-logo.svg",
+    credentials: ["Licensed telc test centre", "Licensed TestDaF centre"],
+    credentialsNoteKey: "destinations.schools.kapito.credentialsNote",
+    focusKeys: ["destinations.schools.kapito.focusLevels", "destinations.schools.kapito.focusUniversity", "destinations.schools.kapito.focusSupport"],
+    examKeys: ["telc", "TestDaF", "DSH"],
+    serviceKeys: ["destinations.schools.kapito.serviceHousing", "destinations.schools.kapito.serviceGuidance", "destinations.schools.kapito.serviceActivities"]
+  },
+  {
     name: "VICTORIA | Academy of Languages",
     city: "berlin",
     location: "Berlin Mitte",
     descriptionKey: "destinations.schools.victoria.description",
     officialUrl: "https://www.victoria-languages.de/en/",
     activityUrl: "https://www.victoria-languages.de/en/about-us/",
-    logoUrl: "https://www.victoria-languages.de/favicon.ico",
+    logoUrl: "https://www.victoria-languages.de/wp-content/uploads/V_Academy_of_Languages_RGB.png",
     credentials: ["telc Competence Center University", "TestDaF", "TOEFL", "OnSET", "International examination centre", "Certified quality management"],
     credentialsNoteKey: "destinations.schools.victoria.credentialsNote",
     focusKeys: ["destinations.schools.victoria.focusCampus", "destinations.schools.victoria.focusUniversity", "destinations.schools.victoria.focusModular"],
