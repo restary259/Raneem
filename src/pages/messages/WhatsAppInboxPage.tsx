@@ -133,6 +133,8 @@ export default function WhatsAppInboxPage({
   const [followUpParameters, setFollowUpParameters] = useState<string[]>([]);
   const [followUpDueAt, setFollowUpDueAt] = useState("");
   const [followUpSaving, setFollowUpSaving] = useState(false);
+  const [customSnoozeOpen, setCustomSnoozeOpen] = useState(false);
+  const [customSnoozeAt, setCustomSnoozeAt] = useState("");
   const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -265,6 +267,23 @@ export default function WhatsAppInboxPage({
     if (!active) return;
     try {
       await resumeWhatsAppConversation(active.id);
+      await load();
+    } catch (error) {
+      toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    }
+  };
+
+  const applyCustomSnooze = async () => {
+    if (!active || !customSnoozeAt) return;
+    const due = new Date(customSnoozeAt);
+    if (!Number.isFinite(due.getTime()) || due.getTime() <= Date.now()) {
+      toast({ variant: "destructive", description: t("snooze.invalidTime") });
+      return;
+    }
+    try {
+      await snoozeWhatsAppConversation(active.id, due.toISOString());
+      setCustomSnoozeOpen(false);
+      setCustomSnoozeAt("");
       await load();
     } catch (error) {
       toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
@@ -496,7 +515,7 @@ export default function WhatsAppInboxPage({
                   </SelectContent>
                 </Select>
                 <Select value={active.priority ?? "normal"} onValueChange={(value) => void saveConversation({ priority: value })}><SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger><SelectContent>{PRIORITIES.map((priority) => <SelectItem key={priority} value={priority}>{t(`priority.${priority}`, priority)}</SelectItem>)}</SelectContent></Select>
-                {activeState === "snoozed" ? <Button size="sm" variant="outline" onClick={() => void unsnoozeConversation()}><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.unsnooze")}</Button> : <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="outline"><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.action")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"}><DropdownMenuItem onSelect={() => void snoozeConversation(60 * 60 * 1000)}>{t("snooze.hour")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(24 * 60 * 60 * 1000)}>{t("snooze.tomorrow")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(3 * 24 * 60 * 60 * 1000)}>{t("snooze.threeDays")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}
+                {activeState === "snoozed" ? <Button size="sm" variant="outline" onClick={() => void unsnoozeConversation()}><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.unsnooze")}</Button> : <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="outline"><AlarmClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.action")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"}><DropdownMenuItem onSelect={() => void snoozeConversation(60 * 60 * 1000)}>{t("snooze.hour")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(24 * 60 * 60 * 1000)}>{t("snooze.tomorrow")}</DropdownMenuItem><DropdownMenuItem onSelect={() => void snoozeConversation(3 * 24 * 60 * 60 * 1000)}>{t("snooze.threeDays")}</DropdownMenuItem><DropdownMenuItem onSelect={() => setCustomSnoozeOpen(true)}>{t("snooze.custom")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>}
                 <Button size="sm" variant="outline" onClick={() => setFollowUpOpen(true)}><CalendarClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.schedule")}</Button>
                 <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{(rtl ? QUICK_REPLIES_AR : QUICK_REPLIES_EN).map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
@@ -805,6 +824,23 @@ export default function WhatsAppInboxPage({
         </TabsContent>
         {canManageTemplates && <TabsContent value="templates" className="m-0 min-w-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-5"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge><div className="flex flex-col gap-2"><label className="flex items-center gap-2 text-xs"><Switch checked={x.is_active !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { is_active: value })} /><span>{t("templates.active", "Active")}</span></label><label className="flex items-center gap-2 text-xs"><Switch checked={x.available_to_team !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { available_to_team: value })} /><span>{t("templates.availableToTeam", "Available to team")}</span></label></div></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en" | "he")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="he">{t("templates.hebrew")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>}
       </Tabs>
+      <Dialog open={customSnoozeOpen} onOpenChange={setCustomSnoozeOpen}>
+        <DialogContent dir={rtl ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle>{t("snooze.custom")}</DialogTitle>
+            <DialogDescription>{t("snooze.customHelp")}</DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label htmlFor="wa-custom-snooze">{t("snooze.when")}</Label>
+            <Input id="wa-custom-snooze" type="datetime-local" className="mt-1" value={customSnoozeAt} onChange={(event) => setCustomSnoozeAt(event.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCustomSnoozeOpen(false)}>{t("actions.cancel", "Cancel")}</Button>
+            <Button disabled={!customSnoozeAt} onClick={() => void applyCustomSnooze()}><AlarmClock className="me-2 h-4 w-4" />{t("snooze.action")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={followUpOpen} onOpenChange={setFollowUpOpen}>
         <DialogContent dir={rtl ? "rtl" : "ltr"}>
           <DialogHeader>
