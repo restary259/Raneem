@@ -91,7 +91,7 @@ const BlogIndexPage: React.FC = () => {
             ))}
           </div>
         </section>
-        <DarbContactCta />
+        <DarbContactCta variant="compact" />
       </main>
       <Footer />
     </div>
