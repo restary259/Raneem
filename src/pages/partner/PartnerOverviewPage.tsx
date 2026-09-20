@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";
 
 
 import { useDirection } from "@/hooks/useDirection";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useCachedData, useRealtimeInvalidate } from "@/hooks/useCachedData";
 import {
   fetchPartnerVisibilityOverride,
   resolvePartnerVisibilityMode,
@@ -33,6 +33,9 @@ const STATUS_COLOR: Record<string, string> = {
 
 const PAID_STATUSES = ["payment_confirmed", "submitted", "enrollment_paid"];
 const ENROLLED_STATUSES = ["enrollment_paid"];
+
+/** Stable empty fallback so derived lists keep their identity between renders. */
+const EMPTY_ROWS: any[] = [];
 
 const startOfCurrentMonth = () => {
   const d = new Date();
