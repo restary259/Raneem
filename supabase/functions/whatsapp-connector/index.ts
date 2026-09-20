@@ -414,9 +414,8 @@ serve(async (req) => {
       if (insertError) throw insertError;
       const { error: updateError } = await admin.from("whatsapp_conversations").update({
         last_outbound_at: now,
-        first_response_at: conversation.first_response_at ?? now,
+        first_response_at: conversation.first_response_at ?? (conversation.last_inbound_at ? now : null),
         last_message_preview: storedBody.slice(0, 240),
-        state: "open",
       }).eq("id", conversationId);
       if (updateError) throw updateError;
       return json({ message }, 200, corsHeaders);
