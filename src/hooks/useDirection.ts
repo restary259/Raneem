@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 export const useDirection = () => {
   const { i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const isRtl = i18n.language === 'ar' || i18n.language === 'he';
   return {
     dir: isRtl ? 'rtl' as const : 'ltr' as const,
     isRtl,
