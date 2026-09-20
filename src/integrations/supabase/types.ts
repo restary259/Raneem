@@ -7168,6 +7168,18 @@ export type Database = {
         Args: { p_whatsapp_lead_id: string }
         Returns: undefined
       }
+      whatsapp_update_conversation: {
+        Args: { p_conversation_id: string; p_patch: Json }
+        Returns: undefined
+      }
+      whatsapp_update_lead_fields: {
+        Args: { p_patch: Json; p_whatsapp_lead_id: string }
+        Returns: undefined
+      }
+      whatsapp_mark_conversation_read: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
