@@ -1,5 +1,4 @@
 
-import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import HomepageExperience from "@/components/landing/HomepageExperience";
 import SEOHead from "@/components/common/SEOHead";
@@ -12,7 +11,6 @@ const Index = () => {
   return (
     <div dir={dir} className="flex flex-col min-h-screen bg-background text-foreground">
       <SEOHead title={t('seo.indexTitle')} description={t('seo.indexDesc')} />
-      <Header />
       <main className="flex-grow">
         <HomepageExperience />
       </main>
