@@ -4,6 +4,8 @@ import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import CurrencyConverter from '@/components/calculator/CurrencyConverter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import { DollarSign } from 'lucide-react';
 import { useDirection } from '@/hooks/useDirection';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +16,14 @@ const CurrencyConverterPage = () => {
   return (
     <div className="min-h-screen bg-background" dir={dir}>
       <Header />
+      <DarbPageHero
+        compact
+        eyebrow={t('currencyComparator.eyebrow', 'MONEY & PLANNING')}
+        imageUrl={DARB_PUBLIC_HERO_IMAGES.city}
+        imageAlt={t('currencyComparator.imageAlt', 'Bright German city and everyday student life')}
+        title={t('currencyComparator.title')}
+        subtitle={t('currencyComparator.description')}
+      />
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <Card>
