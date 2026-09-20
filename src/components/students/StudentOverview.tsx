@@ -27,11 +27,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePipelineStatuses } from "@/hooks/usePipelineStatuses";
 import { useCaseFinancials, type CaseFinancials } from "@/hooks/useCaseFinancials";
 import { statusColorClasses } from "@/lib/caseStatus";
-import { whatsappUrl, normalizePhone, isLinkablePhone } from "@/lib/phone";
+import { normalizePhone, isLinkablePhone } from "@/lib/phone";
 import { formatILS } from "@/lib/money";
 import { readStudentProfile, missingProfileFields } from "@/lib/studentProfileFields";
 import CaseProgressRail from "@/components/cases/CaseProgressRail";
 import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
+import { startWhatsAppConversation } from "@/services/WhatsAppService";
 
 export interface VisaField {
   id: string;
@@ -118,6 +119,7 @@ export default function StudentOverview({
   const [assignedName, setAssignedName] = useState<string | null>(null);
   const [programName, setProgramName] = useState<string | null>(null);
   const [schoolName, setSchoolName] = useState<string | null>(null);
+  const [openingWhatsApp, setOpeningWhatsApp] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -202,7 +204,26 @@ export default function StudentOverview({
   const openCase = caseId ? (caseHref ? caseHref(caseId) : `/team/cases/${caseId}`) : null;
   const openFinance = caseId ? (financeHref ? financeHref(caseId) : `/team/cases/${caseId}`) : null;
 
-  const waHref = isLinkablePhone(phone) ? whatsappUrl(phone) : null;
+  const phoneUsable = isLinkablePhone(phone);
+
+  const openWhatsAppInbox = async () => {
+    if (!phoneUsable || openingWhatsApp) return;
+    setOpeningWhatsApp(true);
+    try {
+      const result = await startWhatsAppConversation(phone, String(profile.full_name ?? ""), {
+        ...(caseId ? { case_id: caseId } : {}),
+        ...(!caseId && profile.id ? { profile_id: String(profile.id) } : {}),
+      });
+      const adminWorkspace = variant === "sheet" || Boolean(caseHref?.(caseId ?? "").startsWith("/admin/"));
+      navigate((adminWorkspace ? "/admin" : "/team") + "/messages?tab=whatsapp&conversation=" + encodeURIComponent(result.conversation.id));
+    } catch (error) {
+      // Keep this action local to the student overview; other profile actions
+      // should remain usable when WhatsApp is temporarily unavailable.
+      console.error("openWhatsAppInbox failed", error);
+    } finally {
+      setOpeningWhatsApp(false);
+    }
+  };
 
   // ── Next action derivation (status + profile completeness + finance) ──
   // Only UNFINISHED work is surfaced. Terminal success/cancelled states have
@@ -307,12 +328,16 @@ export default function StudentOverview({
                     {t("studentOverview.openCase", "Open case")}
                   </Button>
                 )}
-                {waHref && (
-                  <Button asChild size="sm" variant="outline" className="gap-1.5">
-                    <a href={waHref} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      {isAr ? "واتساب" : "WhatsApp"}
-                    </a>
+                {phoneUsable && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => void openWhatsAppInbox()}
+                    disabled={openingWhatsApp}
+                  >
+                    {openingWhatsApp ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                    {isAr ? "واتساب" : "WhatsApp"}
                   </Button>
                 )}
                 {phone && (
