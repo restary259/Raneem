@@ -22,10 +22,16 @@ jobs:
           # its undici@8 dependency uses node:worker_threads markAsUncloneable,
           # which does not exist on Node 20.
           node-version: 22
-          cache: npm
+
+      # The repository's lockfile is bun.lock (see bunfig.toml); there is no
+      # package-lock.json, so `npm ci` cannot install. Use bun for install and
+      # run the scripts through npm, which resolves them from node_modules.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       # Lint currently carries 800+ pre-existing violations (mostly `any` in
       # Deno edge functions). Surfaced but not blocking until that debt is paid.
@@ -41,11 +47,13 @@ jobs:
 
       - name: Verify Lovable Cloud build binding
         run: |
-          grep -R -q "mzbadxfvxioedzdjxamc.supabase.co" dist/assets || {
+          # The nitro/Cloudflare build emits to .output/public, not dist.
+          BUNDLE_DIR=.output/public/assets
+          grep -R -q "mzbadxfvxioedzdjxamc.supabase.co" "$BUNDLE_DIR" || {
             echo "::error::The production bundle is missing the Lovable Cloud endpoint."
             exit 1
           }
-          if grep -R -q "Supabase client could not be initialized" dist/assets; then
+          if grep -R -q "Supabase client could not be initialized" "$BUNDLE_DIR"; then
             echo "::error::The production bundle still contains the obsolete startup blocker."
             exit 1
           fi

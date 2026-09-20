@@ -14,12 +14,13 @@ internal admin / team / partner / student dashboards.
 
 ## Local development
 
-Requires Node.js and npm.
+Requires Node.js 22 and [Bun](https://bun.sh) (the repository ships a
+`bun.lock` lockfile).
 
 ```sh
 git clone <YOUR_GIT_URL>
 cd <YOUR_PROJECT_NAME>
-npm i
+bun install
 npm run dev
 ```
 
