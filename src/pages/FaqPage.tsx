@@ -5,7 +5,8 @@ import { ExternalLink, HelpCircle, ShieldCheck } from 'lucide-react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import SEOHead from '@/components/common/SEOHead';
-import PageHero from '@/components/common/PageHero';
+import DarbPageHero from '@/components/common/DarbPageHero';
+import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -73,8 +74,10 @@ const FaqPage: React.FC = () => {
       <Header />
 
       <main>
-        <PageHero
-          badge={t('hero.badge')}
+        <DarbPageHero
+          eyebrow={t('hero.badge')}
+          imageUrl={DARB_PUBLIC_HERO_IMAGES.studyPath}
+          imageAlt={t('hero.imageAlt', 'A bright study environment in Germany')}
           title={t('hero.title')}
           subtitle={t('hero.subtitle')}
         />
