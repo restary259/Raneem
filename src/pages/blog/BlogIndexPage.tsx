@@ -10,7 +10,6 @@ import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { blogArticles, localeContent } from '@/content/blog';
-import DarbContactCta from '@/components/common/DarbContactCta';
 
 const BlogIndexPage: React.FC = () => {
   const { t, i18n } = useTranslation('blog');
@@ -91,7 +90,7 @@ const BlogIndexPage: React.FC = () => {
             ))}
           </div>
         </section>
-        <DarbContactCta variant="compact" />
+
       </main>
       <Footer />
     </div>
