@@ -296,6 +296,82 @@ export async function scheduleWhatsAppTemplateFollowUp(
   return data;
 }
 
+export type WhatsAppMarketingFilter = {
+  intent?: string;
+  language_code?: string;
+  campaign_key?: string;
+  lead_stage?: string;
+  source?: string;
+};
+
+export type WhatsAppMarketingTemplateSummary = {
+  id: string;
+  provider_name: string;
+  language_code: string;
+  category: string;
+  approval_status: string;
+  is_active?: boolean | null;
+  components?: unknown;
+};
+
+export type WhatsAppMarketingCampaign = {
+  id: string;
+  name: string;
+  template_id: string;
+  template_provider_name: string;
+  template_language_code: string;
+  status: string;
+  scheduled_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  recipient_total: number;
+  pending_count: number;
+  processing_count: number;
+  sent_count: number;
+  failed_count: number;
+  cancelled_count: number;
+};
+
+export async function getWhatsAppMarketingAudienceCount(filters: WhatsAppMarketingFilter = {}) {
+  const { data, error } = await (supabase as any).rpc("whatsapp_marketing_audience_count", {
+    p_filters: filters,
+  });
+  fail(error);
+  return Number(data ?? 0);
+}
+
+export async function createWhatsAppMarketingCampaign(input: {
+  name: string;
+  template_id: string;
+  filters?: WhatsAppMarketingFilter;
+  scheduled_at?: string | null;
+}) {
+  const { data, error } = await (supabase as any).rpc("whatsapp_create_marketing_campaign", {
+    p_name: input.name.trim(),
+    p_template_id: input.template_id,
+    p_filters: input.filters ?? {},
+    p_scheduled_at: input.scheduled_at ?? null,
+  });
+  fail(error);
+  return String(data);
+}
+
+export async function listWhatsAppMarketingCampaigns(limit = 50): Promise<WhatsAppMarketingCampaign[]> {
+  const { data, error } = await (supabase as any).rpc("whatsapp_list_marketing_campaigns", {
+    p_limit: limit,
+  });
+  fail(error);
+  return (data ?? []) as WhatsAppMarketingCampaign[];
+}
+
+export async function cancelWhatsAppMarketingCampaign(campaignId: string) {
+  const { error } = await (supabase as any).rpc("whatsapp_cancel_marketing_campaign", {
+    p_campaign_id: campaignId,
+  });
+  fail(error);
+}
+
 export function startWhatsAppConversation(
   whatsappNumber: string,
   studentName = "",
