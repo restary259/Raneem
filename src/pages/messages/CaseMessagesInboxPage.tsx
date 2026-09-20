@@ -15,6 +15,7 @@ import {
   Search,
   Send,
   Settings2,
+  Users,
 
 } from "lucide-react";
 import { toneClasses } from "@/lib/statusTokens";

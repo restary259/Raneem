@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Users, Search } from "lucide-react";
 import { LoadingState, usePagination, TablePagination, useDebouncedValue } from "@/components/shell";
 import { useDirection } from "@/hooks/useDirection";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useCachedData, useRealtimeInvalidate } from "@/hooks/useCachedData";
 import { STATUS_COLORS } from "@/lib/caseStatus";
 import {
   fetchPartnerVisibilityOverride,
@@ -17,48 +17,56 @@ import {
   type ResolvedPartnerVisibilityMode,
 } from "@/lib/partnerVisibility";
 
+// Stable empty fallback so the memoized filter below keeps its identity.
+const EMPTY_CASES: any[] = [];
+
 export default function PartnerStudentsPage() {
-  const [cases, setCases] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [visibilityMode, setVisibilityMode] = useState<ResolvedPartnerVisibilityMode>('partner_sources');
   const { t, i18n } = useTranslation("dashboard");
   const { dir } = useDirection();
   const isAr = i18n.language === "ar";
 
-  const load = useCallback(async (uid: string) => {
-    const [settingsRes, overrideRes] = await Promise.all([
-      (supabase as any)
-        .from("platform_settings")
-        .select("partner_dashboard_show_all_cases")
-        .limit(1)
-        .maybeSingle(),
-      fetchPartnerVisibilityOverride(uid),
-    ]);
+  const userId = useAuthedUserId();
 
-    const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
-    const override = overrideRes;
-    const mode = resolvePartnerVisibilityMode(override, globalShowAll);
-    const sources = resolveVisibilitySources(override, globalShowAll);
-    setVisibilityMode(mode);
+  // Cache-backed: revisiting the page shows the previous list instantly and
+  // refreshes behind it, instead of refetching into an empty table.
+  const { data, loading: isLoading } = useCachedData(
+    ["partner", "students", userId],
+    async () => {
+      const uid = userId as string;
+      const [settingsRes, override] = await Promise.all([
+        (supabase as any)
+          .from("platform_settings")
+          .select("partner_dashboard_show_all_cases")
+          .limit(1)
+          .maybeSingle(),
+        fetchPartnerVisibilityOverride(uid),
+      ]);
 
-    // Cases are read through the partner reader so the row set and the reduced
-    // column set are enforced server-side (no phone, no internal notes).
-    const { data, error } = await (supabase as any).rpc("get_partner_pool_cases", {
-      p_sources: sources,
-    });
-    if (error) console.error("cases fetch error:", error);
-    setCases(data || []);
-    setIsLoading(false);
-  }, []);
+      const globalShowAll = settingsRes.data?.partner_dashboard_show_all_cases ?? false;
+      const mode = resolvePartnerVisibilityMode(override, globalShowAll);
+      const sources = resolveVisibilitySources(override, globalShowAll);
 
-  const userId = useAuthedUserId(load);
+      // Cases are read through the partner reader so the row set and the reduced
+      // column set are enforced server-side (no phone, no internal notes).
+      const { data: rows, error } = await (supabase as any).rpc("get_partner_pool_cases", {
+        p_sources: sources,
+      });
+      if (error) console.error("cases fetch error:", error);
+      return { mode: mode as ResolvedPartnerVisibilityMode, cases: (rows || []) as any[] };
+    },
+    { enabled: !!userId },
+  );
 
-  // Real-time: refetch when cases or partner overrides change
-  useRealtimeSubscription("cases", () => { if (userId) load(userId); }, !!userId);
-  useRealtimeSubscription("partner_commission_overrides", () => { if (userId) load(userId); }, !!userId);
+  const cases = data?.cases ?? EMPTY_CASES;
+  const visibilityMode: ResolvedPartnerVisibilityMode = data?.mode ?? "partner_sources";
+
+  // Realtime now marks this one query stale instead of re-running a page-wide
+  // load, so a row change no longer blanks and rebuilds the whole table.
+  useRealtimeInvalidate("cases", ["partner", "students", userId], !!userId);
+  useRealtimeInvalidate("partner_commission_overrides", ["partner", "students", userId], !!userId);
 
   const statusLabel = (s: string) => {
     return t(`partner.status.${s}`, { defaultValue: s });
