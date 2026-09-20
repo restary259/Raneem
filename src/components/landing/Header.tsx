@@ -7,7 +7,6 @@ import MobileNav from './MobileNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useDirection } from '@/hooks/useDirection';
 import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
-import { Mail, Phone } from 'lucide-react';
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contactConfig';
 
 const Header = () => {
@@ -31,7 +30,7 @@ const Header = () => {
       data-scrolled={scrolled ? 'true' : 'false'}
     >
       <div className="hidden border-b border-primary-foreground/20 lg:block">
-        <div className={`container grid h-9 grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${scrolled ? 'text-muted-foreground' : 'text-primary-foreground'}`}>
+        <div dir="ltr" className={`container grid h-9 grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${scrolled ? 'text-muted-foreground' : 'text-primary-foreground'}`}>
           <div className="justify-self-start"><LanguageSwitcher /></div>
           <a href="tel:+4917623790623" dir="ltr" className="justify-self-center whitespace-nowrap">
             +49 176 23790623
