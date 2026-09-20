@@ -8,6 +8,7 @@ import SEOHead from '@/components/common/SEOHead';
 import DarbPageHero from '@/components/common/DarbPageHero';
 import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
 import { Button } from '@/components/ui/button';
+import { DARB_CONTACT_ADVISOR_SRC } from '@/assets/darbContactAdvisor';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Accordion,
@@ -137,9 +138,12 @@ const FaqPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <div className="mt-10 text-center">
+            <div className="mt-14 border border-border bg-muted/20 px-6 py-8 text-center md:px-10 md:py-10">
+              <div className="mx-auto mb-5 h-24 w-24 overflow-hidden rounded-full border-4 border-background shadow-[0_12px_32px_rgba(17,17,17,0.12)] ring-1 ring-border">
+                <img src={DARB_CONTACT_ADVISOR_SRC} alt={t('meta.ctaTitle')} className="h-full w-full object-cover" loading="lazy" />
+              </div>
               <h2 className="text-2xl font-bold mb-2">{t('meta.ctaTitle')}</h2>
-              <p className="text-muted-foreground mb-6">{t('meta.ctaText')}</p>
+              <p className="mx-auto mb-6 max-w-2xl text-muted-foreground">{t('meta.ctaText')}</p>
               <div className="flex flex-wrap justify-center gap-3">
                 <Button asChild size="lg">
                   <Link to="/apply">{t('meta.ctaButton')}</Link>
