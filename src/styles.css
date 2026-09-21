@@ -907,3 +907,38 @@ a[href*="lovable.dev"] {
     font-size: clamp(2.15rem, 8vw, 3.8rem);
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * DARB brand graphic elements — the signature rainbow accent line / progress
+ * bar from the brand guidelines. Colours come from the --darb-* tokens.
+ * ------------------------------------------------------------------------- */
+.darb-spectrum {
+  display: block;
+  height: 6px;
+  width: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    hsl(var(--darb-blue)) 0% 12.5%,
+    hsl(var(--darb-teal)) 12.5% 25%,
+    hsl(var(--darb-green)) 25% 37.5%,
+    hsl(var(--darb-yellow)) 37.5% 50%,
+    hsl(var(--darb-orange)) 50% 62.5%,
+    hsl(var(--darb-red)) 62.5% 75%,
+    hsl(var(--darb-pink)) 75% 87.5%,
+    hsl(var(--darb-purple)) 87.5% 100%
+  );
+}
+
+.darb-spectrum-sm { height: 4px; }
+.darb-spectrum-lg { height: 8px; }
+
+/* Short accent underline used beneath headlines and logo lockups. */
+.darb-spectrum-accent {
+  width: 72px;
+  height: 5px;
+}
+
+[dir="rtl"] .darb-spectrum {
+  transform: scaleX(-1);
+}
