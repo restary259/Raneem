@@ -943,8 +943,8 @@ a[href*="lovable.dev"] {
 
 /* Keep fixed public actions clear of the consent notice on compact screens. */
 @media (max-width: 767px) {
-  body:has([aria-label="Cookie consent"]) #ai-advisor-chat {
-    padding-bottom: 12rem;
+  body:has([aria-label="Cookie consent"]) #ai-advisor-chat > :last-child {
+    margin-bottom: 12rem;
   }
 
   body:has([aria-label="Cookie consent"]) .whatsapp-side-tab {
