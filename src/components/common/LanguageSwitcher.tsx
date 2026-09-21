@@ -7,24 +7,24 @@ const LanguageSwitcher = ({ className = '' }: { className?: string }) => {
 
   return (
     <div
-      className={`flex shrink-0 items-center gap-2 sm:gap-3 ${className}`}
+      className={`flex shrink-0 items-center gap-1 sm:gap-3 ${className}`}
       dir="ltr"
       aria-label="Language selector"
     >
       <button
         type="button"
         onClick={() => i18n.changeLanguage('ar')}
-        className={`text-sm whitespace-nowrap underline-offset-4 hover:underline ${current === 'ar' ? 'font-bold' : 'opacity-75'}`}
+        className={`text-xs whitespace-nowrap underline-offset-4 hover:underline ${current === 'ar' ? 'font-bold' : 'opacity-75'}`}
         aria-label="العربية"
         aria-current={current === 'ar' ? 'true' : undefined}
       >
         العربية
       </button>
-      <span aria-hidden="true" className="opacity-40">|</span>
+      <span aria-hidden="true" className="text-xs opacity-40">|</span>
       <button
         type="button"
         onClick={() => i18n.changeLanguage('en')}
-        className={`text-sm whitespace-nowrap underline-offset-4 hover:underline ${current === 'en' ? 'font-bold' : 'opacity-75'}`}
+        className={`text-xs whitespace-nowrap underline-offset-4 hover:underline ${current === 'en' ? 'font-bold' : 'opacity-75'}`}
         aria-label="English"
         aria-current={current === 'en' ? 'true' : undefined}
       >
@@ -34,7 +34,7 @@ const LanguageSwitcher = ({ className = '' }: { className?: string }) => {
       <button
         type="button"
         onClick={() => i18n.changeLanguage('he')}
-        className={`text-sm whitespace-nowrap underline-offset-4 hover:underline ${current === 'he' ? 'font-bold' : 'opacity-75'}`}
+        className={`text-xs whitespace-nowrap underline-offset-4 hover:underline ${current === 'he' ? 'font-bold' : 'opacity-75'}`}
         aria-label="עברית"
         aria-current={current === 'he' ? 'true' : undefined}
       >

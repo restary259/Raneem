@@ -67,7 +67,7 @@ export default function ThemePicker() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-9"
           aria-label={t("theme.choose", "Choose theme")}
           title={t("theme.choose", "Choose theme")}
         >
