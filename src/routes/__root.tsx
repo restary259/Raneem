@@ -125,7 +125,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { httpEquiv: "Content-Security-Policy", content: "upgrade-insecure-requests" },
       // PWA
-      { name: "theme-color", content: "#F28C28" },
+      { name: "theme-color", content: "#082B66" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "درب" },
