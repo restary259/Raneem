@@ -561,9 +561,7 @@ a[href*="lovable.dev"] {
 
 .darb-logo-tile,
 .darb-school-logo-tile {
-  flex: 0 0 clamp(148px, 11.1vw, 176px);
-  width: clamp(148px, 11.1vw, 176px);
-  min-width: 0;
+  flex: 0 0 clamp(132px, 12vw, 176px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -582,8 +580,6 @@ a[href*="lovable.dev"] {
 }
 
 .darb-school-logo-tile {
-  flex-basis: clamp(180px, 16.7vw, 224px);
-  width: clamp(180px, 16.7vw, 224px);
   min-height: 92px;
   background: hsl(var(--editorial-paper));
 }
@@ -613,6 +609,20 @@ a[href*="lovable.dev"] {
   object-fit: contain;
 }
 
+@media (min-width: 768px) {
+  .darb-logo-tile {
+    flex-basis: clamp(148px, 11.1vw, 176px);
+    width: clamp(148px, 11.1vw, 176px);
+    min-width: 0;
+  }
+
+  .darb-school-logo-tile {
+    flex-basis: clamp(180px, 16.7vw, 224px);
+    width: clamp(180px, 16.7vw, 224px);
+    min-width: 0;
+  }
+}
+
 @keyframes darb-logo-marquee {
   from {
     transform: translate3d(0, 0, 0);
@@ -634,7 +644,6 @@ a[href*="lovable.dev"] {
   .darb-logo-tile,
   .darb-school-logo-tile {
     flex-basis: 150px;
-    width: 150px;
   }
 
   .darb-logo-stage-tu9 {
