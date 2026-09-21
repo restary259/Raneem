@@ -246,8 +246,8 @@
     },
     "students": {
       "eyebrow": "Darb students",
-      "title": "Real people whose journey began with one step",
-      "body": "These are Darb students in Germany. Every profile is different, but the beginning is the same: understand the situation and build a clear next step.",
+      "title": "Students across Germany",
+      "body": "See where DARB students are building their next chapter — from language preparation to life in Germany.",
       "namedAlt": "{{name}}, a Darb student in {{destination}}",
       "alt": "A Darb student during their study journey in {{destination}}"
     },
