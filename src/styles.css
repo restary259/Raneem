@@ -48,6 +48,7 @@
   --color-brand-foreground: hsl(var(--brand-foreground));
   --color-trust: hsl(var(--trust));
   --color-editorial-paper: hsl(var(--editorial-paper));
+  --color-hero-panel: hsl(var(--hero-panel));
 
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -155,6 +156,7 @@
   --brand-strong: 217.7 85.5% 21.6%;
   --trust: 188.6 100% 30%;
   --editorial-paper: 210 20% 98%;
+  --hero-panel: 0 0% 3%;
 
   --destructive: 0 90.6% 58.6%;
   --destructive-foreground: 210 40% 98%;

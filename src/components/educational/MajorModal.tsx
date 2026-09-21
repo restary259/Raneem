@@ -33,7 +33,7 @@ const formatMonth = (yyyyMm: string, lang: string) => {
 const SectionTitle = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (
   <div className="flex items-center gap-2">
     {icon}
-    <h3 className="text-xl font-semibold text-gray-800">{children}</h3>
+    <h3 className="text-xl font-semibold text-foreground">{children}</h3>
   </div>
 );
 
@@ -84,7 +84,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl mx-4 max-h-[80vh] overflow-y-auto" dir={dir}>
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-orange-600 mb-2">
+          <DialogTitle className="mb-2 text-2xl font-bold text-primary">
             {loc.name}
             {major.nameDE && <span className="text-base font-normal text-muted-foreground block mt-1">{major.nameDE}</span>}
           </DialogTitle>
@@ -103,7 +103,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
               {verified && <Badge variant="outline" className="text-xs">{t('educational.lastVerified', { date: formatMonth(major.lastVerified!, lang) })}</Badge>}
             </div>
           ) : (
-            <Badge variant="secondary" className="bg-orange-100 text-orange-800"><Clock className="h-4 w-4 ml-1" />{duration}</Badge>
+            <Badge variant="secondary"><Clock className="h-4 w-4 ml-1" />{duration}</Badge>
           )}
 
           {/* 2. Can I get in? */}
@@ -195,8 +195,8 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
           {/* 5. About */}
           <div className="space-y-3">
-            <SectionTitle icon={<BookOpen className="h-5 w-5 text-orange-500" />}>{glance ? t('educational.sectionAbout') : t('educational.modalDescription')}</SectionTitle>
-            <div className="bg-gray-50 rounded-lg p-4 border-s-4 border-orange-500 space-y-3">
+            <SectionTitle icon={<BookOpen className="h-5 w-5 text-brand-strong" />}>{glance ? t('educational.sectionAbout') : t('educational.modalDescription')}</SectionTitle>
+            <div className="space-y-3 rounded-lg border-s-4 border-brand bg-muted/50 p-4">
               <p className="text-gray-700 leading-relaxed">{loc.detailedDesc}</p>
               {loc.localizedSuitableFor && (
                 <p className="text-gray-700 leading-relaxed flex gap-2"><Users className="h-4 w-4 mt-1 shrink-0 text-green-600" /><span><span className="font-semibold">{t('educational.modalSuitableFor')}:</span> {loc.localizedSuitableFor}</span></p>
@@ -233,7 +233,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
               <ol className="space-y-2 list-decimal ps-5">
                 {sources.map((s, i) => (
                   <li key={`${s.url}-${i}`} className="text-sm leading-relaxed">
-                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="font-medium text-orange-700 underline underline-offset-2 hover:text-orange-800 break-words">{s.title}</a>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="break-words font-medium text-brand-strong underline underline-offset-2 hover:text-primary">{s.title}</a>
                     <div className="text-gray-600">
                       <span className="font-medium">{t('educational.sourceVerifies')}:</span> {s.verifies}
                       <span className="text-muted-foreground"> · {t('educational.sourceChecked', { date: s.checked })}</span>

@@ -14,12 +14,12 @@ const NoResults = ({ onClearSearch, onClearCategory }: NoResultsProps) => {
   return (
     <div className="text-center py-12 md:py-16">
       <div className="max-w-md mx-auto">
-        <BookOpen className="h-12 w-12 md:h-16 md:w-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg md:text-xl font-semibold text-gray-600 mb-2">{t('educational.noResultsTitle')}</h3>
-        <p className="text-sm md:text-base text-gray-500 mb-6">{t('educational.noResultsDesc')}</p>
+        <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40 md:h-16 md:w-16" />
+        <h3 className="mb-2 text-lg font-semibold text-foreground md:text-xl">{t('educational.noResultsTitle')}</h3>
+        <p className="mb-6 text-sm text-muted-foreground md:text-base">{t('educational.noResultsDesc')}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button onClick={onClearSearch} className="bg-orange-500 hover:bg-orange-600 text-sm md:text-base px-4 md:px-6">{t('educational.clearSearch')}</Button>
-          <Button variant="outline" onClick={onClearCategory} className="border-orange-500 text-orange-500 hover:bg-orange-50 text-sm md:text-base px-4 md:px-6">{t('educational.showAllCategories')}</Button>
+          <Button onClick={onClearSearch} className="px-4 text-sm md:px-6 md:text-base">{t('educational.clearSearch')}</Button>
+          <Button variant="outline" onClick={onClearCategory} className="px-4 text-sm md:px-6 md:text-base">{t('educational.showAllCategories')}</Button>
         </div>
       </div>
     </div>

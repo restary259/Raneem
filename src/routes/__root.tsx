@@ -19,6 +19,7 @@ import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
+import germanyHero from "@/assets/germany-home-hero.jpg";
 
 const FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans:wght@400;700&display=swap";
@@ -75,7 +76,7 @@ if (location.pathname === '/' || location.pathname === '/index.html') {
   var heroPreload = document.createElement('link');
   heroPreload.rel = 'preload';
   heroPreload.as = 'image';
-  heroPreload.href = '/lovable-uploads/hero-poster.webp';
+  heroPreload.href = ${JSON.stringify(germanyHero)};
   heroPreload.setAttribute('fetchpriority', 'high');
   document.head.appendChild(heroPreload);
 }`;

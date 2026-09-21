@@ -39,7 +39,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
     <section
       dir={dir}
       className={cn(
-        "border-y border-border bg-[#f6f8fc] text-foreground",
+        "border-y border-border bg-editorial-paper text-foreground",
         compact ? "py-10 md:py-12" : "py-12 md:py-16",
         className,
       )}
@@ -76,7 +76,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
                 )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-none bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 <MessageCircle className="h-4 w-4" />
                 {t("contactCta.whatsapp")}
@@ -84,7 +84,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
 
               <Link
                 to="/contact"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-none border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
               >
                 <Mail className="h-4 w-4" />
                 {partner ? t("contactCta.partnerContact") : t("contactCta.contact")}
@@ -92,7 +92,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
 
               <Link
                 to={partner ? "/partnership" : "/apply"}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-none border border-primary bg-primary/5 px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-primary bg-primary/5 px-5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
               >
                 {partner ? t("contactCta.partnerApply") : t("contactCta.apply")}
                 <ArrowUpRight className="h-4 w-4" />

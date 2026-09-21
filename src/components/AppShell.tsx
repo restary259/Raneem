@@ -35,6 +35,18 @@ export const RouteFallback = () => (
   </div>
 );
 
+const PublicRouteFallback = () => (
+  <div className="min-h-[100svh] bg-background" role="status" aria-live="polite" aria-busy="true">
+    <div className="h-20 border-b border-border bg-background/95" />
+    <div className="mx-auto flex min-h-[calc(100svh-5rem)] max-w-7xl flex-col justify-center gap-5 px-5 py-12">
+      <div className="h-3 w-24 animate-pulse rounded-full bg-muted motion-reduce:animate-none" />
+      <div className="h-10 w-full max-w-xl animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
+      <div className="h-5 w-full max-w-md animate-pulse rounded-xl bg-muted/70 motion-reduce:animate-none" />
+      <div className="mt-3 h-12 w-44 animate-pulse rounded-full bg-primary/15 motion-reduce:animate-none" />
+    </div>
+  </div>
+);
+
 const AppShell = () => {
   useSessionTimeout();
   usePageTracking();
@@ -128,7 +140,7 @@ const AppShell = () => {
         )}
         {/* A layout-matched shell paints immediately while the route chunk
             loads, instead of a blank frame that reads as a frozen app. */}
-        <Suspense fallback={isDashboardPath ? <RouteFallback /> : <div />}>
+        <Suspense fallback={isDashboardPath ? <RouteFallback /> : <PublicRouteFallback />}>
           <Outlet />
         </Suspense>
         {!isApplyPage && !isDashboardPath && idleReady && (

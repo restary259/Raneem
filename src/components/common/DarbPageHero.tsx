@@ -39,7 +39,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
-      <div className="absolute inset-0 bg-primary/15" />
+      <div className="absolute inset-0 bg-hero-panel/10" />
       <div
         className={cn(
           "container relative z-10 flex items-center justify-center px-4",
@@ -48,7 +48,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <div
           className={cn(
-            "darb-page-hero-panel w-full bg-primary/70 text-center shadow-surface-lg backdrop-blur-[2px]",
+            "darb-page-hero-panel w-full bg-hero-panel/80 text-center shadow-surface-lg backdrop-blur-[2px]",
           )}
         >
           {eyebrow ? (
@@ -69,18 +69,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
           {children ? <div className="mt-7">{children}</div> : null}
         </div>
       </div>
-      <div
-        className="absolute inset-x-0 bottom-0 grid h-3 grid-cols-7"
-        aria-hidden="true"
-      >
-        <span className="bg-destructive" />
-        <span className="bg-brand" />
-        <span className="bg-trust" />
-        <span className="bg-primary" />
-        <span className="bg-secondary" />
-        <span className="bg-brand" />
-        <span className="bg-primary" />
-      </div>
+      <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 rounded-none" />
     </section>
   );
 };

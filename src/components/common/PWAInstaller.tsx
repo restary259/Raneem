@@ -98,10 +98,10 @@ const PWAInstaller = () => {
       {/* Fixed floating pill button - all devices */}
       <div className="fixed bottom-24 md:bottom-6 right-3 md:right-6 z-40 animate-fade-in">
         <div className="flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-3 py-2 md:px-4 md:py-2.5">
-          <button onClick={dismiss} className="text-primary-foreground/70 hover:text-primary-foreground shrink-0">
-            <X className="h-3.5 w-3.5" />
+          <button onClick={dismiss} aria-label={t('common.close', 'Close')} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground">
+            <X className="h-4 w-4" />
           </button>
-          <Button size="sm" onClick={handleInstall} className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full text-xs md:text-sm h-7 md:h-8 px-3">
+          <Button size="sm" onClick={handleInstall} className="text-xs md:text-sm">
             <Download className="h-3 w-3 md:h-4 md:w-4 mr-1" />{t('pwa.installNow')}
           </Button>
         </div>

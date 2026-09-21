@@ -17,12 +17,12 @@ const CategoryFilter = ({ categories, selectedCategory, onCategorySelect, catego
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">{t('educational.filterByCategory')}</h3>
+      <h3 className="text-lg font-semibold text-foreground">{t('educational.filterByCategory')}</h3>
       <div className="flex flex-wrap gap-2">
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
           onClick={() => onCategorySelect(null)}
-          className={`text-sm ${selectedCategory === null ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600"}`}
+          className="text-sm"
         >
           {t('educational.allMajors')}
           <Badge variant="secondary" className="ms-2">
@@ -34,7 +34,7 @@ const CategoryFilter = ({ categories, selectedCategory, onCategorySelect, catego
             key={category.id}
             variant={selectedCategory === category.id ? "default" : "outline"}
             onClick={() => onCategorySelect(category.id)}
-            className={`text-sm ${selectedCategory === category.id ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600"}`}
+            className="text-sm"
           >
             {category.title}
             <Badge variant="secondary" className="ms-2">
