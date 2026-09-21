@@ -4,15 +4,19 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpenCheck,
   Building2,
   Check,
   CircleCheck,
   Compass,
   FileCheck2,
   GraduationCap,
+  Headphones,
   HeartHandshake,
   Home,
   Languages,
+  Mic2,
+  PenLine,
   MapPin,
   MessageCircle,
   Plane,
@@ -28,6 +32,7 @@ import {
 } from "@/components/ui/accordion";
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
+import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import germanyHero from "@/assets/germany-home-hero.jpg";
 import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
 
@@ -102,6 +107,7 @@ const HomepageExperience = () => {
   const [activeExam, setActiveExam] = useState("TestDaF");
   const levelDetails = t("homepage.languagePrep.levels", { returnObjects: true }) as Record<string, { label: string; description: string; hours: string; duration: string }>;
   const examDetails = t("homepage.languagePrep.exams", { returnObjects: true }) as Record<string, { label: string; description: string }>;
+  const cefrReferenceGraphic = "https://www.coe.int/documents/17518475/18975551/CEFR_Levels1.png/d938755e-2755-c5b9-54ec-b4cef61438e3?t=1491562204000";
 
   return (
     <div className="homepage-experience">
@@ -468,11 +474,22 @@ const HomepageExperience = () => {
         <div className="container">
           <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
             <div className="max-w-xl">
-              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.languagePrep.eyebrow")}</p>
-              <h2 id="homepage-language-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.languagePrep.title")}</h2>
+              <div className="flex items-center justify-between gap-5">
+                <div>
+                  <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.languagePrep.eyebrow")}</p>
+                  <h2 id="homepage-language-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.languagePrep.title")}</h2>
+                </div>
+                <div className="shrink-0 rounded-xl border border-border bg-background px-2.5 py-2 shadow-surface sm:px-3 sm:py-2.5">
+                  <img src={darbLogoAsset.url} alt={t("loader.brand")} width={116} height={40} className="block h-auto w-[72px] object-contain object-center sm:w-[92px] lg:w-[108px]" />
+                </div>
+              </div>
               <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground sm:text-base">{t("homepage.languagePrep.body")}</p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {["A1", "A2", "B1", "B2", "C1"].map((level) => (
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_180px] sm:items-stretch">
+                <div>
+                  <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted-foreground">{t("homepage.languagePrep.cefrReferenceLabel")}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {["A1", "A2", "B1", "B2", "C1"].map((level) => (
                   <button key={level} type="button" onClick={() => setActiveLevel(level)} aria-pressed={activeLevel === level}
                     className={activeLevel === level
                       ? "rounded-full border border-brand bg-brand px-3.5 py-2 text-xs font-bold text-brand-foreground shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -480,14 +497,67 @@ const HomepageExperience = () => {
                     {level}
                   </button>
                 ))}
-              </div>
-              <div className="mt-4 rounded-xl border border-border bg-editorial-paper p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-primary">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
-                  <span className="text-xs font-semibold text-brand-strong">{levelDetails[activeLevel]?.duration}</span>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{levelDetails[activeLevel]?.description}</p>
-                <p className="mt-3 text-xs font-semibold text-muted-foreground">{levelDetails[activeLevel]?.hours}</p>
+
+                <a
+                  href="https://www.coe.int/en/web/common-european-framework-reference-languages"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-white p-3 shadow-surface transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-surface-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  aria-label={t("homepage.languagePrep.cefrReferenceLink")}
+                >
+                  <img
+                    src={cefrReferenceGraphic}
+                    alt={t("homepage.languagePrep.cefrReferenceLabel")}
+                    loading="lazy"
+                    decoding="async"
+                    className="mx-auto h-28 w-full object-contain sm:h-full"
+                  />
+                  <span className="absolute inset-x-3 bottom-3 rounded-full bg-primary/90 px-2.5 py-1.5 text-center text-[0.58rem] font-bold uppercase tracking-[0.12em] text-primary-foreground backdrop-blur-sm">
+                    CEFR · A1–C2
+                  </span>
+                </a>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-border bg-editorial-paper p-5 shadow-surface sm:p-6">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.languagePrep.levelLabel")}</p>
+                    <p className="mt-1 text-xl font-bold text-primary">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
+                  </div>
+                  <span className="rounded-full border border-brand/20 bg-background px-3 py-1.5 text-[0.62rem] font-bold text-brand-strong">{levelDetails[activeLevel]?.duration}</span>
+                </div>
+
+                <div className="mt-5 border-t border-border pt-5">
+                  <p className="text-xs font-bold text-primary">{t("homepage.languagePrep.levelMeaningLabel")}</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{levelDetails[activeLevel]?.description}</p>
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                  <div>
+                    <p className="text-[0.62rem] font-bold uppercase tracking-[0.16em] text-muted-foreground">{t("homepage.languagePrep.levelStudyLabel")}</p>
+                    <p className="mt-1 text-xs font-semibold text-primary">{levelDetails[activeLevel]?.hours}</p>
+                  </div>
+                  <span className="text-[0.62rem] font-semibold text-muted-foreground">{t("homepage.languagePrep.cefrNote")}</span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  [Headphones, t("homepage.languagePrep.skills.listening")],
+                  [Mic2, t("homepage.languagePrep.skills.speaking")],
+                  [BookOpenCheck, t("homepage.languagePrep.skills.reading")],
+                  [PenLine, t("homepage.languagePrep.skills.writing")],
+                ].map(([Icon, label]) => {
+                  const SkillIcon = Icon as typeof Headphones;
+                  return (
+                    <div key={String(label)} className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5">
+                      <SkillIcon className="h-4 w-4 shrink-0 text-brand-strong" />
+                      <span className="text-[0.68rem] font-semibold text-primary">{String(label)}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
