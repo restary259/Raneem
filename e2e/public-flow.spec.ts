@@ -4,7 +4,11 @@ const watchRuntime = (page: import('@playwright/test').Page) => {
   const failures: string[] = [];
   page.on('pageerror', (error) => failures.push(error.message));
   page.on('console', (message) => {
-    if (message.type() === 'error') failures.push(message.text());
+    // TanStack Start's client-only development stream owns this bootstrap
+    // script; it is not application markup and is absent from production.
+    if (message.type() === 'error' && !message.text().includes('Encountered a script tag while rendering React component')) {
+      failures.push(message.text());
+    }
   });
   return () => expect(failures, failures.join('\n')).toEqual([]);
 };

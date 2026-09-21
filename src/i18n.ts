@@ -4,8 +4,8 @@ import { initReactI18next } from 'react-i18next';
 import HttpBackend from 'i18next-http-backend';
 
 // Import broadcast translations directly to avoid async loading issues
-import broadcastAr from '../public/locales/ar/broadcast.json';
-import broadcastEn from '../public/locales/en/broadcast.json';
+import broadcastAr from './locales/ar/broadcast.json';
+import broadcastEn from './locales/en/broadcast.json';
 import commonAr from './locales/ar/common.json';
 import commonEn from './locales/en/common.json';
 import contactAr from './locales/ar/contact.json';
