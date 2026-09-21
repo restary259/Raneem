@@ -53,16 +53,16 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   );
 
   const triggerClass = transparent
-    ? 'nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground drop-shadow-sm after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100'
-    : 'nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100';
+    ? 'nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-primary-foreground drop-shadow-sm after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100'
+    : 'nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-foreground after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100';
   const linkClass = navigationMenuTriggerStyle() + (transparent
-    ? ' nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground drop-shadow-sm after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100'
-    : ' nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100');
+    ? ' nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-primary-foreground drop-shadow-sm after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100'
+    : ' nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-foreground after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100');
 
   return (
-    <div className="flex justify-center w-full" dir={dir}>
+    <div className="flex min-w-0 w-full justify-center overflow-visible" dir={dir}>
       <NavigationMenu>
-        <NavigationMenuList className="flex items-stretch gap-1">
+        <NavigationMenuList className="flex min-w-0 max-w-full items-stretch gap-0 xl:gap-1">
           <NavigationMenuItem>
             <NavigationMenuTrigger className={triggerClass}>{t('nav.studyGermany')}</NavigationMenuTrigger>
             {renderDropdown(studyGermany)}
