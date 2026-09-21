@@ -464,125 +464,86 @@ const HomepageExperience = () => {
         </div>
       </section>
 
-      <section aria-labelledby="homepage-language-title" className="overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20">
+      <section aria-labelledby="homepage-language-title" className="bg-background py-14 sm:py-20">
         <div className="container">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-            <div>
-              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand">{t("homepage.languagePrep.eyebrow")}</p>
-              <h2 id="homepage-language-title" className="mt-2 max-w-xl text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.languagePrep.title")}</h2>
-              <p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/65 sm:text-base">{t("homepage.languagePrep.body")}</p>
+          <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
+            <div className="max-w-xl">
+              <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.languagePrep.eyebrow")}</p>
+              <h2 id="homepage-language-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.languagePrep.title")}</h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground sm:text-base">{t("homepage.languagePrep.body")}</p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {["A1", "A2", "B1", "B2", "C1"].map((level) => (
+                  <button key={level} type="button" onClick={() => setActiveLevel(level)} aria-pressed={activeLevel === level}
+                    className={activeLevel === level
+                      ? "rounded-full border border-brand bg-brand px-3.5 py-2 text-xs font-bold text-brand-foreground shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                      : "rounded-full border border-border bg-background px-3.5 py-2 text-xs font-bold text-muted-foreground transition-colors hover:border-brand/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}>
+                    {level}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 rounded-xl border border-border bg-editorial-paper p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-primary">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
+                  <span className="text-xs font-semibold text-brand-strong">{levelDetails[activeLevel]?.duration}</span>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{levelDetails[activeLevel]?.description}</p>
+                <p className="mt-3 text-xs font-semibold text-muted-foreground">{levelDetails[activeLevel]?.hours}</p>
+              </div>
             </div>
-            <div className="grid gap-3 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="rounded-md border border-primary-foreground/10 bg-primary-foreground/[0.035] p-5 shadow-surface-lg sm:p-7">
-                <div className="flex items-center justify-between">
-                  <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-primary-foreground/45">{t("homepage.languagePrep.levelLabel")}</p>
-                  <span className="text-xs font-semibold text-brand">{activeLevel}</span>
+
+            <div className="rounded-2xl border border-border bg-editorial-paper p-5 sm:p-6">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-brand-strong">{t("homepage.languagePrep.examEyebrow")}</p>
+                  <h3 className="mt-1.5 text-2xl font-bold text-primary">{t("homepage.languagePrep.examTitle")}</h3>
                 </div>
-                <div className="mt-5 flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {["A1", "A2", "B1", "B2", "C1"].map((level) => {
-                    const isActive = activeLevel === level;
-                    return (
-                      <button
-                        key={level}
-                        type="button"
-                        onClick={() => setActiveLevel(level)}
-                        aria-pressed={isActive}
-                        className={isActive ? "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-brand px-2 py-3 text-brand-foreground shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "flex min-w-[58px] flex-1 flex-col items-center rounded-md bg-primary-foreground/[0.04] px-2 py-3 text-primary-foreground/65 transition-colors hover:bg-primary-foreground/[0.08] hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
-                      >
-                        <span className="text-sm font-bold">{level}</span>
-                        <span className="mt-1 h-px w-full bg-current opacity-20" />
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="mt-4 min-h-[118px] rounded-md border border-primary-foreground/10 bg-background/5 p-4">
-                  <p className="text-xs font-bold text-brand">{levelDetails[activeLevel]?.label ?? activeLevel}</p>
-                  <p className="mt-2 text-sm leading-6 text-primary-foreground/70">{levelDetails[activeLevel]?.description}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/10 bg-primary-foreground/[0.04] px-3 py-1.5 text-xs font-semibold text-primary-foreground/80">
-                      <span aria-hidden="true">⏱</span>
-                      {levelDetails[activeLevel]?.hours}
-                    </span>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/[0.08] px-3 py-1.5 text-xs font-semibold text-primary-foreground/80">
-                      <span aria-hidden="true">◷</span>
-                      {levelDetails[activeLevel]?.duration}
-                    </span>
-                  </div>
-                </div>
+                <span className="text-xs font-semibold text-muted-foreground">{t("homepage.languagePrep.examBadge")}</span>
               </div>
 
-              <div className="rounded-md border border-primary-foreground/10 bg-background p-5 text-primary sm:p-7">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.2em] text-brand-strong">{t("homepage.languagePrep.examEyebrow")}</p>
-                    <h3 className="mt-2 text-xl font-bold">{t("homepage.languagePrep.examTitle")}</h3>
-                  </div>
-                  <div className="hidden rounded-md bg-editorial-paper px-2.5 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-muted-foreground sm:block">
-                    {t("homepage.languagePrep.examBadge")}
-                  </div>
-                </div>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {examBrands.map((exam) => {
+                  const slug = exam.id.toLowerCase();
+                  const isActive = activeExam === exam.id;
+                  const logoClass = exam.id === "telc" ? "max-h-7 max-w-[118px]"
+                    : exam.id === "TestDaF" || exam.id === "TestAS" || exam.id === "onSET" ? "max-h-9 max-w-[126px]"
+                    : "max-h-8 max-w-[126px]";
+                  return (
+                    <Link key={exam.id} to={`/language-exams/${slug}`} onClick={() => setActiveExam(exam.id)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={isActive
+                        ? "group min-h-[92px] rounded-xl border border-brand bg-background px-2.5 py-3 text-center shadow-surface transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                        : "group min-h-[92px] rounded-xl border border-border bg-background px-2.5 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-brand/45 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}>
+                      <span className="flex h-10 w-full items-center justify-center">
+                        {exam.logoUrl ? (
+                          <img src={exam.logoUrl} alt={exam.label} loading="lazy" decoding="async" referrerPolicy="no-referrer"
+                            className={"h-auto w-auto object-contain " + logoClass + " transition-transform duration-300 group-hover:scale-[1.03]"}
+                            onError={(event) => {
+                              const image = event.currentTarget;
+                              image.style.display = "none";
+                              const fallback = image.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.hidden = false;
+                            }} />
+                        ) : null}
+                        <span hidden className="max-w-[126px] text-center text-base font-black tracking-tight text-primary">{exam.label}</span>
+                      </span>
+                      <span className="mt-2 line-clamp-1 text-[0.58rem] font-medium text-muted-foreground">{exam.subtitle}</span>
+                      <span className="mt-2 inline-flex items-center gap-1 text-[0.62rem] font-bold text-brand-strong opacity-0 transition-opacity group-hover:opacity-100">
+                        {t("homepage.languagePrep.viewExam")}<Arrow className="h-3 w-3 rtl:rotate-180" />
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                  {examBrands.map((exam) => {
-                    const isActive = activeExam === exam.id;
-                    const logoClass = exam.id === "telc"
-                      ? "max-h-7 max-w-[120px]"
-                      : exam.id === "TestDaF" || exam.id === "TestAS" || exam.id === "onSET"
-                        ? "max-h-10 max-w-[132px]"
-                        : "max-h-8 max-w-[132px]";
-                    return (
-                      <button
-                        key={exam.id}
-                        type="button"
-                        onClick={() => setActiveExam(exam.id)}
-                        aria-pressed={isActive}
-                        title={exam.subtitle}
-                        className={isActive ? "group min-h-[112px] rounded-md border border-brand bg-editorial-paper px-2.5 py-3 text-center shadow-surface transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "group min-h-[112px] rounded-md border border-border bg-background px-2.5 py-3 text-center transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
-                      >
-                        <span className="flex h-12 w-full items-center justify-center">
-                          {exam.logoUrl ? (
-                            <img
-                              src={exam.logoUrl}
-                              alt={exam.label}
-                              loading="lazy"
-                              decoding="async"
-                              referrerPolicy="no-referrer"
-                              className={"h-auto w-auto object-contain " + logoClass + " transition-transform duration-300 group-hover:scale-[1.03]"}
-                              onError={(event) => {
-                                const image = event.currentTarget;
-                                image.style.display = "none";
-                                const fallback = image.nextElementSibling as HTMLElement | null;
-                                if (fallback) fallback.hidden = false;
-                              }}
-                            />
-                          ) : (
-                            <span className="text-lg font-black tracking-tight text-primary">{exam.label}</span>
-                          )}
-                          <span hidden className="max-w-[132px] text-center text-lg font-black tracking-tight text-primary">{exam.label}</span>
-                        </span>
-                        <span className="mt-2 line-clamp-1 text-[0.58rem] font-medium text-muted-foreground">{exam.subtitle}</span>
-                      </button>
-                    );
-                  })}
+              <div className="mt-4 flex flex-col gap-3 rounded-xl border border-brand/20 bg-background p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{examDetails[activeExam]?.label ?? activeExam}</p>
+                  <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{examDetails[activeExam]?.description}</p>
                 </div>
-                <div className="mt-4 rounded-md border border-border bg-editorial-paper/60 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{examDetails[activeExam]?.label ?? activeExam}</p>
-                      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{examDetails[activeExam]?.description}</p>
-                    </div>
-                    <span className="hidden shrink-0 rounded-full border border-brand/25 bg-brand/[0.07] px-2 py-1 text-[0.58rem] font-bold uppercase tracking-[0.13em] text-brand-strong sm:block">
-                      {t("homepage.languagePrep.registrationBadge")}
-                    </span>
-                  </div>
-                  <Link
-                    to="/apply"
-                    className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-brand-strong transition-all hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                  >
-                    {t("homepage.languagePrep.examCta")}
-                    <Arrow className="h-4 w-4 rtl:rotate-180" />
-                  </Link>
-                </div>
+                <Link to={`/language-exams/${activeExam.toLowerCase()}`}
+                  className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-brand-strong transition-all hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+                  {t("homepage.languagePrep.viewExam")}<Arrow className="h-4 w-4 rtl:rotate-180" />
+                </Link>
               </div>
             </div>
           </div>

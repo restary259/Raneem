@@ -53,13 +53,16 @@ const Header = () => {
       <div className="container mx-auto px-3 sm:px-4">
         <div className="darb-header-main flex items-center justify-between" dir="ltr">
           {/* Logo */}
-          <div className="flex min-w-0 flex-shrink-0 items-center">
-            <Link to="/" className="flex flex-shrink-0 items-center whitespace-nowrap">
+          <div className="flex min-w-0 shrink-0 items-center">
+            <Link to="/" aria-label={t('loader.brand')} className="flex h-12 w-[132px] shrink-0 items-center sm:h-14 sm:w-[156px] lg:h-16 lg:w-[182px]">
               <img
                 src={darbLogoAsset.url}
                 alt={t('loader.brand')}
-                className="darb-header-logo w-auto flex-shrink-0 object-contain"
+                width={182}
+                height={64}
+                decoding="async"
                 fetchPriority="high"
+                className="darb-header-logo block h-auto max-h-full w-auto max-w-full object-contain object-left"
               />
             </Link>
           </div>
