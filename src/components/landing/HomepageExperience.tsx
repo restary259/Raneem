@@ -184,28 +184,26 @@ const HomepageExperience = () => {
 
             <div className="darb-logo-marquee rounded-md border border-border bg-background" dir="ltr" aria-label={t("homepage.network.tu9Label")}>
               <div className="darb-logo-marquee-track">
-                {[...tu9Universities, ...tu9Universities].map((uni, index) => {
-                  const isPrimarySet = index < tu9Universities.length;
-                  return (
+                <div className="darb-logo-marquee-group" aria-hidden="false">
+                  {tu9Universities.map((uni) => (
                     <a
-                      key={`${uni.name}-${index}`}
+                      key={uni.name}
                       href={uni.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       title={uni.name}
                       className="darb-logo-tile group"
-                      tabIndex={isPrimarySet ? 0 : -1}
-                      aria-hidden={isPrimarySet ? undefined : true}
+                      tabIndex={0}
                     >
-                      <div className="flex h-14 w-full items-center justify-center sm:h-16">
+                      <div className="darb-logo-image-stage">
                         <img
                           src={uni.logoUrl}
-                          alt={isPrimarySet ? uni.name : ""}
-                          loading={isPrimarySet ? "eager" : "lazy"}
-                          fetchPriority={isPrimarySet ? "high" : "low"}
+                          alt={uni.name}
+                          loading="eager"
+                          fetchPriority="high"
                           decoding="async"
                           referrerPolicy="no-referrer"
-                          className="max-h-11 w-auto max-w-[126px] object-contain opacity-75 transition-all duration-300 group-hover:scale-[1.04] group-hover:opacity-100"
+                          className="darb-university-logo"
                           onError={(event) => {
                             const image = event.currentTarget;
                             image.style.display = "none";
@@ -213,19 +211,48 @@ const HomepageExperience = () => {
                             if (fallback) fallback.hidden = false;
                           }}
                         />
-                        <span hidden className="max-w-[130px] text-center text-xs font-bold leading-4 text-primary">
-                          {uni.city}
-                        </span>
+                        <span hidden className="darb-logo-fallback">{uni.city}</span>
                       </div>
-                      <span className="mt-2 text-[0.62rem] font-semibold tracking-wide text-muted-foreground transition-colors group-hover:text-primary">
-                        {uni.city}
-                      </span>
+                      <span className="darb-logo-city">{uni.city}</span>
                     </a>
-                  );
-                })}
+                  ))}
+                </div>
+
+                <div className="darb-logo-marquee-group" aria-hidden="true">
+                  {tu9Universities.map((uni) => (
+                    <a
+                      key={`duplicate-${uni.name}`}
+                      href={uni.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={uni.name}
+                      className="darb-logo-tile group"
+                      tabIndex={-1}
+                    >
+                      <div className="darb-logo-image-stage">
+                        <img
+                          src={uni.logoUrl}
+                          alt=""
+                          loading="lazy"
+                          fetchPriority="low"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          className="darb-university-logo"
+                          onError={(event) => {
+                            const image = event.currentTarget;
+                            image.style.display = "none";
+                            const fallback = image.nextElementSibling as HTMLElement | null;
+                            if (fallback) fallback.hidden = false;
+                          }}
+                        />
+                        <span hidden className="darb-logo-fallback">{uni.city}</span>
+                      </div>
+                      <span aria-hidden="true" className="darb-logo-city">{uni.city}</span>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+            </div>          </div>
 
           <div className="mt-8 border-t border-border pt-7">
             <div className="mb-3 flex items-center justify-between gap-4">
@@ -237,37 +264,76 @@ const HomepageExperience = () => {
 
             <div className="darb-logo-marquee darb-logo-marquee-schools rounded-md border border-border bg-editorial-paper" dir="ltr" aria-label={t("homepage.network.schoolsLabel")}>
               <div className="darb-logo-marquee-track">
-                {[...languageYearSchools, ...languageYearSchools].map((school, index) => (
-                  <a
-                    key={`${school.name}-${index}`}
-                    href={school.officialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={school.name}
-                    className="darb-school-logo-tile group"
-                  >
-                    {school.logoUrl ? (
-                      <img
-                        src={school.logoUrl}
-                        alt={school.name}
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        className="max-h-12 w-auto max-w-[170px] object-contain opacity-80 transition-all duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
-                        onError={(event) => {
-                          const image = event.currentTarget;
-                          image.style.display = "none";
-                          const fallback = image.nextElementSibling as HTMLElement | null;
-                          if (fallback) fallback.hidden = false;
-                        }}
-                      />
-                    ) : null}
-                    <span hidden className="max-w-[160px] text-center text-xs font-bold leading-4 text-primary">{school.name}</span>
-                  </a>
-                ))}
+                <div className="darb-logo-marquee-group" aria-hidden="false">
+                  {languageYearSchools.map((school) => (
+                    <a
+                      key={school.name}
+                      href={school.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={school.name}
+                      className="darb-school-logo-tile group"
+                      tabIndex={0}
+                    >
+                      <div className="darb-school-logo-image-stage">
+                        {school.logoUrl ? (
+                          <img
+                            src={school.logoUrl}
+                            alt={school.name}
+                            loading="lazy"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                            className="darb-school-logo"
+                            onError={(event) => {
+                              const image = event.currentTarget;
+                              image.style.display = "none";
+                              const fallback = image.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.hidden = false;
+                            }}
+                          />
+                        ) : null}
+                        <span hidden className="darb-school-logo-fallback">{school.name}</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+
+                <div className="darb-logo-marquee-group" aria-hidden="true">
+                  {languageYearSchools.map((school) => (
+                    <a
+                      key={`duplicate-${school.name}`}
+                      href={school.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={school.name}
+                      className="darb-school-logo-tile group"
+                      tabIndex={-1}
+                    >
+                      <div className="darb-school-logo-image-stage">
+                        {school.logoUrl ? (
+                          <img
+                            src={school.logoUrl}
+                            alt=""
+                            loading="lazy"
+                            fetchPriority="low"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                            className="darb-school-logo"
+                            onError={(event) => {
+                              const image = event.currentTarget;
+                              image.style.display = "none";
+                              const fallback = image.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.hidden = false;
+                            }}
+                          />
+                        ) : null}
+                        <span hidden className="darb-school-logo-fallback">{school.name}</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+            </div>          </div>
 
           <div className="mt-7 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center">
             <p className="shrink-0 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted-foreground">{t("homepage.network.examsLabel")}</p>
