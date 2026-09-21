@@ -7,9 +7,10 @@ type IdentityStageProps = {
   href: string;
   meta?: string;
   featured?: boolean;
+  ratio?: "wide" | "square" | "compact";
 };
 
-const IdentityStage = ({ name, imageUrl, href, meta, featured = false }: IdentityStageProps) => {
+const IdentityStage = ({ name, imageUrl, href, meta, featured = false, ratio = "wide" }: IdentityStageProps) => {
   const [failed, setFailed] = useState(false);
   return (
     <a
@@ -17,19 +18,19 @@ const IdentityStage = ({ name, imageUrl, href, meta, featured = false }: Identit
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "group grid min-h-28 min-w-0 place-items-center border border-border bg-background p-4 text-center transition-colors hover:border-brand/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group grid min-h-32 min-w-0 place-items-center border border-border bg-background p-4 text-center transition-colors hover:border-brand/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         featured && "sm:col-span-2",
       )}
     >
-      <div className="flex h-12 w-full min-w-0 items-center justify-center">
+      <div className={cn("flex w-full min-w-0 items-center justify-center", ratio === "square" ? "h-16" : ratio === "compact" ? "h-10" : "h-14")}>
         {imageUrl && !failed ? (
           <img
             src={imageUrl}
-            alt={name}
+            alt={`${name} logo`}
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
-            className="max-h-11 max-w-[90%] object-contain"
+            className={cn("h-auto w-auto max-w-[88%] object-contain", ratio === "square" ? "max-h-16" : ratio === "compact" ? "max-h-9" : "max-h-12")}
             onError={() => setFailed(true)}
           />
         ) : (

@@ -26,6 +26,7 @@ import germanyHero from "@/assets/germany-home-hero.jpg";
 import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
 import BrandArch from "./home/BrandArch";
 import IdentityStage from "./home/IdentityStage";
+import CefrGuide from "./home/CefrGuide";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
@@ -37,9 +38,9 @@ const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, Message
 
 const examBrands = [
   { id: "telc", label: "telc", website: "https://www.telc.net/en/" },
-  { id: "TestDaF", label: "TestDaF", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/TestDaF_RGB_transparent.png", website: "https://www.testdaf.de/" },
-  { id: "TestAS", label: "TestAS", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/TestAS_RGB_transparent.png", website: "https://www.testas.de/en/" },
-  { id: "onSET", label: "onSET", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/onSET_RGB_transparent.png", website: "https://www.onset.de/" },
+  { id: "TestDaF", label: "TestDaF", website: "https://www.testdaf.de/" },
+  { id: "TestAS", label: "TestAS", website: "https://www.testas.de/en/" },
+  { id: "onSET", label: "onSET", website: "https://www.onset.de/" },
   { id: "DSH", label: "DSH", website: "https://www.fadaf.de/dsh/" },
   { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/kup/prf.html" },
 ];
@@ -89,19 +90,19 @@ const HomepageExperience = () => {
     <div className="homepage-experience bg-background">
       <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
         <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/15 rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 bg-gradient-to-r from-hero-panel/95 via-hero-panel/72 to-hero-panel/20 rtl:bg-gradient-to-l" />
         <BrandArch />
         <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center py-16">
-          <div className="max-w-3xl">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.hero.eyebrow")}</p>
-            <h1 className="mt-4 text-balance font-editorial text-5xl leading-[0.98] text-primary sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
-            <p className="mt-5 max-w-2xl text-xl font-bold leading-8 text-foreground sm:text-2xl">{t("homepage.hero.title")}</p>
-            <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">{t("homepage.hero.subtitle")}</p>
+          <div className="max-w-3xl text-primary-foreground">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.hero.eyebrow")}</p>
+            <h1 className="mt-4 text-balance font-editorial text-5xl leading-[0.98] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
+            <p className="mt-5 max-w-2xl text-xl font-bold leading-8 sm:text-2xl">{t("homepage.hero.title")}</p>
+            <p className="mt-4 max-w-xl text-base leading-7 text-primary-foreground/80 sm:text-lg">{t("homepage.hero.subtitle")}</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
-              <Button asChild size="lg" variant="outline" className="border-primary/25 bg-background/75 text-base backdrop-blur-sm"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
+              <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-background/95 text-primary text-base"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-sm font-medium text-muted-foreground"><CircleCheck className="size-4 text-trust" />{t("homepage.hero.reassurance")}</p>
+            <p className="mt-5 flex items-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 text-brand" />{t("homepage.hero.reassurance")}</p>
           </div>
         </div>
         <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
@@ -201,11 +202,14 @@ const HomepageExperience = () => {
                   {tu9Universities.slice(0, 6).map((uni, index) => <IdentityStage key={uni.name} name={uni.name} imageUrl={uni.logoUrl} href={uni.url} meta={uni.city} featured={index === 0} />)}
                 </div>
               </div>
-              <div className="grid gap-5 sm:grid-cols-[1fr_0.72fr]">
-                <div><h3 className="mb-3 font-bold text-primary">{t("homepage.network.schoolsLabel")}</h3><div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">{languageYearSchools.slice(0, 4).map((school) => <IdentityStage key={school.name} name={school.name} imageUrl={school.logoUrl} href={school.officialUrl} meta={school.location} />)}</div></div>
-                <div><h3 className="mb-3 font-bold text-primary">{t("homepage.network.examsLabel")}</h3><div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">{examBrands.map((exam) => <IdentityStage key={exam.id} name={exam.label} imageUrl={exam.logoUrl} href={exam.website} />)}</div></div>
+              <div><h3 className="mb-3 font-bold text-primary">{t("homepage.network.schoolsLabel")}</h3><div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">{languageYearSchools.slice(0, 6).map((school) => <IdentityStage key={school.name} name={school.name} imageUrl={school.logoUrl} href={school.officialUrl} meta={school.location} />)}</div></div>
+              <div>
+                <h3 className="mb-3 font-bold text-primary">{t("homepage.network.examsLabel")}</h3>
+                <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+                  {examBrands.map((exam) => <IdentityStage key={exam.id} name={exam.label} href={exam.website} ratio="compact" meta={t(`homepage.languagePrep.exams.${exam.id}.description`, { defaultValue: t("homepage.languagePrep.examSupport") })} />)}
+                </div>
               </div>
-              <div className="rounded-lg border border-border bg-background p-5"><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-brand text-brand-foreground"><Languages className="size-5" /></span><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-strong">CEFR · A1–C2</p><p className="mt-1 text-sm text-muted-foreground">{t("homepage.languagePrep.cefrNote")}</p></div></div><div className="mt-5 grid grid-cols-6 gap-1" dir="ltr">{["A1","A2","B1","B2","C1","C2"].map((level, i) => <span key={level} className={`grid h-10 place-items-center rounded-sm text-xs font-bold ${i < 2 ? "bg-secondary text-primary" : i < 4 ? "bg-brand/15 text-brand-strong" : "bg-primary text-primary-foreground"}`}>{level}</span>)}</div></div>
+              <CefrGuide />
             </div>
           </div>
         </div>
