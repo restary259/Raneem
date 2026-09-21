@@ -955,3 +955,28 @@ a[href*="lovable.dev"] {
 [dir="rtl"] .darb-spectrum {
   transform: scaleX(-1);
 }
+
+/* Master public experience: mobile-first editorial rhythm and stable header/hero handoff. */
+.homepage-experience {
+  overflow: clip;
+}
+
+.homepage-experience :where(section) {
+  scroll-margin-top: calc(var(--darb-header-height, 72px) + 1rem);
+}
+
+.homepage-experience :where(h1, h2, h3, p) {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .homepage-experience .container {
+    padding-inline: 1.125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .darb-home-hero-content {
+    padding-top: calc(var(--darb-header-height, 112px) + 3rem);
+  }
+}

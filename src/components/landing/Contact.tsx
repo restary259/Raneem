@@ -112,7 +112,7 @@ const Contact = () => {
   });
 
   return (
-    <section id="contact" className="bg-background py-14 md:py-20">
+    <section id="contact" className="bg-editorial-paper py-14 md:py-20">
       <div className="container mx-auto px-4">
         <div className="mx-auto mb-12 max-w-5xl text-center md:mb-16">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">{t("support.eyebrow")}</p>
@@ -121,7 +121,7 @@ const Contact = () => {
             {t("support.title")}
           </h2>
           <div className="mx-auto mt-7 flex flex-col items-center">
-            <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-background shadow-[0_14px_40px_rgba(17,17,17,0.14)] ring-1 ring-border md:h-36 md:w-36">
+            <div className="relative h-28 w-28 overflow-hidden rounded-t-full rounded-b-lg border-4 border-background shadow-surface-lg ring-1 ring-border md:h-36 md:w-36">
               <img src={DARB_CONTACT_ADVISOR_SRC} alt={t("support.title")} className="h-full w-full object-cover" loading="eager" />
             </div>
             <p className="mt-5 text-base text-muted-foreground md:text-lg">{t("support.subtitle")}</p>
@@ -140,7 +140,7 @@ const Contact = () => {
         </div>
 
         <div className="grid items-start gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9 scroll-mt-28`}>
+          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} overflow-hidden rounded-lg border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9 scroll-mt-28`}>
             <div className={`mb-8 max-w-2xl text-center ${dir === "rtl" ? "md:text-right" : "md:text-left"}`}>
               <h2 className="text-3xl font-bold md:text-4xl">{t("contact.title")}</h2>
               <p className="mt-4 text-lg text-muted-foreground">{t("contact.subtitle")}</p>
@@ -206,9 +206,9 @@ const Contact = () => {
             <div>
               <h3 className="text-2xl font-bold text-primary">{t("contact.mapTitle")}</h3>
               <p className="mt-2 text-muted-foreground">{t("contact.mapSubtitle")}</p>
-              <div className="mt-5 h-[320px] overflow-hidden border border-border shadow-surface md:h-[390px]"><Map /></div>
+              <div className="mt-5 h-[320px] overflow-hidden rounded-lg border border-border shadow-surface md:h-[390px]"><Map /></div>
             </div>
-            <div className="border border-border bg-muted/25 p-6">
+            <div className="rounded-lg border border-border bg-background p-6">
               <h3 className="mb-4 text-center text-xl font-semibold">{t("contact.follow")}</h3>
               <div className="flex items-center justify-center gap-6">
                 <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground transition-colors hover:text-accent"><Instagram className="h-7 w-7" /></a>

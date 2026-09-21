@@ -200,7 +200,8 @@
       "title": "Your clear path to studying in Germany",
       "subtitle": "We assess your profile, help you choose a suitable route, and guide you through applications, visa preparation, accommodation, and arrival.",
       "imageAlt": "A German university setting representing the beginning of a study journey",
-      "reassurance": "Start with a profile assessment — no online payment"
+      "reassurance": "Start with a profile assessment — no online payment",
+      "campaign": "Your Future Without Borders"
     },
     "actions": {
       "apply": "Assess your profile and apply",
@@ -359,7 +360,13 @@
       "schoolsHint": "Study locations and language preparation across Germany",
       "viewSchools": "See study destinations",
       "examsLabel": "Common exams & tests",
-      "badge": "TU9 · 9 universities"
+      "badge": "TU9 · 9 universities",
+      "pillars": {
+        "language": "Language route",
+        "admission": "Academic admission",
+        "assessment": "Profile assessment",
+        "recognition": "Official requirements"
+      }
     },
     "routes": {
       "eyebrow": "FIND YOUR ROUTE",
@@ -424,7 +431,7 @@
       "levelLabel": "CEFR LANGUAGE LEVEL",
       "levelMeaningLabel": "What you can do at this level",
       "levelStudyLabel": "Typical guided study time",
-      "cefrNote": "Based on the Council of Europe CEFR global scale. These are learner-friendly summaries, not an exam guarantee.",
+      "cefrNote": "The official European framework describes language ability from A1 to C2; each institution sets its own requirement.",
       "examEyebrow": "EXAM SUPPORT",
       "examTitle": "Registration & preparation",
       "examBadge": "DARB SUPPORT",
@@ -485,8 +492,63 @@
       "note": "Exam dates, fees, registration rules and acceptance requirements can change. Check the official provider and your target institution before registering."
     },
     "trust": {
-      "eyebrow": "CLARITY BUILDS TRUST",
-      "title": "One team. Clear responsibilities."
+      "eyebrow": "Clear responsibilities",
+      "title": "Professional support without promises nobody can make"
+    },
+    "explained": {
+      "eyebrow": "Germany, explained clearly",
+      "title": "The questions you need answered first",
+      "body": "Your Bagrut, German level, study route, costs, visa file, and arrival are connected. DARB helps you understand the whole picture before you commit.",
+      "items": [
+        {
+          "title": "Can I study in Germany?",
+          "description": "Your qualifications, subjects, grades, and intended degree shape the possible academic route."
+        },
+        {
+          "title": "Do I need German first?",
+          "description": "Language requirements depend on the program and institution. We help you identify the level and exam your route may require."
+        },
+        {
+          "title": "What happens before I travel?",
+          "description": "Applications, a visa file, insurance, accommodation planning, and written costs all need a clear order."
+        }
+      ]
+    },
+    "nextStep": {
+      "eyebrow": "Find your next step",
+      "title": "Start with the question that is on your mind",
+      "body": "You do not need to understand the complete German system. Choose what you want to solve now.",
+      "items": [
+        {
+          "title": "Explore Germany",
+          "description": "Understand cities, study environments, and the German education path."
+        },
+        {
+          "title": "Find a program",
+          "description": "Browse study directions and discover programs to research further."
+        },
+        {
+          "title": "Check my Bagrut",
+          "description": "Use the calculator as an orientation tool for your academic profile."
+        },
+        {
+          "title": "Plan my German",
+          "description": "See language-year destinations, schools, levels, and common exams."
+        },
+        {
+          "title": "Ask for guidance",
+          "description": "Talk to the DARB team or begin with the bilingual AI advisor."
+        },
+        {
+          "title": "Start my assessment",
+          "description": "Share your profile so our team can understand your situation."
+        }
+      ]
+    },
+    "path": {
+      "arrivalEyebrow": "After the application",
+      "arrivalTitle": "Preparation does not end with an admission application",
+      "arrivalBody": "Visa-file organization, insurance and accommodation coordination, travel preparation, and understanding your first steps in Germany are part of a connected journey."
     }
   }
 }
