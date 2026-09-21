@@ -37,7 +37,18 @@ type GalleryStudent = { name: string; destination: string; image: string; focus?
 const serviceIcons = [SearchCheck, FileCheck2, ShieldCheck, Home, HeartHandshake];
 const routeIcons = [GraduationCap, Languages, Compass];
 const journeyIcons = [SearchCheck, FileCheck2, Plane, GraduationCap];
-const ecosystemExams = ["TestDaF", "telc", "TestAS", "DSH", "IELTS", "TOEFL", "OnSET"];
+const examBrands = [
+  { id: "telc", label: "telc", subtitle: "German language exams", logoUrl: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Telc_GmbH_logo.svg", website: "https://www.telc.net/en/" },
+  { id: "TestDaF", label: "TestDaF", subtitle: "German for university", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/TestDaF_RGB_transparent.png", website: "https://www.testdaf.de/" },
+  { id: "TestAS", label: "TestAS", subtitle: "Academic aptitude test", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/TestAS_RGB_transparent.png", website: "https://www.testas.de/en/" },
+  { id: "onSET", label: "onSET", subtitle: "Online language placement", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/onSET_RGB_transparent.png", website: "https://www.onset.de/" },
+  { id: "DSH", label: "DSH", subtitle: "University entrance language exam", website: "https://www.fadaf.de/dsh/" },
+  { id: "Goethe", label: "Goethe-Zertifikat", subtitle: "German language certificate", website: "https://www.goethe.de/en/spr/kup/prf.html" },
+  { id: "IELTS", label: "IELTS", subtitle: "English language test", website: "https://ielts.org/" },
+  { id: "TOEFL", label: "TOEFL", subtitle: "English language test", website: "https://www.ets.org/toefl.html" },
+];
+
+const ecosystemExams = examBrands.map((exam) => exam.id);
 
 const StudentFigure = ({
   student,
@@ -445,29 +456,46 @@ const HomepageExperience = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 space-y-2">
-                  {["telc", "TestDaF", "TestAS", "onSET"].map((exam, index) => {
-                    const isActive = activeExam === exam;
-                    const accents = ["bg-trust text-white", "bg-brand-strong text-white", "bg-secondary text-secondary-foreground", "bg-primary text-primary-foreground"];
+                <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {examBrands.map((exam) => {
+                    const isActive = activeExam === exam.id;
                     return (
                       <button
-                        key={exam}
+                        key={exam.id}
                         type="button"
-                        onClick={() => setActiveExam(exam)}
+                        onClick={() => setActiveExam(exam.id)}
                         aria-pressed={isActive}
-                        className={isActive ? "flex w-full items-center gap-3 rounded-md border border-brand/40 bg-editorial-paper px-3 py-2.5 text-start shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-start transition-colors hover:border-border hover:bg-editorial-paper/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
+                        title={exam.subtitle}
+                        className={isActive ? "group flex min-h-[86px] flex-col items-center justify-center rounded-md border border-brand bg-editorial-paper px-2 py-3 text-center shadow-surface transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "group flex min-h-[86px] flex-col items-center justify-center rounded-md border border-border bg-background px-2 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
                       >
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-[0.58rem] font-black tracking-tight ${accents[index]}`}>{exam === "TestDaF" ? "TD" : exam === "TestAS" ? "TA" : exam === "onSET" ? "OS" : "TC"}</span>
-                        <span className="font-semibold">{exam}</span>
-                        <Arrow className={`ms-auto h-4 w-4 transition-transform ${isActive ? "translate-x-0 opacity-100" : "opacity-30"} rtl:rotate-180`} />
+                        {exam.logoUrl ? (
+                          <img
+                            src={exam.logoUrl}
+                            alt={exam.label}
+                            loading="lazy"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                            className="max-h-10 w-auto max-w-[118px] object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <span className={isActive ? "text-xl font-black tracking-tight text-primary" : "text-xl font-black tracking-tight text-primary"}>{exam.label}</span>
+                        )}
+                        <span className="mt-2 line-clamp-1 text-[0.56rem] font-medium text-muted-foreground">{exam.subtitle}</span>
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="mt-3 border-t border-border pt-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{examDetails[activeExam]?.label ?? activeExam}</p>
-                  <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{examDetails[activeExam]?.description}</p>
+                <div className="mt-4 rounded-md border border-border bg-editorial-paper/60 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{examDetails[activeExam]?.label ?? activeExam}</p>
+                      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{examDetails[activeExam]?.description}</p>
+                    </div>
+                    <span className="hidden shrink-0 rounded-full border border-brand/25 bg-brand/[0.07] px-2 py-1 text-[0.58rem] font-bold uppercase tracking-[0.13em] text-brand-strong sm:block">
+                      {t("homepage.languagePrep.registrationBadge")}
+                    </span>
+                  </div>
                   <Link
                     to="/apply"
                     className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-brand-strong transition-all hover:gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
