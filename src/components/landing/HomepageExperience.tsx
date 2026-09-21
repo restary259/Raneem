@@ -457,7 +457,7 @@ const HomepageExperience = () => {
                         aria-pressed={isActive}
                         className={isActive ? "flex w-full items-center gap-3 rounded-md border border-brand/40 bg-editorial-paper px-3 py-2.5 text-start shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "flex w-full items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-start transition-colors hover:border-border hover:bg-editorial-paper/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
                       >
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-[0.58rem] font-black tracking-tight ${accents[index]}`}>{exam === "TestDaF" ? "TD" : exam === "TestAS" ? "TA" : exam === "onSET" ? "OS" : "t"</span>
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-[0.58rem] font-black tracking-tight ${accents[index]}`}>{exam === "TestDaF" ? "TD" : exam === "TestAS" ? "TA" : exam === "onSET" ? "OS" : "TC"}</span>
                         <span className="font-semibold">{exam}</span>
                         <Arrow className={`ms-auto h-4 w-4 transition-transform ${isActive ? "translate-x-0 opacity-100" : "opacity-30"} rtl:rotate-180`} />
                       </button>
