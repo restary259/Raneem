@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from '@/lib/router-compat';
 import { useAuth, AppRole } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
 import AdminSecurityGate from '@/components/admin/AdminSecurityGate';
 import ForcePasswordChange from '@/components/auth/ForcePasswordChange';
+import { DashboardRouteFallback } from '@/components/shell/RouteFallbacks';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,11 +18,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   // Wait for auth to initialize
   if (!initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <DashboardRouteFallback />;
   }
 
   // Not logged in

@@ -146,7 +146,7 @@ const Contact = () => {
               <p className="mt-4 text-lg text-muted-foreground">{t("contact.subtitle")}</p>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-5" data-testid="contact-form">
               <div className="grid gap-4 md:grid-cols-2">
                 <FieldGroup label={`${t("contact.form.fullName")} *`}>
                   <Input value={fullName} maxLength={100} onChange={(event) => setFullName(event.target.value)} placeholder={t("contact.form.namePlaceholder")} dir={dir} className="h-12 rounded-lg" aria-invalid={Boolean(errors.fullName)} />
@@ -195,7 +195,7 @@ const Contact = () => {
                 error={errors.consent}
               />
 
-              <Button type="button" className="h-12 w-full font-bold" size="lg" disabled={isPending} onClick={() => mutate()}>
+              <Button type="button" data-testid="contact-submit" className="h-12 w-full font-bold" size="lg" disabled={isPending} onClick={() => mutate()}>
                 {isPending ? t("contact.form.sending") : t("contact.form.submit")}
               </Button>
             </div>

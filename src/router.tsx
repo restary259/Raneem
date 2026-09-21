@@ -39,10 +39,11 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     context: { queryClient },
+    defaultPreload: "intent",
     // The old app scrolled to top on every pathname change (AppShell effect
     // preserves that); router scroll restoration would fight it.
     scrollRestoration: false,
-    defaultPreloadStaleTime: 0,
+    defaultPreloadStaleTime: 30_000,
     // SPA mode (defaultSsr: false) is configured in src/start.ts.
   });
 

@@ -1,0 +1,116 @@
+{
+  "contactHero": {
+    "title": "تواصل معنا",
+    "subtitle": "",
+    "imageAlt": "إطلالة مشرقة على مدينة دوسلدورف ونهر الراين في ألمانيا"
+  },
+  "contact": {
+    "title": "كيف يمكننا مساعدتك؟",
+    "subtitle": "أرسل سؤالك وسيتواصل معك فريق درب.",
+    "form": {
+      "name": "الاسم الكامل",
+      "namePlaceholder": "اسمك الكامل",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "your.email@example.com",
+      "whatsapp": "رقم الواتساب",
+      "whatsappPlaceholder": "مع رمز الدولة",
+      "destination": "بلد الاهتمام بالدراسة",
+      "destinationPlaceholder": "اختر بلدًا",
+      "destinationOptions": {
+        "germany": "ألمانيا",
+        "romania": "رومانيا",
+        "jordan": "الأردن"
+      },
+      "service": "الخدمة المطلوبة",
+      "servicePlaceholder": "اختر خدمة",
+      "serviceOptions": [
+        "التقديم الجامعي",
+        "الترجمة والتوثيق",
+        "دورات اللغة",
+        "التأشيرات والإقامة",
+        "خدمات السكن",
+        "الاستقبال والمتابعة",
+        "الاستشارات الشخصية",
+        "استشارة عامة"
+      ],
+      "message": "الرسالة أو السؤال",
+      "messagePlaceholder": "اكتب سؤالك أو رسالتك هنا...",
+      "submit": "أرسل الآن",
+      "sending": "جارٍ الإرسال...",
+      "topic": "كيف يمكننا مساعدتك؟",
+      "topicPlaceholder": "اختر موضوعًا",
+      "topicOptions": {
+        "admissions": "القبول الجامعي",
+        "language_courses": "دورات اللغة",
+        "visa": "التأشيرة والإقامة",
+        "accommodation": "السكن",
+        "partnership": "الشراكة",
+        "general": "سؤال عام"
+      },
+      "fullName": "الاسم الكامل",
+      "phone": "رقم الهاتف",
+      "phonePlaceholder": "مع رمز الدولة",
+      "interestedMajor": "التخصص المهتم به",
+      "majorPlaceholder": "اختر تخصصاً",
+      "city": "المدينة",
+      "cityPlaceholder": "مدينتك",
+      "educationLevel": "المستوى التعليمي الحالي",
+      "educationPlaceholder": "اختر المستوى",
+      "stillInSchool": "ما زلت في المدرسة؟",
+      "selectPlaceholder": "اختر",
+      "englishUnits": "وحدات الإنجليزي",
+      "mathUnits": "وحدات الرياضيات",
+      "majorOptions": {
+        "engineering": "هندسة",
+        "business": "إدارة أعمال",
+        "medicine": "طب",
+        "humanities": "علوم إنسانية",
+        "natural-sciences": "علوم طبيعية"
+      },
+      "educationOptions": {
+        "highschool": "ثانوية",
+        "bagrut": "بجروت",
+        "bachelor": "بكالوريوس",
+        "master": "ماجستير"
+      },
+      "yesNo": {
+        "yes": "نعم",
+        "no": "لا"
+      }
+    },
+    "toast": {
+      "successTitle": "تم إرسال رسالتك بنجاح!",
+      "successDescription": "شكرًا لتواصلك معنا. سيقوم أحد مستشارينا بالرد عليك قريبًا.",
+      "errorTitle": "لم يتم إرسال الرسالة"
+    },
+    "consent": {
+      "collected": "الاسم الكامل والبريد الإلكتروني أو رقم الهاتف وموضوع الرسالة ومحتواها",
+      "purpose": "نستخدم هذه البيانات فقط للإجابة عن استفسارك والتواصل معك بخصوصه.",
+      "agree": "أوافق على معالجة درب لبياناتي والتواصل معي بخصوص هذا الاستفسار. *"
+    },
+    "follow": "تابعنا",
+    "mapTitle": "موقعنا على الخريطة",
+    "mapSubtitle": "استكشف مواقع مكاتبنا حول العالم.",
+    "validation": {
+      "cityRequired": "المدينة مطلوبة",
+      "educationRequired": "المستوى التعليمي مطلوب",
+      "stillInSchoolRequired": "يرجى الاختيار",
+      "fullName": "أدخل اسمك الكامل.",
+      "email": "أدخل بريدًا إلكترونيًا صحيحًا.",
+      "phone": "أدخل رقم هاتف صحيحًا.",
+      "topic": "اختر موضوع الاستفسار.",
+      "message": "اكتب رسالة من 5 أحرف على الأقل.",
+      "contact": "أدخل بريدًا إلكترونيًا أو رقم هاتف.",
+      "consent": "الموافقة مطلوبة قبل الإرسال.",
+      "review": "يرجى مراجعة الحقول المحددة."
+    }
+  },
+  "support": {
+    "eyebrow": "تواصل",
+    "title": "بدك معلومات أكثر أو عندك أي سؤال؟",
+    "subtitle": "نحن جاهزين نساعدك!",
+    "contact": "تواصل معنا",
+    "whatsapp": "واتساب",
+    "apply": "ابدأ طلبك"
+  }
+}

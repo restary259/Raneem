@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Index from "@/pages/Index";
+import germanyHero from "@/assets/germany-home-hero.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "preload", href: germanyHero, as: "image", fetchPriority: "high" }],
   }),
   component: Index,
 });
