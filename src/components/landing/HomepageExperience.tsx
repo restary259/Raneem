@@ -121,10 +121,10 @@ const HomepageExperience = () => {
           height={1080}
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-primary/10" />
+        <div className="absolute inset-0 bg-foreground/10" />
 
         <div className="darb-home-hero-content container relative z-10 mx-auto flex w-full justify-center px-4">
-          <div className="darb-home-hero-panel bg-primary/80 text-center shadow-surface-lg backdrop-blur-[2px]">
+          <div className="darb-home-hero-panel bg-foreground/80 text-center shadow-surface-lg backdrop-blur-[2px]">
             <p className="darb-home-hero-eyebrow font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
             <h1 className="darb-home-hero-title mx-auto mt-3 max-w-2xl font-bold leading-[1.15] text-primary-foreground">
               {t("homepage.hero.title")}
@@ -133,10 +133,10 @@ const HomepageExperience = () => {
               {t("homepage.hero.subtitle")}
             </p>
             <div className="darb-home-hero-actions flex flex-col justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="accent" className="darb-home-hero-button rounded-md text-base shadow-[0_8px_24px_-12px_hsl(var(--brand)/0.65)]">
+              <Button asChild size="lg" className="darb-home-hero-button text-base shadow-surface-lg">
                 <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="darb-home-hero-button rounded-md border-primary-foreground/35 bg-primary/10 text-base text-primary-foreground backdrop-blur-sm hover:bg-primary-foreground hover:text-primary">
+              <Button asChild size="lg" variant="outline" className="darb-home-hero-button border-primary-foreground/45 bg-background/10 text-base text-primary-foreground backdrop-blur-sm hover:bg-background hover:text-primary">
                 <a
                   href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")}
                   target="_blank"
@@ -152,9 +152,7 @@ const HomepageExperience = () => {
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 grid h-3 grid-cols-7" aria-hidden="true">
-          <span className="bg-destructive" /><span className="bg-brand" /><span className="bg-trust" /><span className="bg-primary" /><span className="bg-secondary" /><span className="bg-brand" /><span className="bg-primary" />
-        </div>
+        <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
       </section>
 
       <div className="darb-flight-transition relative h-20 overflow-hidden bg-background" aria-hidden="true">
@@ -663,7 +661,7 @@ const HomepageExperience = () => {
           <div>
             <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand">{t("homepage.students.eyebrow")}</p>
             <h2 id="homepage-students-title" className="mt-2 max-w-lg text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.students.title")}</h2>
-            <Button asChild variant="outline" className="mt-7 rounded-md border-primary-foreground/25 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+          <Button asChild variant="outline" className="mt-7 border-primary-foreground/25 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">
               <Link to="/apply">{t("homepage.actions.checkProfile")}<Arrow className="h-4 w-4" /></Link>
             </Button>
           </div>
@@ -756,7 +754,7 @@ const HomepageExperience = () => {
             <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand">{t("homepage.final.eyebrow")}</p>
             <h2 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.final.title")}</h2>
           </div>
-          <Button asChild size="lg" variant="accent" className="rounded-md">
+          <Button asChild size="lg">
             <Link to="/apply">{t("homepage.routes.cta")}<Arrow className="h-4 w-4" /></Link>
           </Button>
         </div>
