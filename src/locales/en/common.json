@@ -345,7 +345,28 @@
       "dsh": "DSH",
       "onset": "OnSET"
     },
-    "universityLogoNote": "University logos are shown for identification and link to each university’s official website. Brand and trademark rights remain with the respective universities."
+    "universityLogoNote": "University logos are shown for identification and link to each university’s official website. Brand and trademark rights remain with the respective universities.",
+    "editorial": {
+      "heroEyebrow": "Germany, city by city",
+      "heroTitle": "SAME DREAM. DIFFERENT DESTINATION.",
+      "heroSubtitle": "Explore the cities where your path to Germany can begin.",
+      "exploreButton": "Explore the cities",
+      "advisorButton": "Ask the DARB advisor",
+      "choiceTitle": "Choose the environment, not only the name.",
+      "choiceBody": "A destination can change your language-school options, daily rhythm, local costs and future study research. Compare each route before deciding.",
+      "citiesTitle": "Five supported starting points.",
+      "citiesBody": "Each city below is connected to a language-school route currently represented in DARB’s verified destination data.",
+      "cityImageAlt": "Recognizable view of {{city}}, Germany",
+      "study": "Study",
+      "studyBody": "Use this city as a starting point for researching your German language and later academic path.",
+      "language": "Language",
+      "university": "University",
+      "universityBody": "University admission is separate. Check each institution’s official requirements for your intended program.",
+      "life": "Life",
+      "nextStep": "Discuss this city",
+      "tu9Body": "A separate Germany-wide reference to the nine technical universities in the official TU9 alliance—not a list of placements or guaranteed admission.",
+      "tu9Source": "Open the official TU9 source"
+    }
   },
   "loader": {
     "brand": "Darb",

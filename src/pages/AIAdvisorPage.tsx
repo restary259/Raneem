@@ -86,16 +86,16 @@ const AIAdvisorPage = () => {
             <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.28fr)] lg:items-start lg:gap-8">
               <div className="min-w-0 space-y-4 sm:space-y-6">
                 <div className="overflow-hidden rounded-2xl border border-border bg-editorial-paper shadow-surface sm:rounded-3xl">
-                  <div className="grid grid-cols-[92px_minmax(0,1fr)] items-stretch sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-1">
-                    <div className="relative min-h-36 overflow-hidden bg-secondary sm:min-h-48 lg:aspect-[16/11]">
+                  <div className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-1 p-4 sm:grid-cols-[152px_minmax(0,1fr)] sm:gap-3 sm:p-6 lg:grid-cols-1 lg:justify-items-center lg:text-center">
+                    <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-full border-4 border-background bg-secondary shadow-surface sm:w-36 lg:w-56">
                       <img
                         src={DARB_CONTACT_ADVISOR_SRC}
                         alt={t("advisor.imageAlt")}
-                        className="absolute inset-0 size-full object-cover object-center"
+                        className="absolute inset-0 size-full rounded-full object-cover object-[50%_42%]"
                         fetchPriority="high"
                       />
                     </div>
-                    <div className="min-w-0 p-4 sm:p-6 lg:p-7">
+                    <div className="min-w-0 p-3 sm:p-4 lg:p-2 lg:pb-4">
                       <p className="text-xs font-semibold uppercase text-primary">
                         {t("advisor.hub.eyebrow")}
                       </p>
@@ -211,11 +211,11 @@ const AIAdvisorPage = () => {
                     {uiMessages.length === 0 ? (
                       <ConversationEmptyState className="min-h-full px-1 py-8 sm:px-8">
                         <div className="mx-auto max-w-xl space-y-5 text-center">
-                          <div className="mx-auto flex size-14 items-center justify-center overflow-hidden rounded-full border border-border bg-editorial-paper shadow-sm">
+                           <div className="mx-auto flex aspect-square size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-editorial-paper shadow-sm">
                             <img
                               src={DARB_CONTACT_ADVISOR_SRC}
                               alt=""
-                              className="size-full object-cover"
+                               className="size-full rounded-full object-cover object-[50%_42%]"
                             />
                           </div>
                           <div className="space-y-2">
