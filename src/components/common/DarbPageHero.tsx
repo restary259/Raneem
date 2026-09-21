@@ -39,7 +39,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
-      <div className="absolute inset-0 bg-foreground/10" />
+      <div className="absolute inset-0 bg-hero-panel/10" />
       <div
         className={cn(
           "container relative z-10 flex items-center justify-center px-4",
@@ -48,7 +48,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <div
           className={cn(
-            "darb-page-hero-panel w-full bg-foreground/80 text-center shadow-surface-lg backdrop-blur-[2px]",
+            "darb-page-hero-panel w-full bg-hero-panel/80 text-center shadow-surface-lg backdrop-blur-[2px]",
           )}
         >
           {eyebrow ? (

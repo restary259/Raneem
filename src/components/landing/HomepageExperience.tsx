@@ -121,10 +121,10 @@ const HomepageExperience = () => {
           height={1080}
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-foreground/10" />
+        <div className="absolute inset-0 bg-hero-panel/10" />
 
         <div className="darb-home-hero-content container relative z-10 mx-auto flex w-full justify-center px-4">
-          <div className="darb-home-hero-panel bg-foreground/80 text-center shadow-surface-lg backdrop-blur-[2px]">
+          <div className="darb-home-hero-panel bg-hero-panel/80 text-center shadow-surface-lg backdrop-blur-[2px]">
             <p className="darb-home-hero-eyebrow font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
             <h1 className="darb-home-hero-title mx-auto mt-3 max-w-2xl font-bold leading-[1.15] text-primary-foreground">
               {t("homepage.hero.title")}
