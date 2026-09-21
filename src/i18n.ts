@@ -6,14 +6,14 @@ import HttpBackend from 'i18next-http-backend';
 // Import broadcast translations directly to avoid async loading issues
 import broadcastAr from '../public/locales/ar/broadcast.json';
 import broadcastEn from '../public/locales/en/broadcast.json';
-import commonAr from '../public/locales/ar/common.json';
-import commonEn from '../public/locales/en/common.json';
-import contactAr from '../public/locales/ar/contact.json';
-import contactEn from '../public/locales/en/contact.json';
-import landingAr from '../public/locales/ar/landing.json';
-import landingEn from '../public/locales/en/landing.json';
-import legalAr from '../public/locales/ar/legal.json';
-import legalEn from '../public/locales/en/legal.json';
+import commonAr from './locales/ar/common.json';
+import commonEn from './locales/en/common.json';
+import contactAr from './locales/ar/contact.json';
+import contactEn from './locales/en/contact.json';
+import landingAr from './locales/ar/landing.json';
+import landingEn from './locales/en/landing.json';
+import legalAr from './locales/ar/legal.json';
+import legalEn from './locales/en/legal.json';
 
 const savedLang = typeof window !== 'undefined' ? localStorage.getItem('i18n_lang') : null;
 
