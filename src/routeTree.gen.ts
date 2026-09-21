@@ -67,6 +67,7 @@ import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as InvoiceTokenRouteImport } from './routes/invoice.$token'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as LanguageExamsExamRouteImport } from './routes/language-exams.$exam'
 import { Route as PartnerIndexRouteImport } from './routes/partner.index'
 import { Route as PartnerApplyRouteImport } from './routes/partner.apply'
 import { Route as PartnerEarningsRouteImport } from './routes/partner.earnings'
@@ -406,6 +407,11 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
   path: '/join/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LanguageExamsExamRoute = LanguageExamsExamRouteImport.update({
+  id: '/language-exams/$exam',
+  path: '/language-exams/$exam',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PartnerIndexRoute = PartnerIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -710,6 +716,7 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/invoice/$token': typeof InvoiceTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/language-exams/$exam': typeof LanguageExamsExamRoute
   '/partner/apply': typeof PartnerApplyRoute
   '/partner/earnings': typeof PartnerEarningsRoute
   '/partner/messages': typeof PartnerMessagesRoute
@@ -813,6 +820,7 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/invoice/$token': typeof InvoiceTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/language-exams/$exam': typeof LanguageExamsExamRoute
   '/partner/apply': typeof PartnerApplyRoute
   '/partner/earnings': typeof PartnerEarningsRoute
   '/partner/messages': typeof PartnerMessagesRoute
@@ -922,6 +930,7 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/invoice/$token': typeof InvoiceTokenRoute
   '/join/$code': typeof JoinCodeRoute
+  '/language-exams/$exam': typeof LanguageExamsExamRoute
   '/partner/apply': typeof PartnerApplyRoute
   '/partner/earnings': typeof PartnerEarningsRoute
   '/partner/messages': typeof PartnerMessagesRoute
@@ -1032,6 +1041,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/invoice/$token'
     | '/join/$code'
+    | '/language-exams/$exam'
     | '/partner/apply'
     | '/partner/earnings'
     | '/partner/messages'
@@ -1135,6 +1145,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/invoice/$token'
     | '/join/$code'
+    | '/language-exams/$exam'
     | '/partner/apply'
     | '/partner/earnings'
     | '/partner/messages'
@@ -1243,6 +1254,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/invoice/$token'
     | '/join/$code'
+    | '/language-exams/$exam'
     | '/partner/apply'
     | '/partner/earnings'
     | '/partner/messages'
@@ -1326,6 +1338,7 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   InvoiceTokenRoute: typeof InvoiceTokenRoute
   JoinCodeRoute: typeof JoinCodeRoute
+  LanguageExamsExamRoute: typeof LanguageExamsExamRoute
   ResourcesBagrutCalculatorRoute: typeof ResourcesBagrutCalculatorRoute
   ResourcesCostCalculatorRoute: typeof ResourcesCostCalculatorRoute
   ResourcesCurrencyConverterRoute: typeof ResourcesCurrencyConverterRoute
@@ -1744,6 +1757,13 @@ declare module '@tanstack/react-router' {
       path: '/join/$code'
       fullPath: '/join/$code'
       preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/language-exams/$exam': {
+      id: '/language-exams/$exam'
+      path: '/language-exams/$exam'
+      fullPath: '/language-exams/$exam'
+      preLoaderRoute: typeof LanguageExamsExamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner/': {
@@ -2291,6 +2311,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   InvoiceTokenRoute: InvoiceTokenRoute,
   JoinCodeRoute: JoinCodeRoute,
+  LanguageExamsExamRoute: LanguageExamsExamRoute,
   ResourcesBagrutCalculatorRoute: ResourcesBagrutCalculatorRoute,
   ResourcesCostCalculatorRoute: ResourcesCostCalculatorRoute,
   ResourcesCurrencyConverterRoute: ResourcesCurrencyConverterRoute,
