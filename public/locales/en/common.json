@@ -381,7 +381,9 @@
     "offlineReply": "You're currently offline. You can review previous conversations or try common questions.",
     "connectionError": "Failed to connect to AI assistant",
     "signInRequired": "Please sign in to use the AI advisor.",
-    "send": "Send"
+    "send": "Send",
+    "loading": "Thinking…",
+    "scrollToLatest": "Scroll to latest message"
   },
   "quickQuestions": [
     "How do I start applying to German universities?",
@@ -427,6 +429,7 @@
   "advisor": {
     "title": "Darb AI Advisor",
     "description": "Your personal guide to studying in Germany 🇩🇪 — Ask me about admissions, visas, language, or student life",
+    "imageAlt": "DARB student advisor ready to help",
     "categories": {
       "admissions": "University Admissions",
       "visa": "Visa & Travel",
