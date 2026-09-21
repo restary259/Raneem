@@ -197,7 +197,7 @@ const HomepageExperience = () => {
                       tabIndex={isPrimarySet ? 0 : -1}
                       aria-hidden={isPrimarySet ? undefined : true}
                     >
-                      <div className="flex h-14 w-full items-center justify-center sm:h-16">
+                      <div className="darb-logo-stage darb-logo-stage-tu9">
                         <img
                           src={uni.logoUrl}
                           alt={isPrimarySet ? uni.name : ""}
@@ -205,7 +205,7 @@ const HomepageExperience = () => {
                           fetchPriority={isPrimarySet ? "high" : "low"}
                           decoding="async"
                           referrerPolicy="no-referrer"
-                          className="max-h-11 w-auto max-w-[126px] object-contain opacity-75 transition-all duration-300 group-hover:scale-[1.04] group-hover:opacity-100"
+                          className="darb-marquee-logo opacity-75 transition-all duration-300 group-hover:scale-[1.04] group-hover:opacity-100"
                           onError={(event) => {
                             const image = event.currentTarget;
                             image.style.display = "none";
@@ -237,34 +237,42 @@ const HomepageExperience = () => {
 
             <div className="darb-logo-marquee darb-logo-marquee-schools rounded-md border border-border bg-editorial-paper" dir="ltr" aria-label={t("homepage.network.schoolsLabel")}>
               <div className="darb-logo-marquee-track">
-                {[...languageYearSchools, ...languageYearSchools].map((school, index) => (
-                  <a
-                    key={`${school.name}-${index}`}
-                    href={school.officialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={school.name}
-                    className="darb-school-logo-tile group"
-                  >
-                    {school.logoUrl ? (
-                      <img
-                        src={school.logoUrl}
-                        alt={school.name}
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        className="max-h-12 w-auto max-w-[170px] object-contain opacity-80 transition-all duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
-                        onError={(event) => {
-                          const image = event.currentTarget;
-                          image.style.display = "none";
-                          const fallback = image.nextElementSibling as HTMLElement | null;
-                          if (fallback) fallback.hidden = false;
-                        }}
-                      />
-                    ) : null}
-                    <span hidden className="max-w-[160px] text-center text-xs font-bold leading-4 text-primary">{school.name}</span>
-                  </a>
-                ))}
+                {[...languageYearSchools, ...languageYearSchools].map((school, index) => {
+                  const isPrimarySet = index < languageYearSchools.length;
+                  return (
+                    <a
+                      key={`${school.name}-${index}`}
+                      href={school.officialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={school.name}
+                      className="darb-school-logo-tile group"
+                      tabIndex={isPrimarySet ? 0 : -1}
+                      aria-hidden={isPrimarySet ? undefined : true}
+                    >
+                      <span className="darb-logo-stage darb-logo-stage-school">
+                        {school.logoUrl ? (
+                          <img
+                            src={school.logoUrl}
+                            alt={isPrimarySet ? school.name : ""}
+                            loading={isPrimarySet ? "eager" : "lazy"}
+                            fetchPriority={isPrimarySet ? "high" : "low"}
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                            className="darb-marquee-logo opacity-80 transition-all duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
+                            onError={(event) => {
+                              const image = event.currentTarget;
+                              image.style.display = "none";
+                              const fallback = image.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.hidden = false;
+                            }}
+                          />
+                        ) : null}
+                        <span hidden className="max-w-[170px] text-center text-xs font-bold leading-4 text-primary">{school.name}</span>
+                      </span>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </div>
