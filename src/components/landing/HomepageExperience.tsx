@@ -268,7 +268,7 @@ const HomepageExperience = () => {
                             }}
                           />
                         ) : null}
-                        <span hidden className="max-w-[170px] text-center text-xs font-bold leading-4 text-primary">{school.name}</span>
+                        <span hidden={Boolean(school.logoUrl)} className="max-w-[170px] text-center text-xs font-bold leading-4 text-primary">{school.name}</span>
                       </span>
                     </a>
                   );
