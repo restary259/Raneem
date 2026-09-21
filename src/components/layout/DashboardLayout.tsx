@@ -468,9 +468,9 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
 
         <div className="flex min-h-0 flex-1 min-w-0 flex-col overflow-hidden">
           {/* Top header */}
-          <header className="h-14 shrink-0 border-b border-border/50 bg-background/95 px-2 backdrop-blur sticky top-0 z-10 sm:px-4">
+          <header className="h-14 flex items-center justify-between border-b border-border/50 bg-background/95 px-3 backdrop-blur sticky top-0 z-10 sm:px-4">
             <SidebarTrigger className="h-9 w-9 shrink-0" />
-            <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
+            <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
               <LanguageSwitcher />
               <ThemePicker />
 

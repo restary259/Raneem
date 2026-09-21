@@ -7,34 +7,34 @@ const LanguageSwitcher = ({ className = '' }: { className?: string }) => {
 
   return (
     <div
-      className={`flex shrink-0 items-center gap-0.5 rounded-lg border border-border/60 bg-muted/30 px-1 py-1 sm:gap-1.5 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 ${className}`}
+      className={`flex shrink-0 items-center gap-2 sm:gap-3 ${className}`}
       dir="ltr"
       aria-label="Language selector"
     >
       <button
         type="button"
         onClick={() => i18n.changeLanguage('ar')}
-        className={`inline-flex h-7 items-center rounded-md px-1.5 text-[11px] leading-none whitespace-nowrap underline-offset-4 transition-colors hover:bg-accent hover:underline sm:px-1 sm:text-sm ${current === 'ar' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}
+        className={`text-sm whitespace-nowrap underline-offset-4 hover:underline ${current === 'ar' ? 'font-bold' : 'opacity-75'}`}
         aria-label="العربية"
         aria-current={current === 'ar' ? 'true' : undefined}
       >
         العربية
       </button>
-      <span aria-hidden="true" className="text-[10px] text-muted-foreground/50 sm:text-xs">|</span>
+      <span aria-hidden="true" className="opacity-40">|</span>
       <button
         type="button"
         onClick={() => i18n.changeLanguage('en')}
-        className={`inline-flex h-7 items-center rounded-md px-1.5 text-[11px] leading-none whitespace-nowrap underline-offset-4 transition-colors hover:bg-accent hover:underline sm:px-1 sm:text-sm ${current === 'en' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}
+        className={`text-sm whitespace-nowrap underline-offset-4 hover:underline ${current === 'en' ? 'font-bold' : 'opacity-75'}`}
         aria-label="English"
         aria-current={current === 'en' ? 'true' : undefined}
       >
         English
       </button>
-      <span aria-hidden="true" className="text-[10px] text-muted-foreground/50 sm:text-xs">|</span>
+      <span aria-hidden="true" className="opacity-40">|</span>
       <button
         type="button"
         onClick={() => i18n.changeLanguage('he')}
-        className={`inline-flex h-7 items-center rounded-md px-1.5 text-[11px] leading-none whitespace-nowrap underline-offset-4 transition-colors hover:bg-accent hover:underline sm:px-1 sm:text-sm ${current === 'he' ? 'font-bold text-foreground' : 'text-muted-foreground'}`}
+        className={`text-sm whitespace-nowrap underline-offset-4 hover:underline ${current === 'he' ? 'font-bold' : 'opacity-75'}`}
         aria-label="עברית"
         aria-current={current === 'he' ? 'true' : undefined}
       >
