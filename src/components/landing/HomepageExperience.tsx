@@ -390,6 +390,44 @@ const HomepageExperience = () => {
         </div>
       </section>
 
+      <section aria-labelledby="homepage-services-title" className="bg-editorial-paper py-14 sm:py-20">
+        <div className="container">
+          <div className="max-w-3xl">
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.services.eyebrow")}</p>
+            <h2 id="homepage-services-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.services.title")}</h2>
+          </div>
+          <div className="mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {services.map((service, index) => {
+              const Icon = serviceIcons[index] ?? Check;
+              const isActive = activeService === index;
+              return (
+                <button
+                  key={service.title}
+                  type="button"
+                  onClick={() => setActiveService(index)}
+                  aria-pressed={isActive}
+                  className={isActive ? "group min-h-[190px] rounded-2xl border border-brand bg-background p-5 text-start shadow-surface-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:p-6" : "group min-h-[190px] rounded-2xl border border-border bg-background p-5 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand motion-reduce:transform-none sm:p-6"}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={isActive ? "flex h-10 w-10 items-center justify-center rounded-full bg-brand text-brand-foreground" : "flex h-10 w-10 items-center justify-center rounded-full bg-editorial-paper text-brand-strong transition-colors group-hover:bg-brand group-hover:text-brand-foreground"}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-[0.68rem] font-bold tracking-[0.18em] text-muted-foreground">0{index + 1}</span>
+                  </div>
+                  <h3 className="mt-9 text-base font-bold text-primary">{service.title}</h3>
+                  <p className={isActive ? "mt-2 text-sm leading-6 text-muted-foreground" : "mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground opacity-55"}>
+                    {service.description}
+                  </p>
+                  <span className={isActive ? "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-brand-strong" : "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted-foreground/60"}>
+                    {isActive ? t("homepage.services.selected") : t("homepage.services.explore")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section aria-labelledby="homepage-journey-title" className="overflow-hidden bg-editorial-paper py-14 sm:py-20">
         <div className="container">
           <div className="flex items-end justify-between gap-6">
@@ -614,44 +652,6 @@ const HomepageExperience = () => {
                 </Link>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="homepage-services-title" className="bg-background py-14 sm:py-20">
-        <div className="container">
-          <div className="max-w-3xl">
-            <p className="text-[0.68rem] font-bold uppercase tracking-[0.22em] text-brand-strong">{t("homepage.services.eyebrow")}</p>
-            <h2 id="homepage-services-title" className="mt-2 text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.services.title")}</h2>
-          </div>
-          <div className="mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            {services.map((service, index) => {
-              const Icon = serviceIcons[index] ?? Check;
-              const isActive = activeService === index;
-              return (
-                <button
-                  key={service.title}
-                  type="button"
-                  onClick={() => setActiveService(index)}
-                  aria-pressed={isActive}
-                  className={isActive ? "group min-h-[190px] rounded-md border border-brand bg-editorial-paper p-5 text-start shadow-surface-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:p-6" : "group min-h-[190px] rounded-md border border-border bg-background p-5 text-start transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:p-6"}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className={isActive ? "flex h-10 w-10 items-center justify-center rounded-md bg-brand text-brand-foreground" : "flex h-10 w-10 items-center justify-center rounded-md bg-editorial-paper text-brand-strong transition-colors group-hover:bg-brand group-hover:text-brand-foreground"}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-[0.68rem] font-bold tracking-[0.18em] text-muted-foreground">0{index + 1}</span>
-                  </div>
-                  <h3 className="mt-9 text-base font-bold text-primary">{service.title}</h3>
-                  <p className={isActive ? "mt-2 text-sm leading-6 text-muted-foreground" : "mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground opacity-55"}>
-                    {service.description}
-                  </p>
-                  <span className={isActive ? "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-brand-strong" : "mt-4 block text-[0.68rem] font-bold uppercase tracking-[0.18em] text-muted-foreground/60"}>
-                    {isActive ? t("homepage.services.selected") : t("homepage.services.explore")}
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </div>
       </section>
