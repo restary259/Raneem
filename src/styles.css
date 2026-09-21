@@ -899,3 +899,126 @@ a[href*="lovable.dev"] {
   .darb-page-hero-inner {
     padding-top: clamp(1.5rem, 6vh, 3.5rem);
   }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Final public-hero overflow guard
+   Heroes must be viewport-aware without being viewport-locked. A fixed
+   height can clip translated titles, multi-line CTAs, and RTL content on
+   short browser windows. These rules keep a cinematic minimum while allowing
+   the section to grow naturally with its content.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.darb-home-hero,
+.darb-page-hero-compact,
+.darb-page-hero-standard {
+  height: auto !important;
+  max-height: none !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.darb-home-hero {
+  min-height: min(860px, max(480px, 100svh)) !important;
+}
+
+.darb-page-hero-compact {
+  min-height: min(560px, max(360px, 70svh)) !important;
+}
+
+.darb-page-hero-standard {
+  min-height: min(760px, max(460px, 82svh)) !important;
+}
+
+.darb-home-hero-content,
+.darb-page-hero-inner {
+  width: 100%;
+  min-width: 0;
+  min-height: inherit;
+  height: auto;
+  box-sizing: border-box;
+}
+
+.darb-home-hero-panel,
+.darb-page-hero-panel {
+  width: min(92vw, 760px);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  flex: 0 1 760px;
+}
+
+.darb-page-hero-title,
+.darb-page-hero-subtitle,
+.darb-home-hero-title,
+.darb-home-hero-subtitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1023px) {
+  .darb-home-hero {
+    min-height: min(760px, max(500px, 92svh)) !important;
+  }
+
+  .darb-page-hero-compact {
+    min-height: min(560px, max(380px, 70svh)) !important;
+  }
+
+  .darb-page-hero-standard {
+    min-height: min(720px, max(460px, 82svh)) !important;
+  }
+
+  .darb-home-hero-content {
+    padding-top: calc(var(--darb-header-height) + 1rem);
+    padding-bottom: clamp(3rem, 8vw, 4.5rem);
+  }
+
+  .darb-page-hero-inner {
+    padding-top: calc(var(--darb-header-height) + 0.5rem);
+    padding-bottom: clamp(3rem, 8vw, 4.5rem);
+  }
+}
+
+@media (max-width: 639px) {
+  .darb-home-hero {
+    min-height: min(700px, max(500px, 100svh)) !important;
+  }
+
+  .darb-page-hero-compact {
+    min-height: min(520px, max(380px, 78svh)) !important;
+  }
+
+  .darb-page-hero-standard {
+    min-height: min(680px, max(440px, 88svh)) !important;
+  }
+
+  .darb-home-hero-content {
+    padding-top: calc(var(--darb-header-height) + 0.75rem);
+    padding-bottom: clamp(2.75rem, 10vw, 4rem);
+  }
+
+  .darb-page-hero-inner {
+    padding-top: calc(var(--darb-header-height) + 0.5rem);
+    padding-bottom: clamp(2.75rem, 10vw, 4rem);
+  }
+
+  .darb-home-hero-panel,
+  .darb-page-hero-panel {
+    width: 100%;
+    flex-basis: auto;
+  }
+}
+
+@media (max-height: 620px) and (min-width: 768px) {
+  .darb-home-hero,
+  .darb-page-hero-compact,
+  .darb-page-hero-standard {
+    min-height: 440px !important;
+  }
+
+  .darb-home-hero-content,
+  .darb-page-hero-inner {
+    padding-top: calc(var(--darb-header-height) + 0.5rem);
+    padding-bottom: 2.5rem;
+  }
+}
