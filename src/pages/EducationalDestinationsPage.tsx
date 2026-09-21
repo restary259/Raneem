@@ -110,7 +110,7 @@ const EducationalDestinationsPage = () => {
                 return (
                   <article key={city.id} className="grid min-w-0 gap-0 overflow-hidden border border-border bg-background shadow-surface lg:grid-cols-12">
                     <div className={`relative min-h-[300px] lg:col-span-7 lg:min-h-[560px] ${reversed ? "lg:order-2" : ""}`}>
-                      <CityImage src={destinationImages[city.id]} alt={t("destinations.editorial.cityImageAlt", { city: city.name })} city={city.name} className="absolute inset-0 size-full" imageClassName="transition-transform duration-700 hover:scale-[1.02] motion-reduce:transition-none" eager={index === 0} />
+                      <CityImage src={city.imageUrl} fallbackSrc={destinationImages[city.id]} alt={t("destinations.editorial.cityImageAlt", { city: city.name })} city={city.name} className="absolute inset-0 size-full" imageClassName="transition-transform duration-700 hover:scale-[1.02] motion-reduce:transition-none" eager={index === 0} />
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-hero-panel/80 via-transparent to-transparent" />
                       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 text-primary-foreground sm:p-7">
                         <div>
@@ -119,6 +119,7 @@ const EducationalDestinationsPage = () => {
                         </div>
                         <span className="font-editorial text-5xl text-primary-foreground/35 sm:text-7xl">{String(index + 1).padStart(2, "0")}</span>
                       </div>
+                      {city.photoCredit ? <a href={city.photoCredit.url} target="_blank" rel="noopener noreferrer" className="absolute start-4 top-4 bg-hero-panel/70 px-2 py-1 text-[10px] text-primary-foreground/80 backdrop-blur-sm">{city.photoCredit.label}</a> : null}
                     </div>
 
                     <div className={`min-w-0 p-6 sm:p-8 lg:col-span-5 lg:p-10 ${reversed ? "lg:order-1" : ""}`}>
