@@ -28,7 +28,7 @@ const exams: Record<string, ExamDefinition> = {
 const ExamDetailPage = () => {
   const { t } = useTranslation("landing");
   const { isRtl } = useDirection();
-  const { exam = "" } = useParams({ strict: false }) as { exam?: string };
+  const { exam = "" } = useParams<{ exam?: string }>();
   const definition = exams[exam.toLowerCase()] ?? exams.testdaf;
   const examDetails = t("homepage.languagePrep.exams", { returnObjects: true }) as Record<string, { label: string; description: string }>;
   const detail = examDetails[definition.id];
