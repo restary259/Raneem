@@ -460,7 +460,18 @@
         }
       },
       "examCta": "Ask about exam registration",
-      "registrationBadge": "REGISTRATION SUPPORT"
+      "registrationBadge": "REGISTRATION SUPPORT",
+      "viewExam": "View exam details"
+    },
+    "examDetail": {
+      "back": "Back to language preparation",
+      "overview": "Overview",
+      "support": "How DARB can help",
+      "official": "Official information",
+      "officialCta": "Open official exam website",
+      "assessment": "Not sure which exam you need?",
+      "assessmentCta": "Start my assessment",
+      "note": "Exam dates, fees, registration rules and acceptance requirements can change. Check the official provider and your target institution before registering."
     },
     "trust": {
       "eyebrow": "CLARITY BUILDS TRUST",
