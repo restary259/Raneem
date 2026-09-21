@@ -88,22 +88,37 @@ const HomepageExperience = () => {
 
   return (
     <div className="homepage-experience bg-background">
-      <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
-        <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-primary/5" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-background/10" />
+      <section className="darb-home-hero relative isolate overflow-hidden bg-primary text-primary-foreground">
+        <img
+          src={germanyHero}
+          alt={t("homepage.hero.imageAlt")}
+          fetchPriority="high"
+          decoding="async"
+          width={1920}
+          height={1080}
+          className="absolute inset-0 h-full w-full object-cover object-center sm:object-[50%_48%]"
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-primary/55 via-primary/10 to-primary/35" />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-primary/25 via-transparent to-primary/15" />
         <BrandArch />
-        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center py-16">
-          <div className="darb-home-hero-panel max-w-3xl border border-background/70 bg-background/92 text-primary shadow-surface-lg backdrop-blur-sm">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.hero.eyebrow")}</p>
-            <h1 className="mt-4 text-balance font-editorial text-5xl leading-[0.98] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
-            <p className="mt-5 max-w-2xl text-xl font-bold leading-8 sm:text-2xl">{t("homepage.hero.title")}</p>
-            <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">{t("homepage.hero.subtitle")}</p>
+        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center py-[calc(var(--darb-header-height)+2rem)] sm:py-[calc(var(--darb-header-height)+3rem)]">
+          <div className="darb-home-hero-panel w-full max-w-[760px] border border-primary-foreground/15 bg-hero-panel/78 text-primary-foreground shadow-surface-lg backdrop-blur-[3px]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand sm:text-sm">{t("homepage.hero.eyebrow")}</p>
+            <h1 className="mt-4 max-w-3xl text-balance font-editorial text-5xl leading-[0.94] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
+            <p className="mt-5 max-w-2xl text-lg font-bold leading-7 sm:text-xl sm:leading-8 lg:text-2xl">{t("homepage.hero.title")}</p>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-primary-foreground/80 sm:text-base sm:leading-7">{t("homepage.hero.subtitle")}</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
-              <Button asChild size="lg" variant="outline" className="border-border bg-background text-primary text-base"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
+              <Button asChild size="lg" className="min-h-12 bg-brand text-brand-foreground text-base shadow-surface-lg hover:bg-brand/90">
+                <Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="min-h-12 border-primary-foreground/45 bg-primary-foreground/5 text-primary-foreground text-base hover:bg-primary-foreground hover:text-primary">
+                <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a>
+              </Button>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-sm font-medium text-muted-foreground"><CircleCheck className="size-4 text-brand-strong" />{t("homepage.hero.reassurance")}</p>
+            <p className="mt-5 flex items-center gap-2 text-xs font-medium text-primary-foreground/75 sm:text-sm">
+              <CircleCheck className="size-4 shrink-0 text-brand" />
+              {t("homepage.hero.reassurance")}
+            </p>
           </div>
         </div>
         <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
