@@ -1,8 +1,9 @@
-# DARB UI/UX roadmap
+# DARB UX/UI rebuild roadmap
 
-- [x] Phase 1: shared foundations, rendering, headings, buttons, heroes
-- [x] Phase 2: homepage order and mobile experience
-- [x] Phase 3: public navigation, footer, and key public pages
-- [x] Phase 4: dashboard shell and highest-frequency mobile pages
-- [ ] Phase 5: specialist tools and dense screens
-- [ ] Phase 6: responsive, bilingual, accessibility, and regression verification
+- [ ] Shared public visual system: arch, logo stage, buttons, header, footer
+- [ ] Homepage first-minute journey and decision paths
+- [ ] Student proof, study ecosystem, destinations, language/tests
+- [ ] Scope, fees, FAQ, and final conversion
+- [ ] Standard Contact page visual refinement and compact WhatsApp utility
+- [ ] Arabic/English content and metadata verification
+- [ ] Responsive, accessibility, interaction, and build verification
