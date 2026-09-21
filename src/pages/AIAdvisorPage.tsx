@@ -13,7 +13,9 @@ import {
   Mail,
   MessageCircle,
   Trash2,
+  FileText,
 } from "lucide-react";
+import { Link } from "@/lib/router-compat";
 import { whatsappBusinessUrl, SUPPORT_EMAIL } from "@/lib/contactConfig";
 import {
   Conversation,
@@ -141,6 +143,12 @@ const AIAdvisorPage = () => {
                       </a>
                     </Button>
                   </div>
+                  <Button asChild variant="ghost" className="mt-3 w-full justify-between">
+                    <Link to="/contact">
+                      <span className="flex items-center gap-2"><FileText className="size-4" />{t("advisor.hub.contactForm")}</span>
+                      <ArrowUpRight className="size-4 opacity-70 rtl:-scale-x-100" />
+                    </Link>
+                  </Button>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">

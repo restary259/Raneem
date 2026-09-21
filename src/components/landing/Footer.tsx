@@ -28,6 +28,7 @@ const Footer = () => {
           <nav className="grid content-start gap-3 text-sm" aria-label={t('nav.resources')}>
             <p className="font-bold text-primary-foreground">{t('nav.resources')}</p>
             <Link to="/services" className="text-primary-foreground/70 transition-colors hover:text-primary-foreground">{t('nav.services')}</Link>
+            <Link to="/ai-advisor" className="text-primary-foreground/70 transition-colors hover:text-primary-foreground">{t('nav.aiAdvisor')}</Link>
             <Link to="/educational-programs" className="text-primary-foreground/70 transition-colors hover:text-primary-foreground">{t('nav.majors')}</Link>
             <Link to="/faq" className="text-primary-foreground/70 transition-colors hover:text-primary-foreground">
             {t('footer.faq', 'الأسئلة الشائعة عن الدراسة في ألمانيا')}
