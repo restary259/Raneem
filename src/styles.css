@@ -514,6 +514,7 @@ a[href*="lovable.dev"] {
 .darb-logo-marquee {
   overflow: hidden;
   position: relative;
+  isolation: isolate;
 }
 
 .darb-logo-marquee::before,
@@ -523,26 +524,43 @@ a[href*="lovable.dev"] {
   top: 0;
   bottom: 0;
   width: clamp(24px, 4vw, 64px);
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
 }
 
 .darb-logo-marquee::before {
   left: 0;
-  background: linear-gradient(to right, hsl(var(--background)), transparent);
+  background: linear-gradient(to right, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 35%, transparent 100%);
 }
 
 .darb-logo-marquee::after {
   right: 0;
-  background: linear-gradient(to left, hsl(var(--background)), transparent);
+  background: linear-gradient(to left, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 35%, transparent 100%);
+}
+
+.darb-logo-marquee-schools::before {
+  background: linear-gradient(to right, hsl(var(--editorial-paper)) 0%, hsl(var(--editorial-paper) / 0.9) 35%, transparent 100%);
+}
+
+.darb-logo-marquee-schools::after {
+  background: linear-gradient(to left, hsl(var(--editorial-paper)) 0%, hsl(var(--editorial-paper) / 0.9) 35%, transparent 100%);
 }
 
 .darb-logo-marquee-track {
   display: flex;
   width: max-content;
   align-items: stretch;
-  animation: darb-logo-marquee 34s linear infinite;
   will-change: transform;
+  animation: darb-logo-marquee 34s linear infinite;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+.darb-logo-marquee-group {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: max-content;
+  align-items: stretch;
 }
 
 .darb-logo-marquee:hover .darb-logo-marquee-track,
@@ -556,16 +574,19 @@ a[href*="lovable.dev"] {
 
 .darb-logo-tile,
 .darb-school-logo-tile {
-  flex: 0 0 clamp(132px, 12vw, 176px);
+  flex: 0 0 176px;
+  min-width: 0;
+  width: 176px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 104px;
-  padding: 1rem 0.9rem;
+  min-height: 112px;
+  padding: 0.95rem 0.75rem;
   border-right: 1px solid hsl(var(--border));
   text-align: center;
-  transition: background-color 200ms ease, box-shadow 200ms ease;
+  transition: background-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
 }
 
 .darb-logo-tile:hover,
@@ -574,9 +595,82 @@ a[href*="lovable.dev"] {
   box-shadow: inset 0 -2px 0 hsl(var(--brand));
 }
 
+.darb-logo-image-stage {
+  width: 148px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.darb-university-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 138px;
+  max-height: 46px;
+  object-fit: contain;
+}
+
+.darb-logo-fallback,
+.darb-school-logo-fallback {
+  display: block;
+  max-width: 138px;
+  font-size: 0.75rem;
+  line-height: 1.15rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+
+.darb-logo-city {
+  margin-top: 0.5rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: hsl(var(--muted-foreground));
+  transition: color 200ms ease;
+}
+
+.group:hover .darb-logo-city {
+  color: hsl(var(--foreground));
+}
+
 .darb-school-logo-tile {
-  min-height: 92px;
+  flex: 0 0 184px;
+  width: 184px;
+  min-height: 104px;
+  padding-inline: 0.9rem;
   background: hsl(var(--editorial-paper));
+}
+
+.darb-school-logo-image-stage {
+  width: 158px;
+  height: 56px;
+  flex: 0 0 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.darb-school-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 154px;
+  max-height: 46px;
+  object-fit: contain;
+}
+
+.darb-school-logo-fallback {
+  max-width: 154px;
+  font-size: 0.78rem;
+  line-height: 1.15rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
 }
 
 @keyframes darb-logo-marquee {
@@ -588,18 +682,62 @@ a[href*="lovable.dev"] {
   }
 }
 
-@media (max-width: 767px) {
+@media (min-width: 1024px) {
+  .darb-logo-tile {
+    flex-basis: 176px;
+    width: 176px;
+  }
+
+  .darb-school-logo-tile {
+    flex-basis: 184px;
+    width: 184px;
+  }
+
+  .darb-logo-marquee-track {
+    animation-duration: 38s;
+  }
+
+  .darb-logo-marquee-schools .darb-logo-marquee-track {
+    animation-duration: 44s;
+  }
+}
+
+@media (max-width: 1023px) {
+  .darb-logo-tile,
+  .darb-school-logo-tile {
+    flex-basis: 150px;
+    width: 150px;
+    min-height: 104px;
+  }
+
+  .darb-logo-image-stage {
+    width: 132px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+
+  .darb-university-logo {
+    max-width: 124px;
+    max-height: 42px;
+  }
+
+  .darb-school-logo-image-stage {
+    width: 132px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+
+  .darb-school-logo {
+    max-width: 128px;
+    max-height: 42px;
+  }
+
   .darb-logo-marquee-track {
     animation-duration: 26s;
   }
 
   .darb-logo-marquee-schools .darb-logo-marquee-track {
     animation-duration: 31s;
-  }
-
-  .darb-logo-tile,
-  .darb-school-logo-tile {
-    flex-basis: 150px;
   }
 }
 
@@ -616,6 +754,10 @@ a[href*="lovable.dev"] {
 
   .darb-logo-marquee-track {
     animation: none;
+  }
+
+  .darb-logo-marquee-group[aria-hidden="true"] {
+    display: none;
   }
 }
 
