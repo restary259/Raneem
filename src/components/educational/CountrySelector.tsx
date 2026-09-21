@@ -20,18 +20,18 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
   onCountrySelect
 }) => {
   return (
-    <section className="py-12 bg-white">
+    <section className="bg-background py-12">
       <div className="container mx-auto px-4">
         <div className="flex justify-center mb-12">
-          <div className="flex gap-4 p-2 bg-gray-100 rounded-full">
+          <div className="flex gap-2 rounded-full bg-muted p-2 sm:gap-4">
             {countries.map((country) => (
               <button
                 key={country.code}
                 onClick={() => onCountrySelect(country.code)}
-                className={`px-6 py-3 rounded-full transition-all duration-200 flex items-center gap-2 ${
+                className={`flex min-h-11 items-center gap-2 rounded-full px-4 py-2.5 transition-all duration-200 sm:px-6 ${
                   selectedCountry === country.code
-                    ? 'bg-orange-500 text-white shadow-lg'
-                    : 'hover:bg-gray-200'
+                    ? 'bg-primary text-primary-foreground shadow-surface'
+                    : 'text-muted-foreground hover:bg-background hover:text-foreground'
                 }`}
               >
                 <span className="text-2xl">{country.flag}</span>
