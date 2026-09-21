@@ -441,9 +441,26 @@
         "onSET": {
           "label": "onSET · Language assessment",
           "description": "We can guide you on using onSET as a language-level assessment when it fits your route and explain the next step."
+        },
+        "DSH": {
+          "label": "DSH · University entrance exam",
+          "description": "We can explain when DSH preparation may fit your university route and help you plan the registration steps with the relevant institution."
+        },
+        "Goethe": {
+          "label": "Goethe-Zertifikat · Language certificate",
+          "description": "We can help you identify the level you need, compare suitable options and plan the certificate stage."
+        },
+        "IELTS": {
+          "label": "IELTS · English language test",
+          "description": "We can help you understand when an English certificate is relevant to your route and organize the next steps."
+        },
+        "TOEFL": {
+          "label": "TOEFL · English language test",
+          "description": "We can help you check whether TOEFL fits the requirement and plan the test stage within your application timeline."
         }
       },
-      "examCta": "Ask about exam registration"
+      "examCta": "Ask about exam registration",
+      "registrationBadge": "REGISTRATION SUPPORT"
     },
     "trust": {
       "eyebrow": "CLARITY BUILDS TRUST",
