@@ -456,9 +456,14 @@ const HomepageExperience = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                   {examBrands.map((exam) => {
                     const isActive = activeExam === exam.id;
+                    const logoClass = exam.id === "telc"
+                      ? "max-h-7 max-w-[120px]"
+                      : exam.id === "TestDaF" || exam.id === "TestAS" || exam.id === "onSET"
+                        ? "max-h-10 max-w-[132px]"
+                        : "max-h-8 max-w-[132px]";
                     return (
                       <button
                         key={exam.id}
@@ -466,33 +471,34 @@ const HomepageExperience = () => {
                         onClick={() => setActiveExam(exam.id)}
                         aria-pressed={isActive}
                         title={exam.subtitle}
-                        className={isActive ? "group flex min-h-[86px] flex-col items-center justify-center rounded-md border border-brand bg-editorial-paper px-2 py-3 text-center shadow-surface transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "group flex min-h-[86px] flex-col items-center justify-center rounded-md border border-border bg-background px-2 py-3 text-center transition-all hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
+                        className={isActive ? "group min-h-[112px] rounded-md border border-brand bg-editorial-paper px-2.5 py-3 text-center shadow-surface transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" : "group min-h-[112px] rounded-md border border-border bg-background px-2.5 py-3 text-center transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"}
                       >
-                        {exam.logoUrl ? (
-                          <img
-                            src={exam.logoUrl}
-                            alt={exam.label}
-                            loading="lazy"
-                            decoding="async"
-                            referrerPolicy="no-referrer"
-                            className="max-h-10 w-auto max-w-[118px] object-contain transition-transform duration-300 group-hover:scale-[1.03]"
-                            onError={(event) => {
-                              const image = event.currentTarget;
-                              image.style.display = "none";
-                              const fallback = image.nextElementSibling as HTMLElement | null;
-                              if (fallback) fallback.hidden = false;
-                            }}
-                          />
-                        ) : (
-                          <span className="text-xl font-black tracking-tight text-primary">{exam.label}</span>
-                        )}
-                        <span hidden className="max-w-[118px] text-center text-xl font-black tracking-tight text-primary">{exam.label}</span>
-                        <span className="mt-2 line-clamp-1 text-[0.56rem] font-medium text-muted-foreground">{exam.subtitle}</span>
+                        <span className="flex h-12 w-full items-center justify-center">
+                          {exam.logoUrl ? (
+                            <img
+                              src={exam.logoUrl}
+                              alt={exam.label}
+                              loading="lazy"
+                              decoding="async"
+                              referrerPolicy="no-referrer"
+                              className={"h-auto w-auto object-contain " + logoClass + " transition-transform duration-300 group-hover:scale-[1.03]"}
+                              onError={(event) => {
+                                const image = event.currentTarget;
+                                image.style.display = "none";
+                                const fallback = image.nextElementSibling as HTMLElement | null;
+                                if (fallback) fallback.hidden = false;
+                              }}
+                            />
+                          ) : (
+                            <span className="text-lg font-black tracking-tight text-primary">{exam.label}</span>
+                          )}
+                          <span hidden className="max-w-[132px] text-center text-lg font-black tracking-tight text-primary">{exam.label}</span>
+                        </span>
+                        <span className="mt-2 line-clamp-1 text-[0.58rem] font-medium text-muted-foreground">{exam.subtitle}</span>
                       </button>
                     );
                   })}
                 </div>
-
                 <div className="mt-4 rounded-md border border-border bg-editorial-paper/60 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
