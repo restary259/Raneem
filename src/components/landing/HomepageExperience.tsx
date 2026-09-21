@@ -36,7 +36,7 @@ const journeyIcons = [SearchCheck, Compass, FileCheck2, Languages, ShieldCheck, 
 const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, MessageCircle, FileCheck2];
 
 const examBrands = [
-  { id: "telc", label: "telc", logoUrl: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Telc_GmbH_logo.svg", website: "https://www.telc.net/en/" },
+  { id: "telc", label: "telc", website: "https://www.telc.net/en/" },
   { id: "TestDaF", label: "TestDaF", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/TestDaF_RGB_transparent.png", website: "https://www.testdaf.de/" },
   { id: "TestAS", label: "TestAS", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/TestAS_RGB_transparent.png", website: "https://www.testas.de/en/" },
   { id: "onSET", label: "onSET", logoUrl: "https://www.gast.de/fileadmin/gast.de/GAST/3_Logos-Icons-Grafiken/1-g.a.s.t.-Logos/Bereitgestellte_Logos/onSET_RGB_transparent.png", website: "https://www.onset.de/" },
