@@ -21,7 +21,7 @@ import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
 
 const FONTS_HREF =
-  "https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans:wght@400;700&display=swap";
 
 const APP_LOGO = darbLogoAsset.url;
 const OG_IMAGE = `https://darb.agency${darbLogoShareAsset.url}`;
@@ -125,7 +125,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { httpEquiv: "Content-Security-Policy", content: "upgrade-insecure-requests" },
       // PWA
-      { name: "theme-color", content: "#F28C28" },
+      { name: "theme-color", content: "#082B66" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "درب" },

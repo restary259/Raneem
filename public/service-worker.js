@@ -13,7 +13,7 @@
 //     are carried over verbatim, so existing push subscriptions keep working
 //     without users re-granting permission.
 
-const CACHE_VERSION = '5.0.2';
+const CACHE_VERSION = '5.1.0';
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());
