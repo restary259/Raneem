@@ -14,6 +14,7 @@ import AppShell from "@/components/AppShell";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ThemeScope from "@/components/common/ThemeScope";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
@@ -132,10 +133,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "dns-prefetch", href: "//fonts.gstatic.com" },
       { rel: "stylesheet", href: appCss },
     ],
-    scripts: [
-      { type: "application/ld+json", children: SITE_JSONLD },
-      { type: "application/ld+json", children: ORG_JSONLD },
-    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -161,6 +158,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <ErrorBoundary>
+      <RootStructuredData />
       <ThemeScope>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
@@ -170,6 +168,22 @@ function RootComponent() {
       </ThemeScope>
     </ErrorBoundary>
   );
+}
+
+function RootStructuredData() {
+  useEffect(() => {
+    const values = [SITE_JSONLD, ORG_JSONLD];
+    const nodes = values.map((value) => {
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.dataset.rootJsonld = "true";
+      script.textContent = value;
+      document.head.appendChild(script);
+      return script;
+    });
+    return () => nodes.forEach((node) => node.remove());
+  }, []);
+  return null;
 }
 
 function RootErrorComponent({ error }: { error: Error }) {

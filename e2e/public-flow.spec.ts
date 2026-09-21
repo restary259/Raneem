@@ -79,13 +79,11 @@ test.describe('public journey', () => {
 
   test('unauthenticated admin route does not render the dashboard', async ({ page }) => {
     await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
-    expect(page.url()).not.toMatch(/\/admin(\/|$)/);
+    await expect(page).toHaveURL(/\/student-auth/, { timeout: 20_000 });
   });
 
   test('unauthenticated team route does not render the dashboard', async ({ page }) => {
     await page.goto('/team');
-    await page.waitForLoadState('networkidle');
-    expect(page.url()).not.toMatch(/\/team(\/|$)/);
+    await expect(page).toHaveURL(/\/student-auth/, { timeout: 20_000 });
   });
 });
