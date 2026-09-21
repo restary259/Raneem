@@ -22,16 +22,16 @@ const Header = () => {
 
   return (
     <header
-      className={`relative inset-x-0 top-0 z-50 lg:fixed transition-[background-color,box-shadow,border-color] duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
         scrolled
           ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md'
-          : 'border-b border-primary-foreground/15 bg-background lg:bg-hero-panel/35 lg:backdrop-blur-[2px]'
+          : 'border-transparent bg-transparent shadow-none'
       }`}
       dir={dir}
       data-scrolled={scrolled ? 'true' : 'false'}
     >
       {/* Desktop utility bar */}
-      <div className="darb-header-utility hidden border-b border-primary-foreground/20 lg:block">
+      <div className={`darb-header-utility hidden lg:block ${scrolled ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
         <div
           dir="ltr"
           className={`container grid h-full grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
@@ -39,7 +39,7 @@ const Header = () => {
           }`}
         >
           <div className="justify-self-start">
-            <LanguageSwitcher />
+              <LanguageSwitcher className={scrolled ? '' : 'drop-shadow-sm'} />
           </div>
           <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="justify-self-center whitespace-nowrap">
             {SUPPORT_PHONE}
@@ -84,8 +84,8 @@ const Header = () => {
 
            {/* Mobile header: preserve breathing room and move contact details into the menu. */}
           <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
-             <LanguageSwitcher className="shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs" />
-            <MobileNav transparent={false} />
+             <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${scrolled ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
+            <MobileNav transparent={!scrolled} />
           </div>
         </div>
       </div>

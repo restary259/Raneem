@@ -44,8 +44,8 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
-      <div className="absolute inset-0 bg-hero-panel/45" />
-      <div className="absolute inset-0 bg-gradient-to-t from-hero-panel/70 via-hero-panel/20 to-hero-panel/25" />
+      <div className="absolute inset-0 bg-primary/5" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/25 via-transparent to-background/10" />
       {showArch ? <BrandArch className="opacity-45" /> : null}
       <div
         className={cn(
@@ -56,12 +56,12 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <div
           className={cn(
-            "darb-page-hero-panel w-full bg-hero-panel/82 shadow-surface-lg backdrop-blur-[2px]",
+            "darb-page-hero-panel w-full border border-background/70 bg-background/92 text-primary shadow-surface-lg backdrop-blur-sm",
             align === "center" ? "text-center" : "text-start",
           )}
         >
           {eyebrow ? (
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-strong">
               {eyebrow}
             </p>
           ) : null}
@@ -71,7 +71,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
             {title}
           </h1>
           {subtitle ? (
-            <p className={cn("darb-page-hero-subtitle mt-5 max-w-2xl text-base leading-8 text-primary-foreground/90", align === "center" && "mx-auto")}>
+            <p className={cn("darb-page-hero-subtitle mt-5 max-w-2xl text-base leading-8 text-muted-foreground", align === "center" && "mx-auto")}>
               {subtitle}
             </p>
           ) : null}

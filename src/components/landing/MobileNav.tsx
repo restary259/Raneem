@@ -25,7 +25,7 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className={`min-h-11 min-w-11 ${transparent ? "border-primary-foreground/30 bg-foreground/30 text-primary-foreground hover:bg-foreground/50" : "border-border bg-background"}`} aria-label={t('nav.more')}>
+        <Button variant="outline" size="icon" className={`min-h-11 min-w-11 ${transparent ? "border-primary-foreground/50 bg-transparent text-primary-foreground drop-shadow-sm hover:bg-background/15 hover:text-primary-foreground" : "border-border bg-background"}`} aria-label={t('nav.more')}>
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>

@@ -90,19 +90,20 @@ const HomepageExperience = () => {
     <div className="homepage-experience bg-background">
       <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
         <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 bg-gradient-to-r from-hero-panel/95 via-hero-panel/72 to-hero-panel/20 rtl:bg-gradient-to-l" />
+        <div className="absolute inset-0 bg-primary/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-background/10" />
         <BrandArch />
         <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center py-16">
-          <div className="darb-home-hero-panel max-w-3xl bg-hero-panel/82 text-primary-foreground shadow-surface-lg backdrop-blur-[2px]">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.hero.eyebrow")}</p>
+          <div className="darb-home-hero-panel max-w-3xl border border-background/70 bg-background/92 text-primary shadow-surface-lg backdrop-blur-sm">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.hero.eyebrow")}</p>
             <h1 className="mt-4 text-balance font-editorial text-5xl leading-[0.98] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
             <p className="mt-5 max-w-2xl text-xl font-bold leading-8 sm:text-2xl">{t("homepage.hero.title")}</p>
-            <p className="mt-4 max-w-xl text-base leading-7 text-primary-foreground/80 sm:text-lg">{t("homepage.hero.subtitle")}</p>
+            <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">{t("homepage.hero.subtitle")}</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
-              <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-background/95 text-primary text-base"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
+              <Button asChild size="lg" variant="outline" className="border-border bg-background text-primary text-base"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 text-brand" />{t("homepage.hero.reassurance")}</p>
+            <p className="mt-5 flex items-center gap-2 text-sm font-medium text-muted-foreground"><CircleCheck className="size-4 text-brand-strong" />{t("homepage.hero.reassurance")}</p>
           </div>
         </div>
         <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
