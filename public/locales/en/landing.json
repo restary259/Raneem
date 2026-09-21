@@ -399,39 +399,34 @@
       "levels": {
         "A1": {
           "label": "A1 · Breakthrough",
-          "description": "Can understand and use very familiar everyday expressions and simple phrases. You can introduce yourself, share basic personal information, and communicate simply when the other person speaks clearly and slowly.",
-          "hours": "≈200 guided learning hours",
-          "duration": "Foundation"
+          "group": "Basic user",
+          "canDo": "Understands and uses familiar everyday expressions and very basic phrases; can introduce themselves, share basic personal details, and communicate simply when the other person speaks slowly and clearly."
         },
         "A2": {
           "label": "A2 · Elementary",
-          "description": "Can understand frequently used expressions about everyday needs and familiar topics. You can handle simple routine exchanges and describe your immediate environment in simple terms.",
-          "hours": "≈200 guided learning hours",
-          "duration": "Basic user"
+          "group": "Basic user",
+          "canDo": "Understands frequently used sentences and expressions about immediate needs; can handle simple routine exchanges and describe their background and surroundings in simple terms."
         },
         "B1": {
           "label": "B1 · Intermediate",
-          "description": "Can understand the main points of clear standard language on familiar topics. You can manage many everyday and travel situations and produce connected speech about experiences, plans and familiar subjects.",
-          "hours": "≈200 guided learning hours",
-          "duration": "Independent user"
+          "group": "Independent user",
+          "canDo": "Understands the main points of clear standard language on familiar matters; can handle most travel situations and produce connected language about experiences and plans."
         },
         "B2": {
           "label": "B2 · Upper intermediate",
-          "description": "Can understand the main ideas of complex texts and discussions, including topics related to your field. You can interact with greater fluency and explain viewpoints with clear, detailed language.",
-          "hours": "≈200 guided learning hours",
-          "duration": "Independent user"
+          "group": "Independent user",
+          "canDo": "Understands the main ideas of complex texts, including discussions in their field; can interact with greater fluency and explain viewpoints clearly and in detail."
         },
         "C1": {
           "label": "C1 · Advanced / Academic",
-          "description": "Can understand demanding, longer texts and recognise implicit meaning. You can communicate fluently and flexibly for social, academic and professional purposes and produce clear, well-structured language on complex topics.",
-          "hours": "≈200 guided learning hours",
-          "duration": "Proficient user"
+          "group": "Proficient user",
+          "canDo": "Understands a wide range of demanding longer texts and implicit meaning; can use language fluently and flexibly for social, academic, and professional purposes."
         }
       },
       "levelLabel": "CEFR LANGUAGE LEVEL",
       "levelMeaningLabel": "What you can do at this level",
       "levelStudyLabel": "Typical guided study time",
-      "cefrNote": "The official European framework describes language ability from A1 to C2; each institution sets its own requirement.",
+      "cefrNote": "The Council of Europe reference levels describe language ability. Each school or institution sets the level it requires.",
       "examEyebrow": "EXAM SUPPORT",
       "examTitle": "Registration & preparation",
       "examBadge": "DARB SUPPORT",
@@ -479,7 +474,12 @@
         "speaking": "Speaking",
         "reading": "Reading",
         "writing": "Writing"
-      }
+      },
+      "guideTitle": "Understand the language levels, step by step",
+      "levelSelector": "Choose a CEFR level",
+      "darbRole": "DARB guides you and coordinates registration; the school or examination body delivers the course and certifies the level.",
+      "sourceLabel": "Council of Europe · CEFR Global Scale",
+      "examSupport": "Guidance and registration coordination; the official body owns the exam and result"
     },
     "examDetail": {
       "back": "Back to language preparation",
