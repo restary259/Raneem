@@ -11,6 +11,7 @@ import BottomNav from "@/components/common/BottomNav";
 import { registerServiceWorker } from "@/utils/pwaUtils";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { usePageTracking } from "@/hooks/usePageTracking";
+import { DashboardRouteFallback, PublicRouteFallback } from "@/components/shell/RouteFallbacks";
 
 // Non-critical global widgets — deferred off the critical path
 const WhatsAppFloatingButton = lazy(() => import("@/components/common/WhatsAppFloatingButton"));
@@ -18,34 +19,6 @@ const PWAInstaller = lazy(() => import("@/components/common/PWAInstaller"));
 const OfflineIndicator = lazy(() => import("@/components/common/OfflineIndicator"));
 const InAppBrowserBanner = lazy(() => import("@/components/common/InAppBrowserBanner"));
 const CookieBanner = lazy(() => import("@/components/common/CookieBanner"));
-
-/**
- * Route-transition placeholder for dashboard paths. Cheap, static markup —
- * it must not import page code, or it would defeat the lazy split.
- */
-export const RouteFallback = () => (
-  <div className="p-4 sm:p-6 space-y-4 max-w-7xl mx-auto animate-pulse" aria-hidden>
-    <div className="h-7 w-48 rounded-md bg-muted" />
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="h-20 rounded-lg border border-border bg-muted/40" />
-      ))}
-    </div>
-    <div className="h-64 rounded-lg border border-border bg-muted/30" />
-  </div>
-);
-
-const PublicRouteFallback = () => (
-  <div className="min-h-[100svh] bg-background" role="status" aria-live="polite" aria-busy="true">
-    <div className="h-20 border-b border-border bg-background/95" />
-    <div className="mx-auto flex min-h-[calc(100svh-5rem)] max-w-7xl flex-col justify-center gap-5 px-5 py-12">
-      <div className="h-3 w-24 animate-pulse rounded-full bg-muted motion-reduce:animate-none" />
-      <div className="h-10 w-full max-w-xl animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
-      <div className="h-5 w-full max-w-md animate-pulse rounded-xl bg-muted/70 motion-reduce:animate-none" />
-      <div className="mt-3 h-12 w-44 animate-pulse rounded-full bg-primary/15 motion-reduce:animate-none" />
-    </div>
-  </div>
-);
 
 const AppShell = () => {
   useSessionTimeout();
@@ -56,15 +29,6 @@ const AppShell = () => {
   // Only the i18n instance is used here; keeping the default ("common") namespace
   // avoids pulling dashboard.json into the boot path of every public route.
   const { i18n } = useTranslation();
-
-  // Hide the index splash as soon as the app tree has mounted.
-  useEffect(() => {
-    const loading = document.getElementById("pwa-loading");
-    if (loading) {
-      loading.classList.add("hidden");
-      setTimeout(() => loading.remove(), 500);
-    }
-  }, []);
 
   // Global safety net for unhandled promise rejections
   useEffect(() => {
@@ -140,7 +104,7 @@ const AppShell = () => {
         )}
         {/* A layout-matched shell paints immediately while the route chunk
             loads, instead of a blank frame that reads as a frozen app. */}
-        <Suspense fallback={isDashboardPath ? <RouteFallback /> : <PublicRouteFallback />}>
+        <Suspense fallback={isDashboardPath ? <DashboardRouteFallback /> : <PublicRouteFallback />}>
           <Outlet />
         </Suspense>
         {!isApplyPage && !isDashboardPath && idleReady && (

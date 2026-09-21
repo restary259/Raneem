@@ -4,8 +4,16 @@ import { initReactI18next } from 'react-i18next';
 import HttpBackend from 'i18next-http-backend';
 
 // Import broadcast translations directly to avoid async loading issues
-import broadcastAr from '../public/locales/ar/broadcast.json';
-import broadcastEn from '../public/locales/en/broadcast.json';
+import broadcastAr from './locales/ar/broadcast.json';
+import broadcastEn from './locales/en/broadcast.json';
+import commonAr from './locales/ar/common.json';
+import commonEn from './locales/en/common.json';
+import contactAr from './locales/ar/contact.json';
+import contactEn from './locales/en/contact.json';
+import landingAr from './locales/ar/landing.json';
+import landingEn from './locales/en/landing.json';
+import legalAr from './locales/ar/legal.json';
+import legalEn from './locales/en/legal.json';
 
 const savedLang = typeof window !== 'undefined' ? localStorage.getItem('i18n_lang') : null;
 
@@ -24,8 +32,8 @@ i18n
     defaultNS: 'common',
     partialBundledLanguages: true,
     resources: {
-      ar: { broadcast: broadcastAr },
-      en: { broadcast: broadcastEn },
+      ar: { common: commonAr, landing: landingAr, contact: contactAr, legal: legalAr, broadcast: broadcastAr },
+      en: { common: commonEn, landing: landingEn, contact: contactEn, legal: legalEn, broadcast: broadcastEn },
     },
     debug: false,
     interpolation: {
