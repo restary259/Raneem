@@ -391,37 +391,40 @@
       "body": "Build the language level, take the right exam, then move toward the academic route that fits your profile.",
       "levels": {
         "A1": {
-          "label": "A1 · Starter",
-          "description": "Basic everyday German for simple communication.",
+          "label": "A1 · Breakthrough",
+          "description": "Can understand and use very familiar everyday expressions and simple phrases. You can introduce yourself, share basic personal information, and communicate simply when the other person speaks clearly and slowly.",
           "hours": "≈200 guided learning hours",
-          "duration": "≈2 months · intensive pace"
+          "duration": "Foundation"
         },
         "A2": {
           "label": "A2 · Elementary",
-          "description": "Handle familiar situations and build a stronger base.",
+          "description": "Can understand frequently used expressions about everyday needs and familiar topics. You can handle simple routine exchanges and describe your immediate environment in simple terms.",
           "hours": "≈200 guided learning hours",
-          "duration": "≈2 months · intensive pace"
+          "duration": "Basic user"
         },
         "B1": {
           "label": "B1 · Intermediate",
-          "description": "Communicate independently in everyday and study-related situations.",
+          "description": "Can understand the main points of clear standard language on familiar topics. You can manage many everyday and travel situations and produce connected speech about experiences, plans and familiar subjects.",
           "hours": "≈200 guided learning hours",
-          "duration": "≈2 months · intensive pace"
+          "duration": "Independent user"
         },
         "B2": {
           "label": "B2 · Upper intermediate",
-          "description": "Follow more complex German and prepare for academic communication.",
+          "description": "Can understand the main ideas of complex texts and discussions, including topics related to your field. You can interact with greater fluency and explain viewpoints with clear, detailed language.",
           "hours": "≈200 guided learning hours",
-          "duration": "≈2 months · intensive pace"
+          "duration": "Independent user"
         },
         "C1": {
-          "label": "C1 · Academic",
-          "description": "Advanced German for higher-education contexts and academic exams.",
+          "label": "C1 · Advanced / Academic",
+          "description": "Can understand demanding, longer texts and recognise implicit meaning. You can communicate fluently and flexibly for social, academic and professional purposes and produce clear, well-structured language on complex topics.",
           "hours": "≈200 guided learning hours",
-          "duration": "≈2 months · intensive pace"
+          "duration": "Proficient user"
         }
       },
-      "levelLabel": "LANGUAGE LEVEL",
+      "levelLabel": "CEFR LANGUAGE LEVEL",
+      "levelMeaningLabel": "What you can do at this level",
+      "levelStudyLabel": "Typical guided study time",
+      "cefrNote": "Based on the Council of Europe CEFR global scale. These are learner-friendly summaries, not an exam guarantee.",
       "examEyebrow": "EXAM SUPPORT",
       "examTitle": "Registration & preparation",
       "examBadge": "DARB SUPPORT",
@@ -461,7 +464,15 @@
       },
       "examCta": "Ask about exam registration",
       "registrationBadge": "REGISTRATION SUPPORT",
-      "viewExam": "View exam details"
+      "viewExam": "View exam details",
+      "cefrReferenceLabel": "CEFR reference levels",
+      "cefrReferenceLink": "Open the official CEFR reference page",
+      "skills": {
+        "listening": "Listening",
+        "speaking": "Speaking",
+        "reading": "Reading",
+        "writing": "Writing"
+      }
     },
     "examDetail": {
       "back": "Back to language preparation",
