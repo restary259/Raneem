@@ -476,10 +476,17 @@ const HomepageExperience = () => {
                             decoding="async"
                             referrerPolicy="no-referrer"
                             className="max-h-10 w-auto max-w-[118px] object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                            onError={(event) => {
+                              const image = event.currentTarget;
+                              image.style.display = "none";
+                              const fallback = image.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.hidden = false;
+                            }}
                           />
                         ) : (
-                          <span className={isActive ? "text-xl font-black tracking-tight text-primary" : "text-xl font-black tracking-tight text-primary"}>{exam.label}</span>
+                          <span className="text-xl font-black tracking-tight text-primary">{exam.label}</span>
                         )}
+                        <span hidden className="max-w-[118px] text-center text-xl font-black tracking-tight text-primary">{exam.label}</span>
                         <span className="mt-2 line-clamp-1 text-[0.56rem] font-medium text-muted-foreground">{exam.subtitle}</span>
                       </button>
                     );
