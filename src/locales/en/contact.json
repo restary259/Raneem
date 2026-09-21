@@ -1,8 +1,10 @@
 {
   "contactHero": {
-    "title": "Contact",
-    "subtitle": "",
-    "imageAlt": "Sunny Düsseldorf skyline along the Rhine in Germany"
+    "eyebrow": "HUMAN SUPPORT",
+    "title": "Contact DARB",
+    "subtitle": "Tell us what you need help with. For a specific file, document, appointment, or partnership question, send the form and our team will follow up.",
+    "imageAlt": "DARB student advisor ready to help",
+    "aiLink": "Need an instant general answer? Ask the AI study advisor"
   },
   "contact": {
     "title": "How can we help?",
@@ -90,7 +92,7 @@
     },
     "follow": "Follow Us",
     "mapTitle": "Our Location on the Map",
-    "mapSubtitle": "Explore our office locations around the world.",
+    "mapSubtitle": "Find the DARB office in Tamra.",
     "validation": {
       "cityRequired": "City is required",
       "educationRequired": "Education level is required",
@@ -103,6 +105,12 @@
       "contact": "Enter an email address or phone number.",
       "consent": "Your consent is required before sending.",
       "review": "Please review the highlighted fields."
+    },
+    "ai": {
+      "eyebrow": "QUICK GUIDANCE",
+      "title": "Start with the AI advisor",
+      "body": "Get a quick answer about studying in Germany, then use this form when your question needs staff follow-up or file context.",
+      "action": "Open AI advisor"
     }
   },
   "support": {
