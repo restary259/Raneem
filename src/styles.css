@@ -137,12 +137,23 @@
   --accent: 222.2 47.6% 11.2%;
   --accent-foreground: 210 40% 98%;
 
-  /* Brand highlight (CTA + stats) — DARB orange, matches the Student Login button */
-  --brand: 24.6 95% 53.1%;
+  /* DARB brand identity — navy primary with the signature blue action colour */
+  --darb-navy: 217.7 85.5% 21.6%;   /* #082B66 */
+  --darb-blue: 213.2 100% 52.2%;    /* #0B78FF */
+  --darb-teal: 188.6 100% 39%;      /* #00AFC7 */
+  --darb-green: 142.1 70.6% 45.3%;  /* #22C55E */
+  --darb-yellow: 45.4 100% 51.4%;   /* #FFC107 */
+  --darb-orange: 32.5 100% 50%;     /* #FF8A00 */
+  --darb-red: 0 90.6% 58.6%;        /* #F53838 */
+  --darb-pink: 334.5 100% 65.1%;    /* #FF4DA6 */
+  --darb-purple: 254.1 100% 68.4%;  /* #805CFF */
+
+  /* Brand highlight (CTA + stats) — DARB blue on navy */
+  --brand: 213.2 100% 52.2%;
   --brand-foreground: 0 0% 100%;
-  /* AA-safe orange: >=4.5:1 with white text and on white backgrounds */
-  --brand-strong: 24.6 95% 38%;
-  --trust: 160.7 72.3% 31.4%;
+  /* AA-safe: >=4.5:1 with white text and on white backgrounds */
+  --brand-strong: 217.7 85.5% 21.6%;
+  --trust: 188.6 100% 30%;
   --editorial-paper: 210 20% 98%;
 
   --destructive: 0 84.2% 60.2%;
