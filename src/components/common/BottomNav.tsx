@@ -62,7 +62,7 @@ const BottomNav = () => {
     <nav 
       role="navigation" 
       aria-label={t('bottomNav.mainNav')}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-2 py-2 pb-safe md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-2 py-2 shadow-[0_-8px_24px_-20px_hsl(var(--foreground)/0.35)] backdrop-blur-md pb-safe md:hidden"
       style={{
         paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
       }}

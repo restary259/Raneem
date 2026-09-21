@@ -127,13 +127,13 @@ const Contact = () => {
             <p className="mt-5 text-base text-muted-foreground md:text-lg">{t("support.subtitle")}</p>
           </div>
           <div className="mx-auto mt-7 grid max-w-4xl gap-3 sm:grid-cols-3">
-            <a href="#contact-form" className="inline-flex min-h-12 items-center justify-center border border-border bg-background px-5 text-sm font-semibold tracking-wide text-foreground transition-colors hover:border-primary hover:text-primary">
+            <a href="#contact-form" className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary">
               {t("support.contact")}
             </a>
-            <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center bg-primary px-5 text-sm font-semibold tracking-wide text-primary-foreground transition-colors hover:bg-primary/90">
+            <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
               {t("support.whatsapp")}
             </a>
-            <Button asChild className="min-h-12 rounded-none px-5 text-sm font-semibold tracking-wide">
+            <Button asChild size="lg" className="px-5 text-sm">
               <Link to="/apply">{t("support.apply")}</Link>
             </Button>
           </div>
@@ -149,23 +149,23 @@ const Contact = () => {
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <FieldGroup label={`${t("contact.form.fullName")} *`}>
-                  <Input value={fullName} maxLength={100} onChange={(event) => setFullName(event.target.value)} placeholder={t("contact.form.namePlaceholder")} dir={dir} className="h-11 rounded-none" aria-invalid={Boolean(errors.fullName)} />
+                  <Input value={fullName} maxLength={100} onChange={(event) => setFullName(event.target.value)} placeholder={t("contact.form.namePlaceholder")} dir={dir} className="h-12 rounded-lg" aria-invalid={Boolean(errors.fullName)} />
                   {errors.fullName ? <p className="mt-1 text-xs text-destructive">{errors.fullName}</p> : null}
                 </FieldGroup>
                 <FieldGroup label={t("contact.form.email")}>
-                  <Input value={email} maxLength={255} onChange={(event) => setEmail(event.target.value)} placeholder={t("contact.form.emailPlaceholder")} dir="ltr" type="email" className="h-11 rounded-none" aria-invalid={Boolean(errors.email)} />
+                  <Input value={email} maxLength={255} onChange={(event) => setEmail(event.target.value)} placeholder={t("contact.form.emailPlaceholder")} dir="ltr" type="email" className="h-12 rounded-lg" aria-invalid={Boolean(errors.email)} />
                   {errors.email ? <p className="mt-1 text-xs text-destructive">{errors.email}</p> : null}
                 </FieldGroup>
               </div>
 
               <FieldGroup label={t("contact.form.whatsapp")}>
-                <Input value={phone} maxLength={30} onChange={(event) => setPhone(event.target.value)} placeholder={t("contact.form.whatsappPlaceholder")} dir="ltr" type="tel" className="h-11 rounded-none" aria-invalid={Boolean(errors.phone || errors.contact)} />
+                <Input value={phone} maxLength={30} onChange={(event) => setPhone(event.target.value)} placeholder={t("contact.form.whatsappPlaceholder")} dir="ltr" type="tel" className="h-12 rounded-lg" aria-invalid={Boolean(errors.phone || errors.contact)} />
                 {errors.phone || errors.contact ? <p className="mt-1 text-xs text-destructive">{errors.phone || errors.contact}</p> : null}
               </FieldGroup>
 
               <FieldGroup label={`${t("contact.form.topic")} *`}>
                 <Select value={topic || undefined} onValueChange={(value) => setTopic(value as typeof topic)}>
-                  <SelectTrigger className="h-11 rounded-none" aria-invalid={Boolean(errors.topic)}><SelectValue placeholder={t("contact.form.topicPlaceholder")} /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-lg" aria-invalid={Boolean(errors.topic)}><SelectValue placeholder={t("contact.form.topicPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {TOPICS.map((value) => <SelectItem key={value} value={value}>{t(`contact.form.topicOptions.${value}`)}</SelectItem>)}
                   </SelectContent>
@@ -174,7 +174,7 @@ const Contact = () => {
               </FieldGroup>
 
               <FieldGroup label={`${t("contact.form.message")} *`}>
-                <Textarea value={message} maxLength={2000} onChange={(event) => setMessage(event.target.value)} placeholder={t("contact.form.messagePlaceholder")} dir={dir} rows={7} className="min-h-40 resize-y rounded-none" aria-invalid={Boolean(errors.message)} />
+                <Textarea value={message} maxLength={2000} onChange={(event) => setMessage(event.target.value)} placeholder={t("contact.form.messagePlaceholder")} dir={dir} rows={7} className="min-h-40 resize-y rounded-lg" aria-invalid={Boolean(errors.message)} />
                 <div className="mt-1 flex justify-between gap-3 text-xs text-muted-foreground">
                   {errors.message ? <span className="text-destructive">{errors.message}</span> : <span />}
                   <span>{message.length.toLocaleString("en-US")} / 2,000</span>
@@ -195,7 +195,7 @@ const Contact = () => {
                 error={errors.consent}
               />
 
-              <Button type="button" className="h-12 w-full rounded-none font-bold" size="lg" disabled={isPending} onClick={() => mutate()}>
+              <Button type="button" className="h-12 w-full font-bold" size="lg" disabled={isPending} onClick={() => mutate()}>
                 {isPending ? t("contact.form.sending") : t("contact.form.submit")}
               </Button>
             </div>

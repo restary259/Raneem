@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 import { Cookie } from 'lucide-react';
 import { COOKIE_CONSENT_KEY, initAnalytics, trackPageView } from '@/lib/analytics';
+import { Button } from '@/components/ui/button';
 
 const CookieBanner = () => {
   const [visible, setVisible] = useState(false);
@@ -34,7 +35,7 @@ const CookieBanner = () => {
 
   return (
     <div
-      className="fixed bottom-20 md:bottom-6 inset-x-4 md:inset-x-8 z-[55] rounded-xl p-4 shadow-xl bg-card border border-border text-card-foreground text-sm animate-in slide-in-from-bottom-4"
+      className="fixed bottom-20 inset-x-3 z-[55] rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-surface-lg animate-in slide-in-from-bottom-4 md:bottom-6 md:inset-x-8 md:rounded-full md:px-5"
       dir={dir}
       role="dialog"
       aria-label="Cookie consent"
@@ -53,19 +54,22 @@ const CookieBanner = () => {
             </span>
           </div>
         </div>
-        <div className="flex gap-2 shrink-0">
-          <button
+        <div className="grid grid-cols-2 gap-2 shrink-0 md:flex">
+          <Button
             onClick={() => accept('necessary')}
-            className="px-3 py-2 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium hover:bg-secondary/80 transition-colors"
+            variant="secondary"
+            size="sm"
+            className="text-xs"
           >
             {isAr ? 'الضرورية فقط' : 'Only necessary'}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => accept('all')}
-            className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+            size="sm"
+            className="text-xs"
           >
             {isAr ? 'قبول الكل' : 'Accept all'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
