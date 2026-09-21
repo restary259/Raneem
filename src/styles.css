@@ -214,10 +214,10 @@
   --accent: 240 4% 17%;
   --accent-foreground: 240 10% 96%;
 
-  /* Brand highlight stays DARB orange in dark mode */
-  --brand: 24.6 95% 56%;
+  /* Brand highlight in dark mode: DARB blue, lifted for contrast */
+  --brand: 213.2 100% 62%;
   --brand-foreground: 0 0% 100%;
-  --brand-strong: 24.6 95% 42%;
+  --brand-strong: 213.2 100% 46%;
 
   --destructive: 0 62% 48%;
   --destructive-foreground: 240 10% 98%;
