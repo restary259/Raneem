@@ -124,11 +124,11 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
             <div className="shrink-0">
               <div className="relative">
                 <div className="absolute -inset-2 rounded-full bg-primary/8" aria-hidden="true" />
-                <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-background shadow-[0_18px_45px_rgba(17,17,17,0.12)] ring-1 ring-border sm:h-36 sm:w-36 md:h-44 md:w-44">
+                <div className="relative aspect-square w-32 shrink-0 overflow-hidden rounded-full border-4 border-background shadow-surface-lg ring-1 ring-border sm:w-36 md:w-44">
                   <img
                     src={DARB_CONTACT_ADVISOR_SRC}
                     alt={t("contactCta.eyebrow")}
-                    className="h-full w-full object-cover"
+                    className="size-full rounded-full object-cover object-[50%_42%]"
                     loading="lazy"
                   />
                 </div>
