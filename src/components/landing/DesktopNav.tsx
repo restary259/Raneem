@@ -53,10 +53,10 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   );
 
   const triggerClass = transparent
-    ? 'nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100'
+    ? 'nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground drop-shadow-sm after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100'
     : 'nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100';
   const linkClass = navigationMenuTriggerStyle() + (transparent
-    ? ' nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100'
+    ? ' nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground drop-shadow-sm after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100'
     : ' nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100');
 
   return (
