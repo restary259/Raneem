@@ -48,7 +48,8 @@
   },
   "applyNow": "Apply Now",
   "whatsapp": {
-    "floatingLabel": "Chat with us on WhatsApp"
+    "floatingLabel": "Chat with us on WhatsApp",
+    "sideTab": "WhatsApp"
   },
   "footer": {
     "quote": "Darb — your path to studying in Germany",
@@ -362,7 +363,9 @@
     "advisorAria": "AI Advisor",
     "accountAria": "Student Account",
     "mainNav": "Main Navigation",
-    "whatsapp": "WhatsApp"
+    "whatsapp": "WhatsApp",
+    "contact": "Contact",
+    "contactAria": "Contact DARB"
   },
   "chat": {
     "title": "Darb AI Assistant",
@@ -432,6 +435,22 @@
       "visa": "Visa & Travel",
       "language": "Language & Prep",
       "life": "Life in Germany"
+    },
+    "hub": {
+      "eyebrow": "CONTACT & GUIDANCE",
+      "title": "Let’s find your next step.",
+      "intro": "Choose human support for a direct conversation, or use the AI advisor for quick study guidance about Germany.",
+      "humanTitle": "Human support when you need it",
+      "humanCopy": "WhatsApp or email the DARB team for questions that need a person, a file, or a clear next step.",
+      "whatsapp": "WhatsApp the team",
+      "askAi": "Ask the AI advisor",
+      "humanLabel": "DARB TEAM",
+      "humanSupport": "Direct questions, your documents, application context, and personal follow-up.",
+      "aiLabel": "AI STUDY ADVISOR",
+      "aiSupport": "Quick guidance on studying in Germany, available 24/7 when the service is online.",
+      "aiTitle": "What would you like to know?",
+      "aiIntro": "Ask about admissions, German language, visas, study paths, or student life. The AI advisor does not replace DARB’s human team.",
+      "composerHint": "AI guidance · Germany study scope"
     }
   },
   "quiz": {
