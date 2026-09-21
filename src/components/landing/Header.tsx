@@ -108,6 +108,9 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* DARB brand accent line */}
+      <span aria-hidden="true" className="darb-spectrum darb-spectrum-sm absolute inset-x-0 bottom-0 rounded-none" />
     </header>
   );
 };
