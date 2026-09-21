@@ -206,7 +206,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
 
   const tabClass = (active: boolean) =>
     cn(
-      'flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors relative',
+      'relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors',
       'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
       active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
     );
@@ -215,7 +215,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     <nav
       role="navigation"
       aria-label={t('nav.bottomNav', 'Main navigation')}
-      className="md:hidden fixed bottom-0 start-0 end-0 z-50 min-h-16 bg-background border-t border-border flex items-stretch pb-safe"
+      className="fixed bottom-0 start-0 end-0 z-50 flex min-h-16 items-stretch border-t border-border bg-background/95 shadow-[0_-8px_24px_-20px_hsl(var(--foreground)/0.35)] backdrop-blur-md pb-safe md:hidden"
     >
       {items.map((item) => {
         const isActive = isItemActive(item);
@@ -283,7 +283,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
                     aria-current={isActive ? 'page' : undefined}
                     aria-label={labelText}
                     className={cn(
-                      'flex flex-col items-center gap-2 rounded-xl border border-border p-3 text-center text-xs transition-colors min-w-0',
+                       'flex min-h-20 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border p-3 text-center text-xs transition-colors',
                       isActive
                         ? 'border-primary/40 bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-muted',

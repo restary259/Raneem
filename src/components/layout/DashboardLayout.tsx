@@ -469,7 +469,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
         <div className="flex min-h-0 flex-1 min-w-0 flex-col overflow-hidden">
           {/* Top header */}
           <header className="flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur sticky top-0 z-10 sm:px-4">
-            <SidebarTrigger className="h-9 w-9 shrink-0" />
+            <SidebarTrigger className="h-11 w-11 shrink-0" />
             <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
               <LanguageSwitcher />
               <ThemePicker />
@@ -483,7 +483,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                         size="sm"
                         onClick={() => navigate(messagesHref)}
                         aria-label={t("nav.messages")}
-                        className="relative h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-auto sm:p-2"
+                        className="relative h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:p-2"
                       >
                         <MessageSquare className="h-4 w-4" />
                         <span className="hidden sm:inline text-xs">{t("nav.messages")}</span>
@@ -507,7 +507,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => navigate("/")}
-                      className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-auto sm:gap-2 sm:p-2"
+                      className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2"
                     >
                       <Home className="h-4 w-4" />
                       <span className="hidden sm:inline text-xs">{t("nav.mainSite")}</span>
@@ -520,7 +520,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-auto sm:gap-2 sm:p-2"
+                className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2"
               >
                 <LogOut className="h-4 w-4" />
               </Button>

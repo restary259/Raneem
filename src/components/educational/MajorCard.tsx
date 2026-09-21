@@ -27,7 +27,7 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
       const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`(${escaped})`, 'gi');
       const parts = text.split(regex).filter(Boolean);
-      return parts.map((part, index) => regex.test(part) ? <mark key={index} className="bg-orange-200 text-orange-800 rounded px-1">{part}</mark> : part);
+      return parts.map((part, index) => regex.test(part) ? <mark key={index} className="rounded bg-brand/20 px-1 text-primary">{part}</mark> : part);
     } catch {
       return text;
     }
@@ -36,21 +36,21 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
   return (
-    <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:border-accent/30 group overflow-hidden" onClick={() => onMajorClick(major)}>
+    <Card className="group cursor-pointer overflow-hidden transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-surface-lg motion-reduce:transform-none" onClick={() => onMajorClick(major)}>
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
-              <BookOpen className="h-5 w-5 text-orange-500" />
-              <h3 className="text-lg font-bold text-gray-800 group-hover:text-orange-600 transition-colors">
+              <BookOpen className="h-5 w-5 text-brand-strong" />
+              <h3 className="text-lg font-bold text-foreground transition-colors group-hover:text-primary">
                 {searchQuery ? highlightText(loc.name, searchQuery) : loc.name}
               </h3>
             </div>
             <Badge variant="outline" className="mb-3 text-xs">{catTitle}</Badge>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+            <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
               {searchQuery ? highlightText(loc.desc, searchQuery) : loc.desc}
             </p>
-            <div className="flex items-center gap-2 text-orange-500 group-hover:text-orange-600 transition-colors">
+            <div className="flex items-center gap-2 text-brand-strong transition-colors group-hover:text-primary">
               <span className="text-sm font-medium">{t('educational.readMore')}</span>
               <span className="sr-only">: {loc.name}</span>
               <Arrow className="h-4 w-4" />
