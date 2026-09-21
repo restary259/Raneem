@@ -61,8 +61,8 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
 
   return (
     <div className="flex min-w-0 w-full justify-center overflow-visible" dir={dir}>
-      <NavigationMenu>
-        <NavigationMenuList className="flex min-w-0 max-w-full items-stretch gap-0 xl:gap-1">
+      <NavigationMenu className="w-full max-w-full">
+        <NavigationMenuList className="flex w-full min-w-0 max-w-full items-stretch justify-center gap-0 xl:gap-1">
           <NavigationMenuItem>
             <NavigationMenuTrigger className={triggerClass}>{t('nav.studyGermany')}</NavigationMenuTrigger>
             {renderDropdown(studyGermany)}
