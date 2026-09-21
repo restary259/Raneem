@@ -899,6 +899,9 @@ a[href*="lovable.dev"] {
   .darb-page-hero-inner {
     padding-top: clamp(1.5rem, 6vh, 3.5rem);
   }
+}
+
+
 
 /* ─────────────────────────────────────────────────────────────────────────
    Final public-hero overflow guard
