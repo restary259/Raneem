@@ -56,12 +56,12 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <div
           className={cn(
-            "darb-page-hero-panel w-full border border-background/70 bg-background/92 text-primary shadow-surface-lg backdrop-blur-sm",
+            "darb-page-hero-panel w-full max-w-4xl border border-primary-foreground/15 bg-hero-panel/78 text-primary-foreground shadow-surface-lg backdrop-blur-[3px]",
             align === "center" ? "text-center" : "text-start",
           )}
         >
           {eyebrow ? (
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-strong">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand sm:text-sm">
               {eyebrow}
             </p>
           ) : null}
