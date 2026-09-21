@@ -453,7 +453,8 @@
       "aiSupport": "Quick guidance on studying in Germany, available 24/7 when the service is online.",
       "aiTitle": "What would you like to know?",
       "aiIntro": "Ask about admissions, German language, visas, study paths, or student life. The AI advisor does not replace DARB’s human team.",
-      "composerHint": "AI guidance · Germany study scope"
+      "composerHint": "AI guidance · Germany study scope",
+      "contactForm": "Send a structured enquiry"
     }
   },
   "quiz": {

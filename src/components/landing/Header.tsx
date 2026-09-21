@@ -25,7 +25,7 @@ const Header = () => {
       className={`relative inset-x-0 top-0 z-50 lg:fixed transition-[background-color,box-shadow,border-color] duration-300 ${
         scrolled
           ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md'
-          : 'border-b border-transparent bg-background lg:bg-transparent'
+          : 'border-b border-primary-foreground/15 bg-background lg:bg-hero-panel/35 lg:backdrop-blur-[2px]'
       }`}
       dir={dir}
       data-scrolled={scrolled ? 'true' : 'false'}

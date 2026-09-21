@@ -53,11 +53,11 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   );
 
   const triggerClass = transparent
-    ? 'nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:border-primary-foreground/15 hover:bg-primary-foreground/10 hover:text-primary-foreground data-[state=open]:border-brand/50 data-[state=open]:bg-primary-foreground/10'
-    : 'nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-foreground transition-all duration-200 hover:border-border hover:bg-muted hover:text-brand-strong data-[state=open]:border-brand/40 data-[state=open]:bg-muted';
+    ? 'nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100'
+    : 'nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100';
   const linkClass = navigationMenuTriggerStyle() + (transparent
-    ? ' nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:border-primary-foreground/15 hover:bg-primary-foreground/10 hover:text-primary-foreground'
-    : ' nav-item rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-foreground transition-all duration-200 hover:border-border hover:bg-muted hover:text-brand-strong');
+    ? ' nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-primary-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100'
+    : ' nav-item relative rounded-none border-0 bg-transparent px-3 py-2 text-sm font-semibold text-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100');
 
   return (
     <div className="flex justify-center w-full" dir={dir}>

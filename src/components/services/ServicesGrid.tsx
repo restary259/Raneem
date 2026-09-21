@@ -1,70 +1,58 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  GraduationCap, FileText, Plane, Home, CreditCard, Users, Calculator, HelpCircle, Brain
-} from 'lucide-react';
-import { useNavigate } from '@/lib/router-compat';
-import { useInView } from 'react-intersection-observer';
-import type { LucideIcon } from 'lucide-react';
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, ArrowRight, Building2, Check, Compass, FileCheck2, Languages, Plane, ShieldCheck } from "lucide-react";
+import { Link } from "@/lib/router-compat";
+import { useDirection } from "@/hooks/useDirection";
 
-interface ServiceCopy {
+type JourneyStage = {
   title: string;
-  description: string;
-  features: string[];
-}
+  problem: string;
+  darb: string;
+  decision: string;
+  action: string;
+  href: string;
+};
 
-interface ServiceItem extends ServiceCopy {
-  icon: LucideIcon;
-  route: string;
-}
-
-const iconList = [GraduationCap, FileText, Plane, Home, CreditCard, Users, Calculator, Brain, HelpCircle];
-const routeList = ['/contact', '/contact', '/contact', '/contact', '/contact', '/contact', '/resources', '/quiz', '/contact'];
+const icons = [Compass, Languages, FileCheck2, ShieldCheck, Plane];
 
 const ServicesGrid = () => {
-  const { t } = useTranslation('services');
-  const navigate = useNavigate();
-  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
-
-  const copy = t('servicesGrid.services', { returnObjects: true });
-  const services: ServiceItem[] = (Array.isArray(copy) ? copy : []).map((service, index) => ({
-    ...(service as ServiceCopy),
-    icon: iconList[index] ?? HelpCircle,
-    route: routeList[index] ?? '/contact',
-  }));
+  const { t } = useTranslation("services");
+  const { isRtl } = useDirection();
+  const Arrow = isRtl ? ArrowLeft : ArrowRight;
+  const stages = t("servicesJourney.stages", { returnObjects: true }) as JourneyStage[];
 
   return (
-    <section className="py-12 sm:py-16 md:py-20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">{t('servicesGrid.sectionTitle')}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t('servicesGrid.sectionSubtitle')}</p>
+    <section className="bg-background py-14 sm:py-20" aria-labelledby="services-journey-title">
+      <div className="container">
+        <div className="grid gap-7 lg:grid-cols-[0.68fr_1.32fr] lg:items-end">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("servicesJourney.eyebrow")}</p>
+            <h2 id="services-journey-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("servicesJourney.title")}</h2>
+          </div>
+          <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:justify-self-end">{t("servicesJourney.body")}</p>
         </div>
-        <div ref={ref} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {services.map((service, index) => (
-            <Card key={service.title} className={`group border-border bg-background transition-[transform,box-shadow,border-color] hover:-translate-y-1 hover:border-brand/35 hover:shadow-surface-lg motion-reduce:transform-none ${inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}`} style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'forwards' }}>
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:bg-primary/15 motion-reduce:transform-none sm:h-16 sm:w-16">
-                  <service.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+
+        <div className="mt-10 border-y border-border">
+          {Array.isArray(stages) && stages.map((stage, index) => {
+            const Icon = icons[index] ?? Check;
+            return (
+              <article key={stage.title} className="grid gap-5 border-b border-border py-7 last:border-b-0 sm:grid-cols-[auto_minmax(0,0.8fr)_minmax(0,1.2fr)] sm:gap-7 sm:py-9">
+                <div className="flex items-start gap-3 sm:block">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Icon className="size-5" /></span>
+                  <span className="mt-3 block text-xs font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</span>
                 </div>
-                <CardTitle className="text-xl mb-2">{service.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground mb-4 text-sm">{service.description}</p>
-                <ul className="space-y-2 mb-6">
-                  {service.features.map((feature: string, fi: number) => (
-                    <li key={fi} className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button onClick={() => navigate(service.route)} className="w-full">{t('servicesGrid.startNow')}</Button>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="min-w-0">
+                  <h3 className="text-xl font-bold text-primary sm:text-2xl">{stage.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{stage.problem}</p>
+                </div>
+                <div className="min-w-0 rounded-lg bg-editorial-paper p-5">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-strong">{t("servicesJourney.darbLabel")}</p>
+                  <p className="mt-2 text-sm leading-6 text-foreground">{stage.darb}</p>
+                  <div className="mt-4 flex items-start gap-2 border-t border-border pt-4 text-xs leading-6 text-muted-foreground"><Building2 className="mt-0.5 size-4 shrink-0" /><span>{stage.decision}</span></div>
+                  <Link to={stage.href} className="mt-4 inline-flex min-h-11 items-center gap-2 font-bold text-primary underline decoration-brand/40 underline-offset-4 hover:decoration-brand">{stage.action}<Arrow className="size-4" /></Link>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>
