@@ -1,0 +1,77 @@
+# DARB public website UX/UI and homepage rebuild
+
+## Goal
+Rebuild the public DARB experience around a first-time Arab 48 student considering Germany: immediately explain what DARB is, make unfamiliar study requirements understandable, prove credibility with real people and verified institutions, and lead to an appropriate next step without turning the site into a crowded sales page.
+
+## Confirmed audit findings
+- The homepage currently opens with a strong Germany photograph, but the centered dark rectangle dominates the image and the desktop header visually competes with it. Mobile uses a separate white header treatment, so the first impression is not one coherent composition.
+- The first section after the hero is a 644px-tall institution/logo block. Practical beginner questions about Bagrut, language, cost, eligibility, and process appear much later or not at all.
+- The desktop homepage is about 6,691px tall and repeats similar card patterns across routes, services, process, pricing, and trust, weakening hierarchy.
+- The current student section is buried below destinations and language content. It renders only the first half of the ten configured photos, combines viewport-width figures with a five-column desktop grid, and live inspection found student images that did not resolve reliably.
+- Live inspection also found failed university, city, CEFR, and test-logo requests. TU9, school, exam, CEFR, and destination media currently mix local assets with third-party hotlinks, so fallback text prevents total breakage but does not provide premium, reliable presentation.
+- The standard Contact page already has the required working fields, validation, consent, inbox submission, office information, map, social links, WhatsApp, and Apply action. Its data flow should be preserved; the visual hierarchy is what needs refinement.
+- The global WhatsApp utility is already a side tab, but it remains visually tall and competes with the cookie notice and mobile bottom navigation.
+- Strong foundations worth preserving: the real Germany photography, bilingual RTL/LTR system, transparent-to-white desktop header behavior, one visible H1, existing profile assessment, quiz, Bagrut, program, destination, contact, and AI-advisor routes, real student photos, verified 16+ student / 6+ partner proof, clear institutional-responsibility copy, pill buttons, and the eight-color DARB spectrum.
+
+## Experience architecture
+
+### Homepage order
+1. **Integrated header + DARB hero** — use **Dreams Without Borders** as the primary campaign statement, then state plainly that DARB helps Arab 48 students build a practical route to studying in Germany. Keep one Apply/profile-assessment action and one human-contact action. Use bright Germany photography, a restrained DARB arch, and a single spectrum accent; no oversized dark rectangle or statistics wall.
+2. **Germany, explained for me** — answer the first three high-anxiety questions in plain language: what an Israeli Bagrut may allow, when German is needed, and how public-university costs actually work. Any factual claim must be checked against an official source and framed with exceptions rather than promises.
+3. **Find your next step** — elevate the existing concept into six concise choices routed to existing destinations: explore Germany, discover majors, check Bagrut, prepare German, speak with the advisor, or apply. On mobile this becomes a compact guided selector, not six oversized stacked cards.
+4. **What DARB actually does** — show one connected path split into “Before Germany” and “Arriving in Germany,” using only confirmed services: profile assessment, route/program selection, documents and applications, language/exam guidance, visa-file preparation, accommodation coordination, arrival preparation, and follow-up. Official decisions remain clearly attributed to the responsible institution.
+5. **Real students, real destinations** — move proof earlier and rebuild it as an editorial composition using reliable existing student photos, arch-shaped/offset crops, names and destinations only where already supplied, and a swipeable but non-autoplay mobile story. Do not invent programs or testimonials.
+6. **The German study ecosystem** — replace the long early logo wall with an editorial explanation of Language, Admission, Assessment, and Recognition. Present verified university, language-school, CEFR, and exam identities with controlled scale and whitespace rather than sponsor carousels.
+7. **Real options in Germany** — connect destinations, programs, language preparation, and exams to the visitor’s decision; keep detailed content on its existing pages and use the homepage for orientation.
+8. **Clarity before commitment** — retain the honest DARB-versus-official-authority scope, written fee breakdown, no-online-payment explanation, and concise FAQs.
+9. **Final next step** — offer profile assessment or human contact once more, using the alternate “Futures Without Borders” line only if it strengthens this closing moment.
+
+### Shared public experience
+- Rework the shared header as one compact responsive system: transparent over the homepage hero, readable without a hero, white and sticky after scrolling, aligned logo/nav/action at desktop, and a compact 320px-safe mobile row with a clear menu and no duplicated language controls.
+- Turn the DARB arch, spectrum strip, editorial image frame, micro-label, and selected card accent into reusable public-site patterns. Use arches selectively around the hero, student proof, and one or two transitions—not on every card.
+- Normalize public buttons through the shared button variants: navy primary, restrained outline secondary, consistent pill geometry, 44px minimum targets, visible focus, and no one-off button palettes.
+- Refine the shared footer and public page hero treatment so Services, Programs, Destinations, About, Resources, Partnership, and Contact feel related without forcing identical layouts.
+- Keep dashboards and authenticated operational screens outside this visual rebuild unless a shared public element currently leaks into them.
+
+## Asset and credibility work
+- Replace fragile third-party hotlinks used in the rebuilt homepage with controlled asset pointers after checking the official source and allowed usage. Preserve original logo proportions and metadata; never redraw or approximate a logo.
+- Build one resilient logo-stage component with fixed visual bounds, `object-fit: contain`, text fallback, loading state, keyboard link behavior, and no broken-image icon.
+- Remove the currently failing CEFR image. Use a verified Council of Europe CEFR asset through the controlled asset flow when permitted; otherwise present the official CEFR name and an original explanatory level scale without imitating an official logo.
+- Include only tests and institutions DARB actually references or supports. Verify ÖSD and any additional organization before adding it; absence is preferable to an unsupported affiliation.
+- Audit every configured student image at its real dimensions, correct focal positions, optimize below-fold delivery, and provide an intentional neutral fallback. Existing placeholder testimonial avatars remain excluded from the homepage.
+
+## Contact and floating utilities
+- Preserve the existing Contact submission, consent, validation, inbox delivery, office/map data, and social destinations.
+- Replace the oversized photographic Contact intro with a more compact editorial contact composition: clear H1 and explanation, advisor portrait/human reassurance, direct WhatsApp/email choices, then the complete form with office information alongside it on desktop and in a logical order on mobile.
+- Keep `/ai-advisor` as the distinct mobile Contact + AI guidance destination and `/contact` as the standard form; do not merge their data flows.
+- Reduce WhatsApp to a compact edge utility with icon-first treatment, accessible label/tooltip, safe-area spacing, and collision rules for cookie consent and the mobile navigation. It remains hidden on Apply and dashboards.
+
+## Visual system
+- Base: bright white and off-white, charcoal/ink typography, DARB navy for authority, orange/yellow for key emphasis, and the full spectrum only as a controlled brand signature.
+- Typography: preserve the current Inter/Noto Sans Arabic direction, improve hierarchy and Arabic line-height, and avoid oversized display text that forces awkward wraps at 320–430px.
+- Cards: use fewer containers. Distinguish editorial stories, decision choices, process steps, and institutional proof instead of repeating “white card + icon + text.” Keep radii disciplined and avoid cards nested inside cards.
+- Motion: subtle arch/route and image transitions only; marquees or horizontal movement pause on hover/focus and become manually scrollable/static under reduced motion.
+
+## Implementation sequence
+1. **Foundation:** define the reusable arch, image frame, logo stage, button variants, public spacing, and compact header behavior in the shared design system.
+2. **Hero and first-minute journey:** rebuild the homepage hero, beginner-answer section, Find Your Next Step selector, and practical DARB path.
+3. **Trust and options:** repair student media, create the editorial student composition, replace unreliable logo/CEFR assets, and rebuild the study-ecosystem/destination presentation.
+4. **Decision content:** consolidate scope, costs, FAQs, and final actions; remove only repetitions that no longer earn their place.
+5. **Public consistency:** restyle Contact and propagate shared header/footer/hero/button patterns to the other public pages without changing their routes or workflows.
+6. **Verification and refinement:** run the stranger test, bilingual and responsive QA, interaction checks, and performance/accessibility regression checks before finalizing.
+
+## Technical boundaries
+- Keep all existing routes and CTA destinations. Do not change Contact or Apply submissions, consent recording, inbox behavior, authentication, AI behavior, database permissions, case/payment workflows, or dashboard business logic.
+- Keep visible copy in the existing Arabic/English translation system, with Arabic as the default RTL experience. Update both languages together.
+- Split the oversized homepage into focused presentational sections and shared visual primitives; keep interactive state local and avoid introducing a second design system.
+- Continue using semantic color tokens and the shared Button component. No hardcoded page-level palette or remote font import.
+- Keep homepage metadata specific and retain one H1, meaningful headings, alt text, keyboard focus, and reduced-motion behavior.
+
+## Acceptance criteria
+- At 5 seconds, a new visitor can state what DARB is and who it helps; at 15 seconds, what is possible; at 30 seconds, what DARB handles; at 60 seconds, how to choose a next step.
+- Verified at 320, 375, 390, 430, 768, 1024, 1280, 1440, and 1920px in Arabic RTL and English LTR.
+- Zero horizontal overflow, clipped text, broken images, distorted logos, blocked controls, competing sticky elements, or desktop-only empty space.
+- Header, hero, arch, student imagery, institution/test identities, cards, Contact form, WhatsApp utility, footer, and mobile navigation remain coherent at every target width.
+- Apply, Contact submission, WhatsApp, email, AI advisor, quiz, Bagrut checker, program/destination links, language/exam links, language switching, login, and footer links continue to work.
+- No unsupported admission, visa, tuition, cost, timeline, partnership, or outcome claim is introduced.
+- Below-fold media is lazy-loaded, the hero alone is prioritized, remote failures do not create broken artifacts, and reduced-motion mode remains complete.
