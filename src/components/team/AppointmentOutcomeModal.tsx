@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { readFunctionError } from '@/lib/functionError';
 import { useTranslation } from 'react-i18next';
+import { isRtlLng } from '@/i18n';
 
 type Outcome = 'completed' | 'delayed' | 'cancelled' | 'rescheduled' | 'no_show';
 
@@ -23,7 +24,7 @@ interface Props {
 export default function AppointmentOutcomeModal({ open, onClose, appointmentId, onSuccess }: Props) {
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
-  const isRtl = i18n.language === 'ar';
+  const isRtl = isRtlLng(i18n.language);
   const [outcome, setOutcome] = useState<Outcome>('completed');
   const [notes, setNotes] = useState('');
   const [newDate, setNewDate] = useState('');

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import { Link, Outlet, useLocation, useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
+import { isRtlLng } from "@/i18n";
 import {
   SidebarProvider,
   Sidebar,
@@ -413,7 +414,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
-  const isRtl = i18n.language === "ar";
+  const isRtl = isRtlLng(i18n.language);
   // Every role that has a messages destination gets the header quick-access
   // button + unread badge. Students have their own messages route too, but they
   // are gated through StudentOnboardingGate and rarely need the header shortcut

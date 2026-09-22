@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
+import { isRtlLng } from '@/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ interface CashCollectionRow {
 const AdminCommandCenter = () => {
   const { t, i18n } = useTranslation('dashboard');
   const navigate = useNavigate();
-  const isRtl = i18n.language === 'ar';
+  const isRtl = isRtlLng(i18n.language);
   const queryClient = useQueryClient();
   const [settlingCaseId, setSettlingCaseId] = useState<string | null>(null);
 

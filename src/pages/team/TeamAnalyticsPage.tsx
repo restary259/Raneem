@@ -4,6 +4,7 @@ import type { Database } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEarningsSummary } from '@/hooks/useEarningsSummary';
 import { useTranslation } from 'react-i18next';
+import { isRtlLng } from '@/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -27,7 +28,7 @@ const CHART_COLORS = [
 export default function TeamAnalyticsPage() {
   const { user } = useAuth();
   const { t, i18n } = useTranslation('dashboard');
-  const isRtl = i18n.language === 'ar';
+  const isRtl = isRtlLng(i18n.language);
 
   const [caseCounts, setCaseCounts] = useState<Record<string, number>>({});
   const [closedThisMonth, setClosedThisMonth] = useState(0);
