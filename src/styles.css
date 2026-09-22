@@ -944,8 +944,9 @@ a[href*="lovable.dev"] {
 }
 
 .darb-page-hero-panel {
-  width: var(--darb-hero-panel-width);
-  padding-inline: clamp(1.5rem, 3.5vw, 3.25rem);
+  /* Same wide flat band as the homepage hero. */
+  width: min(92vw, 1060px);
+  padding-inline: clamp(1.5rem, 5vw, 4.5rem);
   padding-block: clamp(1.35rem, 3vh, 2.25rem);
 }
 
