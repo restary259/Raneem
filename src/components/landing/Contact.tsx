@@ -115,8 +115,8 @@ const Contact = () => {
   return (
     <section id="contact" className="bg-editorial-paper py-10 md:py-16">
       <div className="container mx-auto px-4">
-        <div className="mb-10 grid items-center gap-5 border-b border-border pb-10 sm:grid-cols-[auto_minmax(0,1fr)] md:gap-7">
-          <div className="relative mx-auto size-28 shrink-0 sm:mx-0 md:size-32">
+        <div className="mb-8 grid items-center gap-4 border-b border-border pb-8 sm:grid-cols-[auto_minmax(0,1fr)] md:mb-10 md:gap-7 md:pb-10">
+          <div className="relative mx-auto size-24 shrink-0 sm:mx-0 md:size-32">
             <img src={DARB_CONTACT_ADVISOR_SRC} alt={t("contactHero.imageAlt")} className="size-full rounded-full border border-border object-cover shadow-surface" />
             <span aria-hidden="true" className="absolute inset-x-3 -bottom-1 h-1 rounded-full bg-brand" />
           </div>
@@ -124,7 +124,7 @@ const Contact = () => {
             <p className="text-xs font-bold uppercase text-brand-strong">{t("contactHero.advisorEyebrow")}</p>
             <h2 className="mt-2 text-2xl font-bold text-primary md:text-3xl">{t("contactHero.advisorTitle")}</h2>
             <p className="mt-2 max-w-2xl leading-7 text-muted-foreground">{t("contactHero.advisorBody")}</p>
-            <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row sm:justify-start">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:justify-start">
               <Button asChild><a href={whatsappBusinessUrl(t("contactHero.whatsappMessage"))} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("support.whatsapp")}</a></Button>
               <Button asChild variant="outline"><a href={`mailto:${SUPPORT_EMAIL}`}><Mail />{SUPPORT_EMAIL}</a></Button>
             </div>
