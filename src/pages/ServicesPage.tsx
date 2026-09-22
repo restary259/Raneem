@@ -20,8 +20,8 @@ const ServicesPage = () => {
       <main className="flex-grow">
         <ServicesHero />
         <ServicesGrid />
-        <ServiceDisclosure />
         <ServiceProcess />
+        <ServiceDisclosure />
         <DarbContactCta />
       </main>
       <Footer />

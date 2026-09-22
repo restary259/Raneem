@@ -8,13 +8,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { Suspense } from "react";
 import appCss from "../styles.css?url";
 import "@/i18n";
 import AppShell from "@/components/AppShell";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ThemeScope from "@/components/common/ThemeScope";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
@@ -69,39 +69,6 @@ const ORG_JSONLD = JSON.stringify({
   },
 });
 
-// LCP hero preload — only the landing route renders the hero.
-const HERO_PRELOAD_SCRIPT = `
-if (location.pathname === '/' || location.pathname === '/index.html') {
-  var heroPreload = document.createElement('link');
-  heroPreload.rel = 'preload';
-  heroPreload.as = 'image';
-  heroPreload.href = '/lovable-uploads/hero-poster.webp';
-  heroPreload.setAttribute('fetchpriority', 'high');
-  document.head.appendChild(heroPreload);
-}`;
-
-// Splash fallback — AppShell hides it on mount; this covers a stalled boot.
-const SPLASH_FALLBACK_SCRIPT = `
-setTimeout(function () {
-  var loading = document.getElementById('pwa-loading');
-  if (loading) {
-    loading.classList.add('hidden');
-    setTimeout(function () { loading.remove(); }, 500);
-  }
-}, 10000);`;
-
-const SPLASH_CSS = `
-.pwa-loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #ffffff; display: flex; align-items: center; justify-content: center; z-index: 9999; color: #1a1a2e; font-family: 'Tajawal', sans-serif; opacity: 1; transition: opacity 0.5s ease; }
-.pwa-loading.hidden { opacity: 0; pointer-events: none; }
-.pwa-loading .loading-content { text-align: center; max-width: 300px; }
-.pwa-loading .loading-logo { width: 112px; height: 112px; margin: 0 auto 1rem; animation: pwa-pulse 2s infinite; }
-.pwa-loading .loading-logo img { width: 100%; height: 100%; object-fit: contain; }
-@keyframes pwa-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-.pwa-loading .loading-text { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
-.pwa-loading .loading-subtitle { font-size: 1rem; opacity: 0.8; }
-body { padding-bottom: env(safe-area-inset-bottom, 0); }
-`;
-
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -125,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { httpEquiv: "Content-Security-Policy", content: "upgrade-insecure-requests" },
       // PWA
-      { name: "theme-color", content: "#F28C28" },
+      { name: "theme-color", content: "#082B66" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "درب" },
@@ -156,8 +123,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "manifest", href: "/manifest.json", crossOrigin: "use-credentials" },
-      { rel: "icon", href: "/favicon-v2.png", type: "image/png", sizes: "64x64" },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon-v2.png" },
+      { rel: "icon", href: "/favicon-v3.png", type: "image/png", sizes: "64x64" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon-v3.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: FONTS_HREF },
@@ -165,12 +132,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "dns-prefetch", href: "//fonts.googleapis.com" },
       { rel: "dns-prefetch", href: "//fonts.gstatic.com" },
       { rel: "stylesheet", href: appCss },
-    ],
-    scripts: [
-      { children: HERO_PRELOAD_SCRIPT },
-      { type: "application/ld+json", children: SITE_JSONLD },
-      { type: "application/ld+json", children: ORG_JSONLD },
-      { children: SPLASH_FALLBACK_SCRIPT },
     ],
   }),
   shellComponent: RootShell,
@@ -184,19 +145,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <HeadContent />
-        <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
       </head>
       <body>
-        {/* PWA splash — hidden by AppShell once React mounts */}
-        <div id="pwa-loading" className="pwa-loading">
-          <div className="loading-content">
-            <div className="loading-logo">
-              <img src={APP_LOGO} alt="درب" />
-            </div>
-            <div className="loading-text">درب</div>
-            <div className="loading-subtitle">رفيقك الدراسي العالمي</div>
-          </div>
-        </div>
         {children}
         <Scripts />
       </body>
@@ -208,17 +158,32 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <ErrorBoundary>
-      <Suspense fallback={null}>
-        <ThemeScope>
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <AppShell />
-            </AuthProvider>
-          </QueryClientProvider>
-        </ThemeScope>
-      </Suspense>
+      <RootStructuredData />
+      <ThemeScope>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AppShell />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeScope>
     </ErrorBoundary>
   );
+}
+
+function RootStructuredData() {
+  useEffect(() => {
+    const values = [SITE_JSONLD, ORG_JSONLD];
+    const nodes = values.map((value) => {
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.dataset.rootJsonld = "true";
+      script.textContent = value;
+      document.head.appendChild(script);
+      return script;
+    });
+    return () => nodes.forEach((node) => node.remove());
+  }, []);
+  return null;
 }
 
 function RootErrorComponent({ error }: { error: Error }) {

@@ -150,7 +150,7 @@ const NotificationBell: React.FC = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t('notifications.title')} className="relative text-muted-foreground hover:text-foreground h-9 w-9 p-0">
+        <Button variant="ghost" size="sm" aria-label={t('notifications.title')} className="relative h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-9">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute -top-0.5 -end-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1 neon-dot neon-danger">

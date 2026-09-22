@@ -42,7 +42,7 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
 
   const renderDropdown = (items: { title: string; href: string; description: string }[], widthClass = 'md:w-[500px]') => (
     <NavigationMenuContent>
-      <ul className={`grid w-[400px] gap-3 p-4 ${dir === 'rtl' ? 'text-right' : 'text-left'} ${widthClass} bg-white shadow-lg border rounded-md`}>
+      <ul className={`grid w-[400px] gap-2 p-3 ${dir === "rtl" ? "text-right" : "text-left"} ${widthClass} rounded-md border border-border bg-background/95 shadow-surface-lg backdrop-blur-md`}>
         {items.map((item) => (
           <ListItem key={item.href} to={item.href} title={item.title}>
             {item.description}
@@ -53,16 +53,16 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   );
 
   const triggerClass = transparent
-    ? 'nav-item rounded-none border-b-2 border-brand bg-primary/95 text-primary-foreground hover:bg-primary font-semibold'
-    : 'nav-item rounded-none border-b-2 border-brand bg-muted/60 text-foreground hover:bg-muted hover:text-brand-strong font-semibold';
+    ? 'nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-primary-foreground drop-shadow-sm after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100'
+    : 'nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-foreground after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:origin-center after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100 data-[state=open]:bg-transparent data-[state=open]:after:scale-x-100';
   const linkClass = navigationMenuTriggerStyle() + (transparent
-    ? ' nav-item rounded-none border-b-2 border-brand bg-primary/95 font-semibold text-primary-foreground hover:bg-primary'
-    : ' nav-item rounded-none border-b-2 border-brand bg-muted/60 font-semibold text-brand-strong hover:bg-muted');
+    ? ' nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-primary-foreground drop-shadow-sm after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary-foreground hover:after:scale-x-100'
+    : ' nav-item relative rounded-none border-0 bg-transparent px-2 py-2 text-xs font-semibold xl:px-3 xl:text-sm text-foreground after:absolute after:inset-x-2 after:bottom-0 xl:inset-x-3 after:bottom-0 after:h-0.5 after:scale-x-0 after:bg-brand after:transition-transform hover:bg-transparent hover:text-primary hover:after:scale-x-100');
 
   return (
-    <div className="flex justify-center w-full" dir={dir}>
-      <NavigationMenu>
-        <NavigationMenuList className="flex items-stretch gap-1">
+    <div className="flex min-w-0 w-full justify-center overflow-visible" dir={dir}>
+      <NavigationMenu className="w-full max-w-full">
+        <NavigationMenuList className="flex w-full min-w-0 max-w-full items-stretch justify-center gap-0 xl:gap-1">
           <NavigationMenuItem>
             <NavigationMenuTrigger className={triggerClass}>{t('nav.studyGermany')}</NavigationMenuTrigger>
             {renderDropdown(studyGermany)}

@@ -3,10 +3,18 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import HttpBackend from 'i18next-http-backend';
 
-// Import broadcast translations directly to avoid async loading issues
-import broadcastAr from '../public/locales/ar/broadcast.json';
-import broadcastEn from '../public/locales/en/broadcast.json';
+// Import translations directly to avoid async loading issues
+import broadcastAr from './locales/ar/broadcast.json';
+import broadcastEn from './locales/en/broadcast.json';
 import broadcastHe from '../public/locales/he/broadcast.json';
+import commonAr from './locales/ar/common.json';
+import commonEn from './locales/en/common.json';
+import contactAr from './locales/ar/contact.json';
+import contactEn from './locales/en/contact.json';
+import landingAr from './locales/ar/landing.json';
+import landingEn from './locales/en/landing.json';
+import legalAr from './locales/ar/legal.json';
+import legalEn from './locales/en/legal.json';
 
 /**
  * True for languages that render right-to-left.
@@ -23,7 +31,7 @@ i18n
   .use(initReactI18next)
   .init({
     lng: savedLang || 'ar',
-fallbackLng: { he: ['en'], default: ['ar'] },
+    fallbackLng: { he: ['en'], default: ['ar'] },
     supportedLngs: ['ar', 'en', 'he'],
     // Only the namespace every route needs is loaded up front. The rest are
     // fetched on demand by useTranslation(<ns>) through the HTTP backend, so a
@@ -33,8 +41,8 @@ fallbackLng: { he: ['en'], default: ['ar'] },
     defaultNS: 'common',
     partialBundledLanguages: true,
     resources: {
-      ar: { broadcast: broadcastAr },
-      en: { broadcast: broadcastEn },
+      ar: { common: commonAr, landing: landingAr, contact: contactAr, legal: legalAr, broadcast: broadcastAr },
+      en: { common: commonEn, landing: landingEn, contact: contactEn, legal: legalEn, broadcast: broadcastEn },
       he: { broadcast: broadcastHe },
     },
     debug: false,

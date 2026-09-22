@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Link } from '@/lib/router-compat';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ChevronDown } from 'lucide-react';
+import { Menu, ChevronDown, Mail, MessageCircle } from 'lucide-react';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useDirection } from '@/hooks/useDirection';
+import { SUPPORT_EMAIL, whatsappBusinessUrl } from '@/lib/contactConfig';
 
 const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
   const { t } = useTranslation();
@@ -24,7 +25,7 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className={transparent ? "rounded-none border-b-2 border-brand bg-primary/95 text-primary-foreground hover:bg-primary" : "rounded-none border-b-2 border-brand"} aria-label={t('nav.more')}>
+        <Button variant="outline" size="icon" className={`min-h-11 min-w-11 ${transparent ? "border-primary-foreground/50 bg-transparent text-primary-foreground drop-shadow-sm hover:bg-background/15 hover:text-primary-foreground" : "border-border bg-background"}`} aria-label={t('nav.more')}>
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
@@ -83,7 +84,16 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
 
           <Link onClick={close} to="/contact" className={'text-sm font-medium contact-glow transition-colors ' + textAlign + ' py-3 border-y border-border'}>{t('nav.contact')}</Link>
 
-          <Link onClick={close} to="/student-auth" className="bg-brand-strong text-brand-foreground px-3 py-2 rounded-lg font-medium hover:bg-brand-strong/90 transition-colors text-center mt-3 text-sm">{t('nav.studentLogin')}</Link>
+          <div className="mt-2 grid gap-2 border-t border-border pt-4">
+            <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center gap-3 rounded-full border border-border px-4 text-sm font-semibold hover:border-primary hover:text-primary">
+              <MessageCircle className="h-4 w-4" /> WhatsApp
+            </a>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="flex min-h-11 items-center gap-3 rounded-full border border-border px-4 text-sm font-semibold hover:border-primary hover:text-primary" dir="ltr">
+              <Mail className="h-4 w-4" /> {SUPPORT_EMAIL}
+            </a>
+          </div>
+
+          <Link onClick={close} to="/student-auth" className="mt-3 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-4 text-center text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">{t('nav.studentLogin')}</Link>
         </nav>
       </SheetContent>
     </Sheet>

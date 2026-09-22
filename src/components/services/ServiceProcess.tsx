@@ -19,10 +19,10 @@ const ServiceProcess: React.FC<ServiceProcessProps> = ({ title, description, cla
   const steps = t('serviceProcess.steps', { returnObjects: true }) as any[];
 
   return (
-    <section className={cn("py-12 md:py-24", className)}>
+    <section className={cn("bg-editorial-paper py-14 sm:py-20", className)}>
       <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto mb-8 md:mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold font-cairo text-primary">{displayTitle}</h2>
+        <div className="text-center max-w-3xl mx-auto mb-8 md:mb-14">
+          <h2 className="text-3xl md:text-5xl font-bold text-primary">{displayTitle}</h2>
           <p className="mt-4 text-lg text-muted-foreground">{displayDesc}</p>
         </div>
         <div className="relative max-w-5xl mx-auto">
@@ -31,13 +31,13 @@ const ServiceProcess: React.FC<ServiceProcessProps> = ({ title, description, cla
             {Array.isArray(steps) && steps.map((step: any, index: number) => {
               const Icon = stepIcons[index] || CheckCircle;
               return (
-                <div key={index} className="text-center relative bg-background px-4">
+                <div key={index} className="relative border border-border bg-background px-5 py-6 text-center">
                   <div className="flex justify-center mb-4">
-                    <div className="rounded-full bg-accent text-accent-foreground p-4 ring-8 ring-background">
+                    <div className="rounded-full bg-primary p-4 text-primary-foreground ring-8 ring-background">
                       <Icon className="h-8 w-8" />
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold font-cairo text-primary">{step.title}</h3>
+                  <h3 className="text-xl font-bold text-primary">{step.title}</h3>
                   <p className="mt-2 text-muted-foreground">{step.description}</p>
                 </div>
               );

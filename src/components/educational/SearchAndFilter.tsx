@@ -40,17 +40,17 @@ const SearchAndFilter = ({
   }, [showFilters]);
 
   return (
-    <section className="educational-sticky-section sticky bg-white border-b shadow-xs z-40">
+    <section className="educational-sticky-section sticky z-40 border-b border-border bg-background/95 shadow-xs backdrop-blur-md">
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="relative">
-            <Search className={`absolute top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 md:h-5 md:w-5 ${isRtl ? 'right-3' : 'left-3'}`} />
+            <Search className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground md:h-5 md:w-5 ${isRtl ? 'right-3' : 'left-3'}`} />
             <Input
               type="text"
               placeholder={t('educational.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`h-10 md:h-12 text-sm md:text-base border-2 border-gray-200 focus:border-orange-500 rounded-lg bg-gray-50 focus:bg-white transition-colors ${isRtl ? 'pl-4 pr-10' : 'pr-4 pl-10'}`}
+              className={`h-12 rounded-full border-border bg-muted/40 text-sm transition-colors focus:border-primary focus:bg-background md:text-base ${isRtl ? 'pl-4 pr-10' : 'pr-4 pl-10'}`}
               dir={dir}
             />
           </div>
@@ -58,7 +58,7 @@ const SearchAndFilter = ({
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 border-2 border-gray-200 hover:border-orange-500 transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 whitespace-nowrap px-4 text-xs transition-colors hover:border-primary sm:text-sm"
               aria-expanded={showFilters}
               aria-haspopup="true"
             >
@@ -67,7 +67,7 @@ const SearchAndFilter = ({
               <span className="sm:hidden">{t('educational.filterByCategory').split(' ')[0]}</span>
               <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
             </Button>
-            <div className="text-xs md:text-sm text-gray-600 text-end flex-shrink-0">
+            <div className="flex-shrink-0 text-end text-xs text-muted-foreground md:text-sm">
               {searchQuery || selectedCategory
                 ? t('educational.foundResults', { count: filteredMajorsCount })
                 : t('educational.availableMajors', { count: allMajorsCount })
@@ -86,7 +86,7 @@ const SearchAndFilter = ({
           {/* Bottom Sheet (mobile) / Centered Modal (desktop) */}
           <div className="fixed inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center z-[61]">
             <div 
-              className="bg-background rounded-t-2xl md:rounded-2xl shadow-2xl w-full md:max-w-md max-h-[80vh] md:max-h-[70vh] flex flex-col animate-in slide-in-from-bottom-4 md:slide-in-from-bottom-0 md:zoom-in-95"
+              className="flex max-h-[80vh] w-full flex-col rounded-t-2xl bg-background shadow-surface-lg animate-in slide-in-from-bottom-4 md:max-h-[70vh] md:max-w-md md:rounded-2xl md:slide-in-from-bottom-0 md:zoom-in-95"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Handle bar (mobile) */}
@@ -103,7 +103,7 @@ const SearchAndFilter = ({
                 <Button
                   variant={selectedCategory === null ? "default" : "outline"}
                   onClick={() => { setSelectedCategory(null); setShowFilters(false); }}
-                  className={`w-full justify-between text-sm ${selectedCategory === null ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600 hover:border-orange-500"}`}
+                   className="w-full justify-between text-sm"
                 >
                   <span className="truncate">{t('educational.allMajors')}</span>
                   <Badge variant="secondary" className="ms-2 flex-shrink-0">
@@ -115,7 +115,7 @@ const SearchAndFilter = ({
                     key={category.id}
                     variant={selectedCategory === category.id ? "default" : "outline"}
                     onClick={() => { setSelectedCategory(category.id); setShowFilters(false); }}
-                    className={`w-full justify-between text-sm ${selectedCategory === category.id ? "bg-orange-500 hover:bg-orange-600 text-white" : "text-gray-600 hover:text-orange-600 hover:border-orange-500"}`}
+                     className="w-full justify-between text-sm"
                   >
                     <span className="truncate">{getLocalizedCategoryTitle(category.title, category.titleEN, lang)}</span>
                     <Badge variant="secondary" className="ms-2 flex-shrink-0">{categoryMajorCounts[category.id] || 0}</Badge>

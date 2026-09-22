@@ -8,15 +8,17 @@ import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ApplyPage: React.FC = () => {
   const { dir } = useDirection();
   const { t } = useTranslation("landing");
+  const isMobile = useIsMobile();
 
   return (
     <div dir={dir} className="min-h-screen bg-background text-foreground">
-      {/* Desktop: keep the normal DARB website experience. */}
-      <div className="hidden md:block">
+      {!isMobile ? (
+      <div>
         <Header />
         <main>
           <DarbPageHero
@@ -32,9 +34,8 @@ const ApplyPage: React.FC = () => {
         <Footer />
       </div>
 
-      {/* Mobile: standalone Instagram-first lead form. No site hero, full navigation,
-          footer, or bottom navigation — only a compact DARB identity bar. */}
-      <div className="md:hidden min-h-screen">
+      ) : (
+      <div className="min-h-screen">
         <header className="sticky top-0 z-40 border-b border-border bg-background">
           <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
             <a href="/" aria-label={t("loader.brand")} className="flex items-center">
@@ -62,6 +63,7 @@ const ApplyPage: React.FC = () => {
           <ApplyForm embedded />
         </main>
       </div>
+      )}
     </div>
   );
 };

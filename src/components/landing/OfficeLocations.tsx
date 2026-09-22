@@ -12,7 +12,7 @@ const OfficeLocations = () => {
   return (
     <div className="space-y-5">
        <h3 className="text-2xl font-bold text-primary">{t('officeLocations.title')}</h3>
-        <Card className="rounded-none border-border bg-background shadow-none">
+        <Card className="rounded-2xl border-border bg-background shadow-surface">
           <CardHeader>
             <CardTitle className="text-primary">{t('officeLocations.city')}</CardTitle>
           </CardHeader>
@@ -33,7 +33,7 @@ const OfficeLocations = () => {
               <Clock className="h-5 w-5 text-accent" />
               <span>{t('officeLocations.hours')}</span>
             </div>
-              <Button asChild className="w-full mt-4 rounded-none" variant="outline">
+              <Button asChild className="mt-4 w-full" variant="outline">
                 <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع مكتب درب.")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                     <MessageCircle className="h-5 w-5" />
                     {t('officeLocations.whatsappButton')}

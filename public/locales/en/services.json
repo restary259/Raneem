@@ -1,7 +1,9 @@
 {
   "servicesHero": {
-    "title": "Our Services – Guiding You Step by Step to Your University",
-    "subtitle": "Whether you're looking for university admission, a visa, or housing — we're with you. We provide integrated, customized solutions to meet your needs and support your educational journey in Germany, Romania, and Jordan."
+    "eyebrow": "DARB SERVICES",
+    "title": "One clear journey to studying in Germany",
+    "subtitle": "Understand each stage, what DARB handles, and which decisions remain with universities, authorities, and service providers.",
+    "imageAlt": "Students preparing for university study in Germany"
   },
   "servicesGrid": {
     "sectionTitle": "Our Comprehensive Services",
@@ -92,24 +94,24 @@
     ]
   },
   "serviceProcess": {
-    "title": "Your Journey With Us in 4 Steps",
-    "description": "Our process is transparent and straightforward so you get the best possible support.",
+    "title": "How your file moves forward",
+    "description": "A transparent sequence keeps every next step understandable.",
     "steps": [
       {
-        "title": "Consultation & Assessment",
-        "description": "Your journey begins with a free consultation session to understand your goals and evaluate your profile."
+        "title": "Profile review",
+        "description": "We understand your qualifications, language level, and goals."
       },
       {
-        "title": "Application Preparation & Submission",
-        "description": "We help you prepare all documents and submit your applications to universities and embassies."
+        "title": "Written route",
+        "description": "You receive a clear plan for preparation, applications, and expected third-party steps."
       },
       {
-        "title": "Travel Preparation",
-        "description": "After receiving admission and visa, we help you book accommodation and prepare for travel."
+        "title": "File coordination",
+        "description": "We organize agreed tasks and follow up with the relevant institutions."
       },
       {
-        "title": "Post-Arrival Support",
-        "description": "We welcome you and provide the necessary support to help you settle and start your studies comfortably."
+        "title": "Updates and next step",
+        "description": "You see what is complete, what is pending, and who owns the next decision."
       }
     ]
   },
@@ -204,5 +206,53 @@
         "For any cancellation or refund request: info@darb.agency."
       ]
     }
+  },
+  "servicesJourney": {
+    "eyebrow": "YOUR STUDY PATH",
+    "title": "Support built around the decisions you need to make",
+    "body": "Move from understanding your options to preparing, applying, and arriving—with a clear role for DARB at every stage.",
+    "darbLabel": "What DARB does",
+    "stages": [
+      {
+        "title": "Explore and assess",
+        "problem": "Understand how your Bagrut, previous studies, language level, and goals shape the routes available in Germany.",
+        "darb": "We review your profile, explain realistic routes, and help you compare suitable study or language options.",
+        "decision": "Universities and schools set admission requirements and make admission decisions.",
+        "action": "Assess my profile",
+        "href": "/apply"
+      },
+      {
+        "title": "Prepare language and documents",
+        "problem": "Identify the required language level and organize the documents needed for the chosen route.",
+        "darb": "We guide exam and course registration, review document readiness, and coordinate translation or certification steps.",
+        "decision": "Schools and examination bodies teach, test, and certify language levels; authorized professionals issue official translations.",
+        "action": "Explore preparation routes",
+        "href": "/educational-destinations"
+      },
+      {
+        "title": "Apply to suitable institutions",
+        "problem": "Turn a prepared profile into organized applications that follow each institution’s requirements.",
+        "darb": "We prepare, review, submit, and follow up on applications with the relevant institutions.",
+        "decision": "The university, school, or uni-assist makes the final admission decision and sets its fees.",
+        "action": "Explore study options",
+        "href": "/educational-programs"
+      },
+      {
+        "title": "Prepare visa, accommodation, and arrival",
+        "problem": "Coordinate the practical requirements after an admission or study route becomes clear.",
+        "darb": "We prepare the visa-file checklist and support accommodation search, insurance guidance, and travel readiness.",
+        "decision": "German authorities decide the visa; insurers and accommodation providers own their contracts, availability, deposits, and terms.",
+        "action": "Talk to DARB",
+        "href": "/contact"
+      },
+      {
+        "title": "Start with guided follow-up",
+        "problem": "Understand the first practical steps in Germany and keep your study file organized during the transition.",
+        "darb": "We provide Arabic guidance, file updates, and practical orientation within the agreed service scope.",
+        "decision": "Universities, public authorities, and service providers remain responsible for their official decisions and services.",
+        "action": "Ask the advisor",
+        "href": "/ai-advisor"
+      }
+    ]
   }
 }

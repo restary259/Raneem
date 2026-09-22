@@ -3,72 +3,65 @@ import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpenCheck,
   Building2,
   Check,
   CircleCheck,
+  Compass,
   FileCheck2,
   GraduationCap,
-  HeartHandshake,
   Home,
+  Languages,
+  MapPin,
   MessageCircle,
   Plane,
   SearchCheck,
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
+import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
+import BrandArch from "./home/BrandArch";
+import IdentityStage from "./home/IdentityStage";
+import CefrGuide from "./home/CefrGuide";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
+type PathItem = TextItem & { href: string };
 
-const serviceIcons = [SearchCheck, FileCheck2, ShieldCheck, Home, HeartHandshake];
-const journeyIcons = [SearchCheck, FileCheck2, Plane, GraduationCap];
+const practicalIcons = [GraduationCap, Languages, Building2];
+const journeyIcons = [SearchCheck, Compass, FileCheck2, Languages, ShieldCheck, Home, Plane, GraduationCap];
+const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, MessageCircle, FileCheck2];
 
-const SectionIntro = ({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) => (
-  <div className="max-w-2xl">
-    <p className="text-xs font-bold uppercase text-brand-strong">{eyebrow}</p>
-    <h2 className="mt-3 text-3xl font-bold leading-tight text-primary sm:text-4xl lg:text-5xl">
-      {title}
-    </h2>
-    <p className="mt-4 text-base leading-8 text-muted-foreground sm:text-lg">{body}</p>
-  </div>
-);
+const examBrands = [
+  { id: "telc", label: "telc", website: "https://www.telc.net/en/" },
+  { id: "TestDaF", label: "TestDaF", website: "https://www.testdaf.de/" },
+  { id: "TestAS", label: "TestAS", website: "https://www.testas.de/en/" },
+  { id: "onSET", label: "onSET", website: "https://www.onset.de/" },
+  { id: "DSH", label: "DSH", website: "https://www.fadaf.de/dsh/" },
+  { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/kup/prf.html" },
+];
 
-const StudentFigure = ({
-  student,
-  index,
-  t,
-  className,
-}: {
-  student: GalleryStudent;
-  index: number;
-  t: (key: string, options?: Record<string, unknown>) => string;
-  className?: string;
-}) => (
-  <figure
-    className={`relative aspect-[3/4] w-[70vw] max-w-[280px] shrink-0 snap-center overflow-hidden rounded-md sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""} ${className ?? ""}`}
-  >
-    <img
-      src={student.image}
-      alt={student.name ? t("homepage.students.namedAlt", { name: student.name, destination: student.destination }) : t("homepage.students.alt", { destination: student.destination })}
-      loading="lazy"
-      decoding="async"
-      className="h-full w-full object-cover"
-      style={{ objectPosition: student.focus || "50% 40%" }}
-    />
-    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent" />
-    <figcaption className="absolute inset-x-0 bottom-0 p-4">
+const StudentStory = ({ student, index, t }: { student: GalleryStudent; index: number; t: (key: string, options?: Record<string, unknown>) => string }) => (
+  <figure className={`group relative shrink-0 snap-center overflow-hidden bg-muted ${index === 0 ? "w-[78vw] sm:col-span-5 lg:col-span-4" : "w-[68vw] sm:col-span-3 lg:col-span-2"} max-w-[360px] sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""}`}>
+    <div className={index === 0 ? "aspect-[4/5] sm:aspect-[4/3]" : "aspect-[3/4]"}>
+      <img
+        src={student.image}
+        alt={student.name ? t("homepage.students.namedAlt", { name: student.name, destination: student.destination }) : t("homepage.students.alt", { destination: student.destination })}
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03] motion-reduce:transition-none"
+        style={{ objectPosition: student.focus || "50% 40%" }}
+        onError={(event) => { event.currentTarget.hidden = true; }}
+      />
+    </div>
+    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary via-primary/75 to-transparent p-5 pt-16 text-primary-foreground">
       {student.name ? <p className="font-bold">{student.name}</p> : null}
-      <p className="text-sm text-primary-foreground/70">{student.destination}</p>
-    </figcaption>
+      <p className="mt-1 flex items-center gap-1.5 text-sm text-primary-foreground/75"><MapPin className="size-3.5" />{student.destination}</p>
+    </div>
   </figure>
 );
 
@@ -76,20 +69,26 @@ const HomepageExperience = () => {
   const { t } = useTranslation("landing");
   const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
+  const practical = t("homepage.explained.items", { returnObjects: true }) as TextItem[];
+  const nextSteps = t("homepage.nextStep.items", { returnObjects: true }) as TextItem[];
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
-  const steps = t("homepage.journey.steps", { returnObjects: true }) as TextItem[];
   const students = t("studentGallery.students", { returnObjects: true }) as GalleryStudent[];
-  const half = Math.ceil(students.length / 2);
-  const topStudents = students.slice(0, half);
-  const bottomStudents = students.slice(half);
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
-  const parentPoints = t("homepage.parents.points", { returnObjects: true }) as string[];
   const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
 
+  const nextStepRoutes: PathItem[] = [
+    { ...nextSteps[0], href: "/educational-destinations" },
+    { ...nextSteps[1], href: "/educational-programs" },
+    { ...nextSteps[2], href: "/resources/bagrut-calculator" },
+    { ...nextSteps[3], href: "/educational-destinations" },
+    { ...nextSteps[4], href: "/ai-advisor" },
+    { ...nextSteps[5], href: "/apply" },
+  ].filter((item) => item.title);
+
   return (
-    <div className="homepage-experience">
-      <section className="darb-home-hero relative flex items-center overflow-hidden bg-primary text-primary-foreground">
+    <div className="homepage-experience bg-background">
+      <section className="darb-home-hero relative isolate overflow-hidden bg-primary text-primary-foreground">
         <img
           src={germanyHero}
           alt={t("homepage.hero.imageAlt")}
@@ -97,238 +96,162 @@ const HomepageExperience = () => {
           decoding="async"
           width={1920}
           height={1080}
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="absolute inset-0 h-full w-full object-cover object-center sm:object-[50%_48%]"
         />
-        <div className="absolute inset-0 bg-primary/10" />
-
-        <div className="container relative z-10 mx-auto flex justify-center px-4">
-          <div className="darb-home-hero-panel bg-primary/80 text-center shadow-surface-lg backdrop-blur-[2px]">
-            <p className="darb-home-hero-eyebrow font-semibold text-primary-foreground/90">{t("homepage.hero.eyebrow")}</p>
-            <h1 className="darb-home-hero-title mx-auto mt-3 max-w-2xl font-bold leading-[1.15] text-primary-foreground">
-              {t("homepage.hero.title")}
-            </h1>
-            <p className="darb-home-hero-subtitle mx-auto mt-5 max-w-2xl leading-8 text-primary-foreground/90">
-              {t("homepage.hero.subtitle")}
-            </p>
-            <div className="darb-home-hero-actions flex flex-col justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="accent" className="darb-home-hero-button rounded-none text-base">
-                <Link to="/apply">{t("homepage.actions.apply")}<Arrow className="h-5 w-5" /></Link>
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-primary/25 via-transparent to-primary/20" />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-primary/12 via-transparent to-primary/8" />
+        <BrandArch />
+        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center py-[calc(var(--darb-header-height)+2rem)] sm:py-[calc(var(--darb-header-height)+3rem)]">
+          <div className="darb-home-hero-panel w-full max-w-[760px] border border-background/55 bg-background/72 text-foreground shadow-surface-lg backdrop-blur-[3px]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand sm:text-sm">{t("homepage.hero.eyebrow")}</p>
+            <h1 className="mt-4 max-w-3xl text-balance font-editorial text-5xl leading-[0.94] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
+            <p className="mt-5 max-w-2xl text-lg font-bold leading-7 sm:text-xl sm:leading-8 lg:text-2xl">{t("homepage.hero.title")}</p>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-foreground/75 sm:text-base sm:leading-7">{t("homepage.hero.subtitle")}</p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg" className="min-h-12 text-base shadow-surface-lg">
+                <Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="darb-home-hero-button rounded-none border-primary-foreground/50 bg-primary/50 text-base text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                <a
-                  href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="h-5 w-5" />{t("homepage.actions.whatsapp")}
-                </a>
+              <Button asChild size="lg" variant="outline" className="min-h-12 border-primary/25 bg-background/55 text-primary text-base hover:bg-primary hover:text-primary-foreground">
+                <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a>
               </Button>
             </div>
-            <p className="mt-5 flex items-center justify-center gap-2 text-sm text-primary-foreground/75">
-              <CircleCheck className="h-4 w-4 text-brand" />{t("homepage.hero.reassurance")}
+            <p className="mt-5 flex items-center gap-2 text-xs font-medium text-foreground/70 sm:text-sm">
+              <CircleCheck className="size-4 shrink-0 text-brand" />
+              {t("homepage.hero.reassurance")}
             </p>
           </div>
         </div>
-
-        <div className="absolute inset-x-0 bottom-0 z-20 grid h-3 grid-cols-7" aria-hidden="true">
-          <span className="bg-destructive" /><span className="bg-brand" /><span className="bg-trust" /><span className="bg-primary" /><span className="bg-secondary" /><span className="bg-brand" /><span className="bg-primary" />
-        </div>
+        <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
       </section>
 
-      <section aria-label={t("homepage.proof.aria")} className="border-b border-border bg-background">
-        <div className="container grid grid-cols-2 divide-x divide-border py-7 rtl:divide-x-reverse md:grid-cols-3 md:py-9">
-          <div className="px-3 text-center md:px-8">
-            <p className="text-3xl font-bold text-primary sm:text-4xl">16+</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.students")}</p>
-          </div>
-          <div className="px-3 text-center md:px-8">
-            <p className="text-3xl font-bold text-primary sm:text-4xl">6+</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.partners")}</p>
-          </div>
-          <div className="col-span-2 mt-6 border-t border-border px-3 pt-6 text-center md:col-span-1 md:mt-0 md:border-s md:border-t-0 md:pt-0">
-            <p className="text-2xl font-bold text-primary sm:text-3xl">{t("homepage.proof.arabicTitle")}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("homepage.proof.arabicBody")}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-background py-20 sm:py-28">
+      <section aria-labelledby="homepage-explained-title" className="border-b border-border bg-background py-14 sm:py-18">
         <div className="container">
-          <SectionIntro
-            eyebrow={t("homepage.services.eyebrow")}
-            title={t("homepage.services.title")}
-            body={t("homepage.services.body")}
-          />
-          <div className="mt-12 grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
-            {services.map((service, index) => {
-              const Icon = serviceIcons[index] ?? Check;
-              return (
-                <article key={service.title} className="bg-background p-6 sm:p-7">
-                  <Icon className="h-7 w-7 text-brand-strong" aria-hidden="true" />
-                  <h3 className="mt-8 text-lg font-bold text-primary">{service.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{service.description}</p>
-                </article>
-              );
+          <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.explained.eyebrow")}</p>
+              <h2 id="homepage-explained-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-5xl">{t("homepage.explained.title")}</h2>
+            </div>
+            <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:justify-self-end">{t("homepage.explained.body")}</p>
+          </div>
+          <div className="mt-9 grid border-y border-border md:grid-cols-3">
+            {practical.map((item, index) => {
+              const Icon = practicalIcons[index] ?? CircleCheck;
+              return <article key={item.title} className="group border-b border-border px-1 py-7 last:border-b-0 md:border-b-0 md:border-e md:px-7 md:first:ps-0 md:last:border-e-0 md:last:pe-0">
+                <div className="flex items-start gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-full bg-editorial-paper text-brand-strong"><Icon className="size-5" /></span><div><h3 className="text-lg font-bold text-primary">{item.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p></div></div>
+              </article>;
             })}
           </div>
         </div>
       </section>
 
-      <section className="overflow-hidden bg-primary py-20 text-primary-foreground sm:py-28">
-        <div className="container grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-          <div>
-            <p className="text-xs font-bold uppercase text-brand">{t("homepage.students.eyebrow")}</p>
-            <h2 className="mt-3 max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-              {t("homepage.students.title")}
-            </h2>
-            <p className="mt-5 max-w-xl text-base leading-8 text-primary-foreground/70 sm:text-lg">
-              {t("homepage.students.body")}
-            </p>
-            <Button asChild variant="outline" className="mt-8 rounded-md border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              <Link to="/apply">
-                {t("homepage.actions.checkProfile")}
-                <Arrow className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-
-          <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
-            {topStudents.map((student, index) => (
-              <StudentFigure key={`${student.image}-${index}`} student={student} index={index} t={t} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-editorial-paper py-20 sm:py-28">
+      <section aria-labelledby="homepage-next-step-title" className="bg-editorial-paper py-14 sm:py-20">
         <div className="container">
-          <SectionIntro
-            eyebrow={t("homepage.journey.eyebrow")}
-            title={t("homepage.journey.title")}
-            body={t("homepage.journey.body")}
-          />
-          <ol className="relative mt-14 grid gap-4 md:grid-cols-4 md:gap-0">
-            <div className="absolute inset-x-0 top-7 hidden h-px bg-border md:block" aria-hidden="true" />
-            {steps.map((step, index) => {
-              const Icon = journeyIcons[index] ?? Check;
-              return (
-                <li key={step.title} className="relative flex gap-5 bg-editorial-paper py-3 md:block md:px-5 md:py-0">
-                  <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-background text-primary shadow-surface">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div className="md:mt-7">
-                    <p className="text-xs font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p>
-                    <h3 className="mt-2 text-lg font-bold text-primary">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{step.description}</p>
-                  </div>
-                </li>
-              );
+          <div className="max-w-3xl">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.nextStep.eyebrow")}</p>
+            <h2 id="homepage-next-step-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("homepage.nextStep.title")}</h2>
+            <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">{t("homepage.nextStep.body")}</p>
+          </div>
+          <div className="mt-8 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+            {nextStepRoutes.map((item, index) => {
+              const Icon = nextStepIcons[index] ?? Compass;
+              return <Link key={item.title} to={item.href} className="group grid min-h-36 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 bg-background p-5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Icon className="size-4.5" /></span>
+                <span className="min-w-0"><span className="block font-bold text-primary">{item.title}</span><span className="mt-2 block text-sm leading-6 text-muted-foreground">{item.description}</span></span><Arrow className="mt-1 size-4 text-brand-strong transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+              </Link>;
             })}
-          </ol>
-          <div className="mt-12">
-            <Button asChild variant="accent" className="rounded-md">
-              <Link to="/apply">{t("homepage.actions.startAssessment")}<Arrow className="h-4 w-4" /></Link>
-            </Button>
           </div>
         </div>
       </section>
 
-      <section className="bg-background py-20 sm:py-28">
+      <section aria-labelledby="homepage-services-title" className="bg-background py-14 sm:py-20">
         <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <SectionIntro
-              eyebrow={t("homepage.scope.eyebrow")}
-              title={t("homepage.scope.title")}
-              body={t("homepage.scope.body")}
-            />
-            <div className="mt-9 grid gap-8 sm:grid-cols-2">
-              <div>
-                <h3 className="flex items-center gap-2 font-bold text-primary"><CircleCheck className="h-5 w-5 text-trust" />{t("homepage.scope.includedTitle")}</h3>
-                <ul className="mt-4 space-y-3">
-                  {included.map((item) => <li key={item} className="flex gap-2 text-sm leading-6 text-muted-foreground"><Check className="mt-1 h-4 w-4 shrink-0 text-trust" />{item}</li>)}
-                </ul>
+          <div className="grid gap-10 lg:grid-cols-[0.68fr_1.32fr]">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.services.eyebrow")}</p>
+              <h2 id="homepage-services-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-5xl">{t("homepage.services.title")}</h2>
+              <p className="mt-4 max-w-lg leading-7 text-muted-foreground">{t("homepage.services.body")}</p>
+            </div>
+            <div>
+              <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-0">
+                {services.map((service, index) => {
+                  const Icon = journeyIcons[index] ?? Check;
+                  return <div key={service.title} className="contents">
+                    <div className="relative flex justify-center"><span className="relative z-10 grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"><Icon className="size-4.5" /></span>{index < services.length - 1 ? <span className="absolute inset-y-10 w-px bg-border" /> : null}</div>
+                    <article className="min-w-0 border-b border-border pb-7 pt-1 last:border-b-0"><p className="text-xs font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p><h3 className="mt-1 text-xl font-bold text-primary">{service.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{service.description}</p></article>
+                  </div>;
+                })}
               </div>
-              <div>
-                <h3 className="flex items-center gap-2 font-bold text-primary"><Building2 className="h-5 w-5 text-brand-strong" />{t("homepage.scope.decisionsTitle")}</h3>
-                <ul className="mt-4 space-y-3">
-                  {decisions.map((item) => <li key={item} className="flex gap-2 text-sm leading-6 text-muted-foreground"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />{item}</li>)}
-                </ul>
-              </div>
+              <div className="mt-8 rounded-lg bg-primary p-6 text-primary-foreground sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.path.arrivalEyebrow")}</p><h3 className="mt-2 text-2xl font-bold">{t("homepage.path.arrivalTitle")}</h3><p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/75">{t("homepage.path.arrivalBody")}</p></div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-border bg-editorial-paper py-20 sm:py-24">
-        <div className="container grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">
-          <SectionIntro
-            eyebrow={t("homepage.pricing.eyebrow")}
-            title={t("homepage.pricing.title")}
-            body={t("homepage.pricing.body")}
-          />
-          <div className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3">
-            {["assess", "breakdown", "payment"].map((key, index) => (
-              <div key={key} className="bg-background p-6">
-                <p className="text-3xl font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p>
-                <h3 className="mt-5 font-bold text-primary">{t(`homepage.pricing.${key}Title`)}</h3>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">{t(`homepage.pricing.${key}Body`)}</p>
-              </div>
-            ))}
+      <section aria-labelledby="homepage-students-title" className="relative overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20">
+        <BrandArch variant="frame" className="opacity-40" />
+        <div className="container relative z-10">
+          <div className="grid gap-5 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+            <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.students.eyebrow")}</p><h2 id="homepage-students-title" className="mt-3 text-balance text-3xl font-bold leading-tight sm:text-5xl">{t("homepage.students.title")}</h2></div>
+            <p className="max-w-2xl leading-7 text-primary-foreground/70 lg:justify-self-end">{t("homepage.students.body")}</p>
+          </div>
+          <div className="-mx-4 mt-9 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-8 sm:items-start sm:overflow-visible sm:px-0 lg:grid-cols-12">
+            {students.slice(0, 5).map((student, index) => <StudentStory key={`${student.image}-${index}`} student={student} index={index} t={t} />)}
           </div>
         </div>
       </section>
 
-      <section className="bg-background py-20 sm:py-28">
+      <section aria-labelledby="homepage-ecosystem-title" className="bg-editorial-paper py-14 sm:py-20">
         <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <SectionIntro
-              eyebrow={t("homepage.parents.eyebrow")}
-              title={t("homepage.parents.title")}
-              body={t("homepage.parents.body")}
-            />
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-              {parentPoints.map((point) => (
-                <li key={point} className="flex items-start gap-3 border-s-2 border-trust ps-4 text-sm leading-7 text-primary">
-                  {point}
-                </li>
-              ))}
-            </ul>
+          <div className="grid gap-8 lg:grid-cols-[0.65fr_1.35fr]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.network.eyebrow")}</p>
+              <h2 id="homepage-ecosystem-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-5xl">{t("homepage.network.title")}</h2>
+              <p className="mt-4 max-w-lg leading-7 text-muted-foreground">{t("homepage.network.body")}</p>
+              <div className="mt-7 grid grid-cols-2 gap-2">
+                {["language", "admission", "assessment", "recognition"].map((key) => <div key={key} className="border-s-2 border-brand bg-background px-4 py-3 text-sm font-bold text-primary">{t(`homepage.network.pillars.${key}`)}</div>)}
+              </div>
+            </div>
+            <div className="space-y-5">
+              <div>
+                <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-bold text-primary">{t("homepage.network.tu9Label")}</h3><a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-xs font-bold text-brand-strong">{t("homepage.network.viewTu9")}</a></div>
+                <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
+                  {tu9Universities.slice(0, 6).map((uni, index) => <IdentityStage key={uni.name} name={uni.name} imageUrl={uni.logoUrl} href={uni.url} meta={uni.city} featured={index === 0} />)}
+                </div>
+              </div>
+              <div><h3 className="mb-3 font-bold text-primary">{t("homepage.network.schoolsLabel")}</h3><div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">{languageYearSchools.slice(0, 6).map((school) => <IdentityStage key={school.name} name={school.name} imageUrl={school.logoUrl} href={school.officialUrl} meta={school.location} />)}</div></div>
+              <div>
+                <h3 className="mb-3 font-bold text-primary">{t("homepage.network.examsLabel")}</h3>
+                <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+                  {examBrands.map((exam) => <IdentityStage key={exam.id} name={exam.label} href={exam.website} ratio="compact" meta={t(`homepage.languagePrep.exams.${exam.id}.description`, { defaultValue: t("homepage.languagePrep.examSupport") })} />)}
+                </div>
+              </div>
+              <CefrGuide />
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-editorial-paper py-20 sm:py-28">
-        <div className="container grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-          <SectionIntro
-            eyebrow={t("homepage.faq.eyebrow")}
-            title={t("homepage.faq.title")}
-            body={t("homepage.faq.body")}
-          />
-          <div>
-            <Accordion type="single" collapsible className="border-t border-border">
-              {faqs.map((item, index) => (
-                <AccordionItem key={item.title} value={`faq-${index}`}>
-                  <AccordionTrigger className="text-start text-base font-bold text-primary hover:no-underline sm:text-lg">{item.title}</AccordionTrigger>
-                  <AccordionContent className="pe-8 text-sm leading-7 text-muted-foreground sm:text-base">{item.description}</AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-            <Button asChild variant="link" className="mt-5 h-auto px-0 text-brand-strong">
-              <Link to="/faq">{t("homepage.faq.all")}<Arrow className="h-4 w-4" /></Link>
-            </Button>
+      <section aria-labelledby="homepage-destinations-title" className="bg-background py-14 sm:py-20">
+        <div className="container">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.destinations.eyebrow")}</p><h2 id="homepage-destinations-title" className="mt-3 text-3xl font-bold text-primary sm:text-5xl">{t("homepage.destinations.title")}</h2></div><Link to="/educational-destinations" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand-strong">{t("homepage.destinations.cta")}<Arrow className="size-4" /></Link></div>
+          <div className="mt-8 grid auto-rows-[190px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {languageYearCities.slice(0, 5).map((city, index) => <a key={city.id} href={city.cityUrl} target="_blank" rel="noopener noreferrer" className={`group relative overflow-hidden rounded-lg bg-muted ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2" : ""}`}><img src={city.imageUrl} alt={city.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none" onError={(event) => { if (event.currentTarget.src !== germanyHero) event.currentTarget.src = germanyHero; }} /><div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5 text-primary-foreground"><p className="text-xs text-primary-foreground/65">{city.region}</p><h3 className="mt-1 text-2xl font-bold">{city.name}</h3></div></a>)}
           </div>
         </div>
       </section>
 
-      <section aria-label={t("homepage.students.title")} className="border-t border-border bg-background py-14 sm:py-16">
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-6 lg:px-8">
-          {bottomStudents.map((student, index) => (
-            <StudentFigure key={`${student.image}-bottom-${index}`} student={student} index={index} t={t} className="!w-[60vw] !max-w-[240px] sm:!w-[240px]" />
-          ))}
+      <section aria-labelledby="homepage-trust-title" className="bg-editorial-paper py-14 sm:py-20">
+        <div className="container">
+          <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.trust.eyebrow")}</p><h2 id="homepage-trust-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("homepage.trust.title")}</h2></div>
+          <div className="mt-8 grid gap-3 lg:grid-cols-2"><article className="rounded-lg bg-primary p-6 text-primary-foreground sm:p-8"><div className="flex items-center gap-3"><CircleCheck className="size-6 text-brand" /><h3 className="text-xl font-bold">{t("homepage.scope.includedTitle")}</h3></div><ul className="mt-6 grid gap-3 sm:grid-cols-2">{included.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-primary-foreground/75"><Check className="mt-0.5 size-4 shrink-0 text-brand" />{item}</li>)}</ul></article><article className="rounded-lg border border-border bg-background p-6 sm:p-8"><div className="flex items-center gap-3"><Building2 className="size-6 text-brand-strong" /><h3 className="text-xl font-bold text-primary">{t("homepage.scope.decisionsTitle")}</h3></div><ul className="mt-6 grid gap-3 sm:grid-cols-2">{decisions.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" />{item}</li>)}</ul></article></div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">{["assess", "breakdown", "payment"].map((key, index) => <article key={key} className="border-t-2 border-brand bg-background p-6"><p className="text-xs font-bold text-brand-strong">0{index + 1}</p><h3 className="mt-4 text-lg font-bold text-primary">{t(`homepage.pricing.${key}Title`)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{t(`homepage.pricing.${key}Body`)}</p></article>)}</div>
         </div>
       </section>
 
- </div>
+      <section aria-labelledby="homepage-faq-title" className="bg-background py-14 sm:py-20"><div className="container grid gap-9 lg:grid-cols-[0.7fr_1.3fr]"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.faq.eyebrow")}</p><h2 id="homepage-faq-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("homepage.faq.title")}</h2><Button asChild variant="outline" className="mt-6"><Link to="/faq">{t("homepage.faq.all")}<Arrow /></Link></Button></div><Accordion type="single" collapsible className="border-t border-border">{faqs.map((item, index) => <AccordionItem key={item.title} value={`faq-${index}`}><AccordionTrigger className="text-start text-base font-bold text-primary hover:no-underline sm:text-lg">{item.title}</AccordionTrigger><AccordionContent className="pe-8 text-sm leading-7 text-muted-foreground">{item.description}</AccordionContent></AccordionItem>)}</Accordion></div></section>
+
+      <section className="relative overflow-hidden bg-primary text-primary-foreground"><BrandArch className="opacity-25" /><div className="container relative z-10 grid gap-7 py-14 sm:py-18 lg:grid-cols-[1fr_auto] lg:items-end"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.final.eyebrow")}</p><h2 className="mt-3 text-balance font-editorial text-4xl leading-tight sm:text-6xl">{t("homepage.final.title")}</h2><p className="mt-4 max-w-2xl leading-7 text-primary-foreground/70">{t("homepage.final.body")}</p></div><div className="flex flex-col gap-3 sm:flex-row lg:flex-col"><Button asChild size="lg"><Link to="/apply">{t("homepage.actions.startAssessment")}<Arrow /></Link></Button><Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف شو خطوتي الجاية للدراسة بألمانيا.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button></div></div><span aria-hidden="true" className="darb-spectrum darb-spectrum-lg block rounded-none" /></section>
+    </div>
   );
 };
 

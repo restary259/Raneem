@@ -6,7 +6,7 @@ import MobileNav from './MobileNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useDirection } from '@/hooks/useDirection';
 import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
-import { SUPPORT_EMAIL, SUPPORT_PHONE, whatsappBusinessUrl } from '@/lib/contactConfig';
+import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contactConfig';
 
 const Header = () => {
   const { t } = useTranslation();
@@ -22,16 +22,16 @@ const Header = () => {
 
   return (
     <header
-      className={`relative inset-x-0 top-0 z-50 lg:fixed transition-[background-color,box-shadow,border-color] duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
         scrolled
           ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md'
-          : 'border-b border-transparent bg-background lg:bg-transparent'
+          : 'border-transparent bg-transparent shadow-none'
       }`}
       dir={dir}
       data-scrolled={scrolled ? 'true' : 'false'}
     >
       {/* Desktop utility bar */}
-      <div className="darb-header-utility hidden border-b border-primary-foreground/20 lg:block">
+      <div className={`darb-header-utility hidden lg:block ${scrolled ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
         <div
           dir="ltr"
           className={`container grid h-full grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
@@ -39,7 +39,7 @@ const Header = () => {
           }`}
         >
           <div className="justify-self-start">
-            <LanguageSwitcher />
+              <LanguageSwitcher className={scrolled ? '' : 'drop-shadow-sm'} />
           </div>
           <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="justify-self-center whitespace-nowrap">
             {SUPPORT_PHONE}
@@ -53,55 +53,39 @@ const Header = () => {
       <div className="container mx-auto px-3 sm:px-4">
         <div className="darb-header-main flex items-center justify-between" dir="ltr">
           {/* Logo */}
-          <div className="flex min-w-0 flex-shrink-0 items-center">
-            <Link to="/" className="flex flex-shrink-0 items-center whitespace-nowrap">
+          <div className="flex min-w-0 shrink-0 items-center">
+            <Link to="/" aria-label={t('loader.brand')} className="flex h-12 w-[132px] shrink-0 items-center sm:h-14 sm:w-[156px] lg:h-14 lg:w-[150px] xl:h-16 xl:w-[170px] 2xl:w-[182px]">
               <img
                 src={darbLogoAsset.url}
                 alt={t('loader.brand')}
-                className="darb-header-logo w-auto flex-shrink-0 object-contain"
+                width={182}
+                height={64}
+                decoding="async"
                 fetchPriority="high"
+                className="darb-header-logo block h-auto max-h-full w-auto max-w-full object-contain object-left"
               />
             </Link>
           </div>
 
           {/* Desktop navigation */}
-          <div className="hidden min-w-0 flex-1 lg:mx-5 lg:block">
+          <div className="hidden min-w-0 flex-1 xl:mx-5 xl:block">
             <DesktopNav transparent={!scrolled} />
           </div>
 
           {/* Desktop student login */}
-          <div className="hidden flex-shrink-0 items-center gap-2 lg:flex">
-            <Link
-              to="/student-auth"
-              className="flex-shrink-0 whitespace-nowrap rounded-md bg-brand-strong px-4 py-2 text-sm font-bold text-brand-foreground transition-colors hover:bg-brand-strong/90 md:px-5 md:py-2.5"
-            >
+          <div className="hidden flex-shrink-0 items-center gap-2 xl:flex">
+             <Link
+               to="/student-auth"
+               className="inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-primary px-4 text-xs font-bold xl:px-5 xl:text-sm 2xl:px-6 text-primary-foreground shadow-surface transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+             >
               {t('nav.studentLogin')}
             </Link>
           </div>
 
-          {/* Mobile utility header: fixed left logo, readable contact details, languages, fixed right menu */}
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
-            <div className="flex min-w-0 flex-1 flex-col items-end justify-center text-foreground">
-              <a
-                href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="max-w-full whitespace-nowrap text-[11px] font-semibold leading-tight hover:text-brand-strong sm:text-xs"
-                aria-label="WhatsApp: +49 176 23790623"
-              >
-                +49 176 23790623
-              </a>
-              <a
-                href={`mailto:${SUPPORT_EMAIL}`}
-                className="mt-0.5 max-w-full truncate text-[11px] leading-tight text-muted-foreground hover:text-foreground sm:text-xs"
-                aria-label={`Email ${SUPPORT_EMAIL}`}
-              >
-                {SUPPORT_EMAIL}
-              </a>
-              <LanguageSwitcher className="mt-1 [&>button]:text-[10px] sm:[&>button]:text-[11px] [&>span]:text-[10px] sm:[&>span]:text-[11px]" />
-            </div>
-
-            <MobileNav transparent={false} />
+           {/* Mobile header: preserve breathing room and move contact details into the menu. */}
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 xl:hidden" dir="ltr">
+             <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${scrolled ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
+            <MobileNav transparent={!scrolled} />
           </div>
         </div>
       </div>

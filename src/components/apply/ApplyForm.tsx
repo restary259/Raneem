@@ -386,7 +386,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
 
   // ── Form card (shared) ─────────────────────────────────────────
   const formCard = (
-    <div className="w-full bg-card border border-border rounded-2xl shadow-xs overflow-hidden animate-fade-in">
+    <div className="w-full bg-card border border-border rounded-2xl shadow-xs overflow-hidden animate-fade-in" data-testid="apply-form" data-step={step}>
       <div className="px-5 py-4 border-b border-border bg-muted/30">
         <h2 className="text-sm font-semibold">{stepTitles[step - 1]}</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -609,7 +609,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
               <NextIcon className="h-4 w-4" />
             </Button>
           ) : (
-            <Button className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleSubmit} disabled={loading || !canGoNext() || !consentAgreed}>
+            <Button data-testid="apply-submit" className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleSubmit} disabled={loading || !canGoNext() || !consentAgreed}>
               {loading ? "..." : isAr ? "أرسل بياناتي" : "Submit"}
             </Button>
           )}

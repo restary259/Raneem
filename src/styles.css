@@ -48,6 +48,7 @@
   --color-brand-foreground: hsl(var(--brand-foreground));
   --color-trust: hsl(var(--trust));
   --color-editorial-paper: hsl(var(--editorial-paper));
+  --color-hero-panel: hsl(var(--hero-panel));
 
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -134,40 +135,52 @@
   --muted: 221.2 63.6% 97%;
   --muted-foreground: 215.4 16.3% 38%;
 
-  --accent: 222.2 47.6% 11.2%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 217.7 85.5% 21.6%;
+  --accent-foreground: 0 0% 100%;
 
-  /* Brand highlight (CTA + stats) — DARB orange, matches the Student Login button */
-  --brand: 24.6 95% 53.1%;
+  /* DARB brand identity — navy primary with the signature blue action colour */
+  --darb-navy: 217.7 85.5% 21.6%;   /* #082B66 */
+  --darb-blue: 213.2 100% 52.2%;    /* #0B78FF */
+  --darb-teal: 188.6 100% 39%;      /* #00AFC7 */
+  --darb-green: 142.1 70.6% 45.3%;  /* #22C55E */
+  --darb-yellow: 45.4 100% 51.4%;   /* #FFC107 */
+  --darb-orange: 32.5 100% 50%;     /* #FF8A00 */
+  --darb-red: 0 90.6% 58.6%;        /* #F53838 */
+  --darb-pink: 334.5 100% 65.1%;    /* #FF4DA6 */
+  --darb-purple: 254.1 100% 68.4%;  /* #805CFF */
+
+  /* Brand highlight (CTA + stats) — DARB blue on navy */
+  --brand: 213.2 100% 52.2%;
   --brand-foreground: 0 0% 100%;
-  /* AA-safe orange: >=4.5:1 with white text and on white backgrounds */
-  --brand-strong: 24.6 95% 38%;
-  --trust: 160.7 72.3% 31.4%;
+  /* AA-safe: >=4.5:1 with white text and on white backgrounds */
+  --brand-strong: 217.7 85.5% 21.6%;
+  --trust: 188.6 100% 30%;
   --editorial-paper: 210 20% 98%;
+  --hero-panel: 0 0% 3%;
 
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 90.6% 58.6%;
   --destructive-foreground: 210 40% 98%;
 
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
+  --ring: 217.7 85.5% 21.6%;
 
   --radius: 0.5rem;
 
-  --primary: 222.2 47.6% 11.2%;
-  --primary-foreground: 210 40% 98%;
+  --primary: 217.7 85.5% 21.6%;
+  --primary-foreground: 0 0% 100%;
 
   --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 47.6% 11.2%;
+  --secondary-foreground: 217.7 85.5% 21.6%;
 
   --sidebar-background: 0 0% 100%;
   --sidebar-foreground: 222.2 84% 4.9%;
-  --sidebar-primary: 222.2 47.6% 11.2%;
-  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-primary: 217.7 85.5% 21.6%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 221.2 63.6% 97%;
-  --sidebar-accent-foreground: 222.2 47.6% 11.2%;
+  --sidebar-accent-foreground: 217.7 85.5% 21.6%;
   --sidebar-border: 214.3 31.8% 91.4%;
-  --sidebar-ring: 222.2 84% 4.9%;
+  --sidebar-ring: 217.7 85.5% 21.6%;
 
   /* Semantic pipeline status hues — see src/lib/statusTokens.ts */
   --status-new: 215 16% 42%;
@@ -203,10 +216,10 @@
   --accent: 240 4% 17%;
   --accent-foreground: 240 10% 96%;
 
-  /* Brand highlight stays DARB orange in dark mode */
-  --brand: 24.6 95% 56%;
+  /* Brand highlight in dark mode: DARB blue, lifted for contrast */
+  --brand: 213.2 100% 62%;
   --brand-foreground: 0 0% 100%;
-  --brand-strong: 24.6 95% 42%;
+  --brand-strong: 213.2 100% 46%;
 
   --destructive: 0 62% 48%;
   --destructive-foreground: 240 10% 98%;
@@ -460,9 +473,9 @@ a[href*="lovable.dev"] {
   --darb-header-main-height: clamp(72px, 6vw, 96px);
   --darb-header-height: calc(var(--darb-header-utility-height) + var(--darb-header-main-height));
 
-  --darb-hero-compact-height: clamp(340px, calc(100svh - 9rem), 520px);
-  --darb-hero-standard-height: clamp(440px, calc(100svh - 6rem), 700px);
-  --darb-hero-panel-width: min(90vw, 760px);
+  --darb-hero-compact-height: clamp(380px, calc(100svh - 9rem), 560px);
+  --darb-hero-standard-height: clamp(500px, calc(100svh - 6rem), 740px);
+  --darb-hero-panel-width: min(92vw, 760px);
 }
 
 .darb-header-utility {
@@ -475,19 +488,321 @@ a[href*="lovable.dev"] {
 }
 
 .darb-header-logo {
-  height: clamp(48px, 5vw, 80px);
+  display: block;
+  width: auto;
+  height: clamp(42px, 4vw, 64px);
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .darb-home-hero {
-  height: clamp(500px, calc(100svh - var(--darb-header-height)), 820px);
-  min-height: 500px;
-  max-height: 820px;
+  height: clamp(600px, 100svh, 860px);
+  min-height: 600px;
+  max-height: 860px;
 }
 
 .darb-home-hero-panel {
   width: var(--darb-hero-panel-width);
-  padding-inline: clamp(1.5rem, 3.5vw, 3.5rem);
-  padding-block: clamp(1.75rem, 4vh, 3rem);
+  padding-inline: clamp(1.25rem, 3.5vw, 3.5rem);
+  padding-block: clamp(1.5rem, 4vh, 3rem);
+}
+
+.darb-home-hero-content {
+  min-height: 100%;
+}
+
+@media (max-width: 639px) {
+  .darb-home-hero {
+    height: max(600px, 100svh);
+    min-height: 600px;
+  }
+
+  .darb-home-hero-panel {
+    padding-inline: 1.25rem;
+    padding-block: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .darb-home-hero-panel {
+    margin-inline: auto;
+  }
+}
+
+.darb-logo-marquee {
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.darb-logo-marquee::before,
+.darb-logo-marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(24px, 4vw, 64px);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.darb-logo-marquee::before {
+  left: 0;
+  background: linear-gradient(to right, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 35%, transparent 100%);
+}
+
+.darb-logo-marquee::after {
+  right: 0;
+  background: linear-gradient(to left, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 35%, transparent 100%);
+}
+
+.darb-logo-marquee-schools::before {
+  background: linear-gradient(to right, hsl(var(--editorial-paper)) 0%, hsl(var(--editorial-paper) / 0.9) 35%, transparent 100%);
+}
+
+.darb-logo-marquee-schools::after {
+  background: linear-gradient(to left, hsl(var(--editorial-paper)) 0%, hsl(var(--editorial-paper) / 0.9) 35%, transparent 100%);
+}
+
+.darb-logo-marquee-track {
+  display: flex;
+  width: max-content;
+  align-items: stretch;
+  will-change: transform;
+  animation: darb-logo-marquee 34s linear infinite;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+.darb-logo-marquee-group {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: max-content;
+  align-items: stretch;
+}
+
+.darb-logo-marquee:hover .darb-logo-marquee-track,
+.darb-logo-marquee:focus-within .darb-logo-marquee-track {
+  animation-play-state: paused;
+}
+
+.darb-logo-marquee-schools .darb-logo-marquee-track {
+  animation-duration: 40s;
+}
+
+.darb-logo-tile,
+.darb-school-logo-tile {
+  flex: 0 0 176px;
+  min-width: 0;
+  width: 176px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 112px;
+  padding: 0.95rem 0.75rem;
+  border-right: 1px solid hsl(var(--border));
+  text-align: center;
+  transition: background-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.darb-logo-tile:hover,
+.darb-school-logo-tile:hover {
+  background: hsl(var(--editorial-paper));
+  box-shadow: inset 0 -2px 0 hsl(var(--brand));
+}
+
+.darb-logo-image-stage {
+  width: 148px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.darb-university-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 138px;
+  max-height: 46px;
+  object-fit: contain;
+}
+
+.darb-logo-fallback,
+.darb-school-logo-fallback {
+  display: block;
+  max-width: 138px;
+  font-size: 0.75rem;
+  line-height: 1.15rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+
+.darb-logo-city {
+  margin-top: 0.5rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: hsl(var(--muted-foreground));
+  transition: color 200ms ease;
+}
+
+.group:hover .darb-logo-city {
+  color: hsl(var(--foreground));
+}
+
+.darb-school-logo-tile {
+  flex: 0 0 184px;
+  width: 184px;
+  min-height: 104px;
+  padding-inline: 0.9rem;
+  background: hsl(var(--editorial-paper));
+}
+
+.darb-school-logo-image-stage {
+  width: 158px;
+  height: 56px;
+  flex: 0 0 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.darb-school-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 154px;
+  max-height: 46px;
+  object-fit: contain;
+}
+
+.darb-school-logo-fallback {
+  max-width: 154px;
+  font-size: 0.78rem;
+  line-height: 1.15rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+
+@keyframes darb-logo-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (min-width: 1024px) {
+  .darb-logo-tile {
+    flex-basis: 176px;
+    width: 176px;
+  }
+
+  .darb-school-logo-tile {
+    flex-basis: 184px;
+    width: 184px;
+  }
+
+  .darb-logo-marquee-track {
+    animation-duration: 38s;
+  }
+
+  .darb-logo-marquee-schools .darb-logo-marquee-track {
+    animation-duration: 44s;
+  }
+}
+
+@media (max-width: 1023px) {
+  .darb-logo-tile,
+  .darb-school-logo-tile {
+    flex-basis: 150px;
+    width: 150px;
+    min-height: 104px;
+  }
+
+  .darb-logo-image-stage {
+    width: 132px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+
+  .darb-university-logo {
+    max-width: 124px;
+    max-height: 42px;
+  }
+
+  .darb-school-logo-image-stage {
+    width: 132px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+
+  .darb-school-logo {
+    max-width: 128px;
+    max-height: 42px;
+  }
+
+  .darb-logo-marquee-track {
+    animation-duration: 26s;
+  }
+
+  .darb-logo-marquee-schools .darb-logo-marquee-track {
+    animation-duration: 31s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .darb-logo-marquee {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .darb-logo-marquee::before,
+  .darb-logo-marquee::after {
+    display: none;
+  }
+
+  .darb-logo-marquee-track {
+    animation: none;
+  }
+
+  .darb-logo-marquee-group[aria-hidden="true"] {
+    display: none;
+  }
+}
+
+.darb-flight-transition {
+  color: hsl(var(--foreground));
+}
+
+.darb-flight-plane {
+  animation: darb-flight-glide 8s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes darb-flight-glide {
+  0% { transform: translate3d(0, -50%, 0) rotate(-3deg); }
+  50% { transform: translate3d(42vw, -72%, 0) rotate(4deg); }
+  100% { transform: translate3d(86vw, -35%, 0) rotate(8deg); }
+}
+
+[dir="rtl"] .darb-flight-plane {
+  transform: scaleX(-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .darb-flight-plane {
+    animation: none;
+  }
 }
 
 .darb-home-hero-eyebrow {
@@ -584,14 +899,129 @@ a[href*="lovable.dev"] {
   .darb-page-hero-inner {
     padding-top: clamp(1.5rem, 6vh, 3.5rem);
   }
+}
+
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Final public-hero overflow guard
+   Heroes must be viewport-aware without being viewport-locked. A fixed
+   height can clip translated titles, multi-line CTAs, and RTL content on
+   short browser windows. These rules keep a cinematic minimum while allowing
+   the section to grow naturally with its content.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.darb-home-hero,
+.darb-page-hero-compact,
+.darb-page-hero-standard {
+  height: auto !important;
+  max-height: none !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.darb-home-hero {
+  min-height: min(860px, max(480px, 100svh)) !important;
+}
+
+.darb-page-hero-compact {
+  min-height: min(560px, max(360px, 70svh)) !important;
+}
+
+.darb-page-hero-standard {
+  min-height: min(760px, max(460px, 82svh)) !important;
+}
+
+.darb-home-hero-content,
+.darb-page-hero-inner {
+  width: 100%;
+  min-width: 0;
+  min-height: inherit;
+  height: auto;
+  box-sizing: border-box;
+}
+
+.darb-home-hero-panel,
+.darb-page-hero-panel {
+  width: min(92vw, 760px);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  flex: 0 1 760px;
+}
+
+.darb-page-hero-title,
+.darb-page-hero-subtitle,
+.darb-home-hero-title,
+.darb-home-hero-subtitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1023px) {
+  .darb-home-hero {
+    min-height: min(760px, max(500px, 92svh)) !important;
+  }
+
+  .darb-page-hero-compact {
+    min-height: min(560px, max(380px, 70svh)) !important;
+  }
+
+  .darb-page-hero-standard {
+    min-height: min(720px, max(460px, 82svh)) !important;
+  }
+
+  .darb-home-hero-content {
+    padding-top: calc(var(--darb-header-height) + 1rem);
+    padding-bottom: clamp(3rem, 8vw, 4.5rem);
+  }
+
+  .darb-page-hero-inner {
+    padding-top: calc(var(--darb-header-height) + 0.5rem);
+    padding-bottom: clamp(3rem, 8vw, 4.5rem);
+  }
+}
+
+@media (max-width: 639px) {
+  .darb-home-hero {
+    min-height: min(700px, max(500px, 100svh)) !important;
+  }
+
+  .darb-page-hero-compact {
+    min-height: min(520px, max(380px, 78svh)) !important;
+  }
+
+  .darb-page-hero-standard {
+    min-height: min(680px, max(440px, 88svh)) !important;
+  }
+
+  .darb-home-hero-content {
+    padding-top: calc(var(--darb-header-height) + 0.75rem);
+    padding-bottom: clamp(2.75rem, 10vw, 4rem);
+  }
+
+  .darb-page-hero-inner {
+    padding-top: calc(var(--darb-header-height) + 0.5rem);
+    padding-bottom: clamp(2.75rem, 10vw, 4rem);
+  }
 
   .darb-home-hero-panel,
   .darb-page-hero-panel {
-    width: min(94vw, 760px);
+    width: 100%;
+    flex-basis: auto;
+  }
+}
+
+@media (max-height: 620px) and (min-width: 768px) {
+  .darb-home-hero,
+  .darb-page-hero-compact,
+  .darb-page-hero-standard {
+    min-height: 440px !important;
   }
 
-  .darb-home-hero-title,
-  .darb-page-hero-title {
-    font-size: clamp(2.15rem, 8vw, 3.8rem);
+  .darb-home-hero-content,
+  .darb-page-hero-inner {
+    padding-top: calc(var(--darb-header-height) + 0.5rem);
+    padding-bottom: 2.5rem;
   }
 }
