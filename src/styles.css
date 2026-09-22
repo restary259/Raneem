@@ -474,8 +474,8 @@ a[href*="lovable.dev"] {
   --darb-header-height: calc(var(--darb-header-utility-height) + var(--darb-header-main-height));
 
   /* Internal heroes stay deliberately shorter than the homepage hero. */
-  --darb-hero-compact-height: clamp(280px, 42svh, 340px);
-  --darb-hero-standard-height: clamp(320px, 50svh, 420px);
+  --darb-hero-compact-height: clamp(300px, 40svh, 360px);
+  --darb-hero-standard-height: clamp(340px, 46svh, 400px);
   --darb-hero-panel-width: min(90vw, 760px);
 }
 
@@ -590,7 +590,7 @@ a[href*="lovable.dev"] {
   object-fit: contain;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .darb-home-hero {
     /*
      * Header is fixed on desktop, so it does not occupy document flow.
@@ -984,7 +984,7 @@ a[href*="lovable.dev"] {
   margin-top: clamp(1.25rem, 2.6vh, 1.75rem);
 }
 
-@media (min-width: 1024px) and (max-height: 760px) {
+@media (min-width: 1280px) and (max-height: 760px) {
   .darb-home-hero-panel,
   .darb-page-hero-panel {
     padding-block: clamp(1.35rem, 2.8vh, 2.15rem);
@@ -1001,7 +1001,7 @@ a[href*="lovable.dev"] {
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1279px) {
   :root {
     --darb-header-utility-height: 0px;
     --darb-header-main-height: clamp(64px, 17vw, 80px);
@@ -1015,13 +1015,13 @@ a[href*="lovable.dev"] {
   }
 
   .darb-page-hero-compact {
-    height: clamp(300px, 52svh, 400px);
-    min-height: clamp(300px, 52svh, 400px);
+    height: clamp(300px, 46svh, 360px);
+    min-height: clamp(300px, 46svh, 360px);
   }
 
   .darb-page-hero-standard {
-    height: clamp(340px, 58svh, 460px);
-    min-height: clamp(340px, 58svh, 460px);
+    height: clamp(330px, 50svh, 400px);
+    min-height: clamp(330px, 50svh, 400px);
   }
 
   .darb-page-hero-inner {

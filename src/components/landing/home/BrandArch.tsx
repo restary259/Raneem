@@ -11,8 +11,8 @@ const BrandArch = ({ className, variant = "hero" }: BrandArchProps) => (
     className={cn(
       "pointer-events-none absolute border-[10px] border-brand/90",
       variant === "hero"
-        ? "-end-12 -top-20 h-64 w-44 rounded-t-full border-b-0 sm:-end-8 sm:h-80 sm:w-56 lg:end-[4%] lg:top-14 lg:h-[30rem] lg:w-80 lg:border-[14px]"
-        : "-end-5 -top-5 h-[72%] w-[58%] rounded-t-full border-b-0 border-[#FFC107]/90",
+        ? "end-14 -top-16 h-64 w-40 rounded-t-full border-b-0 sm:end-16 sm:h-80 sm:w-52 lg:end-[4%] lg:top-14 lg:h-[30rem] lg:w-80 lg:border-[14px]"
+        : "end-14 top-16 h-[62%] w-[48%] rounded-t-full border-b-0 border-[#FFC107]/90",
       className,
     )}
   >
