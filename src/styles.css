@@ -476,7 +476,9 @@ a[href*="lovable.dev"] {
   /* Internal heroes stay deliberately shorter than the homepage hero. */
   --darb-hero-compact-height: clamp(300px, 40svh, 360px);
   --darb-hero-standard-height: clamp(340px, 46svh, 400px);
-  --darb-hero-panel-width: min(90vw, 760px);
+  --darb-hero-panel-max-width: 1060px;
+  --darb-hero-inline-gutter: clamp(1rem, 4vw, 2.5rem);
+  --darb-hero-spectrum-clearance: clamp(2.5rem, 6vh, 4rem);
 }
 
 .darb-header-utility {
@@ -508,14 +510,21 @@ a[href*="lovable.dev"] {
 
 .darb-home-hero-panel {
   /* Wide flat band across the photo, deliberately wider than its own copy. */
-  width: min(92vw, 1060px);
+  box-sizing: border-box;
+  width: min(
+    var(--darb-hero-panel-max-width),
+    calc(100% - (2 * var(--darb-hero-inline-gutter)))
+  );
+  max-width: 100%;
   padding-inline: clamp(1.5rem, 5vw, 4.5rem);
   padding-block: clamp(1.75rem, 4vh, 3rem);
 }
 
 .darb-home-hero-content {
+  box-sizing: border-box;
+  align-items: center;
   padding-top: calc(var(--darb-header-height) + clamp(1rem, 2.5vh, 2rem));
-  padding-bottom: clamp(2.5rem, 6vh, 4rem);
+  padding-bottom: var(--darb-hero-spectrum-clearance);
 }
 
 .exam-flip-card {
@@ -928,24 +937,31 @@ a[href*="lovable.dev"] {
 }
 
 .darb-page-hero-compact {
-  height: var(--darb-hero-compact-height);
+  height: auto;
   min-height: var(--darb-hero-compact-height);
 }
 
 .darb-page-hero-standard {
-  height: var(--darb-hero-standard-height);
+  height: auto;
   min-height: var(--darb-hero-standard-height);
 }
 
 .darb-page-hero-inner {
-  min-height: 100%;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: inherit;
   padding-top: calc(var(--darb-header-height) + clamp(0.75rem, 2vh, 1.5rem));
-  padding-bottom: clamp(2.5rem, 6vh, 4rem);
+  padding-bottom: var(--darb-hero-spectrum-clearance);
 }
 
 .darb-page-hero-panel {
   /* Same wide flat band as the homepage hero. */
-  width: min(92vw, 1060px);
+  box-sizing: border-box;
+  width: min(
+    var(--darb-hero-panel-max-width),
+    calc(100% - (2 * var(--darb-hero-inline-gutter)))
+  );
+  max-width: 100%;
   padding-inline: clamp(1.5rem, 5vw, 4.5rem);
   padding-block: clamp(1.35rem, 3vh, 2.25rem);
 }
@@ -984,9 +1000,9 @@ a[href*="lovable.dev"] {
   margin-top: clamp(1.25rem, 2.6vh, 1.75rem);
 }
 
-/* Contact carries a longer supporting sentence, so its compact hero needs a
-   tighter vertical rhythm to keep the entire panel above the spectrum edge. */
-.contact-page-hero .darb-page-hero-panel {
+/* Compact banners share one tighter vertical rhythm so every route clears the
+   navigation and spectrum without changing the common rectangular geometry. */
+.darb-page-hero-compact .darb-page-hero-panel {
   padding-block: clamp(0.75rem, 1.5vh, 1rem);
 }
 
@@ -1031,29 +1047,23 @@ a[href*="lovable.dev"] {
   }
 
   .darb-page-hero-compact {
-    height: clamp(300px, 46svh, 360px);
+    height: auto;
     min-height: clamp(300px, 46svh, 360px);
   }
 
   .darb-page-hero-standard {
-    height: clamp(330px, 50svh, 400px);
+    height: auto;
     min-height: clamp(330px, 50svh, 400px);
   }
 
   .darb-page-hero-inner {
     padding-top: calc(var(--darb-header-height) + clamp(1rem, 3.5vh, 1.75rem));
-    padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
-  }
-
-  .darb-page-hero-panel,
-  .darb-home-hero-panel {
-    width: calc(100vw - 2rem);
+    padding-bottom: var(--darb-hero-spectrum-clearance);
   }
 
   .darb-home-hero-content {
-    align-items: flex-start;
     padding-top: calc(var(--darb-header-height) + clamp(1rem, 3.5vh, 1.75rem));
-    padding-bottom: clamp(1.75rem, 5vh, 3rem);
+    padding-bottom: var(--darb-hero-spectrum-clearance);
   }
 
   .darb-home-hero-panel {
@@ -1089,13 +1099,16 @@ a[href*="lovable.dev"] {
 }
 
 @media (max-width: 374px) {
+  :root {
+    --darb-hero-inline-gutter: 0.75rem;
+  }
+
   .darb-home-hero {
     min-height: 600px;
   }
 
   .darb-home-hero-panel,
   .darb-page-hero-panel {
-    width: calc(100vw - 1.5rem);
     padding-inline: 1.15rem;
   }
 

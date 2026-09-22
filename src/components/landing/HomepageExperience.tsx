@@ -98,7 +98,7 @@ const HomepageExperience = () => {
       <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
         <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
         <span aria-hidden="true" className="darb-hero-scrim absolute inset-0" />
-        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-start justify-center px-4">
+        <div className="darb-home-hero-content relative z-10 flex min-h-full w-full min-w-0 items-center justify-center">
           <div className="darb-home-hero-panel bg-hero-panel/45 text-center text-primary-foreground">
             <h1 className="darb-home-hero-title text-balance font-editorial font-light leading-[1.08] tracking-tight">
               <span className="block">{t("homepage.hero.campaign")}</span>
