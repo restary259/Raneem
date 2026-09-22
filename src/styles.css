@@ -473,8 +473,9 @@ a[href*="lovable.dev"] {
   --darb-header-main-height: clamp(72px, 6vw, 96px);
   --darb-header-height: calc(var(--darb-header-utility-height) + var(--darb-header-main-height));
 
-  --darb-hero-compact-height: clamp(340px, calc(100svh - 9rem), 520px);
-  --darb-hero-standard-height: clamp(440px, calc(100svh - 6rem), 700px);
+  /* Internal heroes stay deliberately shorter than the homepage hero. */
+  --darb-hero-compact-height: clamp(320px, calc(100svh - 12rem), 420px);
+  --darb-hero-standard-height: clamp(360px, calc(100svh - 10rem), 500px);
   --darb-hero-panel-width: min(90vw, 760px);
 }
 
@@ -943,8 +944,24 @@ a[href*="lovable.dev"] {
 
 .darb-page-hero-panel {
   width: var(--darb-hero-panel-width);
-  padding-inline: clamp(1.5rem, 3.5vw, 3.5rem);
-  padding-block: clamp(1.5rem, 3.5vh, 2.75rem);
+  padding-inline: clamp(1.5rem, 3.5vw, 3.25rem);
+  padding-block: clamp(1.35rem, 3vh, 2.25rem);
+}
+
+/* Keeps hero copy readable over photography while the panel stays translucent. */
+.darb-hero-scrim {
+  background: linear-gradient(
+    to top,
+    rgb(0 0 0 / 0.42) 0%,
+    rgb(0 0 0 / 0.18) 45%,
+    rgb(0 0 0 / 0.28) 100%
+  );
+}
+
+.darb-page-hero-title,
+.darb-home-hero-title,
+.darb-home-hero-destination {
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.45);
 }
 
 .darb-page-hero-eyebrow {
@@ -996,13 +1013,13 @@ a[href*="lovable.dev"] {
   }
 
   .darb-page-hero-compact {
-    height: clamp(360px, 70svh, 520px);
-    min-height: clamp(360px, 70svh, 520px);
+    height: clamp(300px, 52svh, 400px);
+    min-height: clamp(300px, 52svh, 400px);
   }
 
   .darb-page-hero-standard {
-    height: clamp(440px, 82svh, 700px);
-    min-height: clamp(440px, 82svh, 700px);
+    height: clamp(340px, 58svh, 460px);
+    min-height: clamp(340px, 58svh, 460px);
   }
 
   .darb-page-hero-inner {

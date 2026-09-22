@@ -800,5 +800,25 @@
   },
   "common": {
     "close": "Close"
+  },
+  "pageHero": {
+    "contact": {
+      "title": "Contact"
+    },
+    "programs": {
+      "title": "Academic Programs"
+    },
+    "destinations": {
+      "title": "Destinations"
+    },
+    "about": {
+      "title": "About DARB"
+    },
+    "services": {
+      "title": "Our Services"
+    },
+    "germany": {
+      "title": "Study in Germany"
+    }
   }
 }

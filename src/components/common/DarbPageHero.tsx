@@ -1,10 +1,12 @@
 import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import BrandArch from "@/components/landing/home/BrandArch";
 
 interface DarbPageHeroProps {
+  /** The single primary title of the page. One page = one hero = one title. */
   title: string;
+  /** Optional short supporting sentence in smaller typography. */
   subtitle?: string;
+  /** Optional small category label. Never a second headline. */
   eyebrow?: string;
   imageUrl: string;
   imageAlt?: string;
@@ -12,7 +14,6 @@ interface DarbPageHeroProps {
   className?: string;
   compact?: boolean;
   align?: "center" | "start";
-  showArch?: boolean;
 }
 
 const DarbPageHero: React.FC<DarbPageHeroProps> = ({
@@ -25,7 +26,6 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
   className,
   compact = false,
   align = "center",
-  showArch = true,
 }) => {
   return (
     <section
@@ -44,7 +44,8 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
         decoding="async"
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
-      {showArch ? <BrandArch className="opacity-45" /> : null}
+      {/* Subtle cinematic scrim: keeps the photography readable without a black box. */}
+      <span aria-hidden="true" className="darb-hero-scrim absolute inset-0" />
       <div
         className={cn(
           "container relative z-10 flex items-center px-4",
@@ -54,22 +55,25 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <div
           className={cn(
-            "darb-page-hero-panel w-full border border-primary-foreground/15 bg-hero-panel/55 text-primary-foreground shadow-surface-lg backdrop-blur-sm",
+            "darb-page-hero-panel w-full border border-primary-foreground/10 bg-hero-panel/30 text-primary-foreground shadow-surface-lg backdrop-blur-sm",
             align === "center" ? "text-center" : "text-start",
           )}
         >
           {eyebrow ? (
-            <p className="darb-page-hero-eyebrow text-sm font-bold uppercase text-brand">
+            <p className="darb-page-hero-eyebrow text-xs font-bold uppercase text-brand">
               {eyebrow}
             </p>
           ) : null}
-          <h1
-            className="darb-page-hero-title text-balance font-bold leading-tight"
-          >
+          <h1 className="darb-page-hero-title text-balance font-editorial font-semibold leading-[1.06]">
             {title}
           </h1>
           {subtitle ? (
-            <p className={cn("darb-page-hero-subtitle max-w-2xl text-base leading-8 text-primary-foreground/80", align === "center" && "mx-auto")}>
+            <p
+              className={cn(
+                "darb-page-hero-subtitle max-w-2xl text-base leading-8 text-primary-foreground/85",
+                align === "center" && "mx-auto",
+              )}
+            >
               {subtitle}
             </p>
           ) : null}

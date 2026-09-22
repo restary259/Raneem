@@ -4,21 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router-compat";
 import { DARB_CONTACT_ADVISOR_SRC } from "@/assets/darbContactAdvisor";
 import { SUPPORT_EMAIL, whatsappBusinessUrl } from "@/lib/contactConfig";
-import BrandArch from "./home/BrandArch";
 
 const ContactHero = () => {
-  const { t, i18n } = useTranslation("contact");
+  const { t, i18n } = useTranslation(["contact", "common"]);
   const whatsappMessage = i18n.language.startsWith("ar")
     ? "مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا."
     : "Hi, I would like to talk to DARB about studying in Germany.";
 
   return (
     <section className="relative overflow-hidden border-b border-border bg-background">
-      <BrandArch className="opacity-20" />
       <div className="container relative z-10 grid min-h-[480px] items-center gap-8 py-12 lg:min-h-[620px] lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.72fr)] lg:py-20">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("contactHero.eyebrow")}</p>
-          <h1 className="mt-4 text-balance font-editorial text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">{t("contactHero.title")}</h1>
+          <h1 className="mt-4 text-balance font-editorial text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">{t("common:pageHero.contact.title", "Contact")}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">{t("contactHero.subtitle")}</p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg"><a href={whatsappBusinessUrl(whatsappMessage)} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("support.whatsapp")}</a></Button>

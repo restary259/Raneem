@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
+import BrandArch from "@/components/landing/home/BrandArch";
 import {
   ArrowLeft,
   ArrowRight,
@@ -30,7 +31,6 @@ import telcLogo from "@/assets/exams/telc.svg.asset.json";
 import testAsLogo from "@/assets/exams/testas.svg.asset.json";
 import testDafLogo from "@/assets/exams/testdaf.svg.asset.json";
 import { languageYearCities, tu9Universities } from "@/data/educationalDestinations";
-import BrandArch from "./home/BrandArch";
 import IdentityStage from "./home/IdentityStage";
 import CefrGuide from "./home/CefrGuide";
 import ExamFlipCard from "./home/ExamFlipCard";
@@ -97,16 +97,18 @@ const HomepageExperience = () => {
     <div className="homepage-experience bg-background">
       <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
         <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
-        <BrandArch className="sm:hidden" />
+        <span aria-hidden="true" className="darb-hero-scrim absolute inset-0" />
         <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center px-4">
-          <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/15 bg-hero-panel/55 text-primary-foreground shadow-surface-lg backdrop-blur-sm">
+          <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/10 bg-hero-panel/30 text-primary-foreground shadow-surface-lg backdrop-blur-sm">
             <div className="darb-home-hero-intro">
-              <p className="darb-home-hero-eyebrow font-bold uppercase text-primary-foreground/65">{t("homepage.hero.eyebrow")}</p>
+              <p className="darb-home-hero-eyebrow font-bold uppercase text-primary-foreground/70">{t("homepage.hero.eyebrow")}</p>
               <span aria-hidden="true" className="darb-home-hero-rule" />
             </div>
-            <h1 className="darb-home-hero-title text-balance font-editorial font-semibold leading-[1.04]">{t("homepage.hero.campaign")}</h1>
-            <p className="darb-home-hero-destination text-balance font-bold leading-tight">{t("homepage.hero.title")}</p>
-            <p className="darb-home-hero-subtitle font-semibold leading-7 text-primary-foreground/85">{t("homepage.hero.subtitle")}</p>
+            <h1 className="darb-home-hero-title text-balance font-editorial font-semibold leading-[1.04]">
+              <span className="block">{t("homepage.hero.campaign")}</span>
+              <span className="block">{t("homepage.hero.title")}</span>
+            </h1>
+            <p className="darb-home-hero-subtitle font-semibold leading-7 text-primary-foreground/90">{t("homepage.hero.subtitle")}</p>
             <div className="darb-home-hero-actions flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
               <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-primary-foreground/5 text-primary-foreground text-base hover:bg-primary-foreground hover:text-primary"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
