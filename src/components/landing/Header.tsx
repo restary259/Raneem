@@ -44,15 +44,15 @@ const Header = () => {
       data-scrolled={solid ? 'true' : 'false'}
     >
       {/* Desktop utility bar */}
-      <div className={`darb-header-utility hidden lg:block ${scrolled ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
+      <div className={`darb-header-utility hidden lg:block ${solid ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
         <div
           dir="ltr"
           className={`container grid h-full grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
-            scrolled ? 'text-muted-foreground' : 'text-primary-foreground'
+            solid ? 'text-muted-foreground' : 'text-primary-foreground'
           }`}
         >
           <div className="justify-self-start">
-              <LanguageSwitcher className={scrolled ? '' : 'drop-shadow-sm'} />
+              <LanguageSwitcher className={solid ? '' : 'drop-shadow-sm'} />
           </div>
           <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="justify-self-center whitespace-nowrap">
             {SUPPORT_PHONE}
