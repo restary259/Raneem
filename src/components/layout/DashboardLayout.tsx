@@ -21,6 +21,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NotificationOnboardingDialog from "@/components/notifications/NotificationOnboardingDialog";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import AccessibilityMenu from "@/components/common/AccessibilityMenu";
 import ThemePicker from "@/components/common/ThemePicker";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
@@ -472,6 +473,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
             <SidebarTrigger className="h-11 w-11 shrink-0" />
             <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
               <LanguageSwitcher />
+              <AccessibilityMenu />
               <ThemePicker />
 
               {canMessage && (
