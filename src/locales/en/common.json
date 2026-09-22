@@ -800,5 +800,21 @@
   },
   "common": {
     "close": "Close"
+  },
+  "accessibilityMenu": {
+    "trigger": "Accessibility options",
+    "textSize": "Text size",
+    "increaseText": "Increase text size",
+    "decreaseText": "Decrease text size",
+    "resetTextSize": "Reset text size",
+    "default": "Default",
+    "highContrast": "High contrast",
+    "grayscale": "Grayscale",
+    "highlightLinks": "Highlight links",
+    "readableFont": "Readable font",
+    "reduceMotion": "Reduce motion",
+    "largeCursor": "Large cursor",
+    "resetAll": "Reset all accessibility settings",
+    "statement": "Accessibility statement"
   }
 }
