@@ -1079,7 +1079,8 @@ a[href*="lovable.dev"] {
 
   .darb-home-hero-panel,
   .darb-page-hero-panel {
-    width: min(calc(100vw - 1.5rem), 760px);
+    width: calc(100vw - 1.5rem);
+    padding-inline: 1.15rem;
   }
 
   .darb-home-hero-panel {
