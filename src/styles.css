@@ -1040,33 +1040,25 @@ a[href*="lovable.dev"] {
   }
 
   .darb-home-hero-panel {
-    padding-inline: clamp(1.35rem, 6vw, 1.75rem);
+    padding-inline: clamp(1.35rem, 6vw, 2rem);
     padding-block: clamp(1.5rem, 4vh, 2rem);
-    text-align: start;
-  }
-
-  .darb-home-hero-intro {
-    margin-bottom: clamp(1rem, 3vh, 1.5rem);
+    text-align: center;
   }
 
   .darb-home-hero-title {
-    font-size: clamp(2.4rem, 11vw, 3.25rem);
+    font-size: clamp(2.1rem, 9.5vw, 3rem);
   }
 
   .darb-home-hero-destination {
     font-size: clamp(1.55rem, 7vw, 2.15rem);
   }
 
-  .darb-home-hero-subtitle {
-    margin-inline: 0;
-  }
-
   .darb-home-hero-actions {
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .darb-home-hero-reassurance {
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .darb-home-hero-title,
