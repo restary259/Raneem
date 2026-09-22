@@ -564,5 +564,11 @@
       "arrivalTitle": "Preparation does not end with an admission application",
       "arrivalBody": "Visa-file organization, insurance and accommodation coordination, travel preparation, and understanding your first steps in Germany are part of a connected journey."
     }
+  },
+  "applyHero": {
+    "eyebrow": "START YOUR JOURNEY",
+    "imageAlt": "Student preparing an application for study in Germany",
+    "title": "Tell us about your study plans",
+    "subtitle": "Share your details so DARB can understand your profile and the next step for Germany."
   }
 }

@@ -5,7 +5,9 @@
   "partnershipHero": {
     "title": "Become a DARB ambassador",
     "subtitle": "Help students reach their study-abroad dream and be part of the success network.",
-    "button": "Apply Now to Become an Agent"
+    "button": "Apply Now to Become an Agent",
+    "eyebrow": "DARB PARTNERSHIP",
+    "imageAlt": "Professional collaboration in an education environment"
   },
   "whyJoinUs": {
     "title": "Why Join Us?",
