@@ -16,3 +16,9 @@
 - [x] Use reliable local city imagery and TU9 assets
 - [x] Complete source validation and focused type/catalog/locale checks
 - [ ] User visual review of the updated homepage and dashboard surfaces
+
+# Public hero refinement
+
+- [x] Replace the homepage payment wording with a free profile-assessment message in English, Arabic, and Hebrew
+- [x] Standardize matching hero panels at 75% black and improve their visual hierarchy
+- [x] Keep every mobile hero panel visibly clear of the fixed navigation
