@@ -474,8 +474,8 @@ a[href*="lovable.dev"] {
   --darb-header-height: calc(var(--darb-header-utility-height) + var(--darb-header-main-height));
 
   /* Internal heroes stay deliberately shorter than the homepage hero. */
-  --darb-hero-compact-height: clamp(320px, calc(100svh - 12rem), 420px);
-  --darb-hero-standard-height: clamp(360px, calc(100svh - 10rem), 500px);
+  --darb-hero-compact-height: clamp(280px, 42svh, 340px);
+  --darb-hero-standard-height: clamp(320px, 50svh, 420px);
   --darb-hero-panel-width: min(90vw, 760px);
 }
 
@@ -501,9 +501,9 @@ a[href*="lovable.dev"] {
   /* Keep enough vertical room for the fixed desktop header + hero panel.
      The previous 500px floor allowed the panel to extend into the proof
      section on shorter desktop viewports. */
-  height: clamp(620px, calc(100svh - var(--darb-header-height)), 820px);
-  min-height: 620px;
-  max-height: 820px;
+  height: clamp(540px, calc(100svh - var(--darb-header-height)), 700px);
+  min-height: 540px;
+  max-height: 700px;
 }
 
 .darb-home-hero-panel {
