@@ -352,7 +352,7 @@
     "network": {
       "eyebrow": "THE DARB NETWORK",
       "title": "The ecosystem behind your route",
-      "body": "Connect the pieces that shape a Germany study journey: leading technical universities, trusted language-school destinations, and the language and aptitude tests students may encounter.",
+      "body": "Connect the verified academic and language milestones that may shape a Germany study journey: the TU9 technical-university alliance, recognized exams, and CEFR language levels.",
       "tu9Label": "TU9 universities",
       "tu9Hint": "Germany’s leading technical university alliance",
       "viewTu9": "Explore TU9",
@@ -433,15 +433,21 @@
       "exams": {
         "telc": {
           "label": "telc · Registration support",
-          "description": "We can help you choose a suitable telc exam, coordinate the registration process and prepare the documents you need."
+          "description": "We can help you choose a suitable telc exam, coordinate the registration process and prepare the documents you need.",
+          "verifiedDescription": "A CEFR C1 examination focused on the German needed in academic and university contexts.",
+          "caveat": "Recognition is governed by the higher-education framework; always confirm the exact requirement with the target university."
         },
         "TestDaF": {
           "label": "TestDaF · Registration support",
-          "description": "We can help you plan your TestDaF route, coordinate registration with the relevant centre and prepare for the exam stage."
+          "description": "We can help you plan your TestDaF route, coordinate registration with the relevant centre and prepare for the exam stage.",
+          "verifiedDescription": "A standardized German exam for prospective international students. Results are reported separately for each skill on the TDN 3–5 scale.",
+          "caveat": "TDN 4 in all four sections meets the general framework requirement, but a university or program may set stricter conditions."
         },
         "TestAS": {
           "label": "TestAS · Registration support",
-          "description": "We can help you understand when TestAS is relevant, coordinate the registration steps and prepare your application timeline."
+          "description": "We can help you understand when TestAS is relevant, coordinate the registration steps and prepare your application timeline.",
+          "verifiedDescription": "A standardized aptitude test measuring general and subject-related skills for international university applicants. It is not a language exam.",
+          "caveat": "It may support or be required for an application, depending entirely on the individual university."
         },
         "onSET": {
           "label": "onSET · Language assessment",
@@ -449,11 +455,15 @@
         },
         "DSH": {
           "label": "DSH · University entrance exam",
-          "description": "We can explain when DSH preparation may fit your university route and help you plan the registration steps with the relevant institution."
+          "description": "We can explain when DSH preparation may fit your university route and help you plan the registration steps with the relevant institution.",
+          "verifiedDescription": "A German university-entrance language examination administered by individual universities and Studienkollegs under a shared framework.",
+          "caveat": "DSH-2 is the general unrestricted benchmark, but administration and additional conditions can differ by institution."
         },
         "Goethe": {
           "label": "Goethe-Zertifikat · Language certificate",
-          "description": "We can help you identify the level you need, compare suitable options and plan the certificate stage."
+          "description": "We can help you identify the level you need, compare suitable options and plan the certificate stage.",
+          "verifiedDescription": "The Goethe-Institut offers German-language examinations from A1 to C2, including advanced C1 and C2 certificates.",
+          "caveat": "Acceptance for admission depends on the university, Studienkolleg, and program; confirm before registering."
         },
         "IELTS": {
           "label": "IELTS · English language test",
@@ -479,7 +489,11 @@
       "levelSelector": "Choose a CEFR level",
       "darbRole": "DARB guides you and coordinates registration; the school or examination body delivers the course and certifies the level.",
       "sourceLabel": "Council of Europe · CEFR Global Scale",
-      "examSupport": "Guidance and registration coordination; the official body owns the exam and result"
+      "examSupport": "Guidance and registration coordination; the official body owns the exam and result",
+      "flipCue": "Tap to learn more",
+      "flipBack": "Show the front",
+      "officialPortal": "Official portal",
+      "selectPrompt": "Choose a level to reveal its concise CEFR can-do description."
     },
     "examDetail": {
       "back": "Back to language preparation",

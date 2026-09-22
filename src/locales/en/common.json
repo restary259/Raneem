@@ -49,7 +49,11 @@
   "applyNow": "Apply Now",
   "whatsapp": {
     "floatingLabel": "Chat with us on WhatsApp",
-    "sideTab": "WhatsApp"
+    "sideTab": "WhatsApp",
+    "panelTitle": "DARB WhatsApp",
+    "verified": "Official DARB contact",
+    "confirm": "Chat with DARB",
+    "close": "Close WhatsApp panel"
   },
   "footer": {
     "quote": "Darb — your path to studying in Germany",
