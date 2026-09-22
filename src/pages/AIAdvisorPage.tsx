@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import { useDirection } from "@/hooks/useDirection";
 import {
   ArrowUpRight,
-  Bot,
   Mail,
   MessageCircle,
   Trash2,
@@ -83,44 +82,27 @@ const AIAdvisorPage = () => {
       />
       <Header />
 
-      <main className="pb-24 md:pb-0">
+      <main className="pb-24 pt-[var(--darb-header-height)] md:pb-0">
         <section className="border-b border-border bg-background">
-          <div className="container mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-2xl border border-border bg-editorial-paper p-3 shadow-surface sm:gap-4 sm:p-4">
-              <div className="relative size-14 shrink-0 overflow-hidden rounded-full border-2 border-background bg-secondary shadow-surface sm:size-16">
-                <img
-                  src={DARB_CONTACT_ADVISOR_SRC}
-                  alt={t("advisor.imageAlt")}
-                  className="absolute inset-0 size-full rounded-full object-cover object-[50%_42%]"
-                  fetchPriority="high"
-                />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase text-primary">
-                  {t("advisor.hub.eyebrow")}
-                </p>
-                <h1 className="mt-1 truncate text-lg font-bold leading-tight text-primary sm:text-xl">
-                  {t("advisor.hub.title")}
-                </h1>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
-                  {t("advisor.hub.intro")}
-                </p>
-              </div>
-            </div>
-
+          <div className="container mx-auto max-w-5xl space-y-5 px-0 py-3 sm:px-6 sm:py-6 lg:px-8">
             <section
               id="ai-advisor-chat"
               aria-label={t("advisor.title")}
-              className="flex h-[min(700px,calc(100dvh-7rem))] min-h-[560px] min-w-0 scroll-mt-20 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-surface sm:rounded-3xl lg:h-[720px]"
+              className="flex h-[calc(100svh-var(--darb-header-height)-5.25rem)] min-h-[30rem] min-w-0 scroll-mt-[var(--darb-header-height)] flex-col overflow-hidden border-y border-border bg-background sm:h-[min(720px,calc(100svh-var(--darb-header-height)-3rem))] sm:min-h-[35rem] sm:rounded-2xl sm:border sm:shadow-surface"
             >
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3 sm:px-5">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border bg-editorial-paper px-4 py-3 sm:px-5">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Bot className="size-5" aria-hidden="true" />
+                  <div className="relative size-11 shrink-0 overflow-hidden rounded-full border border-border bg-secondary shadow-sm">
+                    <img
+                      src={DARB_CONTACT_ADVISOR_SRC}
+                      alt={t("advisor.imageAlt")}
+                      className="absolute inset-0 size-full object-cover object-[50%_42%]"
+                      fetchPriority="high"
+                    />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="truncate text-sm font-semibold">{t("advisor.title")}</h2>
-                    <p className="truncate text-xs text-muted-foreground">{t("advisor.hub.composerHint")}</p>
+                    <h1 className="truncate text-sm font-semibold text-primary sm:text-base">{t("advisor.title")}</h1>
+                    <p className="truncate text-xs text-muted-foreground">{t("chat.description")}</p>
                   </div>
                 </div>
                 {messages.length > 0 && (
@@ -144,33 +126,26 @@ const AIAdvisorPage = () => {
               )}
 
               <Conversation className="min-h-0 flex-1">
-                <ConversationContent className="min-h-full gap-5 p-4 sm:p-6">
+                <ConversationContent className="min-h-full gap-5 px-4 py-5 sm:p-6">
                   {uiMessages.length === 0 ? (
-                    <ConversationEmptyState className="min-h-full px-1 py-8 sm:px-8">
-                      <div className="mx-auto max-w-xl space-y-5 text-center">
-                         <div className="mx-auto flex aspect-square size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-editorial-paper shadow-sm">
-                          <img
-                            src={DARB_CONTACT_ADVISOR_SRC}
-                            alt=""
-                             className="size-full rounded-full object-cover object-[50%_42%]"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <h3 className="text-xl font-semibold text-primary sm:text-2xl">
+                    <ConversationEmptyState className="min-h-full justify-start px-0 py-3 sm:justify-center sm:px-8 sm:py-8">
+                      <div className="mx-auto w-full max-w-xl space-y-4 text-center sm:space-y-5">
+                        <div className="space-y-1.5 sm:space-y-2">
+                          <h2 className="text-xl font-semibold text-primary sm:text-2xl">
                             {t("advisor.hub.aiTitle")}
-                          </h3>
-                          <p className="text-sm leading-6 text-muted-foreground">
+                          </h2>
+                          <p className="mx-auto max-w-lg text-sm leading-6 text-muted-foreground">
                             {t("advisor.hub.aiIntro")}
                           </p>
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="grid gap-2 sm:grid-cols-2" aria-label={t("chat.quickQuestionsTitle")}>
                           {quickQuestions.slice(0, 4).map((question) => (
                             <Button
                               key={question}
                               type="button"
                               variant="outline"
                               onClick={() => sendMessage(question)}
-                              className="h-auto min-h-11 justify-start whitespace-normal px-4 py-3 text-start text-sm leading-5 hover:border-primary hover:text-primary"
+                              className="h-auto min-h-12 justify-start whitespace-normal rounded-lg px-4 py-3 text-start text-sm leading-5 hover:border-primary hover:text-primary"
                             >
                               {question}
                             </Button>
@@ -227,10 +202,10 @@ const AIAdvisorPage = () => {
                 <ConversationScrollButton aria-label={t("chat.scrollToLatest")} />
               </Conversation>
 
-              <div className="shrink-0 border-t border-border bg-background p-3 sm:p-4">
+              <div className="shrink-0 border-t border-border bg-editorial-paper p-3 sm:p-4">
                 <PromptInput
                   onSubmit={({ text }) => sendMessage(text)}
-                  className="mx-auto max-w-3xl rounded-2xl border border-border bg-background shadow-sm"
+                  className="mx-auto max-w-3xl rounded-xl border border-border bg-background shadow-sm"
                 >
                   <PromptInputTextarea
                     ref={textareaRef}
@@ -240,9 +215,9 @@ const AIAdvisorPage = () => {
                     onChange={(event) => setInput(event.currentTarget.value)}
                     disabled={isLoading}
                     aria-label={t("chat.placeholder")}
-                    className="min-h-16 px-4 py-3 text-sm sm:text-base"
+                    className="min-h-14 px-4 py-3 text-sm sm:min-h-16 sm:text-base"
                   />
-                  <PromptInputFooter className="px-3 pb-2">
+                  <PromptInputFooter className="px-3 pb-2.5">
                     <span className="min-w-0 truncate text-xs text-muted-foreground">
                       {t("advisor.hub.composerHint")}
                     </span>
@@ -257,20 +232,20 @@ const AIAdvisorPage = () => {
               </div>
             </section>
 
-            <div className="rounded-2xl border border-border bg-background p-4 shadow-surface sm:p-5">
+            <section aria-labelledby="advisor-contact-title" className="mx-4 rounded-xl border border-border bg-editorial-paper p-4 shadow-surface sm:mx-0 sm:p-5">
               <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <MessageCircle className="size-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <h2 className="text-sm font-semibold">{t("advisor.hub.humanTitle")}</h2>
+                  <h2 id="advisor-contact-title" className="text-sm font-semibold">{t("advisor.hub.humanTitle")}</h2>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
                     {t("advisor.hub.humanCopy")}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3">
                 <Button asChild className="min-h-12 justify-between bg-trust text-primary-foreground hover:bg-trust/90">
                   <a href={whatsappBusinessUrl(whatsappMessage)} target="_blank" rel="noopener noreferrer">
                     <span className="flex items-center gap-2">
@@ -290,13 +265,13 @@ const AIAdvisorPage = () => {
                   </a>
                 </Button>
               </div>
-              <Button asChild variant="ghost" className="mt-3 w-full justify-between">
+              <Button asChild variant="ghost" className="mt-2 min-h-11 w-full justify-between sm:mt-3">
                 <Link to="/contact">
                   <span className="flex items-center gap-2"><FileText className="size-4" />{t("advisor.hub.contactForm")}</span>
                   <ArrowUpRight className="size-4 opacity-70 rtl:-scale-x-100" />
                 </Link>
               </Button>
-            </div>
+            </section>
           </div>
         </section>
       </main>
