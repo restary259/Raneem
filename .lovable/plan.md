@@ -12,9 +12,11 @@ Keep calls to action only in the homepage hero, eliminate clipped internal heroe
 
 ## Changes
 
-### 1. Leave the Destinations hero unchanged
-- Keep the current Destinations hero, its buttons, and its sizing exactly as they are.
-- Make no shared hero-layout changes based on the earlier overflow concern.
+### 1. Audit and fix the Destinations hero
+- Remove both buttons from the Destinations hero so its title and supporting copy fit without clipping.
+- Recheck its height, header clearance, text wrapping, and bottom edge at mobile, tablet, and desktop sizes in EN, AR, and HE.
+- If any overflow remains after button removal, adjust only the Destinations hero sizing; do not change other shared heroes unnecessarily.
+- Keep homepage hero actions unchanged.
 
 ### 2. Temporarily hide language-school contract signals on public pages
 - On **Educational Destinations**, keep the city and university guidance but remove:
