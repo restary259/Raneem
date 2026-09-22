@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import CostCalculatorPage from "@/pages/CostCalculatorPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/resources/cost-calculator")({
-  component: CostCalculatorPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/resources" });
+  },
 });

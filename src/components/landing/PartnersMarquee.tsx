@@ -20,9 +20,7 @@ const partners = [
     'Carol Davila University of Medicine and Pharmacy', 
     'Ovidius University', 
     'Yarmouk University', 
-    'UMF Jordan', 
-    'FU Academy of Languages', 
-    'Kapito Academy of Languages'
+    'UMF Jordan'
 ];
 
 const PartnersMarquee = () => {
