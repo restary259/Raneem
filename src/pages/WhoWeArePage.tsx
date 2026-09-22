@@ -1,5 +1,5 @@
 
-import { ArrowUpRight, Mail } from "lucide-react";
+import { ArrowUpRight, Check, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import DarbContactCta from "@/components/common/DarbContactCta";
 import DarbPageHero from "@/components/common/DarbPageHero";
@@ -11,11 +11,13 @@ import { SUPPORT_EMAIL } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 
 type StoryChapter = { marker: string; title: string; body: string };
+type Principle = { title: string; body: string; practice: string };
 
 const WhoWeArePage = () => {
   const { t } = useTranslation(["about", "common"]);
   const { dir } = useDirection();
   const chapters = t("whoWeAre.story.chapters", { returnObjects: true }) as StoryChapter[];
+  const principles = t("whoWeAre.principles.items", { returnObjects: true }) as Principle[];
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-background text-foreground" dir={dir}>
@@ -29,25 +31,7 @@ const WhoWeArePage = () => {
           subtitle={t("whoWeAre.heroSubtitle")}
         />
 
-        <section className="border-b border-border bg-background py-14 sm:py-20" aria-labelledby="about-founder-title">
-          <div className="container grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.founder.eyebrow")}</p>
-              <p aria-hidden="true" className="mt-6 font-editorial text-7xl leading-none text-primary sm:text-8xl">22</p>
-              <p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">{t("whoWeAre.founder.fact")}</p>
-            </div>
-            <div className="border-s border-border ps-6 sm:ps-10">
-              <h2 id="about-founder-title" className="max-w-3xl text-balance font-editorial text-4xl leading-tight text-primary sm:text-6xl">{t("whoWeAre.founder.title")}</h2>
-              <div className="mt-7 max-w-3xl space-y-5 text-base leading-8 text-muted-foreground sm:text-lg">
-                <p>{t("whoWeAre.founder.bodyOne")}</p>
-                <p>{t("whoWeAre.founder.bodyTwo")}</p>
-              </div>
-              <p className="mt-8 text-sm font-bold uppercase tracking-[0.14em] text-primary">{t("whoWeAre.founder.signature")}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-border bg-editorial-paper py-14 sm:py-20" aria-labelledby="about-story-title">
+        <section className="border-b border-border bg-background py-14 sm:py-20" aria-labelledby="about-story-title">
           <div className="container">
             <div className="mx-auto max-w-4xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.story.eyebrow")}</p>
@@ -73,7 +57,7 @@ const WhoWeArePage = () => {
           </div>
         </section>
 
-        <section className="bg-background py-14 sm:py-20" aria-labelledby="about-direction-title">
+        <section className="bg-editorial-paper py-14 sm:py-20" aria-labelledby="about-direction-title">
           <div className="container">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.direction.eyebrow")}</p>
             <h2 id="about-direction-title" className="mt-3 max-w-3xl text-balance text-3xl font-bold text-primary sm:text-5xl">{t("whoWeAre.direction.title")}</h2>
@@ -92,29 +76,37 @@ const WhoWeArePage = () => {
           </div>
         </section>
 
+        <section className="bg-background py-14 sm:py-20" aria-labelledby="about-principles-title">
+          <div className="container grid gap-10 lg:grid-cols-[0.62fr_1.38fr]">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.principles.eyebrow")}</p>
+              <h2 id="about-principles-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("whoWeAre.principles.title")}</h2>
+              <p className="mt-4 max-w-lg leading-7 text-muted-foreground">{t("whoWeAre.principles.body")}</p>
+            </div>
+            <div className="border-t border-border">
+              {Array.isArray(principles) && principles.map((principle, index) => (
+                <article key={principle.title} className="grid gap-4 border-b border-border py-7 sm:grid-cols-[72px_minmax(0,0.8fr)_minmax(0,1.2fr)] sm:gap-7 sm:py-9">
+                  <p className="font-editorial text-3xl text-brand-strong">{String(index + 1).padStart(2, "0")}</p>
+                  <div><h3 className="text-xl font-bold text-primary">{principle.title}</h3><p className="mt-2 text-sm leading-7 text-muted-foreground">{principle.body}</p></div>
+                  <div className="flex items-start gap-3 bg-editorial-paper p-5 text-sm leading-7 text-foreground"><Check className="mt-1 size-4 shrink-0 text-brand-strong" /><span>{principle.practice}</span></div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="relative overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20" aria-labelledby="about-team-title">
-          <div className="container relative z-10 grid gap-9 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div className="container relative z-10 grid gap-9 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("whoWeAre.team.eyebrow")}</p>
               <h2 id="about-team-title" className="mt-3 text-balance font-editorial text-4xl leading-tight sm:text-6xl">{t("whoWeAre.team.title")}</h2>
             </div>
             <div className="max-w-2xl lg:justify-self-end">
               <p className="text-base leading-8 text-primary-foreground/75">{t("whoWeAre.team.body")}</p>
-              <p className="mt-5 border-s border-brand ps-5 text-base leading-8 text-primary-foreground/90">{t("whoWeAre.team.personal")}</p>
               <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-6 inline-flex min-h-11 items-center gap-2 font-bold text-primary-foreground underline decoration-brand/70 underline-offset-4"><Mail className="size-4" />{t("whoWeAre.team.contact")}<ArrowUpRight className="size-4" /></a>
             </div>
           </div>
           <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 rounded-none" />
-        </section>
-
-        <section className="border-b border-border bg-editorial-paper py-14 sm:py-20" aria-labelledby="about-closing-title">
-          <div className="container grid gap-6 lg:grid-cols-[0.55fr_1.45fr] lg:gap-16">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.closing.eyebrow")}</p>
-            <div>
-              <h2 id="about-closing-title" className="max-w-4xl text-balance font-editorial text-4xl leading-tight text-primary sm:text-6xl">{t("whoWeAre.closing.title")}</h2>
-              <p className="mt-6 max-w-3xl text-base leading-8 text-muted-foreground sm:text-lg">{t("whoWeAre.closing.body")}</p>
-            </div>
-          </div>
         </section>
 
         <DarbContactCta />

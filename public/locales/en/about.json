@@ -1,59 +1,72 @@
 {
   "whoWeAre": {
     "heroTitle": "About DARB",
-    "heroSubtitle": "Student-founded, shaped by lived experience, and built to make international study feel less distant",
+    "heroSubtitle": "A clearer path to studying in Germany, with guidance that explains each step and everyone's responsibilities",
     "imageAlt": "A calm and professional DARB working environment",
-    "founder": {
-      "eyebrow": "Where DARB began",
-      "fact": "An International Business student, an international student, and learning German firsthand",
-      "title": "I started DARB at 22, while living the journey myself",
-      "bodyOne": "I was studying International Business as an international student, and I also had to learn German. I knew what it felt like to enter a new system with questions that were not always answered in one place",
-      "bodyTwo": "DARB began from that experience. Not from the idea that one person has every answer, but from the belief that students deserve someone who understands the distance between finding information and knowing what to do with it",
-      "signature": "The founder of DARB"
-    },
     "story": {
       "eyebrow": "Our story",
-      "title": "From one student experience to a shared purpose",
-      "body": "Our story is still being written, but its beginning is simple: understand the journey personally, recognize what is missing, and build a better bridge for the student who comes next",
+      "title": "A path begins when the next step is clear",
+      "body": "DARB was built around a practical need: turning a process full of information, documents, and decisions into a route students can understand and manage",
       "chapters": [
         {
           "marker": "01",
-          "title": "Living the experience",
-          "body": "Studying internationally and learning German made the unfamiliar parts of the journey visible from a student's point of view"
+          "title": "Start by listening",
+          "body": "Before suggesting a route, we understand the student's academic background, goals, and constraints"
         },
         {
           "marker": "02",
-          "title": "Recognizing the gap",
-          "body": "Information existed, but understanding how it connected — and what to do next — was often the harder part"
+          "title": "Organize the process",
+          "body": "We divide the route into clear stages, explain what each one requires, and identify who is responsible for each decision"
         },
         {
           "marker": "03",
-          "title": "Building DARB",
-          "body": "DARB grew from the idea that students should meet the international-study journey with context, a human connection, and a clearer sense of direction"
+          "title": "Stay reachable",
+          "body": "When circumstances change or a question appears, the student knows who to contact and what needs to happen next"
         }
       ]
     },
     "direction": {
       "eyebrow": "Our direction",
-      "title": "Why we are building DARB",
+      "title": "A practical ambition, not a grand promise",
       "missionLabel": "Our mission",
-      "missionTitle": "Make international study feel understandable and less distant",
-      "missionBody": "We connect information with human guidance, so students can approach the journey with context instead of facing every question alone",
+      "missionTitle": "Make every next step understandable and organized",
+      "missionBody": "We help students gather information, prepare documents, and follow their progress without losing sight of the whole process",
       "visionLabel": "Our vision",
-      "visionTitle": "A trusted bridge between students and what comes next",
-      "visionBody": "We want DARB to be a place where students feel known, can understand the people supporting them, and can approach institutions and decisions with greater clarity"
+      "visionTitle": "Study decisions made with clarity",
+      "visionBody": "We want students to approach international study understanding their options, costs, responsibilities, and the institutions that make official decisions"
+    },
+    "principles": {
+      "eyebrow": "How we work",
+      "title": "Principles you can see in practice",
+      "body": "Our values are measured by how we communicate, document, and follow each case",
+      "items": [
+        {
+          "title": "Listen before advising",
+          "body": "No two students have the same background or circumstances",
+          "practice": "We begin with the student's details, not a ready-made answer"
+        },
+        {
+          "title": "Explain who decides",
+          "body": "Admission, visas, and recognition belong to official institutions",
+          "practice": "We clearly separate DARB's guidance from decisions made by authorities and institutions"
+        },
+        {
+          "title": "Keep the work organized",
+          "body": "A long process is easier when stages and documents remain visible",
+          "practice": "We track progress, tasks, and payments in one place"
+        },
+        {
+          "title": "Remain reachable",
+          "body": "Important questions should not disappear between stages",
+          "practice": "We direct each question to someone who knows the case and can explain the next step"
+        }
+      ]
     },
     "team": {
       "eyebrow": "The people behind DARB",
-      "title": "A young team that stays close to the student experience",
-      "body": "DARB is built by people who understand different parts of the international-study journey and bring those perspectives together. We are growing carefully, with the aim that visitors know who they are speaking with and what each person is responsible for",
-      "personal": "As our team grows, this space will introduce each member with a real portrait, direct contact details, and a clear description of their role",
+      "title": "One team, clear responsibility",
+      "body": "Our work brings together guidance, document preparation, follow-up, and support. Every enquiry has a clear owner, and the team works from the same case record and shared context",
       "contact": "Speak with the team"
-    },
-    "closing": {
-      "eyebrow": "From us to you",
-      "title": "Trust starts by knowing who is on the other side",
-      "body": "This page is our introduction, not a sales pitch. If you are considering studying abroad and still deciding who to trust, speak with us, ask direct questions, and get to know the people behind DARB"
     }
   }
 }
