@@ -41,7 +41,7 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   ];
 
   const renderDropdown = (items: { title: string; href: string; description: string }[], widthClass = 'md:w-[500px]') => (
-    <NavigationMenuContent>
+    <NavigationMenuContent className={`top-full pt-1.5 ${dir === "rtl" ? "right-0 left-auto" : "left-0"}`}>
       <ul className={`grid w-[400px] gap-2 p-3 ${dir === "rtl" ? "text-right" : "text-left"} ${widthClass} rounded-md border border-border bg-background/95 shadow-surface-lg backdrop-blur-md`}>
         {items.map((item) => (
           <ListItem key={item.href} to={item.href} title={item.title}>
@@ -61,7 +61,7 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
 
   return (
     <div className="flex justify-center w-full" dir={dir}>
-      <NavigationMenu>
+      <NavigationMenu viewport={false}>
         <NavigationMenuList className="flex items-stretch gap-1">
           <NavigationMenuItem>
             <NavigationMenuTrigger className={triggerClass}>{t('nav.studyGermany')}</NavigationMenuTrigger>
