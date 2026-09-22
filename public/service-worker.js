@@ -13,7 +13,7 @@
 //     are carried over verbatim, so existing push subscriptions keep working
 //     without users re-granting permission.
 
-const CACHE_VERSION = '5.1.0';
+const CACHE_VERSION = '5.2.0';
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());
@@ -47,10 +47,10 @@ self.addEventListener('message', event => {
 // ---------------------------------------------------------------------------
 // Web Push (preserved verbatim from the pre-migration worker)
 // ---------------------------------------------------------------------------
-const NOTIFICATION_ICON = '/icons/icon-192-v2.png';
+const NOTIFICATION_ICON = '/icons/icon-192-v3.png';
 // Android / Samsung Internet render `badge` as a monochrome mask, so it must be
 // a white-on-transparent silhouette rather than the colour logo. iOS ignores it.
-const NOTIFICATION_BADGE = '/icons/badge-96.png';
+const NOTIFICATION_BADGE = '/icons/badge-96-v3.png';
 
 function parsePushData(event) {
   if (!event.data) return {};
