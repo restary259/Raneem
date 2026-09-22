@@ -102,20 +102,20 @@ const HomepageExperience = () => {
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-primary/12 via-transparent to-primary/8" />
         <BrandArch />
         <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center py-[calc(var(--darb-header-height)+2rem)] sm:py-[calc(var(--darb-header-height)+3rem)]">
-          <div className="darb-home-hero-panel w-full max-w-[760px] border border-background/55 bg-background/72 text-foreground shadow-surface-lg backdrop-blur-[3px]">
+          <div className="darb-home-hero-panel w-full max-w-[760px] border border-white/20 bg-black/40 text-white shadow-surface-lg backdrop-blur-[3px]">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand sm:text-sm">{t("homepage.hero.eyebrow")}</p>
             <h1 className="mt-4 max-w-3xl text-balance font-editorial text-5xl leading-[0.94] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
             <p className="mt-5 max-w-2xl text-lg font-bold leading-7 sm:text-xl sm:leading-8 lg:text-2xl">{t("homepage.hero.title")}</p>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-foreground/75 sm:text-base sm:leading-7">{t("homepage.hero.subtitle")}</p>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-white/80 sm:text-base sm:leading-7">{t("homepage.hero.subtitle")}</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="min-h-12 text-base shadow-surface-lg">
                 <Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="min-h-12 border-primary/25 bg-background/55 text-primary text-base hover:bg-primary hover:text-primary-foreground">
+              <Button asChild size="lg" variant="outline" className="min-h-12 border-white/40 bg-white/5 text-white text-base hover:bg-white hover:text-primary">
                 <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a>
               </Button>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-xs font-medium text-foreground/70 sm:text-sm">
+            <p className="mt-5 flex items-center gap-2 text-xs font-medium text-white/75 sm:text-sm">
               <CircleCheck className="size-4 shrink-0 text-brand" />
               {t("homepage.hero.reassurance")}
             </p>
