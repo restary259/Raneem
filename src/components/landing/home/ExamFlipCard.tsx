@@ -49,6 +49,7 @@ export default function ExamFlipCard({
           className="exam-flip-face exam-flip-front"
           aria-expanded={open}
           aria-label={`${name}: ${flipLabel}`}
+            tabIndex={open ? -1 : 0}
           onClick={onOpen}
         >
           <span className="exam-wordmark" aria-hidden="true">{name}</span>
@@ -64,9 +65,9 @@ export default function ExamFlipCard({
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button asChild size="sm">
-              <a href={href} target="_blank" rel="noopener noreferrer">{officialLabel}<ExternalLink /></a>
+                <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={open ? 0 : -1}>{officialLabel}<ExternalLink /></a>
             </Button>
-            <Button ref={backRef} type="button" size="icon-sm" variant="outline" onClick={close} aria-label={backLabel} title={backLabel}>
+              <Button ref={backRef} type="button" size="icon-sm" variant="outline" tabIndex={open ? 0 : -1} onClick={close} aria-label={backLabel} title={backLabel}>
               <RotateCcw />
             </Button>
           </div>

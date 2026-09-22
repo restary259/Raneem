@@ -14,4 +14,5 @@
 - [x] Add verified exam flip cards and compact on-demand CEFR explorer
 - [x] Convert WhatsApp side tab into a two-step dock
 - [x] Use reliable local city imagery and TU9 assets
-- [ ] Complete source validation, focused tests, and preview build check
+- [x] Complete source validation and focused type/catalog/locale checks
+- [ ] User visual review of the updated homepage and dashboard surfaces
