@@ -1,26 +1,25 @@
 /* Interactive accessibility adjustments, loaded after the main design system. */
 
-@layer utilities {
-  @media (prefers-contrast: high) {
-    .bottom-nav-item {
-      @apply border border-gray-300;
-    }
-
-    .bottom-nav-item.active {
-      @apply border-orange-500 bg-orange-100;
-    }
+@media (prefers-contrast: high) {
+  .bottom-nav-item {
+    border: 1px solid #d1d5db;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .bottom-nav-item {
-      @apply transition-none;
-    }
+  .bottom-nav-item.active {
+    border: 1px solid #f97316;
+    background: #ffedd5;
+  }
+}
 
-    @keyframes logoScale {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-      }
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav-item {
+    transition: none !important;
+  }
+
+  @keyframes logoScale {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
     }
   }
 }
