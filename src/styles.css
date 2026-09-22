@@ -1076,7 +1076,7 @@ a[href*="lovable.dev"] {
 
 @media (max-width: 374px) {
   .darb-home-hero {
-    min-height: 660px;
+    min-height: 600px;
   }
 
   .darb-home-hero-panel,
