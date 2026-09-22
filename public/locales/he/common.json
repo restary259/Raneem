@@ -323,5 +323,21 @@
   "loader": {
     "brand": "Darb",
     "tagline": "השותף שלכם ללימודים בחו״ל"
+  },
+  "accessibilityMenu": {
+    "trigger": "אפשרויות נגישות",
+    "textSize": "גודל טקסט",
+    "increaseText": "הגדלת הטקסט",
+    "decreaseText": "הקטנת הטקסט",
+    "resetTextSize": "איפוס גודל הטקסט",
+    "default": "ברירת מחדל",
+    "highContrast": "ניגודיות גבוהה",
+    "grayscale": "גווני אפור",
+    "highlightLinks": "הדגשת קישורים",
+    "readableFont": "גופן קריא",
+    "reduceMotion": "הפחתת תנועה",
+    "largeCursor": "סמן גדול",
+    "resetAll": "איפוס כל הגדרות הנגישות",
+    "statement": "הצהרת נגישות"
   }
 }
