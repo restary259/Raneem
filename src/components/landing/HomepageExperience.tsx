@@ -99,7 +99,7 @@ const HomepageExperience = () => {
         <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
         <BrandArch className="sm:hidden" />
         <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center px-4">
-          <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/15 bg-hero-panel/75 text-primary-foreground shadow-surface-lg backdrop-blur-sm">
+          <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/15 bg-hero-panel/55 text-primary-foreground shadow-surface-lg backdrop-blur-sm">
             <div className="darb-home-hero-intro">
               <p className="darb-home-hero-eyebrow font-bold uppercase text-primary-foreground/65">{t("homepage.hero.eyebrow")}</p>
               <span aria-hidden="true" className="darb-home-hero-rule" />
