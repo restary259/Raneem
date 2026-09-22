@@ -24,6 +24,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
+import goetheLogo from "@/assets/exams/goethe.svg.asset.json";
+import dshAuthorityLogo from "@/assets/exams/hrk.svg.asset.json";
+import telcLogo from "@/assets/exams/telc.svg.asset.json";
+import testAsLogo from "@/assets/exams/testas.svg.asset.json";
+import testDafLogo from "@/assets/exams/testdaf.svg.asset.json";
 import { languageYearCities, tu9Universities } from "@/data/educationalDestinations";
 import BrandArch from "./home/BrandArch";
 import IdentityStage from "./home/IdentityStage";
@@ -39,11 +44,11 @@ const journeyIcons = [SearchCheck, Compass, FileCheck2, Languages, ShieldCheck, 
 const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, MessageCircle, FileCheck2];
 
 const examBrands = [
-  { id: "TestDaF", label: "TestDaF", website: "https://www.testdaf.de/" },
-  { id: "telc", label: "telc Deutsch C1 Hochschule", website: "https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/telc-deutsch-c1-hochschule/" },
-  { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/prf.html" },
-  { id: "DSH", label: "DSH-2", website: "https://www.hrk.de/themen/internationales/internationale-studierende-und-forschende/hochschulzugang-fuer-internationale-studierende/sprachnachweis-deutsch" },
-  { id: "TestAS", label: "TestAS", website: "https://www.testas.de/en/" },
+  { id: "TestDaF", label: "TestDaF", website: "https://www.testdaf.de/", logo: testDafLogo.url },
+  { id: "telc", label: "telc Deutsch C1 Hochschule", website: "https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/telc-deutsch-c1-hochschule/", logo: telcLogo.url, logoOnDark: true },
+  { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/prf.html", logo: goetheLogo.url },
+  { id: "DSH", label: "DSH-2", website: "https://www.hrk.de/themen/internationales/internationale-studierende-und-forschende/hochschulzugang-fuer-internationale-studierende/sprachnachweis-deutsch", logo: dshAuthorityLogo.url },
+  { id: "TestAS", label: "TestAS", website: "https://www.testas.de/en/", logo: testAsLogo.url },
 ];
 
 const StudentStory = ({ student, index, t }: { student: GalleryStudent; index: number; t: (key: string, options?: Record<string, unknown>) => string }) => (
@@ -95,10 +100,10 @@ const HomepageExperience = () => {
         <BrandArch className="sm:hidden" />
         <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center py-16">
           <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/20 bg-hero-panel/80 text-center text-primary-foreground shadow-surface-lg backdrop-blur-sm">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.hero.eyebrow")}</p>
-            <h1 className="mt-4 text-balance font-editorial text-5xl leading-[0.98] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
-            <p className="mt-5 max-w-2xl text-xl font-bold leading-8 sm:text-2xl">{t("homepage.hero.title")}</p>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-primary-foreground/80 sm:text-lg">{t("homepage.hero.subtitle")}</p>
+            <p className="darb-home-hero-eyebrow font-bold text-brand-strong">{t("homepage.hero.eyebrow")}</p>
+            <h1 className="darb-home-hero-title mt-4 text-balance font-editorial font-semibold leading-[1.02]">{t("homepage.hero.campaign")}</h1>
+            <p className="mt-4 text-balance text-2xl font-bold leading-tight sm:text-3xl">{t("homepage.hero.title")}</p>
+            <p className="darb-home-hero-subtitle mx-auto mt-3 max-w-xl font-semibold leading-7 text-primary-foreground/85">{t("homepage.hero.subtitle")}</p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
               <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-primary-foreground/5 text-primary-foreground text-base hover:bg-primary-foreground hover:text-primary"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
@@ -206,7 +211,7 @@ const HomepageExperience = () => {
               <div>
                 <h3 className="mb-3 font-bold text-primary">{t("homepage.network.examsLabel")}</h3>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {examBrands.map((exam) => <ExamFlipCard key={exam.id} name={exam.label} href={exam.website} description={t(`homepage.languagePrep.exams.${exam.id}.verifiedDescription`)} caveat={t(`homepage.languagePrep.exams.${exam.id}.caveat`)} officialLabel={t("homepage.languagePrep.officialPortal")} flipLabel={t("homepage.languagePrep.flipCue")} backLabel={t("homepage.languagePrep.flipBack")} open={openExam === exam.id} onOpen={() => setOpenExam(exam.id)} onClose={() => setOpenExam(null)} />)}
+                  {examBrands.map((exam) => <ExamFlipCard key={exam.id} name={exam.label} logoSrc={exam.logo} logoOnDark={exam.logoOnDark} href={exam.website} description={t(`homepage.languagePrep.exams.${exam.id}.verifiedDescription`)} caveat={t(`homepage.languagePrep.exams.${exam.id}.caveat`)} officialLabel={t("homepage.languagePrep.officialPortal")} flipLabel={t("homepage.languagePrep.flipCue")} backLabel={t("homepage.languagePrep.flipBack")} open={openExam === exam.id} onOpen={() => setOpenExam(exam.id)} onClose={() => setOpenExam(null)} />)}
                 </div>
               </div>
               <CefrGuide />

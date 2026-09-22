@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 
 type ExamFlipCardProps = {
   name: string;
+  logoSrc: string;
+  logoOnDark?: boolean;
   description: string;
   caveat: string;
   officialLabel: string;
@@ -18,6 +20,8 @@ type ExamFlipCardProps = {
 
 export default function ExamFlipCard({
   name,
+  logoSrc,
+  logoOnDark = false,
   description,
   caveat,
   officialLabel,
@@ -41,7 +45,7 @@ export default function ExamFlipCard({
   };
 
   return (
-    <article className={cn("exam-flip-card min-h-72", open && "is-flipped")}>
+    <article className={cn("exam-flip-card", open && "is-flipped")}>
       <div className="exam-flip-card-inner">
         <button
           ref={frontRef}
@@ -49,25 +53,27 @@ export default function ExamFlipCard({
           className="exam-flip-face exam-flip-front"
           aria-expanded={open}
           aria-label={`${name}: ${flipLabel}`}
-            tabIndex={open ? -1 : 0}
+          tabIndex={open ? -1 : 0}
           onClick={onOpen}
         >
-          <span className="exam-wordmark" aria-hidden="true">{name}</span>
+          <span className={cn("exam-logo-stage", logoOnDark && "exam-logo-stage-dark")} aria-hidden="true">
+            <img src={logoSrc} alt="" className="exam-logo" loading="lazy" decoding="async" />
+          </span>
           <span className="text-base font-bold text-primary">{name}</span>
           <span className="text-xs font-semibold text-muted-foreground">{flipLabel}</span>
         </button>
 
         <div className="exam-flip-face exam-flip-back" aria-hidden={!open} onKeyDown={(event) => event.key === "Escape" && close()}>
-          <div>
+          <div className="min-h-0 overflow-y-auto pe-1">
             <p className="text-lg font-bold text-primary">{name}</p>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>
             <p className="mt-3 border-s-2 border-brand ps-3 text-xs leading-5 text-muted-foreground">{caveat}</p>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button asChild size="sm">
-                <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={open ? 0 : -1}>{officialLabel}<ExternalLink /></a>
+              <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={open ? 0 : -1}>{officialLabel}<ExternalLink /></a>
             </Button>
-              <Button ref={backRef} type="button" size="icon-sm" variant="outline" tabIndex={open ? 0 : -1} onClick={close} aria-label={backLabel} title={backLabel}>
+            <Button ref={backRef} type="button" size="icon-sm" variant="outline" tabIndex={open ? 0 : -1} onClick={close} aria-label={backLabel} title={backLabel}>
               <RotateCcw />
             </Button>
           </div>

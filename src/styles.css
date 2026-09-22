@@ -512,6 +512,8 @@ a[href*="lovable.dev"] {
 }
 
 .exam-flip-card {
+  height: 24rem;
+  min-height: 24rem;
   perspective: 1100px;
 }
 
@@ -534,7 +536,8 @@ a[href*="lovable.dev"] {
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   background: hsl(var(--background));
-  padding: 1.25rem;
+  height: 100%;
+  padding: 1.125rem;
   text-align: start;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -561,16 +564,23 @@ a[href*="lovable.dev"] {
   transform: rotateY(180deg);
 }
 
-.exam-wordmark {
+.exam-logo-stage {
   display: grid;
-  min-height: 4.5rem;
-  width: min(100%, 13rem);
+  height: 7rem;
+  width: 100%;
   place-items: center;
-  border-block: 2px solid hsl(var(--brand));
-  color: hsl(var(--primary));
-  font-size: clamp(1.25rem, 3vw, 1.8rem);
-  font-weight: 900;
-  letter-spacing: 0;
+  padding: 1rem;
+}
+
+.exam-logo-stage-dark {
+  background: hsl(var(--primary));
+}
+
+.exam-logo {
+  display: block;
+  width: min(100%, 13rem);
+  height: 100%;
+  object-fit: contain;
 }
 
 @media (min-width: 1024px) {
