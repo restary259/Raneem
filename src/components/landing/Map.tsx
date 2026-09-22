@@ -1,7 +1,8 @@
 
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Map = () => {
+  const { t } = useTranslation('contact');
   const addressQuery = "Tamra Mall, Tamra 3081100";
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(addressQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 
@@ -12,7 +13,7 @@ const Map = () => {
       allowFullScreen={false}
       loading="lazy"
       referrerPolicy="no-referrer-when-downgrade"
-      title="موقع المكتب"
+      title={t('contact.mapFrameTitle')}
     />
   );
 };

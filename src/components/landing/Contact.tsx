@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { Instagram, Facebook, MessageCircle } from "lucide-react";
+import { Instagram, Facebook, Mail, MessageCircle, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router-compat";
@@ -12,6 +12,8 @@ import { toast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
+import { SUPPORT_EMAIL } from "@/lib/contactConfig";
+import { DARB_CONTACT_ADVISOR_SRC } from "@/assets/darbContactAdvisor";
 import { recordConsent } from "@/lib/consent";
 import ConsentBlock from "@/components/common/ConsentBlock";
 import FieldGroup from "@/components/common/FieldGroup";
@@ -111,10 +113,29 @@ const Contact = () => {
   });
 
   return (
-    <section id="contact" className="bg-editorial-paper py-14 md:py-20">
+    <section id="contact" className="bg-editorial-paper py-10 md:py-16">
       <div className="container mx-auto px-4">
-        <div className="grid items-start gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} overflow-hidden rounded-lg border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9 scroll-mt-28`}>
+        <div className="mb-10 grid items-center gap-5 border-b border-border pb-10 sm:grid-cols-[auto_minmax(0,1fr)] md:gap-7">
+          <div className="relative mx-auto size-28 shrink-0 sm:mx-0 md:size-32">
+            <img src={DARB_CONTACT_ADVISOR_SRC} alt={t("contactHero.imageAlt")} className="size-full rounded-full border border-border object-cover shadow-surface" />
+            <span aria-hidden="true" className="absolute inset-x-3 -bottom-1 h-1 rounded-full bg-brand" />
+          </div>
+          <div className="min-w-0 text-center sm:text-start">
+            <p className="text-xs font-bold uppercase text-brand-strong">{t("contactHero.advisorEyebrow")}</p>
+            <h2 className="mt-2 text-2xl font-bold text-primary md:text-3xl">{t("contactHero.advisorTitle")}</h2>
+            <p className="mt-2 max-w-2xl leading-7 text-muted-foreground">{t("contactHero.advisorBody")}</p>
+            <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row sm:justify-start">
+              <Button asChild><a href={whatsappBusinessUrl(t("contactHero.whatsappMessage"))} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("support.whatsapp")}</a></Button>
+              <Button asChild variant="outline"><a href={`mailto:${SUPPORT_EMAIL}`}><Mail />{SUPPORT_EMAIL}</a></Button>
+            </div>
+            <Link to="/ai-advisor" className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary underline decoration-brand/50 underline-offset-4 hover:decoration-brand">
+              <Sparkles className="size-4 text-brand-strong" />{t("contactHero.aiLink")}
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:gap-12">
+          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} scroll-mt-28 overflow-hidden rounded-lg border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9`}>
             <div className={`mb-8 max-w-2xl text-center ${dir === "rtl" ? "md:text-right" : "md:text-left"}`}>
               <h2 className="text-3xl font-bold md:text-4xl">{t("contact.title")}</h2>
               <p className="mt-4 text-lg text-muted-foreground">{t("contact.subtitle")}</p>
@@ -175,15 +196,7 @@ const Contact = () => {
             </div>
           </div>
 
-          <aside className="space-y-8">
-            <div className="rounded-lg bg-primary p-6 text-primary-foreground">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand">{t("contact.ai.eyebrow")}</p>
-              <h3 className="mt-2 text-2xl font-bold">{t("contact.ai.title")}</h3>
-              <p className="mt-3 text-sm leading-7 text-primary-foreground/75">{t("contact.ai.body")}</p>
-              <Button asChild variant="outline" className="mt-5 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                <Link to="/ai-advisor">{t("contact.ai.action")}</Link>
-              </Button>
-            </div>
+          <aside className="space-y-8 lg:sticky lg:top-32">
             <OfficeLocations />
             <div>
               <h3 className="text-2xl font-bold text-primary">{t("contact.mapTitle")}</h3>

@@ -12,7 +12,7 @@ const OfficeLocations = () => {
   return (
     <div className="space-y-5">
        <h3 className="text-2xl font-bold text-primary">{t('officeLocations.title')}</h3>
-        <Card className="rounded-2xl border-border bg-background shadow-surface">
+        <Card className="rounded-lg border-border bg-background shadow-surface">
           <CardHeader>
             <CardTitle className="text-primary">{t('officeLocations.city')}</CardTitle>
           </CardHeader>

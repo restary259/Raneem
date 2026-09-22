@@ -8,6 +8,7 @@ export const DARB_PUBLIC_HERO_IMAGES = {
   academic: "https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?auto=format&fit=crop&w=2400&q=85",
   housing: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=2400&q=85",
   office: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=2400&q=85",
+  contact: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=2400&q=85",
   collaboration: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=2400&q=85",
   city: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=2400&q=85",
   journal: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=2400&q=85",
