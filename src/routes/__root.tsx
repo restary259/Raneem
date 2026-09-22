@@ -9,6 +9,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
+import accessibilityCss from "../styles/accessibility.css?url";
 import "@/i18n";
 import AppShell from "@/components/AppShell";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -77,7 +78,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "viewport",
         content:
-          "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content",
+          "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
       },
       { title: "درب | الدراسة في ألمانيا بدعم عربي" },
       {
@@ -132,6 +133,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "dns-prefetch", href: "//fonts.googleapis.com" },
       { rel: "dns-prefetch", href: "//fonts.gstatic.com" },
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: accessibilityCss },
     ],
   }),
   shellComponent: RootShell,
