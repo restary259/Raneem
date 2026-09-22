@@ -800,5 +800,21 @@
   },
   "common": {
     "close": "إغلاق"
+  },
+  "accessibilityMenu": {
+    "trigger": "خيارات إتاحة الوصول",
+    "textSize": "حجم النص",
+    "increaseText": "تكبير حجم النص",
+    "decreaseText": "تصغير حجم النص",
+    "resetTextSize": "إعادة ضبط حجم النص",
+    "default": "الحجم الافتراضي",
+    "highContrast": "تباين عالٍ",
+    "grayscale": "تدرج رمادي",
+    "highlightLinks": "إبراز الروابط",
+    "readableFont": "خط واضح",
+    "reduceMotion": "تقليل الحركة",
+    "largeCursor": "مؤشر كبير",
+    "resetAll": "إعادة ضبط جميع إعدادات الإتاحة",
+    "statement": "بيان إتاحة الوصول"
   }
 }
