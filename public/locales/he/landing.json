@@ -1,11 +1,12 @@
 {
   "homepage": {
     "hero": {
-      "eyebrow": "Darb Study International · תמיכה בכל שלב",
-      "title": "הדרך הברורה שלכם ללימודים בגרמניה",
-      "subtitle": "אנחנו בוחנים את הפרופיל שלכם, עוזרים לבחור מסלול מתאים ומלווים אתכם בתהליך ההרשמה, הכנת הוויזה, המגורים וההגעה.",
+      "eyebrow": "DARB · Study International",
+      "title": "Different Destinations.",
+      "subtitle": "Germany starts here.",
       "imageAlt": "סביבה אוניברסיטאית בגרמניה המייצגת את תחילת מסע הלימודים",
-      "reassurance": "מתחילים בהערכת פרופיל — ללא תשלום באתר"
+      "reassurance": "מתחילים בהערכת פרופיל — ללא תשלום באתר",
+      "campaign": "Same Dream."
     },
     "actions": {
       "apply": "הערכת הפרופיל והגשת מועמדות",
