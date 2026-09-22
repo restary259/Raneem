@@ -8,6 +8,7 @@ const ContactHero = () => {
   return (
     <DarbPageHero
       compact
+      className="contact-page-hero"
       imageUrl={DARB_PUBLIC_HERO_IMAGES.contact}
       imageAlt={t("contactHero.heroImageAlt")}
       eyebrow={t("contactHero.eyebrow")}
