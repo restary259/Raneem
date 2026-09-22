@@ -82,7 +82,7 @@ const Header = () => {
 
           {/* Desktop navigation */}
           <div className="hidden min-w-0 flex-1 lg:mx-5 lg:block">
-            <DesktopNav transparent={!scrolled} />
+            <DesktopNav transparent={!solid} />
           </div>
 
           {/* Desktop student login */}
@@ -97,8 +97,8 @@ const Header = () => {
 
            {/* Mobile header: preserve breathing room and move contact details into the menu. */}
           <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
-             <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${scrolled ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
-            <MobileNav transparent={!scrolled} />
+             <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${solid ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
+            <MobileNav transparent={!solid} />
           </div>
         </div>
       </div>
