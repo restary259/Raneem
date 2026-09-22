@@ -507,8 +507,9 @@ a[href*="lovable.dev"] {
 }
 
 .darb-home-hero-panel {
-  width: var(--darb-hero-panel-width);
-  padding-inline: clamp(1.5rem, 3.5vw, 3.5rem);
+  /* Wide flat band across the photo, deliberately wider than its own copy. */
+  width: min(92vw, 1060px);
+  padding-inline: clamp(1.5rem, 5vw, 4.5rem);
   padding-block: clamp(1.75rem, 4vh, 3rem);
 }
 
