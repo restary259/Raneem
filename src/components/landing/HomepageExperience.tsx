@@ -30,7 +30,6 @@ import telcLogo from "@/assets/exams/telc.svg.asset.json";
 import testAsLogo from "@/assets/exams/testas.svg.asset.json";
 import testDafLogo from "@/assets/exams/testdaf.svg.asset.json";
 import { languageYearCities, tu9Universities } from "@/data/educationalDestinations";
-import BrandArch from "./home/BrandArch";
 import IdentityStage from "./home/IdentityStage";
 import CefrGuide from "./home/CefrGuide";
 import ExamFlipCard from "./home/ExamFlipCard";
@@ -97,7 +96,6 @@ const HomepageExperience = () => {
     <div className="homepage-experience bg-background">
       <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
         <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
-        <BrandArch className="sm:hidden" />
         <span aria-hidden="true" className="darb-hero-scrim absolute inset-0" />
         <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center px-4">
           <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/10 bg-hero-panel/30 text-primary-foreground shadow-surface-lg backdrop-blur-sm">
