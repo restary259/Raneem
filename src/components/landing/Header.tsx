@@ -12,6 +12,7 @@ const Header = () => {
   const { t } = useTranslation();
   const { dir } = useDirection();
   const [scrolled, setScrolled] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
     const updateHeader = () => setScrolled(window.scrollY > 24);
@@ -20,26 +21,38 @@ const Header = () => {
     return () => window.removeEventListener('scroll', updateHeader);
   }, []);
 
+  // Mobile/tablet (<1024px) always gets a solid header — the transparent
+  // look is reserved for the desktop hero.
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const update = () => setIsDesktop(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+
+  const solid = scrolled || !isDesktop;
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
-        scrolled
+        solid
           ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md'
           : 'border-transparent bg-transparent shadow-none'
       }`}
       dir={dir}
-      data-scrolled={scrolled ? 'true' : 'false'}
+      data-scrolled={solid ? 'true' : 'false'}
     >
       {/* Desktop utility bar */}
-      <div className={`darb-header-utility hidden lg:block ${scrolled ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
+      <div className={`darb-header-utility hidden lg:block ${solid ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
         <div
           dir="ltr"
           className={`container grid h-full grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
-            scrolled ? 'text-muted-foreground' : 'text-primary-foreground'
+            solid ? 'text-muted-foreground' : 'text-primary-foreground'
           }`}
         >
           <div className="justify-self-start">
-              <LanguageSwitcher className={scrolled ? '' : 'drop-shadow-sm'} />
+              <LanguageSwitcher className={solid ? '' : 'drop-shadow-sm'} />
           </div>
           <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="justify-self-center whitespace-nowrap">
             {SUPPORT_PHONE}
@@ -69,7 +82,7 @@ const Header = () => {
 
           {/* Desktop navigation */}
           <div className="hidden min-w-0 flex-1 lg:mx-5 lg:block">
-            <DesktopNav transparent={!scrolled} />
+            <DesktopNav transparent={!solid} />
           </div>
 
           {/* Desktop student login */}
@@ -84,8 +97,8 @@ const Header = () => {
 
            {/* Mobile header: preserve breathing room and move contact details into the menu. */}
           <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
-             <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${scrolled ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
-            <MobileNav transparent={!scrolled} />
+             <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${solid ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
+            <MobileNav transparent={!solid} />
           </div>
         </div>
       </div>
