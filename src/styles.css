@@ -507,8 +507,9 @@ a[href*="lovable.dev"] {
 }
 
 .darb-home-hero-panel {
-  width: var(--darb-hero-panel-width);
-  padding-inline: clamp(1.5rem, 3.5vw, 3.5rem);
+  /* Wide flat band across the photo, deliberately wider than its own copy. */
+  width: min(92vw, 1060px);
+  padding-inline: clamp(1.5rem, 5vw, 4.5rem);
   padding-block: clamp(1.75rem, 4vh, 3rem);
 }
 
@@ -900,7 +901,7 @@ a[href*="lovable.dev"] {
 }
 
 .darb-home-hero-title {
-  font-size: clamp(2.5rem, 4.3vw, 4.5rem);
+  font-size: clamp(2.35rem, 3.9vw, 3.9rem);
 }
 
 .darb-home-hero-destination {
@@ -909,8 +910,8 @@ a[href*="lovable.dev"] {
 }
 
 .darb-home-hero-subtitle {
-  margin-top: clamp(0.85rem, 1.8vh, 1.25rem);
-  font-size: clamp(0.95rem, 1.1vw, 1.2rem);
+  margin-top: clamp(0.75rem, 1.6vh, 1.1rem);
+  font-size: clamp(0.9rem, 0.95vw, 1.05rem);
 }
 
 .darb-home-hero-actions {
@@ -1008,7 +1009,7 @@ a[href*="lovable.dev"] {
 
   .darb-home-hero {
     height: auto;
-    min-height: clamp(540px, 92svh, 760px);
+    min-height: clamp(480px, 76svh, 620px);
     max-height: none;
   }
 
@@ -1027,9 +1028,12 @@ a[href*="lovable.dev"] {
     padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
   }
 
-  .darb-home-hero-panel,
   .darb-page-hero-panel {
     width: min(calc(100vw - 2rem), 760px);
+  }
+
+  .darb-home-hero-panel {
+    width: calc(100vw - 2rem);
   }
 
   .darb-home-hero-content {
@@ -1039,33 +1043,25 @@ a[href*="lovable.dev"] {
   }
 
   .darb-home-hero-panel {
-    padding-inline: clamp(1.35rem, 6vw, 1.75rem);
+    padding-inline: clamp(1.35rem, 6vw, 2rem);
     padding-block: clamp(1.5rem, 4vh, 2rem);
-    text-align: start;
-  }
-
-  .darb-home-hero-intro {
-    margin-bottom: clamp(1rem, 3vh, 1.5rem);
+    text-align: center;
   }
 
   .darb-home-hero-title {
-    font-size: clamp(2.4rem, 11vw, 3.25rem);
+    font-size: clamp(2.1rem, 9.5vw, 3rem);
   }
 
   .darb-home-hero-destination {
     font-size: clamp(1.55rem, 7vw, 2.15rem);
   }
 
-  .darb-home-hero-subtitle {
-    margin-inline: 0;
-  }
-
   .darb-home-hero-actions {
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .darb-home-hero-reassurance {
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .darb-home-hero-title,
@@ -1080,7 +1076,7 @@ a[href*="lovable.dev"] {
 
 @media (max-width: 374px) {
   .darb-home-hero {
-    min-height: 660px;
+    min-height: 600px;
   }
 
   .darb-home-hero-panel,
@@ -1093,7 +1089,7 @@ a[href*="lovable.dev"] {
   }
 
   .darb-home-hero-title {
-    font-size: 2.25rem;
+    font-size: 1.95rem;
   }
 
   .darb-home-hero-destination {
