@@ -34,5 +34,11 @@
   "submitErrorDesc": "Failed to send video: {{error}}. Please try again.",
   "missingFields": "Missing data",
   "missingFieldsDesc": "Please fill in name, university, and video link.",
-  "copyTooltip": "📎 Copy link to share"
+  "copyTooltip": "📎 Copy link to share",
+  "broadcastHero": {
+    "eyebrow": "DARB BROADCAST",
+    "imageAlt": "Bright German study and media environment",
+    "title": "Germany through the DARB journey",
+    "subtitle": "Educational videos, updates and stories for students preparing for Germany."
+  }
 }

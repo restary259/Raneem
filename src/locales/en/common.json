@@ -820,5 +820,8 @@
     "germany": {
       "title": "Study in Germany"
     }
+  },
+  "apply": {
+    "whatsappNotice": "After you submit your information, the DARB team will contact you on WhatsApp."
   }
 }

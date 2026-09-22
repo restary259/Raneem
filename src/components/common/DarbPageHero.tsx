@@ -64,13 +64,13 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
               {eyebrow}
             </p>
           ) : null}
-          <h1 className="darb-page-hero-title text-balance font-editorial font-semibold leading-[1.06]">
+          <h1 className="darb-page-hero-title line-clamp-3 text-balance font-editorial font-semibold leading-[1.06]">
             {title}
           </h1>
           {subtitle ? (
             <p
               className={cn(
-                "darb-page-hero-subtitle max-w-2xl text-base leading-8 text-primary-foreground/85",
+                "darb-page-hero-subtitle line-clamp-2 max-w-2xl text-base leading-8 text-primary-foreground/85",
                 align === "center" && "mx-auto",
               )}
             >

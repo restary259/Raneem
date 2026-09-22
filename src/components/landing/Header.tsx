@@ -24,7 +24,7 @@ const Header = () => {
   // Mobile/tablet (<1024px) always gets a solid header — the transparent
   // look is reserved for the desktop hero.
   useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
+    const mql = window.matchMedia('(min-width: 1280px)');
     const update = () => setIsDesktop(mql.matches);
     update();
     mql.addEventListener('change', update);
@@ -44,7 +44,7 @@ const Header = () => {
       data-scrolled={solid ? 'true' : 'false'}
     >
       {/* Desktop utility bar */}
-      <div className={`darb-header-utility hidden lg:block ${solid ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
+      <div className={`darb-header-utility hidden xl:block ${solid ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
         <div
           dir="ltr"
           className={`container grid h-full grid-cols-[1fr_auto_1fr] items-center px-4 text-xs sm:text-sm ${
@@ -81,12 +81,12 @@ const Header = () => {
           </div>
 
           {/* Desktop navigation */}
-          <div className="hidden min-w-0 flex-1 lg:mx-5 lg:block">
+          <div className="hidden min-w-0 flex-1 xl:mx-5 xl:block">
             <DesktopNav transparent={!solid} />
           </div>
 
           {/* Desktop student login */}
-          <div className="hidden flex-shrink-0 items-center gap-2 lg:flex">
+          <div className="hidden flex-shrink-0 items-center gap-2 xl:flex">
              <Link
                to="/student-auth"
                className="inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-surface transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -96,7 +96,7 @@ const Header = () => {
           </div>
 
            {/* Mobile header: preserve breathing room and move contact details into the menu. */}
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 xl:hidden" dir="ltr">
              <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${solid ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
             <MobileNav transparent={!solid} />
           </div>

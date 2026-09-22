@@ -78,7 +78,7 @@ const BlogArticlePage: React.FC = () => {
       />
       <Header />
       <main className="flex-1">
-        <DarbPageHero eyebrow={t("categories." + article.category)} imageUrl={DARB_PUBLIC_HERO_IMAGES.journal} imageAlt={content.title} title={content.title} subtitle={content.excerpt} />
+        <DarbPageHero eyebrow={t(`categories.${article.category}`)} imageUrl={DARB_PUBLIC_HERO_IMAGES.journal} imageAlt={content.title} title={content.title} subtitle={content.excerpt} />
 
         <article className="container mx-auto px-4 sm:px-6 py-10 md:py-14 max-w-3xl">
           <nav aria-label="breadcrumb" className="mb-6 text-sm text-muted-foreground flex flex-wrap gap-2">

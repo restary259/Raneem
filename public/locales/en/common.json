@@ -498,7 +498,8 @@
       "I love technology and programming, what major suits me?"
     ],
     "newConversation": "Start new conversation",
-    "inputPlaceholder": "Tell me about your interests and academic background..."
+    "inputPlaceholder": "Tell me about your interests and academic background...",
+    "imageAlt": "Bright university library and study environment"
   },
   "services_landing": {
     "items": [
@@ -557,7 +558,8 @@
         "cities": "Florence (Coming Soon)",
         "services": "New services coming soon."
       }
-    ]
+    ],
+    "imageAlt": "Bright German city representing DARB destinations"
   },
   "educational": {
     "heroBadge": "Discover Your Ideal Major",
@@ -627,7 +629,9 @@
     "langExceptions": "University-specific exceptions",
     "langEnglish": "English-taught option",
     "langSourceNote": "Certificate list per the KMK/HRK RO-DT framework; levels confirmed on the university pages listed under Sources.",
-    "modalDuration": "Duration"
+    "modalDuration": "Duration",
+    "imageAlt": "Students on a university campus in Germany",
+    "edImageAlt": "Bright German university environment"
   },
   "contact": {
     "submitting": "Sending... ⏳",
@@ -820,5 +824,8 @@
     "germany": {
       "title": "Study in Germany"
     }
+  },
+  "apply": {
+    "whatsappNotice": "After you submit your information, the DARB team will contact you on WhatsApp."
   }
 }

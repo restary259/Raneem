@@ -1,7 +1,9 @@
 {
   "costCalculator": {
     "title": "Study & Living Cost Calculator",
-    "description": "An interactive tool to estimate first-year costs at German language schools"
+    "description": "An interactive tool to estimate first-year costs at German language schools",
+    "eyebrow": "PLAN YOUR BUDGET",
+    "imageAlt": "Bright student accommodation in Germany"
   },
   "costCalc": {
     "title": "First Year Cost Calculator — Language Schools in Germany",
@@ -80,7 +82,9 @@
     "bestRecommendationText": "To transfer {{amount}} ILS to {{country}}, the best option is <1>{{service}}</1> to <2>{{bank}}</2>: you'll receive approximately <3>{{received}} {{currency}}</3> within {{time}} at a total cost of {{fee}} ILS.",
     "receivingBank": "Receiving Bank",
     "bankFee": "Bank Fee",
-    "totalFee": "Total Cost"
+    "totalFee": "Total Cost",
+    "eyebrow": "MONEY & PLANNING",
+    "imageAlt": "Bright German city and everyday student life"
   },
   "gpaCalculator": {
     "title": "Bagrut Calculator",
@@ -116,7 +120,9 @@
       "t5sos3": "Specialization 3"
     },
     "notConvertible": "Below the passing mark (55) — not convertible to a German grade.",
-    "disclaimer": "Indicative only — uni-assist and each university may apply a different conversion."
+    "disclaimer": "Indicative only — uni-assist and each university may apply a different conversion.",
+    "eyebrow": "BAGRUT",
+    "imageAlt": "Academic documents and study materials"
   },
   "lebenslaufBuilder": {
     "title": "CV Builder (Lebenslauf)",
@@ -269,7 +275,9 @@
     "pdfGenerating": "Generating…",
     "pdfFailed": "Could not generate the PDF. Please try again.",
     "pdfReady": "PDF downloaded",
-    "pageLabel": "Page"
+    "pageLabel": "Page",
+    "eyebrow": "CAREER PREPARATION",
+    "imageAlt": "Student preparing a professional CV"
   },
   "universityFinder": {
     "title": "Tools & Calculators",
@@ -337,7 +345,9 @@
         "description": "Your comprehensive guide to hospitals, doctors, and pharmacies in Heidelberg. Community contributed!",
         "fileUrl": "/downloads/heidelberg-medical-guide.pdf"
       }
-    ]
+    ],
+    "badge": "DARB RESOURCES",
+    "imageAlt": "Student using digital study resources"
   },
   "tabs": {
     "tools": "Interactive Tools",
