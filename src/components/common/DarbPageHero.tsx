@@ -55,7 +55,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <div
           className={cn(
-            "darb-page-hero-panel w-full border border-primary-foreground/10 bg-hero-panel/20 text-primary-foreground shadow-surface-lg backdrop-blur-md",
+            "darb-page-hero-panel bg-hero-panel/45 text-primary-foreground",
             align === "center" ? "text-center" : "text-start",
           )}
         >
