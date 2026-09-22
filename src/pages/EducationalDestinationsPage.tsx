@@ -7,8 +7,6 @@ import {
   GraduationCap,
   Languages,
   MapPin,
-  MessageCircle,
-  Sparkles,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Header from "@/components/landing/Header";
@@ -20,7 +18,7 @@ import IdentityStage from "@/components/landing/home/IdentityStage";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router-compat";
 import { useDirection } from "@/hooks/useDirection";
-import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
+import { languageYearCities, tu9Universities } from "@/data/educationalDestinations";
 import germanyHero from "@/assets/germany-home-hero.jpg";
 import heidelbergImage from "@/assets/destinations/heidelberg.jpg";
 import dusseldorfImage from "@/assets/destinations/dusseldorf.jpg";
@@ -57,16 +55,7 @@ const EducationalDestinationsPage = () => {
           imageAlt={t("educational.edImageAlt", "Bright German university environment")}
           title={t("pageHero.destinations.title", "Destinations")}
           subtitle={t("destinations.editorial.heroSubtitle")}
-        >
-          <div className="flex flex-col justify-center gap-3 sm:flex-row">
-            <Button asChild size="lg">
-              <a href="#destinations-cities">{t("destinations.editorial.exploreButton")}<Arrow /></a>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-primary-foreground/35 bg-background/95 text-primary hover:bg-background">
-              <Link to="/ai-advisor">{t("destinations.editorial.advisorButton")}<MessageCircle /></Link>
-            </Button>
-          </div>
-        </DarbPageHero>
+        />
 
         <section className="border-b border-border bg-background py-14 sm:py-20" aria-labelledby="destination-choice-title">
           <div className="container">
@@ -104,7 +93,6 @@ const EducationalDestinationsPage = () => {
 
             <div className="mt-12 space-y-14 sm:space-y-20">
               {languageYearCities.map((city, index) => {
-                const schools = languageYearSchools.filter((school) => school.city === city.id);
                 const reversed = index % 2 === 1;
                 return (
                   <article key={city.id} className="grid min-w-0 gap-0 overflow-hidden border border-border bg-background shadow-surface lg:grid-cols-12">
@@ -131,7 +119,7 @@ const EducationalDestinationsPage = () => {
                         </div>
                         <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-4 py-4 sm:grid-cols-[120px_minmax(0,1fr)]">
                           <dt className="text-xs font-bold uppercase text-brand-strong">{t("destinations.editorial.language")}</dt>
-                          <dd className="text-sm leading-6 text-foreground">{schools.map((school) => school.name).join(" · ")}</dd>
+                          <dd className="text-sm leading-6 text-foreground">{t("destinations.editorial.languageBody")}</dd>
                         </div>
                         <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-4 py-4 sm:grid-cols-[120px_minmax(0,1fr)]">
                           <dt className="text-xs font-bold uppercase text-brand-strong">{t("destinations.editorial.university")}</dt>
@@ -155,25 +143,6 @@ const EducationalDestinationsPage = () => {
           </div>
         </section>
 
-        <section className="bg-background py-14 sm:py-20" aria-labelledby="destination-schools-title">
-          <div className="container">
-            <div className="grid gap-8 lg:grid-cols-[0.62fr_1.38fr]">
-              <div className="lg:sticky lg:top-32 lg:self-start">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("destinations.schoolsEyebrow")}</p>
-                <h2 id="destination-schools-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-5xl">{t("destinations.schoolsTitle")}</h2>
-                <p className="mt-4 leading-7 text-muted-foreground">{t("destinations.schoolsBody")}</p>
-                <p className="mt-5 border-s-2 border-brand ps-4 text-xs leading-6 text-muted-foreground">{t("destinations.sourceNote")}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-3">
-                {languageYearSchools.map((school) => (
-                  <IdentityStage key={school.name} name={school.name} imageUrl={school.logoUrl} href={school.officialUrl} meta={school.location} />
-                ))}
-              </div>
-            </div>
-            <p className="mt-6 text-xs leading-6 text-muted-foreground">{t("destinations.logoNotice")}</p>
-          </div>
-        </section>
-
         <section className="border-y border-border bg-editorial-paper py-14 sm:py-20" aria-labelledby="destination-universities-title">
           <div className="container">
             <div className="grid gap-8 lg:grid-cols-[0.62fr_1.38fr]">
@@ -194,9 +163,8 @@ const EducationalDestinationsPage = () => {
         <section className="relative overflow-hidden bg-primary text-primary-foreground">
           <div className="container grid gap-7 py-14 sm:py-18 lg:grid-cols-[1fr_auto] lg:items-end">
             <div className="max-w-3xl">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand"><Sparkles className="me-2 inline size-4" />{t("destinations.disclosureTitle")}</p>
               <h2 className="mt-3 text-balance font-editorial text-4xl leading-tight sm:text-6xl">{t("destinations.endTitle")}</h2>
-              <p className="mt-4 max-w-2xl leading-7 text-primary-foreground/75">{t("destinations.disclosureBody")}</p>
+              <p className="mt-4 max-w-2xl leading-7 text-primary-foreground/75">{t("destinations.endBody")}</p>
             </div>
             <Button asChild size="lg"><Link to="/apply">{t("destinations.endButton")}<Arrow /></Link></Button>
           </div>

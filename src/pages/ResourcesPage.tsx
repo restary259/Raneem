@@ -9,7 +9,7 @@ import GuidesReferences from '@/components/resources/GuidesReferences';
 import SEOHead from '@/components/common/SEOHead';
 import DarbPageHero from '@/components/common/DarbPageHero';
 import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
-import { Calculator, DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
+import { DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
 import { Link } from '@/lib/router-compat';
 import { useInView } from 'react-intersection-observer';
 
@@ -70,7 +70,6 @@ const ResourcesPage = () => {
 
   const tools = [
     { id: 'bagrut-calculator', title: t('gpaCalculator.title'), description: t('gpaCalculator.description'), icon: GraduationCap, path: '/resources/bagrut-calculator' },
-    { id: 'cost-calculator', title: t('costCalculator.title'), description: t('costCalculator.description'), icon: Calculator, path: '/resources/cost-calculator' },
     { id: 'currency-converter', title: t('currencyComparator.title'), description: t('currencyComparator.description'), icon: DollarSign, path: '/resources/currency-converter' },
     { id: 'lebenslauf-builder', title: t('lebenslaufBuilder.title'), description: t('lebenslaufBuilder.description'), icon: FileText, path: '/resources/lebenslauf-builder' },
   ];
@@ -122,14 +121,6 @@ const ResourcesPage = () => {
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold text-center mb-12">{t('faq.title')}</h2>
             <div className="grid gap-6">
-              <Card className="shadow-md hover:shadow-lg border-l-4 border-l-accent/60 transition-shadow duration-300">
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('faq.questions.costCalculator.question')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{t('faq.questions.costCalculator.answer')}</p>
-                </CardContent>
-              </Card>
               <Card className="shadow-md hover:shadow-lg border-l-4 border-l-accent/60 transition-shadow duration-300">
                 <CardHeader>
                   <CardTitle className="text-lg">{t('faq.questions.exchangeRates.question')}</CardTitle>

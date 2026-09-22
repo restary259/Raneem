@@ -11,7 +11,7 @@ const article: BlogArticle = {
     { label: 'Make it in Germany — official government portal', url: 'https://www.make-it-in-germany.com/en/study-training/studying/financing' },
     { label: 'Deutsches Studierendenwerk', url: 'https://www.studierendenwerke.de/themen' },
   ],
-  relatedPaths: ['/resources/cost-calculator', '/services', '/faq'],
+  relatedPaths: ['/resources', '/services', '/faq'],
   ar: {
     title: 'تكلفة المعيشة في ألمانيا للطلاب والحساب المغلق',
     description:

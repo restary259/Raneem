@@ -14,7 +14,14 @@ const ContactHero = () => {
   return (
     <section className="relative overflow-hidden border-b border-border bg-background">
       <div className="container relative z-10 grid min-h-[480px] items-center gap-8 py-12 lg:min-h-[620px] lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.72fr)] lg:py-20">
-        <div className="max-w-3xl">
+        <div className="relative mx-auto w-full max-w-sm lg:order-2 lg:max-w-md">
+          <div className="aspect-[4/5] overflow-hidden rounded-t-[999px] rounded-b-lg border border-border bg-editorial-paper shadow-surface-lg">
+            <img src={DARB_CONTACT_ADVISOR_SRC} alt={t("contactHero.imageAlt")} className="h-full w-full object-cover" fetchPriority="high" />
+          </div>
+          <span className="darb-spectrum darb-spectrum-lg block rounded-none" aria-hidden="true" />
+        </div>
+
+        <div className="max-w-3xl lg:order-1">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("contactHero.eyebrow")}</p>
           <h1 className="mt-4 text-balance font-editorial text-5xl leading-none text-primary sm:text-6xl lg:text-7xl">{t("common:pageHero.contact.title", "Contact")}</h1>
           <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">{t("contactHero.subtitle")}</p>
@@ -28,12 +35,6 @@ const ContactHero = () => {
           </Link>
         </div>
 
-        <div className="relative mx-auto w-full max-w-sm lg:max-w-md">
-          <div className="aspect-[4/5] overflow-hidden rounded-t-[999px] rounded-b-lg border border-border bg-editorial-paper shadow-surface-lg">
-            <img src={DARB_CONTACT_ADVISOR_SRC} alt={t("contactHero.imageAlt")} className="h-full w-full object-cover" fetchPriority="high" />
-          </div>
-          <span className="darb-spectrum darb-spectrum-lg block rounded-none" aria-hidden="true" />
-        </div>
       </div>
     </section>
   );
