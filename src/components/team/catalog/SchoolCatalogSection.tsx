@@ -1,6 +1,6 @@
 import { Building2, MapPin } from "lucide-react";
 import { AccommodationCard } from "./AccommodationCard";
-import { type SchoolGroup, type CatalogAccommodation, localizedName, localizedDescription, primaryPhoto } from "@/lib/catalogDisplay";
+import { type SchoolGroup, type CatalogAccommodation, localizedName, localizedDescription } from "@/lib/catalogDisplay";
 import { useLang } from "@/hooks/useLang";
 import SchoolLogo from "@/components/common/SchoolLogo";
 
@@ -12,7 +12,6 @@ interface SchoolCatalogSectionProps {
 export function SchoolCatalogSection({ group, onSelect }: SchoolCatalogSectionProps) {
   const lang = useLang();
   const { school, accommodations } = group;
-  const photo = primaryPhoto(school.photos);
   const description = localizedDescription(school, lang);
   const isOther = group.isOther === true;
 
