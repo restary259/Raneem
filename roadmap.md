@@ -1,4 +1,4 @@
-- [ ] Rebuild About page structure and visuals
-- [ ] Replace About copy in English, Arabic, and Hebrew
-- [ ] Remove obsolete fake-profile About sections
-- [ ] Verify all languages and screen sizes
+- [x] Rebuild About page structure and visuals
+- [x] Replace About copy in English, Arabic, and Hebrew
+- [x] Remove obsolete fake-profile About sections
+- [x] Verify all languages and screen sizes
