@@ -8,8 +8,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -204,11 +202,13 @@ const AccessibilityMenu = ({ className = '' }: { className?: string }) => {
           {t('accessibilityMenu.decreaseText')}
         </DropdownMenuItem>
 
-        <DropdownMenuRadioGroup value={settings.fontSize} onValueChange={setFontSize}>
-          <DropdownMenuRadioItem value="base" className={itemClass}>
-            {t('accessibilityMenu.resetTextSize')}
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
+        <DropdownMenuItem
+          disabled={settings.fontSize === 'base'}
+          onSelect={() => setFontSize('base')}
+          className="min-h-11 py-2"
+        >
+          {t('accessibilityMenu.resetTextSize')}
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
