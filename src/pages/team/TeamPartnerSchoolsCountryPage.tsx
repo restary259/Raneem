@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState, LoadingState, ErrorState } from "@/components/shell";
 import { usePartnerCountries } from "@/hooks/usePartnerSchools";
 import { useLang } from "@/hooks/useLang";
+import SchoolLogo from "@/components/common/SchoolLogo";
 
 export default function TeamPartnerSchoolsCountryPage() {
   const { t } = useTranslation("dashboard");
@@ -49,7 +50,8 @@ export default function TeamPartnerSchoolsCountryPage() {
         {schools.map((s) => (
           <Link key={s.id} to={`/team/partner-schools/${slug}/${s.slug}`}>
             <Card className="flex h-full items-start justify-between gap-4 border-border px-5 py-4 transition-colors hover:border-brand/50 hover:bg-muted/40 sm:px-6">
-              <div className="min-w-0 space-y-2">
+              <SchoolLogo name={s.name} slug={s.slug} />
+              <div className="min-w-0 flex-1 space-y-2">
                 <div className="text-base font-semibold text-foreground">{s.name}</div>
                 {s.city && (
                   <p className="flex items-center gap-1.5 text-sm text-muted-foreground">

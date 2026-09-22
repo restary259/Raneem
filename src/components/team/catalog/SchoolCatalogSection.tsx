@@ -2,6 +2,7 @@ import { Building2, MapPin } from "lucide-react";
 import { AccommodationCard } from "./AccommodationCard";
 import { type SchoolGroup, type CatalogAccommodation, localizedName, localizedDescription, primaryPhoto } from "@/lib/catalogDisplay";
 import { useLang } from "@/hooks/useLang";
+import SchoolLogo from "@/components/common/SchoolLogo";
 
 interface SchoolCatalogSectionProps {
   group: SchoolGroup;
@@ -18,15 +19,7 @@ export function SchoolCatalogSection({ group, onSelect }: SchoolCatalogSectionPr
   return (
     <section className="space-y-4 scroll-mt-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 border-b pb-3">
-        {photo && !isOther && (
-          <img
-            src={photo}
-            alt=""
-            aria-hidden
-            className="h-14 w-14 rounded-lg object-cover border shrink-0"
-            loading="lazy"
-          />
-        )}
+        {!isOther && <SchoolLogo name={school.name_en} />}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Building2 className="h-5 w-5 shrink-0 text-primary" />

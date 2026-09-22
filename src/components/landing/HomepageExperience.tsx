@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,10 +24,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
-import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
+import { languageYearCities, tu9Universities } from "@/data/educationalDestinations";
 import BrandArch from "./home/BrandArch";
 import IdentityStage from "./home/IdentityStage";
 import CefrGuide from "./home/CefrGuide";
+import ExamFlipCard from "./home/ExamFlipCard";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
@@ -37,12 +39,11 @@ const journeyIcons = [SearchCheck, Compass, FileCheck2, Languages, ShieldCheck, 
 const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, MessageCircle, FileCheck2];
 
 const examBrands = [
-  { id: "telc", label: "telc", website: "https://www.telc.net/en/" },
   { id: "TestDaF", label: "TestDaF", website: "https://www.testdaf.de/" },
+  { id: "telc", label: "telc Deutsch C1 Hochschule", website: "https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/telc-deutsch-c1-hochschule/" },
+  { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/prf.html" },
+  { id: "DSH", label: "DSH-2", website: "https://www.hrk.de/themen/internationales/internationale-studierende-und-forschende/hochschulzugang-fuer-internationale-studierende/sprachnachweis-deutsch" },
   { id: "TestAS", label: "TestAS", website: "https://www.testas.de/en/" },
-  { id: "onSET", label: "onSET", website: "https://www.onset.de/" },
-  { id: "DSH", label: "DSH", website: "https://www.fadaf.de/dsh/" },
-  { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/kup/prf.html" },
 ];
 
 const StudentStory = ({ student, index, t }: { student: GalleryStudent; index: number; t: (key: string, options?: Record<string, unknown>) => string }) => (
@@ -76,6 +77,7 @@ const HomepageExperience = () => {
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
   const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
+  const [openExam, setOpenExam] = useState<string | null>(null);
 
   const nextStepRoutes: PathItem[] = [
     { ...nextSteps[0], href: "/educational-destinations" },
@@ -200,14 +202,13 @@ const HomepageExperience = () => {
               <div>
                 <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-bold text-primary">{t("homepage.network.tu9Label")}</h3><a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-xs font-bold text-brand-strong">{t("homepage.network.viewTu9")}</a></div>
                 <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
-                  {tu9Universities.slice(0, 6).map((uni, index) => <IdentityStage key={uni.name} name={uni.name} imageUrl={uni.logoUrl} href={uni.url} meta={uni.city} featured={index === 0} />)}
+                  {tu9Universities.map((uni) => <IdentityStage key={uni.name} name={uni.name} imageUrl={uni.logoUrl} href={uni.url} meta={uni.city} />)}
                 </div>
               </div>
-              <div><h3 className="mb-3 font-bold text-primary">{t("homepage.network.schoolsLabel")}</h3><div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">{languageYearSchools.slice(0, 6).map((school) => <IdentityStage key={school.name} name={school.name} imageUrl={school.logoUrl} href={school.officialUrl} meta={school.location} />)}</div></div>
               <div>
                 <h3 className="mb-3 font-bold text-primary">{t("homepage.network.examsLabel")}</h3>
-                <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-                  {examBrands.map((exam) => <IdentityStage key={exam.id} name={exam.label} href={exam.website} ratio="compact" meta={t(`homepage.languagePrep.exams.${exam.id}.description`, { defaultValue: t("homepage.languagePrep.examSupport") })} />)}
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {examBrands.map((exam) => <ExamFlipCard key={exam.id} name={exam.label} href={exam.website} description={t(`homepage.languagePrep.exams.${exam.id}.verifiedDescription`)} caveat={t(`homepage.languagePrep.exams.${exam.id}.caveat`)} officialLabel={t("homepage.languagePrep.officialPortal")} flipLabel={t("homepage.languagePrep.flipCue")} backLabel={t("homepage.languagePrep.flipBack")} open={openExam === exam.id} onOpen={() => setOpenExam(exam.id)} onClose={() => setOpenExam(null)} />)}
                 </div>
               </div>
               <CefrGuide />

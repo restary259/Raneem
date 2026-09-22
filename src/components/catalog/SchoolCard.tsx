@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/hooks/useLang";
 import CatalogImage from "./CatalogImage";
+import SchoolLogo from "@/components/common/SchoolLogo";
 import { type CatalogSchool, localizedName, localizedDescription, primaryPhoto } from "@/lib/catalogDisplay";
 
 interface SchoolCardProps {
@@ -36,13 +37,10 @@ export function SchoolCard({ school, programCount, accommodationCount, onSelect 
         !school.is_active && "opacity-60",
       )}
     >
-      <CatalogImage
-        src={primaryPhoto(school.photos)}
-        alt={localizedName(school, lang)}
-        aspect="aspect-[16/10] xl:aspect-[16/9]"
-        icon={Building2}
-        className="[&_img]:group-hover:scale-105"
-      />
+      <div className="relative">
+        <CatalogImage src={primaryPhoto(school.photos)} alt={localizedName(school, lang)} aspect="aspect-[16/10] xl:aspect-[16/9]" icon={Building2} className="[&_img]:group-hover:scale-105" />
+        <SchoolLogo name={school.name_en} className="absolute bottom-3 start-3 size-16" />
+      </div>
 
       <div className="space-y-2 p-4 xl:p-5">
         <div className="flex items-start justify-between gap-2">

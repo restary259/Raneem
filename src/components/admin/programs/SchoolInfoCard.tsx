@@ -2,9 +2,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Pause, Play, GraduationCap, Trash2 } from "lucide-react";
+import { Pencil, Pause, Play, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { School } from "./types";
+import SchoolLogo from "@/components/common/SchoolLogo";
 
 interface SchoolInfoCardProps {
   school: School;
@@ -21,14 +22,7 @@ const SchoolInfoCard = ({ school, onEdit, onToggleActive, onDelete }: SchoolInfo
     <div className="rounded-lg border bg-card p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3 min-w-0">
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-              school.is_active ? "bg-primary/10" : "bg-muted",
-            )}
-          >
-            <GraduationCap className={cn("h-5 w-5", school.is_active ? "text-primary" : "text-muted-foreground")} />
-          </div>
+          <SchoolLogo name={school.name_en} className={cn("size-11", !school.is_active && "opacity-60")} />
           <div className="min-w-0">
             <h2 className="break-words text-lg font-semibold leading-tight sm:truncate">{school.name_en}</h2>
             {school.name_ar && <p className="text-sm text-muted-foreground">{school.name_ar}</p>}

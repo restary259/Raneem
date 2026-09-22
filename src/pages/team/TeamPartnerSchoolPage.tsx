@@ -33,6 +33,7 @@ import {
 } from "@/lib/partnerSchools";
 import { mealsLabel, roomTypeLabel } from "@/lib/catalogDisplay";
 import SchoolCalculator from "@/components/team/partnerSchools/SchoolCalculator";
+import SchoolLogo from "@/components/common/SchoolLogo";
 
 const TABS = [
   "overview",
@@ -193,7 +194,7 @@ export default function TeamPartnerSchoolPage() {
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-3 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
       <PageHeader
-        title={school.name}
+        title={<span className="flex items-center gap-3"><SchoolLogo name={school.name} slug={school.slug} className="size-12" /><span className="min-w-0 truncate">{school.name}</span></span>}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">
             <MapPin className="h-3.5 w-3.5" />

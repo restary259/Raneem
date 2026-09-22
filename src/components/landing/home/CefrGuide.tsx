@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, Languages } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,16 +15,16 @@ const CEFR_SOURCE = "https://www.coe.int/en/web/common-european-framework-refere
 
 const CefrGuide = () => {
   const { t } = useTranslation("landing");
-  const [selected, setSelected] = useState<(typeof LEVELS)[number]>("A1");
+  const [selected, setSelected] = useState<(typeof LEVELS)[number] | null>(null);
   const levels = t("homepage.languagePrep.levels", { returnObjects: true }) as Record<string, CefrLevel>;
-  const active = levels[selected];
+  const active = selected ? levels[selected] : null;
 
   return (
     <section className="overflow-hidden rounded-lg border border-border bg-background" aria-labelledby="cefr-guide-title">
       <div className="grid gap-0 lg:grid-cols-[0.72fr_1.28fr]">
         <div className="bg-primary p-5 text-primary-foreground sm:p-7">
-          <span className="grid size-11 place-items-center rounded-full bg-brand text-brand-foreground">
-            <Languages className="size-5" aria-hidden="true" />
+          <span className="inline-flex min-h-11 items-center rounded-md border border-primary-foreground/25 px-3 text-sm font-black tracking-[0.12em] text-brand">
+            CEFR
           </span>
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-brand">CEFR · A1–C1</p>
           <h3 id="cefr-guide-title" className="mt-2 text-2xl font-bold sm:text-3xl">{t("homepage.languagePrep.guideTitle")}</h3>
@@ -39,6 +39,7 @@ const CefrGuide = () => {
                 type="button"
                 role="tab"
                 aria-selected={selected === level}
+                aria-controls="cefr-level-detail"
                 variant={selected === level ? "default" : "outline"}
                 className="min-w-16 shrink-0 snap-start"
                 onClick={() => setSelected(level)}
@@ -48,7 +49,7 @@ const CefrGuide = () => {
             ))}
           </div>
 
-          <div key={selected} role="tabpanel" className="mt-5 animate-fade-in motion-reduce:animate-none">
+          {selected && active ? <div id="cefr-level-detail" key={selected} role="tabpanel" className="mt-5 animate-fade-in motion-reduce:animate-none">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h4 className="text-3xl font-bold text-primary">{active?.label ?? selected}</h4>
               <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground">{active?.group}</span>
@@ -59,7 +60,7 @@ const CefrGuide = () => {
               {t("homepage.languagePrep.sourceLabel")}
               <ExternalLink className="size-3.5" aria-hidden="true" />
             </a>
-          </div>
+          </div> : <p className="mt-5 border-s-2 border-brand ps-3 text-sm leading-6 text-muted-foreground">{t("homepage.languagePrep.selectPrompt")}</p>}
         </div>
       </div>
     </section>
