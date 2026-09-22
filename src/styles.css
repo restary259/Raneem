@@ -987,7 +987,7 @@ a[href*="lovable.dev"] {
 /* Contact carries a longer supporting sentence, so its compact hero needs a
    tighter vertical rhythm to keep the entire panel above the spectrum edge. */
 .contact-page-hero .darb-page-hero-panel {
-  padding-block: clamp(0.9rem, 2vh, 1.35rem);
+  padding-block: clamp(0.75rem, 1.5vh, 1rem);
 }
 
 .contact-page-hero .darb-page-hero-title {
@@ -997,7 +997,7 @@ a[href*="lovable.dev"] {
 
 .contact-page-hero .darb-page-hero-subtitle {
   margin-top: clamp(0.5rem, 1.2vh, 0.75rem);
-  line-height: 1.65;
+  line-height: 1.5;
 }
 
 @media (min-width: 1280px) and (max-height: 760px) {
