@@ -342,6 +342,13 @@
     "brand": "Darb",
     "tagline": "השותף שלכם ללימודים בחו״ל"
   },
+  "officeLocations": {
+    "title": "המשרד הראשי שלנו",
+    "whatsappButton": "התחילו שיחה ב-WhatsApp",
+    "hours": "ראשון עד חמישי: 10:00–19:00",
+    "city": "טמרה",
+    "address": "קניון טמרה, טמרה 3081100"
+  },
   "pageHero": {
     "contact": {
       "title": "צור קשר"
