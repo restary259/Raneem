@@ -10,6 +10,7 @@ import commonAr from './locales/ar/common.json';
 import commonEn from './locales/en/common.json';
 import contactAr from './locales/ar/contact.json';
 import contactEn from './locales/en/contact.json';
+import contactHe from '../public/locales/he/contact.json';
 import landingAr from './locales/ar/landing.json';
 import landingEn from './locales/en/landing.json';
 import legalAr from './locales/ar/legal.json';
@@ -34,6 +35,7 @@ i18n
     resources: {
       ar: { common: commonAr, landing: landingAr, contact: contactAr, legal: legalAr, broadcast: broadcastAr },
       en: { common: commonEn, landing: landingEn, contact: contactEn, legal: legalEn, broadcast: broadcastEn },
+      he: { contact: contactHe },
     },
     debug: false,
     interpolation: {

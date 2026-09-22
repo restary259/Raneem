@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from "react";
 import { Link } from "@/lib/router-compat";
 import { ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ConsentBlockProps {
   isAr: boolean;
@@ -36,18 +37,20 @@ const ConsentBlock = ({
   agreeLabel,
   error,
 }: ConsentBlockProps) => {
+  const { i18n } = useTranslation();
+  const isHe = i18n.language === "he";
   const agreeId = useId();
   const marketingId = useId();
   const errorId = `${agreeId}-error`;
 
   const privacyLink = (
     <Link to="/privacy" className="underline font-medium text-foreground">
-      {isAr ? "سياسة الخصوصية" : "Privacy Policy"}
+      {isAr ? "سياسة الخصوصية" : isHe ? "מדיניות פרטיות" : "Privacy Policy"}
     </Link>
   );
   const termsLink = (
     <Link to="/terms" className="underline font-medium text-foreground">
-      {isAr ? "شروط الخدمة" : "Terms of Service"}
+      {isAr ? "شروط الخدمة" : isHe ? "תנאי שימוש" : "Terms of Service"}
     </Link>
   );
 
@@ -64,6 +67,11 @@ const ConsentBlock = ({
               الحاجة مع الجامعة أو مزوّد التأمين أو السكن المرتبط بطلبك. لا نبيع بياناتك لأي جهة.
               للتفاصيل الكاملة راجع {privacyLink} و{termsLink}. يمكنك سحب موافقتك أو طلب حذف بياناتك في
               أي وقت.
+            </>
+          ) : isHe ? (
+            <>
+              אנחנו אוספים: {collected}. המידע משמש רק לבדיקת הבקשה ולמעקב מולכם, ובמידת הצורך משותף עם
+              האוניברסיטה או ספק השירות הקשור לבקשה. לעולם איננו מוכרים את המידע שלכם. לפרטים ראו את {privacyLink} ואת {termsLink}.
             </>
           ) : (
             <>
@@ -90,6 +98,8 @@ const ConsentBlock = ({
           {agreeLabel ??
             (isAr
               ? "أوافق على معالجة بياناتي وعلى تواصل فريق درب معي بخصوص طلبي. *"
+              : isHe
+                ? "אני מסכים/ה לעיבוד המידע שלי וליצירת קשר מצד DARB בנוגע לבקשה. *"
               : "I agree to my data being processed and to Darb contacting me about my application. *")}
         </span>
       </label>
@@ -112,6 +122,8 @@ const ConsentBlock = ({
           <span className="text-sm leading-relaxed text-muted-foreground">
             {isAr
               ? "اختياري: أرغب باستلام نصائح وعروض ومواعيد تسجيل عبر البريد أو واتساب."
+              : isHe
+                ? "אופציונלי: אשמח לקבל טיפים, הצעות ומועדי הרשמה באימייל או ב-WhatsApp."
               : "Optional: send me tips, offers and intake deadlines by email or WhatsApp."}
           </span>
         </label>
