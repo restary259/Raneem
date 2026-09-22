@@ -800,5 +800,25 @@
   },
   "common": {
     "close": "إغلاق"
+  },
+  "pageHero": {
+    "contact": {
+      "title": "تواصل معنا"
+    },
+    "programs": {
+      "title": "التخصصات الأكاديمية"
+    },
+    "destinations": {
+      "title": "الوجهات"
+    },
+    "about": {
+      "title": "عن DARB"
+    },
+    "services": {
+      "title": "خدماتنا"
+    },
+    "germany": {
+      "title": "الدراسة في ألمانيا"
+    }
   }
 }

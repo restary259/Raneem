@@ -323,5 +323,25 @@
   "loader": {
     "brand": "Darb",
     "tagline": "השותף שלכם ללימודים בחו״ל"
+  },
+  "pageHero": {
+    "contact": {
+      "title": "צור קשר"
+    },
+    "programs": {
+      "title": "תכניות לימודים"
+    },
+    "destinations": {
+      "title": "יעדים"
+    },
+    "about": {
+      "title": "אודות DARB"
+    },
+    "services": {
+      "title": "השירותים שלנו"
+    },
+    "germany": {
+      "title": "לימודים בגרמניה"
+    }
   }
 }
