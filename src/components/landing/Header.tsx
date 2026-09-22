@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import DesktopNav from './DesktopNav';
 import MobileNav from './MobileNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import AccessibilityMenu from '@/components/common/AccessibilityMenu';
 import { useDirection } from '@/hooks/useDirection';
 import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contactConfig';
@@ -39,7 +40,10 @@ const Header = () => {
           }`}
         >
           <div className="justify-self-start">
+            <div className="flex items-center gap-1">
               <LanguageSwitcher className={scrolled ? '' : 'drop-shadow-sm'} />
+              <AccessibilityMenu className={scrolled ? '' : 'text-primary-foreground drop-shadow-sm'} />
+            </div>
           </div>
           <a href={`tel:${SUPPORT_PHONE}`} dir="ltr" className="justify-self-center whitespace-nowrap">
             {SUPPORT_PHONE}
