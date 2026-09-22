@@ -1018,8 +1018,8 @@ a[href*="lovable.dev"] {
   }
 
   .darb-page-hero-standard {
-    height: clamp(440px, 82svh, 700px);
-    min-height: clamp(440px, 82svh, 700px);
+    height: clamp(340px, 58svh, 460px);
+    min-height: clamp(340px, 58svh, 460px);
   }
 
   .darb-page-hero-inner {
