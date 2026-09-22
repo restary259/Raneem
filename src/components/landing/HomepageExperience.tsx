@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
+import BrandArch from "@/components/landing/home/BrandArch";
 import {
   ArrowLeft,
   ArrowRight,
