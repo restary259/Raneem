@@ -1009,7 +1009,7 @@ a[href*="lovable.dev"] {
 
   .darb-home-hero {
     height: auto;
-    min-height: clamp(540px, 92svh, 760px);
+    min-height: clamp(480px, 76svh, 620px);
     max-height: none;
   }
 
