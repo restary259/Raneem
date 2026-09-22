@@ -473,9 +473,9 @@ a[href*="lovable.dev"] {
   --darb-header-main-height: clamp(72px, 6vw, 96px);
   --darb-header-height: calc(var(--darb-header-utility-height) + var(--darb-header-main-height));
 
-  --darb-hero-compact-height: clamp(380px, calc(100svh - 9rem), 560px);
-  --darb-hero-standard-height: clamp(500px, calc(100svh - 6rem), 740px);
-  --darb-hero-panel-width: min(92vw, 760px);
+  --darb-hero-compact-height: clamp(340px, calc(100svh - 9rem), 520px);
+  --darb-hero-standard-height: clamp(440px, calc(100svh - 6rem), 700px);
+  --darb-hero-panel-width: min(90vw, 760px);
 }
 
 .darb-header-utility {
@@ -497,36 +497,35 @@ a[href*="lovable.dev"] {
 }
 
 .darb-home-hero {
-  height: clamp(600px, 100svh, 860px);
-  min-height: 600px;
-  max-height: 860px;
+  /* Keep enough vertical room for the fixed desktop header + hero panel.
+     The previous 500px floor allowed the panel to extend into the proof
+     section on shorter desktop viewports. */
+  height: clamp(620px, calc(100svh - var(--darb-header-height)), 820px);
+  min-height: 620px;
+  max-height: 820px;
 }
 
 .darb-home-hero-panel {
   width: var(--darb-hero-panel-width);
-  padding-inline: clamp(1.25rem, 3.5vw, 3.5rem);
-  padding-block: clamp(1.5rem, 4vh, 3rem);
-}
-
-.darb-home-hero-content {
-  min-height: 100%;
-}
-
-@media (max-width: 639px) {
-  .darb-home-hero {
-    height: max(600px, 100svh);
-    min-height: 600px;
-  }
-
-  .darb-home-hero-panel {
-    padding-inline: 1.25rem;
-    padding-block: 1.5rem;
-  }
+  padding-inline: clamp(1.5rem, 3.5vw, 3.5rem);
+  padding-block: clamp(1.75rem, 4vh, 3rem);
 }
 
 @media (min-width: 1024px) {
-  .darb-home-hero-panel {
-    margin-inline: auto;
+  .darb-home-hero {
+    /*
+     * Header is fixed on desktop, so it does not occupy document flow.
+     * The hero still begins at y=0 and intentionally sits behind the
+     * transparent header. Only the content panel needs an explicit anchor
+     * below the full header stack; otherwise the panel visually slides under
+     * the navigation bar.
+     */
+    align-items: flex-start;
+  }
+
+  .darb-home-hero-content {
+    flex: 1 1 auto;
+    padding-top: calc(var(--darb-header-height) + clamp(0.75rem, 1.5vw, 1.5rem));
   }
 }
 
@@ -899,129 +898,85 @@ a[href*="lovable.dev"] {
   .darb-page-hero-inner {
     padding-top: clamp(1.5rem, 6vh, 3.5rem);
   }
-}
-
-
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Final public-hero overflow guard
-   Heroes must be viewport-aware without being viewport-locked. A fixed
-   height can clip translated titles, multi-line CTAs, and RTL content on
-   short browser windows. These rules keep a cinematic minimum while allowing
-   the section to grow naturally with its content.
-   ───────────────────────────────────────────────────────────────────────── */
-
-.darb-home-hero,
-.darb-page-hero-compact,
-.darb-page-hero-standard {
-  height: auto !important;
-  max-height: none !important;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.darb-home-hero {
-  min-height: min(860px, max(480px, 100svh)) !important;
-}
-
-.darb-page-hero-compact {
-  min-height: min(560px, max(360px, 70svh)) !important;
-}
-
-.darb-page-hero-standard {
-  min-height: min(760px, max(460px, 82svh)) !important;
-}
-
-.darb-home-hero-content,
-.darb-page-hero-inner {
-  width: 100%;
-  min-width: 0;
-  min-height: inherit;
-  height: auto;
-  box-sizing: border-box;
-}
-
-.darb-home-hero-panel,
-.darb-page-hero-panel {
-  width: min(92vw, 760px);
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  flex: 0 1 760px;
-}
-
-.darb-page-hero-title,
-.darb-page-hero-subtitle,
-.darb-home-hero-title,
-.darb-home-hero-subtitle {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 1023px) {
-  .darb-home-hero {
-    min-height: min(760px, max(500px, 92svh)) !important;
-  }
-
-  .darb-page-hero-compact {
-    min-height: min(560px, max(380px, 70svh)) !important;
-  }
-
-  .darb-page-hero-standard {
-    min-height: min(720px, max(460px, 82svh)) !important;
-  }
-
-  .darb-home-hero-content {
-    padding-top: calc(var(--darb-header-height) + 1rem);
-    padding-bottom: clamp(3rem, 8vw, 4.5rem);
-  }
-
-  .darb-page-hero-inner {
-    padding-top: calc(var(--darb-header-height) + 0.5rem);
-    padding-bottom: clamp(3rem, 8vw, 4.5rem);
-  }
-}
-
-@media (max-width: 639px) {
-  .darb-home-hero {
-    min-height: min(700px, max(500px, 100svh)) !important;
-  }
-
-  .darb-page-hero-compact {
-    min-height: min(520px, max(380px, 78svh)) !important;
-  }
-
-  .darb-page-hero-standard {
-    min-height: min(680px, max(440px, 88svh)) !important;
-  }
-
-  .darb-home-hero-content {
-    padding-top: calc(var(--darb-header-height) + 0.75rem);
-    padding-bottom: clamp(2.75rem, 10vw, 4rem);
-  }
-
-  .darb-page-hero-inner {
-    padding-top: calc(var(--darb-header-height) + 0.5rem);
-    padding-bottom: clamp(2.75rem, 10vw, 4rem);
-  }
 
   .darb-home-hero-panel,
   .darb-page-hero-panel {
-    width: 100%;
-    flex-basis: auto;
+    width: min(94vw, 760px);
+  }
+
+  .darb-home-hero-title,
+  .darb-page-hero-title {
+    font-size: clamp(2.15rem, 8vw, 3.8rem);
   }
 }
 
-@media (max-height: 620px) and (min-width: 768px) {
-  .darb-home-hero,
-  .darb-page-hero-compact,
-  .darb-page-hero-standard {
-    min-height: 440px !important;
+/* ---------------------------------------------------------------------------
+ * DARB brand graphic elements — the signature rainbow accent line / progress
+ * bar from the brand guidelines. Colours come from the --darb-* tokens.
+ * ------------------------------------------------------------------------- */
+.darb-spectrum {
+  display: block;
+  height: 6px;
+  width: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    hsl(var(--darb-blue)) 0% 12.5%,
+    hsl(var(--darb-teal)) 12.5% 25%,
+    hsl(var(--darb-green)) 25% 37.5%,
+    hsl(var(--darb-yellow)) 37.5% 50%,
+    hsl(var(--darb-orange)) 50% 62.5%,
+    hsl(var(--darb-red)) 62.5% 75%,
+    hsl(var(--darb-pink)) 75% 87.5%,
+    hsl(var(--darb-purple)) 87.5% 100%
+  );
+}
+
+.darb-spectrum-sm { height: 4px; }
+.darb-spectrum-lg { height: 8px; }
+
+/* Short accent underline used beneath headlines and logo lockups. */
+.darb-spectrum-accent {
+  width: 72px;
+  height: 5px;
+}
+
+/* Keep fixed public actions clear of the consent notice on compact screens. */
+@media (max-width: 767px) {
+  body:has([aria-label="Cookie consent"]) #ai-advisor-chat > :last-child {
+    display: none;
   }
 
-  .darb-home-hero-content,
-  .darb-page-hero-inner {
-    padding-top: calc(var(--darb-header-height) + 0.5rem);
-    padding-bottom: 2.5rem;
+  body:has([aria-label="Cookie consent"]) .whatsapp-side-tab {
+    bottom: calc(17rem + env(safe-area-inset-bottom));
+  }
+}
+
+[dir="rtl"] .darb-spectrum {
+  transform: scaleX(-1);
+}
+
+/* Master public experience: mobile-first editorial rhythm and stable header/hero handoff. */
+.homepage-experience {
+  overflow: clip;
+}
+
+.homepage-experience :where(section) {
+  scroll-margin-top: calc(var(--darb-header-height, 72px) + 1rem);
+}
+
+.homepage-experience :where(h1, h2, h3, p) {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .homepage-experience .container {
+    padding-inline: 1.125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .darb-home-hero-content {
+    padding-top: calc(var(--darb-header-height, 112px) + 3rem);
   }
 }
