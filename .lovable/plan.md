@@ -12,12 +12,9 @@ Keep calls to action only in the homepage hero, eliminate clipped internal heroe
 
 ## Changes
 
-### 1. Make homepage the only hero with buttons
-- Remove both buttons from the Destinations hero.
-- Remove the registration button from the Partnership hero.
-- Keep homepage hero actions unchanged.
-- Remove the shared internal-hero action slot if no remaining public hero uses it, preventing buttons from being reintroduced accidentally.
-- Let internal heroes size safely to their title and description instead of clipping content inside a fixed height; preserve their intentionally shorter appearance.
+### 1. Leave the Destinations hero unchanged
+- Keep the current Destinations hero, its buttons, and its sizing exactly as they are.
+- Make no shared hero-layout changes based on the earlier overflow concern.
 
 ### 2. Temporarily hide language-school contract signals on public pages
 - On **Educational Destinations**, keep the city and university guidance but remove:
