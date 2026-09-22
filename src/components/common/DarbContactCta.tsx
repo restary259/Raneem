@@ -52,7 +52,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
           )}
         >
           {!compact && !partner ? (
-            <div className="shrink-0">
+            <div className="shrink-0 md:order-2">
               <div className="relative">
                 <div className="absolute -inset-2 rounded-full bg-primary/8" aria-hidden="true" />
                 <div className="relative aspect-square w-32 shrink-0 overflow-hidden rounded-full border-4 border-background shadow-surface-lg ring-1 ring-border sm:w-36 md:w-44">
@@ -67,7 +67,7 @@ const DarbContactCta: React.FC<DarbContactCtaProps> = ({
             </div>
           ) : null}
 
-          <div className={cn("w-full text-center md:text-start", compact || partner ? "max-w-4xl mx-auto" : "max-w-2xl")}>
+          <div className={cn("w-full text-center md:text-start", compact || partner ? "max-w-4xl mx-auto" : "max-w-2xl md:order-1")}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
               {partner ? t("contactCta.partnerEyebrow") : t("contactCta.eyebrow")}
             </p>
