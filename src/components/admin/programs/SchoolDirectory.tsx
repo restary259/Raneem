@@ -2,7 +2,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { GraduationCap, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import SchoolLogo from "@/components/common/SchoolLogo";
 import { Program, School, Accommodation, UNASSIGNED_KEY } from "./types";
 
 interface SchoolDirectoryProps {
@@ -51,9 +52,7 @@ const SchoolDirectory = ({ schools, programs, accommodations, selectedId, onSele
               )}
             >
               <div className="flex items-start gap-2">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                  <GraduationCap className="h-4 w-4 text-primary" />
-                </div>
+                <SchoolLogo name={s.name_en} className="size-9 rounded-md p-1.5" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-semibold">{s.name_en}</p>

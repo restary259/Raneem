@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
-import { isRtlLng } from '@/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ interface ActivityEntry {
 const AdminActivityPage = () => {
   const { t, i18n } = useTranslation('dashboard');
   const { toast } = useToast();
-  const isRtl = isRtlLng(i18n.language);
+  const isRtl = i18n.language === 'ar';
 
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);

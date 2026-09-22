@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,10 +24,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import germanyHero from "@/assets/germany-home-hero.jpg";
-import { languageYearCities, languageYearSchools, tu9Universities } from "@/data/educationalDestinations";
+import { languageYearCities, tu9Universities } from "@/data/educationalDestinations";
 import BrandArch from "./home/BrandArch";
 import IdentityStage from "./home/IdentityStage";
 import CefrGuide from "./home/CefrGuide";
+import ExamFlipCard from "./home/ExamFlipCard";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
@@ -37,12 +39,11 @@ const journeyIcons = [SearchCheck, Compass, FileCheck2, Languages, ShieldCheck, 
 const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, MessageCircle, FileCheck2];
 
 const examBrands = [
-  { id: "telc", label: "telc", website: "https://www.telc.net/en/" },
   { id: "TestDaF", label: "TestDaF", website: "https://www.testdaf.de/" },
+  { id: "telc", label: "telc Deutsch C1 Hochschule", website: "https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/telc-deutsch-c1-hochschule/" },
+  { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/prf.html" },
+  { id: "DSH", label: "DSH-2", website: "https://www.hrk.de/themen/internationales/internationale-studierende-und-forschende/hochschulzugang-fuer-internationale-studierende/sprachnachweis-deutsch" },
   { id: "TestAS", label: "TestAS", website: "https://www.testas.de/en/" },
-  { id: "onSET", label: "onSET", website: "https://www.onset.de/" },
-  { id: "DSH", label: "DSH", website: "https://www.fadaf.de/dsh/" },
-  { id: "Goethe", label: "Goethe-Zertifikat", website: "https://www.goethe.de/en/spr/kup/prf.html" },
 ];
 
 const StudentStory = ({ student, index, t }: { student: GalleryStudent; index: number; t: (key: string, options?: Record<string, unknown>) => string }) => (
@@ -76,6 +77,7 @@ const HomepageExperience = () => {
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
   const faqs = t("homepage.faq.items", { returnObjects: true }) as TextItem[];
+  const [openExam, setOpenExam] = useState<string | null>(null);
 
   const nextStepRoutes: PathItem[] = [
     { ...nextSteps[0], href: "/educational-destinations" },
@@ -88,37 +90,22 @@ const HomepageExperience = () => {
 
   return (
     <div className="homepage-experience bg-background">
-      <section className="darb-home-hero relative isolate overflow-hidden bg-primary text-primary-foreground">
-        <img
-          src={germanyHero}
-          alt={t("homepage.hero.imageAlt")}
-          fetchPriority="high"
-          decoding="async"
-          width={1920}
-          height={1080}
-          className="absolute inset-0 h-full w-full object-cover object-center sm:object-[50%_48%]"
-        />
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-primary/25 via-transparent to-primary/20" />
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-primary/12 via-transparent to-primary/8" />
+      <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
+        <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-primary/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-background/10" />
         <BrandArch />
-        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center py-[calc(var(--darb-header-height)+2rem)] sm:py-[calc(var(--darb-header-height)+3rem)]">
-          <div className="darb-home-hero-panel w-full max-w-[760px] border border-white/20 bg-black/40 text-white shadow-surface-lg backdrop-blur-[3px]">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand sm:text-sm">{t("homepage.hero.eyebrow")}</p>
-            <h1 className="mt-4 max-w-3xl text-balance font-editorial text-5xl leading-[0.94] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
-            <p className="mt-5 max-w-2xl text-lg font-bold leading-7 sm:text-xl sm:leading-8 lg:text-2xl">{t("homepage.hero.title")}</p>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-white/80 sm:text-base sm:leading-7">{t("homepage.hero.subtitle")}</p>
+        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center py-16">
+          <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/20 bg-hero-panel/40 text-primary-foreground shadow-surface-lg backdrop-blur-sm">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.hero.eyebrow")}</p>
+            <h1 className="mt-4 text-balance font-editorial text-5xl leading-[0.98] sm:text-6xl lg:text-8xl">{t("homepage.hero.campaign")}</h1>
+            <p className="mt-5 max-w-2xl text-xl font-bold leading-8 sm:text-2xl">{t("homepage.hero.title")}</p>
+            <p className="mt-4 max-w-xl text-base leading-7 text-primary-foreground/80 sm:text-lg">{t("homepage.hero.subtitle")}</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="min-h-12 text-base shadow-surface-lg">
-                <Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="min-h-12 border-white/40 bg-white/5 text-white text-base hover:bg-white hover:text-primary">
-                <a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a>
-              </Button>
+              <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
+              <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-primary-foreground/5 text-primary-foreground text-base hover:bg-primary-foreground hover:text-primary"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-xs font-medium text-white/75 sm:text-sm">
-              <CircleCheck className="size-4 shrink-0 text-brand" />
-              {t("homepage.hero.reassurance")}
-            </p>
+            <p className="mt-5 flex items-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 text-brand" />{t("homepage.hero.reassurance")}</p>
           </div>
         </div>
         <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
@@ -215,14 +202,13 @@ const HomepageExperience = () => {
               <div>
                 <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-bold text-primary">{t("homepage.network.tu9Label")}</h3><a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-xs font-bold text-brand-strong">{t("homepage.network.viewTu9")}</a></div>
                 <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
-                  {tu9Universities.slice(0, 6).map((uni, index) => <IdentityStage key={uni.name} name={uni.name} imageUrl={uni.logoUrl} href={uni.url} meta={uni.city} featured={index === 0} />)}
+                  {tu9Universities.map((uni) => <IdentityStage key={uni.name} name={uni.name} imageUrl={uni.logoUrl} href={uni.url} meta={uni.city} />)}
                 </div>
               </div>
-              <div><h3 className="mb-3 font-bold text-primary">{t("homepage.network.schoolsLabel")}</h3><div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">{languageYearSchools.slice(0, 6).map((school) => <IdentityStage key={school.name} name={school.name} imageUrl={school.logoUrl} href={school.officialUrl} meta={school.location} />)}</div></div>
               <div>
                 <h3 className="mb-3 font-bold text-primary">{t("homepage.network.examsLabel")}</h3>
-                <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-                  {examBrands.map((exam) => <IdentityStage key={exam.id} name={exam.label} href={exam.website} ratio="compact" meta={t(`homepage.languagePrep.exams.${exam.id}.description`, { defaultValue: t("homepage.languagePrep.examSupport") })} />)}
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {examBrands.map((exam) => <ExamFlipCard key={exam.id} name={exam.label} href={exam.website} description={t(`homepage.languagePrep.exams.${exam.id}.verifiedDescription`)} caveat={t(`homepage.languagePrep.exams.${exam.id}.caveat`)} officialLabel={t("homepage.languagePrep.officialPortal")} flipLabel={t("homepage.languagePrep.flipCue")} backLabel={t("homepage.languagePrep.flipBack")} open={openExam === exam.id} onOpen={() => setOpenExam(exam.id)} onClose={() => setOpenExam(null)} />)}
                 </div>
               </div>
               <CefrGuide />

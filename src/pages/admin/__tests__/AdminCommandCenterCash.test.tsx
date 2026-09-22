@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ── i18n: return fallbacks with basic {{var}} interpolation ───────────────
 vi.mock("react-i18next", () => ({
-  initReactI18next: { type: "3rdParty" },
   useTranslation: () => ({
     t: (_k: string, fallback?: unknown, opts?: Record<string, unknown>) => {
       let s =

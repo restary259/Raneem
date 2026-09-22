@@ -3,10 +3,9 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import HttpBackend from 'i18next-http-backend';
 
-// Import translations directly to avoid async loading issues
+// Import broadcast translations directly to avoid async loading issues
 import broadcastAr from './locales/ar/broadcast.json';
 import broadcastEn from './locales/en/broadcast.json';
-import broadcastHe from '../public/locales/he/broadcast.json';
 import commonAr from './locales/ar/common.json';
 import commonEn from './locales/en/common.json';
 import contactAr from './locales/ar/contact.json';
@@ -15,14 +14,6 @@ import landingAr from './locales/ar/landing.json';
 import landingEn from './locales/en/landing.json';
 import legalAr from './locales/ar/legal.json';
 import legalEn from './locales/en/legal.json';
-
-/**
- * True for languages that render right-to-left.
- * Centralised so the document dir, layout gates and helpers stay in sync.
- */
-export function isRtlLng(lng: string | undefined | null): boolean {
-  return lng === 'ar' || lng === 'he';
-}
 
 const savedLang = typeof window !== 'undefined' ? localStorage.getItem('i18n_lang') : null;
 
@@ -43,7 +34,6 @@ i18n
     resources: {
       ar: { common: commonAr, landing: landingAr, contact: contactAr, legal: legalAr, broadcast: broadcastAr },
       en: { common: commonEn, landing: landingEn, contact: contactEn, legal: legalEn, broadcast: broadcastEn },
-      he: { broadcast: broadcastHe },
     },
     debug: false,
     interpolation: {
@@ -64,7 +54,7 @@ i18n
 i18n.on('languageChanged', (lng) => {
   // SSR guard — this module is evaluated on the server too (TanStack Start).
   if (typeof document === 'undefined') return;
-const dir = isRtlLng(lng) ? 'rtl' : 'ltr';
+  const dir = (lng === 'ar' || lng === 'he') ? 'rtl' : 'ltr';
   document.documentElement.dir = dir;
   document.documentElement.lang = lng;
   localStorage.setItem('i18n_lang', lng);

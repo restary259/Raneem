@@ -4,7 +4,6 @@ import React from "react";
 
 // ── i18n: return fallback strings ─────────────────────────────────────────
 vi.mock("react-i18next", () => ({
-  initReactI18next: { type: "3rdParty" },
   useTranslation: () => ({
     t: (_k: string, fallback?: unknown) =>
       typeof fallback === "string"

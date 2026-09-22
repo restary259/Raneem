@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { X, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { isRtlLng } from "@/i18n";
 
 const isInAppBrowser = () => {
   const ua = navigator.userAgent || '';
@@ -30,7 +29,7 @@ const InAppBrowserBanner = () => {
 
   if (!visible) return null;
 
-  const isRtl = isRtlLng(i18n.language);
+  const isRtl = i18n.language === 'ar';
 
   return (
     <div className="fixed top-0 inset-x-0 z-[9999] bg-accent text-accent-foreground px-4 py-2.5 flex items-center justify-between gap-2 text-sm shadow-md" dir={isRtl ? 'rtl' : 'ltr'}>

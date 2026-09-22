@@ -21,7 +21,7 @@ import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
 
 const FONTS_HREF =
-  "https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans:wght@400;700&display=swap";
 
 const APP_LOGO = darbLogoAsset.url;
 const OG_IMAGE = `https://darb.agency${darbLogoShareAsset.url}`;
@@ -123,8 +123,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "manifest", href: "/manifest.json", crossOrigin: "use-credentials" },
-      { rel: "icon", href: "/favicon-v3.png", type: "image/png", sizes: "64x64" },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon-v3.png" },
+      { rel: "icon", href: "/favicon-v2.png", type: "image/png", sizes: "64x64" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon-v2.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: FONTS_HREF },

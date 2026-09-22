@@ -54,7 +54,7 @@ const Header = () => {
         <div className="darb-header-main flex items-center justify-between" dir="ltr">
           {/* Logo */}
           <div className="flex min-w-0 shrink-0 items-center">
-            <Link to="/" aria-label={t('loader.brand')} className="flex h-12 w-[132px] shrink-0 items-center sm:h-14 sm:w-[156px] lg:h-14 lg:w-[150px] xl:h-16 xl:w-[170px] 2xl:w-[182px]">
+            <Link to="/" aria-label={t('loader.brand')} className="flex h-12 w-[132px] shrink-0 items-center sm:h-14 sm:w-[156px] lg:h-16 lg:w-[182px]">
               <img
                 src={darbLogoAsset.url}
                 alt={t('loader.brand')}
@@ -68,22 +68,22 @@ const Header = () => {
           </div>
 
           {/* Desktop navigation */}
-          <div className="hidden min-w-0 flex-1 xl:mx-5 xl:block">
+          <div className="hidden min-w-0 flex-1 lg:mx-5 lg:block">
             <DesktopNav transparent={!scrolled} />
           </div>
 
           {/* Desktop student login */}
-          <div className="hidden flex-shrink-0 items-center gap-2 xl:flex">
+          <div className="hidden flex-shrink-0 items-center gap-2 lg:flex">
              <Link
                to="/student-auth"
-               className="inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-primary px-4 text-xs font-bold xl:px-5 xl:text-sm 2xl:px-6 text-primary-foreground shadow-surface transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+               className="inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-surface transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
              >
               {t('nav.studentLogin')}
             </Link>
           </div>
 
            {/* Mobile header: preserve breathing room and move contact details into the menu. */}
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 xl:hidden" dir="ltr">
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:hidden" dir="ltr">
              <LanguageSwitcher className={`shrink-0 [&>button]:min-h-11 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs ${scrolled ? 'text-foreground' : 'text-primary-foreground drop-shadow-sm'}`} />
             <MobileNav transparent={!scrolled} />
           </div>

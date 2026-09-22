@@ -49,7 +49,11 @@
   "applyNow": "Apply Now",
   "whatsapp": {
     "floatingLabel": "Chat with us on WhatsApp",
-    "sideTab": "WhatsApp"
+    "sideTab": "WhatsApp",
+    "panelTitle": "DARB WhatsApp",
+    "verified": "Official DARB contact",
+    "confirm": "Chat with DARB",
+    "close": "Close WhatsApp panel"
   },
   "footer": {
     "quote": "Darb — your path to studying in Germany",
@@ -462,7 +466,7 @@
     },
     "hub": {
       "eyebrow": "CONTACT & GUIDANCE",
-      "title": "Let’s find your next step",
+      "title": "Let’s find your next step.",
       "intro": "Choose human support for a direct conversation, or use the AI advisor for quick study guidance about Germany.",
       "humanTitle": "Human support when you need it",
       "humanCopy": "WhatsApp or email the DARB team for questions that need a person, a file, or a clear next step.",

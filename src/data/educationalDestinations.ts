@@ -1,4 +1,18 @@
 import { ALPHA_AKTIV_LOGO_SRC } from "@/assets/alphaAktivLogo";
+import heidelbergImage from "@/assets/destinations/heidelberg.jpg";
+import dusseldorfImage from "@/assets/destinations/dusseldorf.jpg";
+import dortmundImage from "@/assets/destinations/dortmund.jpg";
+import munsterImage from "@/assets/destinations/munster.jpg";
+import berlinImage from "@/assets/destinations/berlin.jpg";
+import rwthLogo from "@/assets/universities/rwth.png.asset.json";
+import tuBerlinLogo from "@/assets/universities/tu-berlin.svg.asset.json";
+import tuBraunschweigLogo from "@/assets/universities/tu-braunschweig.svg.asset.json";
+import tuDarmstadtLogo from "@/assets/universities/tu-darmstadt.svg.asset.json";
+import tuDresdenLogo from "@/assets/universities/tu-dresden.svg.asset.json";
+import leibnizLogo from "@/assets/universities/leibniz-hannover.png.asset.json";
+import kitLogo from "@/assets/universities/kit.svg.asset.json";
+import tumLogo from "@/assets/universities/tum.svg.asset.json";
+import stuttgartLogo from "@/assets/universities/uni-stuttgart.svg.asset.json";
 
 export interface LanguageSchoolDestination {
   name: string;
@@ -32,7 +46,7 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "heidelberg",
     name: "Heidelberg",
     region: "Baden-Württemberg",
-    imageUrl: "https://images.unsplash.com/photo-1744049891187-99ce6f6bca57?auto=format&fit=crop&w=2400&q=88",
+    imageUrl: heidelbergImage,
     photoCredit: { label: "Photo: Christopher Politano / Unsplash", url: "https://unsplash.com/photos/heidelberg-castle-towers-over-the-historic-town-AWv1ymdCFIc" },
     descriptionKey: "destinations.cities.heidelberg.description",
     highlights: ["destinations.cities.heidelberg.highlight1", "destinations.cities.heidelberg.highlight2", "destinations.cities.heidelberg.highlight3"],
@@ -47,7 +61,7 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "dusseldorf",
     name: "Düsseldorf",
     region: "North Rhine-Westphalia",
-    imageUrl: "https://images.unsplash.com/photo-1741342276667-4185aa6d95f1?auto=format&fit=crop&w=2400&q=88",
+    imageUrl: dusseldorfImage,
     photoCredit: { label: "Photo: Markus Winkler / Unsplash", url: "https://unsplash.com/photos/the-rheinturm-tower-stands-tall-in-dusseldorf-0KQwbCNwIZo" },
     descriptionKey: "destinations.cities.dusseldorf.description",
     highlights: ["destinations.cities.dusseldorf.highlight1", "destinations.cities.dusseldorf.highlight2", "destinations.cities.dusseldorf.highlight3"],
@@ -62,7 +76,7 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "dortmund",
     name: "Dortmund",
     region: "North Rhine-Westphalia",
-    imageUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Panorama%20Skyline%20Dortmund.jpg",
+    imageUrl: dortmundImage,
     descriptionKey: "destinations.cities.dortmund.description",
     highlights: ["destinations.cities.dortmund.highlight1", "destinations.cities.dortmund.highlight2", "destinations.cities.dortmund.highlight3"],
     cityUrl: "https://www.dortmund-tourismus.de/",
@@ -77,7 +91,7 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "munster",
     name: "Münster",
     region: "North Rhine-Westphalia",
-    imageUrl: "https://upload.wikimedia.org/wikipedia/commons/b/bb/MuensterPanorama2856alt.jpg",
+    imageUrl: munsterImage,
     descriptionKey: "destinations.cities.munster.description",
     highlights: ["destinations.cities.munster.highlight1", "destinations.cities.munster.highlight2", "destinations.cities.munster.highlight3"],
     cityUrl: "https://www.stadt-muenster.de/tourismus/startseite",
@@ -92,7 +106,7 @@ export const languageYearCities: LanguageYearCity[] = [
     id: "berlin",
     name: "Berlin",
     region: "Berlin",
-    imageUrl: "https://images.unsplash.com/photo-1775045309134-7525be4e2f2d?auto=format&fit=crop&w=2400&q=88",
+    imageUrl: berlinImage,
     photoCredit: { label: "Photo: Eugenia Pan'kiv / Unsplash", url: "https://unsplash.com/photos/brandenburg-gate-in-berlin-on-a-clear-day-AG1beo31e1M" },
     descriptionKey: "destinations.cities.berlin.description",
     highlights: ["destinations.cities.berlin.highlight1", "destinations.cities.berlin.highlight2", "destinations.cities.berlin.highlight3"],
@@ -193,15 +207,15 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
 ];
 
 export const tu9Universities = [
-  { name: "RWTH Aachen University", city: "Aachen", url: "https://www.rwth-aachen.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/RWTH-logo.png" },
-  { name: "TU Berlin", city: "Berlin", url: "https://www.tu.berlin/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/LogoDerTechnischenUniversitätBerlin2020.svg" },
-  { name: "TU Braunschweig", city: "Braunschweig", url: "https://www.tu-braunschweig.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Siegel%20TU%20Braunschweig%20transparent.svg" },
-  { name: "TU Darmstadt", city: "Darmstadt", url: "https://www.tu-darmstadt.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/TU%20Darmstadt%20Logo.svg" },
-  { name: "TU Dresden", city: "Dresden", url: "https://tu-dresden.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20TU%20Dresden%202025.svg" },
-  { name: "Leibniz University Hannover", city: "Hannover", url: "https://www.uni-hannover.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Leibniz-Universität%20Hannover.png" },
-  { name: "Karlsruhe Institute of Technology (KIT)", city: "Karlsruhe", url: "https://www.kit.edu/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20KIT.svg" },
-  { name: "Technical University of Munich (TUM)", city: "Munich", url: "https://www.tum.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20of%20the%20Technical%20University%20of%20Munich.svg" },
-  { name: "University of Stuttgart", city: "Stuttgart", url: "https://www.uni-stuttgart.de/", logoUrl: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Universität%20Stuttgart%20Logo.svg" }
+  { name: "RWTH Aachen University", city: "Aachen", url: "https://www.rwth-aachen.de/", logoUrl: rwthLogo.url },
+  { name: "TU Berlin", city: "Berlin", url: "https://www.tu.berlin/", logoUrl: tuBerlinLogo.url },
+  { name: "TU Braunschweig", city: "Braunschweig", url: "https://www.tu-braunschweig.de/", logoUrl: tuBraunschweigLogo.url },
+  { name: "TU Darmstadt", city: "Darmstadt", url: "https://www.tu-darmstadt.de/", logoUrl: tuDarmstadtLogo.url },
+  { name: "TU Dresden", city: "Dresden", url: "https://tu-dresden.de/", logoUrl: tuDresdenLogo.url },
+  { name: "Leibniz University Hannover", city: "Hannover", url: "https://www.uni-hannover.de/", logoUrl: leibnizLogo.url },
+  { name: "Karlsruhe Institute of Technology (KIT)", city: "Karlsruhe", url: "https://www.kit.edu/", logoUrl: kitLogo.url },
+  { name: "Technical University of Munich (TUM)", city: "Munich", url: "https://www.tum.de/", logoUrl: tumLogo.url },
+  { name: "University of Stuttgart", city: "Stuttgart", url: "https://www.uni-stuttgart.de/", logoUrl: stuttgartLogo.url }
 ];
 
 // Backward-compatible exports for legacy tooling (including AI knowledge generation).

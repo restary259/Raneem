@@ -1,10 +1,9 @@
 
 import { useTranslation } from 'react-i18next';
-import { isRtlLng } from '@/i18n';
 
 export const useDirection = () => {
   const { i18n } = useTranslation();
-const isRtl = isRtlLng(i18n.language);
+  const isRtl = i18n.language === 'ar' || i18n.language === 'he';
   return {
     dir: isRtl ? 'rtl' as const : 'ltr' as const,
     isRtl,

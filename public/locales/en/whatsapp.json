@@ -95,8 +95,6 @@
     "attach": "Attach a photo or file",
     "composerLocked": "Replies are locked until the contact writes again — send an approved template below.",
     "openFile": "Open file",
-    "templateHeading": "Send an approved template",
-    "panelToggle": "Toggle student file",
     "templateRequired": "Approved template required",
     "remaining": "{{time}} remaining in service window",
     "metadata": "Conversation metadata",
