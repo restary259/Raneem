@@ -48,7 +48,7 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       <span aria-hidden="true" className="darb-hero-scrim absolute inset-0" />
       <div
         className={cn(
-          "container relative z-10 flex items-center px-4",
+          "relative z-10 flex w-full min-w-0 items-center",
           align === "center" ? "justify-center" : "justify-start",
           "darb-page-hero-inner",
         )}
