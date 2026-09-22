@@ -53,10 +53,9 @@ const EducationalDestinationsPage = () => {
       <Header />
       <main>
         <DarbPageHero
-          eyebrow={t("destinations.editorial.heroEyebrow")}
           imageUrl={germanyHero}
           imageAlt={t("educational.edImageAlt", "Bright German university environment")}
-          title={t("destinations.editorial.heroTitle")}
+          title={t("pageHero.destinations.title", "Destinations")}
           subtitle={t("destinations.editorial.heroSubtitle")}
         >
           <div className="flex flex-col justify-center gap-3 sm:flex-row">

@@ -17,7 +17,6 @@ const LocationsPage = () => {
       <Header />
       <main className="flex-grow">
         <DarbPageHero
-          eyebrow={t('locations.title')}
           imageUrl={DARB_PUBLIC_HERO_IMAGES.city}
           imageAlt={t('locations.imageAlt', 'Bright German city representing DARB destinations')}
           title={t('locations.title')}

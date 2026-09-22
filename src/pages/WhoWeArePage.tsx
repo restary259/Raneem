@@ -32,10 +32,9 @@ const WhoWeArePage = () => {
             <Header />
             <main className="flex-grow">
                 <DarbPageHero
-                    eyebrow={t('whoWeAre.heroBadge', 'ABOUT DARB')}
                     imageUrl={DARB_PUBLIC_HERO_IMAGES.office}
                     imageAlt={t('whoWeAre.imageAlt', 'Bright professional education consultation environment')}
-                    title={t('whoWeAre.heroTitle')}
+                    title={t('common:pageHero.about.title', 'About DARB')}
                     subtitle={t('whoWeAre.heroSubtitle')}
                 />
 
