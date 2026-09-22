@@ -1,7 +1,4 @@
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Interactive accessibility adjustments, loaded after the main design system. */
 
 @layer utilities {
   @media (prefers-contrast: high) {
@@ -26,4 +23,77 @@
       }
     }
   }
+}
+
+html.a11y-font-lg {
+  font-size: 112.5%;
+}
+
+html.a11y-font-xl {
+  font-size: 125%;
+}
+
+html.a11y-high-contrast {
+  filter: contrast(1.2);
+}
+
+html.a11y-high-contrast button,
+html.a11y-high-contrast input,
+html.a11y-high-contrast select,
+html.a11y-high-contrast textarea,
+html.a11y-high-contrast [role="button"],
+html.a11y-high-contrast [role="checkbox"],
+html.a11y-high-contrast [role="menuitem"],
+html.a11y-high-contrast [role="menuitemcheckbox"],
+html.a11y-high-contrast [role="menuitemradio"] {
+  border-color: currentColor !important;
+}
+
+html.a11y-high-contrast :focus-visible {
+  outline: 3px solid currentColor !important;
+  outline-offset: 2px !important;
+}
+
+html.a11y-high-contrast.a11y-grayscale {
+  filter: grayscale(1) contrast(1.2);
+}
+
+html.a11y-grayscale:not(.a11y-high-contrast) {
+  filter: grayscale(1);
+}
+
+html.a11y-highlight-links a {
+  color: #0057b8 !important;
+  text-decoration-line: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 0.15em !important;
+}
+
+html.dark.a11y-highlight-links a,
+html.aurora.a11y-highlight-links a {
+  color: #8ed0ff !important;
+}
+
+html.a11y-highlight-links a:focus-visible {
+  outline: 3px solid currentColor !important;
+  outline-offset: 3px !important;
+}
+
+html.a11y-readable-font body,
+html.a11y-readable-font body * {
+  font-family: Arial, "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans", sans-serif !important;
+}
+
+html.a11y-reduce-motion,
+html.a11y-reduce-motion * {
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+html.a11y-big-cursor,
+html.a11y-big-cursor * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 viewBox=%220 0 32 32%22%3E%3Cpath d=%22M4 2l22 12-9 3 5 11-4 2-5-11-7 7z%22 fill=%22%23000%22 stroke=%22%23fff%22 stroke-width=%222%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E") 3 2, auto !important;
 }
