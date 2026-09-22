@@ -98,17 +98,20 @@ const HomepageExperience = () => {
       <section className="darb-home-hero relative overflow-hidden bg-editorial-paper">
         <img src={germanyHero} alt={t("homepage.hero.imageAlt")} fetchPriority="high" decoding="async" width={1920} height={1080} className="absolute inset-0 h-full w-full object-cover object-center" />
         <BrandArch className="sm:hidden" />
-        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center py-16">
-          <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/20 bg-hero-panel/80 text-center text-primary-foreground shadow-surface-lg backdrop-blur-sm">
-            <p className="darb-home-hero-eyebrow font-bold text-brand-strong">{t("homepage.hero.eyebrow")}</p>
-            <h1 className="darb-home-hero-title mt-4 text-balance font-editorial font-semibold leading-[1.02]">{t("homepage.hero.campaign")}</h1>
-            <p className="mt-4 text-balance text-2xl font-bold leading-tight sm:text-3xl">{t("homepage.hero.title")}</p>
-            <p className="darb-home-hero-subtitle mx-auto mt-3 max-w-xl font-semibold leading-7 text-primary-foreground/85">{t("homepage.hero.subtitle")}</p>
-            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="darb-home-hero-content container relative z-10 flex min-h-full items-center justify-center px-4">
+          <div className="darb-home-hero-panel max-w-3xl border border-primary-foreground/15 bg-hero-panel/75 text-primary-foreground shadow-surface-lg backdrop-blur-sm">
+            <div className="darb-home-hero-intro">
+              <p className="darb-home-hero-eyebrow font-bold uppercase text-primary-foreground/65">{t("homepage.hero.eyebrow")}</p>
+              <span aria-hidden="true" className="darb-home-hero-rule" />
+            </div>
+            <h1 className="darb-home-hero-title text-balance font-editorial font-semibold leading-[1.04]">{t("homepage.hero.campaign")}</h1>
+            <p className="darb-home-hero-destination text-balance font-bold leading-tight">{t("homepage.hero.title")}</p>
+            <p className="darb-home-hero-subtitle font-semibold leading-7 text-primary-foreground/85">{t("homepage.hero.subtitle")}</p>
+            <div className="darb-home-hero-actions flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
               <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-primary-foreground/5 text-primary-foreground text-base hover:bg-primary-foreground hover:text-primary"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
             </div>
-            <p className="mt-5 flex items-center justify-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 shrink-0 text-brand" />{t("homepage.hero.reassurance")}</p>
+            <p className="darb-home-hero-reassurance flex items-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 shrink-0 text-brand" />{t("homepage.hero.reassurance")}</p>
           </div>
         </div>
         <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />

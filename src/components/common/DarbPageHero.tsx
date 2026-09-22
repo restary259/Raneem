@@ -54,26 +54,26 @@ const DarbPageHero: React.FC<DarbPageHeroProps> = ({
       >
         <div
           className={cn(
-            "darb-page-hero-panel w-full border border-primary-foreground/20 bg-hero-panel/80 text-primary-foreground shadow-surface-lg backdrop-blur-sm",
+            "darb-page-hero-panel w-full border border-primary-foreground/15 bg-hero-panel/75 text-primary-foreground shadow-surface-lg backdrop-blur-sm",
             align === "center" ? "text-center" : "text-start",
           )}
         >
           {eyebrow ? (
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand">
+            <p className="darb-page-hero-eyebrow text-sm font-bold uppercase text-brand">
               {eyebrow}
             </p>
           ) : null}
           <h1
-            className="darb-page-hero-title font-bold leading-tight"
+            className="darb-page-hero-title text-balance font-bold leading-tight"
           >
             {title}
           </h1>
           {subtitle ? (
-            <p className={cn("darb-page-hero-subtitle mt-5 max-w-2xl text-base leading-8 text-primary-foreground/80", align === "center" && "mx-auto")}>
+            <p className={cn("darb-page-hero-subtitle max-w-2xl text-base leading-8 text-primary-foreground/80", align === "center" && "mx-auto")}>
               {subtitle}
             </p>
           ) : null}
-          {children ? <div className="mt-7">{children}</div> : null}
+          {children ? <div className="darb-page-hero-actions">{children}</div> : null}
         </div>
       </div>
       <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 rounded-none" />

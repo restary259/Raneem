@@ -511,6 +511,11 @@ a[href*="lovable.dev"] {
   padding-block: clamp(1.75rem, 4vh, 3rem);
 }
 
+.darb-home-hero-content {
+  padding-top: calc(var(--darb-header-height) + clamp(1rem, 2.5vh, 2rem));
+  padding-bottom: clamp(2.5rem, 6vh, 4rem);
+}
+
 .exam-flip-card {
   height: 24rem;
   min-height: 24rem;
@@ -878,18 +883,41 @@ a[href*="lovable.dev"] {
 
 .darb-home-hero-eyebrow {
   font-size: clamp(0.72rem, 0.72vw, 0.9rem);
+  letter-spacing: 0.14em;
+}
+
+.darb-home-hero-intro {
+  margin-bottom: clamp(1.25rem, 2.8vh, 2rem);
+}
+
+.darb-home-hero-rule {
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  margin-top: 0.75rem;
+  background: color-mix(in oklab, currentColor 30%, transparent);
 }
 
 .darb-home-hero-title {
   font-size: clamp(2.5rem, 4.3vw, 4.5rem);
 }
 
+.darb-home-hero-destination {
+  margin-top: clamp(0.45rem, 1.3vh, 0.85rem);
+  font-size: clamp(1.55rem, 2.5vw, 2.35rem);
+}
+
 .darb-home-hero-subtitle {
+  margin-top: clamp(0.85rem, 1.8vh, 1.25rem);
   font-size: clamp(0.95rem, 1.1vw, 1.2rem);
 }
 
 .darb-home-hero-actions {
   margin-top: clamp(1.25rem, 2.6vh, 1.75rem);
+}
+
+.darb-home-hero-reassurance {
+  margin-top: clamp(1rem, 2.2vh, 1.35rem);
 }
 
 .darb-home-hero-button {
@@ -919,12 +947,22 @@ a[href*="lovable.dev"] {
   padding-block: clamp(1.5rem, 3.5vh, 2.75rem);
 }
 
+.darb-page-hero-eyebrow {
+  letter-spacing: 0.14em;
+}
+
 .darb-page-hero-title {
+  margin-top: 0.85rem;
   font-size: clamp(2.35rem, 4.1vw, 4.25rem);
 }
 
 .darb-page-hero-subtitle {
+  margin-top: clamp(0.9rem, 2vh, 1.25rem);
   font-size: clamp(0.95rem, 1.08vw, 1.15rem);
+}
+
+.darb-page-hero-actions {
+  margin-top: clamp(1.25rem, 2.6vh, 1.75rem);
 }
 
 @media (min-width: 1024px) and (max-height: 760px) {
@@ -968,17 +1006,81 @@ a[href*="lovable.dev"] {
   }
 
   .darb-page-hero-inner {
-    padding-top: clamp(1.5rem, 6vh, 3.5rem);
+    padding-top: calc(var(--darb-header-height) + clamp(1rem, 3.5vh, 1.75rem));
+    padding-bottom: clamp(1.5rem, 4vh, 2.5rem);
   }
 
   .darb-home-hero-panel,
   .darb-page-hero-panel {
-    width: min(94vw, 760px);
+    width: min(calc(100vw - 2rem), 760px);
+  }
+
+  .darb-home-hero-content {
+    align-items: flex-start;
+    padding-top: calc(var(--darb-header-height) + clamp(1rem, 3.5vh, 1.75rem));
+    padding-bottom: clamp(1.75rem, 5vh, 3rem);
+  }
+
+  .darb-home-hero-panel {
+    padding-inline: clamp(1.35rem, 6vw, 1.75rem);
+    padding-block: clamp(1.5rem, 4vh, 2rem);
+    text-align: start;
+  }
+
+  .darb-home-hero-intro {
+    margin-bottom: clamp(1rem, 3vh, 1.5rem);
+  }
+
+  .darb-home-hero-title {
+    font-size: clamp(2.4rem, 11vw, 3.25rem);
+  }
+
+  .darb-home-hero-destination {
+    font-size: clamp(1.55rem, 7vw, 2.15rem);
+  }
+
+  .darb-home-hero-subtitle {
+    margin-inline: 0;
+  }
+
+  .darb-home-hero-actions {
+    justify-content: flex-start;
+  }
+
+  .darb-home-hero-reassurance {
+    justify-content: flex-start;
   }
 
   .darb-home-hero-title,
   .darb-page-hero-title {
-    font-size: clamp(2.15rem, 8vw, 3.8rem);
+    overflow-wrap: anywhere;
+  }
+
+  .darb-page-hero-title {
+    font-size: clamp(2rem, 8vw, 3.8rem);
+  }
+}
+
+@media (max-width: 374px) {
+  .darb-home-hero {
+    min-height: 660px;
+  }
+
+  .darb-home-hero-panel,
+  .darb-page-hero-panel {
+    width: min(calc(100vw - 1.5rem), 760px);
+  }
+
+  .darb-home-hero-panel {
+    padding-inline: 1.15rem;
+  }
+
+  .darb-home-hero-title {
+    font-size: 2.25rem;
+  }
+
+  .darb-home-hero-destination {
+    font-size: 1.45rem;
   }
 }
 
