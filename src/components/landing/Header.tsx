@@ -12,6 +12,7 @@ const Header = () => {
   const { t } = useTranslation();
   const { dir } = useDirection();
   const [scrolled, setScrolled] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
     const updateHeader = () => setScrolled(window.scrollY > 24);
@@ -20,15 +21,27 @@ const Header = () => {
     return () => window.removeEventListener('scroll', updateHeader);
   }, []);
 
+  // Mobile/tablet (<1024px) always gets a solid header — the transparent
+  // look is reserved for the desktop hero.
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const update = () => setIsDesktop(mql.matches);
+    update();
+    mql.addEventListener('change', update);
+    return () => mql.removeEventListener('change', update);
+  }, []);
+
+  const solid = scrolled || !isDesktop;
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
-        scrolled
+        solid
           ? 'border-b border-border bg-background/95 shadow-surface backdrop-blur-md'
           : 'border-transparent bg-transparent shadow-none'
       }`}
       dir={dir}
-      data-scrolled={scrolled ? 'true' : 'false'}
+      data-scrolled={solid ? 'true' : 'false'}
     >
       {/* Desktop utility bar */}
       <div className={`darb-header-utility hidden lg:block ${scrolled ? 'border-b border-border' : 'border-b border-primary-foreground/20'}`}>
