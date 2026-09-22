@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, ChevronDown, Mail, MessageCircle } from 'lucide-react';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import AccessibilityMenu from '@/components/common/AccessibilityMenu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useDirection } from '@/hooks/useDirection';
 import { SUPPORT_EMAIL, whatsappBusinessUrl } from '@/lib/contactConfig';
@@ -31,7 +32,10 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
       </SheetTrigger>
       <SheetContent side={sheetSide} className="w-72 bg-background" dir={dir}>
         <nav className="flex flex-col gap-3 mt-6 overflow-y-auto max-h-[calc(100dvh-4rem)]">
-          <div className="flex justify-center mb-3"><LanguageSwitcher /></div>
+          <div className="flex justify-center mb-3 gap-1" dir={dir}>
+            <LanguageSwitcher />
+            <AccessibilityMenu />
+          </div>
 
           <Collapsible open={studyGermanyOpen} onOpenChange={setStudyGermanyOpen} className={groupClass}>
             <CollapsibleTrigger className={'flex items-center justify-between w-full py-3 ' + textAlign}>
