@@ -1,5 +1,5 @@
 - [x] Audit Arabic brand spelling across public pages and dashboards
 - [x] Normalize public, dashboard, invoice, PDF, and email-facing Arabic branding to درب
 - [x] Apply and verify the saved-content correction
-- [ ] Add and run permanent Arabic brand-spelling safeguards
+- [x] Add and run permanent Arabic brand-spelling safeguards
 - [ ] Verify representative Arabic screens and preview health
