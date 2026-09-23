@@ -22,6 +22,7 @@ import {
 import { BirthdayPicker } from "@/components/shared/BirthdayPicker";
 import { OnboardingShell } from "@/components/student/OnboardingShell";
 import { stripMustChangePassword } from "@/lib/profileWriteGuards";
+import { buildCasePrefill, mergeCasePrefill, type CasePrefillResult } from "@/lib/onboardingPrefill";
 
 interface EmergencyContact {
   name: string;
