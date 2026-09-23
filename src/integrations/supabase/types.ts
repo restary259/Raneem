@@ -5824,6 +5824,8 @@ export type Database = {
           linked_lead_id: string | null
           linked_profile_id: string | null
           marketing_consent_status: string
+          marketing_consent_updated_at: string | null
+          marketing_consent_updated_by: string | null
           source: string
           student_name: string
           tags: string[]
@@ -5849,6 +5851,8 @@ export type Database = {
           linked_lead_id?: string | null
           linked_profile_id?: string | null
           marketing_consent_status?: string
+          marketing_consent_updated_at?: string | null
+          marketing_consent_updated_by?: string | null
           source?: string
           student_name?: string
           tags?: string[]
@@ -5874,6 +5878,8 @@ export type Database = {
           linked_lead_id?: string | null
           linked_profile_id?: string | null
           marketing_consent_status?: string
+          marketing_consent_updated_at?: string | null
+          marketing_consent_updated_by?: string | null
           source?: string
           student_name?: string
           tags?: string[]
@@ -6881,6 +6887,33 @@ export type Database = {
         }[]
       }
       get_whatsapp_dashboard: { Args: never; Returns: Json }
+      get_whatsapp_failed_jobs: {
+        Args: never
+        Returns: {
+          attempt_count: number
+          contact_name: string
+          conversation_id: string
+          failed_at: string
+          id: string
+          kind: string
+          last_error: string
+          phone_number: string
+        }[]
+      }
+      get_whatsapp_health: { Args: never; Returns: Json }
+      get_whatsapp_ingest_failures: {
+        Args: { p_include_resolved?: boolean }
+        Returns: {
+          created_at: string
+          delivery_id: string
+          error_code: string
+          error_message: string
+          event_type: string
+          id: string
+          phone_number: string
+          resolved_at: string
+        }[]
+      }
       get_whatsapp_staff_directory: {
         Args: never
         Returns: {
@@ -7485,9 +7518,17 @@ export type Database = {
         Returns: number
       }
       whatsapp_normalize_msisdn: { Args: { p_value: string }; Returns: string }
+      whatsapp_resolve_ingest_failure: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
       whatsapp_resume_conversation: {
         Args: { p_conversation_id: string }
         Returns: Json
+      }
+      whatsapp_retry_failed_job: {
+        Args: { p_id: string; p_kind: string }
+        Returns: undefined
       }
       whatsapp_schedule_template_follow_up: {
         Args: {
@@ -7511,6 +7552,10 @@ export type Database = {
       whatsapp_set_conversation_assignment: {
         Args: { p_assigned_to?: string; p_conversation_id: string }
         Returns: string
+      }
+      whatsapp_set_marketing_consent: {
+        Args: { p_lead_id: string; p_status: string }
+        Returns: undefined
       }
       whatsapp_snooze_conversation: {
         Args: { p_conversation_id: string; p_until: string }
