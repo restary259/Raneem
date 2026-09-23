@@ -257,7 +257,8 @@
       "lead": "Lead"
     },
     "autoLinked": "Automatically matched",
-    "staffConfirmed": "Staff confirmed"
+    "staffConfirmed": "Staff confirmed",
+    "nameMissing": "No name yet"
   },
   "crm": {
     "autoLinked": "Automatically matched",
@@ -386,7 +387,8 @@
   "owner": {
     "claim": "Take this chat",
     "release": "Hand back",
-    "takenBy": "With {{name}}"
+    "takenBy": "With {{name}}",
+    "unownedNudge": "Nobody has taken these yet"
   },
   "consentAudit": {
     "recorded": "Recorded {{time}}"
@@ -414,5 +416,14 @@
       "follow_up": "Follow-up",
       "campaign": "Campaign"
     }
+  },
+  "delivery": {
+    "fromPhone": "sent from the phone",
+    "sent": "sent",
+    "delivered": "delivered",
+    "read": "read",
+    "failed": "failed",
+    "queued": "queued",
+    "accepted": "accepted"
   }
 }
