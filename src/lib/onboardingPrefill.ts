@@ -89,7 +89,7 @@ export function buildCasePrefill(
  * account wins, so confirming can never silently replace their own edits.
  */
 export function mergeCasePrefill<T extends object>(profile: T, prefill: CasePrefill): T {
-  const out: Record<string, unknown> = { ...profile };
+  const out = { ...profile } as Record<string, unknown>;
   for (const [key, value] of Object.entries(prefill)) {
     const current = out[key];
     const currentFilled = typeof current === "string" && current.trim().length > 0;
