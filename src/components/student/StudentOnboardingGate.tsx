@@ -377,7 +377,9 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       setTaskIndex(firstInvalidTask >= 0 ? firstInvalidTask : TASKS.length - 1);
 
     } else {
-      setProfile({ ...EMPTY_PROFILE });
+      setProfile(mergeCasePrefill({ ...EMPTY_PROFILE }, casePrefill.values));
+      if (casePrefill.contact) setContacts([{ ...casePrefill.contact }, emptyContact()]);
+      setReviewOpen(casePrefill.hasData);
       setTaskIndex(0);
     }
     setLoading(false);
