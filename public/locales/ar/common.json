@@ -8,7 +8,7 @@
     "resources": "موارد",
     "universityFinder": "ابحث عن جامعة",
     "contact": "تواصل معنا",
-    "brand": "Darb",
+    "brand": "درب",
     "locations": "مواقعنا",
     "broadcast": "بث درب",
     "studentPortal": "البوابة الطلابية",
@@ -252,7 +252,7 @@
     "exams": "مسار الامتحانات",
     "studentServices": "دعم الطالب",
     "schoolSource": "المصدر والتفاصيل الحالية",
-    "notDarbCredential": "اعتماد يخص المعهد / الجهة المانحة",
+    "notدربCredential": "اعتماد يخص المعهد / الجهة المانحة",
     "sourceNote": "افتح موقع المؤسسة الرسمي لمعرفة الكورس، الامتحان، السعر والتوفر الحالي.",
     "schoolFacts": {
       "fu": {
@@ -422,7 +422,7 @@
   ],
   "auth": {
     "loginTitle": "تسجيل الدخول",
-    "loginSubtitle": "سجّل دخولك إلى حسابك في DARB",
+    "loginSubtitle": "سجّل دخولك إلى حسابك في درب",
     "signupTitle": "إنشاء حساب جديد",
     "fullName": "الاسم الكامل *",
     "fullNamePlaceholder": "أدخل اسمك الكامل",
@@ -817,7 +817,7 @@
       "title": "الوجهات"
     },
     "about": {
-      "title": "عن DARB"
+      "title": "عن درب"
     },
     "services": {
       "title": "خدماتنا"

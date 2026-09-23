@@ -278,10 +278,14 @@ function SidebarNav({ role }: { role: AppRole }) {
       >
         {!collapsed && (
           <Link to="/" className="font-bold text-lg text-primary tracking-tight">
-            DARB
+            {i18n.language === "ar" ? "درب" : "DARB"}
           </Link>
         )}
-        {collapsed && <span className="font-bold text-primary text-sm">D</span>}
+        {collapsed && (
+          <span className="font-bold text-primary text-sm">
+            {i18n.language === "ar" ? "د" : "D"}
+          </span>
+        )}
       </div>
 
       <SidebarMenu className="mt-2 px-2">

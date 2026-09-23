@@ -1,4 +1,5 @@
-- [ ] Rebuild About page structure and visuals
-- [ ] Replace About copy in English, Arabic, and Hebrew
-- [ ] Remove obsolete fake-profile About sections
-- [ ] Verify all languages and screen sizes
+- [x] Audit Arabic brand spelling across public pages and dashboards
+- [x] Normalize public, dashboard, invoice, PDF, and email-facing Arabic branding to درب
+- [x] Apply and verify the saved-content correction
+- [x] Add and run permanent Arabic brand-spelling safeguards
+- [x] Verify representative Arabic screens and preview health
