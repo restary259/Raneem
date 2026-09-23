@@ -5703,6 +5703,42 @@ export type Database = {
           },
         ]
       }
+      whatsapp_ingest_failures: {
+        Row: {
+          created_at: string
+          delivery_id: string
+          error_code: string | null
+          error_message: string | null
+          event_type: string | null
+          id: string
+          payload: Json
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_id: string
+          error_code?: string | null
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string
+          error_code?: string | null
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_ingest_log: {
         Row: {
           created_at: string
