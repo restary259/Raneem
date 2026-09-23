@@ -2,4 +2,4 @@
 - [x] Normalize public, dashboard, invoice, PDF, and email-facing Arabic branding to درب
 - [x] Apply and verify the saved-content correction
 - [x] Add and run permanent Arabic brand-spelling safeguards
-- [ ] Verify representative Arabic screens and preview health
+- [x] Verify representative Arabic screens and preview health
