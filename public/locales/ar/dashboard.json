@@ -4116,6 +4116,7 @@
     "caseTab": "الملف",
     "payoutTab": "الدفعة",
     "teamThreadNoCase": "المحادثة مع عضو الفريق متاحة بعد اكتمال ملفك.",
+    "teamThreadNoMember": "لم يتم تعيين عضو فريق لك بعد — ستتمكن من مراسلته فور تعيينه.",
     "teamMemberTab": "عضو الفريق",
     "noConversationYet": "لا توجد محادثة بعد",
     "contactTeamMember": "تواصل مع عضو الفريق"
