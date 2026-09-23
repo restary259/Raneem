@@ -491,11 +491,64 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const isLastTask = taskIndex === TASKS.length - 1;
   const isLastOfStep = taskIndex === lastTaskIndexOfStep(task.step);
 
+  /** Saves everything currently on screen (blank values are left untouched). */
+  const confirmAll = async () => {
+    const p = profile;
+    const patch: Record<string, unknown> = {};
+    const put = (key: string, value?: string | null) => {
+      if (filled(value)) patch[key] = value;
+    };
+    put("full_name", p?.full_name);
+    put("phone_number", p?.phone_number);
+    put("date_of_birth", p?.date_of_birth);
+    put("gender", p?.gender);
+    put("nationality", p?.nationality);
+    put("city", p?.city);
+    put("street", p?.street);
+    put("house_number", p?.house_number);
+    put("residential_city", p?.residential_city);
+    put("university_name", p?.university_name);
+    put("language_school_id", p?.language_school_id);
+    put("intake_month", p?.intake_month);
+    if (filled(p?.street) && filled(p?.house_number) && filled(p?.residential_city)) {
+      patch.country = `${p!.street!.trim()} ${p!.house_number!.trim()}, ${p!.residential_city!.trim()}`;
+    }
+    const cleaned = cleanedContacts();
+    if (cleaned.length >= 2) {
+      patch.emergency_contacts = cleaned;
+      patch.emergency_contact_name = cleaned[0]?.name;
+      patch.emergency_contact_phone = cleaned[0]?.phone;
+    }
+    const ok = await persist(patch);
+    if (!ok) return;
+    setIdentityConfirmed(true);
+    setReviewOpen(false);
+    toast({ description: t("studentOnboarding.saved", "Your details were saved.") });
+    await load();
+  };
+
+  /** Jump from the review straight to one field, then come back. */
+  const editFromReview = (index: number) => {
+    setAttempted(false);
+    setEditingFromReview(true);
+    setReviewOpen(false);
+    setTaskIndex(index);
+  };
+
   const next = async () => {
     const err = taskErrorFor(task, profile, contacts, identityConfirmed);
     if (err) {
       setAttempted(true);
       toast({ variant: "destructive", description: t(err, err) });
+      return;
+    }
+    // Single-field edit started from the review → save it and go back there.
+    if (editingFromReview && !isLastTask) {
+      const ok = await persist(stepPatch(task.step));
+      if (!ok) return;
+      setEditingFromReview(false);
+      setAttempted(false);
+      setReviewOpen(true);
       return;
     }
     // Final task → persist contacts, re-read authoritative profile, close the gate.
