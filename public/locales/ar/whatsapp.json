@@ -257,7 +257,8 @@
       "lead": "عميل محتمل"
     },
     "autoLinked": "تمت المطابقة تلقائياً",
-    "staffConfirmed": "تم التأكيد من الفريق"
+    "staffConfirmed": "تم التأكيد من الفريق",
+    "nameMissing": "بدون اسم بعد"
   },
   "crm": {
     "autoLinked": "تمت المطابقة تلقائياً",
@@ -386,7 +387,8 @@
   "owner": {
     "claim": "استلام المحادثة",
     "release": "إعادة المحادثة",
-    "takenBy": "مع {{name}}"
+    "takenBy": "مع {{name}}",
+    "unownedNudge": "لم يستلمها أحد بعد"
   },
   "consentAudit": {
     "recorded": "تم التسجيل {{time}}"
@@ -414,5 +416,14 @@
       "follow_up": "متابعة",
       "campaign": "حملة"
     }
+  },
+  "delivery": {
+    "fromPhone": "أُرسلت من الهاتف",
+    "sent": "أُرسلت",
+    "delivered": "وصلت",
+    "read": "تمت القراءة",
+    "failed": "فشلت",
+    "queued": "في الانتظار",
+    "accepted": "مقبولة"
   }
 }

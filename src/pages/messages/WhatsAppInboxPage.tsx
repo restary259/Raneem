@@ -284,6 +284,8 @@ export default function WhatsAppInboxPage({
     };
   }, [threads, query]);
 
+  const unownedCount = useMemo(() => threads.filter((thread) => !thread.assigned_to).length, [threads]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (teamMode) {
@@ -671,7 +673,12 @@ export default function WhatsAppInboxPage({
                         <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
                           {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
                           {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {fmt(m.created_at, i18n.language)}
+                            {m.direction === "outbound" && (m.is_echo
+                              ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
+                              : <> · {t(`delivery.${m.delivery_status}`, m.delivery_status)}</>)}
+                          </span>
                         </MessageContent>
                       </Message>
                     </div>
@@ -811,6 +818,16 @@ export default function WhatsAppInboxPage({
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={slaOnly} onCheckedChange={setSlaOnly} aria-label={t("filters.sla")} />{t("filters.sla")}</label>
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={snoozedOnly} onCheckedChange={setSnoozedOnly} aria-label={t("filters.snoozed")} />{t("filters.snoozed")}</label>
                 </div>
+                {unownedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setOwnerFilter(ownerFilter === "unassigned" ? "all" : "unassigned")}
+                    className={cn("flex w-full items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors", ownerFilter === "unassigned" ? "border-amber-500/60 bg-amber-500/10" : "border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10")}
+                  >
+                    <span className="font-medium">{t("owner.unownedNudge", "Nobody has taken these yet")}</span>
+                    <Badge variant="outline" className="text-[10px]">{unownedCount}</Badge>
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -825,6 +842,7 @@ export default function WhatsAppInboxPage({
                   <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
                   {!simplified && (
                     <div className="mt-1 flex flex-wrap items-center gap-1">
+                      {!thread.lead.student_name && <Badge variant="outline" className="border-amber-500/50 text-[9px] text-amber-700 dark:text-amber-300">{t("identity.nameMissing", "No name yet")}</Badge>}
                       <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
                       {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
                       {thread.intent && <Badge variant="secondary" className="text-[9px]">{t(`intent.${thread.intent}`, thread.intent)}</Badge>}
