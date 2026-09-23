@@ -689,7 +689,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             variant="outline"
             className="w-full"
             disabled={saving}
-            onClick={() => { setReviewOpen(false); setEditingFromReview(false); setTaskIndex(0); }}
+            onClick={() => { reviewDismissed.current = true; setReviewOpen(false); setEditingFromReview(false); setTaskIndex(0); }}
           >
             {t("studentOnboarding.review.editAll", "Go through the details step by step")}
           </Button>
