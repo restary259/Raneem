@@ -157,17 +157,19 @@ export async function downloadInvoicePdf(
     y += 17;
   }
 
+  const noteText = setText(L.separationNote, 8, false, MUTED);
+  const noteLines = doc.splitTextToSize(noteText, contentWidth - 10);
+  const noteHeight = Math.max(16, noteLines.length * 4.5 + 8);
+  if (y + noteHeight + 16 > 278) {
+    doc.addPage();
+    y = 20;
+  }
   doc.setDrawColor(...BORDER);
   doc.setLineDashPattern([1.5, 1.5], 0);
-  doc.roundedRect(margin, y, contentWidth, 16, 2, 2, "S");
+  doc.roundedRect(margin, y, contentWidth, noteHeight, 2, 2, "S");
   doc.setLineDashPattern([], 0);
-  const noteLines = doc.splitTextToSize(draw(L.separationNote), contentWidth - 10);
-  doc.text(setText("", 8, false, MUTED) || noteLines, isArabic ? pageWidth - margin - 5 : margin + 5, y + 6, {
-    align,
-    maxWidth: contentWidth - 10,
-  });
-  doc.text(noteLines, isArabic ? pageWidth - margin - 5 : margin + 5, y + 6, { align, maxWidth: contentWidth - 10 });
-  y += 23;
+  doc.text(noteLines, isArabic ? pageWidth - margin - 5 : margin + 5, y + 6, { align });
+  y += noteHeight + 7;
   doc.text(setText(L.support, 8, false, MUTED), edge, y, { align });
 
   doc.save(invoicePdfFileName(meta.invoiceNumber));

@@ -76,7 +76,7 @@ export default function InvoicePage() {
         <header className="px-5 pb-0 pt-8 text-center sm:px-10 sm:pt-10">
           <img src={darbLogoAsset.url} alt={L.brandLine} className="mx-auto h-auto w-32 sm:w-36" />
           <p className="mt-2 text-xs text-muted-foreground">{L.brandLine}</p>
-          <div className="mt-5 h-1 w-full bg-brand" />
+          <div className="mt-5 h-1 w-full bg-[#f9b115]" />
         </header>
 
         <div className="space-y-7 px-5 py-7 sm:px-10 sm:py-9">
@@ -127,7 +127,7 @@ export default function InvoicePage() {
           <p className="border border-dashed border-border px-4 py-3 text-xs leading-6 text-muted-foreground">{L.separationNote}</p>
         </div>
 
-        <footer className="mx-5 border-t-2 border-brand px-0 py-6 text-xs text-muted-foreground sm:mx-10">
+        <footer className="mx-5 border-t-2 border-[#f9b115] px-0 py-6 text-xs text-muted-foreground sm:mx-10">
           <p>{L.support}</p>
           <p dir="ltr" className="mt-2">darb.agency · +49 176 23790623</p>
         </footer>
