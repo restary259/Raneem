@@ -895,12 +895,29 @@ export default function WhatsAppInboxPage({
                           }}
                           placeholder={t("conversation.campaignPlaceholder")}
                         />
-                        <div className="flex items-center justify-between rounded-lg border bg-muted/20 p-2 text-xs">
-                          <span className="text-muted-foreground">{t("conversation.marketingConsent")}</span>
-                          <Badge variant={active.lead.marketing_consent_status === "withdrawn" ? "destructive" : active.lead.marketing_consent_status === "granted" ? "secondary" : "outline"}>
-                            {t(`consent.${active.lead.marketing_consent_status ?? "unknown"}`, active.lead.marketing_consent_status ?? "unknown")}
-                          </Badge>
+                        {/* Consent is a recorded decision, not a read-only badge:
+                            campaigns refuse to send without it. */}
+                        <div className="rounded-lg border bg-muted/20 p-2 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted-foreground">{t("conversation.marketingConsent")}</span>
+                            <Select value={active.lead.marketing_consent_status ?? "unknown"} onValueChange={(value) => void saveConsent(value)}>
+                              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>{CONSENT.map((status) => <SelectItem key={status} value={status}>{t(`consent.${status}`, status)}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          {active.lead.marketing_consent_updated_at && (
+                            <p className="mt-1.5 text-[11px] text-muted-foreground">
+                              {t("consentAudit.recorded", "Recorded {{time}}", { time: fmt(active.lead.marketing_consent_updated_at, i18n.language) })}
+                              {consentActorName ? ` · ${consentActorName}` : ""}
+                            </p>
+                          )}
                         </div>
+                        <TagEditor
+                          label={t("profile.tags", "Tags")}
+                          tags={active.lead.tags ?? []}
+                          onChange={(tags) => void saveLead({ tags })}
+                          addLabel={t("profile.addTag", "Add a tag")}
+                        />
                         <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                           <div className="rounded-lg border bg-muted/20 p-2"><span className="block">{t("conversation.sourceChannel")}</span><span className="mt-1 block font-medium text-foreground">{active.source_channel ?? "whatsapp"}</span></div>
                           <div className="rounded-lg border bg-muted/20 p-2"><span className="block">{t("conversation.lastCustomerMessage")}</span><span className="mt-1 block font-medium text-foreground">{active.last_customer_message_at ? fmt(active.last_customer_message_at, i18n.language) : "—"}</span></div>
