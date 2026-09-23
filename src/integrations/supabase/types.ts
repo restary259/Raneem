@@ -6917,6 +6917,17 @@ export type Database = {
           resolved_at: string
         }[]
       }
+      get_whatsapp_purpose_catalog: {
+        Args: never
+        Returns: {
+          approval_status: string
+          automated: boolean
+          category: string
+          is_active: boolean
+          purpose: string
+          template_name: string
+        }[]
+      }
       get_whatsapp_staff_directory: {
         Args: never
         Returns: {
@@ -7521,10 +7532,33 @@ export type Database = {
         Returns: number
       }
       whatsapp_normalize_msisdn: { Args: { p_value: string }; Returns: string }
+      whatsapp_pick_template: { Args: { p_purpose: string }; Returns: string }
       whatsapp_prune_pending_statuses: { Args: never; Returns: number }
+      whatsapp_queue_template_task: {
+        Args: {
+          p_case_id: string
+          p_conversation_id: string
+          p_dedupe: string
+          p_due: string
+          p_origin: string
+          p_payload: Json
+          p_scheduled_at: string
+          p_template_id: string
+        }
+        Returns: undefined
+      }
       whatsapp_resolve_ingest_failure: {
         Args: { p_id: string }
         Returns: undefined
+      }
+      whatsapp_resolve_template_params: {
+        Args: {
+          p_case_id: string
+          p_payload: Json
+          p_scheduled_at: string
+          p_template_id: string
+        }
+        Returns: Json
       }
       whatsapp_resume_conversation: {
         Args: { p_conversation_id: string }
