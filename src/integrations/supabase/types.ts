@@ -5953,6 +5953,7 @@ export type Database = {
           error_status: number | null
           follow_up_task_id: string | null
           id: string
+          is_echo: boolean
           media_filename: string | null
           media_mime_type: string | null
           media_provider_id: string | null
@@ -5978,6 +5979,7 @@ export type Database = {
           error_status?: number | null
           follow_up_task_id?: string | null
           id?: string
+          is_echo?: boolean
           media_filename?: string | null
           media_mime_type?: string | null
           media_provider_id?: string | null
@@ -6003,6 +6005,7 @@ export type Database = {
           error_status?: number | null
           follow_up_task_id?: string | null
           id?: string
+          is_echo?: boolean
           media_filename?: string | null
           media_mime_type?: string | null
           media_provider_id?: string | null
@@ -7518,6 +7521,7 @@ export type Database = {
         Returns: number
       }
       whatsapp_normalize_msisdn: { Args: { p_value: string }; Returns: string }
+      whatsapp_prune_pending_statuses: { Args: never; Returns: number }
       whatsapp_resolve_ingest_failure: {
         Args: { p_id: string }
         Returns: undefined
