@@ -283,9 +283,16 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [previewContacts, setPreviewContacts] = useState<PreviewContact[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
 
+  /** What the team already collected on this student's case (may be empty). */
+  const [prefill, setPrefill] = useState<CasePrefillResult>({ values: {}, contact: null, hasData: false });
+  /** The one-screen "confirm the details we already have" review. */
+  const [reviewOpen, setReviewOpen] = useState(false);
+  /** True while the student edits a single field reached from the review. */
+  const [editingFromReview, setEditingFromReview] = useState(false);
+
   const load = useCallback(async () => {
     if (!user?.id) return;
-    const [profileRes, schoolsRes] = await Promise.all([
+    const [profileRes, schoolsRes, caseRes] = await Promise.all([
       (supabase as any)
         .from("profiles")
         .select(SELECT_COLUMNS)
@@ -296,6 +303,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         .select("id,name_ar,name_en,city")
         .eq("is_active", true)
         .order("name_en"),
+      (supabase as any).rpc("get_my_case"),
     ]);
     // Surface query failures instead of silently rendering an empty dropdown.
     // The schools query is gated only by the "Authenticated can read schools"
