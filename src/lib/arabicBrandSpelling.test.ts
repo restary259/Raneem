@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const WRONG_ARABIC_BRAND = /دارب|دآرب|دَرْب|دَرب/;
+const WRONG_ARABIC_BRAND_PARTS = ['د' + 'ارب', 'د' + 'آرب', 'د' + 'َرْب', 'د' + 'َرب'];
 const LATIN_BRAND = /\b(?:DARB|Darb)\b/;
 
 const ARABIC_LOCALE_DIRS = [
@@ -48,7 +48,9 @@ describe("Arabic DARB brand spelling", () => {
 
     const invalid = files.flatMap((file) => {
       const source = fs.readFileSync(file, "utf8");
-      return WRONG_ARABIC_BRAND.test(source) ? [path.relative(ROOT, file)] : [];
+      return WRONG_ARABIC_BRAND_PARTS.some((variant) => source.includes(variant))
+        ? [path.relative(ROOT, file)]
+        : [];
     });
 
     expect(invalid).toEqual([]);
