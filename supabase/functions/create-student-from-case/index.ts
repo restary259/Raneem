@@ -218,8 +218,7 @@ serve(async (req) => {
         }
       }
     } else if (!isAdmin) {
-      // Standalone invites from team members: never to an existing staff or
-      // partner account, and at most 20 per team member per day.
+      // Standalone invites from team members are capped at 20 per day.
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { count } = await supabaseAdmin
         .from("user_invitations")
