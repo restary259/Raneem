@@ -12,7 +12,8 @@ export function requiresAdvisorReview(text: string): boolean {
 export function isInsideWhatsAppServiceWindow(lastInboundAt: string | null, now = new Date()): boolean {
   if (!lastInboundAt) return false;
   const received = new Date(lastInboundAt).getTime();
-  return Number.isFinite(received) && now.getTime() >= received && now.getTime() - received <= 24 * 60 * 60 * 1000;
+  // Single source of truth for the 24-hour service window.
+  return Number.isFinite(received) && now.getTime() >= received && now.getTime() - received <= WHATSAPP_SERVICE_WINDOW_MS;
 }
 
 export function requiresApprovedTemplate(lastInboundAt: string | null, now = new Date()): boolean {
