@@ -62,11 +62,14 @@ export default function StudentMessagesPage() {
       setTeamThreadId(data as string);
       setActive("team");
     } catch (err: any) {
-      const noCase = /No completed case/i.test(err.message ?? "");
+      const noMember = /No team member assigned|No completed case/i.test(err.message ?? "");
       toast({
         variant: "destructive",
-        description: noCase
-          ? t("messagesInbox.teamThreadNoCase", "Chat with your team member is available once your case is completed.")
+        description: noMember
+          ? t(
+              "messagesInbox.teamThreadNoMember",
+              "A team member hasn't been assigned to you yet — you'll be able to message them once one is.",
+            )
           : err.message,
       });
     } finally {
