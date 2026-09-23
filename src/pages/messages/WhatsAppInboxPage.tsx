@@ -842,6 +842,7 @@ export default function WhatsAppInboxPage({
                   <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
                   {!simplified && (
                     <div className="mt-1 flex flex-wrap items-center gap-1">
+                      {!thread.lead.student_name && <Badge variant="outline" className="border-amber-500/50 text-[9px] text-amber-700 dark:text-amber-300">{t("identity.nameMissing", "No name yet")}</Badge>}
                       <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
                       {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
                       {thread.intent && <Badge variant="secondary" className="text-[9px]">{t(`intent.${thread.intent}`, thread.intent)}</Badge>}
