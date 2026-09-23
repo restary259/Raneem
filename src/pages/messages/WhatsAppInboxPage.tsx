@@ -30,11 +30,12 @@ import { isDarbBusinessHours } from "@/lib/whatsappBusinessHours";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
 import WhatsAppCrmContextPanel from "@/components/messages/WhatsAppCrmContextPanel";
+import WhatsAppHealthPanel from "@/components/messages/WhatsAppHealthPanel";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
-  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
+  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppMarketingConsent, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   searchWhatsAppCases, type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
@@ -392,6 +393,20 @@ export default function WhatsAppInboxPage({
     try { await updateLead(active.lead.id, patch); await load(); toast({ description: t("profile.saved") }); }
     catch { toast({ variant: "destructive", description: t("errors.save") }); }
   };
+  /** Consent decisions are stamped with who recorded them, server-side. */
+  const saveConsent = async (status: string) => {
+    if (!active) return;
+    try {
+      await setWhatsAppMarketingConsent(active.lead.id, status as "unknown" | "granted" | "declined" | "withdrawn");
+      await load();
+      toast({ description: t("profile.saved") });
+    } catch (error) {
+      toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    }
+  };
+  const consentActorName = active?.lead.marketing_consent_updated_by
+    ? staff.find((member) => member.id === active.lead.marketing_consent_updated_by)?.full_name ?? null
+    : null;
   useEffect(() => {
     setNameDraft(active?.lead.student_name ?? "");
     setEditingName(false);
@@ -686,6 +701,21 @@ export default function WhatsAppInboxPage({
                     <Button size="sm" variant="outline" onClick={() => setFollowUpOpen(true)}><CalendarClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.schedule")}</Button>
                   </>
                 )}
+                {/* Team members can take a free conversation or hand back their
+                    own; assigning someone else stays with admins (enforced in SQL). */}
+                {teamMode && (active.assigned_to === user?.id ? (
+                  <Button size="sm" variant="outline" onClick={() => void assignConversation(null)}>
+                    <UserRound className="me-1.5 h-3.5 w-3.5" />{t("owner.release", "Hand back")}
+                  </Button>
+                ) : !active.assigned_to ? (
+                  <Button size="sm" variant="outline" onClick={() => void assignConversation(user?.id ?? null)}>
+                    <UserRound className="me-1.5 h-3.5 w-3.5" />{t("owner.claim", "Take this chat")}
+                  </Button>
+                ) : (
+                  <Badge variant="secondary" className="text-[11px]">
+                    {t("owner.takenBy", "With {{name}}", { name: staff.find((member) => member.id === active.assigned_to)?.full_name ?? t("filters.unassigned") })}
+                  </Badge>
+                ))}
                 <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLIES_AR.map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
@@ -895,12 +925,29 @@ export default function WhatsAppInboxPage({
                           }}
                           placeholder={t("conversation.campaignPlaceholder")}
                         />
-                        <div className="flex items-center justify-between rounded-lg border bg-muted/20 p-2 text-xs">
-                          <span className="text-muted-foreground">{t("conversation.marketingConsent")}</span>
-                          <Badge variant={active.lead.marketing_consent_status === "withdrawn" ? "destructive" : active.lead.marketing_consent_status === "granted" ? "secondary" : "outline"}>
-                            {t(`consent.${active.lead.marketing_consent_status ?? "unknown"}`, active.lead.marketing_consent_status ?? "unknown")}
-                          </Badge>
+                        {/* Consent is a recorded decision, not a read-only badge:
+                            campaigns refuse to send without it. */}
+                        <div className="rounded-lg border bg-muted/20 p-2 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted-foreground">{t("conversation.marketingConsent")}</span>
+                            <Select value={active.lead.marketing_consent_status ?? "unknown"} onValueChange={(value) => void saveConsent(value)}>
+                              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>{CONSENT.map((status) => <SelectItem key={status} value={status}>{t(`consent.${status}`, status)}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          {active.lead.marketing_consent_updated_at && (
+                            <p className="mt-1.5 text-[11px] text-muted-foreground">
+                              {t("consentAudit.recorded", "Recorded {{time}}", { time: fmt(active.lead.marketing_consent_updated_at, i18n.language) })}
+                              {consentActorName ? ` · ${consentActorName}` : ""}
+                            </p>
+                          )}
                         </div>
+                        <TagEditor
+                          label={t("profile.tags", "Tags")}
+                          tags={active.lead.tags ?? []}
+                          onChange={(tags) => void saveLead({ tags })}
+                          addLabel={t("profile.addTag", "Add a tag")}
+                        />
                         <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                           <div className="rounded-lg border bg-muted/20 p-2"><span className="block">{t("conversation.sourceChannel")}</span><span className="mt-1 block font-medium text-foreground">{active.source_channel ?? "whatsapp"}</span></div>
                           <div className="rounded-lg border bg-muted/20 p-2"><span className="block">{t("conversation.lastCustomerMessage")}</span><span className="mt-1 block font-medium text-foreground">{active.last_customer_message_at ? fmt(active.last_customer_message_at, i18n.language) : "—"}</span></div>
@@ -1034,7 +1081,14 @@ export default function WhatsAppInboxPage({
             <Button size="icon" variant="outline" onClick={load} aria-label={t("actions.refresh")}><RefreshCw className="h-4 w-4" /></Button>
           </div>
         </div>
-        {inboxWorkspace(true)}
+        <Tabs defaultValue="inbox" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+          <TabsList className="flex w-full max-w-[420px] shrink-0 justify-start gap-1 overflow-x-auto">
+            <TabsTrigger value="inbox" className="shrink-0">{t("tabs.inbox")}</TabsTrigger>
+            <TabsTrigger value="health" className="shrink-0">{t("tabs.health", "Delivery health")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="inbox" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col">{inboxWorkspace(true)}</TabsContent>
+          <TabsContent value="health" className="m-0 min-w-0"><WhatsAppHealthPanel isAdmin={isAdmin} /></TabsContent>
+        </Tabs>
         {startDialog}
       </div>
     );
@@ -1055,7 +1109,7 @@ export default function WhatsAppInboxPage({
         {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
       </div>
       <Tabs defaultValue="inbox" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-        <TabsList className={cn("grid w-full max-w-[470px] shrink-0 overflow-hidden", canManageTemplates ? "grid-cols-3" : "grid-cols-2")}><TabsTrigger value="inbox">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard">{t("tabs.dashboard")}</TabsTrigger>{canManageTemplates && <TabsTrigger value="templates">{t("tabs.templates")}</TabsTrigger>}</TabsList>
+        <TabsList className={cn("flex w-full max-w-[640px] shrink-0 justify-start gap-1 overflow-x-auto")}><TabsTrigger value="inbox" className="shrink-0">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard" className="shrink-0">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="health" className="shrink-0">{t("tabs.health", "Delivery health")}</TabsTrigger>{canManageTemplates && <TabsTrigger value="templates" className="shrink-0">{t("tabs.templates")}</TabsTrigger>}</TabsList>
         <TabsContent value="inbox" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col">{inboxWorkspace(false)}</TabsContent>
         <TabsContent value="dashboard" className="m-0 min-w-0 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -1094,6 +1148,9 @@ export default function WhatsAppInboxPage({
           </div>
         </TabsContent>
         {canManageTemplates && <TabsContent value="templates" className="m-0 min-w-0 space-y-3"><Card className="rounded-xl shadow-none"><div className="flex flex-wrap items-start justify-between gap-3 border-b p-5"><div><div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-emerald-600" /><h2 className="font-semibold">{t("templates.title")}</h2></div><p className="mt-1 text-sm text-muted-foreground">{t("templates.required")}</p></div><Button variant="outline" disabled={templateSyncing} onClick={() => void syncTemplates()}><RefreshCw className={cn("me-2 h-4 w-4", templateSyncing && "animate-spin")} />{t("templates.sync")}</Button></div>{templates.length ? <div className="divide-y">{templates.map((x) => <div key={x.id} className="grid gap-2 p-4 text-sm sm:grid-cols-5"><strong>{t(`templates.purpose.${x.purpose}`, x.purpose)}</strong><span>{x.provider_name}</span><span>{x.language_code}</span><Badge variant="outline" className="w-fit">{x.approval_status}</Badge><div className="flex flex-col gap-2"><label className="flex items-center gap-2 text-xs"><Switch checked={x.is_active !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { is_active: value })} /><span>{t("templates.active", "Active")}</span></label><label className="flex items-center gap-2 text-xs"><Switch checked={x.available_to_team !== false} onCheckedChange={(value) => void toggleTemplateFlag(x.id, { available_to_team: value })} /><span>{t("templates.availableToTeam", "Available to team")}</span></label></div></div>)}</div> : <EmptyState title={t("templates.noneTitle")} description={t("templates.noneDescription")} icon={ShieldCheck} />}</Card><Card className="rounded-xl p-5 shadow-none"><h2 className="font-semibold">{t("templates.createTitle")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("templates.createHelp")}</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><Select value={templatePurpose} onValueChange={setTemplatePurpose}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TEMPLATE_PURPOSES.map((purpose) => <SelectItem key={purpose} value={purpose}>{t(`templates.purpose.${purpose}`)}</SelectItem>)}</SelectContent></Select><Select value={templateLanguage} onValueChange={(value) => setTemplateLanguage(value as "ar" | "en" | "he")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">{t("templates.arabic")}</SelectItem><SelectItem value="he">{t("templates.hebrew")}</SelectItem><SelectItem value="en">{t("templates.english")}</SelectItem></SelectContent></Select><Select value={templateCategory} onValueChange={(value) => setTemplateCategory(value as "UTILITY" | "MARKETING")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="UTILITY">{t("templates.utility")}</SelectItem><SelectItem value="MARKETING">{t("templates.marketing")}</SelectItem></SelectContent></Select></div><Textarea className="mt-3 min-h-28" value={templateBody} onChange={(event) => setTemplateBody(event.target.value)} placeholder={t("templates.bodyPlaceholder")} /><div className="mt-3 flex justify-end"><Button disabled={templateCreating || templateBody.trim().length < 20} onClick={() => void createTemplate()}><Plus className="me-2 h-4 w-4" />{t("templates.submit")}</Button></div></Card></TabsContent>}
+        <TabsContent value="health" className="m-0 min-w-0">
+          <WhatsAppHealthPanel isAdmin={isAdmin} />
+        </TabsContent>
       </Tabs>
       <Dialog open={customSnoozeOpen} onOpenChange={setCustomSnoozeOpen}>
         <DialogContent dir={rtl ? "rtl" : "ltr"}>

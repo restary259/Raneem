@@ -9,7 +9,8 @@
     "templates": "Templates",
     "admin": "Admin",
     "team": "Team view",
-    "viewToggle": "View"
+    "viewToggle": "View",
+    "health": "Delivery health"
   },
   "quick": {
     "all": "All",
@@ -381,5 +382,37 @@
     "allStages": "All stages",
     "optional": "Optional",
     "kickFailed": "The campaign was created, but the first dispatch kick failed; the scheduler will retry automatically."
+  },
+  "owner": {
+    "claim": "Take this chat",
+    "release": "Hand back",
+    "takenBy": "With {{name}}"
+  },
+  "consentAudit": {
+    "recorded": "Recorded {{time}}"
+  },
+  "health": {
+    "title": "Delivery health",
+    "today": "Today at a glance",
+    "in": "Messages in",
+    "out": "Messages out",
+    "delivered": "Delivered",
+    "failed": "Failed",
+    "queued": "Queued",
+    "blockedTitle": "Blocked incoming messages",
+    "blockedEmpty": "Every incoming message was processed.",
+    "jobsTitle": "Messages that never went out",
+    "jobsEmpty": "Every scheduled message went out.",
+    "nothingFailed": "Nothing failed",
+    "markHandled": "Mark handled",
+    "handled": "Marked as handled",
+    "retry": "Retry",
+    "retried": "Queued again",
+    "attempts": "{{count}} attempts",
+    "unknownEvent": "unknown",
+    "kind": {
+      "follow_up": "Follow-up",
+      "campaign": "Campaign"
+    }
   }
 }
