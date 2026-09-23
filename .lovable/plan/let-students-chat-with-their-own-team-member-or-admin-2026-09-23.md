@@ -1,4 +1,4 @@
-# Let students chat with their own team member
+# Let students chat with their own team member OR ADMIN 
 
 Today a student can only open the "Team Member" chat once their file has reached the final, fully-paid stage. In the live data almost no student is at that stage, so for nearly everyone the button fails with "Chat with your team member is available once your case is completed." The chat itself already exists and works — only the condition for opening it is too strict.
 
