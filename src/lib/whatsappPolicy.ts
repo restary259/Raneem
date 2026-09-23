@@ -1,3 +1,5 @@
+import { WHATSAPP_SERVICE_WINDOW_MS } from "@/lib/whatsappOperational";
+
 const ESCALATION_PATTERNS = [
   /\b(human|person|advisor|price|cost|fee|payment|pay|visa|legal|lawyer|guarantee|acceptance|deadline|timeline|uncertain|not sure)\b/iu,
   /سعر|تكلفة|دفع|فيزا|تأشيرة|قانون|محامي|موظف|إنسان|مستشار|قبول|ضمان|موعد|مش متأكد|غير متأكد/iu,
