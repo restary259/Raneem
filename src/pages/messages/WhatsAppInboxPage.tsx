@@ -671,7 +671,12 @@ export default function WhatsAppInboxPage({
                         <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
                           {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
                           {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className="text-[10px] text-muted-foreground">{fmt(m.created_at, i18n.language)} · {m.delivery_status}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {fmt(m.created_at, i18n.language)}
+                            {m.direction === "outbound" && (m.is_echo
+                              ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
+                              : <> · {t(`delivery.${m.delivery_status}`, m.delivery_status)}</>)}
+                          </span>
                         </MessageContent>
                       </Message>
                     </div>
