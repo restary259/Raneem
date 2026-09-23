@@ -19,6 +19,12 @@ function isRateLimited(ip: string): boolean {
 }
 
 const CURRENCY_CODE = /^[A-Z]{3}$/;
+// Only the pairs the calculator offers; anything else never reaches the paid API.
+const ALLOWED_FROM = new Set(["ILS"]);
+const ALLOWED_TO = new Set(["EUR", "USD", "GBP", "JOD", "CAD"]);
+// Rates are cached per pair for an hour, so repeated calls reuse one upstream lookup.
+const CACHE_TTL = 60 * 60 * 1000;
+const rateCache = new Map<string, { rate: number; expiresAt: number }>();
 
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
@@ -44,6 +50,14 @@ serve(async (req) => {
     if (!CURRENCY_CODE.test(fromCode) || !CURRENCY_CODE.test(toCode)) {
       return json({ error: "Invalid 'from' or 'to' currency code" }, 400);
     }
+    if (!ALLOWED_FROM.has(fromCode) || !ALLOWED_TO.has(toCode)) {
+      return json({ error: "Unsupported currency pair" }, 400);
+    }
+    const cacheKey = `${fromCode}-${toCode}`;
+    const cached = rateCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return json({ result: cached.rate });
+    }
 
     const apiKey = Deno.env.get("EXCHANGE_RATE_API_KEY");
     if (!apiKey) {
@@ -67,6 +81,7 @@ serve(async (req) => {
       return json({ error: "Exchange rate service unavailable" }, 502);
     }
 
+    rateCache.set(cacheKey, { rate: data.result, expiresAt: Date.now() + CACHE_TTL });
     return json({ result: data.result });
   } catch (e) {
     console.error("get-exchange-rate error:", e);

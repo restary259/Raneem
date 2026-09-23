@@ -47,19 +47,43 @@ Deno.serve(async (req) => {
 
     // Handle visa_status_changed event from trigger
     if (body.event === "visa_status_changed") {
-      const { student_email, student_name, new_status } = body;
+      const { new_status } = body;
+      const requestedEmail = String(body.student_email ?? "").trim().toLowerCase();
 
-      if (!student_email || !new_status) {
+      if (!requestedEmail || !new_status) {
         return new Response(JSON.stringify({ error: "Missing student_email or new_status" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
+      // Recipient must be a real student profile whose stored visa status
+      // matches this event; the address and name come from the database,
+      // never from the request, so this cannot email arbitrary addresses.
+      const { data: studentProfile } = await serviceClient
+        .from("profiles")
+        .select("id, email, full_name, visa_status")
+        .ilike("email", requestedEmail)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (!studentProfile?.email || studentProfile.visa_status !== new_status) {
+        return new Response(JSON.stringify({ error: "Recipient not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: isStudent } = await serviceClient
+        .from("user_roles").select("role").eq("user_id", studentProfile.id).eq("role", "student").maybeSingle();
+      if (!isStudent) {
+        return new Response(JSON.stringify({ error: "Recipient not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const student_email = studentProfile.email;
+      const student_name = studentProfile.full_name;
+
       const template = VISA_EMAIL_TEMPLATES[new_status];
       if (template) {
-        // Send email via Supabase Auth's email service (or log for now)
-        console.log(`[VISA EMAIL] To: ${student_email}, Subject: ${template.subject}`);
-        console.log(`[VISA EMAIL] Body: ${template.body(student_name || "Student")}`);
+        console.log(`[VISA EMAIL] Sending status "${new_status}" email`);
+        
         
         // Try sending via the send-email function if available
         try {

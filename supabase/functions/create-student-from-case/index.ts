@@ -196,6 +196,42 @@ serve(async (req) => {
       }
 
       caseData = fetchedCase;
+
+      // Team members may only invite the email recorded on the case's
+      // submission (when one is recorded), so the case cannot be used to send
+      // invitations to arbitrary addresses.
+      if (!isAdmin) {
+        const { data: sub } = await supabaseAdmin
+          .from("case_submissions")
+          .select("student_email")
+          .eq("case_id", case_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const recorded = String(sub?.student_email ?? "").trim().toLowerCase();
+        if (recorded && recorded !== student_email.trim().toLowerCase()) {
+          return jsonResponse(
+            { error: "Email does not match the student email recorded on this case", code: "EMAIL_MISMATCH" },
+            403,
+            corsHeaders,
+          );
+        }
+      }
+    } else if (!isAdmin) {
+      // Standalone invites from team members are capped at 20 per day.
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { count } = await supabaseAdmin
+        .from("user_invitations")
+        .select("id", { count: "exact", head: true })
+        .eq("inviter_id", callerId)
+        .gte("created_at", since);
+      if ((count ?? 0) >= 20) {
+        return jsonResponse(
+          { error: "Daily invitation limit reached", code: "INVITE_LIMIT" },
+          429,
+          corsHeaders,
+        );
+      }
     }
 
     // ── Captured activation link (invite mode) + temp password (manual) ──
