@@ -816,6 +816,16 @@ export default function WhatsAppInboxPage({
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={slaOnly} onCheckedChange={setSlaOnly} aria-label={t("filters.sla")} />{t("filters.sla")}</label>
                   <label className="flex items-center gap-1.5 text-xs text-muted-foreground"><Switch checked={snoozedOnly} onCheckedChange={setSnoozedOnly} aria-label={t("filters.snoozed")} />{t("filters.snoozed")}</label>
                 </div>
+                {unownedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setOwnerFilter(ownerFilter === "unassigned" ? "all" : "unassigned")}
+                    className={cn("flex w-full items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors", ownerFilter === "unassigned" ? "border-amber-500/60 bg-amber-500/10" : "border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10")}
+                  >
+                    <span className="font-medium">{t("owner.unownedNudge", "Nobody has taken these yet")}</span>
+                    <Badge variant="outline" className="text-[10px]">{unownedCount}</Badge>
+                  </button>
+                )}
               </>
             )}
           </div>
