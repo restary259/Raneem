@@ -122,6 +122,30 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Email content is taken from the caller's own latest stored message in
+    // this thread, never from the request body, so a caller cannot inject
+    // arbitrary text into emails sent to other participants.
+    let serverPreview = auth.isServiceRole ? preview : "";
+    if (!auth.isServiceRole) {
+      const table = thread_type === "direct" ? "direct_messages" : "case_messages";
+      const col = thread_type === "direct" ? "thread_id" : "case_id";
+      const { data: lastMsg } = await admin
+        .from(table)
+        .select("body")
+        .eq(col, thread_id)
+        .eq("author_id", senderId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      serverPreview = String(lastMsg?.body ?? "").slice(0, 300);
+      if (!serverPreview) {
+        return new Response(JSON.stringify({ ok: true, sent: 0, reason: "no_message" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Recipients
     let recipientIds: string[] = [];
     let threadTitle = "";
