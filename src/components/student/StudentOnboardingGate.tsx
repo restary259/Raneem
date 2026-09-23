@@ -22,6 +22,7 @@ import {
 import { BirthdayPicker } from "@/components/shared/BirthdayPicker";
 import { OnboardingShell } from "@/components/student/OnboardingShell";
 import { stripMustChangePassword } from "@/lib/profileWriteGuards";
+import { buildCasePrefill, mergeCasePrefill, type CasePrefillResult } from "@/lib/onboardingPrefill";
 
 interface EmergencyContact {
   name: string;
@@ -282,9 +283,16 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [previewContacts, setPreviewContacts] = useState<PreviewContact[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
 
+  /** What the team already collected on this student's case (may be empty). */
+  const [prefill, setPrefill] = useState<CasePrefillResult>({ values: {}, contact: null, hasData: false });
+  /** The one-screen "confirm the details we already have" review. */
+  const [reviewOpen, setReviewOpen] = useState(false);
+  /** True while the student edits a single field reached from the review. */
+  const [editingFromReview, setEditingFromReview] = useState(false);
+
   const load = useCallback(async () => {
     if (!user?.id) return;
-    const [profileRes, schoolsRes] = await Promise.all([
+    const [profileRes, schoolsRes, caseRes] = await Promise.all([
       (supabase as any)
         .from("profiles")
         .select(SELECT_COLUMNS)
@@ -295,6 +303,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         .select("id,name_ar,name_en,city")
         .eq("is_active", true)
         .order("name_en"),
+      (supabase as any).rpc("get_my_case"),
     ]);
     // Surface query failures instead of silently rendering an empty dropdown.
     // The schools query is gated only by the "Authenticated can read schools"
@@ -312,17 +321,46 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     const schoolRows = (schoolsRes.data as { id: string; name_ar: string; name_en: string; city: string | null }[] | null) ?? [];
     setSchools(schoolRows);
+
+    // Anything the team already collected on this student's case is reused so
+    // the student confirms instead of retyping. Best-effort: a student without
+    // a case (or with no submission yet) simply gets the blank wizard.
+    let casePrefill: CasePrefillResult = { values: {}, contact: null, hasData: false };
+    try {
+      const caseRow = Array.isArray(caseRes?.data) ? caseRes.data[0] : caseRes?.data;
+      if (caseRow?.id) {
+        const submissionRes = await (supabase as any)
+          .from("case_submissions")
+          .select("*")
+          .eq("case_id", caseRow.id)
+          .maybeSingle();
+        casePrefill = buildCasePrefill(caseRow, submissionRes.data ?? null, schoolRows.map(s => s.id));
+      }
+    } catch (e) {
+      console.warn("[Darb onboarding] case prefill unavailable:", e);
+    }
+    setPrefill(casePrefill);
+
     const data = profileRes.data;
     if (data) {
-      const merged: ProfileShape = {
-        ...EMPTY_PROFILE,
-        ...data,
-      };
+      const merged: ProfileShape = mergeCasePrefill(
+        { ...EMPTY_PROFILE, ...data } as ProfileShape,
+        casePrefill.values,
+      );
+      // Keep the school display name in sync when the id came from the case.
+      if (merged.language_school_id && !filled(merged.university_name)) {
+        const sch = schoolRows.find(s => s.id === merged.language_school_id);
+        if (sch) merged.university_name = i18n.language === "ar" ? sch.name_ar : sch.name_en;
+      }
       setProfile(merged);
       const existing = Array.isArray(data.emergency_contacts) ? data.emergency_contacts : [];
       const seeded = [...existing.map((c: any) => ({ ...emptyContact(), ...c }))];
+      if (seeded.length === 0 && casePrefill.contact) seeded.push({ ...casePrefill.contact });
       while (seeded.length < 2) seeded.push(emptyContact());
       setContacts(seeded);
+      // Offer the one-screen review whenever the case supplied something and
+      // the profile is not already complete.
+      setReviewOpen(casePrefill.hasData && !isProfileComplete(merged));
       // Resume at the first incomplete step, then at the first incomplete task
       // within that step so the student lands on exactly the field they missed.
       let resumeStep = 0;
@@ -339,7 +377,9 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       setTaskIndex(firstInvalidTask >= 0 ? firstInvalidTask : TASKS.length - 1);
 
     } else {
-      setProfile({ ...EMPTY_PROFILE });
+      setProfile(mergeCasePrefill({ ...EMPTY_PROFILE }, casePrefill.values));
+      if (casePrefill.contact) setContacts([{ ...casePrefill.contact }, emptyContact()]);
+      setReviewOpen(casePrefill.hasData);
       setTaskIndex(0);
     }
     setLoading(false);
@@ -451,11 +491,64 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const isLastTask = taskIndex === TASKS.length - 1;
   const isLastOfStep = taskIndex === lastTaskIndexOfStep(task.step);
 
+  /** Saves everything currently on screen (blank values are left untouched). */
+  const confirmAll = async () => {
+    const p = profile;
+    const patch: Record<string, unknown> = {};
+    const put = (key: string, value?: string | null) => {
+      if (filled(value)) patch[key] = value;
+    };
+    put("full_name", p?.full_name);
+    put("phone_number", p?.phone_number);
+    put("date_of_birth", p?.date_of_birth);
+    put("gender", p?.gender);
+    put("nationality", p?.nationality);
+    put("city", p?.city);
+    put("street", p?.street);
+    put("house_number", p?.house_number);
+    put("residential_city", p?.residential_city);
+    put("university_name", p?.university_name);
+    put("language_school_id", p?.language_school_id);
+    put("intake_month", p?.intake_month);
+    if (filled(p?.street) && filled(p?.house_number) && filled(p?.residential_city)) {
+      patch.country = `${p!.street!.trim()} ${p!.house_number!.trim()}, ${p!.residential_city!.trim()}`;
+    }
+    const cleaned = cleanedContacts();
+    if (cleaned.length >= 2) {
+      patch.emergency_contacts = cleaned;
+      patch.emergency_contact_name = cleaned[0]?.name;
+      patch.emergency_contact_phone = cleaned[0]?.phone;
+    }
+    const ok = await persist(patch);
+    if (!ok) return;
+    setIdentityConfirmed(true);
+    setReviewOpen(false);
+    toast({ description: t("studentOnboarding.saved", "Your details were saved.") });
+    await load();
+  };
+
+  /** Jump from the review straight to one field, then come back. */
+  const editFromReview = (index: number) => {
+    setAttempted(false);
+    setEditingFromReview(true);
+    setReviewOpen(false);
+    setTaskIndex(index);
+  };
+
   const next = async () => {
     const err = taskErrorFor(task, profile, contacts, identityConfirmed);
     if (err) {
       setAttempted(true);
       toast({ variant: "destructive", description: t(err, err) });
+      return;
+    }
+    // Single-field edit started from the review → save it and go back there.
+    if (editingFromReview && !isLastTask) {
+      const ok = await persist(stepPatch(task.step));
+      if (!ok) return;
+      setEditingFromReview(false);
+      setAttempted(false);
+      setReviewOpen(true);
       return;
     }
     // Final task → persist contacts, re-read authoritative profile, close the gate.
@@ -508,6 +601,85 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   }
 
   if (complete) return <>{children}</>;
+
+  // ── Review: everything already on file, confirm in one tap or edit a line ──
+  if (reviewOpen) {
+    const notOnFile = t("studentOnboarding.review.missing", "Not on file yet");
+    const addressText = [
+      [profile?.street, profile?.house_number].filter(Boolean).join(" "),
+      profile?.residential_city,
+    ].filter(Boolean).join(", ") || (profile?.country ?? "");
+    const contactText = contacts
+      .filter(c => filled(c.name) && filled(c.phone))
+      .map(c => `${c.name} · ${c.phone}`)
+      .join(" / ");
+    const genderText = profile?.gender
+      ? t(`studentOnboarding.gender${profile.gender === "female" ? "Female" : "Male"}`, profile.gender)
+      : "";
+
+    const rows: { label: string; value: string; taskIndex: number | null }[] = [
+      { label: t("studentOnboarding.fullName", "Full name"), value: profile?.full_name ?? "", taskIndex: 0 },
+      { label: t("studentOnboarding.phone", "Phone number"), value: profile?.phone_number ?? "", taskIndex: 0 },
+      { label: t("studentOnboarding.email", "Email address"), value: profile?.email ?? "", taskIndex: null },
+      { label: t("studentOnboarding.dob", "Date of birth"), value: profile?.date_of_birth ?? "", taskIndex: 1 },
+      { label: t("studentOnboarding.gender", "Gender"), value: genderText, taskIndex: 2 },
+      { label: t("studentOnboarding.nationality", "Nationality"), value: profile?.nationality ?? "", taskIndex: 3 },
+      { label: t("studentOnboarding.city", "City of birth"), value: profile?.city ?? "", taskIndex: 4 },
+      { label: t("studentOnboarding.country", "Address"), value: addressText, taskIndex: 5 },
+      { label: t("studentOnboarding.universityName", "Language school"), value: profile?.university_name ?? "", taskIndex: 6 },
+      { label: t("studentOnboarding.intakeMonth", "Intake month"), value: profile?.intake_month ?? "", taskIndex: 7 },
+      { label: t("studentOnboarding.emergencyContacts", "Emergency contacts"), value: contactText, taskIndex: 8 },
+    ];
+
+    return (
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col gap-4 p-4 sm:p-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t("studentOnboarding.review.title", "Confirm your details")}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("studentOnboarding.review.subtitle", "These are the details we already have on your file. Check them, fix anything that's wrong, then confirm.")}
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="divide-y divide-border p-0">
+            {rows.map(row => (
+              <div key={row.label} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">{row.label}</p>
+                  <p className={cn("truncate text-sm", filled(row.value) ? "text-foreground" : "text-muted-foreground italic")}>
+                    {filled(row.value) ? row.value : notOnFile}
+                  </p>
+                </div>
+                {row.taskIndex !== null && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => editFromReview(row.taskIndex!)}>
+                    {t("studentOnboarding.review.edit", "Edit")}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <div className="mt-auto space-y-2 pb-2">
+          <Button className="w-full" onClick={confirmAll} disabled={saving}>
+            {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+            {t("studentOnboarding.review.confirmAll", "Everything is correct")}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={saving}
+            onClick={() => { setReviewOpen(false); setEditingFromReview(false); setTaskIndex(0); }}
+          >
+            {t("studentOnboarding.review.editAll", "Go through the details step by step")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
 
   const steps = [
     t("studentOnboarding.step1", "Confirm your details"),
