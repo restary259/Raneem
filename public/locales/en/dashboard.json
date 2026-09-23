@@ -4695,7 +4695,13 @@
     "q": {
       "confirmIdentity": "Let's start with your details",
       "confirmIdentityDesc": "Check the details we already have. Correct anything that's wrong, then confirm to continue."
-    }
+    },
+    "review.title": "Confirm your details",
+    "review.subtitle": "These are the details we already have on your file. Check them, fix anything that's wrong, then confirm.",
+    "review.missing": "Not on file yet",
+    "review.edit": "Edit",
+    "review.confirmAll": "Everything is correct",
+    "review.editAll": "Go through the details step by step"
   },
   "pushSettings": {
     "title": "Device notifications",
