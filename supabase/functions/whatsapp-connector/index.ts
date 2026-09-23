@@ -13,6 +13,7 @@ const PURPOSES = [
   "appointment_confirmation",
   "consultation_confirmation",
   "appointment_reminder",
+  "appointment_rescheduled",
   "documents_missing",
   "document_reminder",
   "profile_incomplete",
@@ -28,6 +29,7 @@ const PURPOSES = [
   "next_steps",
   "support_followup",
   "case_update",
+  "re_engagement",
 ] as const;
 const MEDIA_TYPES = ["image", "video", "audio", "document"];
 

@@ -207,11 +207,22 @@
       "enrollment_confirmation": "تأكيد التسجيل",
       "next_steps": "الخطوات التالية",
       "support_followup": "متابعة الدعم",
-      "case_update": "تحديث الحالة"
+      "case_update": "تحديث الحالة",
+      "appointment_rescheduled": "تغيير موعد",
+      "re_engagement": "إعادة تواصل (تسويقي)"
     },
     "active": "مُفعّل",
     "availableToTeam": "متاح للفريق",
-    "hebrew": "العبرية"
+    "hebrew": "العبرية",
+    "catalog": {
+      "title": "أغراض الرسائل",
+      "help": "كل غرض يمكن للنظام إرساله، وهل وافقت Meta على قالب له.",
+      "automated": "يُرسل تلقائياً",
+      "manual": "يرسله الفريق",
+      "none": "لا يوجد قالب بعد",
+      "needsApproval": "الإرسال التلقائي بانتظار قالب معتمد",
+      "missingCount": "{{count}} من الأغراض التلقائية ما زالت تحتاج قالباً معتمداً"
+    }
   },
   "actions": {
     "retry": "إعادة المحاولة",

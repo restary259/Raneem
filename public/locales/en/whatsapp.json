@@ -207,11 +207,22 @@
       "enrollment_confirmation": "Enrollment confirmation",
       "next_steps": "Next steps",
       "support_followup": "Support follow-up",
-      "case_update": "Case update"
+      "case_update": "Case update",
+      "appointment_rescheduled": "Appointment moved",
+      "re_engagement": "Re-engagement (marketing)"
     },
     "active": "Active",
     "availableToTeam": "Available to team",
-    "hebrew": "Hebrew"
+    "hebrew": "Hebrew",
+    "catalog": {
+      "title": "Message purposes",
+      "help": "Each purpose the app can send, and whether Meta has approved a template for it.",
+      "automated": "Sent automatically",
+      "manual": "Sent by staff",
+      "none": "No template yet",
+      "needsApproval": "Automation is waiting on an approved template",
+      "missingCount": "{{count}} automated purposes still need an approved template"
+    }
   },
   "actions": {
     "retry": "Retry",
