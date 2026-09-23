@@ -30,7 +30,7 @@ A ready-to-paste pack for WhatsApp Manager covering all 22 purposes: exact name,
 - Clearly flag the purposes that the automation needs but still have no approved template.
 
 ## Recommendation
-Do Part 1 now and submit Version A of the 12 launch templates today, since Meta approval is the slowest step. Build Part 2 while approval is pending, then submit the Version B templates.
+Do Parts 1, 2 and 3 together now and submit Version A of the 12 launch templates today, since Meta approval is the slowest step. Build Part 2 while approval is pending, then submit the Version B templates.
 
 ## Technical notes
 - `queue_whatsapp_case_event_automation()` filters `components::text NOT LIKE '%{{%'`, `category='UTILITY'`, `language_code LIKE 'ar%'`, `approval_status='APPROVED'`, `is_active`. Part 2 removes the no-placeholder filter and adds a per-purpose parameter resolver (payload + case/appointment join); unresolved parameter → failed task with `last_error`.
