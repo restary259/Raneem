@@ -602,6 +602,85 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
   if (complete) return <>{children}</>;
 
+  // ── Review: everything already on file, confirm in one tap or edit a line ──
+  if (reviewOpen) {
+    const notOnFile = t("studentOnboarding.review.missing", "Not on file yet");
+    const addressText = [
+      [profile?.street, profile?.house_number].filter(Boolean).join(" "),
+      profile?.residential_city,
+    ].filter(Boolean).join(", ") || (profile?.country ?? "");
+    const contactText = contacts
+      .filter(c => filled(c.name) && filled(c.phone))
+      .map(c => `${c.name} · ${c.phone}`)
+      .join(" / ");
+    const genderText = profile?.gender
+      ? t(`studentOnboarding.gender${profile.gender === "female" ? "Female" : "Male"}`, profile.gender)
+      : "";
+
+    const rows: { label: string; value: string; taskIndex: number | null }[] = [
+      { label: t("studentOnboarding.fullName", "Full name"), value: profile?.full_name ?? "", taskIndex: 0 },
+      { label: t("studentOnboarding.phone", "Phone number"), value: profile?.phone_number ?? "", taskIndex: 0 },
+      { label: t("studentOnboarding.email", "Email address"), value: profile?.email ?? "", taskIndex: null },
+      { label: t("studentOnboarding.dob", "Date of birth"), value: profile?.date_of_birth ?? "", taskIndex: 1 },
+      { label: t("studentOnboarding.gender", "Gender"), value: genderText, taskIndex: 2 },
+      { label: t("studentOnboarding.nationality", "Nationality"), value: profile?.nationality ?? "", taskIndex: 3 },
+      { label: t("studentOnboarding.city", "City of birth"), value: profile?.city ?? "", taskIndex: 4 },
+      { label: t("studentOnboarding.country", "Address"), value: addressText, taskIndex: 5 },
+      { label: t("studentOnboarding.universityName", "Language school"), value: profile?.university_name ?? "", taskIndex: 6 },
+      { label: t("studentOnboarding.intakeMonth", "Intake month"), value: profile?.intake_month ?? "", taskIndex: 7 },
+      { label: t("studentOnboarding.emergencyContacts", "Emergency contacts"), value: contactText, taskIndex: 8 },
+    ];
+
+    return (
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col gap-4 p-4 sm:p-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t("studentOnboarding.review.title", "Confirm your details")}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("studentOnboarding.review.subtitle", "These are the details we already have on your file. Check them, fix anything that's wrong, then confirm.")}
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="divide-y divide-border p-0">
+            {rows.map(row => (
+              <div key={row.label} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">{row.label}</p>
+                  <p className={cn("truncate text-sm", filled(row.value) ? "text-foreground" : "text-muted-foreground italic")}>
+                    {filled(row.value) ? row.value : notOnFile}
+                  </p>
+                </div>
+                {row.taskIndex !== null && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => editFromReview(row.taskIndex!)}>
+                    {t("studentOnboarding.review.edit", "Edit")}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <div className="mt-auto space-y-2 pb-2">
+          <Button className="w-full" onClick={confirmAll} disabled={saving}>
+            {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+            {t("studentOnboarding.review.confirmAll", "Everything is correct")}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={saving}
+            onClick={() => { setReviewOpen(false); setEditingFromReview(false); setTaskIndex(0); }}
+          >
+            {t("studentOnboarding.review.editAll", "Go through the details step by step")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+
   const steps = [
     t("studentOnboarding.step1", "Confirm your details"),
     t("studentOnboarding.step2", "Personal"),
