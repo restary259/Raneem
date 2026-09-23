@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
           recipientName: p.full_name ?? "",
           senderName: sender?.full_name ?? "",
           threadTitle,
-          preview,
+          preview: serverPreview,
           link,
         },
         `chat-${thread_type}-${thread_id}-${p.id}-${Math.floor(now / DEBOUNCE_MS)}`,

@@ -134,10 +134,16 @@ serve(async (req) => {
         });
       }
 
+      // Pushes to another user carry fixed text and a same-origin path only,
+      // so a request can never deliver arbitrary content or external links
+      // to someone else's device. Self-tests may customise text.
+      const isSelf = targetUserId === authenticatedUserId;
+      const safeUrl = typeof url === "string" && /^\/(?!\/)[\w\-./?=&%#]*$/.test(url) ? url : "/";
+      const clip = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) : "");
       const payload = {
-        title: title || "درب",
-        body: body || "إشعار تجريبي من منصة درب",
-        url: url || "/",
+        title: (isSelf && clip(title, 80)) || "درب",
+        body: (isSelf && clip(body, 200)) || "إشعار تجريبي من منصة درب",
+        url: safeUrl,
         tag: "test",
         category: "system",
         priority: "high",
