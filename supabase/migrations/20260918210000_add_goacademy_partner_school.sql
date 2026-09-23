@@ -326,7 +326,7 @@ BEGIN
     'info',true,2),
    (v_school,'darb_recommendation','When should we apply?','متى نقدّم الطلب؟',
     'Submit the application 1–2 months before the preferred start date to improve the chance of securing the preferred accommodation. This is DARB office guidance, not a GoAcademy! minimum registration period.',
-    'قدّم الطلب قبل 1–2 شهر من موعد البدء المفضل لتحسين فرصة الحصول على السكن المفضل. هذه توصية من مكتب دارب، وليست مدة تسجيل أدنى تفرضها المدرسة.',
+    'قدّم الطلب قبل 1–2 شهر من موعد البدء المفضل لتحسين فرصة الحصول على السكن المفضل. هذه توصية من مكتب درب، وليست مدة تسجيل أدنى تفرضها المدرسة.',
     'info',true,3);
 
   -- Sources (the five supplied 2026 documents)

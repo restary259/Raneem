@@ -104,8 +104,8 @@ export default function JoinPartnerPage() {
   return (
     <div className="min-h-[70vh] bg-muted/30 py-10 px-4" dir={dir}>
       <SEOHead
-        title={t("join.seoTitle", "انضم كوكيل مع دَرب")}
-        description={t("join.seoDesc", "تسجيل سريع للوكلاء بدعوة من شريك رئيسي في دَرب.")}
+        title={t("join.seoTitle", "انضم كوكيل مع درب")}
+        description={t("join.seoDesc", "تسجيل سريع للوكلاء بدعوة من شريك رئيسي في درب.")}
       />
       <Card className="max-w-xl mx-auto shadow-lg">
         <CardHeader>
@@ -115,7 +115,7 @@ export default function JoinPartnerPage() {
           </div>
           <CardTitle className="text-2xl">{t("join.title", "انضم كوكيل")}</CardTitle>
           <CardDescription>
-            {t("join.subtitle", "تسجيل سريع — تتم مراجعة الطلب من إدارة دَرب قبل تفعيل الحساب.")}
+            {t("join.subtitle", "تسجيل سريع — تتم مراجعة الطلب من إدارة درب قبل تفعيل الحساب.")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -124,7 +124,7 @@ export default function JoinPartnerPage() {
               <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto" />
               <p className="font-semibold">{t("join.doneTitle", "تم استلام طلبك")}</p>
               <p className="text-sm text-muted-foreground">
-                {t("join.doneBody", "سيتواصل معك فريق دَرب بعد المراجعة.")}
+                {t("join.doneBody", "سيتواصل معك فريق درب بعد المراجعة.")}
               </p>
             </div>
           ) : (
