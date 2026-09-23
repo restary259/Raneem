@@ -77,7 +77,7 @@ export default function StudentMessagesPage() {
     }
   };
 
-  const hasTabs = !!(caseId || payoutThreadId);
+  const hasTabs = true;
   const showCase = active === "case" && !!caseId;
   const showPayout = active === "payout" && !!payoutThreadId;
   const showTeam = active === "team" && !!teamThreadId;
