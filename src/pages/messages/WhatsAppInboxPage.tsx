@@ -30,13 +30,16 @@ import { isDarbBusinessHours } from "@/lib/whatsappBusinessHours";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
 import WhatsAppCrmContextPanel from "@/components/messages/WhatsAppCrmContextPanel";
+import WhatsAppHealthPanel from "@/components/messages/WhatsAppHealthPanel";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
-  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
+  markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppMarketingConsent, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   searchWhatsAppCases, type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
+
+const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 
 const DISPLAY_STATES: ConversationState[] = ["waiting_for_team", "open", "waiting_for_student", "closed"];
 const QUICK_TABS = ["all", "unread", "read", "needsReply"] as const;
