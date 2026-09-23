@@ -6695,6 +6695,15 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_my_case_submission: {
+        Args: never
+        Returns: {
+          case_id: string
+          extra_data: Json
+          student_email: string
+          student_phone: string
+        }[]
+      }
       get_my_cash_debts: {
         Args: never
         Returns: {
