@@ -1034,7 +1034,14 @@ export default function WhatsAppInboxPage({
             <Button size="icon" variant="outline" onClick={load} aria-label={t("actions.refresh")}><RefreshCw className="h-4 w-4" /></Button>
           </div>
         </div>
-        {inboxWorkspace(true)}
+        <Tabs defaultValue="inbox" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+          <TabsList className="flex w-full max-w-[420px] shrink-0 justify-start gap-1 overflow-x-auto">
+            <TabsTrigger value="inbox" className="shrink-0">{t("tabs.inbox")}</TabsTrigger>
+            <TabsTrigger value="health" className="shrink-0">{t("tabs.health", "Delivery health")}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="inbox" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col">{inboxWorkspace(true)}</TabsContent>
+          <TabsContent value="health" className="m-0 min-w-0"><WhatsAppHealthPanel isAdmin={isAdmin} /></TabsContent>
+        </Tabs>
         {startDialog}
       </div>
     );
