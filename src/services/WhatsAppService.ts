@@ -418,3 +418,75 @@ export function startWhatsAppConversation(
     ...(target?.profile_id ? { profile_id: target.profile_id } : {}),
   });
 }
+
+/* -------------------------------------------------------------------------
+ * Delivery health: what failed, and why. Read paths are role-gated in SQL —
+ * admins see everything, team members only their assigned conversations.
+ * ---------------------------------------------------------------------- */
+
+export type WhatsAppHealth = {
+  inbound: number;
+  outbound: number;
+  delivered: number;
+  failed: number;
+  queued: number;
+  blocked_incoming: number;
+  failed_jobs: number;
+  is_admin: boolean;
+};
+
+export type WhatsAppIngestFailure = {
+  id: string;
+  delivery_id: string;
+  event_type: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  phone_number: string | null;
+  created_at: string;
+  resolved_at: string | null;
+};
+
+export type WhatsAppFailedJob = {
+  kind: "follow_up" | "campaign";
+  id: string;
+  conversation_id: string | null;
+  contact_name: string | null;
+  phone_number: string | null;
+  last_error: string | null;
+  attempt_count: number | null;
+  failed_at: string | null;
+};
+
+export async function getWhatsAppHealth(): Promise<WhatsAppHealth> {
+  const { data, error } = await (supabase as any).rpc("get_whatsapp_health");
+  fail(error);
+  return data as WhatsAppHealth;
+}
+
+export async function listWhatsAppIngestFailures(includeResolved = false): Promise<WhatsAppIngestFailure[]> {
+  const { data, error } = await (supabase as any).rpc("get_whatsapp_ingest_failures", { p_include_resolved: includeResolved });
+  fail(error);
+  return (data ?? []) as WhatsAppIngestFailure[];
+}
+
+export async function resolveWhatsAppIngestFailure(id: string) {
+  const { error } = await (supabase as any).rpc("whatsapp_resolve_ingest_failure", { p_id: id });
+  fail(error);
+}
+
+export async function listWhatsAppFailedJobs(): Promise<WhatsAppFailedJob[]> {
+  const { data, error } = await (supabase as any).rpc("get_whatsapp_failed_jobs");
+  fail(error);
+  return (data ?? []) as WhatsAppFailedJob[];
+}
+
+export async function retryWhatsAppFailedJob(kind: "follow_up" | "campaign", id: string) {
+  const { error } = await (supabase as any).rpc("whatsapp_retry_failed_job", { p_kind: kind, p_id: id });
+  fail(error);
+}
+
+/** Consent is stamped with the actor and time server-side. */
+export async function setWhatsAppMarketingConsent(leadId: string, status: "unknown" | "granted" | "declined" | "withdrawn") {
+  const { error } = await (supabase as any).rpc("whatsapp_set_marketing_consent", { p_lead_id: leadId, p_status: status });
+  fail(error);
+}
