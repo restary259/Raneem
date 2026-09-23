@@ -1134,7 +1134,7 @@ export default function WhatsAppInboxPage({
               const item = templates.find((template) => template.id === followUpTemplateId);
               const body = Array.isArray(item?.components) ? item.components.find((part) => part && typeof part === "object" && String((part as Record<string, unknown>).type ?? "").toUpperCase() === "BODY") as Record<string, unknown> | undefined : undefined;
               const textBody = String(body?.text ?? "");
-              const count = [...textBody.matchAll(/{{s*(d+)s*}}/g)].length;
+              const count = [...textBody.matchAll(/{{\s*(\d+)\s*}}/g)].length;
               return <div className="rounded-md border bg-muted/30 p-3 text-xs"><p className="whitespace-pre-wrap">{textBody}</p>{Array.from({ length: count }, (_, index) => <Input key={index} className="mt-2" value={followUpParameters[index] ?? ""} onChange={(event) => setFollowUpParameters((current) => { const next = [...current]; next[index] = event.target.value; return next; })} placeholder={t("conversation.templateField", { number: index + 1 })} />)}</div>;
             })()}
           </div>
