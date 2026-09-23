@@ -392,6 +392,20 @@ export default function WhatsAppInboxPage({
     try { await updateLead(active.lead.id, patch); await load(); toast({ description: t("profile.saved") }); }
     catch { toast({ variant: "destructive", description: t("errors.save") }); }
   };
+  /** Consent decisions are stamped with who recorded them, server-side. */
+  const saveConsent = async (status: string) => {
+    if (!active) return;
+    try {
+      await setWhatsAppMarketingConsent(active.lead.id, status as "unknown" | "granted" | "declined" | "withdrawn");
+      await load();
+      toast({ description: t("profile.saved") });
+    } catch (error) {
+      toast({ variant: "destructive", description: error instanceof Error ? error.message : t("errors.save") });
+    }
+  };
+  const consentActorName = active?.lead.marketing_consent_updated_by
+    ? staff.find((member) => member.id === active.lead.marketing_consent_updated_by)?.full_name ?? null
+    : null;
   useEffect(() => {
     setNameDraft(active?.lead.student_name ?? "");
     setEditingName(false);
@@ -686,6 +700,21 @@ export default function WhatsAppInboxPage({
                     <Button size="sm" variant="outline" onClick={() => setFollowUpOpen(true)}><CalendarClock className="me-1.5 h-3.5 w-3.5" />{t("snooze.schedule")}</Button>
                   </>
                 )}
+                {/* Team members can take a free conversation or hand back their
+                    own; assigning someone else stays with admins (enforced in SQL). */}
+                {teamMode && (active.assigned_to === user?.id ? (
+                  <Button size="sm" variant="outline" onClick={() => void assignConversation(null)}>
+                    <UserRound className="me-1.5 h-3.5 w-3.5" />{t("owner.release", "Hand back")}
+                  </Button>
+                ) : !active.assigned_to ? (
+                  <Button size="sm" variant="outline" onClick={() => void assignConversation(user?.id ?? null)}>
+                    <UserRound className="me-1.5 h-3.5 w-3.5" />{t("owner.claim", "Take this chat")}
+                  </Button>
+                ) : (
+                  <Badge variant="secondary" className="text-[11px]">
+                    {t("owner.takenBy", "With {{name}}", { name: staff.find((member) => member.id === active.assigned_to)?.full_name ?? t("filters.unassigned") })}
+                  </Badge>
+                ))}
                 <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLIES_AR.map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
