@@ -88,7 +88,7 @@ export function buildCasePrefill(
  * Case data fills blanks only — anything already saved on the student's own
  * account wins, so confirming can never silently replace their own edits.
  */
-export function mergeCasePrefill<T extends Record<string, unknown>>(profile: T, prefill: CasePrefill): T {
+export function mergeCasePrefill<T extends object>(profile: T, prefill: CasePrefill): T {
   const out: Record<string, unknown> = { ...profile };
   for (const [key, value] of Object.entries(prefill)) {
     const current = out[key];
