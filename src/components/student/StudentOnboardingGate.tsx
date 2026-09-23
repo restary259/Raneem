@@ -333,13 +333,14 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const caseRow = Array.isArray(caseRes?.data) ? caseRes.data[0] : caseRes?.data;
       if (caseRow?.id) {
-        const submissionRes = await (supabase as any)
-          .from("case_submissions")
-          .select("*")
-          .eq("case_id", caseRow.id)
-          .maybeSingle();
-        casePrefill = buildCasePrefill(caseRow, submissionRes.data ?? null, schoolRows.map(s => s.id));
+        // Students have no direct SELECT on case_submissions (its RLS policy
+        // reads `cases`, which students cannot read either), so the submission
+        // is fetched through the owner-scoped SECURITY DEFINER RPC.
+        const submissionRes = await (supabase as any).rpc("get_my_case_submission");
+        const submission = Array.isArray(submissionRes?.data) ? submissionRes.data[0] : submissionRes?.data;
+        casePrefill = buildCasePrefill(caseRow, submission ?? null, schoolRows.map(s => s.id));
       }
+
     } catch (e) {
       console.warn("[Darb onboarding] case prefill unavailable:", e);
     }
