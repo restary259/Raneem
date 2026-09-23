@@ -321,17 +321,46 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     const schoolRows = (schoolsRes.data as { id: string; name_ar: string; name_en: string; city: string | null }[] | null) ?? [];
     setSchools(schoolRows);
+
+    // Anything the team already collected on this student's case is reused so
+    // the student confirms instead of retyping. Best-effort: a student without
+    // a case (or with no submission yet) simply gets the blank wizard.
+    let casePrefill: CasePrefillResult = { values: {}, contact: null, hasData: false };
+    try {
+      const caseRow = Array.isArray(caseRes?.data) ? caseRes.data[0] : caseRes?.data;
+      if (caseRow?.id) {
+        const submissionRes = await (supabase as any)
+          .from("case_submissions")
+          .select("*")
+          .eq("case_id", caseRow.id)
+          .maybeSingle();
+        casePrefill = buildCasePrefill(caseRow, submissionRes.data ?? null, schoolRows.map(s => s.id));
+      }
+    } catch (e) {
+      console.warn("[Darb onboarding] case prefill unavailable:", e);
+    }
+    setPrefill(casePrefill);
+
     const data = profileRes.data;
     if (data) {
-      const merged: ProfileShape = {
-        ...EMPTY_PROFILE,
-        ...data,
-      };
+      const merged: ProfileShape = mergeCasePrefill(
+        { ...EMPTY_PROFILE, ...data } as ProfileShape,
+        casePrefill.values,
+      );
+      // Keep the school display name in sync when the id came from the case.
+      if (merged.language_school_id && !filled(merged.university_name)) {
+        const sch = schoolRows.find(s => s.id === merged.language_school_id);
+        if (sch) merged.university_name = i18n.language === "ar" ? sch.name_ar : sch.name_en;
+      }
       setProfile(merged);
       const existing = Array.isArray(data.emergency_contacts) ? data.emergency_contacts : [];
       const seeded = [...existing.map((c: any) => ({ ...emptyContact(), ...c }))];
+      if (seeded.length === 0 && casePrefill.contact) seeded.push({ ...casePrefill.contact });
       while (seeded.length < 2) seeded.push(emptyContact());
       setContacts(seeded);
+      // Offer the one-screen review whenever the case supplied something and
+      // the profile is not already complete.
+      setReviewOpen(casePrefill.hasData && !isProfileComplete(merged));
       // Resume at the first incomplete step, then at the first incomplete task
       // within that step so the student lands on exactly the field they missed.
       let resumeStep = 0;
