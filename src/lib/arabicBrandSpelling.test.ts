@@ -3,8 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const WRONG_ARABIC_BRAND = /دارب|دآرب|دَرْب|دَرب/g;
-const LATIN_BRAND = /\b(?:DARB|Darb)\b/g;
+const WRONG_ARABIC_BRAND = /دارب|دآرب|دَرْب|دَرب/;
+const LATIN_BRAND = /\b(?:DARB|Darb)\b/;
 
 const ARABIC_LOCALE_DIRS = [
   path.join(ROOT, "public/locales/ar"),
