@@ -289,6 +289,10 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [reviewOpen, setReviewOpen] = useState(false);
   /** True while the student edits a single field reached from the review. */
   const [editingFromReview, setEditingFromReview] = useState(false);
+  /** Once the student confirmed (or chose to go step by step) the review is
+   *  never shown again in this session — otherwise an incomplete file would
+   *  bounce them back to the same screen after every save. */
+  const reviewDismissed = useRef(false);
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -360,7 +364,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       setContacts(seeded);
       // Offer the one-screen review whenever the case supplied something and
       // the profile is not already complete.
-      setReviewOpen(casePrefill.hasData && !isProfileComplete(merged));
+      setReviewOpen(casePrefill.hasData && !isProfileComplete(merged) && !reviewDismissed.current);
       // Resume at the first incomplete step, then at the first incomplete task
       // within that step so the student lands on exactly the field they missed.
       let resumeStep = 0;
@@ -379,7 +383,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     } else {
       setProfile(mergeCasePrefill({ ...EMPTY_PROFILE }, casePrefill.values));
       if (casePrefill.contact) setContacts([{ ...casePrefill.contact }, emptyContact()]);
-      setReviewOpen(casePrefill.hasData);
+      setReviewOpen(casePrefill.hasData && !reviewDismissed.current);
       setTaskIndex(0);
     }
     setLoading(false);
@@ -522,6 +526,9 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     const ok = await persist(patch);
     if (!ok) return;
     setIdentityConfirmed(true);
+    // Never come back here: load() resumes at the first field that is still
+    // missing, so an incomplete file continues the wizard instead of looping.
+    reviewDismissed.current = true;
     setReviewOpen(false);
     toast({ description: t("studentOnboarding.saved", "Your details were saved.") });
     await load();
@@ -543,9 +550,20 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     // Single-field edit started from the review → save it and go back there.
-    if (editingFromReview && !isLastTask) {
-      const ok = await persist(stepPatch(task.step));
+    // Contacts (the last task) has no stepPatch slice, so it is saved here too.
+    if (editingFromReview) {
+      const cleaned = cleanedContacts();
+      const ok = await persist(
+        isLastTask
+          ? {
+              emergency_contacts: cleaned,
+              emergency_contact_name: cleaned[0]?.name,
+              emergency_contact_phone: cleaned[0]?.phone,
+            }
+          : stepPatch(task.step),
+      );
       if (!ok) return;
+      if (isLastTask) setProfile(p => (p ? { ...p, emergency_contacts: cleaned } : p));
       setEditingFromReview(false);
       setAttempted(false);
       setReviewOpen(true);
@@ -671,7 +689,7 @@ const StudentOnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             variant="outline"
             className="w-full"
             disabled={saving}
-            onClick={() => { setReviewOpen(false); setEditingFromReview(false); setTaskIndex(0); }}
+            onClick={() => { reviewDismissed.current = true; setReviewOpen(false); setEditingFromReview(false); setTaskIndex(0); }}
           >
             {t("studentOnboarding.review.editAll", "Go through the details step by step")}
           </Button>
