@@ -27,12 +27,6 @@ interface ServiceLine {
   amount?: string
 }
 
-interface SchoolLine {
-  label?: string
-  amount?: string
-  currency?: string
-}
-
 interface Props {
   studentName?: string
   caseReference?: string
@@ -45,7 +39,6 @@ interface Props {
   serviceTotal?: string
   totalConfirmed?: string | null
   remaining?: string
-  schoolCosts?: SchoolLine[]
   link?: string
 }
 
@@ -102,7 +95,6 @@ const Email = ({
   serviceTotal,
   totalConfirmed,
   remaining,
-  schoolCosts = [],
   link,
 }: Props) => {
   const paid = num(totalConfirmed)
@@ -234,36 +226,10 @@ const Email = ({
         </Text>
       ) : null}
 
-      {/* Germany costs — separate currency, never mixed into the ILS total */}
-      {schoolCosts.length > 0 ? (
-        <>
-          <Text style={sectionTitle} dir="rtl">
-            تكاليف ألمانيا (تقديرية — تُدفع مباشرة لمزوّد الخدمة)
-          </Text>
-          <table
-            width="100%"
-            cellPadding={0}
-            cellSpacing={0}
-            role="presentation"
-            style={lineTable}
-            dir="rtl"
-          >
-            <tbody>
-              {schoolCosts.map((l, i) => (
-                <LineRow
-                  key={`${l.label ?? 'cost'}-${i}`}
-                  label={l.label}
-                  value={`${l.currency === 'EUR' ? '€' : `${l.currency} `}${l.amount ?? '0.00'}`}
-                />
-              ))}
-            </tbody>
-          </table>
-          <Text style={note} dir="rtl">
-            هذه المبالغ باليورو وليست جزءاً من إجمالي خدمات درب بالشيكل، وتُدفع مباشرة للمدرسة أو
-            مزوّد الخدمة في ألمانيا.
-          </Text>
-        </>
-      ) : null}
+      <Text style={separationNote} dir="rtl">
+        تكاليف المدرسة ومزوّدي الخدمات في ألمانيا منفصلة عن هذه الفاتورة، وتُدفع مباشرة إلى الجهة
+        المعنية بعد التحقق منها.
+      </Text>
 
       {link ? <EmailButton href={link}>عرض الفاتورة وتنزيلها</EmailButton> : null}
       {link ? <EmailFallbackLink href={link} /> : null}
@@ -295,7 +261,6 @@ export const template = {
     serviceTotal: '2,650.00',
     totalConfirmed: '1,000.00',
     remaining: '1,650.00',
-    schoolCosts: [{ label: 'Language course', amount: '4,200.00', currency: 'EUR' }],
     link: 'https://darb.agency/invoice/sample-token-preview-only',
   },
 } satisfies TemplateEntry
@@ -381,4 +346,11 @@ const note = {
   lineHeight: '1.7',
   margin: '8px 0 0',
   fontFamily: font.family,
+}
+
+const separationNote = {
+  ...note,
+  border: `1px dashed ${color.border}`,
+  padding: '10px 12px',
+  margin: '16px 0 8px',
 }

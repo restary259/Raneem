@@ -110,11 +110,6 @@ export function buildInvoiceEmailData(invoice: CaseInvoice) {
     serviceTotal: money(t.service_total),
     totalConfirmed: t.total_confirmed > 0 ? money(t.total_confirmed) : null,
     remaining: money(t.remaining),
-    schoolCosts: t.school_costs.map((l) => ({
-      label: l.name_en || l.name_ar || l.kind,
-      amount: money(l.total),
-      currency: l.currency || "EUR",
-    })),
     link: invoiceUrl(invoice.public_token),
   };
 }
