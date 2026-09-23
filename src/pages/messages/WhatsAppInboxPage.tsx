@@ -39,8 +39,6 @@ import {
   searchWhatsAppCases, type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
 
-const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
-
 const DISPLAY_STATES: ConversationState[] = ["waiting_for_team", "open", "waiting_for_student", "closed"];
 const QUICK_TABS = ["all", "unread", "read", "needsReply"] as const;
 type QuickTab = (typeof QUICK_TABS)[number];
