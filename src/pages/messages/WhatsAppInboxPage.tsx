@@ -284,6 +284,8 @@ export default function WhatsAppInboxPage({
     };
   }, [threads, query]);
 
+  const unownedCount = useMemo(() => threads.filter((thread) => !thread.assigned_to).length, [threads]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (teamMode) {
