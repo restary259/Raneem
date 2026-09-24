@@ -21,5 +21,5 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npx vitest run src/data/intel/majorIntel.links.test.ts

@@ -1882,3 +1882,38 @@ catalog school `alpha-aktiv`.
   the catalog was missing and corrects "Student Residence - Double Not
   Central" 27+ band from 140 to 130.
 - Live QA must be done after the migration is applied.
+
+## CI lockfile / package-manager (2026-09-24)
+
+- **Two lockfiles, both committed**: `bun.lock` (dev, see `bunfig.toml`) and
+  `package-lock.json` (npm, what CI installs from). CI uses `cache: npm` +
+  `npm ci`, so `package-lock.json` must exist and stay in sync with
+  `package.json`. Regenerate with **Node 22** to match CI.
+- **`npm ci --legacy-peer-deps` is required**, not plain `npm ci`. The tree has
+  real peer mismatches that bun tolerates but npm's strict resolver rejects:
+  `next-themes@0.3.0` peers React <=18 (project uses React 19),
+  `@typescript-eslint/eslint-plugin@6` peers ESLint <=8 (project uses 9), and
+  `@typescript-eslint/parser@6` likewise. `legacy-peer-deps` alone is NOT
+  enough in `package.json` deps: it skips auto-installing peer-only packages,
+  so `@testing-library/dom` (peer of `@testing-library/react`/`jest-dom`, and
+  required by `src/test/setup.ts`) MUST stay an explicit devDependency or all
+  78 vitest suites fail to collect with
+  `Cannot find package '@testing-library/dom'`.
+- **Do not add a `.npmrc`** for this. Use the explicit CLI flag in the workflow.
+  The repo keeps no `.npmrc`.
+- **`@radix-ui/react-dialog` must be pinned to `1.1.23`**, matching the
+  `overrides` entry. npm errors `EOVERRIDE` ("Override for
+  @radix-ui/react-dialog@^1.1.15 conflicts with direct dependency") and refuses
+  to install at all if the direct dependency is a range. Don't relax it back to
+  `^1.1.15`.
+- **The build emits to `.output/public/assets`, NOT `dist/`.** The nitro
+  cloudflare-module build writes `.output/`. The CI "Verify Lovable Cloud build
+  binding" step must grep `BUNDLE_DIR=.output/public/assets`. A `dist/assets`
+  path fails with "No such file or directory" even on a successful build.
+- `npm run lint` exits non-zero (pre-existing debt) but is
+  `continue-on-error: true`, so it does not fail the job.
+- `src/data/intel/majorIntel.links.test.ts` is a live external link checker
+  (fetches real university sites) and runs inside `npm test`; it fails in
+  network-restricted sandboxes and from sites that are down (e.g.
+  `uni-leipzig.de`). It is not a dependency/build signal. The separate
+  `major-intel-links.yml` workflow also runs it standalone.
