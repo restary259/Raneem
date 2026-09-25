@@ -1304,7 +1304,7 @@ function initials(value: string) {
   return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
 }
 
-function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
+export function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
   const { t } = useTranslation("whatsapp");
   const name = thread.lead.student_name || thread.lead.whatsapp_number;
   const lastAt = thread.last_inbound_at ?? thread.last_outbound_at;
