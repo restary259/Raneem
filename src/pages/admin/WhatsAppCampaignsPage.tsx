@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/shell/States";
 import { useToast } from "@/hooks/use-toast";
+import { WHATSAPP_LEAD_STAGES, whatsappStageLabel } from "@/lib/whatsappStages";
 import {
   cancelWhatsAppMarketingCampaign,
   createWhatsAppMarketingCampaign,
@@ -39,16 +40,7 @@ const INTENTS = [
 
 const LANGUAGES = ["", "ar", "he", "en"] as const;
 
-const STAGES = [
-  "",
-  "new",
-  "qualified",
-  "consultation_booked",
-  "documents_pending",
-  "application_in_progress",
-  "won",
-  "lost",
-] as const;
+const STAGES = ["", ...WHATSAPP_LEAD_STAGES] as const;
 
 function templateBody(template: WhatsAppTemplate) {
   if (!Array.isArray(template.components)) return "";
@@ -281,7 +273,7 @@ export default function WhatsAppCampaignsPage() {
               <Label>{t("campaigns.stage")}</Label>
               <Select value={leadStage} onValueChange={setLeadStage}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STAGES.map((value) => <SelectItem key={value || "all"} value={value || "all"}>{value ? t(`stage.${value}`) : t("campaigns.allStages")}</SelectItem>)}</SelectContent>
+                <SelectContent>{STAGES.map((value) => <SelectItem key={value || "all"} value={value || "all"}>{value ? whatsappStageLabel(value, i18n.language) : t("campaigns.allStages")}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 

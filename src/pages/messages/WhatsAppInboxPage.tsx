@@ -2,7 +2,7 @@ import { WhatsAppPurposeCatalog } from "@/components/messages/WhatsAppPurposeCat
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, LayoutGrid, PanelRight, Wrench, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
 import WhatsAppCrmContextPanel from "@/components/messages/WhatsAppCrmContextPanel";
 import WhatsAppHealthPanel from "@/components/messages/WhatsAppHealthPanel";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
+import { WHATSAPP_LEAD_STAGES, whatsappStageClass, whatsappStageLabel } from "@/lib/whatsappStages";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, getWhatsAppMessage, listConversationMessages, mergeWhatsAppMessages, WHATSAPP_PAGE_SIZE, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
@@ -60,7 +62,7 @@ const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
   appointment_confirmation: "أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا.",
   appointment_reminder: "أهلاً! تذكير من درب: عندك موعد معنا بكرا بخصوص الدراسة بألمانيا. إذا احتجت تغيّر الموعد، ابعتلنا.",
 };
-const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documents_pending", "application_in_progress", "won", "lost"];
+const STAGES: LeadStage[] = WHATSAPP_LEAD_STAGES as LeadStage[];
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["lead_received", "lead_followup", "inquiry_follow_up", "appointment_invitation", "appointment_confirmation", "consultation_confirmation", "appointment_reminder", "appointment_rescheduled", "documents_missing", "document_reminder", "profile_incomplete", "document_received", "payment_instruction", "payment_reminder", "payment_confirmed", "application_started", "application_submitted", "application_update", "student_welcome", "enrollment_confirmation", "next_steps", "support_followup", "case_update", "re_engagement"] as const;
 const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -112,6 +114,8 @@ export default function WhatsAppInboxPage({
   const [notes, setNotes] = useState<WhatsAppNote[]>([]);
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
+  const [stageFilter, setStageFilter] = useState<string>("all");
+  const [view, setView] = useState<"inbox" | "dashboard" | "templates" | "health">("inbox");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -307,6 +311,7 @@ export default function WhatsAppInboxPage({
     if (teamMode) {
       return threads.filter((thread) => {
         if (!searchMatches(thread, q)) return false;
+        if (stageFilter !== "all" && (thread.lead.lead_stage ?? "new") !== stageFilter) return false;
         switch (inboxTab) {
           case "unread": return (thread.unread_count ?? 0) > 0;
           case "read": return (thread.unread_count ?? 0) === 0;
@@ -318,6 +323,7 @@ export default function WhatsAppInboxPage({
     return threads.filter((thread) => {
       const operationalState = normalizeWhatsAppState(thread.state);
       if (!searchMatches(thread, q)) return false;
+      if (stageFilter !== "all" && (thread.lead.lead_stage ?? "new") !== stageFilter) return false;
       if (stateFilter !== "all" && operationalState !== stateFilter) return false;
       if (ownerFilter === "unassigned" && thread.assigned_to) return false;
       if (ownerFilter === "__mine__" && thread.assigned_to !== user?.id) return false;
@@ -330,7 +336,7 @@ export default function WhatsAppInboxPage({
       if (snoozedOnly && !isWhatsAppSnoozed("snoozed", thread.snoozed_until, now)) return false;
       return true;
     });
-  }, [threads, query, teamMode, inboxTab, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now, user?.id]);
+  }, [threads, query, teamMode, inboxTab, stageFilter, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now, user?.id]);
 
   const saveConversation = async (patch: Parameters<typeof updateConversation>[1]) => {
     if (!active) return;
@@ -667,8 +673,10 @@ export default function WhatsAppInboxPage({
                     {activeSlaOverdue && <Badge variant="destructive" className="gap-1 text-[10px]"><Clock3 className="h-3 w-3" />{t("sla.overdue")}</Badge>}
                   </div>
                 )}
+              <span className={cn("hidden shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium sm:inline-flex", whatsappStageClass(active.lead.lead_stage))}>{whatsappStageLabel(active.lead.lead_stage, i18n.language)}</span>
+              {!conversationOnly && <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setDetailsOpen(true)} aria-label={t("profile.title")}><PanelRight className="h-4 w-4" /></Button>}
               <Select value={activeState ?? "open"} onValueChange={(v) => saveConversation({ state: v })}>
-                <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 w-[130px] text-xs sm:w-[150px]"><SelectValue /></SelectTrigger>
                 <SelectContent>{DISPLAY_STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
@@ -693,10 +701,10 @@ export default function WhatsAppInboxPage({
                     <div key={m.id} className="space-y-3">
                       {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
                       <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                        <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
+                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-2 shadow-sm", m.direction === "inbound" ? "rounded-ss-sm bg-card border" : "rounded-se-sm bg-primary text-primary-foreground")}>
                           {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
                           {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className={cn("mt-1 block text-end text-[10px]", m.direction === "outbound" ? "text-primary-foreground/70" : "text-muted-foreground")}>
                             {fmt(m.created_at, i18n.language)}
                             {m.direction === "outbound" && (m.is_echo
                               ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
@@ -817,6 +825,29 @@ export default function WhatsAppInboxPage({
     </div>
   );
 
+  const stageChips = (
+    <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]">
+      {(["all", ...STAGES] as string[]).map((s) => {
+        const count = s === "all" ? threads.length : threads.filter((x) => (x.lead.lead_stage ?? "new") === s).length;
+        if (s !== "all" && !count && stageFilter !== s) return null;
+        return (
+          <button key={s} type="button" aria-pressed={stageFilter === s} onClick={() => setStageFilter(s)} className={cn("shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors", stageFilter === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground")}>
+            {s === "all" ? t("filters.allStages", "All stages") : whatsappStageLabel(s, i18n.language)} <span className="opacity-70">{count}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const leadStageControl = active ? (teamMode ? (
+    <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", whatsappStageClass(active.lead.lead_stage))}>{whatsappStageLabel(active.lead.lead_stage, i18n.language)}</span>
+  ) : (
+    <Select value={active.lead.lead_stage ?? "new"} onValueChange={(value) => void saveLead({ lead_stage: value })}>
+      <SelectTrigger className="h-8 w-full text-xs" aria-label={t("profile.stage", "Lead stage")}><SelectValue /></SelectTrigger>
+      <SelectContent>{STAGES.map((s) => <SelectItem key={s} value={s}><span className={cn("rounded-full px-2 py-0.5 text-xs", whatsappStageClass(s))}>{whatsappStageLabel(s, i18n.language)}</span></SelectItem>)}</SelectContent>
+    </Select>
+  )) : null;
+
   const inboxWorkspace = (simplified: boolean) => (
     <>
       {/* The student panel only appears once a conversation is open, so the
@@ -827,6 +858,7 @@ export default function WhatsAppInboxPage({
         <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
           <div className="shrink-0 space-y-2 border-b p-3">
             <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
+            {stageChips}
             {simplified ? quickTabs : (
               <>
                 <div className="grid grid-cols-2 gap-2">
@@ -858,23 +890,7 @@ export default function WhatsAppInboxPage({
               instead of stretching the row past the panel. */}
           <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
             {filtered.length ? filtered.map((thread) => (
-              <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
-                  {thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}
-                  <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
-                  {!simplified && (
-                    <div className="mt-1 flex flex-wrap items-center gap-1">
-                      {!thread.lead.student_name && <Badge variant="outline" className="border-amber-500/50 text-[9px] text-amber-700 dark:text-amber-300">{t("identity.nameMissing", "No name yet")}</Badge>}
-                      <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
-                      {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
-                      {thread.intent && <Badge variant="secondary" className="text-[9px]">{t(`intent.${thread.intent}`, thread.intent)}</Badge>}
-                      {isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="text-[9px]">{t("sla.overdue")}</Badge>}
-                    </div>
-                  )}
-                </div>
-                {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
-              </button>
+              <ConversationRow key={thread.id} thread={thread} active={thread.id === selectedId} simplified={simplified} now={now} lang={i18n.language} onSelect={() => selectConversation(thread.id)} />
             )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
           </ScrollArea>
         </Card>
@@ -918,7 +934,7 @@ export default function WhatsAppInboxPage({
                   )}
                 </div>
                 <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
-                <Badge variant="secondary" className="mt-2">{t(`stage.${active.lead.lead_stage}`, active.lead.lead_stage)}</Badge>
+                <div className="mt-3"><p className="mb-1 text-[11px] text-muted-foreground">{t("profile.stage", "Lead stage")}</p>{leadStageControl}</div>
               </div>
               <WhatsAppCrmContextPanel lead={active.lead} />
               <ScrollArea className="min-h-0 flex-1">
@@ -1015,6 +1031,24 @@ export default function WhatsAppInboxPage({
           )}
         </Card>
       </div>
+      <Sheet open={detailsOpen && !!active} onOpenChange={setDetailsOpen}>
+        <SheetContent side="bottom" dir={rtl ? "rtl" : "ltr"} className="max-h-[85dvh] overflow-y-auto rounded-t-2xl lg:hidden">
+          {active && (
+            <div className="space-y-4">
+              <SheetHeader className="text-start"><SheetTitle dir="auto">{active.lead.student_name || active.lead.whatsapp_number}</SheetTitle><p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p></SheetHeader>
+              <div><p className="mb-1 text-[11px] text-muted-foreground">{t("profile.stage", "Lead stage")}</p>{leadStageControl}</div>
+              <WhatsAppCrmContextPanel lead={active.lead} />
+              {!simplified && <TagEditor label={t("profile.tags", "Tags")} tags={active.lead.tags ?? []} onChange={(tags) => void saveLead({ tags })} addLabel={t("profile.addTag", "Add a tag")} />}
+              <div>
+                <h4 className="text-sm font-semibold">{t("notes.title")}</h4>
+                <div className="mt-2 space-y-2">{notes.length ? notes.map((item) => <div key={item.id} className="rounded-lg border bg-muted/30 p-2 text-xs"><p className="whitespace-pre-wrap">{item.body}</p><p className="mt-1 text-[10px] text-muted-foreground">{fmt(item.created_at, i18n.language)}</p></div>) : <p className="text-xs text-muted-foreground">{t("notes.empty")}</p>}</div>
+                <Textarea className="mt-3 min-h-16 text-sm" value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("notes.placeholder")} />
+                <Button size="sm" className="mt-2 w-full" disabled={!note.trim()} onClick={() => void addNote()}>{t("notes.add")}</Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
       {/* Mobile follows the internal Messages pattern:
           list first, then a full-surface conversation after selection. */}
       <div className="flex min-h-0 flex-1 lg:hidden">
@@ -1031,41 +1065,11 @@ export default function WhatsAppInboxPage({
                 />
               </div>
               {simplified && quickTabs}
+              {stageChips}
             </div>
             <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
               {filtered.length ? filtered.map((thread) => (
-                <button
-                  key={thread.id}
-                  type="button"
-                  onClick={() => selectConversation(thread.id)}
-                  className="flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {thread.lead.student_name || thread.lead.whatsapp_number}
-                    </p>
-                    {thread.lead.student_name && (
-                      <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">
-                        {thread.lead.whatsapp_number}
-                      </p>
-                    )}
-                    <p className="truncate text-xs text-muted-foreground">
-                      {thread.last_message_preview ?? ""}
-                    </p>
-                    {!simplified && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
-                        {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
-                        {isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="text-[9px]">{t("sla.overdue")}</Badge>}
-                      </div>
-                    )}
-                  </div>
-                  {thread.unread_count > 0 && (
-                    <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">
-                      {thread.unread_count}
-                    </Badge>
-                  )}
-                </button>
+                <ConversationRow key={thread.id} thread={thread} active={false} simplified={simplified} now={now} lang={i18n.language} onSelect={() => selectConversation(thread.id)} />
               )) : (
                 <EmptyState
                   title={t("empty.title")}
@@ -1140,17 +1144,27 @@ export default function WhatsAppInboxPage({
     <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto flex w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden", embedded ? "pb-0" : "pb-20 md:pb-4")}>
       {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<><div className="flex items-center gap-2">{isAdmin && adminTeamToggle}<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div></>} />}
       {embedded && <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><div className="flex items-center gap-2">{isAdmin && adminTeamToggle}<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div></div>}
-      <div className={cn("mb-3 rounded-lg border p-3 text-xs", receiving ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5")}>
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="font-medium">{t("number")} · {statusLabel}</p>
-          <Badge variant={businessHoursOpen ? "outline" : "secondary"}>{businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}</Badge>
+      <div className="mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          <span className={cn("h-2 w-2 shrink-0 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} />
+          <span className="truncate">{t("number")} · {statusLabel}</span>
+          <Badge variant="outline" className="h-5 text-[10px]">{businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}</Badge>
         </div>
-        <p className="mt-1 text-muted-foreground">{receiving ? t("status.receivingHelp") : t("status.waitingHelp")}</p>
-        {inbound?.lastInboundAt && <p className="mt-1 text-muted-foreground">{t("status.lastInbound", { time: fmt(inbound.lastInboundAt, i18n.language) })}</p>}
-        {!!inbound?.unrecognisedCount && <p className="mt-1 text-muted-foreground">{t("status.unrecognised", { count: inbound.unrecognisedCount })}</p>}
+        <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5 text-xs" role="tablist">
+          <button type="button" role="tab" aria-selected={view === "inbox"} onClick={() => setView("inbox")} className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium", view === "inbox" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground")}><MessageCircle className="h-3.5 w-3.5" />{t("tabs.inbox")}</button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium", view !== "inbox" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground")}><Wrench className="h-3.5 w-3.5" />{view === "inbox" ? t("tabs.tools", "Tools") : view === "dashboard" ? t("tabs.dashboard") : view === "templates" ? t("tabs.templates") : t("tabs.health", "Delivery health")}</button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={rtl ? "start" : "end"}>
+              <DropdownMenuItem onSelect={() => setView("dashboard")}><LayoutGrid className="me-2 h-4 w-4" />{t("tabs.dashboard")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setView("health")}><ShieldCheck className="me-2 h-4 w-4" />{t("tabs.health", "Delivery health")}</DropdownMenuItem>
+              {canManageTemplates && <DropdownMenuItem onSelect={() => setView("templates")}><FileText className="me-2 h-4 w-4" />{t("tabs.templates")}</DropdownMenuItem>}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-      <Tabs defaultValue="inbox" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-        <TabsList className={cn("flex w-full max-w-[640px] shrink-0 justify-start gap-1 overflow-x-auto")}><TabsTrigger value="inbox" className="shrink-0">{t("tabs.inbox")}</TabsTrigger><TabsTrigger value="dashboard" className="shrink-0">{t("tabs.dashboard")}</TabsTrigger><TabsTrigger value="health" className="shrink-0">{t("tabs.health", "Delivery health")}</TabsTrigger>{canManageTemplates && <TabsTrigger value="templates" className="shrink-0">{t("tabs.templates")}</TabsTrigger>}</TabsList>
+      <Tabs value={view} onValueChange={(v) => setView(v as typeof view)} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         <TabsContent value="inbox" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col">{inboxWorkspace(false)}</TabsContent>
         <TabsContent value="dashboard" className="m-0 min-w-0 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -1173,7 +1187,7 @@ export default function WhatsAppInboxPage({
           <div className="grid gap-3 lg:grid-cols-[1.3fr_0.7fr]">
             <Card className="rounded-xl p-5 shadow-none">
               <h2 className="mb-4 font-semibold">{t("dashboard.byStage")}</h2>
-              {threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{t(`stage.${s}`)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}
+              {threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span className={cn("rounded-full px-2 py-0.5 text-xs", whatsappStageClass(s))}>{whatsappStageLabel(s, i18n.language)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}
             </Card>
             <Card className="rounded-xl p-5 shadow-none">
               <div className="flex items-center justify-between gap-2">
@@ -1276,4 +1290,40 @@ function MediaBubble({ path, mime, filename, openLabel }: { path: string; mime: 
   if (mime?.startsWith("video/")) return <video src={url} controls className="mb-1 max-h-56 rounded-md" />;
   if (mime?.startsWith("audio/")) return <audio src={url} controls className="mb-1 w-56" />;
   return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
+}
+
+function initials(value: string) {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "#";
+  if (/^\+?\d/.test(parts[0])) return parts[0].replace(/\D/g, "").slice(-2);
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
+  const { t } = useTranslation("whatsapp");
+  const name = thread.lead.student_name || thread.lead.whatsapp_number;
+  const lastAt = thread.last_inbound_at ?? thread.last_outbound_at;
+  const unread = (thread.unread_count ?? 0) > 0;
+  const time = lastAt ? new Intl.DateTimeFormat("en-GB", new Date(lastAt).toDateString() === new Date(now).toDateString() ? { hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "short" }).format(new Date(lastAt)) : "";
+  return (
+    <button type="button" onClick={onSelect} className={cn("flex w-full items-center gap-3 border-b border-border/60 px-3 py-2.5 text-start transition-colors hover:bg-muted/50", active && "bg-muted")}>
+      <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-semibold", unread ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{initials(name)}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center justify-between gap-2">
+          <span dir="auto" className={cn("truncate text-sm", unread ? "font-semibold" : "font-medium")}>{name}</span>
+          <span className={cn("shrink-0 text-[10px]", unread ? "font-semibold text-primary" : "text-muted-foreground")}>{time}</span>
+        </span>
+        <span className="mt-0.5 flex items-center justify-between gap-2">
+          <span dir="auto" className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</span>
+          {unread && <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">{thread.unread_count}</span>}
+        </span>
+        <span className="mt-1 flex flex-wrap items-center gap-1">
+          <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-medium", whatsappStageClass(thread.lead.lead_stage))}>{whatsappStageLabel(thread.lead.lead_stage, lang)}</span>
+          {!thread.lead.student_name && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">{t("identity.nameMissing", "No name yet")}</Badge>}
+          {!simplified && thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="h-4 px-1.5 text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
+          {!simplified && isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="h-4 px-1.5 text-[9px]">{t("sla.overdue")}</Badge>}
+        </span>
+      </span>
+    </button>
+  );
 }
