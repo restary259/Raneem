@@ -626,13 +626,13 @@ export default function WhatsAppInboxPage({
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
   const conversationOnlyView = (
-    <Card className={cn("min-h-0 h-full max-h-full w-full overflow-hidden rounded-xl shadow-none", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0")}>
+    <div className={cn("flex min-h-0 h-full max-h-full w-full flex-col overflow-hidden bg-background", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh]")}>
       <div className="flex h-full min-h-0 flex-col">
         {!active ? (
           <EmptyState title={t("empty.select")} description={t("empty.description")} icon={MessageCircle} className="flex-1" />
         ) : (
           <>
-            <div className="flex shrink-0 items-center gap-2 border-b bg-card p-2 md:p-3">
+            <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-3 py-2">
               <Button size="icon" variant="ghost" onClick={closeConversation} aria-label={t("actions.back")}>
                 <Back className="h-4 w-4" />
               </Button>
