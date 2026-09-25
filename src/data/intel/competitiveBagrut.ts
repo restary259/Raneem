@@ -30,6 +30,19 @@ export const COMPETITIVE_BGRUT_BY_MAJOR = {
   economics: 75,
 } as const;
 
+export const COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR = {
+  architecture: 'DARB supplied reference — Report.pdf 2, page 1',
+  'mechanical-engineering': 'DARB supplied reference — Report.pdf 2, page 2',
+  'computer-science': 'DARB supplied reference — Report.pdf 2, page 3',
+  medicine: 'DARB supplied reference — Report.pdf.pdf, page 1',
+  pharmacy: 'DARB supplied reference — Report.pdf.pdf, page 2',
+  dentistry: 'DARB supplied reference — Report.pdf.pdf, page 3',
+  veterinary: 'DARB supplied reference — Report.pdf.pdf, page 4',
+  'international-law': 'DARB supplied reference — Report.pdf 3, page 1',
+  'business-administration': 'DARB supplied reference — Report.pdf 3, page 3',
+  economics: 'DARB supplied reference — Report.pdf 3, page 4',
+} as const;
+
 const NOTE_EN =
   'Internal DARB planning indicator transcribed from supplied DARB student-requirements reference material. It is not an official university cutoff or a guarantee of admission. Check the named programme requirements separately.';
 const NOTE_AR =
@@ -46,6 +59,12 @@ export function competitiveBagrutForMajor(
     'DARB_OPERATIONAL_GUIDANCE',
     COMPETITIVE_BGRUT_SOURCE.id,
     COMPETITIVE_BGRUT_SOURCE.checkedAt,
-    { note: NOTE_EN, noteAR: NOTE_AR },
+    {
+      note: NOTE_EN,
+      noteAR: NOTE_AR,
+      evidenceRef: COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR[
+        majorId as keyof typeof COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR
+      ],
+    },
   );
 }
