@@ -107,7 +107,7 @@ export default function WhatsAppCrmContextPanel({ lead, compact = false }: { lea
       ) : (
         <div className="mt-3 space-y-3 text-sm">
           {context.caseRecord && (
-            <div className="rounded-lg border bg-muted/20 p-3">
+            <div className="rounded-md bg-muted/40 p-3">
               <div className="mb-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 {context.caseRecord.city && <div><span className="block text-muted-foreground">{t("crm.city")}</span><span className="font-medium">{context.caseRecord.city}</span></div>}
                 {(context.caseRecord.degree_interest || context.leadRecord?.preferred_major) && <div><span className="block text-muted-foreground">{t("crm.major")}</span><span className="font-medium">{context.caseRecord.degree_interest || context.leadRecord?.preferred_major}</span></div>}
@@ -133,7 +133,7 @@ export default function WhatsAppCrmContextPanel({ lead, compact = false }: { lea
           )}
 
           {context.profile && (
-            <div className="rounded-lg border bg-muted/20 p-3">
+            <div className="rounded-md bg-muted/40 p-3">
               <div className="mb-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 {context.profile.city && <div><span className="block text-muted-foreground">{t("crm.city")}</span><span className="font-medium">{context.profile.city}</span></div>}
                 {context.profile.university_name && <div><span className="block text-muted-foreground">{t("crm.university")}</span><span className="font-medium">{context.profile.university_name}</span></div>}
@@ -151,7 +151,7 @@ export default function WhatsAppCrmContextPanel({ lead, compact = false }: { lea
           )}
 
           {context.leadRecord && (
-            <div className="rounded-lg border bg-muted/20 p-3">
+            <div className="rounded-md bg-muted/40 p-3">
               <p className="text-xs font-medium text-muted-foreground">{t("crm.lead")}</p>
               <p className="mt-1 font-semibold">{context.leadRecord.full_name || "—"}</p>
               <p className="mt-1 text-xs text-muted-foreground">

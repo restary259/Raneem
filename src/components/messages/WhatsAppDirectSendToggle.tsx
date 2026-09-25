@@ -31,7 +31,7 @@ export default function WhatsAppDirectSendToggle() {
   };
 
   return (
-    <Card className="flex items-start justify-between gap-3 rounded-xl p-3 shadow-none">
+    <Card className="flex items-start justify-between gap-3 rounded-lg p-3 shadow-none">
       <div className="min-w-0">
         <p className="text-sm font-semibold">{t("directSend.title")}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">{t("directSend.description")}</p>
