@@ -476,9 +476,7 @@ function makeVerifiedEngineeringMajor(
     aliases,
     status: 'verified',
     lastVerified: '2026-09',
-    ...(COMPETITIVE_BGRUT_BY_ENGINEERING_MAJOR[id] ? {
-      competitiveBagrutThreshold: competitiveBagrutForMajor(id),
-    } : {}),
+    competitiveBagrutThreshold: competitiveBagrutForMajor(id),
     bagrutAccess: fact(
       { mathUnits: 3, englishUnits: 4, furtherUnits: 4 },
       'OFFICIAL_REQUIREMENT',
