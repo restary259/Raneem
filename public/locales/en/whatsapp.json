@@ -98,7 +98,8 @@
     "marketingConsent": "Marketing consent",
     "loadOlder": "Load older messages",
     "loadingOlder": "Loading…",
-    "expired": "Expired"
+    "expired": "Expired",
+    "moreActions": "More actions"
   },
   "profile": {
     "title": "Lead profile",
