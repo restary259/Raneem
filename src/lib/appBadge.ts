@@ -109,6 +109,12 @@ export function updateAppBadge(count: number): void {
   const safe = Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
   setOsBadge(safe);
   paintTitle(safe);
+  // Keep the worker's background counter aligned with what the app knows.
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.ready
+      .then((reg) => reg.active?.postMessage({ type: "SET_APP_BADGE", count: safe }))
+      .catch(() => undefined);
+  }
   if (safe === lastPainted) return;
   lastPainted = safe;
   void paintFavicon(safe);
