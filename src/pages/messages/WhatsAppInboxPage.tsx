@@ -626,13 +626,13 @@ export default function WhatsAppInboxPage({
   if (error) return <ErrorState title={t("errors.load")} description={error} onRetry={load} retryLabel={t("actions.retry")} />;
 
   const conversationOnlyView = (
-    <Card className={cn("min-h-0 h-full max-h-full w-full overflow-hidden rounded-xl shadow-none", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0")}>
+    <div className={cn("flex min-h-0 h-full max-h-full w-full flex-col overflow-hidden bg-background", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh]")}>
       <div className="flex h-full min-h-0 flex-col">
         {!active ? (
           <EmptyState title={t("empty.select")} description={t("empty.description")} icon={MessageCircle} className="flex-1" />
         ) : (
           <>
-            <div className="flex shrink-0 items-center gap-2 border-b bg-card p-2 md:p-3">
+            <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-3 py-2">
               <Button size="icon" variant="ghost" onClick={closeConversation} aria-label={t("actions.back")}>
                 <Back className="h-4 w-4" />
               </Button>
@@ -687,7 +687,7 @@ export default function WhatsAppInboxPage({
                 <ConversationContent className="min-h-0 min-w-0 flex-1 gap-3">
                 {hasOlder && (
                   <div className="flex justify-center">
-                    <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={loadingOlder} onClick={() => void loadOlder()}>
+                    <Button size="sm" variant="ghost" className="h-6 text-[11px] text-muted-foreground" disabled={loadingOlder} onClick={() => void loadOlder()}>
                       {loadingOlder ? t("conversation.loadingOlder", "Loading…") : t("conversation.loadOlder", "Load older messages")}
                     </Button>
                   </div>
@@ -698,13 +698,13 @@ export default function WhatsAppInboxPage({
                   const body = m.body?.trim();
                   const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
                   return (
-                    <div key={m.id} className="space-y-3">
-                      {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
+                    <div key={m.id} className="space-y-2">
+                      {newDay && <div className="flex justify-center pt-1"><span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/80">{fmtDay(m.created_at, i18n.language)}</span></div>}
                       <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-2 shadow-sm", m.direction === "inbound" ? "rounded-ss-sm bg-card border" : "rounded-se-sm bg-primary text-primary-foreground")}>
+                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-1.5", m.direction === "inbound" ? "rounded-ss-sm bg-muted/60" : "rounded-se-sm bg-brand text-brand-foreground")}>
                           {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
                           {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className={cn("mt-1 block text-end text-[10px]", m.direction === "outbound" ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                          <span className={cn("mt-0.5 block text-end text-[10px]", m.direction === "outbound" ? "text-brand-foreground/70" : "text-muted-foreground")}>
                             {fmt(m.created_at, i18n.language)}
                             {m.direction === "outbound" && (m.is_echo
                               ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
@@ -719,9 +719,12 @@ export default function WhatsAppInboxPage({
                 <ConversationScrollButton />
               </Conversation>
             </div>
-            <div className="shrink-0 space-y-2 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className={cn("flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs", windowClosed ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5")}>
-                <div className="flex items-center gap-2"><Clock3 className="h-3.5 w-3.5" /><span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span></div>
+            <div className="shrink-0 space-y-2 border-t border-border/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className="flex items-center justify-between gap-2 px-1 text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", windowClosed ? "bg-amber-500" : "bg-emerald-500")} />
+                  <span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span>
+                </div>
                 <span className="text-muted-foreground">{windowClosed ? t("conversation.templateRequired") : t("conversation.remaining", { time: formatDuration(windowRemaining) })}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -758,7 +761,7 @@ export default function WhatsAppInboxPage({
               </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
                   service window it is locked and the template picker takes over. */}
-              <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
+              <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-xl border-border/60 shadow-none">
                 <PromptInputTextarea
                   value={composer}
                   onChange={(event) => setComposer(event.target.value)}
@@ -801,7 +804,7 @@ export default function WhatsAppInboxPage({
           </>
         )}
       </div>
-    </Card>
+    </div>
   );
 
   if (conversationOnly) return conversationOnlyView;
@@ -826,13 +829,13 @@ export default function WhatsAppInboxPage({
   );
 
   const stageChips = (
-    <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]">
+    <div className="-mx-1 flex gap-0.5 overflow-x-auto px-1 [scrollbar-width:none]" role="group" aria-label={t("filters.allStages", "All stages")}>
       {(["all", ...STAGES] as string[]).map((s) => {
         const count = s === "all" ? threads.length : threads.filter((x) => (x.lead.lead_stage ?? "new") === s).length;
         if (s !== "all" && !count && stageFilter !== s) return null;
         return (
-          <button key={s} type="button" aria-pressed={stageFilter === s} onClick={() => setStageFilter(s)} className={cn("shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors", stageFilter === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground")}>
-            {s === "all" ? t("filters.allStages", "All stages") : whatsappStageLabel(s, i18n.language)} <span className="opacity-70">{count}</span>
+          <button key={s} type="button" aria-pressed={stageFilter === s} onClick={() => setStageFilter(s)} className={cn("shrink-0 border-b-2 px-2.5 pb-1 pt-1.5 text-[11px] font-medium transition-colors", stageFilter === s ? "border-brand text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+            {s === "all" ? t("filters.allStages", "All stages") : whatsappStageLabel(s, i18n.language)} <span className="opacity-60">{count}</span>
           </button>
         );
       })}
@@ -852,11 +855,12 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-      <div className={cn("grid min-h-0 flex-1 gap-3", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+      <div className="darb-spectrum darb-spectrum-sm mb-0 shrink-0 [border-radius:0]" aria-hidden="true" />
+      <div className={cn("grid min-h-0 flex-1 gap-0 lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
-        <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
-          <div className="shrink-0 space-y-2 border-b p-3">
+        <div className={cn("min-h-0 flex-col overflow-hidden bg-card", "hidden lg:flex")}>
+          <div className="shrink-0 space-y-2 border-b border-border/60 p-3">
             <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
             {stageChips}
             {simplified ? quickTabs : (
@@ -893,7 +897,7 @@ export default function WhatsAppInboxPage({
               <ConversationRow key={thread.id} thread={thread} active={thread.id === selectedId} simplified={simplified} now={now} lang={i18n.language} onSelect={() => selectConversation(thread.id)} />
             )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
           </ScrollArea>
-        </Card>
+        </div>
         {/* Chat — desktop only when browsing the inbox; mobile uses the dedicated
             conversation-only view after a thread is selected. */}
         <div className={cn(
@@ -904,11 +908,11 @@ export default function WhatsAppInboxPage({
         </div>
         {/* Lead — quiet for the team (name, stage, CRM context, notes);
             full contact + operational metadata for admins. */}
-        <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", active ? "hidden lg:flex" : "hidden")}>
+        <div className={cn("min-h-0 flex-col overflow-hidden bg-card", active ? "hidden lg:flex" : "hidden")}>
           {!active ? null : (
             <>
-              <div className="shrink-0 border-b p-4">
-                <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-muted-foreground" /><h3 className="font-semibold">{t("profile.title")}</h3></div>
+              <div className="shrink-0 border-b border-border/60 p-4">
+                <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-muted-foreground" /><h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("profile.title")}</h3></div>
                 <div className="mt-2 flex items-center gap-1.5">
                   {editingName ? (
                     <Input
@@ -955,8 +959,8 @@ export default function WhatsAppInboxPage({
                         <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-0.5">{value || "—"}</dd></div>
                       ))}
                     </dl>
-                    <div className="border-t p-4">
-                      <h4 className="text-sm font-semibold">{t("conversation.metadata")}</h4>
+                    <div className="border-t border-border/60 p-4">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("conversation.metadata")}</h4>
                       <div className="mt-3 grid gap-3">
                         <Select value={active.assigned_to ?? "unassigned"} onValueChange={(value) => void assignConversation(value === "unassigned" ? null : value)}>
                           <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
@@ -1013,11 +1017,11 @@ export default function WhatsAppInboxPage({
                     </div>
                   </>
                 )}
-                <div className="border-t p-4">
-                  <h4 className="text-sm font-semibold">{t("notes.title")}</h4>
+                <div className="border-t border-border/60 p-4">
+                  <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("notes.title")}</h4>
                   <div className="mt-2 space-y-2">
                     {notes.length ? notes.map((item) => (
-                      <div key={item.id} className="rounded-lg border bg-muted/30 p-2 text-xs">
+                      <div key={item.id} className="border-s-2 border-border py-1 ps-3 text-xs">
                         <p className="whitespace-pre-wrap">{item.body}</p>
                         <p className="mt-1 text-[10px] text-muted-foreground">{fmt(item.created_at, i18n.language)}</p>
                       </div>
@@ -1029,7 +1033,7 @@ export default function WhatsAppInboxPage({
               </ScrollArea>
             </>
           )}
-        </Card>
+        </div>
       </div>
       <Sheet open={detailsOpen && !!active} onOpenChange={setDetailsOpen}>
         <SheetContent side="bottom" dir={rtl ? "rtl" : "ltr"} className="max-h-[85dvh] overflow-y-auto rounded-t-2xl lg:hidden">
@@ -1053,8 +1057,9 @@ export default function WhatsAppInboxPage({
           list first, then a full-surface conversation after selection. */}
       <div className="flex min-h-0 flex-1 lg:hidden">
         {!active && (
-          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-none">
-            <div className="shrink-0 space-y-2 border-b p-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
+            <div className="darb-spectrum darb-spectrum-sm shrink-0 [border-radius:0]" aria-hidden="true" />
+            <div className="shrink-0 space-y-2 border-b border-border/60 p-3">
               <div className="relative">
                 <Search className="pointer-events-none absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -1079,7 +1084,7 @@ export default function WhatsAppInboxPage({
                 />
               )}
             </ScrollArea>
-          </Card>
+          </div>
         )}
       </div>
     </>
@@ -1274,7 +1279,7 @@ function TagEditor({ label, tags, onChange, addLabel }: { label: string; tags: s
   return <div><Label className="text-xs">{label}</Label><div className="mt-1 flex gap-2"><Input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); add(); } }} placeholder={addLabel} /><Button type="button" size="icon" variant="outline" onClick={add} aria-label={addLabel}><Tag className="h-4 w-4" /></Button></div>{tags.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{tags.map((tag) => <Badge key={tag} variant="secondary" className="gap-1">{tag}<button type="button" onClick={() => onChange(tags.filter((item) => item !== tag))} aria-label={`${addLabel}: ${tag}`}><X className="h-3 w-3" /></button></Badge>)}</div>}</div>;
 }
 function Metric({ icon: Icon, label, value }: { icon: typeof Inbox; label: string; value: string | number }) {
-  return <Card className="rounded-xl p-4 shadow-none"><div className="flex items-center justify-between"><div><p className="text-xs text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div><div className="rounded-lg bg-muted p-2.5"><Icon className="h-5 w-5" /></div></div></Card>;
+  return <Card className="rounded-lg p-3.5 shadow-none"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p><p className="mt-1.5 text-2xl font-semibold">{value}</p></div><div className="rounded-md bg-brand/10 p-2 text-brand"><Icon className="h-4.5 w-4.5" /></div></div></Card>;
 }
 
 /** Attachments live in a private bucket, so each bubble asks for its own signed link. */
@@ -1299,23 +1304,24 @@ function initials(value: string) {
   return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
 }
 
-function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
+export function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
   const { t } = useTranslation("whatsapp");
   const name = thread.lead.student_name || thread.lead.whatsapp_number;
   const lastAt = thread.last_inbound_at ?? thread.last_outbound_at;
   const unread = (thread.unread_count ?? 0) > 0;
   const time = lastAt ? new Intl.DateTimeFormat("en-GB", new Date(lastAt).toDateString() === new Date(now).toDateString() ? { hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "short" }).format(new Date(lastAt)) : "";
   return (
-    <button type="button" onClick={onSelect} className={cn("flex w-full items-center gap-3 border-b border-border/60 px-3 py-2.5 text-start transition-colors hover:bg-muted/50", active && "bg-muted")}>
-      <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-semibold", unread ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{initials(name)}</span>
+    <button type="button" onClick={onSelect} className={cn("relative flex w-full items-center gap-2.5 border-b border-border/40 px-3 py-2 text-start transition-colors hover:bg-muted/40", active && "bg-brand/5")}>
+      {active && <span className="absolute inset-y-0 start-0 w-0.5 bg-brand" aria-hidden="true" />}
+      <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-[11px] font-semibold", unread ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground")}>{initials(name)}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2">
-          <span dir="auto" className={cn("truncate text-sm", unread ? "font-semibold" : "font-medium")}>{name}</span>
-          <span className={cn("shrink-0 text-[10px]", unread ? "font-semibold text-primary" : "text-muted-foreground")}>{time}</span>
+          <span dir="auto" className={cn("truncate text-[13px]", unread ? "font-semibold" : "font-medium")}>{name}</span>
+          <span className={cn("shrink-0 text-[10px]", unread ? "font-semibold text-brand" : "text-muted-foreground")}>{time}</span>
         </span>
         <span className="mt-0.5 flex items-center justify-between gap-2">
           <span dir="auto" className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</span>
-          {unread && <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">{thread.unread_count}</span>}
+          {unread && <span className="grid h-4.5 min-w-4.5 shrink-0 place-items-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-foreground">{thread.unread_count}</span>}
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-1">
           <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-medium", whatsappStageClass(thread.lead.lead_stage))}>{whatsappStageLabel(thread.lead.lead_stage, lang)}</span>

@@ -92,7 +92,7 @@ export default function WhatsAppHealthPanel({ isAdmin }: { isAdmin: boolean }) {
         <h3 className="text-sm font-semibold">{t("health.today", "Today at a glance")}</h3>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {kpis.map(([label, value, tone]) => (
-            <Card key={label} className="rounded-xl p-3 shadow-none">
+            <Card key={label} className="rounded-lg p-3 shadow-none">
               <p className="text-xs text-muted-foreground">{label}</p>
               <p className={`mt-1 text-xl font-semibold ${tone}`}>{value}</p>
             </Card>
@@ -101,7 +101,7 @@ export default function WhatsAppHealthPanel({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {isAdmin && (
-        <Card className="rounded-xl p-4 shadow-none">
+        <Card className="rounded-lg p-4 shadow-none">
           <div className="flex flex-wrap items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-amber-600" />
             <h3 className="text-sm font-semibold">{t("health.blockedTitle", "Blocked incoming messages")}</h3>
@@ -132,7 +132,7 @@ export default function WhatsAppHealthPanel({ isAdmin }: { isAdmin: boolean }) {
         </Card>
       )}
 
-      <Card className="rounded-xl p-4 shadow-none">
+      <Card className="rounded-lg p-4 shadow-none">
         <div className="flex flex-wrap items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           <h3 className="text-sm font-semibold">{t("health.jobsTitle", "Messages that never went out")}</h3>
