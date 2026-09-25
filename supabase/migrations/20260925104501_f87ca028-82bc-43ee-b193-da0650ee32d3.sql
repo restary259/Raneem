@@ -1,0 +1,1 @@
+UPDATE public.platform_settings SET whatsapp_direct_send_enabled = false;
