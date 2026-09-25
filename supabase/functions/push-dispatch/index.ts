@@ -152,6 +152,14 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
     return { drop: true, logs };
   }
 
+  // Authoritative unread count so the closed app's icon badge is correct even
+  // after the service worker was suspended and lost its in-memory counter.
+  const { count: unread } = await admin
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("is_read", false);
+
   const payload = {
     title: notification.title_ar || notification.title,
     body: notification.body_ar || notification.body,
@@ -160,6 +168,7 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
     notificationId,
     category,
     priority,
+    badge: typeof unread === "number" ? unread : null,
   };
 
   let anyRetryable = false;
