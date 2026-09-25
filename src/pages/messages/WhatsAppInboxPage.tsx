@@ -673,8 +673,10 @@ export default function WhatsAppInboxPage({
                     {activeSlaOverdue && <Badge variant="destructive" className="gap-1 text-[10px]"><Clock3 className="h-3 w-3" />{t("sla.overdue")}</Badge>}
                   </div>
                 )}
+              <span className={cn("hidden shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium sm:inline-flex", whatsappStageClass(active.lead.lead_stage))}>{whatsappStageLabel(active.lead.lead_stage, i18n.language)}</span>
+              {!conversationOnly && <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setDetailsOpen(true)} aria-label={t("profile.title")}><PanelRight className="h-4 w-4" /></Button>}
               <Select value={activeState ?? "open"} onValueChange={(v) => saveConversation({ state: v })}>
-                <SelectTrigger className="h-9 w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 w-[130px] text-xs sm:w-[150px]"><SelectValue /></SelectTrigger>
                 <SelectContent>{DISPLAY_STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
@@ -823,6 +825,29 @@ export default function WhatsAppInboxPage({
     </div>
   );
 
+  const stageChips = (
+    <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]">
+      {(["all", ...STAGES] as string[]).map((s) => {
+        const count = s === "all" ? threads.length : threads.filter((x) => (x.lead.lead_stage ?? "new") === s).length;
+        if (s !== "all" && !count && stageFilter !== s) return null;
+        return (
+          <button key={s} type="button" aria-pressed={stageFilter === s} onClick={() => setStageFilter(s)} className={cn("shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors", stageFilter === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground")}>
+            {s === "all" ? t("filters.allStages", "All stages") : whatsappStageLabel(s, i18n.language)} <span className="opacity-70">{count}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const leadStageControl = active ? (teamMode ? (
+    <span className={cn("inline-flex rounded-full px-2 py-0.5 text-xs font-medium", whatsappStageClass(active.lead.lead_stage))}>{whatsappStageLabel(active.lead.lead_stage, i18n.language)}</span>
+  ) : (
+    <Select value={active.lead.lead_stage ?? "new"} onValueChange={(value) => void saveLead({ lead_stage: value })}>
+      <SelectTrigger className="h-8 w-full text-xs" aria-label={t("profile.stage", "Lead stage")}><SelectValue /></SelectTrigger>
+      <SelectContent>{STAGES.map((s) => <SelectItem key={s} value={s}><span className={cn("rounded-full px-2 py-0.5 text-xs", whatsappStageClass(s))}>{whatsappStageLabel(s, i18n.language)}</span></SelectItem>)}</SelectContent>
+    </Select>
+  )) : null;
+
   const inboxWorkspace = (simplified: boolean) => (
     <>
       {/* The student panel only appears once a conversation is open, so the
@@ -833,6 +858,7 @@ export default function WhatsAppInboxPage({
         <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
           <div className="shrink-0 space-y-2 border-b p-3">
             <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
+            {stageChips}
             {simplified ? quickTabs : (
               <>
                 <div className="grid grid-cols-2 gap-2">
@@ -908,7 +934,7 @@ export default function WhatsAppInboxPage({
                   )}
                 </div>
                 <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
-                <Badge variant="secondary" className="mt-2">{t(`stage.${active.lead.lead_stage}`, active.lead.lead_stage)}</Badge>
+                <div className="mt-3"><p className="mb-1 text-[11px] text-muted-foreground">{t("profile.stage", "Lead stage")}</p>{leadStageControl}</div>
               </div>
               <WhatsAppCrmContextPanel lead={active.lead} />
               <ScrollArea className="min-h-0 flex-1">
@@ -1021,6 +1047,7 @@ export default function WhatsAppInboxPage({
                 />
               </div>
               {simplified && quickTabs}
+              {stageChips}
             </div>
             <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
               {filtered.length ? filtered.map((thread) => (
