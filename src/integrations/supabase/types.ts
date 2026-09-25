@@ -7526,6 +7526,7 @@ export type Database = {
           template_provider_name: string
         }[]
       }
+      whatsapp_map_lead_stage: { Args: { p: string }; Returns: string }
       whatsapp_mark_conversation_read: {
         Args: { p_conversation_id: string }
         Returns: undefined
