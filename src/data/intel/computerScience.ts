@@ -419,6 +419,16 @@ export const COMPUTER_SCIENCE_INTEL: MajorIntel = {
   },
   status: 'verified',
   lastVerified: CS_LAST_VERIFIED,
+  competitiveBagrutThreshold: fact(
+    75,
+    'DARB_OPERATIONAL_GUIDANCE',
+    'darb-reference-pdf-competitive-bagrut',
+    '2026-09-25',
+    {
+      note: 'Competitive planning benchmark from the supplied DARB student-requirements reference material; 75+ Bagrut. Not a legal or university-wide admission cutoff.',
+      noteAR: 'حد تخطيط تنافسي مستند إلى مادة متطلبات الطلاب المقدمة من درب؛ 75+ بجروت. وليس حداً قانونياً أو موحداً للقبول الجامعي.',
+    },
+  ),
   bagrutAccess: fact(
     { mathUnits: 3, englishUnits: 4, furtherUnits: 4 },
     'OFFICIAL_REQUIREMENT',
