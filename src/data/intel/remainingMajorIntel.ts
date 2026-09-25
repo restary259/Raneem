@@ -13,6 +13,16 @@ import { majorsData } from '@/data/majorsData';
 
 const CHECKED = '2026-09-19';
 
+const COMPETITIVE_BGRUT_SOURCE: IntelSource = {
+  id: 'darb-reference-pdf-competitive-bagrut',
+  url: 'https://github.com/restary259/Raneem/blob/main/docs/major-intel/competitive-bagrut-benchmarks.md',
+  title: 'DARB — Student Requirements reference: competitive Bagrut benchmarks',
+  titleAR: 'درب — مرجع متطلبات الطلاب: الحدود التنافسية للبجروت',
+  authority: 'darb',
+  checkedAt: '2026-09-25',
+};
+
+
 const SRC_ANABIN: IntelSource = {
   id: 'anabin-isr',
   url: 'https://anabin.kmk.org/db/schulabschluesse-mit-hochschulzugang',
@@ -212,7 +222,7 @@ function makeMajor(id: string, route: Route): MajorIntel {
           'لا نفترض شرط لغة موحداً للمجال؛ استخدم مسار البرنامج المحدد.',
         ),
     programs: [makeProgram(route)],
-    sources: [SRC_ANABIN, SRC_KMK, SRC_RO_DT, sourceFor(route)],
+    sources: [COMPETITIVE_BGRUT_SOURCE, SRC_ANABIN, SRC_KMK, SRC_RO_DT, sourceFor(route)],
   };
 }
 
