@@ -59,9 +59,32 @@ export async function listWhatsAppThreads(): Promise<WhatsAppThread[]> {
   return (data ?? []) as unknown as WhatsAppThread[];
 }
 
-export async function listConversationMessages(conversationId: string) {
-  const { data, error } = await supabase.from("whatsapp_messages").select("*").eq("conversation_id", conversationId).order("created_at");
-  fail(error); return (data ?? []) as WhatsAppMessage[];
+export const WHATSAPP_PAGE_SIZE = 50;
+
+/** Newest page first (or the page before `before`), returned oldest→newest. */
+export async function listConversationMessages(conversationId: string, before?: string, limit = WHATSAPP_PAGE_SIZE) {
+  let q = supabase.from("whatsapp_messages").select("*").eq("conversation_id", conversationId);
+  if (before) q = q.lt("created_at", before);
+  const { data, error } = await q.order("created_at", { ascending: false }).order("id", { ascending: false }).limit(limit);
+  fail(error); return ((data ?? []) as WhatsAppMessage[]).reverse();
+}
+
+export async function getWhatsAppMessage(id: string) {
+  const { data, error } = await supabase.from("whatsapp_messages").select("*").eq("id", id).maybeSingle();
+  fail(error); return (data ?? null) as WhatsAppMessage | null;
+}
+
+/** Insert/replace rows by id and keep chronological order. Never duplicates. */
+export function mergeWhatsAppMessages(current: WhatsAppMessage[], incoming: WhatsAppMessage[]): WhatsAppMessage[] {
+  const map = new Map(current.map((m) => [m.id, m]));
+  for (const m of incoming) {
+    // Drop an optimistic placeholder once the real row with the same provider id arrives.
+    if (m.provider_message_id) {
+      for (const [k, v] of map) if (k.startsWith("tmp-") && v.provider_message_id === m.provider_message_id) map.delete(k);
+    }
+    map.set(m.id, m);
+  }
+  return [...map.values()].sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
 }
 
 export async function listConversationNotes(conversationId: string) {
