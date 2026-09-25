@@ -908,11 +908,11 @@ export default function WhatsAppInboxPage({
         </div>
         {/* Lead — quiet for the team (name, stage, CRM context, notes);
             full contact + operational metadata for admins. */}
-        <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", active ? "hidden lg:flex" : "hidden")}>
+        <div className={cn("min-h-0 flex-col overflow-hidden bg-card", active ? "hidden lg:flex" : "hidden")}>
           {!active ? null : (
             <>
-              <div className="shrink-0 border-b p-4">
-                <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-muted-foreground" /><h3 className="font-semibold">{t("profile.title")}</h3></div>
+              <div className="shrink-0 border-b border-border/60 p-4">
+                <div className="flex items-center gap-2"><UserRound className="h-4 w-4 text-muted-foreground" /><h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("profile.title")}</h3></div>
                 <div className="mt-2 flex items-center gap-1.5">
                   {editingName ? (
                     <Input
@@ -959,8 +959,8 @@ export default function WhatsAppInboxPage({
                         <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-0.5">{value || "—"}</dd></div>
                       ))}
                     </dl>
-                    <div className="border-t p-4">
-                      <h4 className="text-sm font-semibold">{t("conversation.metadata")}</h4>
+                    <div className="border-t border-border/60 p-4">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("conversation.metadata")}</h4>
                       <div className="mt-3 grid gap-3">
                         <Select value={active.assigned_to ?? "unassigned"} onValueChange={(value) => void assignConversation(value === "unassigned" ? null : value)}>
                           <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
