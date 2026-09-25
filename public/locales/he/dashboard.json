@@ -1,0 +1,12 @@
+{
+  "intel": {
+    "card": {
+      "benchmarkTitle": "מדד תכנוני של DARB",
+      "benchmarkBadge": "פנימי",
+      "benchmarkValueLabel": "ממוצע בגרות יעד",
+      "benchmarkHint": "מדד תכנוני פנימי של DARB להערכת פרופיל המועמד. זה אינו סף קבלה רשמי של האוניברסיטה ואינו מבטיח קבלה.",
+      "benchmarkSource": "מקור מדד DARB",
+      "formalEligibility": "זכאות בגרות רשמית"
+    }
+  }
+}
