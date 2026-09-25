@@ -438,5 +438,11 @@
     "failed": "failed",
     "queued": "queued",
     "accepted": "accepted"
+  },
+  "directSend": {
+    "title": "Direct Send (service messages)",
+    "description": "Send appointment, document, payment and application updates without waiting for template approval. Only turn on after WhatsApp Manager confirms your account is eligible. Marketing never uses this.",
+    "enabled": "Direct Send is on",
+    "disabled": "Direct Send is off"
   }
 }
