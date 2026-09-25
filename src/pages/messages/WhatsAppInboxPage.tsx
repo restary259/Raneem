@@ -855,11 +855,12 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-      <div className={cn("grid min-h-0 flex-1 gap-3", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+      <div className="darb-spectrum darb-spectrum-sm mb-0 shrink-0 [border-radius:0]" aria-hidden="true" />
+      <div className={cn("grid min-h-0 flex-1 gap-0 lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
-        <Card className={cn("min-h-0 flex-col overflow-hidden rounded-xl shadow-none", "hidden lg:flex")}>
-          <div className="shrink-0 space-y-2 border-b p-3">
+        <div className={cn("min-h-0 flex-col overflow-hidden bg-card", "hidden lg:flex")}>
+          <div className="shrink-0 space-y-2 border-b border-border/60 p-3">
             <div className="relative"><Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input className="ps-8" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.search")} /></div>
             {stageChips}
             {simplified ? quickTabs : (
@@ -896,7 +897,7 @@ export default function WhatsAppInboxPage({
               <ConversationRow key={thread.id} thread={thread} active={thread.id === selectedId} simplified={simplified} now={now} lang={i18n.language} onSelect={() => selectConversation(thread.id)} />
             )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
           </ScrollArea>
-        </Card>
+        </div>
         {/* Chat — desktop only when browsing the inbox; mobile uses the dedicated
             conversation-only view after a thread is selected. */}
         <div className={cn(
