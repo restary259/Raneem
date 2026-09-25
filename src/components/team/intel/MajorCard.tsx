@@ -9,7 +9,7 @@
 import React, { useMemo } from 'react';
 import { Link } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ChevronRight, ExternalLink, MapPin } from 'lucide-react';
+import { ArrowLeft, ChevronRight, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -69,9 +69,6 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
   const { data } = usePartnerCountries();
   const intel = subject.intel?.status === 'verified' ? subject.intel : undefined;
   const programs: ProgramIntel[] = intel?.programs ?? [];
-  const benchmarkSource = intel?.competitiveBagrutThreshold?.sourceId
-    ? intel.sources.find((source) => source.id === intel.competitiveBagrutThreshold?.sourceId)
-    : undefined;
 
   const partnerSchools = useMemo(() => data?.schools ?? [], [data]);
   const partnerCountryById = useMemo(
@@ -260,19 +257,6 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                   <p className="mt-2 text-sm text-muted-foreground">
                     {t('intel.card.benchmarkHint', 'Internal DARB planning indicator used to assess an applicant’s profile. It is not an official university cutoff or a guarantee of admission.')}
                   </p>
-                  <a
-                    href={benchmarkSource?.url ?? undefined}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-disabled={!benchmarkSource?.url}
-                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                  >
-                    {t('intel.card.benchmarkSource', 'DARB benchmark source')}
-                    {intel.competitiveBagrutThreshold.evidenceRef && (
-                      <span className="font-normal no-underline">· {intel.competitiveBagrutThreshold.evidenceRef}</span>
-                    )}
-                    <ExternalLink className="h-3 w-3" aria-hidden />
-                  </a>
                 </div>
               ) : null}
             </div>
@@ -438,12 +422,9 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                     const meta = getRecommendedUniversityMeta(recommendation.universityId);
                     if (!meta) return null;
                     return (
-                      <a
+                      <div
                         key={recommendation.universityId}
-                        href={recommendation.programUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
+                        className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm"
                       >
                         <span className="min-w-0">
                           <span className="flex flex-wrap items-center gap-1.5">
@@ -456,11 +437,6 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                               ? t('intel.recommendations.exact', 'Exact programme route')
                               : t('intel.recommendations.related', 'Related route — official catalogue')}
                           </span>
-                          <span className="mt-1 block text-xs">
-                            {recommendation.linkKind === 'programme'
-                              ? t('intel.recommendations.openProgramme', 'Official programme page')
-                              : t('intel.recommendations.openCatalogue', 'Official programme catalogue')}
-                          </span>
                           <span className={recommendation.tuition.kind === 'verify'
                             ? 'mt-1 block text-xs text-muted-foreground'
                             : 'mt-1 block text-xs font-medium'}>
@@ -471,8 +447,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                                 : recommendation.tuition.label}
                           </span>
                         </span>
-                        <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                      </a>
+                      </div>
                     );
                   })}
                 </div>
@@ -486,12 +461,9 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                   {t('intel.recommendations.verifiedRoutes', 'Verified programme routes on file')}
                 </p>
                 {programs.slice(0, 6).map((program) => (
-                  <a
+                  <div
                     key={program.id}
-                    href={program.programUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
+                    className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm"
                   >
                     <span className="min-w-0">
                       <span className="block font-medium">{isAr ? program.universityNameAR : program.universityName}</span>
@@ -499,8 +471,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                         {isAr ? program.programNameAR : program.programName} · {isAr ? program.cityAR : program.city}
                       </span>
                     </span>
-                    <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                  </a>
+                  </div>
                 ))}
               </section>
             )}
