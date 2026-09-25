@@ -804,7 +804,7 @@ export default function WhatsAppInboxPage({
           </>
         )}
       </div>
-    </Card>
+    </div>
   );
 
   if (conversationOnly) return conversationOnlyView;
@@ -829,13 +829,13 @@ export default function WhatsAppInboxPage({
   );
 
   const stageChips = (
-    <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]">
+    <div className="-mx-1 flex gap-0.5 overflow-x-auto px-1 [scrollbar-width:none]" role="group" aria-label={t("filters.allStages", "All stages")}>
       {(["all", ...STAGES] as string[]).map((s) => {
         const count = s === "all" ? threads.length : threads.filter((x) => (x.lead.lead_stage ?? "new") === s).length;
         if (s !== "all" && !count && stageFilter !== s) return null;
         return (
-          <button key={s} type="button" aria-pressed={stageFilter === s} onClick={() => setStageFilter(s)} className={cn("shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors", stageFilter === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground")}>
-            {s === "all" ? t("filters.allStages", "All stages") : whatsappStageLabel(s, i18n.language)} <span className="opacity-70">{count}</span>
+          <button key={s} type="button" aria-pressed={stageFilter === s} onClick={() => setStageFilter(s)} className={cn("shrink-0 border-b-2 px-2.5 pb-1 pt-1.5 text-[11px] font-medium transition-colors", stageFilter === s ? "border-brand text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+            {s === "all" ? t("filters.allStages", "All stages") : whatsappStageLabel(s, i18n.language)} <span className="opacity-60">{count}</span>
           </button>
         );
       })}
