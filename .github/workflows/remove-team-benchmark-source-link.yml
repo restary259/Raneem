@@ -1,0 +1,56 @@
+name: Remove Team Majors benchmark source link
+
+on:
+  push:
+    branches:
+      - fix/team-majors-bagrut-clean
+
+permissions:
+  contents: write
+
+jobs:
+  remove-link:
+    if: github.ref == 'refs/heads/fix/team-majors-bagrut-clean'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove benchmark source link from MajorCard
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('src/components/team/intel/MajorCard.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          start = text.find("                  <a\n                    href={benchmarkSource?.url ?? undefined}")
+          if start == -1:
+              raise SystemExit('benchmark source link already absent')
+
+          end_marker = "                  </a>\n"
+          end = text.find(end_marker, start)
+          if end == -1:
+              raise SystemExit('benchmark source link closing tag not found')
+          end += len(end_marker)
+
+          path.write_text(text[:start] + text[end:], encoding='utf-8')
+
+          text = path.read_text(encoding='utf-8')
+          text = text.replace("  const benchmarkSource = intel?.competitiveBagrutThreshold?.sourceId\n    ? intel.sources.find((source) => source.id === intel.competitiveBagrutThreshold?.sourceId)\n    : undefined;\n\n", "")
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit and remove this one-time workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/team/intel/MajorCard.tsx .github/workflows/remove-team-benchmark-source-link.yml
+          git rm .github/workflows/remove-team-benchmark-source-link.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "fix(team-majors): remove benchmark source link from all majors"
+          git push
