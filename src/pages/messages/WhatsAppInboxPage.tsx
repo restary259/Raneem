@@ -2,7 +2,7 @@ import { WhatsAppPurposeCatalog } from "@/components/messages/WhatsAppPurposeCat
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, LayoutGrid, PanelRight, Wrench, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,8 @@ import WhatsAppIdentityPanel from "@/components/messages/WhatsAppIdentityPanel";
 import WhatsAppCrmContextPanel from "@/components/messages/WhatsAppCrmContextPanel";
 import WhatsAppHealthPanel from "@/components/messages/WhatsAppHealthPanel";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
+import { WHATSAPP_LEAD_STAGES, whatsappStageClass, whatsappStageLabel } from "@/lib/whatsappStages";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, getWhatsAppMessage, listConversationMessages, mergeWhatsAppMessages, WHATSAPP_PAGE_SIZE, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
@@ -60,7 +62,7 @@ const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
   appointment_confirmation: "أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا.",
   appointment_reminder: "أهلاً! تذكير من درب: عندك موعد معنا بكرا بخصوص الدراسة بألمانيا. إذا احتجت تغيّر الموعد، ابعتلنا.",
 };
-const STAGES: LeadStage[] = ["new", "qualified", "consultation_booked", "documents_pending", "application_in_progress", "won", "lost"];
+const STAGES: LeadStage[] = WHATSAPP_LEAD_STAGES as LeadStage[];
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["lead_received", "lead_followup", "inquiry_follow_up", "appointment_invitation", "appointment_confirmation", "consultation_confirmation", "appointment_reminder", "appointment_rescheduled", "documents_missing", "document_reminder", "profile_incomplete", "document_received", "payment_instruction", "payment_reminder", "payment_confirmed", "application_started", "application_submitted", "application_update", "student_welcome", "enrollment_confirmation", "next_steps", "support_followup", "case_update", "re_engagement"] as const;
 const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -112,6 +114,8 @@ export default function WhatsAppInboxPage({
   const [notes, setNotes] = useState<WhatsAppNote[]>([]);
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
+  const [stageFilter, setStageFilter] = useState<string>("all");
+  const [view, setView] = useState<"inbox" | "dashboard" | "templates" | "health">("inbox");
   const [ownerFilter, setOwnerFilter] = useState("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -307,6 +311,7 @@ export default function WhatsAppInboxPage({
     if (teamMode) {
       return threads.filter((thread) => {
         if (!searchMatches(thread, q)) return false;
+        if (stageFilter !== "all" && (thread.lead.lead_stage ?? "new") !== stageFilter) return false;
         switch (inboxTab) {
           case "unread": return (thread.unread_count ?? 0) > 0;
           case "read": return (thread.unread_count ?? 0) === 0;
@@ -318,6 +323,7 @@ export default function WhatsAppInboxPage({
     return threads.filter((thread) => {
       const operationalState = normalizeWhatsAppState(thread.state);
       if (!searchMatches(thread, q)) return false;
+      if (stageFilter !== "all" && (thread.lead.lead_stage ?? "new") !== stageFilter) return false;
       if (stateFilter !== "all" && operationalState !== stateFilter) return false;
       if (ownerFilter === "unassigned" && thread.assigned_to) return false;
       if (ownerFilter === "__mine__" && thread.assigned_to !== user?.id) return false;
@@ -330,7 +336,7 @@ export default function WhatsAppInboxPage({
       if (snoozedOnly && !isWhatsAppSnoozed("snoozed", thread.snoozed_until, now)) return false;
       return true;
     });
-  }, [threads, query, teamMode, inboxTab, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now, user?.id]);
+  }, [threads, query, teamMode, inboxTab, stageFilter, stateFilter, ownerFilter, unreadOnly, priorityFilter, intentFilter, languageFilter, slaOnly, snoozedOnly, now, user?.id]);
 
   const saveConversation = async (patch: Parameters<typeof updateConversation>[1]) => {
     if (!active) return;
@@ -693,10 +699,10 @@ export default function WhatsAppInboxPage({
                     <div key={m.id} className="space-y-3">
                       {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
                       <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                        <MessageContent className={cn("rounded-xl px-3 py-2", m.direction === "inbound" && "bg-muted")}>
+                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-2 shadow-sm", m.direction === "inbound" ? "rounded-ss-sm bg-card border" : "rounded-se-sm bg-primary text-primary-foreground")}>
                           {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
                           {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className={cn("mt-1 block text-end text-[10px]", m.direction === "outbound" ? "text-primary-foreground/70" : "text-muted-foreground")}>
                             {fmt(m.created_at, i18n.language)}
                             {m.direction === "outbound" && (m.is_echo
                               ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
@@ -1173,7 +1179,7 @@ export default function WhatsAppInboxPage({
           <div className="grid gap-3 lg:grid-cols-[1.3fr_0.7fr]">
             <Card className="rounded-xl p-5 shadow-none">
               <h2 className="mb-4 font-semibold">{t("dashboard.byStage")}</h2>
-              {threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>{t(`stage.${s}`)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}
+              {threads.length ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{STAGES.map((s) => <div key={s} className="flex items-center justify-between rounded-lg border p-3 text-sm"><span className={cn("rounded-full px-2 py-0.5 text-xs", whatsappStageClass(s))}>{whatsappStageLabel(s, i18n.language)}</span><Badge variant="secondary">{threads.filter((x) => x.lead.lead_stage === s).length}</Badge></div>)}</div> : <EmptyState title={t("dashboard.noData")} icon={UsersRound} />}
             </Card>
             <Card className="rounded-xl p-5 shadow-none">
               <div className="flex items-center justify-between gap-2">
