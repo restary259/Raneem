@@ -758,6 +758,7 @@ export default function WhatsAppInboxPage({
                 ))}
                 <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLIES_AR.map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
+              )}
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
                   service window it is locked and the template picker takes over. */}
               <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-xl border-border/60 shadow-none">
@@ -769,6 +770,9 @@ export default function WhatsAppInboxPage({
                 />
                 <PromptInputFooter>
                   <div className="flex min-w-0 items-center gap-2">
+                    <Button type="button" size="icon" variant={composerActionsOpen ? "secondary" : "ghost"} className="h-8 w-8" onClick={() => setComposerActionsOpen((open) => !open)} aria-label={t("conversation.moreActions", "More actions")} aria-expanded={composerActionsOpen}>
+                      <Plus className={cn("h-4 w-4 transition-transform", composerActionsOpen && "rotate-45")} />
+                    </Button>
                     <input ref={fileRef} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" onChange={(event) => { setAttachment(event.target.files?.[0] ?? null); event.target.value = ""; }} />
                     <Button type="button" size="icon" variant="ghost" className="h-8 w-8" disabled={windowClosed || sending} onClick={() => fileRef.current?.click()} aria-label={t("conversation.attach", "Attach a photo or file")}>
                       <Paperclip className="h-4 w-4" />
