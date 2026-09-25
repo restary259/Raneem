@@ -11,6 +11,15 @@ import { PROFILE_FIELD_LABEL_KEYS } from "./studentProfileFields";
 const ROOT = process.cwd();
 const LOCALES = ["ar", "en"] as const;
 
+const TEAM_MAJORS_HEBREW_KEYS = [
+  "intel.card.formalEligibility",
+  "intel.card.benchmarkTitle",
+  "intel.card.benchmarkBadge",
+  "intel.card.benchmarkValueLabel",
+  "intel.card.benchmarkHint",
+  "intel.card.benchmarkSource",
+] as const;
+
 const loadDicts = (lang: string) => {
   const dir = path.join(ROOT, "public/locales", lang);
   const dicts: Record<string, any> = {};
@@ -65,6 +74,14 @@ describe("i18n coverage", () => {
     }
 
     expect(missing).toEqual([]);
+  });
+
+  it("has Team Majors benchmark copy in Hebrew", () => {
+    const dashboard = loadDicts("he").dashboard;
+    expect(dashboard, "Hebrew dashboard dictionary").toBeDefined();
+    for (const key of TEAM_MAJORS_HEBREW_KEYS) {
+      expect(hasKey(dashboard, key), `he: ${key}`).toBe(true);
+    }
   });
 
   it("has every profile-summary label key in the dashboard dictionaries", () => {
