@@ -687,7 +687,7 @@ export default function WhatsAppInboxPage({
                 <ConversationContent className="min-h-0 min-w-0 flex-1 gap-3">
                 {hasOlder && (
                   <div className="flex justify-center">
-                    <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={loadingOlder} onClick={() => void loadOlder()}>
+                    <Button size="sm" variant="ghost" className="h-6 text-[11px] text-muted-foreground" disabled={loadingOlder} onClick={() => void loadOlder()}>
                       {loadingOlder ? t("conversation.loadingOlder", "Loading…") : t("conversation.loadOlder", "Load older messages")}
                     </Button>
                   </div>
@@ -698,13 +698,13 @@ export default function WhatsAppInboxPage({
                   const body = m.body?.trim();
                   const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
                   return (
-                    <div key={m.id} className="space-y-3">
-                      {newDay && <div className="flex justify-center"><span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{fmtDay(m.created_at, i18n.language)}</span></div>}
+                    <div key={m.id} className="space-y-2">
+                      {newDay && <div className="flex justify-center pt-1"><span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/80">{fmtDay(m.created_at, i18n.language)}</span></div>}
                       <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-2 shadow-sm", m.direction === "inbound" ? "rounded-ss-sm bg-card border" : "rounded-se-sm bg-primary text-primary-foreground")}>
+                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-1.5", m.direction === "inbound" ? "rounded-ss-sm bg-muted/60" : "rounded-se-sm bg-brand text-brand-foreground")}>
                           {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
                           {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className={cn("mt-1 block text-end text-[10px]", m.direction === "outbound" ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                          <span className={cn("mt-0.5 block text-end text-[10px]", m.direction === "outbound" ? "text-brand-foreground/70" : "text-muted-foreground")}>
                             {fmt(m.created_at, i18n.language)}
                             {m.direction === "outbound" && (m.is_echo
                               ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
