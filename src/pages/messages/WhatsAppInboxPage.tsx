@@ -1017,11 +1017,11 @@ export default function WhatsAppInboxPage({
                     </div>
                   </>
                 )}
-                <div className="border-t p-4">
-                  <h4 className="text-sm font-semibold">{t("notes.title")}</h4>
+                <div className="border-t border-border/60 p-4">
+                  <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("notes.title")}</h4>
                   <div className="mt-2 space-y-2">
                     {notes.length ? notes.map((item) => (
-                      <div key={item.id} className="rounded-lg border bg-muted/30 p-2 text-xs">
+                      <div key={item.id} className="border-s-2 border-border py-1 ps-3 text-xs">
                         <p className="whitespace-pre-wrap">{item.body}</p>
                         <p className="mt-1 text-[10px] text-muted-foreground">{fmt(item.created_at, i18n.language)}</p>
                       </div>
@@ -1033,7 +1033,7 @@ export default function WhatsAppInboxPage({
               </ScrollArea>
             </>
           )}
-        </Card>
+        </div>
       </div>
       <Sheet open={detailsOpen && !!active} onOpenChange={setDetailsOpen}>
         <SheetContent side="bottom" dir={rtl ? "rtl" : "ltr"} className="max-h-[85dvh] overflow-y-auto rounded-t-2xl lg:hidden">
