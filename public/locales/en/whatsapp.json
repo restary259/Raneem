@@ -10,7 +10,8 @@
     "admin": "Admin",
     "team": "Team view",
     "viewToggle": "View",
-    "health": "Delivery health"
+    "health": "Delivery health",
+    "tools": "Tools"
   },
   "quick": {
     "all": "All",
@@ -33,7 +34,8 @@
     "allIntents": "All intents",
     "allLanguages": "All languages",
     "sla": "SLA overdue",
-    "snoozed": "Snoozed"
+    "snoozed": "Snoozed",
+    "allStages": "All stages"
   },
   "state": {
     "new": "New",
@@ -44,15 +46,6 @@
     "waiting_for_student": "Waiting for student",
     "snoozed": "Snoozed",
     "closed": "Closed"
-  },
-  "stage": {
-    "new": "New",
-    "qualified": "Qualified",
-    "consultation_booked": "Consultation booked",
-    "documents_pending": "Documents pending",
-    "application_in_progress": "Application in progress",
-    "won": "Won",
-    "lost": "Lost"
   },
   "empty": {
     "title": "No WhatsApp conversations yet",

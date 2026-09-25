@@ -10,7 +10,8 @@
     "admin": "المشرف",
     "team": "عرض الفريق",
     "viewToggle": "العرض",
-    "health": "حالة التسليم"
+    "health": "حالة التسليم",
+    "tools": "الأدوات"
   },
   "quick": {
     "all": "الكل",
@@ -33,7 +34,8 @@
     "allIntents": "كل المواضيع",
     "allLanguages": "كل اللغات",
     "sla": "تجاوز وقت الاستجابة",
-    "snoozed": "مؤجّلة"
+    "snoozed": "مؤجّلة",
+    "allStages": "كل المراحل"
   },
   "state": {
     "new": "جديد",
@@ -44,15 +46,6 @@
     "waiting_for_student": "بانتظار الطالب",
     "snoozed": "مؤجّلة",
     "closed": "مغلقة"
-  },
-  "stage": {
-    "new": "جديد",
-    "qualified": "مؤهّل",
-    "consultation_booked": "تم حجز استشارة",
-    "documents_pending": "بانتظار الوثائق",
-    "application_in_progress": "التقديم قيد العمل",
-    "won": "تم الاتفاق",
-    "lost": "لم يكتمل"
   },
   "empty": {
     "title": "لا توجد محادثات واتساب بعد",
