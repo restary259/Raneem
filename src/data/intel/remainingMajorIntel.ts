@@ -10,18 +10,9 @@ import type { IntelSource } from './factTypes';
 import { fact, unverified } from './factTypes';
 import type { MajorIntel, ProgramIntel, LanguageRequirementValue } from './types';
 import { majorsData } from '@/data/majorsData';
+import { COMPETITIVE_BGRUT_SOURCE, competitiveBagrutForMajor } from './competitiveBagrut';
 
 const CHECKED = '2026-09-19';
-
-const COMPETITIVE_BGRUT_SOURCE: IntelSource = {
-  id: 'darb-reference-pdf-competitive-bagrut',
-  url: 'https://github.com/restary259/Raneem/blob/main/docs/major-intel/competitive-bagrut-benchmarks.md',
-  title: 'DARB — Student Requirements reference: competitive Bagrut benchmarks',
-  titleAR: 'درب — مرجع متطلبات الطلاب: الحدود التنافسية للبجروت',
-  authority: 'darb',
-  checkedAt: '2026-09-25',
-};
-
 
 const SRC_ANABIN: IntelSource = {
   id: 'anabin-isr',
@@ -53,17 +44,6 @@ const BAGRUT_AR = 'تعودات بجروت مُدرجة في anabin كقبول �
 const GRADE_EN = 'German grade = 1 + 3 × (Nmax − N) / (Nmax − Nmin). The formula is a conversion procedure, not an admission decision.';
 const GRADE_AR = 'الدرجة الألمانية = 1 + 3 × (Nmax − N) / (Nmax − Nmin). الصيغة إجراء لتحويل المعدل وليست قرار قبول.';
 const GERMAN_C1_CERTS = ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'];
-
-const COMPETITIVE_BGRUT_BY_MAJOR: Record<string, number> = {
-  'medicine': 94,
-  'dentistry': 94,
-  'veterinary': 89,
-  'pharmacy': 75,
-  'business-administration': 75,
-  'economics': 75,
-  'architecture': 70,
-  'international-law': 90,
-};
 
 
 type Route = {
@@ -194,18 +174,7 @@ function makeMajor(id: string, route: Route): MajorIntel {
     aliases: { ar: [ar], he: [], en: [en], de: [de] },
     status: 'verified',
     lastVerified: CHECKED,
-    ...(COMPETITIVE_BGRUT_BY_MAJOR[id] ? {
-      competitiveBagrutThreshold: fact(
-        COMPETITIVE_BGRUT_BY_MAJOR[id],
-        'DARB_OPERATIONAL_GUIDANCE',
-        'darb-reference-pdf-competitive-bagrut',
-        '2026-09-25',
-        {
-          note: 'Competitive planning benchmark from the supplied DARB student-requirements reference material; not a legal or university-wide admission cutoff.',
-          noteAR: 'حدّ تخطيط تنافسي مستند إلى مادة متطلبات الطلاب المقدمة من درب؛ وليس حداً قانونياً أو حداً موحداً للقبول الجامعي.',
-        },
-      ),
-    } : {}),
+    competitiveBagrutThreshold: competitiveBagrutForMajor(id),
     bagrutAccess: fact(
       { mathUnits: 3, englishUnits: 4, furtherUnits: 4 },
       'OFFICIAL_REQUIREMENT',
