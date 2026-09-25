@@ -719,9 +719,12 @@ export default function WhatsAppInboxPage({
                 <ConversationScrollButton />
               </Conversation>
             </div>
-            <div className="shrink-0 space-y-2 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className={cn("flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs", windowClosed ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5")}>
-                <div className="flex items-center gap-2"><Clock3 className="h-3.5 w-3.5" /><span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span></div>
+            <div className="shrink-0 space-y-2 border-t border-border/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className="flex items-center justify-between gap-2 px-1 text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", windowClosed ? "bg-amber-500" : "bg-emerald-500")} />
+                  <span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span>
+                </div>
                 <span className="text-muted-foreground">{windowClosed ? t("conversation.templateRequired") : t("conversation.remaining", { time: formatDuration(windowRemaining) })}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -758,7 +761,7 @@ export default function WhatsAppInboxPage({
               </div>
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
                   service window it is locked and the template picker takes over. */}
-              <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-lg">
+              <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-xl border-border/60 shadow-none">
                 <PromptInputTextarea
                   value={composer}
                   onChange={(event) => setComposer(event.target.value)}
