@@ -52,6 +52,7 @@ const COMPETITIVE_BGRUT_BY_MAJOR: Record<string, number> = {
   'business-administration': 75,
   'economics': 75,
   'architecture': 70,
+  'international-law': 90,
 };
 
 
