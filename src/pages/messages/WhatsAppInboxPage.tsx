@@ -1150,7 +1150,7 @@ export default function WhatsAppInboxPage({
 
 
   return (
-    <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto flex w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden", embedded ? "pb-0" : "pb-20 md:pb-4")}>
+    <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto flex h-full w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden", embedded ? "pb-0" : "pb-20 md:pb-4")}>
       {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<><div className="flex items-center gap-2">{isAdmin && adminTeamToggle}<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div></>} />}
       {embedded && <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><div className="flex items-center gap-2">{isAdmin && adminTeamToggle}<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div></div>}
       <div className="mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2">
