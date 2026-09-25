@@ -7,13 +7,25 @@ import {
 } from './competitiveBagrut';
 
 const EXPECTED = {
-  architecture: 70,
-  'mechanical-engineering': 70,
-  'computer-science': 75,
   medicine: 94,
   dentistry: 94,
+  pharmacy: 94,
+  'public-health': 94,
+  bioinformatics: 94,
   veterinary: 89,
-  pharmacy: 75,
+  'mechanical-engineering': 80,
+  'civil-engineering': 80,
+  'electrical-engineering': 80,
+  'electrical-it': 80,
+  'chemical-engineering': 80,
+  'aerospace-engineering': 80,
+  'space-engineering': 80,
+  'biomedical-engineering': 80,
+  'renewable-energy': 75,
+  'software-engineering': 75,
+  'industrial-engineering': 75,
+  'computer-science': 75,
+  architecture: 70,
   'international-law': 90,
   'business-administration': 75,
   economics: 75,
@@ -39,7 +51,11 @@ describe('competitive Bagrut planning benchmarks', () => {
         status: 'verified',
       });
       expect(fact?.note).toContain('not an official university cutoff');
-      expect(fact?.evidenceRef).toBe(COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR[majorId as keyof typeof COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR]);
+      expect(fact?.evidenceRef).toBe(
+        COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR[
+          majorId as keyof typeof COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR
+        ],
+      );
     }
   });
 
