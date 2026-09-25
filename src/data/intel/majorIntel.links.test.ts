@@ -42,7 +42,14 @@ async function checkUrl(url: string): Promise<{ status: number; finalUrl: string
   throw lastError;
 }
 
-describe('Major Intelligence displayed links', () => {
+// This suite makes live HTTP requests to real university sites, so it is opt-in:
+// `npm test` must stay deterministic and must not fail when a third-party site is
+// slow or down (uni-leipzig.de intermittently returns HTTP/2 INTERNAL_ERROR).
+// The dedicated `major-intel-links.yml` workflow sets RUN_NETWORK_LINK_CHECK=1.
+const describeNetwork =
+  process.env.RUN_NETWORK_LINK_CHECK === '1' ? describe : describe.skip;
+
+describeNetwork('Major Intelligence displayed links', () => {
   it(
     'does not contain broken 404/410/5xx displayed programme destinations',
     async () => {

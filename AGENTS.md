@@ -1911,8 +1911,11 @@ catalog school `alpha-aktiv`.
   `.wrangler` are gitignored.
 - `npm run lint` exits non-zero (pre-existing debt) but is
   `continue-on-error: true`, so it does not fail the job.
-- `src/data/intel/majorIntel.links.test.ts` is a live external link checker
-  (fetches real university sites) and runs inside `npm test`; it fails in
-  network-restricted sandboxes and from sites that are down (e.g.
-  `uni-leipzig.de`). It is not a dependency/build signal. `major-intel-links.yml`
-  runs it standalone (also bun-installed).
+- `src/data/intel/majorIntel.links.test.ts` is a **live external link checker**
+  (fetches real university sites) and is therefore **opt-in**: it is wrapped in
+  `describeNetwork` (`describe` only when `RUN_NETWORK_LINK_CHECK=1`, else
+  `describe.skip`). `npm test` stays deterministic and never fails because a
+  third-party site is slow or down — `uni-leipzig.de` intermittently returns
+  HTTP/2 `INTERNAL_ERROR` and `uni-saarland.de` times out, which used to turn
+  `main` red on its own. `major-intel-links.yml` sets the env var and runs it
+  standalone (also bun-installed); that job is meant to go red on a real 404/410/5xx.
