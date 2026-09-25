@@ -24,6 +24,7 @@ import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemePicker from "@/components/common/ThemePicker";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
+import { useAppBadge } from "@/hooks/useAppBadge";
 import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
 import { filterApplyNavItem } from "@/lib/partnerNav";
 
@@ -429,6 +430,8 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
     role === "social_media_partner" ||
     role === "ambassador";
   const headerUnread = useUnreadCaseMessages(canMessage);
+  /* Red count on the installed app icon + browser tab while signed in. */
+  useAppBadge();
   const messagesHref =
     role === "admin"
       ? "/admin/messages"
