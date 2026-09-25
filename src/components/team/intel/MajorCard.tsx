@@ -69,10 +69,6 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
   const { data } = usePartnerCountries();
   const intel = subject.intel?.status === 'verified' ? subject.intel : undefined;
   const programs: ProgramIntel[] = intel?.programs ?? [];
-  const benchmarkSource = intel?.competitiveBagrutThreshold?.sourceId
-    ? intel.sources.find((source) => source.id === intel.competitiveBagrutThreshold?.sourceId)
-    : undefined;
-
   const partnerSchools = useMemo(() => data?.schools ?? [], [data]);
   const partnerCountryById = useMemo(
     () => new Map((data?.countries ?? []).map((country) => [country.id, country.slug])),
@@ -260,19 +256,6 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                   <p className="mt-2 text-sm text-muted-foreground">
                     {t('intel.card.benchmarkHint', 'Internal DARB planning indicator used to assess an applicant’s profile. It is not an official university cutoff or a guarantee of admission.')}
                   </p>
-                  <a
-                    href={benchmarkSource?.url ?? undefined}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-disabled={!benchmarkSource?.url}
-                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                  >
-                    {t('intel.card.benchmarkSource', 'DARB benchmark source')}
-                    {intel.competitiveBagrutThreshold.evidenceRef && (
-                      <span className="font-normal no-underline">· {intel.competitiveBagrutThreshold.evidenceRef}</span>
-                    )}
-                    <ExternalLink className="h-3 w-3" aria-hidden />
-                  </a>
                 </div>
               ) : null}
             </div>
