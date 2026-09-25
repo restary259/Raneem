@@ -3450,6 +3450,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           vat_rate: number
+          whatsapp_direct_send_enabled: boolean
         }
         Insert: {
           agent_commission_rate?: number
@@ -3469,6 +3470,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vat_rate?: number
+          whatsapp_direct_send_enabled?: boolean
         }
         Update: {
           agent_commission_rate?: number
@@ -3488,6 +3490,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vat_rate?: number
+          whatsapp_direct_send_enabled?: boolean
         }
         Relationships: []
       }

@@ -1,0 +1,2 @@
+ALTER TABLE public.platform_settings ADD COLUMN IF NOT EXISTS whatsapp_direct_send_enabled boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.platform_settings.whatsapp_direct_send_enabled IS 'Admin switch: send UTILITY templates via Meta Direct Send (category=utility). Marketing never uses Direct Send.';

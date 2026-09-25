@@ -35,7 +35,7 @@ import WhatsAppHealthPanel from "@/components/messages/WhatsAppHealthPanel";
 import { requiresApprovedTemplate } from "@/lib/whatsappPolicy";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, listConversationMessages, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
+  addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, getWhatsAppMessage, listConversationMessages, mergeWhatsAppMessages, WHATSAPP_PAGE_SIZE, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
   markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppMarketingConsent, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
   searchWhatsAppCases, type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
@@ -249,20 +249,35 @@ export default function WhatsAppInboxPage({
     return String(body?.text ?? "");
   }, [selectedTemplate]);
   const parameterCount = useMemo(() => [...selectedTemplateText.matchAll(/{{\s*(\d+)\s*}}/g)].length, [selectedTemplateText]);
+  const [hasOlder, setHasOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   useEffect(() => {
-    setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]); setAttachment(null);
+    setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]); setAttachment(null); setHasOlder(false);
     if (!selectedId) return;
     Promise.all([listConversationMessages(selectedId), listConversationNotes(selectedId)])
-      .then(([m, n]) => { setMessages(m); setNotes(n); })
+      .then(([m, n]) => { setMessages(m); setNotes(n); setHasOlder(m.length >= WHATSAPP_PAGE_SIZE); })
       .catch(() => toast({ variant: "destructive", description: t("errors.load") }));
     void markConversationRead(selectedId).catch(() => undefined);
   }, [selectedId, t, toast]);
+  const loadOlder = async () => {
+    if (!selectedId || loadingOlder || !messages.length) return;
+    setLoadingOlder(true);
+    try {
+      const older = await listConversationMessages(selectedId, messages[0].created_at);
+      setMessages((cur) => mergeWhatsAppMessages(cur, older));
+      setHasOlder(older.length >= WHATSAPP_PAGE_SIZE);
+    } catch { toast({ variant: "destructive", description: t("errors.load") }); }
+    finally { setLoadingOlder(false); }
+  };
   useEffect(() => {
     if (!selectedId) return;
     const channel = supabase.channel(`whatsapp-thread-${selectedId}`)
-      // "*" so delivery/read ticks (UPDATE on the same row) land too, not just new messages.
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages", filter: `conversation_id=eq.${selectedId}` }, () => {
-        void listConversationMessages(selectedId).then(setMessages).catch(() => undefined);
+      // Merge only the changed row (new message or delivery tick), never refetch the thread.
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages", filter: `conversation_id=eq.${selectedId}` }, (payload) => {
+        const row = payload.new as WhatsAppMessage | undefined;
+        if (row?.id && row.created_at) { setMessages((cur) => mergeWhatsAppMessages(cur, [row])); return; }
+        const id = (payload.new as { id?: string } | undefined)?.id;
+        if (id) void getWhatsAppMessage(id).then((m) => m && setMessages((cur) => mergeWhatsAppMessages(cur, [m]))).catch(() => undefined);
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_internal_notes", filter: `conversation_id=eq.${selectedId}` }, () => {
         void listConversationNotes(selectedId).then(setNotes).catch(() => undefined);
@@ -450,7 +465,7 @@ export default function WhatsAppInboxPage({
   const reloadConversation = async () => {
     if (!active) return;
     const [nextMessages] = await Promise.all([listConversationMessages(active.id), load()]);
-    setMessages(nextMessages);
+    setMessages((cur) => mergeWhatsAppMessages(cur, nextMessages));
   };
   const sendReply = async (submittedText?: string) => {
     if (!active || sending) return;
@@ -662,6 +677,13 @@ export default function WhatsAppInboxPage({
             <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
               <Conversation className="flex min-h-0 min-w-0 flex-1">
                 <ConversationContent className="min-h-0 min-w-0 flex-1 gap-3">
+                {hasOlder && (
+                  <div className="flex justify-center">
+                    <Button size="sm" variant="ghost" className="h-7 text-xs" disabled={loadingOlder} onClick={() => void loadOlder()}>
+                      {loadingOlder ? t("conversation.loadingOlder", "Loading…") : t("conversation.loadOlder", "Load older messages")}
+                    </Button>
+                  </div>
+                )}
                 {messages.length ? messages.map((m, index) => {
                   const previous = index > 0 ? messages[index - 1] : null;
                   const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
@@ -689,7 +711,7 @@ export default function WhatsAppInboxPage({
                 <ConversationScrollButton />
               </Conversation>
             </div>
-            <div className="shrink-0 space-y-2 border-t p-3">
+            <div className="shrink-0 space-y-2 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <div className={cn("flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs", windowClosed ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5")}>
                 <div className="flex items-center gap-2"><Clock3 className="h-3.5 w-3.5" /><span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span></div>
                 <span className="text-muted-foreground">{windowClosed ? t("conversation.templateRequired") : t("conversation.remaining", { time: formatDuration(windowRemaining) })}</span>

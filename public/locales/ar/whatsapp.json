@@ -102,7 +102,9 @@
     "campaignPlaceholder": "الحملة / رمز الدخول (اختياري)",
     "sourceChannel": "قناة المصدر",
     "lastCustomerMessage": "آخر رسالة من الطالب",
-    "marketingConsent": "موافقة التسويق"
+    "marketingConsent": "موافقة التسويق",
+    "loadOlder": "تحميل الرسائل الأقدم",
+    "loadingOlder": "جارٍ التحميل…"
   },
   "profile": {
     "title": "ملف الطالب",

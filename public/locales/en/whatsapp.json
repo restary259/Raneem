@@ -102,7 +102,9 @@
     "campaignPlaceholder": "Campaign / entry code (optional)",
     "sourceChannel": "Source channel",
     "lastCustomerMessage": "Last customer message",
-    "marketingConsent": "Marketing consent"
+    "marketingConsent": "Marketing consent",
+    "loadOlder": "Load older messages",
+    "loadingOlder": "Loading…"
   },
   "profile": {
     "title": "Lead profile",
