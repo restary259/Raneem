@@ -683,9 +683,9 @@ export default function WhatsAppInboxPage({
             </div>
             <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
             <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
-            <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-              <Conversation className="flex min-h-0 min-w-0 flex-1">
-                <ConversationContent className="min-h-0 min-w-0 flex-1 gap-3">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+              <Conversation className="min-h-0 min-w-0 flex-1">
+                <ConversationContent className="min-w-0 gap-3">
                 {hasOlder && (
                   <div className="flex justify-center">
                     <Button size="sm" variant="ghost" className="h-6 text-[11px] text-muted-foreground" disabled={loadingOlder} onClick={() => void loadOlder()}>
