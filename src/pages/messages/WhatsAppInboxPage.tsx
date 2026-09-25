@@ -1057,8 +1057,9 @@ export default function WhatsAppInboxPage({
           list first, then a full-surface conversation after selection. */}
       <div className="flex min-h-0 flex-1 lg:hidden">
         {!active && (
-          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl shadow-none">
-            <div className="shrink-0 space-y-2 border-b p-3">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
+            <div className="darb-spectrum darb-spectrum-sm shrink-0 [border-radius:0]" aria-hidden="true" />
+            <div className="shrink-0 space-y-2 border-b border-border/60 p-3">
               <div className="relative">
                 <Search className="pointer-events-none absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -1083,7 +1084,7 @@ export default function WhatsAppInboxPage({
                 />
               )}
             </ScrollArea>
-          </Card>
+          </div>
         )}
       </div>
     </>
