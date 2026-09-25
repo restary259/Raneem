@@ -8,15 +8,29 @@ import {
 
 const EXPECTED = {
   architecture: 70,
-  'mechanical-engineering': 70,
+  'mechanical-engineering': 80,
   'computer-science': 75,
   medicine: 94,
   dentistry: 94,
   veterinary: 89,
-  pharmacy: 75,
+  pharmacy: 94,
+  'public-health': 94,
+  bioinformatics: 94,
+  'biomedical-engineering': 80,
+  physiotherapy: 94,
+  nursing: 94,
   'international-law': 90,
   'business-administration': 75,
   economics: 75,
+  'computer-engineering': 80,
+  'aerospace-engineering': 80,
+  'renewable-energy': 75,
+  'software-engineering': 75,
+  'industrial-engineering': 75,
+  'space-engineering': 80,
+  'chemical-engineering': 80,
+  'civil-engineering': 80,
+  'electrical-it': 80,
 } as const;
 
 describe('competitive Bagrut planning benchmarks', () => {
@@ -39,8 +53,25 @@ describe('competitive Bagrut planning benchmarks', () => {
         status: 'verified',
       });
       expect(fact?.note).toContain('not an official university cutoff');
-      expect(fact?.evidenceRef).toBe(COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR[majorId as keyof typeof COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR]);
+      expect(fact?.evidenceRef).toBe(
+        COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR[
+          majorId as keyof typeof COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR
+        ],
+      );
     }
+  });
+
+  it('keeps the requested category rules explicit', () => {
+    expect(EXPECTED.medicine).toBe(94);
+    expect(EXPECTED.dentistry).toBe(94);
+    expect(EXPECTED.physiotherapy).toBe(94);
+    expect(EXPECTED.nursing).toBe(94);
+    expect(EXPECTED['computer-science']).toBe(75);
+    expect(EXPECTED['software-engineering']).toBe(75);
+    expect(EXPECTED['mechanical-engineering']).toBe(80);
+    expect(EXPECTED['civil-engineering']).toBe(80);
+    expect(EXPECTED['electrical-it']).toBe(80);
+    expect(EXPECTED['chemical-engineering']).toBe(80);
   });
 
   it('does not invent benchmarks for unregistered majors', () => {
