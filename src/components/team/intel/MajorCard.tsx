@@ -223,15 +223,27 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
 
           {/* Bagrut -------------------------------------------------------- */}
           <TabsContent value="bagrut" className="mt-4 space-y-3">
-            {intel?.bagrutAccess?.status === 'verified' ? (
-              <div>
-                <Row label={t('intel.row.math', 'Mathematics units')}>{intel.bagrutAccess.value?.mathUnits}</Row>
-                <Row label={t('intel.row.english', 'English units')}>{intel.bagrutAccess.value?.englishUnits}</Row>
-                <Row label={t('intel.row.further', 'Further subject units')}>{intel.bagrutAccess.value?.furtherUnits}</Row>
-              </div>
-            ) : (
-              <Empty />
-            )}
+            <div className="grid gap-3 md:grid-cols-2">
+              {intel?.bagrutAccess?.status === 'verified' ? (
+                <div className="rounded-md border border-border p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('intel.card.formalEligibility', 'Formal Bagrut eligibility')}</p>
+                  <Row label={t('intel.row.math', 'Mathematics units')}>{intel.bagrutAccess.value?.mathUnits}</Row>
+                  <Row label={t('intel.row.english', 'English units')}>{intel.bagrutAccess.value?.englishUnits}</Row>
+                  <Row label={t('intel.row.further', 'Further subject units')}>{intel.bagrutAccess.value?.furtherUnits}</Row>
+                </div>
+              ) : (
+                <Empty />
+              )}
+              {intel?.competitiveBagrutThreshold?.status === 'verified' ? (
+                <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('intel.card.competitiveThreshold', 'Competitive Bagrut benchmark')}</p>
+                    <Badge variant="outline">{intel.competitiveBagrutThreshold.value}%+</Badge>
+                  </div>
+                  <p className="mt-2 text-sm">{t('intel.card.competitiveThresholdHint', 'DARB planning benchmark used to assess practical competitiveness for a seat. This is not a guaranteed university cutoff.')}</p>
+                </div>
+              ) : null}
+            </div>
             <div className="rounded-md border border-border p-3">
               <p className="text-xs font-semibold text-muted-foreground">
                 {t('intel.card.gradeTable', 'Bagrut average → German grade')}

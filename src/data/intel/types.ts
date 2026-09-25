@@ -144,6 +144,11 @@ export interface MajorIntel {
   bagrutAccess?: VerifiedFact<{ mathUnits: number; englishUnits: number; furtherUnits: number }>;
   /** The conversion formula itself — a procedure, not an admission decision. */
   gradeConversion?: VerifiedFact<string>;
+  /**
+   * DARB competitive planning benchmark from agency reference material.
+   * This is intentionally separate from official university admission rules.
+   */
+  competitiveBagrutThreshold?: VerifiedFact<number>;
   /** Field-level language picture; each programme still carries its own. */
   language?: VerifiedFact<LanguageRequirementValue>;
   programs: ProgramIntel[];
