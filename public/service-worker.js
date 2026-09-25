@@ -52,6 +52,12 @@ self.addEventListener('message', event => {
   if (event.data?.type === 'CLEAR_CACHES_ON_LOGOUT') {
     caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
   }
+  // The open app owns the authoritative unread total; keep the worker aligned
+  // so a later background push counts up from the right number.
+  if (event.data?.type === 'SET_APP_BADGE') {
+    badgeCount = 0;
+    bumpBadge(Number(event.data.count) || 0);
+  }
 });
 
 // NOTE: intentionally NO 'fetch' handler — no offline mode, no response caching.
@@ -111,6 +117,7 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
+  bumpBadge(-1);
   if (event.action === 'dismiss') return;
 
   const target = event.notification.data?.url || '/';
