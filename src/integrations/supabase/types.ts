@@ -431,6 +431,7 @@ export type Database = {
           outcome_recorded_by: string | null
           rescheduled_to: string | null
           scheduled_at: string
+          status: string
           team_member_id: string
           updated_at: string
         }
@@ -447,6 +448,7 @@ export type Database = {
           outcome_recorded_by?: string | null
           rescheduled_to?: string | null
           scheduled_at: string
+          status?: string
           team_member_id: string
           updated_at?: string
         }
@@ -463,6 +465,7 @@ export type Database = {
           outcome_recorded_by?: string | null
           rescheduled_to?: string | null
           scheduled_at?: string
+          status?: string
           team_member_id?: string
           updated_at?: string
         }
