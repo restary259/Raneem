@@ -1,0 +1,49 @@
+name: Remove Team Majors benchmark source links
+
+on:
+  push:
+    branches:
+      - fix/remove-team-benchmark-source-links
+
+permissions:
+  contents: write
+
+jobs:
+  remove-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove benchmark source links
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('src/components/team/intel/MajorCard.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          text = text.replace(
+              "  const benchmarkSource = intel?.competitiveBagrutThreshold?.sourceId\n    ? intel.sources.find((source) => source.id === intel.competitiveBagrutThreshold?.sourceId)\n    : undefined;\n\n",
+              "",
+          )
+
+          start = text.find("                  <a\n                    href={benchmarkSource?.url ?? undefined}")
+          if start == -1:
+              raise SystemExit('benchmark source link not found')
+          end_marker = "                  </a>\n"
+          end = text.find(end_marker, start)
+          if end == -1:
+              raise SystemExit('benchmark source link closing tag not found')
+          end += len(end_marker)
+          path.write_text(text[:start] + text[end:], encoding='utf-8')
+
+      - name: Commit and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/team/intel/MajorCard.tsx
+          git rm .github/workflows/remove-team-benchmark-source-links.yml
+          git commit -m "fix(team-majors): remove benchmark source links"
+          git push
