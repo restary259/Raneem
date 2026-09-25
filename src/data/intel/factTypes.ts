@@ -69,6 +69,8 @@ export interface VerifiedFact<T> {
   /** Shown verbatim to the team (e.g. what to check, or why it is unknown). */
   note?: string;
   noteAR?: string;
+  /** Optional precise evidence locator for internal/source-register-backed facts. */
+  evidenceRef?: string;
   /** Populated only when `status === 'conflicting'`. */
   conflict?: ConflictingValue<T>[];
 }
@@ -100,7 +102,7 @@ export function fact<T>(
   factType: FactType,
   sourceId: string,
   checkedAt: string,
-  extra?: { note?: string; noteAR?: string },
+  extra?: { note?: string; noteAR?: string; evidenceRef?: string },
 ): VerifiedFact<T> {
   return { value, factType, sourceId, checkedAt, status: 'verified', ...extra };
 }

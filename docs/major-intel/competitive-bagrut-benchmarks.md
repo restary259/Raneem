@@ -1,23 +1,23 @@
-# Competitive Bagrut Planning Benchmarks — DARB Team Majors
+# DARB Internal Bagrut Planning Benchmark Register
 
-These benchmarks are transcribed from the DARB student-requirements reference PDFs supplied for the Team Majors update on 2026-09-25.
+These planning indicators are transcribed from the DARB student-requirements reference material supplied for the Team Majors update on 2026-09-25.
 
-They are DARB planning benchmarks used to assess practical competitiveness for a seat. They are **not presented as nationwide legal admission cutoffs or as guarantees of admission**. Official university/programme requirements remain separately sourced in the major-intelligence records.
+They are internal DARB planning indicators used to assess an applicant profile. They are **not official university admission cutoffs and do not guarantee admission**. Official university/programme requirements remain separately sourced in the major-intelligence records.\n\n**Evidence note:** the original supplied reference PDFs are not stored in this public repository. This register is a transcription record, not a replacement for the underlying evidence. For an audit-grade decision, the team must re-open the supplied source material and verify the relevant figure against the current programme requirements.
 
-| Major | Competitive Bagrut benchmark | Reference note |
+| Major | DARB planning benchmark | Evidence locator |
 |---|---:|---|
-| Architecture | 70%+ | Supplied DARB reference: Bagrut average 70+ |
-| Mechanical Engineering | 70%+ | Supplied DARB reference: Bagrut average 70+ |
-| Computer Science / Informatik | 75%+ | Supplied DARB reference: Bagrut average 75+ |
-| Medicine | 94%+ | Supplied DARB reference: 94+ with Bagrut bonus |
-| Dentistry | 94%+ | Supplied DARB reference: usually 94+; university-specific requirements may differ |
-| Veterinary Medicine | 89%+ | Supplied DARB reference: Bagrut 89+ |
-| Pharmacy | 75%+ | Supplied DARB reference: Bagrut 75+ with bonus; university-specific requirements may differ |
-| Law / International Law | 90%+ | Supplied DARB reference: high Bagrut preferred 90+; some universities list 94+ and additional selection requirements |
-| Business Administration | 75%+ | Supplied DARB reference: Bagrut 75+; university-specific requirements may differ |
-| Economics | 75%+ | Supplied DARB reference: Bagrut 75+; university-specific requirements may differ |
+| Architecture | 70+ | `Report.pdf 2`, p. 1 |
+| Mechanical Engineering | 70+ | `Report.pdf 2`, p. 2 |
+| Computer Science / Informatik | 75+ | `Report.pdf 2`, p. 3 |
+| Medicine | 94+ | `Report.pdf.pdf`, p. 1 |
+| Dentistry | 94+ | `Report.pdf.pdf`, p. 3 |
+| Veterinary Medicine | 89+ | `Report.pdf.pdf`, p. 4 |
+| Pharmacy | 75+ | `Report.pdf.pdf`, p. 2 |
+| Law / International Law | 90+ preferred | `Report.pdf 3`, p. 1 |
+| Business Administration | 75+ | `Report.pdf 3`, p. 3 |
+| Economics | 75+ | `Report.pdf 3`, p. 4 |
 
-## Formal Bagrut access baseline
+## Source record\n\n- Source ID: `darb-reference-pdf-competitive-bagrut`\n- Authority: DARB internal guidance (tier 4)\n- Register checked: 2026-09-25\n\n## Formal Bagrut access baseline
 
 The Team Majors records separately store the official general Israeli Bagrut access rule used in the intelligence system:
 

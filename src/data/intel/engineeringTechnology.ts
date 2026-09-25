@@ -9,23 +9,10 @@
  */
 import type { IntelSource } from './factTypes';
 import { fact, unverified } from './factTypes';
+import { COMPETITIVE_BGRUT_SOURCE, competitiveBagrutForMajor } from './competitiveBagrut';
 import type { MajorIntel, ProgramIntel } from './types';
 
 const CHECKED = '2026-09-19';
-
-const COMPETITIVE_BGRUT_SOURCE: IntelSource = {
-  id: 'darb-reference-pdf-competitive-bagrut',
-  url: 'https://github.com/restary259/Raneem/blob/main/docs/major-intel/competitive-bagrut-benchmarks.md',
-  title: 'DARB — Student Requirements reference: competitive Bagrut benchmarks',
-  titleAR: 'درب — مرجع متطلبات الطلاب: الحدود التنافسية للبجروت',
-  authority: 'darb',
-  checkedAt: '2026-09-25',
-};
-
-
-const COMPETITIVE_BGRUT_BY_ENGINEERING_MAJOR: Record<string, number> = {
-  'mechanical-engineering': 70,
-};
 
 const SOURCES: IntelSource[] = [
   COMPETITIVE_BGRUT_SOURCE,
@@ -489,15 +476,7 @@ function makeVerifiedEngineeringMajor(
     aliases,
     status: 'verified',
     lastVerified: '2026-09',
-    ...(COMPETITIVE_BGRUT_BY_ENGINEERING_MAJOR[id] ? {
-      competitiveBagrutThreshold: fact(
-        COMPETITIVE_BGRUT_BY_ENGINEERING_MAJOR[id],
-        'DARB_OPERATIONAL_GUIDANCE',
-        'darb-reference-pdf-competitive-bagrut',
-        '2026-09-25',
-        { note: 'Competitive planning benchmark from the supplied DARB student-requirements reference material; not a university-wide admission cutoff.', noteAR: 'حد تخطيط تنافسي مستند إلى مادة متطلبات الطلاب المقدمة من درب؛ وليس حداً موحداً للقبول الجامعي.' },
-      ),
-    } : {}),
+    competitiveBagrutThreshold: competitiveBagrutForMajor(id),
     bagrutAccess: fact(
       { mathUnits: 3, englishUnits: 4, furtherUnits: 4 },
       'OFFICIAL_REQUIREMENT',

@@ -4981,8 +4981,6 @@
       "tabLanguage": "اللغة",
       "tabBagrut": "البجروت",
       "formalEligibility": "شروط البجروت الرسمية",
-      "competitiveThreshold": "الحد التنافسي للبجروت",
-      "competitiveThresholdHint": "حد تخطيط تستخدمه درب لتقييم تنافسية الطالب على مقعد. ليس حداً مضموناً للقبول في الجامعة.",
       "tabSchools": "مدارسنا",
       "tabDeadlines": "المواعيد",
       "tabUniversities": "الجامعات",
@@ -5007,7 +5005,12 @@
       "compensation": "مسار بديل",
       "admissionMode": "نمط القبول",
       "applicationChannel": "قناة التقديم",
-      "entranceProcedure": "إجراء القبول"
+      "entranceProcedure": "إجراء القبول",
+      "benchmarkTitle": "مؤشر التخطيط من درب",
+      "benchmarkBadge": "داخلي",
+      "benchmarkValueLabel": "متوسط البجروت المستهدف",
+      "benchmarkHint": "مؤشر تخطيط داخلي من درب لتقييم ملف الطالب. ليس حداً رسمياً للقبول الجامعي ولا ضماناً للقبول.",
+      "benchmarkSource": "مصدر مؤشر درب"
     },
     "readyToUse": "جاهزة للاستخدام",
     "stillMissing": "لم يُجب عنه بعد",
