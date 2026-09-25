@@ -165,6 +165,7 @@ export default function WhatsAppInboxPage({
   const [customSnoozeAt, setCustomSnoozeAt] = useState("");
   const [inbound, setInbound] = useState<WhatsAppInboundStatus | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [composerActionsOpen, setComposerActionsOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
   // Editable contact name — lets staff give an inbound WhatsApp contact a name
   // instead of only seeing their phone number.
