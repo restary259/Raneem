@@ -1331,3 +1331,13 @@ export function ConversationRow({ thread, active, simplified, now, lang, onSelec
     </button>
   );
 }
+
+function deliveryMark(status: string | null | undefined): string {
+  switch (status) {
+    case "read": return "✓✓";
+    case "delivered": return "✓✓";
+    case "sent": case "accepted": return "✓";
+    case "failed": return "⚠";
+    default: return "…";
+  }
+}
