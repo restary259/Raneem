@@ -711,7 +711,7 @@ export default function WhatsAppInboxPage({
                 <ConversationScrollButton />
               </Conversation>
             </div>
-            <div className="shrink-0 space-y-2 border-t p-3">
+            <div className="shrink-0 space-y-2 border-t p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <div className={cn("flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs", windowClosed ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-500/30 bg-emerald-500/5")}>
                 <div className="flex items-center gap-2"><Clock3 className="h-3.5 w-3.5" /><span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span></div>
                 <span className="text-muted-foreground">{windowClosed ? t("conversation.templateRequired") : t("conversation.remaining", { time: formatDuration(windowRemaining) })}</span>
