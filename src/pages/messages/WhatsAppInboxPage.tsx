@@ -725,6 +725,7 @@ export default function WhatsAppInboxPage({
                 <span className="font-medium">{windowClosed ? t("conversation.expired", "Expired") : "24h"}</span>
                 {!windowClosed && <span className="text-muted-foreground">· {formatDuration(windowRemaining)}</span>}
               </div>
+              {composerActionsOpen && (
               <div className="flex flex-wrap items-center gap-2">
                 {!teamMode && (
                   <>
