@@ -864,23 +864,7 @@ export default function WhatsAppInboxPage({
               instead of stretching the row past the panel. */}
           <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
             {filtered.length ? filtered.map((thread) => (
-              <button key={thread.id} type="button" onClick={() => selectConversation(thread.id)} className={cn("flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50", thread.id === selectedId && "bg-muted")}>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-medium">{thread.lead.student_name || thread.lead.whatsapp_number}</p>{(thread.last_inbound_at ?? thread.last_outbound_at) && <span className="shrink-0 text-[10px] text-muted-foreground">{fmt((thread.last_inbound_at ?? thread.last_outbound_at)!, i18n.language)}</span>}</div>
-                  {thread.lead.student_name && <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">{thread.lead.whatsapp_number}</p>}
-                  <p className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? t("empty.description")}</p>
-                  {!simplified && (
-                    <div className="mt-1 flex flex-wrap items-center gap-1">
-                      {!thread.lead.student_name && <Badge variant="outline" className="border-amber-500/50 text-[9px] text-amber-700 dark:text-amber-300">{t("identity.nameMissing", "No name yet")}</Badge>}
-                      <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
-                      {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
-                      {thread.intent && <Badge variant="secondary" className="text-[9px]">{t(`intent.${thread.intent}`, thread.intent)}</Badge>}
-                      {isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="text-[9px]">{t("sla.overdue")}</Badge>}
-                    </div>
-                  )}
-                </div>
-                {thread.unread_count > 0 && <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">{thread.unread_count}</Badge>}
-              </button>
+              <ConversationRow key={thread.id} thread={thread} active={thread.id === selectedId} simplified={simplified} now={now} lang={i18n.language} onSelect={() => selectConversation(thread.id)} />
             )) : <EmptyState title={t("empty.title")} description={t("empty.description")} icon={MessageCircle} className="p-6" />}
           </ScrollArea>
         </Card>
@@ -1040,38 +1024,7 @@ export default function WhatsAppInboxPage({
             </div>
             <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block">
               {filtered.length ? filtered.map((thread) => (
-                <button
-                  key={thread.id}
-                  type="button"
-                  onClick={() => selectConversation(thread.id)}
-                  className="flex w-full items-start gap-2 border-b p-3 text-start transition-colors hover:bg-muted/50"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {thread.lead.student_name || thread.lead.whatsapp_number}
-                    </p>
-                    {thread.lead.student_name && (
-                      <p dir="ltr" className="truncate text-start text-[11px] text-muted-foreground">
-                        {thread.lead.whatsapp_number}
-                      </p>
-                    )}
-                    <p className="truncate text-xs text-muted-foreground">
-                      {thread.last_message_preview ?? ""}
-                    </p>
-                    {!simplified && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        <Badge variant="outline" className="text-[9px]">{t(`state.${normalizeWhatsAppState(thread.state)}`, normalizeWhatsAppState(thread.state))}</Badge>
-                        {thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
-                        {isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="text-[9px]">{t("sla.overdue")}</Badge>}
-                      </div>
-                    )}
-                  </div>
-                  {thread.unread_count > 0 && (
-                    <Badge className="shrink-0 rounded-full px-1.5 text-[10px]">
-                      {thread.unread_count}
-                    </Badge>
-                  )}
-                </button>
+                <ConversationRow key={thread.id} thread={thread} active={false} simplified={simplified} now={now} lang={i18n.language} onSelect={() => selectConversation(thread.id)} />
               )) : (
                 <EmptyState
                   title={t("empty.title")}
@@ -1282,4 +1235,40 @@ function MediaBubble({ path, mime, filename, openLabel }: { path: string; mime: 
   if (mime?.startsWith("video/")) return <video src={url} controls className="mb-1 max-h-56 rounded-md" />;
   if (mime?.startsWith("audio/")) return <audio src={url} controls className="mb-1 w-56" />;
   return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
+}
+
+function initials(value: string) {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "#";
+  if (/^\+?\d/.test(parts[0])) return parts[0].replace(/\D/g, "").slice(-2);
+  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
+  const { t } = useTranslation("whatsapp");
+  const name = thread.lead.student_name || thread.lead.whatsapp_number;
+  const lastAt = thread.last_inbound_at ?? thread.last_outbound_at;
+  const unread = (thread.unread_count ?? 0) > 0;
+  const time = lastAt ? new Intl.DateTimeFormat("en-GB", new Date(lastAt).toDateString() === new Date(now).toDateString() ? { hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "short" }).format(new Date(lastAt)) : "";
+  return (
+    <button type="button" onClick={onSelect} className={cn("flex w-full items-center gap-3 border-b border-border/60 px-3 py-2.5 text-start transition-colors hover:bg-muted/50", active && "bg-muted")}>
+      <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-semibold", unread ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{initials(name)}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center justify-between gap-2">
+          <span dir="auto" className={cn("truncate text-sm", unread ? "font-semibold" : "font-medium")}>{name}</span>
+          <span className={cn("shrink-0 text-[10px]", unread ? "font-semibold text-primary" : "text-muted-foreground")}>{time}</span>
+        </span>
+        <span className="mt-0.5 flex items-center justify-between gap-2">
+          <span dir="auto" className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</span>
+          {unread && <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">{thread.unread_count}</span>}
+        </span>
+        <span className="mt-1 flex flex-wrap items-center gap-1">
+          <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-medium", whatsappStageClass(thread.lead.lead_stage))}>{whatsappStageLabel(thread.lead.lead_stage, lang)}</span>
+          {!thread.lead.student_name && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">{t("identity.nameMissing", "No name yet")}</Badge>}
+          {!simplified && thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="h-4 px-1.5 text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
+          {!simplified && isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="h-4 px-1.5 text-[9px]">{t("sla.overdue")}</Badge>}
+        </span>
+      </span>
+    </button>
+  );
 }
