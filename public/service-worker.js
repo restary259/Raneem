@@ -13,7 +13,19 @@
 //     are carried over verbatim, so existing push subscriptions keep working
 //     without users re-granting permission.
 
-const CACHE_VERSION = '5.1.0';
+const CACHE_VERSION = '5.2.0';
+
+// Unread count painted on the OS app icon while the app is closed. The open app
+// overwrites this with the authoritative total as soon as it is focused.
+let badgeCount = 0;
+
+function bumpBadge(delta) {
+  badgeCount = Math.max(0, badgeCount + delta);
+  try {
+    if (badgeCount > 0) self.navigator.setAppBadge?.(badgeCount);
+    else self.navigator.clearAppBadge?.();
+  } catch { /* unsupported browser */ }
+}
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());
@@ -85,6 +97,9 @@ self.addEventListener('push', event => {
         category: data.category || 'system',
       },
     });
+
+    // Red count on the installed app icon (home screen / dock / taskbar).
+    bumpBadge(1);
 
     // Let any open tab refresh its bell/badge without waiting for realtime.
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
