@@ -22,15 +22,17 @@ jobs:
           # its undici@8 dependency uses node:worker_threads markAsUncloneable,
           # which does not exist on Node 20.
           node-version: 22
-          cache: npm
 
-      # bun.lock is the dev lockfile (see bunfig.toml); package-lock.json is the
-      # committed npm lockfile CI installs from. --legacy-peer-deps matches the
-      # tolerance bun applies, needed for pre-existing peer mismatches:
-      # next-themes@0.3.0 peers React <=18 (project uses React 19) and
-      # @typescript-eslint/eslint-plugin@6 peers ESLint <=8 (project uses 9).
+      # The repository's package manager is bun (see bunfig.toml): bun.lock is the
+      # lockfile, and bunfig.toml's minimumReleaseAge guard only applies to bun
+      # installs. Install with bun --frozen-lockfile, then run the scripts through
+      # npm, which resolves them from node_modules.
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: bun install --frozen-lockfile
 
       # Lint currently carries 800+ pre-existing violations (mostly `any` in
       # Deno edge functions). Surfaced but not blocking until that debt is paid.
