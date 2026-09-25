@@ -12,14 +12,57 @@ const ROOT = process.cwd();
 const LOCALES = ["ar", "en"] as const;
 
 const TEAM_MAJORS_HEBREW_KEYS = [
+  "intel.card.empty",
+  "intel.card.language.german",
+  "intel.card.language.english",
+  "intel.card.back",
+  "intel.status.verified",
+  "intel.card.notFilled",
+  "intel.card.tabLanguage",
+  "intel.card.tabBagrut",
   "intel.card.formalEligibility",
+  "intel.card.tabSchools",
+  "intel.card.tabDeadlines",
+  "intel.card.tabUniversities",
+  "intel.card.teachingLanguage",
+  "intel.none",
+  "intel.card.requiredLevel",
+  "intel.card.levelMap",
+  "intel.card.required",
+  "intel.card.below",
+  "intel.card.above",
+  "intel.card.acceptedProof",
+  "intel.card.additionalLanguage",
+  "intel.card.languageTiming",
+  "intel.row.math",
+  "intel.row.english",
+  "intel.row.further",
   "intel.card.benchmarkTitle",
   "intel.card.benchmarkBadge",
   "intel.card.benchmarkValueLabel",
   "intel.card.benchmarkHint",
   "intel.card.benchmarkSource",
+  "intel.card.gradeTable",
+  "intel.card.conversionFormula",
+  "intel.calculatedOnly",
+  "intel.card.publishedThreshold",
+  "intel.card.compensation",
+  "intel.card.admissionMode",
+  "intel.card.applicationChannel",
+  "intel.row.deadline",
+  "intel.card.entranceProcedure",
+  "intel.card.startTiming",
+  "intel.recommendations.title",
+  "intel.recommendations.subtitle",
+  "intel.recommendations.count",
+  "intel.recommendations.primary",
+  "intel.recommendations.tu9",
+  "intel.recommendations.exact",
+  "intel.recommendations.related",
+  "intel.recommendations.openProgramme",
+  "intel.recommendations.openCatalogue",
+  "intel.recommendations.verifiedRoutes",
 ] as const;
-
 const loadDicts = (lang: string) => {
   const dir = path.join(ROOT, "public/locales", lang);
   const dicts: Record<string, any> = {};
@@ -76,7 +119,7 @@ describe("i18n coverage", () => {
     expect(missing).toEqual([]);
   });
 
-  it("has Team Majors benchmark copy in Hebrew", () => {
+  it("has all Team Majors card copy in Hebrew", () => {
     const dashboard = loadDicts("he").dashboard;
     expect(dashboard, "Hebrew dashboard dictionary").toBeDefined();
     for (const key of TEAM_MAJORS_HEBREW_KEYS) {
