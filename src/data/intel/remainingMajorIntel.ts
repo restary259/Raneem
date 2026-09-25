@@ -44,6 +44,22 @@ const GRADE_EN = 'German grade = 1 + 3 × (Nmax − N) / (Nmax − Nmin). The fo
 const GRADE_AR = 'الدرجة الألمانية = 1 + 3 × (Nmax − N) / (Nmax − Nmin). الصيغة إجراء لتحويل المعدل وليست قرار قبول.';
 const GERMAN_C1_CERTS = ['DSH-2', 'TestDaF 4×4', 'telc C1 Hochschule', 'Goethe-Zertifikat C2', 'DSD II'];
 
+const COMPETITIVE_BGRUT_BY_MAJOR: Record<string, number> = {
+  'medicine': 94,
+  'dentistry': 94,
+  'veterinary': 89,
+  'pharmacy': 75,
+  'computer-science': 75,
+  'business-administration': 75,
+  'economics': 75,
+  'architecture': 70,
+  'mechanical-engineering': 70,
+  'social-work': 75,
+  'nursing': 80,
+  'physiotherapy': 80,
+  'psychology': 80,
+};
+
 type Route = {
   id: string;
   universityName: string;
@@ -172,6 +188,18 @@ function makeMajor(id: string, route: Route): MajorIntel {
     aliases: { ar: [ar], he: [], en: [en], de: [de] },
     status: 'verified',
     lastVerified: CHECKED,
+    ...(COMPETITIVE_BGRUT_BY_MAJOR[id] ? {
+      competitiveBagrutThreshold: fact(
+        COMPETITIVE_BGRUT_BY_MAJOR[id],
+        'DARB_OPERATIONAL_GUIDANCE',
+        'darb-reference-pdf-competitive-bagrut',
+        '2026-09-25',
+        {
+          note: 'Competitive planning benchmark from the supplied DARB student-requirements reference material; not a legal or university-wide admission cutoff.',
+          noteAR: 'حدّ تخطيط تنافسي مستند إلى مادة متطلبات الطلاب المقدمة من درب؛ وليس حداً قانونياً أو حداً موحداً للقبول الجامعي.',
+        },
+      ),
+    } : {}),
     bagrutAccess: fact(
       { mathUnits: 3, englishUnits: 4, furtherUnits: 4 },
       'OFFICIAL_REQUIREMENT',
