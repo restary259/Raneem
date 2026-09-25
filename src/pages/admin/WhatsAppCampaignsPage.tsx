@@ -273,7 +273,7 @@ export default function WhatsAppCampaignsPage() {
               <Label>{t("campaigns.stage")}</Label>
               <Select value={leadStage} onValueChange={setLeadStage}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STAGES.map((value) => <SelectItem key={value || "all"} value={value || "all"}>{value ? t(`stage.${value}`) : t("campaigns.allStages")}</SelectItem>)}</SelectContent>
+                <SelectContent>{STAGES.map((value) => <SelectItem key={value || "all"} value={value || "all"}>{value ? whatsappStageLabel(value, i18n.language) : t("campaigns.allStages")}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
