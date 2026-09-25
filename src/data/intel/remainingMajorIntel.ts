@@ -49,16 +49,11 @@ const COMPETITIVE_BGRUT_BY_MAJOR: Record<string, number> = {
   'dentistry': 94,
   'veterinary': 89,
   'pharmacy': 75,
-  'computer-science': 75,
   'business-administration': 75,
   'economics': 75,
   'architecture': 70,
-  'mechanical-engineering': 70,
-  'social-work': 75,
-  'nursing': 80,
-  'physiotherapy': 80,
-  'psychology': 80,
 };
+
 
 type Route = {
   id: string;
