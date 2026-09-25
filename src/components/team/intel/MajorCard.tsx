@@ -234,13 +234,38 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
               ) : (
                 <Empty />
               )}
-              {intel?.competitiveBagrutThreshold?.status === 'verified' ? (
-                <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('intel.card.competitiveThreshold', 'Competitive Bagrut benchmark')}</p>
-                    <Badge variant="outline">{intel.competitiveBagrutThreshold.value}%+</Badge>
+              {intel?.competitiveBagrutThreshold?.status === 'verified' && intel.competitiveBagrutThreshold.value != null ? (
+                <div className="rounded-md border border-dashed border-border bg-muted/20 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {t('intel.card.benchmarkTitle', 'DARB planning benchmark')}
+                        </p>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {t('intel.card.benchmarkBadge', 'Internal')}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t('intel.card.benchmarkValueLabel', 'Target Bagrut average')}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-end">
+                      <span className="font-mono text-2xl font-semibold tabular-nums">{intel.competitiveBagrutThreshold.value}+</span>
+                    </div>
                   </div>
-                  <p className="mt-2 text-sm">{t('intel.card.competitiveThresholdHint', 'DARB planning benchmark used to assess practical competitiveness for a seat. This is not a guaranteed university cutoff.')}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t('intel.card.benchmarkHint', 'Internal DARB planning indicator used to assess an applicant’s profile. It is not an official university cutoff or a guarantee of admission.')}
+                  </p>
+                  <a
+                    href="https://github.com/restary259/Raneem/blob/main/docs/major-intel/competitive-bagrut-benchmarks.md"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    {t('intel.card.benchmarkSource', 'DARB benchmark source')}
+                    <ExternalLink className="h-3 w-3" aria-hidden />
+                  </a>
                 </div>
               ) : null}
             </div>
