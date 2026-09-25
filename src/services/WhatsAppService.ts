@@ -11,7 +11,7 @@ export type WhatsAppTemplate = Tables["whatsapp_templates"]["Row"];
 export type StaffMember = { id: string; full_name: string };
 export type ConversationState = "new" | "open" | "waiting" | "resolved" | "waiting_for_team" | "waiting_for_student" | "snoozed" | "closed";
 export type WhatsAppPriority = "normal" | "high" | "urgent";
-export type LeadStage = "new" | "qualified" | "consultation_booked" | "documents_pending" | "application_in_progress" | "won" | "lost";
+export type LeadStage = "new" | "contacted" | "appointment_scheduled" | "profile_completion" | "payment_confirmed" | "submitted" | "enrollment_paid" | "forgotten" | "cancelled";
 
 export interface WhatsAppThread extends WhatsAppConversation { lead: WhatsAppLead }
 
@@ -223,7 +223,7 @@ export async function unlinkWhatsAppIdentity(whatsappLeadId: string) {
 
 export async function updateLead(id: string, patch: Tables["whatsapp_leads"]["Update"]) {
   const allowed: Record<string, unknown> = {};
-  for (const key of ["student_name", "country", "target_country", "desired_program", "language_level", "budget_range", "intended_start_date", "tags", "consent_status", "source"] as const) {
+  for (const key of ["student_name", "country", "target_country", "desired_program", "language_level", "budget_range", "intended_start_date", "tags", "consent_status", "source", "lead_stage"] as const) {
     if (key in patch) allowed[key] = patch[key];
   }
   const { error } = await supabase.rpc("whatsapp_update_lead_fields", {
