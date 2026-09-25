@@ -268,6 +268,9 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                     className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline aria-disabled:pointer-events-none aria-disabled:opacity-50"
                   >
                     {t('intel.card.benchmarkSource', 'DARB benchmark source')}
+                    {intel.competitiveBagrutThreshold.evidenceRef && (
+                      <span className="font-normal no-underline">· {intel.competitiveBagrutThreshold.evidenceRef}</span>
+                    )}
                     <ExternalLink className="h-3 w-3" aria-hidden />
                   </a>
                 </div>
