@@ -4964,8 +4964,6 @@
       "tabLanguage": "Language",
       "tabBagrut": "Bagrut",
       "formalEligibility": "Formal Bagrut eligibility",
-      "competitiveThreshold": "Competitive Bagrut benchmark",
-      "competitiveThresholdHint": "DARB planning benchmark used to assess practical competitiveness for a seat. This is not a guaranteed university cutoff.",
       "tabSchools": "Our schools",
       "tabDeadlines": "Deadlines",
       "tabUniversities": "Universities",
@@ -4990,7 +4988,12 @@
       "compensation": "Alternative route",
       "admissionMode": "Admission mode",
       "applicationChannel": "Application channel",
-      "entranceProcedure": "Entrance procedure"
+      "entranceProcedure": "Entrance procedure",
+      "benchmarkTitle": "DARB planning benchmark",
+      "benchmarkBadge": "Internal",
+      "benchmarkValueLabel": "Target Bagrut average",
+      "benchmarkHint": "Internal DARB planning indicator used to assess an applicant’s profile. It is not an official university cutoff or a guarantee of admission.",
+      "benchmarkSource": "DARB benchmark source"
     },
     "readyToUse": "Ready to use",
     "stillMissing": "Still unanswered",
