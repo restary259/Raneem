@@ -1,9 +1,9 @@
 /**
  * DARB competitive Bagrut planning benchmarks.
  *
- * These are internal planning indicators transcribed from the DARB student-
- * requirements reference material supplied for the Team Majors update.
- * They are not official university admission cutoffs.
+ * These are internal planning indicators. Some values below are transcribed
+ * from supplied DARB reference material; the extended category values are
+ * DARB operational planning rules and are not official university cutoffs.
  */
 import type { IntelSource, VerifiedFact } from './factTypes';
 import { fact } from './factTypes';
@@ -19,34 +19,62 @@ export const COMPETITIVE_BGRUT_SOURCE: IntelSource = {
 
 export const COMPETITIVE_BGRUT_BY_MAJOR = {
   architecture: 70,
-  'mechanical-engineering': 70,
+  'mechanical-engineering': 80,
   'computer-science': 75,
   medicine: 94,
   dentistry: 94,
   veterinary: 89,
-  pharmacy: 75,
+  pharmacy: 94,
+  'public-health': 94,
+  bioinformatics: 94,
+  'biomedical-engineering': 80,
+  physiotherapy: 94,
+  nursing: 94,
   'international-law': 90,
   'business-administration': 75,
   economics: 75,
+  'computer-engineering': 80,
+  'aerospace-engineering': 80,
+  'renewable-energy': 75,
+  'software-engineering': 75,
+  'industrial-engineering': 75,
+  'space-engineering': 80,
+  'chemical-engineering': 80,
+  'civil-engineering': 80,
+  'electrical-it': 80,
 } as const;
 
 export const COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR = {
   architecture: 'DARB supplied reference — Report.pdf 2, page 1',
-  'mechanical-engineering': 'DARB supplied reference — Report.pdf 2, page 2',
+  'mechanical-engineering': 'DARB operational category rule — hard engineering, 2026-09-25',
   'computer-science': 'DARB supplied reference — Report.pdf 2, page 3',
   medicine: 'DARB supplied reference — Report.pdf.pdf, page 1',
-  pharmacy: 'DARB supplied reference — Report.pdf.pdf, page 2',
+  pharmacy: 'DARB operational category rule — health/medical, 2026-09-25',
   dentistry: 'DARB supplied reference — Report.pdf.pdf, page 3',
   veterinary: 'DARB supplied reference — Report.pdf.pdf, page 4',
+  'public-health': 'DARB operational category rule — health/medical, 2026-09-25',
+  bioinformatics: 'DARB operational category rule — health/medical, 2026-09-25',
+  'biomedical-engineering': 'DARB operational category rule — hard engineering, 2026-09-25',
+  physiotherapy: 'DARB operational category rule — health/medical, 2026-09-25',
+  nursing: 'DARB operational category rule — health/medical, 2026-09-25',
   'international-law': 'DARB supplied reference — Report.pdf 3, page 1',
   'business-administration': 'DARB supplied reference — Report.pdf 3, page 3',
   economics: 'DARB supplied reference — Report.pdf 3, page 4',
+  'computer-engineering': 'DARB operational category rule — hard engineering, 2026-09-25',
+  'aerospace-engineering': 'DARB operational category rule — hard engineering, 2026-09-25',
+  'renewable-energy': 'DARB operational category rule — engineering, 2026-09-25',
+  'software-engineering': 'DARB operational category rule — engineering, 2026-09-25',
+  'industrial-engineering': 'DARB operational category rule — engineering, 2026-09-25',
+  'space-engineering': 'DARB operational category rule — hard engineering, 2026-09-25',
+  'chemical-engineering': 'DARB operational category rule — hard engineering, 2026-09-25',
+  'civil-engineering': 'DARB operational category rule — hard engineering, 2026-09-25',
+  'electrical-it': 'DARB operational category rule — hard engineering, 2026-09-25',
 } as const;
 
 const NOTE_EN =
-  'Internal DARB planning indicator transcribed from supplied DARB student-requirements reference material. It is not an official university cutoff or a guarantee of admission. Check the named programme requirements separately.';
+  'Internal DARB planning indicator. It is not an official university cutoff or a guarantee of admission. Check the named programme requirements separately.';
 const NOTE_AR =
-  'مؤشر تخطيط داخلي من درب، منقول من مادة متطلبات الطلاب المقدمة من درب. ليس حداً رسمياً للقبول الجامعي ولا ضماناً للقبول. يجب التحقق من شروط البرنامج المحدد بشكل منفصل.';
+  'مؤشر تخطيط داخلي من درب. ليس حداً رسمياً للقبول الجامعي ولا ضماناً للقبول. يجب التحقق من شروط البرنامج المحدد بشكل منفصل.';
 
 export function competitiveBagrutForMajor(
   majorId: string,
