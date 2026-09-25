@@ -12,7 +12,17 @@ import type { MajorIntel, ProgramIntel } from './types';
 const CHECKED = '2026-09-17';
 export const CS_LAST_VERIFIED = '2026-09';
 
+const COMPETITIVE_BGRUT_SOURCE: IntelSource = {
+  id: 'darb-reference-pdf-competitive-bagrut',
+  url: 'https://github.com/restary259/Raneem/blob/main/docs/major-intel/competitive-bagrut-benchmarks.md',
+  title: 'DARB — Student Requirements reference: competitive Bagrut benchmarks',
+  titleAR: 'درب — مرجع متطلبات الطلاب: الحدود التنافسية للبجروت',
+  authority: 'darb',
+  checkedAt: '2026-09-25',
+};
+
 const SOURCES: IntelSource[] = [
+  COMPETITIVE_BGRUT_SOURCE,
   {
     id: 'anabin-isr',
     url: 'https://anabin.kmk.org/db/schulabschluesse-mit-hochschulzugang',
