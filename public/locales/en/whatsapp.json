@@ -97,7 +97,8 @@
     "lastCustomerMessage": "Last customer message",
     "marketingConsent": "Marketing consent",
     "loadOlder": "Load older messages",
-    "loadingOlder": "Loading…"
+    "loadingOlder": "Loading…",
+    "expired": "Expired"
   },
   "profile": {
     "title": "Lead profile",
