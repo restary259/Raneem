@@ -1,12 +1,64 @@
 {
   "intel": {
     "card": {
+      "empty": "עדיין לא מולא.",
+      "language": {
+        "german": "גרמנית",
+        "english": "אנגלית"
+      },
+      "back": "כל המקצועות",
+      "notFilled": "אין תוכן עדיין",
+      "tabLanguage": "שפה",
+      "tabBagrut": "בגרות",
+      "formalEligibility": "זכאות רשמית לבגרות",
+      "tabSchools": "בתי הספר שלנו",
+      "tabDeadlines": "מועדי הגשה",
+      "tabUniversities": "אוניברסיטאות",
+      "teachingLanguage": "שפת ההוראה",
+      "requiredLevel": "רמת CEFR נדרשת",
+      "levelMap": "מפת רמות CEFR",
+      "required": "נדרש",
+      "below": "מתחת לדרישה",
+      "above": "עומד בדרישה או גבוה ממנה",
+      "acceptedProof": "הוכחה מקובלת",
+      "additionalLanguage": "שפה נוספת",
+      "languageTiming": "הנחיית תכנון של DARB למסלולים הנלמדים בגרמנית — אינה דרישה אוניברסיטאית: הגעה ל‑B2 אורכת כ‑10 חודשי לימוד במשרה מלאה, וכ‑12 חודשים כולל בחינת Telc, TestDaF או DSH.",
       "benchmarkTitle": "מדד תכנוני של DARB",
       "benchmarkBadge": "פנימי",
       "benchmarkValueLabel": "ממוצע בגרות יעד",
       "benchmarkHint": "מדד תכנוני פנימי של DARB להערכת פרופיל המועמד. זה אינו סף קבלה רשמי של האוניברסיטה ואינו מבטיח קבלה.",
       "benchmarkSource": "מקור מדד DARB",
-      "formalEligibility": "זכאות בגרות רשמית"
+      "gradeTable": "ממוצע בגרות → ציון גרמני",
+      "conversionFormula": "הליך המרה רשמי",
+      "publishedThreshold": "סף ציון שפורסם",
+      "compensation": "מסלול חלופי",
+      "admissionMode": "מסלול קבלה",
+      "applicationChannel": "ערוץ הגשה",
+      "entranceProcedure": "הליך קבלה",
+      "startTiming": "הנחיית תכנון של DARB למסלולים הנלמדים בגרמנית — אינה כלל של מועד האוניברסיטה: להתחיל הכנה לשפה כ‑12 חודשים לפני מועד ההגשה כאשר נדרש C1."
+    },
+    "status": {
+      "verified": "מאומת"
+    },
+    "none": "לא פורסם",
+    "calculatedOnly": "מחושב — לא החלטת קבלה",
+    "row": {
+      "math": "יחידות מתמטיקה",
+      "english": "יחידות אנגלית",
+      "further": "יחידות במקצוע נוסף",
+      "deadline": "מועד הגשה"
+    },
+    "recommendations": {
+      "title": "אוניברסיטאות מומלצות",
+      "subtitle": "אפשרויות המדורגות על ידי DARB: יש לתת עדיפות ל‑TU9 כאשר קיים מסלול TU9 קונקרטי לתחום המבוקש.",
+      "count": "4+ אפשרויות",
+      "primary": "ראשי",
+      "tu9": "עדיפות TU9",
+      "exact": "מסלול תוכנית מדויק",
+      "related": "מסלול קשור — יש לאמת את התוכנית המדויקת",
+      "openProgramme": "עמוד התוכנית הרשמי",
+      "openCatalogue": "קטלוג התוכניות הרשמי",
+      "verifiedRoutes": "מסלולי התוכניות המאומתים במערכת"
     }
   }
 }
