@@ -522,17 +522,28 @@ serve(async (req) => {
       let messageType = "text";
       let templateName: string | null = null;
 
+      let fallbackBody: Record<string, unknown> | null = null;
+      let directSend = false;
       if (templateId) {
         const { data: template, error: templateError } = await admin.from("whatsapp_templates").select("*").eq("id", templateId).maybeSingle();
         if (templateError) throw templateError;
-        if (!template || template.approval_status !== "APPROVED") return json({ error: "Only an approved WhatsApp template can be sent" }, 400, corsHeaders);
+        if (!template) return json({ error: "Template not found" }, 404, corsHeaders);
+        const category = String(template.category ?? "").toUpperCase();
+        const approved = template.approval_status === "APPROVED";
+        // Direct Send: UTILITY only, admin switch on. Marketing never qualifies.
+        let directSendOn = false;
+        if (category === "UTILITY") {
+          const { data: settings } = await admin.from("platform_settings").select("whatsapp_direct_send_enabled").limit(1).maybeSingle();
+          directSendOn = (settings as { whatsapp_direct_send_enabled?: boolean } | null)?.whatsapp_direct_send_enabled === true;
+        }
+        if (!approved && !directSendOn) return json({ error: "Only an approved WhatsApp template can be sent" }, 400, corsHeaders);
         if (template.is_active === false) return json({ error: "This template is switched off" }, 409, corsHeaders);
         if (!isAdmin && template.available_to_team === false) {
           return json({ error: "This template has not been released to the team" }, 403, corsHeaders);
         }
         // Marketing consent is tracked separately from service consent: a
         // marketing template may only go to a contact who explicitly granted it.
-        if (String(template.category ?? "").toUpperCase() === "MARKETING") {
+        if (category === "MARKETING") {
           const marketingConsent = String((lead as { marketing_consent_status?: string } | null)?.marketing_consent_status ?? "unknown");
           if (marketingConsent !== "granted") {
             return json({ error: "This contact has not granted marketing consent, so only service templates can be sent" }, 409, corsHeaders);
@@ -542,10 +553,19 @@ serve(async (req) => {
         const expected = [...templateBody(template.components).matchAll(/{{\s*(\d+)\s*}}/g)].length;
         if (parameters.length !== expected || parameters.some((value: string) => !value)) return json({ error: "Complete every template field before sending" }, 400, corsHeaders);
         const components = expected ? [{ type: "body", parameters: parameters.map((text: string) => ({ type: "text", text })) }] : [];
-        providerBody = { messaging_product: "whatsapp", to, type: "template", template: { name: template.provider_name, language: { code: template.language_code }, components } };
-        storedBody = templateBody(template.components) || template.provider_name;
+        const templateSend = { messaging_product: "whatsapp", to, type: "template", template: { name: template.provider_name, language: { code: template.language_code }, components } };
+        const rendered = templateBody(template.components).replace(/{{\s*(\d+)\s*}}/g, (_m: string, n: string) => parameters[Number(n) - 1] ?? "");
+        if (directSendOn && rendered.trim()) {
+          directSend = true;
+          providerBody = { messaging_product: "whatsapp", recipient_type: "individual", to, type: "text", text: { body: rendered.slice(0, 4096) }, category: "utility", template_name: template.provider_name };
+          fallbackBody = approved ? templateSend : null;
+        } else {
+          providerBody = templateSend;
+        }
+        storedBody = rendered || template.provider_name;
         templateName = template.provider_name;
         messageType = "template";
+
       } else if (mediaPath) {
         // Attachment: the file already sits in the staff-only bucket, so we hand
         // WhatsApp a short-lived signed URL instead of making the file public.
@@ -566,7 +586,12 @@ serve(async (req) => {
         providerBody = { messaging_product: "whatsapp", to, type: "text", text: { body: storedBody } };
       }
 
-      const upstream = await provider("/messages", "POST", providerBody);
+      let upstream = await provider("/messages", "POST", providerBody);
+      if (!upstream.ok && directSend && /requires Direct Send|Direct Send/i.test(upstream.text)) {
+        // Meta says Direct Send isn't enabled: use the approved template, or fail honestly.
+        if (!fallbackBody) return json({ error: "Direct Send is not enabled for this account and this message has no approved template yet", status: upstream.status, details: upstream.text.slice(0, 600) }, 409, corsHeaders);
+        upstream = await provider("/messages", "POST", fallbackBody);
+      }
       if (!upstream.ok) return json({ error: "WhatsApp could not send the message", status: upstream.status, details: upstream.text.slice(0, 600) }, upstream.status, corsHeaders);
       const payload = JSON.parse(upstream.text || "{}") as { messages?: { id?: string }[] };
       const providerMessageId = payload.messages?.[0]?.id ?? null;
