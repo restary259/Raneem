@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   COMPETITIVE_BGRUT_BY_MAJOR,
+  COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR,
   COMPETITIVE_BGRUT_SOURCE,
   competitiveBagrutForMajor,
 } from './competitiveBagrut';
@@ -38,6 +39,7 @@ describe('competitive Bagrut planning benchmarks', () => {
         status: 'verified',
       });
       expect(fact?.note).toContain('not an official university cutoff');
+      expect(fact?.evidenceRef).toBe(COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR[majorId as keyof typeof COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR]);
     }
   });
 
