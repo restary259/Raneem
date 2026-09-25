@@ -97,7 +97,8 @@
     "lastCustomerMessage": "آخر رسالة من الطالب",
     "marketingConsent": "موافقة التسويق",
     "loadOlder": "تحميل الرسائل الأقدم",
-    "loadingOlder": "جارٍ التحميل…"
+    "loadingOlder": "جارٍ التحميل…",
+    "expired": "منتهية"
   },
   "profile": {
     "title": "ملف الطالب",

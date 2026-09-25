@@ -708,7 +708,7 @@ export default function WhatsAppInboxPage({
                             {fmt(m.created_at, i18n.language)}
                             {m.direction === "outbound" && (m.is_echo
                               ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
-                              : <> · {t(`delivery.${m.delivery_status}`, m.delivery_status)}</>)}
+                              : <span title={t(`delivery.${m.delivery_status}`, m.delivery_status)}> {deliveryMark(m.delivery_status)}</span>)}
                           </span>
                         </MessageContent>
                       </Message>
@@ -720,12 +720,10 @@ export default function WhatsAppInboxPage({
               </Conversation>
             </div>
             <div className="shrink-0 space-y-2 border-t border-border/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className="flex items-center justify-between gap-2 px-1 text-[11px]">
-                <div className="flex items-center gap-1.5">
-                  <span className={cn("h-1.5 w-1.5 rounded-full", windowClosed ? "bg-amber-500" : "bg-emerald-500")} />
-                  <span className="font-medium">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span>
-                </div>
-                <span className="text-muted-foreground">{windowClosed ? t("conversation.templateRequired") : t("conversation.remaining", { time: formatDuration(windowRemaining) })}</span>
+              <div className="flex items-center gap-1.5 px-1 text-[11px]" title={windowClosed ? t("conversation.templateRequired") : t("conversation.windowOpen")}>
+                <span className={cn("h-1.5 w-1.5 rounded-full", windowClosed ? "bg-red-500" : "bg-emerald-500")} />
+                <span className="font-medium">{windowClosed ? t("conversation.expired", "Expired") : "24h"}</span>
+                {!windowClosed && <span className="text-muted-foreground">· {formatDuration(windowRemaining)}</span>}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {!teamMode && (
@@ -780,7 +778,7 @@ export default function WhatsAppInboxPage({
                         <button type="button" onClick={() => setAttachment(null)} aria-label={t("actions.remove", "Remove")}><X className="h-3 w-3" /></button>
                       </span>
                     ) : (
-                      <span className="truncate text-[11px] text-muted-foreground">{windowClosed ? t("conversation.windowClosed") : t("conversation.windowOpen")}</span>
+                      <span />
                     )}
                   </div>
                   <PromptInputSubmit status={sending ? "submitted" : undefined} disabled={windowClosed || sending || (!composer.trim() && !attachment)} aria-label={t("conversation.send")} />
@@ -1265,7 +1263,7 @@ export default function WhatsAppInboxPage({
 }
 
 function WhatsAppActions({ receiving, connectedLabel, statusLabel, refreshLabel, startLabel, onRefresh, onStart }: { receiving: boolean; connectedLabel: string; statusLabel: string; refreshLabel: string; startLabel: string; onRefresh: () => void; onStart: () => void }) {
-  return <div className="flex flex-wrap items-center gap-2"><Badge variant="outline" className="gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="h-3.5 w-3.5" />{connectedLabel}</Badge><Badge variant="outline" className={cn("gap-1.5", receiving ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-300" : "border-amber-500/40 text-amber-700 dark:text-amber-300")}>{statusLabel}</Badge><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
+  return <div className="flex flex-wrap items-center gap-2"><span className="flex items-center gap-1.5 text-xs font-medium" title={statusLabel}><span className={cn("h-2 w-2 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} />{receiving ? connectedLabel : statusLabel}</span><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
 }
 
 function Field({ label, value, onBlur, type = "text" }: { label: string; value: string; onBlur: (value: string) => void; type?: string }) {
@@ -1332,4 +1330,14 @@ export function ConversationRow({ thread, active, simplified, now, lang, onSelec
       </span>
     </button>
   );
+}
+
+function deliveryMark(status: string | null | undefined): string {
+  switch (status) {
+    case "read": return "✓✓";
+    case "delivered": return "✓✓";
+    case "sent": case "accepted": return "✓";
+    case "failed": return "⚠";
+    default: return "…";
+  }
 }
