@@ -26,7 +26,7 @@ const ServicesGrid = () => {
         <div className="grid gap-7 lg:grid-cols-[0.68fr_1.32fr] lg:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("servicesJourney.eyebrow")}</p>
-            <h2 id="services-journey-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("servicesJourney.title")}</h2>
+            <h2 id="services-journey-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-4xl">{t("servicesJourney.title")}</h2>
           </div>
           <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:justify-self-end">{t("servicesJourney.body")}</p>
         </div>
