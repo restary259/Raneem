@@ -4053,7 +4053,9 @@
       "requiredProgress": "{{done}} of {{total}} required payments confirmed",
       "optional": "Optional — paid after arrival in Germany",
       "required": "Required before enrollment",
-      "confirmedAt": "Confirmed on"
+      "confirmedAt": "Confirmed on",
+      "optionalShort": "Optional",
+      "requiredShort": "Required"
     },
     "tabs": {
       "summary": "Summary",
