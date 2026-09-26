@@ -29,6 +29,7 @@ const TEAM_MAJORS_HEBREW_KEYS = [
   "intel.card.requiredLevel",
   "intel.card.levelMap",
   "intel.card.required",
+  "intel.card.levelLegend",
   "intel.card.below",
   "intel.card.above",
   "intel.card.acceptedProof",
