@@ -14,7 +14,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
   const { dir, sheetSide, textAlign } = useDirection();
   const [open, setOpen] = useState(false);
   const [studyGermanyOpen, setStudyGermanyOpen] = useState(false);
-  const [studyPathOpen, setStudyPathOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
 
@@ -33,6 +32,8 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
         <nav className="flex flex-col gap-3 mt-6 overflow-y-auto max-h-[calc(100dvh-4rem)]">
           <div className="flex justify-center mb-3"><LanguageSwitcher /></div>
 
+          <Link onClick={close} to="/apply" className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-4 text-center text-sm font-bold text-brand-foreground transition-colors hover:bg-brand/90">{t('nav.apply')}</Link>
+
           <Collapsible open={studyGermanyOpen} onOpenChange={setStudyGermanyOpen} className={groupClass}>
             <CollapsibleTrigger className={'flex items-center justify-between w-full py-3 ' + textAlign}>
               <span className="text-sm font-semibold">{t('nav.studyGermany')}</span>
@@ -41,15 +42,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
               <Link onClick={close} to="/educational-destinations" className={itemClass}>{t('nav.educationalDestinations')}</Link>
               <Link onClick={close} to="/educational-programs" className={itemClass}>{t('nav.majors')}</Link>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Collapsible open={studyPathOpen} onOpenChange={setStudyPathOpen} className={groupClass}>
-            <CollapsibleTrigger className={'flex items-center justify-between w-full py-3 ' + textAlign}>
-              <span className="text-sm font-semibold">{t('nav.studyPath')}</span>
-              <ChevronDown className={'h-4 w-4 text-gray-500 transition-transform duration-200 ' + (studyPathOpen ? 'rotate-180' : '')} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
               <Link onClick={close} to="/quiz" className={itemClass}>{t('nav.majorQuizNav')}</Link>
               <Link onClick={close} to="/ai-advisor" className={itemClass}>{t('nav.aiAdvisor')}</Link>
             </CollapsibleContent>
@@ -63,7 +55,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
               <ChevronDown className={'h-4 w-4 text-gray-500 transition-transform duration-200 ' + (resourcesOpen ? 'rotate-180' : '')} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
-              <Link onClick={close} to="/resources" className={itemClass}>{t('nav.resources')}</Link>
               <Link onClick={close} to="/faq" className={itemClass}>{t('nav.faq')}</Link>
               <Link onClick={close} to="/broadcast" className={itemClass}>{t('nav.broadcast')}</Link>
               <Link onClick={close} to="/blog" className={itemClass}>{t('nav.blog')}</Link>

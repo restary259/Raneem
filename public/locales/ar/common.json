@@ -19,7 +19,7 @@
     "educationalDestinations": "وجهاتنا التعليمية",
     "educationalDestinationsDesc": "اكتشف الجامعات ومعاهد اللغة والخدمات التعليمية",
     "broadcastDesc": "شاهد فيديوهات تعليمية ومباشرة من خبرائنا",
-    "studentLogin": "تسجيل الدخول للطلاب",
+    "studentLogin": "دخول الحساب",
     "faq": "الأسئلة الشائعة",
     "faqDesc": "إجابات على أكثر الأسئلة شيوعًا حول الدراسة في ألمانيا",
     "studyGermany": "الدراسة في ألمانيا",
@@ -30,7 +30,8 @@
     "costCalculator": "حاسبة التكاليف",
     "currencyConverter": "محول العملات",
     "cvBuilder": "منشئ السيرة الذاتية",
-    "blog": "المدونة"
+    "blog": "المدونة",
+    "apply": "قدّم طلبك"
   },
   "desktopNav": {
     "about": {

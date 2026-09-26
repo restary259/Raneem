@@ -19,7 +19,7 @@
     "educationalDestinations": "Educational Destinations",
     "educationalDestinationsDesc": "Discover German cities, universities, and study pathways",
     "broadcastDesc": "Watch educational and live videos from our experts",
-    "studentLogin": "Student Login",
+    "studentLogin": "Account login",
     "faq": "FAQ",
     "faqDesc": "Answers to the most common questions about studying in Germany",
     "studyGermany": "Study in Germany",
@@ -30,7 +30,8 @@
     "costCalculator": "Cost Calculator",
     "currencyConverter": "Currency Converter",
     "cvBuilder": "CV Builder",
-    "blog": "Blog"
+    "blog": "Blog",
+    "apply": "Apply now"
   },
   "desktopNav": {
     "about": {

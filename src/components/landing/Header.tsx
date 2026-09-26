@@ -85,13 +85,19 @@ const Header = () => {
             <DesktopNav transparent={!solid} />
           </div>
 
-          {/* Desktop student login */}
+          {/* Desktop login + apply */}
           <div className="hidden flex-shrink-0 items-center gap-2 xl:flex">
-             <Link
-               to="/student-auth"
-               className="inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-surface transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-             >
+            <Link
+              to="/student-auth"
+              className={`inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${solid ? 'text-foreground hover:text-primary' : 'text-primary-foreground drop-shadow-sm hover:opacity-80'}`}
+            >
               {t('nav.studentLogin')}
+            </Link>
+             <Link
+               to="/apply"
+               className="inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-brand px-6 text-sm font-bold text-brand-foreground shadow-surface transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+             >
+              {t('nav.apply')}
             </Link>
           </div>
 
