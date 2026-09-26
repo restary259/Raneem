@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Signed-in users can list school-assets" ON storage.objects;
