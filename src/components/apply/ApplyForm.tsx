@@ -349,7 +349,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
               </div>
              </FieldGroup></details>
             <FieldGroup label={isAr ? "المدينة *" : "City *"}>
-              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className={`h-11 ${step === 1 && !city.trim() && cityTouched ? "border-destructive" : ""}`} />
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
             </FieldGroup>
           </div>
         )}
