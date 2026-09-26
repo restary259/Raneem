@@ -110,7 +110,7 @@ const HomepageExperience = () => {
             <div className="darb-home-hero-actions flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" variant="cta" className="bg-brand! text-base text-brand-foreground! shadow-surface-lg hover:bg-brand/90!"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
             </div>
-            <p className="darb-home-hero-reassurance flex items-center justify-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 shrink-0 text-brand" />{t("homepage.hero.reassurance")}</p>
+            <p className="darb-home-hero-reassurance text-center text-sm font-medium text-primary-foreground/75"><CircleCheck className="me-1.5 inline-block size-4 shrink-0 align-[-0.18em] text-brand" />{t("homepage.hero.reassurance")}</p>
           </div>
         </div>
         <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
