@@ -232,7 +232,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
     setLoading(true);
     void recordConsent({ sourceForm: "apply_page", subjectName: me.name, phone: me.phone, serviceContact: true, marketing: false, locale: i18n.language });
 
-    const caseUrl = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/create-case-from-apply`;
+    const caseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-case-from-apply`;
     const headers = await buildHeaders();
     try {
       const resp = await fetch(caseUrl, { method: "POST", headers, body: JSON.stringify(payloadFor(me, { english_level: englishProficiency || null })) });
