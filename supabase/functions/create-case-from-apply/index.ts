@@ -445,6 +445,18 @@ Deno.serve(async (req) => {
         .eq("referrer_user_id", validatedReferrerId);
     }
 
+    // Log the application-received case event. This is what fires the
+    // WhatsApp "application received" automation (queue_whatsapp_case_event_automation
+    // trigger on case_events). Best-effort: a logging hiccup must not fail the
+    // application itself.
+    const { error: eventError } = await supabaseAdmin.rpc("log_case_event", {
+      p_case_id: newCase.id,
+      p_event_type: "application_received",
+      p_payload: { source },
+      p_is_internal: false,
+    });
+    if (eventError) console.error("application_received event log failed:", eventError.message);
+
     // Log activity. The actor is the verified caller: a body-supplied actor
     // would let anyone forge activity entries.
     if (caller.userId && actor_name) {
