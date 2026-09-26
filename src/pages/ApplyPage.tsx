@@ -1,6 +1,8 @@
 import React from "react";
 import Header from "@/components/landing/Header";
 import ApplyForm from "@/components/apply/ApplyForm";
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import { useDirection } from "@/hooks/useDirection";
@@ -21,7 +23,17 @@ const ApplyPage: React.FC = () => {
           <LanguageSwitcher className="[&>button]:text-xs [&>span]:text-xs" />
         </div>
       </header>
-      <main><ApplyForm /></main>
+      <main>
+        <div className="hidden md:block">
+          <DarbPageHero
+            compact
+            imageUrl={DARB_PUBLIC_HERO_IMAGES.programs}
+            title={t("apply.heroTitle")}
+            subtitle={t("apply.heroSubtitle")}
+          />
+        </div>
+        <ApplyForm />
+      </main>
     </div>
   );
 };
