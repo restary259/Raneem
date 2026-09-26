@@ -18,7 +18,6 @@ import { Route as AgentRouteImport } from './routes/agent'
 import { Route as AiAdvisorRouteImport } from './routes/ai-advisor'
 import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as BroadcastRouteImport } from './routes/broadcast'
-import { Route as CalendarPreviewRouteImport } from './routes/calendar-preview'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as EducationalDestinationsRouteImport } from './routes/educational-destinations'
 import { Route as EducationalProgramsRouteImport } from './routes/educational-programs'
@@ -162,11 +161,6 @@ const ApplyRoute = ApplyRouteImport.update({
 const BroadcastRoute = BroadcastRouteImport.update({
   id: '/broadcast',
   path: '/broadcast',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalendarPreviewRoute = CalendarPreviewRouteImport.update({
-  id: '/calendar-preview',
-  path: '/calendar-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -682,7 +676,6 @@ export interface FileRoutesByFullPath {
   '/ai-advisor': typeof AiAdvisorRoute
   '/apply': typeof ApplyRoute
   '/broadcast': typeof BroadcastRoute
-  '/calendar-preview': typeof CalendarPreviewRoute
   '/contact': typeof ContactRoute
   '/educational-destinations': typeof EducationalDestinationsRoute
   '/educational-programs': typeof EducationalProgramsRoute
@@ -791,7 +784,6 @@ export interface FileRoutesByTo {
   '/ai-advisor': typeof AiAdvisorRoute
   '/apply': typeof ApplyRoute
   '/broadcast': typeof BroadcastRoute
-  '/calendar-preview': typeof CalendarPreviewRoute
   '/contact': typeof ContactRoute
   '/educational-destinations': typeof EducationalDestinationsRoute
   '/educational-programs': typeof EducationalProgramsRoute
@@ -900,7 +892,6 @@ export interface FileRoutesById {
   '/ai-advisor': typeof AiAdvisorRoute
   '/apply': typeof ApplyRoute
   '/broadcast': typeof BroadcastRoute
-  '/calendar-preview': typeof CalendarPreviewRoute
   '/contact': typeof ContactRoute
   '/educational-destinations': typeof EducationalDestinationsRoute
   '/educational-programs': typeof EducationalProgramsRoute
@@ -1013,7 +1004,6 @@ export interface FileRouteTypes {
     | '/ai-advisor'
     | '/apply'
     | '/broadcast'
-    | '/calendar-preview'
     | '/contact'
     | '/educational-destinations'
     | '/educational-programs'
@@ -1122,7 +1112,6 @@ export interface FileRouteTypes {
     | '/ai-advisor'
     | '/apply'
     | '/broadcast'
-    | '/calendar-preview'
     | '/contact'
     | '/educational-destinations'
     | '/educational-programs'
@@ -1230,7 +1219,6 @@ export interface FileRouteTypes {
     | '/ai-advisor'
     | '/apply'
     | '/broadcast'
-    | '/calendar-preview'
     | '/contact'
     | '/educational-destinations'
     | '/educational-programs'
@@ -1342,7 +1330,6 @@ export interface RootRouteChildren {
   AiAdvisorRoute: typeof AiAdvisorRoute
   ApplyRoute: typeof ApplyRoute
   BroadcastRoute: typeof BroadcastRoute
-  CalendarPreviewRoute: typeof CalendarPreviewRoute
   ContactRoute: typeof ContactRoute
   EducationalDestinationsRoute: typeof EducationalDestinationsRoute
   EducationalProgramsRoute: typeof EducationalProgramsRoute
@@ -1440,13 +1427,6 @@ declare module '@tanstack/react-router' {
       path: '/broadcast'
       fullPath: '/broadcast'
       preLoaderRoute: typeof BroadcastRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendar-preview': {
-      id: '/calendar-preview'
-      path: '/calendar-preview'
-      fullPath: '/calendar-preview'
-      preLoaderRoute: typeof CalendarPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -2331,7 +2311,6 @@ const rootRouteChildren: RootRouteChildren = {
   AiAdvisorRoute: AiAdvisorRoute,
   ApplyRoute: ApplyRoute,
   BroadcastRoute: BroadcastRoute,
-  CalendarPreviewRoute: CalendarPreviewRoute,
   ContactRoute: ContactRoute,
   EducationalDestinationsRoute: EducationalDestinationsRoute,
   EducationalProgramsRoute: EducationalProgramsRoute,
