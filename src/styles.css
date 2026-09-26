@@ -948,6 +948,11 @@ a[href*="lovable.dev"] {
   display: block;
   overflow: hidden;
   padding-bottom: 0.14em;
+  margin-top: clamp(0.5rem, 1.4vh, 0.9rem);
+  font-size: 0.52em;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  opacity: 0.92;
 }
 
 .darb-rotating-ghost {

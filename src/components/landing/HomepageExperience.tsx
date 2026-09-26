@@ -103,7 +103,6 @@ const HomepageExperience = () => {
         <div className="darb-home-hero-content relative z-10 flex min-h-full w-full min-w-0 items-center justify-center">
           <div className="darb-home-hero-panel bg-hero-panel/45 text-center text-primary-foreground">
             <h1 className="darb-home-hero-title text-balance font-editorial font-light leading-[1.08] tracking-tight">
-              <span className="block font-normal">{t("homepage.hero.campaign")}</span>
               <span className="block">{t("homepage.hero.title")}</span>
               <RotatingHeadline words={t("homepage.hero.rotating", { returnObjects: true }) as string[]} />
             </h1>
