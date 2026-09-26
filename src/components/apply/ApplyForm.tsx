@@ -372,8 +372,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
           </div>
         )}
 
-        {/* Step 2 — Personal details */}
-        {step === 2 && (
+        {/* Step 1 — Personal details */}
+        {step === 1 && (
           <div className="space-y-4 animate-fade-in">
             <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"} dir={dir} className="h-11" />
@@ -405,8 +405,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
           </div>
         )}
 
-        {/* Step 3 — Education */}
-        {step === 3 && (
+        {/* Step 2 — Education */}
+        {step === 2 && (
           <div className="space-y-4 animate-fade-in">
             <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
               <div className="grid grid-cols-2 gap-2">
