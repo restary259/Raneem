@@ -17,7 +17,7 @@ REVOKE ALL ON FUNCTION public.trg_case_events_appointments() FROM PUBLIC,anon,au
 CREATE OR REPLACE FUNCTION public.confirm_public_appointment(p_appointment_id uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE v_case public.cases%ROWTYPE; v_appt public.appointments%ROWTYPE;
 BEGIN
- IF auth.uid() IS NULL OR NOT public.has_role(auth.uid(),'team_member') THEN RAISE EXCEPTION 'Forbidden'; END IF;
+ IF auth.uid() IS NULL OR NOT (public.has_role(auth.uid(),'team_member') OR public.has_role(auth.uid(),'admin')) THEN RAISE EXCEPTION 'Forbidden'; END IF;
  SELECT * INTO v_appt FROM public.appointments WHERE id=p_appointment_id FOR UPDATE;
  IF NOT FOUND OR NOT v_appt.public_booking OR v_appt.confirmation_status <> 'pending' OR v_appt.status NOT IN ('scheduled','confirmed') OR v_appt.outcome IS NOT NULL OR v_appt.scheduled_at<=now() THEN RAISE EXCEPTION 'Request unavailable'; END IF;
  SELECT * INTO v_case FROM public.cases WHERE id=v_appt.case_id FOR UPDATE;
