@@ -107,7 +107,6 @@ const HomepageExperience = () => {
             <p className="darb-home-hero-subtitle mx-auto max-w-xl leading-6 text-primary-foreground/85">{t("homepage.hero.subtitle")}</p>
             <div className="darb-home-hero-actions flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
-              <Button asChild size="lg" variant="outline" className="border-primary-foreground/40 bg-primary-foreground/5 text-primary-foreground text-base hover:bg-primary-foreground hover:text-primary"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف أكثر عن الدراسة بألمانيا مع درب.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button>
             </div>
             <p className="darb-home-hero-reassurance flex items-center justify-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 shrink-0 text-brand" />{t("homepage.hero.reassurance")}</p>
           </div>
