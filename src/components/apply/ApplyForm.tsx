@@ -91,6 +91,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
   const [bookingToken, setBookingToken] = useState<string | null>(null);
   const [showBooking, setShowBooking] = useState(false);
+  const [companionsFailedNotice, setCompanionsFailedNotice] = useState("");
 
   useEffect(() => {
     const code = captureReferralCode(searchParams.toString());
@@ -260,6 +261,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       }
 
       if (hasCompanions && companionsFailed > 0) {
+        setCompanionsFailedNotice(t("apply.companionFailure", { count: companionsFailed }));
         toast({
           title: isAr ? "تعذّر إنشاء بعض الرفاق" : "Some companions could not be added",
           description: isAr
@@ -306,6 +308,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
           {companionsFailedNotice && <p role="status" className="text-sm text-destructive">{companionsFailedNotice}</p>}
           {bookingToken && !useSessionAuth && !showBooking && <div className="grid gap-3 sm:grid-cols-2"><Button onClick={() => setShowBooking(true)}>{t("apply.bookVisit")}</Button><Button variant="outline" onClick={() => setBookingToken(null)}>{t("apply.deferVisit")}</Button></div>}
           {showBooking && bookingToken && <PublicOfficeBooking token={bookingToken} />}
+          {bookingToken && <a className="block text-sm text-brand-strong underline" href={`/office-visit?token=${bookingToken}`}>{t("apply.saveVisitLink")}</a>}
           <p className="text-sm text-muted-foreground">{t("apply.officeNext")}</p>
         </div>
       </div>
@@ -334,7 +337,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
               <Input value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className={`h-11 ${phoneError ? "border-destructive" : ""}`} />
               {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
             </FieldGroup>
-            <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
+             <details className="text-start text-sm text-muted-foreground"><summary className="cursor-pointer">{t("apply.extraDetails")}</summary><FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
               <div className="grid grid-cols-1 gap-2">
                 {PASSPORT_TYPES.map((pt) => (
                   <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
@@ -342,7 +345,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                   </button>
                 ))}
               </div>
-            </FieldGroup>
+             </FieldGroup></details>
             <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
             </FieldGroup>
@@ -362,15 +365,14 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
               </div>
             </FieldGroup>
 
-            {showBagrut && (
-              <>
+             {showBagrut && (
+               <details className="text-start text-sm text-muted-foreground"><summary className="cursor-pointer">{t("apply.extraDetails")}</summary>
                 <FieldGroup label={isAr ? "وحدات الإنجليزي *" : "English Units *"}>
                   <div className="flex gap-2">
                     {UNIT_OPTIONS.map((u) => (
                       <button key={u} type="button" onClick={() => setEnglishUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${englishUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
-                  {!englishUnits && <p className="text-xs text-muted-foreground mt-1">{isAr ? "الرجاء اختيار عدد وحدات الإنجليزي" : "Please select your English units"}</p>}
                 </FieldGroup>
                 <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
                   <div className="flex gap-2">
@@ -378,9 +380,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                       <button key={u} type="button" onClick={() => setMathUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${mathUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
-                  {!mathUnits && <p className="text-xs text-muted-foreground mt-1">{isAr ? "الرجاء اختيار عدد وحدات الرياضيات" : "Please select your Math units"}</p>}
                 </FieldGroup>
-              </>
+               </details>
             )}
 
             {showHigherEd && (
@@ -405,8 +406,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
         {/* Step 3 — Desired Major */}
         {step === 3 && (
           <div className="space-y-4 animate-fade-in">
-            <FieldGroup label={isAr ? "التخصص المفضل" : "Preferred Major"}>
-              <Input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder={isAr ? "اكتب التخصص الذي تريده..." : "Type your desired major..."} dir={dir} className="h-11" />
+             <FieldGroup label={t("apply.studyWish")}>
+               <Input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder={t("apply.studyWishPlaceholder")} dir={dir} className="h-11" />
             </FieldGroup>
             <p className="text-xs text-muted-foreground">{isAr ? "يمكنك تخطي هذه الخطوة إذا لم تكن متأكدًا بعد" : "You can skip this step if you're not sure yet"}</p>
           </div>
@@ -440,44 +441,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                     </FieldGroup>
                     <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
                       <Input value={c.phone} onChange={(e) => updateCompanion(idx, "phone", e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className="h-11" />
-                    </FieldGroup>
-                    <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
-                      <div className="grid grid-cols-1 gap-2">
-                        {PASSPORT_TYPES.map((pt) => (
-                          <button key={pt.value} type="button" onClick={() => updateCompanion(idx, "passportType", pt.value)} className={`w-full text-start px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${c.passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? pt.label : pt.labelEn}</button>
-                        ))}
-                      </div>
-                    </FieldGroup>
-                    <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
-                      <Input value={c.city} onChange={(e) => updateCompanion(idx, "city", e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
-                    </FieldGroup>
-                    <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
-                      <div className="grid grid-cols-2 gap-2">
-                        {EDUCATION_LEVELS.map((lvl) => (
-                          <button key={lvl.value} type="button" onClick={() => updateCompanion(idx, "education", lvl.value)} className={`px-2 py-2 rounded-xl border text-[11px] font-medium transition-all ${c.education === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? lvl.label : lvl.labelEn}</button>
-                        ))}
-                      </div>
-                    </FieldGroup>
-                    {c.education === "bagrut" && (
-                      <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-background/60 border border-border animate-fade-in">
-                        <FieldGroup label={isAr ? "وحدات الإنجليزي" : "English Units"}>
-                          <div className="flex gap-1.5">
-                            {UNIT_OPTIONS.map((u) => (
-                              <button key={u} type="button" onClick={() => updateCompanion(idx, "englishUnits", u)} className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${c.englishUnits === u ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
-                            ))}
-                          </div>
-                        </FieldGroup>
-                        <FieldGroup label={isAr ? "وحدات الرياضيات" : "Math Units"}>
-                          <div className="flex gap-1.5">
-                            {UNIT_OPTIONS.map((u) => (
-                              <button key={u} type="button" onClick={() => updateCompanion(idx, "mathUnits", u)} className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${c.mathUnits === u ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
-                            ))}
-                          </div>
-                        </FieldGroup>
-                      </div>
-                    )}
-                    <FieldGroup label={isAr ? "التخصص المفضل (اختياري)" : "Preferred Major (optional)"}>
-                      <Input value={c.preferredMajor} onChange={(e) => updateCompanion(idx, "preferredMajor", e.target.value)} placeholder={isAr ? "مثال: هندسة، طب..." : "e.g. Engineering, Medicine..."} dir={dir} className="h-11" />
                     </FieldGroup>
                     {idx < companions.length - 1 && <hr className="border-border" />}
                   </div>
