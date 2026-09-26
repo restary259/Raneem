@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { ar, enUS } from "date-fns/locale";
-import { CalendarDays, Check, Loader2, MapPin } from "lucide-react";
+import { CalendarDays, Check, Loader2, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { managePublicBooking } from "@/lib/publicBooking.functions";
@@ -29,6 +29,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
   const [working, setWorking] = useState(false);
   const [invalid, setInvalid] = useState(false);
   const [error, setError] = useState("");
+  const [confirming, setConfirming] = useState(false);
   const language = i18n.language.startsWith("ar") ? "ar" : "en";
 
   useEffect(() => {
@@ -131,13 +132,28 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
         {selectedDay && <div className="space-y-3">
           <p className="text-sm font-semibold text-foreground">{t("apply.availableTimes")}</p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" dir="ltr">
-            {daySlots.map((slot) => <Button key={slot} type="button" variant={selected === slot ? "default" : "outline"} disabled={working} onClick={() => setSelected(slot)} aria-pressed={selected === slot} className="w-full rounded-md px-2 tabular-nums">
+            {daySlots.map((slot) => <Button key={slot} type="button" variant={selected === slot ? "default" : "outline"} disabled={working || confirming} onClick={() => setSelected(slot)} aria-pressed={selected === slot} className="w-full rounded-md px-2 tabular-nums">
               {selected === slot && <Check aria-hidden="true" />}{formatTime(slot)}
             </Button>)}
           </div>
         </div>}
         <p className="text-xs leading-5 text-muted-foreground">{t("apply.requestNotice")}</p>
-        <Button type="button" disabled={!selected || working} onClick={() => change(current ? "reschedule" : "book")} className="w-full">{working ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}{t("apply.requestVisit")}</Button>
+        {selected && !confirming && <div className="rounded-xl border border-border bg-muted/20 p-4 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-0.5 size-5 text-brand-strong shrink-0" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">{t("apply.lastConfirmTitle")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("apply.lastConfirmDescription")}</p>
+              <p className="mt-3 font-semibold text-foreground" dir="auto">{formatVisit(selected, language)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("apply.officeLocation")}</p>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setSelected("")}>{t("apply.changeTime")}</Button>
+            <Button type="button" className="flex-1" disabled={working} onClick={async () => { setConfirming(true); await change(current ? "reschedule" : "book"); setConfirming(false); }}><Check aria-hidden="true" />{t("apply.confirmAppointment")}</Button>
+          </div>
+        </div>}
+        {confirming && <div role="status" className="rounded-xl border border-border bg-muted/20 p-4 text-sm"><Loader2 className="me-2 inline size-4 animate-spin" />{t("apply.confirmingAppointment")}</div>}
       </> : <p className="py-6 text-sm text-muted-foreground">{t("apply.noTimes")}</p>}
       <Button type="button" variant="ghost" onClick={() => { setOpen(false); setError(""); }} className="w-full" disabled={working}>{t("apply.closeCalendar")}</Button>
     </div>}

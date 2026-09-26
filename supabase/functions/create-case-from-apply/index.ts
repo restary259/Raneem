@@ -409,11 +409,39 @@ Deno.serve(async (req) => {
         passport_type: passport_type ? String(passport_type) : null,
         degree_interest: degree_interest ? String(degree_interest) : null,
         intake_notes: intake_notes ? stripHtml(String(intake_notes)).slice(0, 2000) : null,
+        email: email ? String(email).trim().toLowerCase() : null,
       })
       .select("id")
       .single();
 
     if (caseError) throw caseError;
+
+    // Best-effort application receipt email. The case is already created, so
+    // a temporary email-provider failure must never block the application flow.
+    if (source === "apply_page" && email && newCase?.id) {
+      try {
+        const emailRes = await fetch(
+          `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              to: String(email).trim().toLowerCase(),
+              subject: "Your DARB application was received",
+              text: `Hi ${cleanName},\n\nWe received your application and created your DARB case. Our team will review your details and contact you about the next step.\n\nDARB Study International\nSame dream, different destination.`,
+            }),
+          },
+        );
+        if (!emailRes.ok) {
+          console.error("application receipt email failed:", emailRes.status);
+        }
+      } catch (emailErr) {
+        console.error("application receipt email error:", emailErr);
+      }
+    }
 
     // Mirror the applicant into the leads table in the SAME server call, so a
     // referred applicant can never end up with a case but no lead (or the

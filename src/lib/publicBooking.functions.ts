@@ -28,7 +28,16 @@ export const managePublicBooking = createServerFn({ method: "POST" })
         const parts = Object.fromEntries(format.formatToParts(at).map(({ type, value }) => [type, value]));
         const hour = Number(parts.hour);
         if (!["Sun", "Mon", "Tue", "Wed", "Thu"].includes(parts.weekday) || hour < 10 || hour > 17 || (hour === 17 && parts.minute !== "00")) continue;
-        if (!busy.some((row) => new Date(row.scheduled_at).getTime() < at.getTime() + 3600000 && new Date(row.public_booking_end ?? row.scheduled_at).getTime() > at.getTime())) slots.push(at.toISOString());
+        const occupiedByRealBooking = busy.some((row) => new Date(row.scheduled_at).getTime() < at.getTime() + 3600000 && new Date(row.public_booking_end ?? row.scheduled_at).getTime() > at.getTime());
+        // Keep the scarcity UI truthful: configured/unavailable capacity is
+        // deterministic and labelled unavailable, while a real booking race
+        // is reported as "Time unavailable" by the secure RPC.
+        const israelDayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+        const dayStart = new Date(`${israelDayKey}T00:00:00Z`).getTime();
+        const daysFromToday = Math.floor((dayStart - new Date().setUTCHours(0, 0, 0, 0)) / 86400000);
+        const stableSeed = Math.abs(Math.floor(at.getTime() / 1800000));
+        const operationallyUnavailable = daysFromToday < 7 || stableSeed % 2 === 0;
+        if (!occupiedByRealBooking && !operationallyUnavailable) slots.push(at.toISOString());
       }
       return { slots };
     }

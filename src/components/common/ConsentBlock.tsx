@@ -19,6 +19,8 @@ interface ConsentBlockProps {
   agreeLabel?: ReactNode;
   /** Validation message rendered under the required checkbox. */
   error?: string | null;
+  /** Compact label for the expandable data-collection details. */
+  detailsLabel?: ReactNode;
 }
 
 /**
@@ -36,6 +38,7 @@ const ConsentBlock = ({
   purpose,
   agreeLabel,
   error,
+  detailsLabel,
 }: ConsentBlockProps) => {
   const { i18n } = useTranslation();
   const isHe = i18n.language === "he";
@@ -56,80 +59,43 @@ const ConsentBlock = ({
 
   return (
     <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-      <div className="flex items-start gap-2">
-        <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {purpose ? (
-            purpose
-          ) : isAr ? (
-            <>
-              نجمع منك: {collected}. نستخدم هذه المعلومات فقط لتقييم طلبك ومتابعته معك، ونشاركها عند
-              الحاجة مع الجامعة أو مزوّد التأمين أو السكن المرتبط بطلبك. لا نبيع بياناتك لأي جهة.
-              للتفاصيل الكاملة راجع {privacyLink} و{termsLink}. يمكنك سحب موافقتك أو طلب حذف بياناتك في
-              أي وقت.
-            </>
-          ) : isHe ? (
-            <>
-              אנחנו אוספים: {collected}. המידע משמש רק לבדיקת הבקשה ולמעקב מולכם, ובמידת הצורך משותף עם
-              האוניברסיטה או ספק השירות הקשור לבקשה. לעולם איננו מוכרים את המידע שלכם. לפרטים ראו את {privacyLink} ואת {termsLink}.
-            </>
-          ) : (
-            <>
-              We collect: {collected}. This is used only to assess and follow up on your application,
-              and is shared where needed with the university, insurer or accommodation provider linked
-              to your case. We never sell your data. See our {privacyLink} and {termsLink}. You can
-              withdraw consent or request deletion at any time.
-            </>
-          )}
-        </p>
-      </div>
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-foreground">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+          <span>{detailsLabel ?? (isAr ? "ما البيانات التي نجمعها؟" : isHe ? "אילו נתונים אנחנו אוספים?" : "What data do we collect?")}</span>
+          <span className="ms-auto text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+        </summary>
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {purpose ? purpose : isAr ? (
+              <>نجمع منك: {collected}. نستخدم هذه المعلومات لتقييم طلبك ومتابعته معك، وعند الحاجة لمشاركة المعلومات اللازمة مع الجهة المرتبطة بطلبك. لا نبيع بياناتك. راجع {privacyLink} و{termsLink} للمزيد.</>
+            ) : isHe ? (
+              <>אנחנו אוספים: {collected}. המידע משמש לבדיקת הבקשה ולמעקב מולכם, ובמידת הצורך לשיתוף המידע הנדרש עם הגורם הקשור לבקשה. איננו מוכרים את המידע. ראו {privacyLink} ו-{termsLink} לפרטים.</>
+            ) : (
+              <>We collect: {collected}. This is used to assess and follow up on your application and, where necessary, share required information with the party connected to your case. We do not sell your data. See {privacyLink} and {termsLink} for details.</>
+            )}
+          </p>
+        </div>
+      </details>
 
       <label htmlFor={agreeId} className="flex items-start gap-2.5 cursor-pointer">
-        <input
-          id={agreeId}
-          type="checkbox"
-          checked={agreed}
-          onChange={(e) => onAgreedChange(e.target.checked)}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? errorId : undefined}
-          className="mt-0.5 h-5 w-5 shrink-0 rounded border-border accent-[hsl(var(--accent))]"
-        />
+        <input id={agreeId} type="checkbox" checked={agreed} onChange={(e) => onAgreedChange(e.target.checked)} aria-invalid={error ? true : undefined} aria-describedby={error ? errorId : undefined} className="mt-0.5 h-5 w-5 shrink-0 rounded border-border accent-[hsl(var(--accent))]" />
         <span className="text-sm leading-relaxed text-foreground">
-          {agreeLabel ??
-            (isAr
-              ? "أوافق على معالجة بياناتي وعلى تواصل فريق درب معي بخصوص طلبي. *"
-              : isHe
-                ? "אני מסכים/ה לעיבוד המידע שלי וליצירת קשר מצד DARB בנוגע לבקשה. *"
-              : "I agree to my data being processed and to Darb contacting me about my application. *")}
+          {agreeLabel ?? (isAr ? "أوافق على معالجة بياناتي والتواصل معي بخصوص طلبي. *" : isHe ? "אני מסכים/ה לעיבוד המידע שלי וליצירת קשר בנוגע לבקשה. *" : "I agree to my data being processed and to being contacted about my application. *")}
         </span>
       </label>
 
-      {error ? (
-        <p id={errorId} role="alert" className="text-sm font-medium text-destructive">
-          {error}
-        </p>
-      ) : null}
+      {error ? <p id={errorId} role="alert" className="text-sm font-medium text-destructive">{error}</p> : null}
 
       {showMarketing && onMarketingChange ? (
         <label htmlFor={marketingId} className="flex items-start gap-2.5 cursor-pointer">
-          <input
-            id={marketingId}
-            type="checkbox"
-            checked={marketing}
-            onChange={(e) => onMarketingChange(e.target.checked)}
-            className="mt-0.5 h-5 w-5 shrink-0 rounded border-border accent-[hsl(var(--accent))]"
-          />
+          <input id={marketingId} type="checkbox" checked={marketing} onChange={(e) => onMarketingChange(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 rounded border-border accent-[hsl(var(--accent))]" />
           <span className="text-sm leading-relaxed text-muted-foreground">
-            {isAr
-              ? "اختياري: أرغب باستلام نصائح وعروض ومواعيد تسجيل عبر البريد أو واتساب."
-              : isHe
-                ? "אופציונלי: אשמח לקבל טיפים, הצעות ומועדי הרשמה באימייל או ב-WhatsApp."
-              : "Optional: send me tips, offers and intake deadlines by email or WhatsApp."}
+            {isAr ? "اختياري: أرغب باستلام نصائح وعروض ومواعيد تسجيل عبر البريد أو واتساب." : isHe ? "אופציונלי: אשמח לקבל טיפים, הצעות ומועדי הרשמה באימייל או ב-WhatsApp." : "Optional: send me tips, offers and intake deadlines by email or WhatsApp."}
           </span>
         </label>
       ) : null}
     </div>
-  );
-};
+  );};
 
 export default ConsentBlock;
