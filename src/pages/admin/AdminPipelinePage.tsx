@@ -389,10 +389,6 @@ const AdminPipelinePage = () => {
     } finally {
       setAppointmentLoading(false);
     }
-    } catch (err: any) {
-      console.error("[openCase] fetch error:", err.message);
-      setSelectedCase(c); // fallback to card data
-    }
   };
 
   /* ── start edit ── */
