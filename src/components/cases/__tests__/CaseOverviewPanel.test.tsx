@@ -55,6 +55,19 @@ vi.mock("@/integrations/supabase/client", () => ({
       }
       return Promise.resolve({ data: null, error: null });
     },
+    // Chainable no-op builder for table reads performed by child panels
+    // (e.g. CaseApplicationInfo's office-visit lookup).
+    from: () => {
+      const builder: any = {
+        select: () => builder,
+        eq: () => builder,
+        order: () => builder,
+        limit: () => builder,
+        maybeSingle: () => Promise.resolve({ data: null, error: null }),
+        then: (resolve: any) => resolve({ data: [], error: null }),
+      };
+      return builder;
+    },
   },
 }));
 
