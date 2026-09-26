@@ -309,12 +309,34 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <p className="leading-7 text-muted-foreground">{t("apply.successSubtitle")}</p>
           </div>
           {companionsFailedNotice && <p role="status" className="text-sm text-destructive">{companionsFailedNotice}</p>}
-          {bookingToken && !useSessionAuth && !showBooking && !deferredBooking && <div className="space-y-3 border-t border-border pt-6">
-            <Button onClick={() => setShowBooking(true)} className="w-full"><CalendarDays aria-hidden="true" />{t("apply.bookVisit")}</Button>
-            <Button variant="ghost" onClick={() => setDeferredBooking(true)} className="w-full">{t("apply.deferVisit")}</Button>
-          </div>}
+          {bookingToken && !useSessionAuth && !showBooking && !deferredBooking && (
+            <div className="grid gap-3 border-t border-border pt-6 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setShowBooking(true)}
+                className="group rounded-2xl border border-border bg-card p-5 text-start transition-all duration-200 hover:border-brand hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <span className="mb-3 flex size-10 items-center justify-center rounded-full bg-secondary text-brand-strong transition-colors group-hover:bg-brand group-hover:text-brand-foreground">
+                  <CalendarDays className="size-5" aria-hidden="true" />
+                </span>
+                <span className="block font-semibold">{t("apply.bookChoiceTitle", "احجز زيارة للمكتب")}</span>
+                <span className="mt-1 block text-xs leading-5 text-muted-foreground">{t("apply.bookChoiceDesc", "اختر وقتًا يناسبك لمقابلة الفريق في طمرة.")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeferredBooking(true)}
+                className="group rounded-2xl border border-border bg-card p-5 text-start transition-all duration-200 hover:border-border/80 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <span className="mb-3 flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <CheckCircle className="size-5" aria-hidden="true" />
+                </span>
+                <span className="block font-semibold">{t("apply.skipChoiceTitle", "المتابعة بدون زيارة")}</span>
+                <span className="mt-1 block text-xs leading-5 text-muted-foreground">{t("apply.skipChoiceDesc", "سيتواصل معك الفريق عبر واتساب.")}</span>
+              </button>
+            </div>
+          )}
           {showBooking && bookingToken && <div className="border-t border-border pt-6"><PublicOfficeBooking token={bookingToken} autoOpen /></div>}
-          {deferredBooking && <p role="status" className="text-sm text-muted-foreground">{t("apply.deferredNotice")}</p>}
+          {deferredBooking && <p role="status" className="rounded-xl bg-muted/50 px-4 py-3 text-sm text-muted-foreground">{t("apply.deferredNotice")}</p>}
           <p className="border-t border-border pt-5 text-sm leading-6 text-muted-foreground">{t("apply.officeNext")}</p>
         </div>
       </div>
