@@ -16,17 +16,17 @@ interface MajorCardProps {
 
 // A subject keeps its color even when the list is searched or filtered.
 const categorySurfaces: Record<string, string> = {
-  'health-medical': 'bg-story-coral',
-  'engineering-technology': 'bg-story-sky',
-  'computer-it': 'bg-story-plum',
-  'natural-sciences': 'bg-story-mint',
-  'social-sciences': 'bg-story-rose',
-  'business-management': 'bg-story-peach',
-  law: 'bg-story-lime',
-  'arts-design': 'bg-story-rose',
-  education: 'bg-story-sky',
-  'agriculture-environment': 'bg-story-mint',
-  'tourism-hospitality': 'bg-story-peach',
+  'health-medical': 'bg-story-coral hover:bg-story-coral',
+  'engineering-technology': 'bg-story-sky hover:bg-story-sky',
+  'computer-it': 'bg-story-plum hover:bg-story-plum',
+  'natural-sciences': 'bg-story-mint hover:bg-story-mint',
+  'social-sciences': 'bg-story-rose hover:bg-story-rose',
+  'business-management': 'bg-story-peach hover:bg-story-peach',
+  law: 'bg-story-lime hover:bg-story-lime',
+  'arts-design': 'bg-story-rose hover:bg-story-rose',
+  education: 'bg-story-sky hover:bg-story-sky',
+  'agriculture-environment': 'bg-story-mint hover:bg-story-mint',
+  'tourism-hospitality': 'bg-story-peach hover:bg-story-peach',
 };
 
 const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
@@ -51,7 +51,7 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
   return (
-    <Button type="button" variant="ghost" className={`group h-auto min-h-36 w-full items-start overflow-hidden rounded-lg border border-primary/10 p-0 text-start text-primary whitespace-normal shadow-xs transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-surface-lg focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none ${categorySurfaces[major.categoryId] ?? 'bg-story-sky'}`} onClick={() => onMajorClick(major)}>
+    <Button type="button" variant="ghost" className={`group h-auto min-h-36 w-full items-start overflow-hidden rounded-lg border border-primary/10 p-0 text-start text-primary whitespace-normal shadow-xs transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:text-primary hover:shadow-surface-lg focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none ${categorySurfaces[major.categoryId] ?? 'bg-story-sky hover:bg-story-sky'}`} onClick={() => onMajorClick(major)}>
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
