@@ -69,7 +69,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   // Step 1 — Identity
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [passportType, setPassportType] = useState("");
   const [city, setCity] = useState("");
 
@@ -83,7 +82,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   // Step 3 — Major
   const [preferredMajor, setPreferredMajor] = useState("");
 
-  // Step 4 — Companion
+  // Step 3 — Companion (moved to the end, just before review)
   const [applyingWith, setApplyingWith] = useState("alone");
   const [companions, setCompanions] = useState<Companion[]>([{ ...EMPTY_COMPANION }]);
 
@@ -140,9 +139,9 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const hasCompanions = applyingWith !== "alone";
 
   const canGoNext = () => {
-    if (step === 1) return applyingWith === "alone" || Boolean(companions[0]?.name.trim() && isValidPhone(companions[0]?.phone ?? ""));
-    if (step === 2) return Boolean(fullName.trim() && phone.trim() && isValidPhone(phone) && city.trim() && email.trim() && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim()));
-    if (step === 3) return !showBagrut || Boolean(englishUnits && mathUnits);
+    if (step === 1) return Boolean(fullName.trim() && phone.trim() && isValidPhone(phone) && city.trim());
+    if (step === 2) return !showBagrut || Boolean(englishUnits && mathUnits);
+    if (step === 3) return applyingWith === "alone" || Boolean(companions[0]?.name.trim() && isValidPhone(companions[0]?.phone ?? ""));
     if (step === 4) return consentAgreed;
     return false;
   };
@@ -201,7 +200,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
     const basePayload = {
       full_name: fullName.trim(),
       phone_number: phone.trim(),
-      email: email.trim().toLowerCase(),
       source: "apply_page",
       ref_code: refCode,
       city: city.trim() || null,
@@ -293,12 +291,12 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const BackIcon = isRtl ? ChevronRight : ChevronLeft;
 
   const stepTitles = [
-    t("apply.routeStep", { defaultValue: isAr ? "مع مين رح تقدّم؟" : "Who are you applying with?" }),
     t("apply.personalStep"),
     t("apply.educationStep"),
+    t("apply.companionStep", { defaultValue: isAr ? "مع مين رح تقدّم؟" : "Who are you applying with?" }),
     t("apply.reviewStep", { defaultValue: isAr ? "مراجعة وإرسال" : "Review & submit" }),
   ];
-  const stepIcons = [Users, UserRound, GraduationCap, ClipboardCheck];
+  const stepIcons = [UserRound, GraduationCap, Users, ClipboardCheck];
 
   // ── Success screen ──────────────────────────────────────────────
   if (submitted) {
