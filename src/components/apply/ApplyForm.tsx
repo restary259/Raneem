@@ -291,10 +291,10 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const BackIcon = isRtl ? ChevronRight : ChevronLeft;
 
   const stepTitles = [
-    t("apply.routeStep"),
+    t("apply.routeStep", { defaultValue: isAr ? "مع مين رح تقدّم؟" : "Who are you applying with?" }),
     t("apply.personalStep"),
     t("apply.educationStep"),
-    t("apply.reviewStep"),
+    t("apply.reviewStep", { defaultValue: isAr ? "مراجعة وإرسال" : "Review & submit" }),
   ];
   const stepIcons = [Users, UserRound, GraduationCap, ClipboardCheck];
 
@@ -330,61 +330,109 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       </div>
       <div className="space-y-6">
 
-        {/* Step 1 — Identity */}
+        {/* Step 1 — Alone or with a friend */}
         {step === 1 && (
+          <div className="space-y-4 animate-fade-in">
+            <FieldGroup label={isAr ? "كيف رح تقدّم؟" : "How are you applying?"}>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {APPLYING_WITH_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setApplyingWith(opt.value);
+                      if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]);
+                    }}
+                    className={`rounded-xl border p-4 text-start transition-all duration-200 ${applyingWith === opt.value ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border bg-card hover:border-primary/40 hover:bg-muted/50"}`}
+                    aria-pressed={applyingWith === opt.value}
+                  >
+                    {opt.value === "alone" ? <UserRound className="mb-3 size-5 text-brand-strong" /> : <Users className="mb-3 size-5 text-brand-strong" />}
+                    <p className="font-semibold">{isAr ? opt.label : opt.labelEn}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {opt.value === "alone"
+                        ? isAr ? "طلب واحد باسمك وبياناتك." : "One application using your details."
+                        : isAr ? "بننسّق طلبك مع صديق أو قريب بنفس البداية." : "We can start the process together with a friend or relative."}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </FieldGroup>
+
+            {hasCompanions && (
+              <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4 animate-fade-in">
+                <p className="text-sm font-semibold">{isAr ? "بيانات الشخص اللي معك" : "Your companion's details"}</p>
+                <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
+                  <Input value={companions[0].name} onChange={(e) => updateCompanion(0, "name", e.target.value)} placeholder={isAr ? "الاسم الكامل" : "Full name"} dir={dir} className="h-11" />
+                </FieldGroup>
+                <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
+                  <Input value={companions[0].phone} onChange={(e) => updateCompanion(0, "phone", e.target.value)} placeholder="050-1234567" dir="ltr" type="tel" className="h-11" />
+                </FieldGroup>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 2 — Personal details */}
+        {step === 2 && (
           <div className="space-y-4 animate-fade-in">
             <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={isAr ? "أدخل اسمك الكامل" : "Enter your full name"} dir={dir} className="h-11" />
             </FieldGroup>
             <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
-              <Input value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className={`h-11 ${phoneError ? "border-destructive" : ""}`} />
-              {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
+              <Input value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="050-1234567" dir="ltr" type="tel" className={`h-11 ${phoneError ? "border-destructive" : ""}`} />
+              {phoneError && <p className="mt-1 text-xs text-destructive">{phoneError}</p>}
             </FieldGroup>
-             <details className="text-start text-sm text-muted-foreground"><summary className="cursor-pointer">{t("apply.extraDetails")}</summary><FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
-              <div className="grid grid-cols-1 gap-2">
-                {PASSPORT_TYPES.map((pt) => (
-                  <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-md border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
-                    {isAr ? pt.label : pt.labelEn}
-                  </button>
-                ))}
-              </div>
-             </FieldGroup></details>
             <FieldGroup label={isAr ? "المدينة *" : "City *"}>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
             </FieldGroup>
+            <details className="text-start text-sm text-muted-foreground">
+              <summary className="cursor-pointer font-medium">{t("apply.extraDetails")}</summary>
+              <div className="mt-3">
+                <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
+                  <div className="grid grid-cols-1 gap-2">
+                    {PASSPORT_TYPES.map((pt) => (
+                      <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full rounded-md border px-4 py-2.5 text-start text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                        {isAr ? pt.label : pt.labelEn}
+                      </button>
+                    ))}
+                  </div>
+                </FieldGroup>
+              </div>
+            </details>
           </div>
         )}
 
-        {/* Step 2 — Education */}
-        {step === 2 && (
+        {/* Step 3 — Education */}
+        {step === 3 && (
           <div className="space-y-4 animate-fade-in">
             <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
               <div className="grid grid-cols-2 gap-2">
                 {EDUCATION_LEVELS.map((lvl) => (
-                  <button key={lvl.value} type="button" onClick={() => setEducationLevel(lvl.value)} className={`px-3 py-2.5 rounded-md border text-xs font-medium transition-all duration-200 ${educationLevel === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                  <button key={lvl.value} type="button" onClick={() => setEducationLevel(lvl.value)} className={`rounded-md border px-3 py-3 text-xs font-medium transition-all duration-200 ${educationLevel === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
                     {isAr ? lvl.label : lvl.labelEn}
                   </button>
                 ))}
               </div>
             </FieldGroup>
 
-             {showBagrut && (
-               <details className="text-start text-sm text-muted-foreground"><summary className="cursor-pointer">{t("apply.extraDetails")}</summary>
+            {showBagrut && (
+              <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-4 animate-fade-in">
+                <p className="text-sm font-semibold">{isAr ? "بالنسبة للبجروت، لازم نعرف الوحدات:" : "For Bagrut, we need your units:"}</p>
                 <FieldGroup label={isAr ? "وحدات الإنجليزي *" : "English Units *"}>
                   <div className="flex gap-2">
                     {UNIT_OPTIONS.map((u) => (
-                      <button key={u} type="button" onClick={() => setEnglishUnits(u)} className={`flex-1 py-2.5 rounded-md border text-sm font-bold transition-all ${englishUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                      <button key={u} type="button" onClick={() => setEnglishUnits(u)} className={`flex-1 rounded-md border py-2.5 text-sm font-bold transition-all ${englishUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
                 </FieldGroup>
                 <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
                   <div className="flex gap-2">
                     {UNIT_OPTIONS.map((u) => (
-                      <button key={u} type="button" onClick={() => setMathUnits(u)} className={`flex-1 py-2.5 rounded-md border text-sm font-bold transition-all ${mathUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                      <button key={u} type="button" onClick={() => setMathUnits(u)} className={`flex-1 rounded-md border py-2.5 text-sm font-bold transition-all ${mathUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
                 </FieldGroup>
-               </details>
+              </div>
             )}
 
             {showHigherEd && (
@@ -395,7 +443,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                 <FieldGroup label={isAr ? "مستوى الإنجليزية" : "English Proficiency"}>
                   <div className="flex gap-2">
                     {["beginner", "intermediate", "advanced"].map((lvl) => (
-                      <button key={lvl} type="button" onClick={() => setEnglishProficiency(lvl)} className={`flex-1 py-2.5 rounded-md border text-xs font-medium transition-all ${englishProficiency === lvl ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>
+                      <button key={lvl} type="button" onClick={() => setEnglishProficiency(lvl)} className={`flex-1 rounded-md border py-2.5 text-xs font-medium ${englishProficiency === lvl ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
                         {isAr ? ({ beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" } as Record<string, string>)[lvl] : lvl.charAt(0).toUpperCase() + lvl.slice(1)}
                       </button>
                     ))}
@@ -403,58 +451,37 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                 </FieldGroup>
               </>
             )}
-          </div>
-        )}
 
-        {/* Step 3 — Desired Major */}
-        {step === 3 && (
-          <div className="space-y-4 animate-fade-in">
-             <FieldGroup label={t("apply.studyWish")}>
-               <Input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder={t("apply.studyWishPlaceholder")} dir={dir} className="h-11" />
+            <FieldGroup label={isAr ? "التخصص المفضّل (اختياري)" : "Preferred major (optional)"}>
+              <Input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder={t("apply.studyWishPlaceholder")} dir={dir} className="h-11" />
             </FieldGroup>
-            <p className="text-xs text-muted-foreground">{isAr ? "يمكنك تخطي هذه الخطوة إذا لم تكن متأكدًا بعد" : "You can skip this step if you're not sure yet"}</p>
           </div>
         )}
 
-        {/* Step 4 — Applying with someone? */}
+        {/* Step 4 — Review + consent */}
         {step === 4 && (
-          <div className="space-y-4 animate-fade-in">
-            <FieldGroup label={isAr ? "هل تتقدم مع فرد من العائلة أو صديق؟" : "Are you applying with a family member or a friend?"}>
-              <div className="grid grid-cols-1 gap-2">
-                {APPLYING_WITH_OPTIONS.map((opt) => (
-                  <button key={opt.value} type="button" onClick={() => { setApplyingWith(opt.value); if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]); if (opt.value === "multiple" && companions.length < 2) setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]); }} className={`w-full text-start px-4 py-3 rounded-md border text-sm font-medium transition-all duration-200 ${applyingWith === opt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
-                    {isAr ? opt.label : opt.labelEn}
-                  </button>
-                ))}
+          <div className="space-y-5 animate-fade-in">
+            <div className="rounded-xl border border-border bg-muted/20 p-4">
+              <p className="text-sm font-semibold">{isAr ? "راجع بياناتك قبل الإرسال" : "Review your details before submitting"}</p>
+              <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                <p><span className="font-medium text-foreground">{isAr ? "الاسم:" : "Name:"}</span> {fullName}</p>
+                <p><span className="font-medium text-foreground">{isAr ? "الهاتف:" : "Phone:"}</span> {phone}</p>
+                <p><span className="font-medium text-foreground">{isAr ? "المدينة:" : "City:"}</span> {city}</p>
+                {educationLevel && <p><span className="font-medium text-foreground">{isAr ? "التعليم:" : "Education:"}</span> {isAr ? EDUCATION_LEVELS.find((x) => x.value === educationLevel)?.label : EDUCATION_LEVELS.find((x) => x.value === educationLevel)?.labelEn}</p>}
+                {showBagrut && <p><span className="font-medium text-foreground">{isAr ? "الوحدات:" : "Units:"}</span> {mathUnits} Math · {englishUnits} English</p>}
+                {preferredMajor && <p><span className="font-medium text-foreground">{isAr ? "التخصص:" : "Major:"}</span> {preferredMajor}</p>}
+                <p><span className="font-medium text-foreground">{isAr ? "التقديم:" : "Applying:"}</span> {applyingWith === "alone" ? (isAr ? "لوحدك" : "Alone") : (isAr ? "مع صديق / قريب" : "With a friend / relative")}</p>
               </div>
-            </FieldGroup>
-
-            {hasCompanions && (
-              <div className="space-y-5 p-4 rounded-md border-s-2 border-border bg-muted/30 animate-fade-in">
-                {companions.map((c, idx) => (
-                  <div key={idx} className="space-y-3">
-                    {companions.length > 1 && (
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-foreground/70">{isAr ? `الشخص ${idx + 1}` : `Person ${idx + 1}`}</p>
-                        {idx > 0 && <button type="button" onClick={() => removeCompanion(idx)} className="text-xs text-destructive hover:underline">{isAr ? "حذف" : "Remove"}</button>}
-                      </div>
-                    )}
-                    <FieldGroup label={isAr ? "الاسم الكامل *" : "Full Name *"}>
-                      <Input value={c.name} onChange={(e) => updateCompanion(idx, "name", e.target.value)} placeholder={isAr ? "الاسم الكامل" : "Full name"} dir={dir} className="h-11" />
-                    </FieldGroup>
-                    <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
-                      <Input value={c.phone} onChange={(e) => updateCompanion(idx, "phone", e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className="h-11" />
-                    </FieldGroup>
-                    {idx < companions.length - 1 && <hr className="border-border" />}
-                  </div>
-                ))}
-                {applyingWith === "multiple" && (
-                  <Button type="button" variant="outline" size="sm" className="w-full rounded-md" onClick={addCompanion}>
-                    {isAr ? "+ إضافة شخص آخر" : "+ Add another person"}
-                  </Button>
-                )}
-              </div>
-            )}
+            </div>
+            <ConsentBlock
+              isAr={isAr}
+              collected={t("apply.collectedData", { defaultValue: isAr ? "الاسم، رقم الهاتف، المدينة، نوع جواز السفر والمعلومات الدراسية" : "your name, phone number, city, passport type and education details" })}
+              agreed={consentAgreed}
+              onAgreedChange={setConsentAgreed}
+              showMarketing={false}
+              detailsLabel={t("apply.consentDetails", { defaultValue: isAr ? "كيف نستخدم بياناتك؟" : "How we use your data" })}
+              agreeLabel={t("apply.consentAgree", { defaultValue: isAr ? "أوافق على معالجة بياناتي والتواصل معي بخصوص طلبي. *" : "I agree to the processing of my data and contact about my application. *" })}
+            />
           </div>
         )}
 
