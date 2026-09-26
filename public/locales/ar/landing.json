@@ -219,7 +219,10 @@
     "loadingVisit": "جارٍ تحميل زيارتك",
     "invalidVisitLink": "رابط الزيارة الخاص غير صالح أو انتهت صلاحيته. تواصل مع فريق درب للمساعدة.",
     "deferredNotice": "لم تطلب زيارة. سيتواصل معك فريق درب.",
-    "progressLabel": "تقدّم الطلب"
+    "progressLabel": "تقدّم الطلب",
+    "personalStep": "معلوماتك",
+    "educationStep": "دراستك",
+    "companionStep": "هل ستأتي مع أحد؟"
   },
   "homepage": {
     "hero": {

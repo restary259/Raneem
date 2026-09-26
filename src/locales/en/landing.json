@@ -219,7 +219,10 @@
     "loadingVisit": "Loading your visit",
     "invalidVisitLink": "This private visit link is invalid or has expired. Please contact the DARB team for help.",
     "deferredNotice": "No visit requested. The DARB team will contact you.",
-    "progressLabel": "Application progress"
+    "progressLabel": "Application progress",
+    "personalStep": "About you",
+    "educationStep": "Your studies",
+    "companionStep": "Coming with someone?"
   },
   "homepage": {
     "hero": {
