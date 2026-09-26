@@ -1,41 +1,85 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Loader2 } from "lucide-react";
+import { ar, enUS } from "date-fns/locale";
+import { CalendarDays, Check, Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { managePublicBooking } from "@/lib/publicBooking.functions";
 
-export default function PublicOfficeBooking({ token }: { token: string }) {
-  const { t } = useTranslation("landing");
+const OFFICE_ZONE = "Asia/Jerusalem";
+const dayKey = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: OFFICE_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const localDate = (key: string) => new Date(`${key}T12:00:00`);
+const formatVisit = (iso: string, language: string) => new Intl.DateTimeFormat(language === "ar" ? "ar-u-nu-latn" : "en-US", {
+  timeZone: OFFICE_ZONE, weekday: "long", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+}).format(new Date(iso));
+const formatTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: OFFICE_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+
+export default function PublicOfficeBooking({ token, autoOpen = false }: { token: string; autoOpen?: boolean }) {
+  const { t, i18n } = useTranslation("landing");
   const booking = useServerFn(managePublicBooking);
   const [slots, setSlots] = useState<string[]>([]);
+  const [selectedDay, setSelectedDay] = useState("");
   const [selected, setSelected] = useState("");
   const [current, setCurrent] = useState("");
   const [status, setStatus] = useState("");
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+  const [invalid, setInvalid] = useState(false);
   const [error, setError] = useState("");
-  const label = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Jerusalem", weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+  const language = i18n.language.startsWith("ar") ? "ar" : "en";
 
   useEffect(() => {
     let live = true;
+    setLoading(true);
+    setInvalid(false);
+    setOpen(false);
+    setError("");
     booking({ data: { token, action: "read" } }).then((value) => {
-      if (live && value && typeof value === "object" && "scheduled_at" in value) {
+      if (!live) return;
+      if (value && typeof value === "object" && "scheduled_at" in value) {
         setCurrent(typeof value.scheduled_at === "string" ? value.scheduled_at : "");
         setStatus(typeof value.status === "string" ? value.status : "");
       }
-    }).catch(() => { if (live) setError(t("apply.bookingUnavailable")); });
+      if (autoOpen) {
+        setOpen(true);
+        setWorking(true);
+        return booking({ data: { token, action: "availability" } }).then((result) => {
+          if (!live) return;
+          const available = result && typeof result === "object" && "slots" in result && Array.isArray(result.slots)
+            ? result.slots.filter((slot): slot is string => typeof slot === "string").sort() : [];
+          setSlots(available);
+          setSelectedDay(available.length ? dayKey(available[0]) : "");
+        }).catch(() => { if (live) { setOpen(false); setError("availability"); } })
+          .finally(() => { if (live) setWorking(false); });
+      }
+    }).catch(() => { if (live) setInvalid(true); })
+      .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, [booking, token, t]);
+  }, [booking, token, autoOpen]);
+
+  const days = useMemo(() => new Set(slots.map(dayKey)), [slots]);
+  const daySlots = useMemo(() => slots.filter((slot) => dayKey(slot) === selectedDay), [slots, selectedDay]);
+  const firstDay = slots.length ? localDate(dayKey(slots[0])) : undefined;
+  const lastDay = slots.length ? localDate(dayKey(slots[slots.length - 1])) : undefined;
 
   const loadSlots = async () => {
+    setSlots([]);
+    setSelectedDay("");
+    setSelected("");
     setOpen(true);
     setWorking(true);
     setError("");
     try {
       const result = await booking({ data: { token, action: "availability" } });
-      setSlots(result && typeof result === "object" && "slots" in result && Array.isArray(result.slots) ? result.slots.filter((slot): slot is string => typeof slot === "string") : []);
-    } catch { setError(t("apply.bookingUnavailable")); }
+      const available = result && typeof result === "object" && "slots" in result && Array.isArray(result.slots)
+        ? result.slots.filter((slot): slot is string => typeof slot === "string").sort() : [];
+      setSlots(available);
+      setSelectedDay(available.length ? dayKey(available[0]) : "");
+      setSelected("");
+    } catch { setOpen(false); setError(t("apply.bookingUnavailable")); }
     finally { setWorking(false); }
   };
 
@@ -54,21 +98,50 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
     finally { setWorking(false); }
   };
 
-  return <div className="w-full space-y-4 text-start">
-    {current && <div className="border-s-2 border-brand bg-editorial-paper p-4">
-      <p className="font-semibold text-foreground">{t("apply.visitRequested")}</p>
-      <p className="text-sm text-muted-foreground">{label(current)} · {t(status === "confirmed" ? "apply.visitConfirmed" : "apply.visitPending")}</p>
+  if (loading) return <div role="status" className="flex min-h-24 items-center justify-center text-muted-foreground"><Loader2 className="size-5 animate-spin" /><span className="sr-only">{t("apply.loadingVisit")}</span></div>;
+  if (invalid) return <p role="alert" className="border-s-2 border-destructive bg-muted px-4 py-3 text-sm leading-6 text-foreground">{t("apply.invalidVisitLink")}</p>;
+
+  return <div className="w-full space-y-5 text-start">
+    {current && <div role="status" className="border-s-2 border-brand bg-editorial-paper px-4 py-4">
+      <p className="text-xs font-semibold text-brand-strong">{t(status === "confirmed" ? "apply.visitConfirmed" : "apply.visitPending")}</p>
+      <p className="mt-1 font-semibold text-foreground" dir="auto">{formatVisit(current, language)}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{t("apply.officeLocation")}</p>
     </div>}
-    {!open ? <Button onClick={loadSlots} variant={current ? "outline" : "default"} className="w-full" disabled={working}>
-      <CalendarDays className="size-4" />{t(current ? "apply.changeVisit" : "apply.bookVisit")}
-    </Button> : <div className="space-y-4">
-      <p className="text-sm font-semibold">{t("apply.pickTime")}</p>
-      {working ? <Loader2 className="mx-auto size-5 animate-spin" /> : slots.length ? <div className="grid max-h-56 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
-        {slots.map((slot) => <Button key={slot} type="button" size="sm" variant={selected === slot ? "default" : "outline"} onClick={() => setSelected(slot)} className="h-auto min-h-12 whitespace-normal text-xs" aria-pressed={selected === slot}>{label(slot)}</Button>)}
-      </div> : <p className="text-sm text-muted-foreground">{t("apply.noTimes")}</p>}
-      <div className="flex gap-2"><Button disabled={!selected || working} onClick={() => change(current ? "reschedule" : "book")} className="flex-1">{t("apply.requestVisit")}</Button><Button variant="ghost" onClick={() => setOpen(false)}>{t("apply.deferVisit")}</Button></div>
+    {!open ? <Button type="button" onClick={loadSlots} variant={current ? "outline" : "default"} className="w-full" disabled={working}>
+      <CalendarDays aria-hidden="true" />{t(current ? "apply.changeVisit" : "apply.bookVisit")}
+    </Button> : <div className="space-y-5">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><MapPin className="size-4 text-brand-strong" aria-hidden="true" />{t("apply.pickTime")}</div>
+      {working && !slots.length ? <div className="flex h-48 items-center justify-center" role="status"><Loader2 className="size-5 animate-spin text-muted-foreground" /><span className="sr-only">{t("apply.loadingVisit")}</span></div> : slots.length && firstDay && lastDay ? <>
+        <div className="flex justify-center border border-border bg-card p-1 sm:p-3">
+          <Calendar
+            mode="single"
+            locale={language === "ar" ? ar : enUS}
+            numerals="latn"
+            dir={language === "ar" ? "rtl" : "ltr"}
+            selected={selectedDay ? localDate(selectedDay) : undefined}
+            onSelect={(day) => { setSelectedDay(day ? dateKey(day) : ""); setSelected(""); }}
+            disabled={(day) => working || !days.has(dateKey(day))}
+            startMonth={firstDay}
+            endMonth={lastDay}
+            defaultMonth={firstDay}
+            showOutsideDays={false}
+            className="pointer-events-auto w-fit p-2 [--rdp-day_button-width:40px] [--rdp-day_button-height:40px]"
+          />
+        </div>
+        {selectedDay && <div className="space-y-3">
+          <p className="text-sm font-semibold text-foreground">{t("apply.availableTimes")}</p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" dir="ltr">
+            {daySlots.map((slot) => <Button key={slot} type="button" variant={selected === slot ? "default" : "outline"} disabled={working} onClick={() => setSelected(slot)} aria-pressed={selected === slot} className="w-full rounded-md px-2 tabular-nums">
+              {selected === slot && <Check aria-hidden="true" />}{formatTime(slot)}
+            </Button>)}
+          </div>
+        </div>}
+        <p className="text-xs leading-5 text-muted-foreground">{t("apply.requestNotice")}</p>
+        <Button type="button" disabled={!selected || working} onClick={() => change(current ? "reschedule" : "book")} className="w-full">{working ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}{t("apply.requestVisit")}</Button>
+      </> : <p className="py-6 text-sm text-muted-foreground">{t("apply.noTimes")}</p>}
+      <Button type="button" variant="ghost" onClick={() => { setOpen(false); setError(""); }} className="w-full" disabled={working}>{t("apply.closeCalendar")}</Button>
     </div>}
-    {current && status && <Button variant="link" className="px-0 text-destructive" disabled={working} onClick={() => change("cancel")}>{t("apply.cancelVisit")}</Button>}
-    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    {current && !open && <Button type="button" variant="link" className="h-auto px-0 text-destructive" disabled={working} onClick={() => change("cancel")}>{t("apply.cancelVisit")}</Button>}
+    {error && <p role="alert" className="text-sm leading-6 text-destructive">{error === "availability" ? t("apply.bookingUnavailable") : error}</p>}
   </div>;
 }
