@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones, Link2, AlertTriangle } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
 import { captureReferralCode, getReferralCode, verifyReferralCode, shouldKeepReferralCode } from "@/lib/referral";
 import FieldGroup from "@/components/common/FieldGroup";
 import ConsentBlock from "@/components/common/ConsentBlock";
+import PublicOfficeBooking from "./PublicOfficeBooking";
 import { recordConsent } from "@/lib/consent";
 import {
   PASSPORT_TYPES,
@@ -88,15 +89,14 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const [companions, setCompanions] = useState<Companion[]>([{ ...EMPTY_COMPANION }]);
 
   const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
-  const [refOwner, setRefOwner] = useState<string | null>(null);
-  const [refBroken, setRefBroken] = useState(false);
+  const [bookingToken, setBookingToken] = useState<string | null>(null);
+  const [showBooking, setShowBooking] = useState(false);
+  const [companionsFailedNotice, setCompanionsFailedNotice] = useState("");
 
   useEffect(() => {
     const code = captureReferralCode(searchParams.toString());
     setRefCode(code);
     if (!code) {
-      setRefOwner(null);
-      setRefBroken(false);
       return;
     }
     let active = true;
@@ -108,13 +108,9 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
         // momentary client-side lookup failure must never strip a partner's
         // attribution from the case (which would leave the case unattributed —
         // visible to Admin, invisible to the partner dashboard / KPI).
-        setRefOwner(health.valid ? health.ownerName : null);
-        setRefBroken(false);
       } else {
         // Server confirmed the code is invalid/disabled — drop it.
         setRefCode(null);
-        setRefOwner(null);
-        setRefBroken(true);
       }
     });
     return () => { active = false; };
@@ -145,7 +141,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
 
   const canGoNext = () => {
     if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone);
-    if (step === 2 && showBagrut) return !!englishUnits && !!mathUnits;
     return true;
   };
 
@@ -181,38 +176,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       return;
     }
 
-    if (educationLevel === "bagrut" && !englishUnits) {
-      toast({
-        title: isAr ? "الرجاء اختيار وحدات الإنجليزي" : "English Units Required",
-        description: isAr ? "يجب اختيار عدد وحدات الإنجليزي قبل الإرسال" : "Please go back to step 2 and select your English units",
-        variant: "destructive",
-      });
-      setStep(2);
-      return;
-    }
-    if (educationLevel === "bagrut" && !mathUnits) {
-      toast({
-        title: isAr ? "الرجاء اختيار وحدات الرياضيات" : "Math Units Required",
-        description: isAr ? "يجب اختيار عدد وحدات الرياضيات قبل الإرسال" : "Please go back to step 2 and select your Math units",
-        variant: "destructive",
-      });
-      setStep(2);
-      return;
-    }
-
     setLoading(true);
-
-    // A signed-in partner doesn't need a referral code to be credited — the
-    // edge function attributes from their JWT. Only warn public applicants.
-    if (!useSessionAuth && !refCode) {
-      toast({
-        title: isAr ? "لا يوجد رابط إحالة" : "No referral link",
-        description: isAr
-          ? "لم يُعثر على رمز إحالة صالح؛ سيُسجّل الطلب دون نسبة إلى شريك."
-          : "No valid referral code found; your application will be recorded without partner attribution.",
-        variant: "default",
-      });
-    }
 
     void recordConsent({
       sourceForm: "apply_page",
@@ -220,7 +184,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       phone,
       serviceContact: true,
       marketing: marketingConsent,
-      marketingChannels: marketingConsent ? { email: true, whatsapp: true, sms: false } : undefined,
+        marketingChannels: marketingConsent ? { email: false, whatsapp: true, sms: false } : undefined,
       locale: i18n.language,
     });
 
@@ -253,12 +217,13 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
         headers,
         body: JSON.stringify(basePayload),
       });
-      const caseResult = await caseResp.json();
-      if (!caseResp.ok && caseResp.status !== 409) {
+       const caseResult = await caseResp.json();
+       if (!caseResp.ok) {
         throw new Error(caseResult.error || "Failed to create case");
       }
 
-      let companionsCreated = 0;
+       if (typeof caseResult.booking_token === "string") setBookingToken(caseResult.booking_token);
+       let companionsCreated = 0;
       let companionsFailed = 0;
       if (hasCompanions) {
         for (const c of companions) {
@@ -272,14 +237,14 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                 phone_number: c.phone.trim(),
                 source: "apply_page",
                 ref_code: refCode,
-                city: c.city.trim() || null,
-                education_level: c.education || null,
-                passport_type: c.passportType || null,
-                math_units: c.mathUnits ? parseInt(c.mathUnits) : null,
-                english_units: c.englishUnits ? parseInt(c.englishUnits) : null,
+                 city: null,
+                 education_level: null,
+                 passport_type: null,
+                 math_units: null,
+                 english_units: null,
                 bagrut_score: null,
                 english_level: null,
-                degree_interest: c.preferredMajor.trim() || null,
+                 degree_interest: null,
               }),
             });
             if (compCaseResp.status === 409) {
@@ -296,6 +261,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       }
 
       if (hasCompanions && companionsFailed > 0) {
+        setCompanionsFailedNotice(t("apply.companionFailure", { count: companionsFailed }));
         toast({
           title: isAr ? "تعذّر إنشاء بعض الرفاق" : "Some companions could not be added",
           description: isAr
@@ -327,58 +293,23 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const stepTitles = [
     isAr ? "المعلومات الشخصية" : "Personal Information",
     isAr ? "الخلفية التعليمية" : "Education Background",
-    isAr ? "التخصص المفضل" : "Desired Major",
+    t("apply.goalStep"),
     isAr ? "التقديم مع شخص آخر؟" : "Applying with someone?",
   ];
 
   // ── Success screen ──────────────────────────────────────────────
   if (submitted) {
-    if (embedded) {
-      return (
-        <div className="w-full max-w-md mx-auto text-center space-y-6 animate-fade-in py-8">
-          <div className="relative mx-auto w-20 h-20 flex items-center justify-center">
-            <CheckCircle className="h-12 w-12 text-accent" />
-          </div>
-          <h2 className="text-xl font-bold">{t("apply.successTitle", "تم استلام بياناتك ✅")}</h2>
-          <p className="text-muted-foreground text-sm">
-            {t("apply.successSubtitle", "سيتم التواصل معك عبر واتساب قريباً")}
-          </p>
-        </div>
-      );
-    }
     return (
-      <div className="min-h-screen flex flex-col" dir={dir}>
-        <div className="min-h-screen flex flex-col bg-background text-foreground">
-          <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />
-          <main className="flex-1 flex items-center justify-center p-4">
-            <div className="w-full max-w-md text-center space-y-6 animate-fade-in">
-              <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
-                <span className="absolute inset-0 rounded-full bg-accent/20 animate-[ping_1.5s_ease-out_infinite]" />
-                <span className="absolute inset-2 rounded-full bg-accent/15 animate-[ping_1.5s_ease-out_0.3s_infinite]" />
-                <div className="relative w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center animate-scale-in">
-                  <CheckCircle className="h-10 w-10 text-accent" />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold">{t("apply.successTitle", "تم استلام بياناتك ✅")}</h2>
-              <p className="text-muted-foreground">
-                {t("apply.successSubtitle", "سيتم التواصل معك عبر واتساب قريباً")}
-              </p>
-              <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-2">
-                <p className="text-sm font-semibold text-foreground">
-                  {isAr
-                    ? "📩 سنتواصل معك خلال 24 إلى 48 ساعة عبر واتساب"
-                    : "📩 We will contact you within 24 to 48 hours via WhatsApp"}
-                </p>
-              </div>
-              <div className="flex flex-col gap-3">
-                <a href="/">
-                  <Button variant="outline" className="w-full h-12 rounded-xl text-base font-semibold">
-                    {t("apply.exploreWebsite", "تصفّح موقعنا")}
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </main>
+      <div className="min-h-[65vh] flex items-center justify-center bg-background p-5 text-foreground" dir={dir}>
+        <div className="w-full max-w-lg space-y-6 py-12 text-center">
+          <CheckCircle className="mx-auto size-14 text-brand-strong" />
+          <h2 className="text-3xl font-bold">{t("apply.successTitle")}</h2>
+          <p className="leading-7 text-muted-foreground">{t("apply.successSubtitle")}</p>
+          {companionsFailedNotice && <p role="status" className="text-sm text-destructive">{companionsFailedNotice}</p>}
+          {bookingToken && !useSessionAuth && !showBooking && <div className="grid gap-3 sm:grid-cols-2"><Button onClick={() => setShowBooking(true)}>{t("apply.bookVisit")}</Button><Button variant="outline" onClick={() => setBookingToken(null)}>{t("apply.deferVisit")}</Button></div>}
+          {showBooking && bookingToken && <PublicOfficeBooking token={bookingToken} />}
+          {bookingToken && <a className="block text-sm text-brand-strong underline" href={`/office-visit?token=${bookingToken}`}>{t("apply.saveVisitLink")}</a>}
+          <p className="text-sm text-muted-foreground">{t("apply.officeNext")}</p>
         </div>
       </div>
     );
@@ -395,26 +326,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       </div>
 
       <div className="p-5 space-y-5">
-        {refOwner && (
-          <div data-testid="referral-valid" className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
-            <Link2 className="h-4 w-4 shrink-0" />
-            <span>
-              {isAr
-                ? `تم إحالتك من قبل ${refOwner} — فريق درب يرافقك`
-                : `You were referred by ${refOwner} — the Darb team is with you`}
-            </span>
-          </div>
-        )}
-        {refBroken && (
-          <div data-testid="referral-broken" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-300">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>
-              {isAr
-                ? "تعذّر التحقق من رابط الإحالة — سيتم تسجيل طلبك دون نسبة إلى شريك."
-                : "Your referral link could not be verified — your application will be recorded without partner attribution."}
-            </span>
-          </div>
-        )}
 
         {/* Step 1 — Identity */}
         {step === 1 && (
@@ -426,7 +337,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
               <Input value={phone} onChange={(e) => handlePhoneChange(e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className={`h-11 ${phoneError ? "border-destructive" : ""}`} />
               {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
             </FieldGroup>
-            <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
+             <details className="text-start text-sm text-muted-foreground"><summary className="cursor-pointer">{t("apply.extraDetails")}</summary><FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
               <div className="grid grid-cols-1 gap-2">
                 {PASSPORT_TYPES.map((pt) => (
                   <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
@@ -434,7 +345,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                   </button>
                 ))}
               </div>
-            </FieldGroup>
+             </FieldGroup></details>
             <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
             </FieldGroup>
@@ -454,15 +365,14 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
               </div>
             </FieldGroup>
 
-            {showBagrut && (
-              <>
+             {showBagrut && (
+               <details className="text-start text-sm text-muted-foreground"><summary className="cursor-pointer">{t("apply.extraDetails")}</summary>
                 <FieldGroup label={isAr ? "وحدات الإنجليزي *" : "English Units *"}>
                   <div className="flex gap-2">
                     {UNIT_OPTIONS.map((u) => (
                       <button key={u} type="button" onClick={() => setEnglishUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${englishUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
-                  {!englishUnits && <p className="text-xs text-muted-foreground mt-1">{isAr ? "الرجاء اختيار عدد وحدات الإنجليزي" : "Please select your English units"}</p>}
                 </FieldGroup>
                 <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
                   <div className="flex gap-2">
@@ -470,9 +380,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                       <button key={u} type="button" onClick={() => setMathUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${mathUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
-                  {!mathUnits && <p className="text-xs text-muted-foreground mt-1">{isAr ? "الرجاء اختيار عدد وحدات الرياضيات" : "Please select your Math units"}</p>}
                 </FieldGroup>
-              </>
+               </details>
             )}
 
             {showHigherEd && (
@@ -497,8 +406,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
         {/* Step 3 — Desired Major */}
         {step === 3 && (
           <div className="space-y-4 animate-fade-in">
-            <FieldGroup label={isAr ? "التخصص المفضل" : "Preferred Major"}>
-              <Input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder={isAr ? "اكتب التخصص الذي تريده..." : "Type your desired major..."} dir={dir} className="h-11" />
+             <FieldGroup label={t("apply.studyWish")}>
+               <Input value={preferredMajor} onChange={(e) => setPreferredMajor(e.target.value)} placeholder={t("apply.studyWishPlaceholder")} dir={dir} className="h-11" />
             </FieldGroup>
             <p className="text-xs text-muted-foreground">{isAr ? "يمكنك تخطي هذه الخطوة إذا لم تكن متأكدًا بعد" : "You can skip this step if you're not sure yet"}</p>
           </div>
@@ -532,44 +441,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                     </FieldGroup>
                     <FieldGroup label={isAr ? "رقم الهاتف / واتساب *" : "Phone / WhatsApp *"}>
                       <Input value={c.phone} onChange={(e) => updateCompanion(idx, "phone", e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" type="tel" className="h-11" />
-                    </FieldGroup>
-                    <FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
-                      <div className="grid grid-cols-1 gap-2">
-                        {PASSPORT_TYPES.map((pt) => (
-                          <button key={pt.value} type="button" onClick={() => updateCompanion(idx, "passportType", pt.value)} className={`w-full text-start px-3 py-2.5 rounded-xl border text-xs font-medium transition-all ${c.passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? pt.label : pt.labelEn}</button>
-                        ))}
-                      </div>
-                    </FieldGroup>
-                    <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
-                      <Input value={c.city} onChange={(e) => updateCompanion(idx, "city", e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
-                    </FieldGroup>
-                    <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
-                      <div className="grid grid-cols-2 gap-2">
-                        {EDUCATION_LEVELS.map((lvl) => (
-                          <button key={lvl.value} type="button" onClick={() => updateCompanion(idx, "education", lvl.value)} className={`px-2 py-2 rounded-xl border text-[11px] font-medium transition-all ${c.education === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40"}`}>{isAr ? lvl.label : lvl.labelEn}</button>
-                        ))}
-                      </div>
-                    </FieldGroup>
-                    {c.education === "bagrut" && (
-                      <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-background/60 border border-border animate-fade-in">
-                        <FieldGroup label={isAr ? "وحدات الإنجليزي" : "English Units"}>
-                          <div className="flex gap-1.5">
-                            {UNIT_OPTIONS.map((u) => (
-                              <button key={u} type="button" onClick={() => updateCompanion(idx, "englishUnits", u)} className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${c.englishUnits === u ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
-                            ))}
-                          </div>
-                        </FieldGroup>
-                        <FieldGroup label={isAr ? "وحدات الرياضيات" : "Math Units"}>
-                          <div className="flex gap-1.5">
-                            {UNIT_OPTIONS.map((u) => (
-                              <button key={u} type="button" onClick={() => updateCompanion(idx, "mathUnits", u)} className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all ${c.mathUnits === u ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
-                            ))}
-                          </div>
-                        </FieldGroup>
-                      </div>
-                    )}
-                    <FieldGroup label={isAr ? "التخصص المفضل (اختياري)" : "Preferred Major (optional)"}>
-                      <Input value={c.preferredMajor} onChange={(e) => updateCompanion(idx, "preferredMajor", e.target.value)} placeholder={isAr ? "مثال: هندسة، طب..." : "e.g. Engineering, Medicine..."} dir={dir} className="h-11" />
                     </FieldGroup>
                     {idx < companions.length - 1 && <hr className="border-border" />}
                   </div>

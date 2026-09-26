@@ -420,6 +420,7 @@ export type Database = {
       appointments: {
         Row: {
           case_id: string | null
+          confirmation_status: string
           created_at: string
           duration_minutes: number
           guest_name: string | null
@@ -429,14 +430,17 @@ export type Database = {
           outcome_notes: string | null
           outcome_recorded_at: string | null
           outcome_recorded_by: string | null
+          public_booking: boolean
+          public_booking_end: string | null
           rescheduled_to: string | null
           scheduled_at: string
           status: string
-          team_member_id: string
+          team_member_id: string | null
           updated_at: string
         }
         Insert: {
           case_id?: string | null
+          confirmation_status?: string
           created_at?: string
           duration_minutes?: number
           guest_name?: string | null
@@ -446,14 +450,17 @@ export type Database = {
           outcome_notes?: string | null
           outcome_recorded_at?: string | null
           outcome_recorded_by?: string | null
+          public_booking?: boolean
+          public_booking_end?: string | null
           rescheduled_to?: string | null
           scheduled_at: string
           status?: string
-          team_member_id: string
+          team_member_id?: string | null
           updated_at?: string
         }
         Update: {
           case_id?: string | null
+          confirmation_status?: string
           created_at?: string
           duration_minutes?: number
           guest_name?: string | null
@@ -463,10 +470,12 @@ export type Database = {
           outcome_notes?: string | null
           outcome_recorded_at?: string | null
           outcome_recorded_by?: string | null
+          public_booking?: boolean
+          public_booking_end?: string | null
           rescheduled_to?: string | null
           scheduled_at?: string
           status?: string
-          team_member_id?: string
+          team_member_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3822,6 +3831,48 @@ export type Database = {
           },
         ]
       }
+      public_appointment_access: {
+        Row: {
+          appointment_id: string | null
+          case_id: string
+          created_at: string
+          expires_at: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          case_id: string
+          created_at?: string
+          expires_at: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          case_id?: string
+          created_at?: string
+          expires_at?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_appointment_access_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_appointment_access_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_delivery_log: {
         Row: {
           attempt: number
@@ -6408,7 +6459,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      confirm_public_appointment: {
+        Args: { p_appointment_id: string }
+        Returns: undefined
+      }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
+      create_public_appointment_access: {
+        Args: { p_case_id: string; p_token_hash: string }
+        Returns: undefined
+      }
       delete_catalog_entity: {
         Args: { p_id: string; p_kind: string }
         Returns: Json
@@ -7162,6 +7221,10 @@ export type Database = {
           p_target_table?: string
         }
         Returns: undefined
+      }
+      manage_public_appointment: {
+        Args: { p_action: string; p_slot?: string; p_token_hash: string }
+        Returns: Json
       }
       mark_case_messages_read: {
         Args: { p_case_id: string }

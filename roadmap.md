@@ -3,3 +3,7 @@
 - [x] Apply and verify the saved-content correction
 - [x] Add and run permanent Arabic brand-spelling safeguards
 - [x] Verify representative Arabic screens and preview health
+- [x] Align visitor and application copy in both live language dictionaries
+- [x] Preserve four-step application, optional companion identity/contact, and silent referrals
+- [x] Add optional case-linked Tamra office visit requests with secure changes/cancellation and staff confirmation
+- [ ] Run a real application-to-staff confirmation test with a controlled test account and case (blocked: would create a live case, messages, and reminders; no authorized test identity provided)

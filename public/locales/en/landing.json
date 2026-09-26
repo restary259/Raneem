@@ -169,8 +169,8 @@
     "title": "Top Global Universities"
   },
   "apply": {
-    "heroTitle": "Let’s Start Your Journey to Germany 🇩🇪",
-    "heroSubtitle": "Answer a few questions about yourself. The DARB team will review your details and get back to you shortly.",
+    "heroTitle": "Tell DARB what you have in mind",
+    "heroSubtitle": "Start with a few details. We will help you figure out the rest.",
     "preferredMajor": "Preferred Major (optional)",
     "selectMajor": "Select a major...",
     "step": "Step",
@@ -185,26 +185,45 @@
     "back": "Back",
     "next": "Next",
     "submit": "Submit My Details",
-    "successTitle": "Your details have been received ✅",
-    "successSubtitle": "We'll contact you soon",
+    "successTitle": "Your request is with DARB",
+    "successSubtitle": "Our team will review your plans, contact you and guide your next step. You can request an office visit now or leave it to us.",
     "error": "An error occurred, please try again",
     "trustBadge1": "Free Consultation",
     "trustBadge2": "Accredited Schools",
     "trustBadge3": "Support Until Enrollment",
     "exploreWebsite": "Explore Our Website",
-    "whileYouWait": "In the meantime, browse our services and discover more"
+    "whileYouWait": "In the meantime, browse our services and discover more",
+    "goalStep": "What would you like to study?",
+    "studyWish": "What would you like to explore?",
+    "studyWishPlaceholder": "A subject, a career, or “I’m not sure yet”",
+    "extraDetails": "I know more about my qualifications (optional)",
+    "bookVisit": "Choose an office visit",
+    "deferVisit": "Let DARB contact me",
+    "officeNext": "Your visit request is linked to your application. A team member will confirm or suggest another time after assignment.",
+    "saveVisitLink": "Save your private visit link to change or cancel later",
+    "visitRequested": "Visit requested",
+    "visitPending": "Awaiting team confirmation",
+    "changeVisit": "Change requested time",
+    "pickTime": "Choose a time at the Tamra office (10:00–18:00)",
+    "noTimes": "No times are available right now. DARB will contact you.",
+    "requestVisit": "Request this time",
+    "cancelVisit": "Cancel visit request",
+    "bookingUnavailable": "This time is no longer available or booking could not be updated. Please try another or let DARB contact you.",
+    "companionFailure": "{{count}} companion could not be registered. Our team can help you add them later.",
+    "manageVisit": "Your DARB office visit",
+    "visitConfirmed": "Confirmed by your team member"
   },
   "homepage": {
     "hero": {
       "eyebrow": "DARB · Study International",
-      "title": "Different Destinations",
-      "subtitle": "Germany starts here.",
+      "title": "Your path to studying in Germany",
+      "subtitle": "Tell us what you hope to study. Our team in Tamra will help you understand what comes next.",
       "imageAlt": "A German university setting representing the beginning of a study journey",
       "reassurance": "Get started with a profile assessment — free of charge",
-      "campaign": "Same Dream"
+      "campaign": "DARB"
     },
     "actions": {
-      "apply": "Assess your profile and apply",
+      "apply": "Tell DARB about my plans",
       "whatsapp": "Talk to us on WhatsApp",
       "checkProfile": "Could this path fit you?",
       "startAssessment": "Start your profile assessment"
@@ -512,7 +531,7 @@
     "explained": {
       "eyebrow": "Germany, explained clearly",
       "title": "The questions you need answered first",
-      "body": "Your Bagrut, German level, study route, costs, visa file, and arrival are connected. DARB helps you understand the whole picture before you commit.",
+      "body": "For students from our communities considering Germany: start with your question. We can discuss your qualifications, language and options together, in person at our Tamra office.",
       "items": [
         {
           "title": "Can I study in Germany?",
@@ -531,7 +550,7 @@
     "nextStep": {
       "eyebrow": "Find your next step",
       "title": "Start with the question that is on your mind",
-      "body": "You do not need to understand the complete German system. Choose what you want to solve now.",
+      "body": "You do not need to know the admissions process before contacting us. Share what you want; meet the people who will guide you at our Tamra office, where we can review documents together.",
       "items": [
         {
           "title": "Explore Germany",

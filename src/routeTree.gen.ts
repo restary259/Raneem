@@ -23,6 +23,7 @@ import { Route as EducationalDestinationsRouteImport } from './routes/educationa
 import { Route as EducationalProgramsRouteImport } from './routes/educational-programs'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as LocationsRouteImport } from './routes/locations'
+import { Route as OfficeVisitRouteImport } from './routes/office-visit'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as PartnershipRouteImport } from './routes/partnership'
@@ -185,6 +186,11 @@ const FaqRoute = FaqRouteImport.update({
 const LocationsRoute = LocationsRouteImport.update({
   id: '/locations',
   path: '/locations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfficeVisitRoute = OfficeVisitRouteImport.update({
+  id: '/office-visit',
+  path: '/office-visit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerRoute = PartnerRouteImport.update({
@@ -675,6 +681,7 @@ export interface FileRoutesByFullPath {
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
   '/locations': typeof LocationsRoute
+  '/office-visit': typeof OfficeVisitRoute
   '/partner': typeof PartnerRouteWithChildren
   '/partners': typeof PartnersRoute
   '/partnership': typeof PartnershipRoute
@@ -782,6 +789,7 @@ export interface FileRoutesByTo {
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
   '/locations': typeof LocationsRoute
+  '/office-visit': typeof OfficeVisitRoute
   '/partners': typeof PartnersRoute
   '/partnership': typeof PartnershipRoute
   '/privacy': typeof PrivacyRoute
@@ -889,6 +897,7 @@ export interface FileRoutesById {
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
   '/locations': typeof LocationsRoute
+  '/office-visit': typeof OfficeVisitRoute
   '/partner': typeof PartnerRouteWithChildren
   '/partners': typeof PartnersRoute
   '/partnership': typeof PartnershipRoute
@@ -1000,6 +1009,7 @@ export interface FileRouteTypes {
     | '/educational-programs'
     | '/faq'
     | '/locations'
+    | '/office-visit'
     | '/partner'
     | '/partners'
     | '/partnership'
@@ -1107,6 +1117,7 @@ export interface FileRouteTypes {
     | '/educational-programs'
     | '/faq'
     | '/locations'
+    | '/office-visit'
     | '/partners'
     | '/partnership'
     | '/privacy'
@@ -1213,6 +1224,7 @@ export interface FileRouteTypes {
     | '/educational-programs'
     | '/faq'
     | '/locations'
+    | '/office-visit'
     | '/partner'
     | '/partners'
     | '/partnership'
@@ -1323,6 +1335,7 @@ export interface RootRouteChildren {
   EducationalProgramsRoute: typeof EducationalProgramsRoute
   FaqRoute: typeof FaqRoute
   LocationsRoute: typeof LocationsRoute
+  OfficeVisitRoute: typeof OfficeVisitRoute
   PartnerRoute: typeof PartnerRouteWithChildren
   PartnersRoute: typeof PartnersRoute
   PartnershipRoute: typeof PartnershipRoute
@@ -1449,6 +1462,13 @@ declare module '@tanstack/react-router' {
       path: '/locations'
       fullPath: '/locations'
       preLoaderRoute: typeof LocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/office-visit': {
+      id: '/office-visit'
+      path: '/office-visit'
+      fullPath: '/office-visit'
+      preLoaderRoute: typeof OfficeVisitRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner': {
@@ -2296,6 +2316,7 @@ const rootRouteChildren: RootRouteChildren = {
   EducationalProgramsRoute: EducationalProgramsRoute,
   FaqRoute: FaqRoute,
   LocationsRoute: LocationsRoute,
+  OfficeVisitRoute: OfficeVisitRoute,
   PartnerRoute: PartnerRouteWithChildren,
   PartnersRoute: PartnersRoute,
   PartnershipRoute: PartnershipRoute,

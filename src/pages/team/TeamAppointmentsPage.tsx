@@ -60,6 +60,8 @@ interface Appointment {
   duration_minutes: number;
   notes: string | null;
   outcome: string | null;
+  public_booking?: boolean;
+  confirmation_status?: string;
   case?: { full_name: string; phone_number: string; status: string };
 }
 interface Case {
@@ -127,6 +129,8 @@ export default function TeamAppointmentsPage() {
 
   /* ── Data ── */
   const [appts, setAppts] = useState<Appointment[]>([]);
+  const [visitRequests, setVisitRequests] = useState<Appointment[]>([]);
+  const [confirmingVisit, setConfirmingVisit] = useState<string | null>(null);
   const [myCases, setMyCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -181,6 +185,17 @@ export default function TeamAppointmentsPage() {
         .order("scheduled_at");
       if (error) throw error;
       setAppts((data as any[]) ?? []);
+      const { data: requested, error: requestError } = await supabase
+        .from("appointments")
+        .select("*, case:cases!inner(full_name, phone_number, status, assigned_to)")
+        .eq("case.assigned_to", user.id)
+        .eq("public_booking", true)
+        .eq("confirmation_status", "pending")
+        .is("outcome", null)
+        .gte("scheduled_at", new Date().toISOString())
+        .order("scheduled_at");
+      if (requestError) throw requestError;
+      setVisitRequests((requested as Appointment[]) ?? []);
     } catch (err: any) {
       console.error("fetchAppts error:", err);
       toast({ variant: "destructive", description: t("common.error") });
@@ -188,6 +203,18 @@ export default function TeamAppointmentsPage() {
       setLoading(false);
     }
   }, [user, toast]);
+
+  const confirmVisit = async (id: string) => {
+    setConfirmingVisit(id);
+    try {
+      const { error } = await supabase.rpc("confirm_public_appointment", { p_appointment_id: id });
+      if (error) throw error;
+      toast({ title: t("team.appointments.visitConfirmed") });
+      await fetchAppts();
+    } catch (err) {
+      toast({ variant: "destructive", description: apptErrorMessage(err) });
+    } finally { setConfirmingVisit(null); }
+  };
 
   /*
    * The database blocks double-booking a team member. Translate that specific
@@ -614,6 +641,16 @@ export default function TeamAppointmentsPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       )}
+
+      {!loading && visitRequests.length > 0 && <section className="border-b border-border bg-muted/20 p-4" aria-label={t("team.appointments.visitRequests")}>
+        <h2 className="mb-3 font-semibold text-foreground">{t("team.appointments.visitRequests")}</h2>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {visitRequests.map((request) => <div key={request.id} className="flex items-center justify-between gap-3 border border-border bg-background p-3 text-sm">
+            <div className="min-w-0"><p className="truncate font-semibold">{request.case?.full_name}</p><p className="text-muted-foreground">{format(parseISO(request.scheduled_at), "EEE, MMM d · h:mm a")}</p></div>
+            <Button size="sm" disabled={confirmingVisit === request.id} onClick={() => confirmVisit(request.id)}>{t("team.appointments.confirmVisit")}</Button>
+          </div>)}
+        </div>
+      </section>}
 
       {/* ══ DAY VIEW ══ */}
       {!loading && view === "day" && (

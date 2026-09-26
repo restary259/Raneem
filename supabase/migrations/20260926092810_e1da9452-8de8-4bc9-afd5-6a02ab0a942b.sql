@@ -1,0 +1,1 @@
+CREATE POLICY "Service only booking access" ON public.public_appointment_access FOR ALL TO service_role USING (true) WITH CHECK (true); CREATE SCHEMA IF NOT EXISTS extensions; ALTER EXTENSION btree_gist SET SCHEMA extensions;

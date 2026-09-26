@@ -2242,7 +2242,10 @@
       "dayAbbrevWed": "أرب",
       "dayAbbrevThu": "خمي",
       "dayAbbrevFri": "جمع",
-      "dayAbbrevSat": "سبت"
+      "dayAbbrevSat": "سبت",
+      "visitRequests": "طلبات زيارة المكتب",
+      "confirmVisit": "تأكيد الزيارة",
+      "visitConfirmed": "تم تأكيد الزيارة"
     },
     "submit": {
       "title": "تقديم طالب جديد",
