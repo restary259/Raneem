@@ -28,9 +28,9 @@ const ConsultationCta = () => {
       name: z.string().min(2, { message: t('consultationCta.validation.nameMin') }),
       phone: z.string().min(9, { message: t('consultationCta.validation.phoneRequired') }),
       city: z.string().min(2, { message: t('consultationCta.validation.cityRequired') }),
-      interestedMajor: z.string({ required_error: t('consultationCta.validation.majorRequired') }),
-      educationLevel: z.string({ required_error: t('consultationCta.validation.educationRequired') }),
-      stillInSchool: z.enum(["yes", "no"], { required_error: t('consultationCta.validation.stillInSchoolRequired') }),
+      interestedMajor: z.string({ error: t('consultationCta.validation.majorRequired') }),
+      educationLevel: z.string({ error: t('consultationCta.validation.educationRequired') }),
+      stillInSchool: z.enum(["yes", "no"], { error: t('consultationCta.validation.stillInSchoolRequired') }),
       englishUnits: z.string().optional(),
       mathUnits: z.string().optional(),
     });
