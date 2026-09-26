@@ -106,6 +106,7 @@ interface Case {
   id: string;
   full_name: string;
   phone_number: string;
+  email: string | null;
   status: string;
   source: string;
   assigned_to: string | null;
