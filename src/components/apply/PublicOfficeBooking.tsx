@@ -52,13 +52,13 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
             ? result.slots.filter((slot): slot is string => typeof slot === "string").sort() : [];
           setSlots(available);
           setSelectedDay(available.length ? dayKey(available[0]) : "");
-        }).catch(() => { if (live) { setOpen(false); setError(t("apply.bookingUnavailable")); } })
+        }).catch(() => { if (live) { setOpen(false); setError("availability"); } })
           .finally(() => { if (live) setWorking(false); });
       }
     }).catch(() => { if (live) setInvalid(true); })
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, [booking, token, autoOpen, t]);
+  }, [booking, token, autoOpen]);
 
   const days = useMemo(() => new Set(slots.map(dayKey)), [slots]);
   const daySlots = useMemo(() => slots.filter((slot) => dayKey(slot) === selectedDay), [slots, selectedDay]);
@@ -142,6 +142,6 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
       <Button type="button" variant="ghost" onClick={() => { setOpen(false); setError(""); }} className="w-full" disabled={working}>{t("apply.closeCalendar")}</Button>
     </div>}
     {current && !open && <Button type="button" variant="link" className="h-auto px-0 text-destructive" disabled={working} onClick={() => change("cancel")}>{t("apply.cancelVisit")}</Button>}
-    {error && <p role="alert" className="text-sm leading-6 text-destructive">{error}</p>}
+    {error && <p role="alert" className="text-sm leading-6 text-destructive">{error === "availability" ? t("apply.bookingUnavailable") : error}</p>}
   </div>;
 }
