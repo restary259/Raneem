@@ -79,10 +79,14 @@ const colLetter = (index: number) => {
   return s;
 };
 
+/** Text starting with = + - @ (or tab/CR) would be run as a formula by Excel. */
+const neutralizeFormula = (value: unknown) =>
+  typeof value === 'string' && /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+
 const toCells = (row: ExportRow, columns: ExportColumn[]) =>
   Array.isArray(row)
-    ? columns.map((c, i) => coerceValue(row[i], c.type))
-    : columns.map(c => coerceValue(c.key ? (row as Record<string, unknown>)[c.key] : undefined, c.type));
+    ? columns.map((c, i) => neutralizeFormula(coerceValue(row[i], c.type)))
+    : columns.map(c => neutralizeFormula(coerceValue(c.key ? (row as Record<string, unknown>)[c.key] : undefined, c.type)));
 
 const displayLength = (value: unknown, type?: ExportColumnType) => {
   if (value === null || value === undefined) return 1;

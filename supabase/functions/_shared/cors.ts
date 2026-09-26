@@ -17,12 +17,17 @@ const ALLOWED_ORIGINS = [
 const ALLOWED_HEADERS =
   "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version";
 
+const PROJECT_ID = "6ca0fcbe-667c-43cb-9cbf-11c55b0c4933";
+
 export function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  // Lovable preview/sandbox subdomains for this project.
-  return /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(origin) ||
-    /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/.test(origin);
+  // Only this project's own preview hosts — never arbitrary Lovable subdomains.
+  return origin === `https://${PROJECT_ID}.lovableproject.com` ||
+    origin === `https://id-preview--${PROJECT_ID}.lovable.app` ||
+    origin === `https://preview--${PROJECT_ID}.lovable.app` ||
+    origin === `https://project--${PROJECT_ID}.lovable.app` ||
+    origin === `https://project--${PROJECT_ID}-dev.lovable.app`;
 }
 
 export function buildCorsHeaders(req: Request): Record<string, string> {
