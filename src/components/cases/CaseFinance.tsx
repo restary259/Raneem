@@ -881,12 +881,20 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   return (
                     <div key={type} className="rounded-md border p-3 space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="flex flex-wrap items-center gap-2 font-medium">
-                          {typeLabel(type)}
-                          <Badge variant="outline" className="text-[10px] font-normal">
+                        <span className="flex min-w-0 flex-wrap items-center gap-2 font-medium">
+                          <span className="min-w-0 truncate">{typeLabel(type)}</span>
+                          <Badge
+                            variant="outline"
+                            className="shrink-0 text-[10px] font-normal"
+                            title={
+                              optional
+                                ? t("finance.verification.optional", "Optional — paid after arrival in Germany")
+                                : t("finance.verification.required", "Required before enrollment")
+                            }
+                          >
                             {optional
-                              ? t("finance.verification.optional", "Optional — paid after arrival in Germany")
-                              : t("finance.verification.required", "Required before enrollment")}
+                              ? t("finance.verification.optionalShort", "Optional")
+                              : t("finance.verification.requiredShort", "Required")}
                           </Badge>
                         </span>
                         <span className="text-sm font-semibold">
