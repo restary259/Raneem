@@ -24,16 +24,16 @@ export const managePublicBooking = createServerFn({ method: "POST" })
       const busy = occupied ?? [];
       const format = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Jerusalem", weekday: "short", hour: "2-digit", hourCycle: "h23", minute: "2-digit" });
       const slots: string[] = [];
-      for (let at = new Date(start.getTime() - start.getTime() % 3600000 + 3600000); at <= end; at = new Date(at.getTime() + 3600000)) {
+      for (let at = new Date(start.getTime() - start.getTime() % 1800000 + 1800000); at <= end; at = new Date(at.getTime() + 1800000)) {
         const parts = Object.fromEntries(format.formatToParts(at).map(({ type, value }) => [type, value]));
         const hour = Number(parts.hour);
-        if (!["Sun", "Mon", "Tue", "Wed", "Thu"].includes(parts.weekday) || hour < 10 || hour > 17 || parts.minute !== "00") continue;
+        if (!["Sun", "Mon", "Tue", "Wed", "Thu"].includes(parts.weekday) || hour < 10 || hour > 17 || (hour === 17 && parts.minute !== "00")) continue;
         if (!busy.some((row) => new Date(row.scheduled_at).getTime() < at.getTime() + 3600000 && new Date(row.public_booking_end ?? row.scheduled_at).getTime() > at.getTime())) slots.push(at.toISOString());
       }
       return { slots };
     }
     const { data: result, error } = await supabaseAdmin.rpc("manage_public_appointment", {
-      p_token_hash: hash, p_action: data.action, p_slot: data.slot ?? null,
+      p_token_hash: hash, p_action: data.action, p_slot: data.slot,
     });
     if (error) throw new Error(error.message.includes("Time unavailable") || error.message.includes("APPT_BLOCKED") ? "Time unavailable" : "Booking could not be updated. Please contact DARB.");
     return result;

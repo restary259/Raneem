@@ -34,7 +34,7 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
     setError("");
     try {
       const result = await booking({ data: { token, action: "availability" } });
-      setSlots(result && typeof result === "object" && "slots" in result && Array.isArray(result.slots) ? result.slots : []);
+      setSlots(result && typeof result === "object" && "slots" in result && Array.isArray(result.slots) ? result.slots.filter((slot): slot is string => typeof slot === "string") : []);
     } catch { setError(t("apply.bookingUnavailable")); }
     finally { setWorking(false); }
   };
@@ -47,17 +47,17 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
       if (action === "cancel") { setCurrent(""); setStatus(""); }
       else if (result && typeof result === "object" && "scheduled_at" in result) {
         setCurrent(typeof result.scheduled_at === "string" ? result.scheduled_at : selected);
-        setStatus("scheduled");
+        setStatus("pending");
       }
       setSelected(""); setOpen(false);
-    } catch { setError(t("apply.bookingUnavailable")); await loadSlots(); }
+    } catch { setError(t("apply.bookingUnavailable")); }
     finally { setWorking(false); }
   };
 
   return <div className="w-full space-y-4 text-start">
     {current && <div className="border-s-2 border-brand bg-editorial-paper p-4">
       <p className="font-semibold text-foreground">{t("apply.visitRequested")}</p>
-      <p className="text-sm text-muted-foreground">{label(current)} · {t("apply.visitPending")}</p>
+      <p className="text-sm text-muted-foreground">{label(current)} · {t(status === "confirmed" ? "apply.visitConfirmed" : "apply.visitPending")}</p>
     </div>}
     {!open ? <Button onClick={loadSlots} variant={current ? "outline" : "default"} className="w-full" disabled={working}>
       <CalendarDays className="size-4" />{t(current ? "apply.changeVisit" : "apply.bookVisit")}
