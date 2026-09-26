@@ -97,6 +97,13 @@ export default function PublicOfficeBooking({ token, autoOpen = false, onBooked 
     setError("");
     try {
       const result = await booking({ data: { token, action, slot: action === "cancel" ? undefined : selected } });
+      if (result && typeof result === "object" && "error" in result && result.error === "slot_taken") {
+        setError(t("apply.slotTaken"));
+        setUnavailable((prev) => (selected ? [...prev, selected] : prev));
+        setSlots((prev) => prev.filter((s) => s !== selected));
+        setSelected("");
+        return;
+      }
       if (action === "cancel") { setCurrent(""); setStatus(""); }
       else if (result && typeof result === "object" && "scheduled_at" in result) {
         setCurrent(typeof result.scheduled_at === "string" ? result.scheduled_at : selected);
