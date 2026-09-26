@@ -410,7 +410,7 @@ Deno.serve(async (req) => {
         passport_type: passport_type ? String(passport_type) : null,
         degree_interest: degree_interest ? String(degree_interest) : null,
         intake_notes: intake_notes ? stripHtml(String(intake_notes)).slice(0, 2000) : null,
-        email: email ? String(email).trim().toLowerCase() : null,
+        // cases has no email column; the apply form no longer collects email.
       })
       .select("id")
       .single();
