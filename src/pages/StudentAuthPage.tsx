@@ -54,6 +54,12 @@ const StudentAuthPage = () => {
       return;
     }
 
+    // Return to a same-origin page (e.g. the agent-connection consent screen) when requested.
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) {
+      window.location.replace(next);
+      return;
+    }
     const path = ROLE_TO_PATH[role] ?? "/student/checklist";
     navigate(path, { replace: true });
   }, [initialized, user, role, mustChangePassword, navigate]);
