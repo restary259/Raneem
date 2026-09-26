@@ -4071,7 +4071,9 @@
       "requiredProgress": "تم تأكيد {{done}} من {{total}} من الدفعات المطلوبة",
       "optional": "اختياري — يُدفع بعد الوصول إلى ألمانيا",
       "required": "مطلوب قبل التسجيل",
-      "confirmedAt": "تم التأكيد في"
+      "confirmedAt": "تم التأكيد في",
+      "optionalShort": "اختياري",
+      "requiredShort": "مطلوب"
     },
     "tabs": {
       "summary": "الملخّص",
