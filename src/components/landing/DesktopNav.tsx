@@ -20,15 +20,11 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   const studyGermany = [
     { title: t('nav.educationalDestinations'), href: '/educational-destinations', description: t('nav.educationalDestinationsDesc') },
     { title: t('nav.majors'), href: '/educational-programs', description: t('seo.edProgDesc', { ns: 'common' }) },
-  ];
-
-  const studyPath = [
     { title: t('nav.majorQuizNav'), href: '/quiz', description: t('seo.quizDesc', { ns: 'common' }) },
     { title: t('nav.aiAdvisor'), href: '/ai-advisor', description: t('seo.advisorDesc', { ns: 'common' }) },
   ];
 
   const resources = [
-    { title: t('nav.resources'), href: '/resources', description: t('seo.resourcesDesc', { ns: 'common' }) },
     { title: t('nav.faq'), href: '/faq', description: t('nav.faqDesc') },
     { title: t('nav.broadcast'), href: '/broadcast', description: t('nav.broadcastDesc') },
     { title: t('nav.blog'), href: '/blog', description: t('footer.blog') },
