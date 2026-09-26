@@ -56,6 +56,7 @@
   --color-story-mint: hsl(var(--story-mint));
   --color-story-lime: hsl(var(--story-lime));
   --color-story-peach: hsl(var(--story-peach));
+  --color-story-foreground: hsl(var(--story-foreground));
 
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -165,14 +166,15 @@
   --editorial-paper: 210 20% 98%;
   --hero-panel: 0 0% 3%;
 
-  /* Light-only visitor card surfaces: DARB's spectrum softened for navy ink. */
-  --story-coral: 3 89% 87%;
-  --story-rose: 336 74% 86%;
-  --story-plum: 302 34% 84%;
-  --story-sky: 218 78% 86%;
-  --story-mint: 151 51% 82%;
-  --story-lime: 80 61% 79%;
-  --story-peach: 32 92% 83%;
+  /* Deep, light-only visitor card colors; separate from dashboard status hues. */
+  --story-coral: 350 66% 35%;
+  --story-rose: 330 54% 34%;
+  --story-plum: 291 40% 31%;
+  --story-sky: 214 63% 32%;
+  --story-mint: 169 57% 25%;
+  --story-lime: 135 39% 25%;
+  --story-peach: 24 66% 34%;
+  --story-foreground: 0 0% 100%;
 
   --destructive: 0 90.6% 58.6%;
   --destructive-foreground: 210 40% 98%;
