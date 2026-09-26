@@ -20,7 +20,7 @@ const CefrGuide = () => {
   const active = selected ? levels[selected] : null;
 
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-background" aria-labelledby="cefr-guide-title">
+    <section className="overflow-hidden rounded-2xl border border-border bg-background" aria-labelledby="cefr-guide-title">
       <div className="grid gap-0 lg:grid-cols-[0.72fr_1.28fr]">
         <div className="bg-primary p-5 text-primary-foreground sm:p-7">
           <span className="inline-flex min-h-11 items-center rounded-md border border-primary-foreground/25 px-3 text-sm font-black tracking-[0.12em] text-brand">

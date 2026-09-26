@@ -30,7 +30,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isOpen, onOpenChang
         {youtubeId ? (
           <div className="aspect-video">
             <iframe
-              className="w-full h-full rounded-lg"
+              className="w-full h-full rounded-2xl"
               src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`}
               title="YouTube video player"
               frameBorder="0"
@@ -39,7 +39,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isOpen, onOpenChang
             ></iframe>
           </div>
         ) : (
-          <video src={videoUrl!} controls autoPlay className="w-full h-auto rounded-lg aspect-video" />
+          <video src={videoUrl!} controls autoPlay className="w-full h-auto rounded-2xl aspect-video" />
         )}
       </DialogContent>
     </Dialog>

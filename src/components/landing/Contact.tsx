@@ -201,9 +201,9 @@ const Contact = () => {
             <div>
               <h3 className="text-2xl font-bold text-primary">{t("contact.mapTitle")}</h3>
               <p className="mt-2 text-muted-foreground">{t("contact.mapSubtitle")}</p>
-              <div className="mt-5 h-[320px] overflow-hidden rounded-lg border border-border shadow-surface md:h-[390px]"><Map /></div>
+              <div className="mt-5 h-[320px] overflow-hidden rounded-2xl border border-border shadow-surface md:h-[390px]"><Map /></div>
             </div>
-            <div className="rounded-lg border border-border bg-background p-6">
+            <div className="rounded-2xl border border-border bg-background p-6">
               <h3 className="mb-4 text-center text-xl font-semibold">{t("contact.follow")}</h3>
               <div className="flex items-center justify-center gap-6">
                 <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground transition-colors hover:text-accent"><Instagram className="h-7 w-7" /></a>

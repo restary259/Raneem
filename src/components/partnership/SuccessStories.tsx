@@ -49,10 +49,10 @@ const SuccessStories = () => {
         </div>
 
         <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-          <div className="p-6 bg-primary/5 rounded-lg"><div className="text-3xl font-bold text-primary mb-2">50+</div><div className="text-gray-600">{t('successStories.stats.activeAgents')}</div></div>
-          <div className="p-6 bg-green-50 rounded-lg"><div className="text-3xl font-bold text-green-600 mb-2">200+</div><div className="text-gray-600">{t('successStories.stats.acceptedStudentsTotal')}</div></div>
-          <div className="p-6 bg-blue-50 rounded-lg"><div className="text-3xl font-bold text-blue-600 mb-2">500K+</div><div className="text-gray-600">{t('successStories.stats.commissionsPaid')}</div></div>
-          <div className="p-6 bg-orange-50 rounded-lg"><div className="text-3xl font-bold text-orange-600 mb-2">95%</div><div className="text-gray-600">{t('successStories.stats.satisfactionRate')}</div></div>
+          <div className="p-6 bg-primary/5 rounded-2xl"><div className="text-3xl font-bold text-primary mb-2">50+</div><div className="text-gray-600">{t('successStories.stats.activeAgents')}</div></div>
+          <div className="p-6 bg-green-50 rounded-2xl"><div className="text-3xl font-bold text-green-600 mb-2">200+</div><div className="text-gray-600">{t('successStories.stats.acceptedStudentsTotal')}</div></div>
+          <div className="p-6 bg-blue-50 rounded-2xl"><div className="text-3xl font-bold text-blue-600 mb-2">500K+</div><div className="text-gray-600">{t('successStories.stats.commissionsPaid')}</div></div>
+          <div className="p-6 bg-orange-50 rounded-2xl"><div className="text-3xl font-bold text-orange-600 mb-2">95%</div><div className="text-gray-600">{t('successStories.stats.satisfactionRate')}</div></div>
         </div>
       </div>
     </section>

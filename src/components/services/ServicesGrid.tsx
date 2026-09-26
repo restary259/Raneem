@@ -44,7 +44,7 @@ const ServicesGrid = () => {
                   <h3 className="text-xl font-bold text-primary sm:text-2xl">{stage.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">{stage.problem}</p>
                 </div>
-                <div className="min-w-0 rounded-lg bg-editorial-paper p-5">
+                <div className="min-w-0 rounded-2xl bg-editorial-paper p-5">
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-strong">{t("servicesJourney.darbLabel")}</p>
                   <p className="mt-2 text-sm leading-6 text-foreground">{stage.darb}</p>
                   <div className="mt-4 flex items-start gap-2 border-t border-border pt-4 text-xs leading-6 text-muted-foreground"><Building2 className="mt-0.5 size-4 shrink-0" /><span>{stage.decision}</span></div>
