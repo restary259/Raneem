@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, CalendarDays, Users, UserRound, GraduationCap, ClipboardCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
 import { captureReferralCode, getReferralCode, verifyReferralCode, shouldKeepReferralCode } from "@/lib/referral";
@@ -65,7 +65,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [consentAgreed, setConsentAgreed] = useState(false);
-  const [marketingConsent, setMarketingConsent] = useState(false);
 
   // Step 1 — Identity
   const [fullName, setFullName] = useState("");
@@ -140,8 +139,11 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const hasCompanions = applyingWith !== "alone";
 
   const canGoNext = () => {
-    if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone) && city.trim().length > 0;
-    return true;
+    if (step === 1) return applyingWith === "alone" || Boolean(companions[0]?.name.trim() && isValidPhone(companions[0]?.phone ?? ""));
+    if (step === 2) return Boolean(fullName.trim() && phone.trim() && isValidPhone(phone) && city.trim());
+    if (step === 3) return !showBagrut || Boolean(englishUnits && mathUnits);
+    if (step === 4) return consentAgreed;
+    return false;
   };
 
   const addCompanion = () => setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]);
@@ -183,8 +185,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       subjectName: fullName,
       phone,
       serviceContact: true,
-      marketing: marketingConsent,
-        marketingChannels: marketingConsent ? { email: false, whatsapp: true, sms: false } : undefined,
+      marketing: false,
       locale: i18n.language,
     });
 
@@ -290,11 +291,12 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const BackIcon = isRtl ? ChevronRight : ChevronLeft;
 
   const stepTitles = [
+    t("apply.routeStep"),
     t("apply.personalStep"),
     t("apply.educationStep"),
-    t("apply.goalStep"),
-    t("apply.companionStep"),
+    t("apply.reviewStep"),
   ];
+  const stepIcons = [Users, UserRound, GraduationCap, ClipboardCheck];
 
   // ── Success screen ──────────────────────────────────────────────
   if (submitted) {
@@ -312,7 +314,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <Button variant="ghost" onClick={() => setDeferredBooking(true)} className="w-full">{t("apply.deferVisit")}</Button>
           </div>}
           {showBooking && bookingToken && <div className="border-t border-border pt-6"><PublicOfficeBooking token={bookingToken} autoOpen /></div>}
-          {bookingToken && <a className="inline-block text-sm text-brand-strong underline underline-offset-4" href={`/office-visit?token=${bookingToken}`}>{t("apply.saveVisitLink")}</a>}
           {deferredBooking && <p role="status" className="text-sm text-muted-foreground">{t("apply.deferredNotice")}</p>}
           <p className="border-t border-border pt-5 text-sm leading-6 text-muted-foreground">{t("apply.officeNext")}</p>
         </div>
@@ -460,11 +461,12 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
         {step === TOTAL_STEPS && (
           <ConsentBlock
             isAr={isAr}
-            collected={isAr ? "الاسم الكامل، رقم الهاتف، المدينة، نوع جواز السفر والمعلومات الدراسية" : "full name, phone number, city, passport type and education details"}
+            collected={t("apply.collectedData")}
             agreed={consentAgreed}
             onAgreedChange={setConsentAgreed}
-            marketing={marketingConsent}
-            onMarketingChange={setMarketingConsent}
+            showMarketing={false}
+            detailsLabel={t("apply.consentDetails")}
+            agreeLabel={t("apply.consentAgree")}
           />
         )}
 
@@ -495,7 +497,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   return (
     <div dir={dir} className={embedded ? "mx-auto w-full max-w-lg px-4 py-8" : "mx-auto w-full max-w-lg px-5 py-10 sm:py-16"}>
       {!embedded && <div className="mb-10 space-y-3 text-start">
-        <p className="text-sm leading-7 text-muted-foreground">{t("apply.heroSubtitle")}</p>
+        <p className="text-sm leading-7 text-muted-foreground">{t("apply.applicationIntro")}</p>
       </div>}
       <div className="mb-8 flex gap-1.5" role="progressbar" aria-label={t("apply.progressLabel")} aria-valuemin={1} aria-valuemax={TOTAL_STEPS} aria-valuenow={step}>
         {Array.from({ length: TOTAL_STEPS }, (_, index) => <span key={index} className={`h-1 flex-1 rounded-full ${index < step ? "bg-brand-strong" : "bg-muted"}`} />)}
