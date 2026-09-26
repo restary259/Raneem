@@ -52,7 +52,7 @@ const examBrands = [
 ];
 
 const StudentStory = ({ student, index, t }: { student: GalleryStudent; index: number; t: (key: string, options?: Record<string, unknown>) => string }) => (
-  <figure className={`group relative shrink-0 snap-center overflow-hidden bg-muted ${index === 0 ? "w-[78vw] sm:col-span-5 lg:col-span-4" : "w-[68vw] sm:col-span-3 lg:col-span-2"} max-w-[360px] sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""}`}>
+  <figure className={`group relative shrink-0 snap-center overflow-hidden rounded-2xl bg-muted ${index === 0 ? "w-[78vw] sm:col-span-5 lg:col-span-4" : "w-[68vw] sm:col-span-3 lg:col-span-2"} max-w-[360px] sm:w-auto sm:max-w-none ${index % 3 === 1 ? "sm:translate-y-8" : ""}`}>
     <div className={index === 0 ? "aspect-[4/5] sm:aspect-[4/3]" : "aspect-[3/4]"}>
       <img
         src={student.image}
@@ -171,7 +171,7 @@ const HomepageExperience = () => {
                   </div>;
                 })}
               </div>
-              <div className="mt-8 rounded-lg bg-primary p-6 text-primary-foreground sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.path.arrivalEyebrow")}</p><h3 className="mt-2 text-2xl font-bold">{t("homepage.path.arrivalTitle")}</h3><p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/75">{t("homepage.path.arrivalBody")}</p></div>
+              <div className="mt-8 rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.path.arrivalEyebrow")}</p><h3 className="mt-2 text-2xl font-bold">{t("homepage.path.arrivalTitle")}</h3><p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/75">{t("homepage.path.arrivalBody")}</p></div>
             </div>
           </div>
         </div>
@@ -198,13 +198,13 @@ const HomepageExperience = () => {
               <h2 id="homepage-ecosystem-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.network.title")}</h2>
               <p className="mt-4 max-w-lg leading-7 text-muted-foreground">{t("homepage.network.body")}</p>
               <div className="mt-7 grid grid-cols-2 gap-2">
-                {["language", "admission", "assessment", "recognition"].map((key) => <div key={key} className="border-s-2 border-brand bg-background px-4 py-3 text-sm font-bold text-primary">{t(`homepage.network.pillars.${key}`)}</div>)}
+                {["language", "admission", "assessment", "recognition"].map((key) => <div key={key} className="rounded-2xl border border-border bg-background px-4 py-3 text-sm font-bold text-primary">{t(`homepage.network.pillars.${key}`)}</div>)}
               </div>
             </div>
             <div className="space-y-5">
               <div>
                 <div className="mb-3 flex items-center justify-between gap-3"><h3 className="font-bold text-primary">{t("homepage.network.tu9Label")}</h3><a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-xs font-bold text-brand-strong">{t("homepage.network.viewTu9")}</a></div>
-                <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
                   {tu9Universities.map((uni) => <IdentityStage key={uni.name} name={uni.name} imageUrl={uni.logoUrl} href={uni.url} meta={uni.city} />)}
                 </div>
               </div>
@@ -224,7 +224,7 @@ const HomepageExperience = () => {
         <div className="container">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.destinations.eyebrow")}</p><h2 id="homepage-destinations-title" className="mt-3 text-3xl font-bold text-primary sm:text-4xl">{t("homepage.destinations.title")}</h2></div><Link to="/educational-destinations" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand-strong">{t("homepage.destinations.cta")}<Arrow className="size-4" /></Link></div>
           <div className="mt-8 grid auto-rows-[190px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {languageYearCities.slice(0, 5).map((city, index) => <a key={city.id} href={city.cityUrl} target="_blank" rel="noopener noreferrer" className={`group relative overflow-hidden rounded-lg bg-muted ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2" : ""}`}><img src={city.imageUrl} alt={city.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none" onError={(event) => { if (event.currentTarget.src !== germanyHero) event.currentTarget.src = germanyHero; }} /><div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5 text-primary-foreground"><p className="text-xs text-primary-foreground/65">{city.region}</p><h3 className="mt-1 text-2xl font-bold">{city.name}</h3></div></a>)}
+            {languageYearCities.slice(0, 5).map((city, index) => <a key={city.id} href={city.cityUrl} target="_blank" rel="noopener noreferrer" className={`group relative overflow-hidden rounded-2xl bg-muted ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2" : ""}`}><img src={city.imageUrl} alt={city.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none" onError={(event) => { if (event.currentTarget.src !== germanyHero) event.currentTarget.src = germanyHero; }} /><div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5 text-primary-foreground"><p className="text-xs text-primary-foreground/65">{city.region}</p><h3 className="mt-1 text-2xl font-bold">{city.name}</h3></div></a>)}
           </div>
         </div>
       </section>
@@ -232,8 +232,8 @@ const HomepageExperience = () => {
       <section aria-labelledby="homepage-trust-title" className="bg-editorial-paper py-14 sm:py-20">
         <div className="container">
           <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.trust.eyebrow")}</p><h2 id="homepage-trust-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-4xl">{t("homepage.trust.title")}</h2></div>
-          <div className="mt-8 grid gap-3 lg:grid-cols-2"><article className="rounded-lg bg-primary p-6 text-primary-foreground sm:p-8"><div className="flex items-center gap-3"><CircleCheck className="size-6 text-brand" /><h3 className="text-xl font-bold">{t("homepage.scope.includedTitle")}</h3></div><ul className="mt-6 grid gap-3 sm:grid-cols-2">{included.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-primary-foreground/75"><Check className="mt-0.5 size-4 shrink-0 text-brand" />{item}</li>)}</ul></article><article className="rounded-lg border border-border bg-background p-6 sm:p-8"><div className="flex items-center gap-3"><Building2 className="size-6 text-brand-strong" /><h3 className="text-xl font-bold text-primary">{t("homepage.scope.decisionsTitle")}</h3></div><ul className="mt-6 grid gap-3 sm:grid-cols-2">{decisions.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" />{item}</li>)}</ul></article></div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">{["assess", "breakdown", "payment"].map((key, index) => <article key={key} className="border-t-2 border-brand bg-background p-6"><p className="text-xs font-bold text-brand-strong">0{index + 1}</p><h3 className="mt-4 text-lg font-bold text-primary">{t(`homepage.pricing.${key}Title`)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{t(`homepage.pricing.${key}Body`)}</p></article>)}</div>
+          <div className="mt-8 grid gap-3 lg:grid-cols-2"><article className="rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8"><div className="flex items-center gap-3"><CircleCheck className="size-6 text-brand" /><h3 className="text-xl font-bold">{t("homepage.scope.includedTitle")}</h3></div><ul className="mt-6 grid gap-3 sm:grid-cols-2">{included.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-primary-foreground/75"><Check className="mt-0.5 size-4 shrink-0 text-brand" />{item}</li>)}</ul></article><article className="rounded-2xl border border-border bg-background p-6 sm:p-8"><div className="flex items-center gap-3"><Building2 className="size-6 text-brand-strong" /><h3 className="text-xl font-bold text-primary">{t("homepage.scope.decisionsTitle")}</h3></div><ul className="mt-6 grid gap-3 sm:grid-cols-2">{decisions.map((item) => <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" />{item}</li>)}</ul></article></div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">{["assess", "breakdown", "payment"].map((key, index) => <article key={key} className="rounded-2xl border border-border border-t-2 border-t-brand bg-background p-6"><p className="text-xs font-bold text-brand-strong">0{index + 1}</p><h3 className="mt-4 text-lg font-bold text-primary">{t(`homepage.pricing.${key}Title`)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{t(`homepage.pricing.${key}Body`)}</p></article>)}</div>
         </div>
       </section>
 
