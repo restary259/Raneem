@@ -290,10 +290,10 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const BackIcon = isRtl ? ChevronRight : ChevronLeft;
 
   const stepTitles = [
-    isAr ? "المعلومات الشخصية" : "Personal Information",
-    isAr ? "الخلفية التعليمية" : "Education Background",
+    t("apply.personalStep"),
+    t("apply.educationStep"),
     t("apply.goalStep"),
-    isAr ? "التقديم مع شخص آخر؟" : "Applying with someone?",
+    t("apply.companionStep"),
   ];
 
   // ── Success screen ──────────────────────────────────────────────
@@ -322,7 +322,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
 
   // ── Form card (shared) ─────────────────────────────────────────
   const formCard = (
-    <div className="w-full animate-fade-in" data-testid="apply-form" data-step={step}>
+    <div className="w-full" data-testid="apply-form" data-step={step}>
       <div className="space-y-1 pb-6">
         <p className="text-xs font-semibold text-brand-strong">{t("apply.step")} {step} / {TOTAL_STEPS}</p>
         <h2 className="text-2xl font-bold leading-tight text-foreground">{stepTitles[step - 1]}</h2>
