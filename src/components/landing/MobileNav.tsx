@@ -32,7 +32,7 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
         <nav className="flex flex-col gap-3 mt-6 overflow-y-auto max-h-[calc(100dvh-4rem)]">
           <div className="flex justify-center mb-3"><LanguageSwitcher /></div>
 
-          <Link onClick={close} to="/apply" className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-4 text-center text-sm font-bold text-brand-foreground transition-colors hover:bg-brand/90">{t('nav.apply')}</Link>
+          <Link onClick={close} to="/apply" className="inline-flex min-h-11 items-center justify-center rounded-full bg-highlight px-4 text-center text-sm font-bold text-highlight-foreground transition-colors hover:bg-highlight/90">{t('nav.apply')}</Link>
 
           <Collapsible open={studyGermanyOpen} onOpenChange={setStudyGermanyOpen} className={groupClass}>
             <CollapsibleTrigger className={'flex items-center justify-between w-full py-3 ' + textAlign}>
