@@ -285,7 +285,13 @@
       "title": "Your path to studying in Germany",
       "imageAlt": "A German university setting representing the beginning of a study journey",
       "reassurance": "Get started with a profile assessment — free of charge",
-      "campaign": "DARB"
+      "campaign": "DARB",
+      "rotating": [
+        "Medicine and dentistry",
+        "Engineering and technology",
+        "Language and foundation year",
+        "Top German universities"
+      ]
     },
     "actions": {
       "apply": "Contact us",

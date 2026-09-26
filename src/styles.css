@@ -943,6 +943,44 @@ a[href*="lovable.dev"] {
   font-size: clamp(2.35rem, 3.9vw, 3.9rem);
 }
 
+.darb-rotating-wrap {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+}
+
+.darb-rotating-ghost {
+  display: block;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.darb-rotating-word {
+  position: absolute;
+  inset: 0;
+  display: block;
+  animation: darb-word-in 0.55s cubic-bezier(0.2, 0.7, 0.25, 1) both;
+}
+
+@keyframes darb-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em) rotateX(-40deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .darb-rotating-word {
+    animation: none;
+  }
+}
+
+
 .darb-home-hero-destination {
   margin-top: clamp(0.45rem, 1.3vh, 0.85rem);
   font-size: clamp(1.55rem, 2.5vw, 2.35rem);
