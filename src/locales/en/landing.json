@@ -208,6 +208,7 @@
     "noTimes": "No times are available right now. DARB will contact you.",
     "requestVisit": "Request this time",
     "cancelVisit": "Cancel visit request",
+    "slotTaken": "That time was just booked by someone else. Please choose another time.",
     "bookingUnavailable": "This time is no longer available or booking could not be updated. Please try another or let DARB contact you.",
     "companionFailure": "{{count}} companion could not be registered. Our team can help you add them later.",
     "manageVisit": "Your DARB office visit",
