@@ -1355,6 +1355,7 @@ export type Database = {
           passport_type: string | null
           phone_number: string
           platform_revenue_ils: number
+          preferred_major_id: string | null
           referral_discount: number
           referral_type: string | null
           referred_by: string | null
@@ -1402,6 +1403,7 @@ export type Database = {
           passport_type?: string | null
           phone_number: string
           platform_revenue_ils?: number
+          preferred_major_id?: string | null
           referral_discount?: number
           referral_type?: string | null
           referred_by?: string | null
@@ -1449,6 +1451,7 @@ export type Database = {
           passport_type?: string | null
           phone_number?: string
           platform_revenue_ils?: number
+          preferred_major_id?: string | null
           referral_discount?: number
           referral_type?: string | null
           referred_by?: string | null
@@ -6636,6 +6639,7 @@ export type Database = {
           passport_type: string | null
           phone_number: string
           platform_revenue_ils: number
+          preferred_major_id: string | null
           referral_discount: number
           referral_type: string | null
           referred_by: string | null

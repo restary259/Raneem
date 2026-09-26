@@ -15,7 +15,7 @@ export const managePublicBooking = createServerFn({ method: "POST" })
       if (accessError) throw new Error("This booking link has expired or is invalid.");
       const now = new Date();
       const start = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-      const end = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+      const end = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000);
       const { data: occupied, error } = await supabaseAdmin.from("appointments")
         .select("scheduled_at, public_booking_end")
         .eq("public_booking", true).in("status", ["scheduled", "confirmed"]).is("outcome", null)
@@ -24,6 +24,7 @@ export const managePublicBooking = createServerFn({ method: "POST" })
       const busy = occupied ?? [];
       const format = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Jerusalem", weekday: "short", hour: "2-digit", hourCycle: "h23", minute: "2-digit" });
       const slots: string[] = [];
+      const unavailable: string[] = [];
       for (let at = new Date(start.getTime() - start.getTime() % 1800000 + 1800000); at <= end; at = new Date(at.getTime() + 1800000)) {
         const parts = Object.fromEntries(format.formatToParts(at).map(({ type, value }) => [type, value]));
         const hour = Number(parts.hour);
@@ -37,9 +38,11 @@ export const managePublicBooking = createServerFn({ method: "POST" })
         const daysFromToday = Math.floor((dayStart - new Date().setUTCHours(0, 0, 0, 0)) / 86400000);
         const stableSeed = Math.abs(Math.floor(at.getTime() / 1800000));
         const operationallyUnavailable = daysFromToday < 7 || stableSeed % 2 === 0;
+        if (daysFromToday < 7) continue; // first week is closed entirely
         if (!occupiedByRealBooking && !operationallyUnavailable) slots.push(at.toISOString());
+        else unavailable.push(at.toISOString()); // shown as "Unavailable", never "booked"
       }
-      return { slots };
+      return { slots, unavailable };
     }
     const { data: result, error } = await supabaseAdmin.rpc("manage_public_appointment", {
       p_token_hash: hash, p_action: data.action, p_slot: data.slot,

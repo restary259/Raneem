@@ -33,7 +33,8 @@ describe("PublicOfficeBooking", () => {
     await user.click(screen.getByRole("button", { name: "10:30" }));
     await user.click(screen.getByRole("button", { name: "apply.confirmVisit" }));
     await waitFor(() => expect(call).toHaveBeenCalledWith({ data: { token: "a".repeat(64), action: "book", slot: slots[1] } }));
-    expect(await screen.findByText("apply.visitPending")).toBeInTheDocument();
+    expect(await screen.findByText("apply.visitRequestedTitle")).toBeInTheDocument();
+    expect(screen.queryByText("apply.visitPending")).not.toBeInTheDocument();
   });
 
   it("shows no active controls for an expired private link", async () => {
@@ -58,6 +59,7 @@ describe("PublicOfficeBooking", () => {
     expect(screen.getByRole("button", { name: "10:00" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "apply.closeCalendar" })).toBeDisabled();
     resolveRequest({ scheduled_at: slots[0], status: "pending" });
-    expect(await screen.findByText("apply.visitPending")).toBeInTheDocument();
+    expect(await screen.findByText("apply.visitRequestedTitle")).toBeInTheDocument();
+    expect(screen.queryByText("apply.visitPending")).not.toBeInTheDocument();
   });
 });
