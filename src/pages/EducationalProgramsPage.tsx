@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Header from '@/components/landing/Header';
 import Footer from '@/components/landing/Footer';
 import { majorsData, SubMajor } from '@/data/majorsData';
@@ -63,6 +63,19 @@ const EducationalProgramsPage = () => {
     });
     return counts;
   }, []);
+
+  // Deep links from the apply confirmation: ?major=<id> opens that major,
+  // ?q=<text> pre-fills the search.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('major');
+    const q = params.get('q');
+    if (q) setSearchQuery(q);
+    if (id) {
+      const found = allSubMajors.find((m) => m.id === id);
+      if (found) { setSelectedMajor(found); setIsModalOpen(true); }
+    }
+  }, [allSubMajors]);
 
   const handleMajorClick = (major: SubMajor) => {
     setSelectedMajor(major);
