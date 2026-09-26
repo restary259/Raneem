@@ -47,7 +47,7 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
       if (action === "cancel") { setCurrent(""); setStatus(""); }
       else if (result && typeof result === "object" && "scheduled_at" in result) {
         setCurrent(typeof result.scheduled_at === "string" ? result.scheduled_at : selected);
-        setStatus("pending");
+        setStatus(typeof result.status === "string" ? result.status : "pending");
       }
       setSelected(""); setOpen(false);
     } catch { setError(t("apply.bookingUnavailable")); }
