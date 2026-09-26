@@ -39,7 +39,7 @@ export async function resolveIdentity(
     .ilike("email", email)
     .limit(2);
   if (profileError) {
-    console.error("resolveIdentity: profile lookup failed", { email, error: profileError });
+    console.error("resolveIdentity: profile lookup failed", { error: profileError?.message });
   }
 
   let userId: string | null = null;
@@ -47,7 +47,7 @@ export async function resolveIdentity(
 
   if (matches && matches.length > 0) {
     if (matches.length > 1) {
-      console.warn("resolveIdentity: multiple profiles share the same email", { email });
+      console.warn("resolveIdentity: multiple profiles share the same email", { count: matches.length });
     }
     profile = matches[0];
     userId = profile.id;
@@ -62,7 +62,7 @@ export async function resolveIdentity(
       { p_email: email },
     );
     if (authLookupError) {
-      console.error("resolveIdentity: auth rpc lookup failed", { email, error: authLookupError });
+      console.error("resolveIdentity: auth rpc lookup failed", { error: authLookupError?.message });
     } else if (authId) {
       userId = authId as string;
     }
@@ -79,7 +79,7 @@ export async function resolveIdentity(
         perPage,
       });
       if (listError) {
-        console.error("resolveIdentity: auth user lookup failed", { email, error: listError });
+        console.error("resolveIdentity: auth user lookup failed", { error: listError?.message });
         break;
       }
       const users = list?.users ?? [];
