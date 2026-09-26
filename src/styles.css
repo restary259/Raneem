@@ -225,7 +225,7 @@
   --status-paid: 152 72% 36%;
 
   /* Elevation + motion primitives shared by all themes */
-  --surface-shadow: 0 1px 2px hsl(222 47% 11% / 0.05), 0 8px 24px -12px hsl(222 47% 11% / 0.12);
+  --surface-shadow: 0 8px 30px rgba(8, 43, 102, 0.06);
   --surface-shadow-lg: 0 2px 4px hsl(222 47% 11% / 0.06), 0 18px 44px -18px hsl(222 47% 11% / 0.22);
 }
 
@@ -1166,14 +1166,12 @@ a[href*="lovable.dev"] {
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    hsl(var(--darb-blue)) 0% 12.5%,
-    hsl(var(--darb-teal)) 12.5% 25%,
-    hsl(var(--darb-green)) 25% 37.5%,
-    hsl(var(--darb-yellow)) 37.5% 50%,
-    hsl(var(--darb-orange)) 50% 62.5%,
-    hsl(var(--darb-red)) 62.5% 75%,
-    hsl(var(--darb-pink)) 75% 87.5%,
-    hsl(var(--darb-purple)) 87.5% 100%
+    hsl(var(--darb-blue)) 0% 16.6%,
+    hsl(var(--tint-green)) 16.6% 33.3%,
+    hsl(var(--tint-yellow)) 33.3% 50%,
+    hsl(var(--tint-orange)) 50% 66.6%,
+    hsl(var(--tint-pink)) 66.6% 83.3%,
+    hsl(var(--tint-purple)) 83.3% 100%
   );
 }
 
