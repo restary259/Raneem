@@ -3,22 +3,6 @@ import { z } from "zod";
 
 const request = z.object({ token: z.string().regex(/^[0-9a-f]{64}$/), action: z.enum(["read", "book", "reschedule", "cancel", "availability"]), slot: z.string().datetime().optional() });
 
-export const createPublicBookingLink = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ caseId: z.string().uuid(), phone: z.string().min(7).max(30), name: z.string().min(1).max(100) }).parse(input))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: found, error } = await supabaseAdmin.from("cases")
-      .select("id,full_name,phone_number,source,created_at").eq("id", data.caseId).eq("source", "apply_page").maybeSingle();
-    // Never allow possession of a bare case ID to authorize an older case.
-    if (error || !found || found.full_name.trim() !== data.name.trim() || found.phone_number.trim() !== data.phone.trim() || Date.now() - Date.parse(found.created_at) > 10 * 60 * 1000) throw new Error("We could not open booking. DARB will contact you.");
-    const token = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");
-    const bytes = new TextEncoder().encode(token);
-    const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((b) => b.toString(16).padStart(2, "0")).join("");
-    const { error: insertError } = await supabaseAdmin.rpc("create_public_appointment_access", { p_case_id: data.caseId, p_token_hash: hash });
-    if (insertError) throw new Error("We could not open booking. DARB will contact you.");
-    return { token };
-  });
-
 export const managePublicBooking = createServerFn({ method: "POST" })
   .inputValidator((input) => request.parse(input))
   .handler(async ({ data }) => {

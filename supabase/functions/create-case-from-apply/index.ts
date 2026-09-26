@@ -458,7 +458,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ case_id: newCase.id, ok: true }), {
+    // Issue booking authority only at initial creation, never from a bare case ID
+    // or the duplicate-phone path. The token is returned once to this applicant.
+    let booking_token: string | null = null;
+    if (source === "apply_page") {
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+      const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      const { error: bookingError } = await supabaseAdmin.rpc("create_public_appointment_access", { p_case_id: newCase.id, p_token_hash: hash });
+      if (bookingError) console.error("booking access could not be created:", bookingError.message);
+      else booking_token = token;
+    }
+    return new Response(JSON.stringify({ case_id: newCase.id, ok: true, booking_token }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
