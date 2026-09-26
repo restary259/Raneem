@@ -370,7 +370,7 @@ const AdminPipelinePage = () => {
     // Always fetch fresh — never trust the card's cached data
     try {
       const data = await CaseService.getById(c.id);
-      const { data: appt } = await supabase
+      const { data: appt, error: apptError } = await supabase
         .from("appointments")
         .select("id, case_id, scheduled_at, duration_minutes, status, confirmation_status, public_booking, outcome, team_member_id")
         .eq("case_id", c.id)
@@ -378,6 +378,7 @@ const AdminPipelinePage = () => {
         .order("scheduled_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (apptError) throw apptError;
       if (data) {
         setSelectedCase({ ...(data as any), assignee_name: c.assignee_name } as Case);
         setCaseAppointment(appt ?? null);
