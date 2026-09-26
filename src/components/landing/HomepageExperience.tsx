@@ -34,6 +34,8 @@ import { languageYearCities, tu9Universities } from "@/data/educationalDestinati
 import IdentityStage from "./home/IdentityStage";
 import CefrGuide from "./home/CefrGuide";
 import ExamFlipCard from "./home/ExamFlipCard";
+import RotatingHeadline from "./home/RotatingHeadline";
+
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
