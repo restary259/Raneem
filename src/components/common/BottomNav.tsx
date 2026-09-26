@@ -16,7 +16,7 @@ const BottomNav = () => {
   const navItems = [
     { name: t("bottomNav.home"), href: "/", icon: Home, ariaLabel: t("bottomNav.homeAria") },
     { name: t("bottomNav.majors"), href: "/educational-programs", icon: Search, ariaLabel: t("bottomNav.majorsAria") },
-    { name: t("bottomNav.contact"), href: "/ai-advisor", icon: MessageCircle, ariaLabel: t("bottomNav.contactAria") },
+    { name: t("bottomNav.contact"), href: "/contact", icon: MessageCircle, ariaLabel: t("bottomNav.contactAria") },
     { name: t("bottomNav.apply", "Apply"), href: "/apply", icon: FileText, ariaLabel: t("bottomNav.applyAria", "Apply Now") },
     { name: t("bottomNav.account"), href: "/student-auth", icon: User, ariaLabel: t("bottomNav.accountAria") },
   ];
