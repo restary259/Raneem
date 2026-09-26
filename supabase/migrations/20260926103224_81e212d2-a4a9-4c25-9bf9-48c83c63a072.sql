@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS whatsapp_messages_direction_created_idx ON public.whatsapp_messages (direction, created_at DESC);
+CREATE INDEX IF NOT EXISTS whatsapp_conversations_updated_idx ON public.whatsapp_conversations (updated_at DESC);
