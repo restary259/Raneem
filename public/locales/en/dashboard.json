@@ -2224,7 +2224,10 @@
       "dayAbbrevWed": "Wed",
       "dayAbbrevThu": "Thu",
       "dayAbbrevFri": "Fri",
-      "dayAbbrevSat": "Sat"
+      "dayAbbrevSat": "Sat",
+      "visitRequests": "Office visit requests",
+      "confirmVisit": "Confirm visit",
+      "visitConfirmed": "Visit confirmed"
     },
     "submit": {
       "title": "Submit New Student",

@@ -169,8 +169,8 @@
     "title": "Top Global Universities"
   },
   "apply": {
-    "heroTitle": "Let’s Start Your Journey to Germany 🇩🇪",
-    "heroSubtitle": "Answer a few questions about yourself. The DARB team will review your details and get back to you shortly.",
+    "heroTitle": "Tell DARB what you have in mind",
+    "heroSubtitle": "Start with a few details. We will help you figure out the rest.",
     "preferredMajor": "Preferred Major (optional)",
     "selectMajor": "Select a major...",
     "step": "Step",
@@ -209,7 +209,9 @@
     "requestVisit": "Request this time",
     "cancelVisit": "Cancel visit request",
     "bookingUnavailable": "This time is no longer available or booking could not be updated. Please try another or let DARB contact you.",
-    "companionFailure": "{{count}} companion could not be registered. Our team can help you add them later."
+    "companionFailure": "{{count}} companion could not be registered. Our team can help you add them later.",
+    "manageVisit": "Your DARB office visit",
+    "visitConfirmed": "Confirmed by your team member"
   },
   "homepage": {
     "hero": {
@@ -548,7 +550,7 @@
     "nextStep": {
       "eyebrow": "Find your next step",
       "title": "Start with the question that is on your mind",
-      "body": "You do not need to understand the complete German system. Choose what you want to solve now.",
+      "body": "You do not need to know the admissions process before contacting us. Share what you want; meet the people who will guide you at our Tamra office, where we can review documents together.",
       "items": [
         {
           "title": "Explore Germany",
