@@ -495,7 +495,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   return (
     <div dir={dir} className={embedded ? "mx-auto w-full max-w-lg px-4 py-8" : "mx-auto w-full max-w-lg px-5 py-10 sm:py-16"}>
       {!embedded && <div className="mb-10 space-y-3 text-start">
-        <h1 className="text-3xl font-bold leading-tight text-foreground">{t("apply.heroTitle")}</h1>
         <p className="text-sm leading-7 text-muted-foreground">{t("apply.heroSubtitle")}</p>
       </div>}
       <div className="mb-8 flex gap-1.5" role="progressbar" aria-label={t("apply.progressLabel")} aria-valuemin={1} aria-valuemax={TOTAL_STEPS} aria-valuenow={step}>
