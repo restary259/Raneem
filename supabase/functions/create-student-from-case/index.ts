@@ -218,20 +218,14 @@ serve(async (req) => {
         }
       }
     } else if (!isAdmin) {
-      // Standalone invites from team members are capped at 20 per day.
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count } = await supabaseAdmin
-        .from("user_invitations")
-        .select("id", { count: "exact", head: true })
-        .eq("inviter_id", callerId)
-        .gte("created_at", since);
-      if ((count ?? 0) >= 20) {
-        return jsonResponse(
-          { error: "Daily invitation limit reached", code: "INVITE_LIMIT" },
-          429,
-          corsHeaders,
-        );
-      }
+      // Team members may only invite through a case they are assigned to, so
+      // an invitation can never go to an address that is not on record.
+      // Standalone (case-less) invites are an admin-only capability.
+      return jsonResponse(
+        { error: "A case is required to invite a student", code: "CASE_REQUIRED" },
+        403,
+        corsHeaders,
+      );
     }
 
     // ── Captured activation link (invite mode) + temp password (manual) ──
