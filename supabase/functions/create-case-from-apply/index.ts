@@ -318,6 +318,7 @@ Deno.serve(async (req) => {
           passport_type: passport_type ? String(passport_type) : undefined,
           degree_interest: degree_interest ? String(degree_interest) : undefined,
           bagrut_score: cleanBagrutScore ?? undefined,
+          email: email ? String(email).trim().toLowerCase() : undefined,
         })
         .eq("id", existingCase.id);
 
@@ -371,6 +372,34 @@ Deno.serve(async (req) => {
           .eq("referrer_user_id", validatedReferrerId);
       }
 
+      let duplicateBookingToken: string | null = null;
+      if (source === "apply_page") {
+        const token = Array.from(
+          crypto.getRandomValues(new Uint8Array(32)),
+          (byte) => byte.toString(16).padStart(2, "0"),
+        ).join("");
+        const digest = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(token),
+        );
+        const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+        const { error: accessError } = await supabaseAdmin
+          .from("public_appointment_access")
+          .upsert(
+            {
+              case_id: existingCase.id,
+              token_hash: hash,
+              expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            },
+            { onConflict: "case_id" },
+          );
+        if (accessError) {
+          console.error("duplicate booking access could not be refreshed:", accessError.message);
+        } else {
+          duplicateBookingToken = token;
+        }
+      }
+
       return new Response(
         JSON.stringify({
           duplicate: true,
@@ -379,6 +408,7 @@ Deno.serve(async (req) => {
           existing_status: existingCase.status,
           referral_linked: !!(validatedReferrerId && referral_id && typeof referral_id === "string" && UUID.test(referral_id)),
           message: "A case with this phone number already exists — education data updated",
+          booking_token: duplicateBookingToken,
         }),
         {
           status: 200,
