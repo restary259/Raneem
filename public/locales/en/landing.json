@@ -221,7 +221,25 @@
     "progressLabel": "Application progress",
     "personalStep": "About you",
     "educationStep": "Your studies",
-    "companionStep": "Coming with someone?"
+    "companionStep": "Coming with someone?",
+    "bookChoiceTitle": "Book an office visit",
+    "bookChoiceDesc": "Pick a time that suits you to meet the team in Tamra.",
+    "skipChoiceTitle": "Continue without a visit",
+    "skipChoiceDesc": "The team will contact you on WhatsApp.",
+    "bookingStepDate": "Choose a date",
+    "bookingStepTime": "Choose a time",
+    "bookingStepConfirm": "Confirm",
+    "legendAvailable": "Available",
+    "legendSelected": "Selected",
+    "legendUnavailable": "Unavailable",
+    "summaryTitle": "Visit details",
+    "summaryDate": "Date",
+    "summaryTime": "Time",
+    "summaryLocation": "Location",
+    "summaryEmpty": "Pick a date and time to see the details here.",
+    "confirmVisit": "Confirm visit request",
+    "visitRequestedTitle": "Your visit request was sent",
+    "visitRequestedBody": "The DARB team will confirm your appointment and message you on WhatsApp with the details."
   },
   "homepage": {
     "hero": {

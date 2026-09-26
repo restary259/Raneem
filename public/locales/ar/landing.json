@@ -221,7 +221,25 @@
     "progressLabel": "تقدّم الطلب",
     "personalStep": "معلوماتك",
     "educationStep": "دراستك",
-    "companionStep": "هل ستأتي مع أحد؟"
+    "companionStep": "هل ستأتي مع أحد؟",
+    "bookChoiceTitle": "احجز زيارة للمكتب",
+    "bookChoiceDesc": "اختر وقتًا يناسبك لمقابلة الفريق في طمرة.",
+    "skipChoiceTitle": "المتابعة بدون زيارة",
+    "skipChoiceDesc": "سيتواصل معك الفريق عبر واتساب.",
+    "bookingStepDate": "اختر التاريخ",
+    "bookingStepTime": "اختر الوقت",
+    "bookingStepConfirm": "التأكيد",
+    "legendAvailable": "متاح",
+    "legendSelected": "مختار",
+    "legendUnavailable": "غير متاح",
+    "summaryTitle": "تفاصيل الزيارة",
+    "summaryDate": "التاريخ",
+    "summaryTime": "الوقت",
+    "summaryLocation": "الموقع",
+    "summaryEmpty": "اختر التاريخ والوقت لعرض التفاصيل هنا.",
+    "confirmVisit": "تأكيد طلب الزيارة",
+    "visitRequestedTitle": "تم إرسال طلب زيارتك",
+    "visitRequestedBody": "سيؤكد فريق درب موعدك ويرسل لك التفاصيل عبر واتساب."
   },
   "homepage": {
     "hero": {
