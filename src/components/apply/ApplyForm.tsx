@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle, ChevronLeft, ChevronRight, GraduationCap, Shield, Headphones } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
 import { captureReferralCode, getReferralCode, verifyReferralCode, shouldKeepReferralCode } from "@/lib/referral";
@@ -91,6 +90,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
   const [bookingToken, setBookingToken] = useState<string | null>(null);
   const [showBooking, setShowBooking] = useState(false);
+  const [deferredBooking, setDeferredBooking] = useState(false);
   const [companionsFailedNotice, setCompanionsFailedNotice] = useState("");
 
   useEffect(() => {
@@ -286,7 +286,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   };
 
   const TOTAL_STEPS = APPLY_TOTAL_STEPS;
-  const progressValue = (step / TOTAL_STEPS) * 100;
   const NextIcon = isRtl ? ChevronLeft : ChevronRight;
   const BackIcon = isRtl ? ChevronRight : ChevronLeft;
 
@@ -300,16 +299,22 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   // ── Success screen ──────────────────────────────────────────────
   if (submitted) {
     return (
-      <div className="min-h-[65vh] flex items-center justify-center bg-background p-5 text-foreground" dir={dir}>
-        <div className="w-full max-w-lg space-y-6 py-12 text-center">
-          <CheckCircle className="mx-auto size-14 text-brand-strong" />
-          <h2 className="text-3xl font-bold">{t("apply.successTitle")}</h2>
-          <p className="leading-7 text-muted-foreground">{t("apply.successSubtitle")}</p>
+      <div className="flex min-h-[65vh] items-start justify-center bg-background px-5 py-14 text-foreground" dir={dir}>
+        <div className="w-full max-w-lg space-y-6 text-start">
+          <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-brand-strong"><CheckCircle className="size-6" aria-hidden="true" /></div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold leading-tight sm:text-3xl">{t("apply.successTitle")}</h2>
+            <p className="leading-7 text-muted-foreground">{t("apply.successSubtitle")}</p>
+          </div>
           {companionsFailedNotice && <p role="status" className="text-sm text-destructive">{companionsFailedNotice}</p>}
-          {bookingToken && !useSessionAuth && !showBooking && <div className="grid gap-3 sm:grid-cols-2"><Button onClick={() => setShowBooking(true)}>{t("apply.bookVisit")}</Button><Button variant="outline" onClick={() => setBookingToken(null)}>{t("apply.deferVisit")}</Button></div>}
-          {showBooking && bookingToken && <PublicOfficeBooking token={bookingToken} />}
-          {bookingToken && <a className="block text-sm text-brand-strong underline" href={`/office-visit?token=${bookingToken}`}>{t("apply.saveVisitLink")}</a>}
-          <p className="text-sm text-muted-foreground">{t("apply.officeNext")}</p>
+          {bookingToken && !useSessionAuth && !showBooking && !deferredBooking && <div className="space-y-3 border-t border-border pt-6">
+            <Button onClick={() => setShowBooking(true)} className="w-full"><CalendarDays aria-hidden="true" />{t("apply.bookVisit")}</Button>
+            <Button variant="ghost" onClick={() => setDeferredBooking(true)} className="w-full">{t("apply.deferVisit")}</Button>
+          </div>}
+          {showBooking && bookingToken && <div className="border-t border-border pt-6"><PublicOfficeBooking token={bookingToken} /></div>}
+          {bookingToken && <a className="inline-block text-sm text-brand-strong underline underline-offset-4" href={`/office-visit?token=${bookingToken}`}>{t("apply.saveVisitLink")}</a>}
+          {deferredBooking && <p role="status" className="text-sm text-muted-foreground">{t("apply.deferredNotice")}</p>}
+          <p className="border-t border-border pt-5 text-sm leading-6 text-muted-foreground">{t("apply.officeNext")}</p>
         </div>
       </div>
     );
@@ -317,15 +322,12 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
 
   // ── Form card (shared) ─────────────────────────────────────────
   const formCard = (
-    <div className="w-full bg-card border border-border rounded-2xl shadow-xs overflow-hidden animate-fade-in" data-testid="apply-form" data-step={step}>
-      <div className="px-5 py-4 border-b border-border bg-muted/30">
-        <h2 className="text-sm font-semibold">{stepTitles[step - 1]}</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {t("apply.step", "خطوة")} {step} / {TOTAL_STEPS}
-        </p>
+    <div className="w-full animate-fade-in" data-testid="apply-form" data-step={step}>
+      <div className="space-y-1 pb-6">
+        <p className="text-xs font-semibold text-brand-strong">{t("apply.step")} {step} / {TOTAL_STEPS}</p>
+        <h2 className="text-2xl font-bold leading-tight text-foreground">{stepTitles[step - 1]}</h2>
       </div>
-
-      <div className="p-5 space-y-5">
+      <div className="space-y-6">
 
         {/* Step 1 — Identity */}
         {step === 1 && (
@@ -340,7 +342,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
              <details className="text-start text-sm text-muted-foreground"><summary className="cursor-pointer">{t("apply.extraDetails")}</summary><FieldGroup label={isAr ? "نوع جواز السفر" : "Passport Type"}>
               <div className="grid grid-cols-1 gap-2">
                 {PASSPORT_TYPES.map((pt) => (
-                  <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                  <button key={pt.value} type="button" onClick={() => setPassportType(pt.value)} className={`w-full text-start px-4 py-2.5 rounded-md border text-sm font-medium transition-all duration-200 ${passportType === pt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
                     {isAr ? pt.label : pt.labelEn}
                   </button>
                 ))}
@@ -358,7 +360,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <FieldGroup label={isAr ? "المستوى التعليمي" : "Education Level"}>
               <div className="grid grid-cols-2 gap-2">
                 {EDUCATION_LEVELS.map((lvl) => (
-                  <button key={lvl.value} type="button" onClick={() => setEducationLevel(lvl.value)} className={`px-3 py-2.5 rounded-xl border text-xs font-medium transition-all duration-200 ${educationLevel === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                  <button key={lvl.value} type="button" onClick={() => setEducationLevel(lvl.value)} className={`px-3 py-2.5 rounded-md border text-xs font-medium transition-all duration-200 ${educationLevel === lvl.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
                     {isAr ? lvl.label : lvl.labelEn}
                   </button>
                 ))}
@@ -370,14 +372,14 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                 <FieldGroup label={isAr ? "وحدات الإنجليزي *" : "English Units *"}>
                   <div className="flex gap-2">
                     {UNIT_OPTIONS.map((u) => (
-                      <button key={u} type="button" onClick={() => setEnglishUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${englishUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                      <button key={u} type="button" onClick={() => setEnglishUnits(u)} className={`flex-1 py-2.5 rounded-md border text-sm font-bold transition-all ${englishUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
                 </FieldGroup>
                 <FieldGroup label={isAr ? "وحدات الرياضيات *" : "Math Units *"}>
                   <div className="flex gap-2">
                     {UNIT_OPTIONS.map((u) => (
-                      <button key={u} type="button" onClick={() => setMathUnits(u)} className={`flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all ${mathUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
+                      <button key={u} type="button" onClick={() => setMathUnits(u)} className={`flex-1 py-2.5 rounded-md border text-sm font-bold transition-all ${mathUnits === u ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/30" : "bg-card border-border hover:border-primary/40"}`}>{u}</button>
                     ))}
                   </div>
                 </FieldGroup>
@@ -392,7 +394,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                 <FieldGroup label={isAr ? "مستوى الإنجليزية" : "English Proficiency"}>
                   <div className="flex gap-2">
                     {["beginner", "intermediate", "advanced"].map((lvl) => (
-                      <button key={lvl} type="button" onClick={() => setEnglishProficiency(lvl)} className={`flex-1 py-2.5 rounded-xl border text-xs font-medium transition-all ${englishProficiency === lvl ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>
+                      <button key={lvl} type="button" onClick={() => setEnglishProficiency(lvl)} className={`flex-1 py-2.5 rounded-md border text-xs font-medium transition-all ${englishProficiency === lvl ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border hover:border-primary/40"}`}>
                         {isAr ? ({ beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" } as Record<string, string>)[lvl] : lvl.charAt(0).toUpperCase() + lvl.slice(1)}
                       </button>
                     ))}
@@ -419,7 +421,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <FieldGroup label={isAr ? "هل تتقدم مع فرد من العائلة أو صديق؟" : "Are you applying with a family member or a friend?"}>
               <div className="grid grid-cols-1 gap-2">
                 {APPLYING_WITH_OPTIONS.map((opt) => (
-                  <button key={opt.value} type="button" onClick={() => { setApplyingWith(opt.value); if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]); if (opt.value === "multiple" && companions.length < 2) setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]); }} className={`w-full text-start px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${applyingWith === opt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
+                  <button key={opt.value} type="button" onClick={() => { setApplyingWith(opt.value); if (opt.value === "alone") setCompanions([{ ...EMPTY_COMPANION }]); if (opt.value === "multiple" && companions.length < 2) setCompanions((prev) => [...prev, { ...EMPTY_COMPANION }]); }} className={`w-full text-start px-4 py-3 rounded-md border text-sm font-medium transition-all duration-200 ${applyingWith === opt.value ? "bg-primary text-primary-foreground border-primary shadow-xs" : "bg-card border-border hover:border-primary/40 hover:bg-muted/50"}`}>
                     {isAr ? opt.label : opt.labelEn}
                   </button>
                 ))}
@@ -427,7 +429,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             </FieldGroup>
 
             {hasCompanions && (
-              <div className="space-y-5 p-4 rounded-xl bg-muted/30 border border-border animate-fade-in">
+              <div className="space-y-5 p-4 rounded-md border-s-2 border-border bg-muted/30 animate-fade-in">
                 {companions.map((c, idx) => (
                   <div key={idx} className="space-y-3">
                     {companions.length > 1 && (
@@ -446,7 +448,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                   </div>
                 ))}
                 {applyingWith === "multiple" && (
-                  <Button type="button" variant="outline" size="sm" className="w-full rounded-xl" onClick={addCompanion}>
+                  <Button type="button" variant="outline" size="sm" className="w-full rounded-md" onClick={addCompanion}>
                     {isAr ? "+ إضافة شخص آخر" : "+ Add another person"}
                   </Button>
                 )}
@@ -467,20 +469,20 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
         )}
 
         {/* Navigation */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-3 border-t border-border pt-6">
           {step > 1 && (
-            <Button variant="outline" className="flex-1 h-11 rounded-xl" onClick={() => setStep((s) => s - 1)}>
+            <Button variant="outline" className="flex-1 h-11 rounded-md" onClick={() => setStep((s) => s - 1)}>
               <BackIcon className="h-4 w-4" />
               {isAr ? "رجوع" : "Back"}
             </Button>
           )}
           {step < TOTAL_STEPS ? (
-            <Button className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setStep((s) => s + 1)} disabled={!canGoNext()}>
+            <Button className="flex-1 h-11 rounded-md bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setStep((s) => s + 1)} disabled={!canGoNext()}>
               {isAr ? "التالي" : "Next"}
               <NextIcon className="h-4 w-4" />
             </Button>
           ) : (
-            <Button data-testid="apply-submit" className="flex-1 h-11 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleSubmit} disabled={loading || !canGoNext() || !consentAgreed}>
+            <Button data-testid="apply-submit" className="flex-1 h-11 rounded-md bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handleSubmit} disabled={loading || !canGoNext() || !consentAgreed}>
               {loading ? "..." : isAr ? "أرسل بياناتي" : "Submit"}
             </Button>
           )}
@@ -489,66 +491,17 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
     </div>
   );
 
-  // ── Embedded: just the card + step indicators, no full-screen chrome ──
-  if (embedded) {
-    return (
-      <div dir={dir} className="w-full max-w-lg mx-auto px-1 py-6 space-y-6">
-        <div className="w-full flex items-center gap-1">
-          {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex-1 flex flex-col items-center gap-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${s < step ? "bg-accent text-accent-foreground" : s === step ? "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : "bg-muted text-muted-foreground"}`}>
-                {s < step ? <CheckCircle className="h-4 w-4" /> : s}
-              </div>
-              <span className="text-[9px] text-muted-foreground text-center leading-tight hidden sm:block">{stepTitles[s - 1]}</span>
-            </div>
-          ))}
-        </div>
-        <Progress value={progressValue} aria-label={isRtl ? "تقدّم تعبئة الطلب" : "Application progress"} className="h-1.5 w-full" />
-        {formCard}
-      </div>
-    );
-  }
-
-  // ── Public: full-screen page with hero + trust badges ──
+  // ── The same quiet shell works for the public and partner application. ──
   return (
-    <div className="min-h-screen flex flex-col" dir={dir}>
-      <div className="min-h-screen flex flex-col bg-background text-foreground">
-        <header className="h-3 bg-gradient-to-r from-primary via-accent to-primary" />
-        <main className="flex-1 flex flex-col items-center px-4 py-6 md:py-10 gap-6 max-w-lg mx-auto w-full">
-          <section className="text-center space-y-2 animate-fade-in">
-            <h1 className="text-xl md:text-2xl font-bold leading-tight">{t("apply.heroTitle")}</h1>
-            <p className="text-muted-foreground text-sm">{t("apply.heroSubtitle")}</p>
-          </section>
-
-          <div className="w-full flex items-center gap-1">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex-1 flex flex-col items-center gap-1">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${s < step ? "bg-accent text-accent-foreground" : s === step ? "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background" : "bg-muted text-muted-foreground"}`}>
-                  {s < step ? <CheckCircle className="h-4 w-4" /> : s}
-                </div>
-                <span className="text-[9px] text-muted-foreground text-center leading-tight hidden sm:block">{stepTitles[s - 1]}</span>
-              </div>
-            ))}
-          </div>
-          <Progress value={progressValue} aria-label={isRtl ? "تقدّم تعبئة الطلب" : "Application progress"} className="h-1.5 w-full" />
-
-          {formCard}
-
-          <div className="grid grid-cols-3 gap-2.5 w-full">
-            {[
-              { icon: GraduationCap, label: t("apply.trustBadge1", "استشارة مجانية") },
-              { icon: Shield, label: t("apply.trustBadge2", "مدارس معتمدة") },
-              { icon: Headphones, label: t("apply.trustBadge3", "متابعة حتى التسجيل") },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex flex-col items-center gap-1.5 text-center p-3 rounded-xl border border-border bg-card text-xs text-muted-foreground">
-                <Icon className="h-5 w-5 text-accent" />
-                <span className="leading-tight">{label}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[11px] text-muted-foreground text-center pb-4">Darb Study International © {new Date().getFullYear()}</p>
-        </main>
+    <div dir={dir} className={embedded ? "mx-auto w-full max-w-lg px-4 py-8" : "mx-auto w-full max-w-lg px-5 py-10 sm:py-16"}>
+      {!embedded && <div className="mb-10 space-y-3 text-start">
+        <h1 className="text-3xl font-bold leading-tight text-foreground">{t("apply.heroTitle")}</h1>
+        <p className="text-sm leading-7 text-muted-foreground">{t("apply.heroSubtitle")}</p>
+      </div>}
+      <div className="mb-8 flex gap-1.5" role="progressbar" aria-label={t("apply.progressLabel")} aria-valuemin={1} aria-valuemax={TOTAL_STEPS} aria-valuenow={step}>
+        {Array.from({ length: TOTAL_STEPS }, (_, index) => <span key={index} className={`h-1 flex-1 rounded-full ${index < step ? "bg-brand-strong" : "bg-muted"}`} />)}
       </div>
+      {formCard}
     </div>
   );
 };
