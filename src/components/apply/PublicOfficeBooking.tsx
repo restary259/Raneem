@@ -116,26 +116,26 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
     return (
       <div className="space-y-5">
         <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-primary/10 text-brand-strong">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
             <CheckCircle2 className="size-7" aria-hidden="true" />
           </div>
           <h3 className="text-xl font-bold">{t("apply.visitRequestedTitle", "تم إرسال طلب زيارتك")}</h3>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("apply.visitRequestedBody", "سيؤكد فريق درب موعدك ويرسل لك التفاصيل عبر واتساب.")}</p>
           <div className="mx-auto mt-5 grid max-w-sm gap-2 text-start text-sm">
             <div className="flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
-              <CalendarDays className="size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+              <CalendarDays className="size-4 shrink-0 text-primary" aria-hidden="true" />
               <span className="font-medium">{formatDay(current, language)}</span>
             </div>
             <div className="flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
-              <Clock className="size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+              <Clock className="size-4 shrink-0 text-primary" aria-hidden="true" />
               <span className="font-medium" dir="ltr">{formatTime(current)}</span>
             </div>
             <div className="flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
-              <MapPin className="size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+              <MapPin className="size-4 shrink-0 text-primary" aria-hidden="true" />
               <span className="font-medium">{t("apply.officeLocation")}</span>
             </div>
           </div>
-          <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-brand-strong">
+          <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-primary">
             {confirmed ? t("apply.visitConfirmed") : t("apply.visitPending")}
           </p>
         </div>
@@ -251,8 +251,8 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
                         aria-pressed={isSelected}
                         className={`rounded-lg border px-2 py-2.5 text-sm font-medium tabular-nums transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                           isSelected
-                            ? "border-brand bg-primary text-primary-foreground shadow-sm"
-                            : "border-border bg-background hover:border-brand/60 hover:bg-primary/5"
+                            ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                            : "border-border bg-background hover:border-primary/60 hover:bg-primary/5"
                         }`}
                         dir="ltr"
                       >
@@ -272,21 +272,21 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
               {selected ? (
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-3">
-                    <CalendarDays className="size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+                    <CalendarDays className="size-4 shrink-0 text-primary" aria-hidden="true" />
                     <div>
                       <p className="text-[11px] text-muted-foreground">{t("apply.summaryDate", "التاريخ")}</p>
                       <p className="font-medium">{formatDay(selected, language)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Clock className="size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+                    <Clock className="size-4 shrink-0 text-primary" aria-hidden="true" />
                     <div>
                       <p className="text-[11px] text-muted-foreground">{t("apply.summaryTime", "الوقت")}</p>
                       <p className="font-medium" dir="ltr">{formatTime(selected)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <MapPin className="size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+                    <MapPin className="size-4 shrink-0 text-primary" aria-hidden="true" />
                     <div>
                       <p className="text-[11px] text-muted-foreground">{t("apply.summaryLocation", "الموقع")}</p>
                       <p className="font-medium">{t("apply.officeLocation")}</p>
@@ -307,7 +307,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
             </div>
 
             <div className="flex items-start gap-2.5 rounded-2xl border border-border bg-muted/40 p-4 text-xs leading-5 text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-strong" aria-hidden="true" />
+              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
               <p>{t("apply.requestNotice")}</p>
             </div>
 
