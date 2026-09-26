@@ -17,9 +17,8 @@ export const EDUCATION_LEVELS = [
 export const UNIT_OPTIONS = ["3", "4", "5"];
 
 export const APPLYING_WITH_OPTIONS = [
-  { value: "alone", label: "لا", labelEn: "No" },
-  { value: "one", label: "نعم، مع شخص واحد", labelEn: "Yes, with 1 person" },
-  { value: "multiple", label: "نعم، مع أكثر من شخص", labelEn: "Yes, with 2+ people" },
+  { value: "alone", label: "أتقدم لوحدي", labelEn: "I'm applying alone" },
+  { value: "friend", label: "أتقدم مع صديق / قريب", labelEn: "I'm applying with a friend / relative" },
 ];
 
 export const EMPTY_COMPANION = {
