@@ -105,7 +105,7 @@ const HomepageExperience = () => {
               <span className="block">{t("homepage.hero.title")}</span>
             </h1>
             <div className="darb-home-hero-actions flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="cta" className="text-base shadow-surface-lg"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
+              <Button asChild size="lg" variant="cta" className="bg-brand! text-base text-brand-foreground! shadow-surface-lg hover:bg-brand/90!"><Link to="/apply">{t("homepage.actions.apply")}<Arrow /></Link></Button>
             </div>
             <p className="darb-home-hero-reassurance flex items-center justify-center gap-2 text-sm font-medium text-primary-foreground/75"><CircleCheck className="size-4 shrink-0 text-brand" />{t("homepage.hero.reassurance")}</p>
           </div>
