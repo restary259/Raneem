@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, ChevronLeft, ChevronRight, Users, UserRound, Loader2, ArrowUpRight, Sparkles, HeartHandshake } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, Users, UserRound, Loader2, ArrowUpRight, Sparkles, HeartHandshake, MessageCircle, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDirection } from "@/hooks/useDirection";
 import { captureReferralCode, getReferralCode, verifyReferralCode, shouldKeepReferralCode } from "@/lib/referral";
@@ -165,6 +165,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const [companion, setCompanion] = useState<Applicant>({ ...EMPTY_COMPANION });
   const [refCode, setRefCode] = useState<string | null>(() => getReferralCode());
   const [bookingToken, setBookingToken] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [companionFailed, setCompanionFailed] = useState(false);
 
   useEffect(() => {
