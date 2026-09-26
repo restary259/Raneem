@@ -388,7 +388,7 @@ serve(async (req) => {
       }
       const { data: conversation, error } = await admin
         .from("whatsapp_conversations")
-        .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number, marketing_consent_status, linked_case_id)")
+        .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number, marketing_consent_status)")
         .eq("id", conversationId)
         .maybeSingle();
       if (error) throw error;
@@ -396,25 +396,6 @@ serve(async (req) => {
       const lead = Array.isArray(conversation.lead) ? conversation.lead[0] : conversation.lead;
       const to = digitsOnly((lead as { whatsapp_number?: string } | null)?.whatsapp_number);
       if (to.length < 8 || to.length > 15) return json({ error: "The WhatsApp number is invalid" }, 400, corsHeaders);
-
-      // Team members may only message contacts whose conversation is linked to
-      // a case assigned to them. Admins and service-role automation are exempt.
-      if (!isAdmin && !auth.isServiceRole && auth.userId) {
-        const linkedCaseId = (lead as { linked_case_id?: string | null } | null)?.linked_case_id ?? null;
-        if (!linkedCaseId) {
-          return json({ error: "This conversation is not linked to one of your cases" }, 403, corsHeaders);
-        }
-        const { data: assignedCase, error: caseError } = await admin
-          .from("cases")
-          .select("id")
-          .eq("id", linkedCaseId)
-          .eq("assigned_to", auth.userId)
-          .maybeSingle();
-        if (caseError) throw caseError;
-        if (!assignedCase) {
-          return json({ error: "This conversation belongs to a case that is not assigned to you" }, 403, corsHeaders);
-        }
-      }
 
       if (campaignRecipientId) {
         // This path is reserved for the service-role campaign worker. Staff

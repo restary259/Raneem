@@ -59,7 +59,7 @@ export const formSchema = z.object({
     z.number().positive({ message: 'الرجاء إدخال مبلغ صحيح' })
   ),
   targetCountry: z.enum(['DE', 'RO', 'JO']),
-  receivingBank: z.string({ error: "الرجاء اختيار بنك" }).nonempty("الرجاء اختيار بنك"),
+  receivingBank: z.string({ required_error: "الرجاء اختيار بنك" }).nonempty("الرجاء اختيار بنك"),
   deliverySpeed: z.enum(['fastest', 'cheapest', 'balanced']),
   paymentMethod: z.enum(['bank', 'card', 'pickup']),
 });
