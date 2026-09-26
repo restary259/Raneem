@@ -64,10 +64,6 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
             {renderDropdown(studyGermany)}
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <NavigationMenuTrigger className={triggerClass}>{t('nav.studyPath')}</NavigationMenuTrigger>
-            {renderDropdown(studyPath)}
-          </NavigationMenuItem>
-          <NavigationMenuItem>
             <NavigationMenuLink asChild className={linkClass}>
               <Link to="/services">{t('nav.services')}</Link>
             </NavigationMenuLink>
