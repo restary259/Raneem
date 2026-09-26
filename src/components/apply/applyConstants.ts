@@ -16,10 +16,11 @@ export const EDUCATION_LEVELS = [
 
 export const UNIT_OPTIONS = ["3", "4", "5"];
 
-export const APPLYING_WITH_OPTIONS = [
-  { value: "alone", label: "أتقدم لوحدي", labelEn: "I'm applying alone" },
-  { value: "friend", label: "أتقدم مع صديق / قريب", labelEn: "I'm applying with a friend / relative" },
-];
+export const APPLYING_WITH_OPTIONS = ["alone", "friend", "relative"] as const;
+export type ApplyingWith = (typeof APPLYING_WITH_OPTIONS)[number];
+
+/** Marketing copy only — no backend price change is tied to this amount. */
+export const GROUP_VALUE_AMOUNT_ILS = 500;
 
 export const EMPTY_COMPANION = {
   name: "",
@@ -30,6 +31,7 @@ export const EMPTY_COMPANION = {
   englishUnits: "",
   mathUnits: "",
   preferredMajor: "",
+  preferredMajorId: null as string | null,
 };
 
 export const APPLY_TOTAL_STEPS = 4;
