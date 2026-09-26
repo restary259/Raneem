@@ -47,6 +47,10 @@ export const managePublicBooking = createServerFn({ method: "POST" })
     const { data: result, error } = await supabaseAdmin.rpc("manage_public_appointment", {
       p_token_hash: hash, p_action: data.action, p_slot: data.slot,
     });
-    if (error) throw new Error(error.message.includes("Time unavailable") || error.message.includes("APPT_BLOCKED") ? "Time unavailable" : "Booking could not be updated. Please contact DARB.");
+    if (error) {
+      // A slot taken by someone else is an expected outcome, not a crash.
+      if (error.message.includes("Time unavailable") || error.message.includes("APPT_BLOCKED")) return { error: "slot_taken" as const };
+      throw new Error("Booking could not be updated. Please contact DARB.");
+    }
     return result;
   });
