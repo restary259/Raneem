@@ -25,19 +25,19 @@ Desktop, from the start of the bar: **الدراسة في ألمانيا ▾ · 
 
 ## Proposed structure
 ```text
-Desktop:  [Logo]  الدراسة في ألمانيا▾  خدماتنا  موارد▾  عن درب▾  تواصل معنا   [دخول]  [قدّم طلبك]
+Desktop:  [Logo]  الدراسة في ألمانيا▾  خدماتنا  موارد▾  عن درب▾  تواصل معنا   [دخول الحساب]  [قدّم طلبك]
 ```
 1. **Merge** "الدراسة في ألمانيا" and "اكتشف مسارك الدراسي" into one group, "الدراسة في ألمانيا": majors, the major quiz, the AI advisor, and educational destinations. This leaves one fewer top-level item.
-2. **Add a primary "قدّم طلبك" button** in brand color as the main action, on both desktop and phone. On the phone it sits in the bar itself, next to the menu icon.
-3. **Turn the login button into a neutral "تسجيل الدخول"** (outline style) for all account types. The sign-in page already serves all roles.
-4. **Make partnership visible:** rename "عن درب" to "عن درب والشراكة", or add a clear "للشركاء والوكلاء" item. On the phone, add a short "Are you a lawyer or agent? Partner with DARB" link at the bottom.
+2. **Replace the desktop bar's "تسجيل الدخول للطلاب" button with a "قدّم طلبك" apply button** (brand color, the main action) and a quiet "دخول الحساب" link next to it. The phone's bottom navigation stays unchanged.
+3. **Rename every remaining login entry point** (phone menu, footer) from "تسجيل الدخول للطلاب" to "دخول الحساب" / "Account login" — one unified login for students, partners and agents.
+4. **Keep "عن درب" exactly as it is** — no rename, no new partners item.
 5. **Trim "موارد"** to FAQ, Blog and Broadcast. The general resources page stays reachable from within those pages.
 6. The phone menu mirrors the same order. The WhatsApp and email buttons stay.
 
-## Questions before building
-- Option 4: a separate top-level item "للشركاء", or keep it inside "عن درب" but rename that group?
-- Should the sign-in page actually work for partners and agents? It should if they use the same sign-in page, but that needs checking before the label changes.
+## Already true — no work needed
+- The sign-in page (`/student-auth`) already signs in **all roles** and sends each to their own dashboard, so a unified login needs no new page — only the label changes.
+- Mobile sign-in **already stays logged in** (the session is stored persistently on the device), so no change is needed there either.
 
 ## Technical notes
-- Files: `src/components/landing/DesktopNav.tsx`, `MobileNav.tsx`, `Header.tsx`; nav keys in `common.json` for en/ar/he (both `src` and `public` locale folders where present).
+- Files: `src/components/landing/DesktopNav.tsx`, `MobileNav.tsx`, `Header.tsx` (desktop apply button + login label; phone bottom nav untouched); nav keys in `common.json` for en/ar/he (both `src` and `public` locale folders where present).
 - No new pages and no backend changes. Verify with Playwright at 1353px and 390px in Arabic and English, checking the bar for overlap or wrapping.
