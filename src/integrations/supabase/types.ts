@@ -420,6 +420,7 @@ export type Database = {
       appointments: {
         Row: {
           case_id: string | null
+          confirmation_status: string
           created_at: string
           duration_minutes: number
           guest_name: string | null
@@ -439,6 +440,7 @@ export type Database = {
         }
         Insert: {
           case_id?: string | null
+          confirmation_status?: string
           created_at?: string
           duration_minutes?: number
           guest_name?: string | null
@@ -458,6 +460,7 @@ export type Database = {
         }
         Update: {
           case_id?: string | null
+          confirmation_status?: string
           created_at?: string
           duration_minutes?: number
           guest_name?: string | null
@@ -6454,6 +6457,10 @@ export type Database = {
           p_payout_request_id: string
           p_transaction_ref?: string
         }
+        Returns: undefined
+      }
+      confirm_public_appointment: {
+        Args: { p_appointment_id: string }
         Returns: undefined
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
