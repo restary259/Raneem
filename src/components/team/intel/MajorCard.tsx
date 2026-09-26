@@ -163,29 +163,33 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                           <p className="mb-1.5 text-xs font-medium text-muted-foreground">
                             {t('intel.card.levelMap', 'CEFR level map')}
                           </p>
-                          <div className="grid grid-cols-6 gap-1">
+                          <div className="grid grid-cols-6 gap-1" role="list">
                             {(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const).map((level) => {
                               const requiredIndex = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(value.minimumLevel);
                               const levelIndex = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].indexOf(level);
                               const isRequired = level === value.minimumLevel;
                               const isBelow = levelIndex < requiredIndex;
+                              const status = isRequired
+                                ? t('intel.card.required', 'required')
+                                : isBelow
+                                  ? t('intel.card.below', 'below')
+                                  : t('intel.card.above', 'meets');
                               return (
                                 <div
                                   key={level}
-                                  className={`rounded-md border px-1.5 py-2 text-center text-xs ${isRequired ? 'border-primary bg-primary/10 font-semibold text-primary' : isBelow ? 'opacity-45' : ''}`}
+                                  role="listitem"
+                                  aria-label={`${level}, ${status}`}
+                                  title={status}
+                                  className={`min-w-0 rounded-md border py-2 text-center text-sm tabular-nums ${isRequired ? 'border-primary bg-primary font-bold text-primary-foreground shadow-sm' : isBelow ? 'text-muted-foreground opacity-40' : 'font-medium'}`}
                                 >
-                                  <div>{level}</div>
-                                  <div className="mt-0.5 text-[10px] text-muted-foreground">
-                                    {isRequired
-                                      ? t('intel.card.required', 'required')
-                                      : isBelow
-                                        ? t('intel.card.below', 'below')
-                                        : t('intel.card.above', 'meets')}
-                                  </div>
+                                  {level}
                                 </div>
                               );
                             })}
                           </div>
+                          <p className="mt-1.5 text-[11px] text-muted-foreground">
+                            {t('intel.card.levelLegend', 'Highlighted = required · faded = below')}
+                          </p>
                         </div>
                         {value.certificates.length > 0 && (
                           <Row label={t('intel.card.acceptedProof', 'Accepted proof')}>

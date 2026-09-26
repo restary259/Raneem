@@ -5021,7 +5021,8 @@
       "benchmarkBadge": "داخلي",
       "benchmarkValueLabel": "متوسط البجروت المستهدف",
       "benchmarkHint": "مؤشر تخطيط داخلي من درب لتقييم ملف الطالب. ليس حداً رسمياً للقبول الجامعي ولا ضماناً للقبول.",
-      "benchmarkSource": "مصدر مؤشر درب"
+      "benchmarkSource": "مصدر مؤشر درب",
+      "levelLegend": "المُظلَّل = المطلوب · الباهت = أقل"
     },
     "readyToUse": "جاهزة للاستخدام",
     "stillMissing": "لم يُجب عنه بعد",

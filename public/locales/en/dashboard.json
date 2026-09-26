@@ -5004,7 +5004,8 @@
       "benchmarkBadge": "Internal",
       "benchmarkValueLabel": "Target Bagrut average",
       "benchmarkHint": "Internal DARB planning indicator used to assess an applicant’s profile. It is not an official university cutoff or a guarantee of admission.",
-      "benchmarkSource": "DARB benchmark source"
+      "benchmarkSource": "DARB benchmark source",
+      "levelLegend": "Highlighted = required · faded = below"
     },
     "readyToUse": "Ready to use",
     "stillMissing": "Still unanswered",
