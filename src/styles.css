@@ -1069,6 +1069,11 @@ a[href*="lovable.dev"] {
     height: auto;
     min-height: clamp(480px, 76svh, 620px);
     max-height: none;
+    /* Center the hero panel vertically on mobile — the content div's
+       min-h-full does not resolve here (section height is auto), so it
+       otherwise hugs the top under the header. */
+    display: flex;
+    align-items: center;
   }
 
   .darb-page-hero-compact {
