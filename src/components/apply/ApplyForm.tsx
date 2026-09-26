@@ -385,9 +385,6 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <FieldGroup label={isAr ? "المدينة *" : "City *"}>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
             </FieldGroup>
-            <FieldGroup label={isAr ? "البريد الإلكتروني *" : "Email *"}>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={isAr ? "name@example.com" : "name@example.com"} dir="ltr" type="email" className="h-11" />
-            </FieldGroup>
             <details className="text-start text-sm text-muted-foreground">
               <summary className="cursor-pointer font-medium">{t("apply.extraDetails")}</summary>
               <div className="mt-3">
