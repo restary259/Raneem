@@ -70,7 +70,7 @@ const ConsultationCta = () => {
                     </div>
                     <div className="animate-fade-in animation-delay-300">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 bg-card p-6 md:p-8 rounded-lg shadow-lg border">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 bg-card p-6 md:p-8 rounded-2xl shadow-lg border">
                                 <FormField control={form.control} name="name" render={({ field }) => (
                                     <FormItem><FormLabel>{t('consultationCta.fullName')}</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />

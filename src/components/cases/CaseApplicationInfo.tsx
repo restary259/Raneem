@@ -15,7 +15,7 @@ type Visit = { scheduled_at: string; status: string; confirmation_status: string
 /** Chosen major + office visit booked on the apply form. Read-only. */
 export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeInterest }: Props) {
   const { t, i18n } = useTranslation("dashboard");
-  const isAr = i18n.language === "ar";
+  const isAr = (i18n?.language ?? "") === "ar";
   const [visit, setVisit] = useState<Visit | null>(null);
   const [loaded, setLoaded] = useState(false);
 

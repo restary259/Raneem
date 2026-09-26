@@ -53,8 +53,8 @@ const StudentGallery = () => {
       key={index}
       className={
         inCarousel
-          ? "shrink-0 w-[72vw] max-w-[300px] snap-center overflow-hidden rounded-lg shadow-lg"
-          : "group overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+          ? "shrink-0 w-[72vw] max-w-[300px] snap-center overflow-hidden rounded-2xl shadow-lg"
+          : "group overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
       }
     >
       <div className="relative aspect-[3/4] bg-secondary">

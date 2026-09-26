@@ -40,7 +40,7 @@ const SectionTitle = ({ icon, children }: { icon: React.ReactNode; children: Rea
 const TierList = ({ icon, title, items, tone }: { icon: React.ReactNode; title: string; items: string[]; tone: string }) => {
   if (!items.length) return null;
   return (
-    <div className={`rounded-lg p-4 ${tone}`}>
+    <div className={`rounded-2xl p-4 ${tone}`}>
       <div className="flex items-center gap-2 mb-2">
         {icon}
         <h4 className="font-semibold text-gray-800">{title}</h4>
@@ -60,7 +60,7 @@ const FactRow = ({ label, children }: { label: string; children: React.ReactNode
 );
 
 const GlanceChip = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="rounded-lg border border-gray-200 bg-white p-3 min-w-0">
+  <div className="rounded-xl border border-gray-200 bg-white p-3 min-w-0">
     <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">{icon}<span>{label}</span></div>
     <div className="text-sm font-semibold text-gray-800 leading-snug break-words">{value}</div>
   </div>
@@ -111,7 +111,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
             <div className="space-y-3">
               <SectionTitle icon={<Scale className="h-5 w-5 text-emerald-600" />}>{t('educational.sectionCanIGetIn')}</SectionTitle>
               {verified && (
-                <div className="bg-emerald-50 rounded-lg p-4 space-y-3">
+                <div className="bg-emerald-50 rounded-2xl p-4 space-y-3">
                   <div className="flex items-center gap-2 font-semibold text-gray-800"><Calculator className="h-4 w-4 text-emerald-700" />{t('educational.bagrutTitle')}</div>
                   <p className="text-sm text-gray-700 leading-relaxed">{t('educational.bagrutUnits')}</p>
                   <p className="text-sm text-gray-700 leading-relaxed">{t('educational.bagrutFormula', { min: BAGRUT_PASS_MARK })}</p>
@@ -151,7 +151,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {langProfile ? (
             <div className="space-y-3">
               <SectionTitle icon={<Globe className="h-5 w-5 text-purple-500" />}>{t('educational.sectionLanguage')}</SectionTitle>
-              <dl className="bg-purple-50 rounded-lg px-4 py-1">
+              <dl className="bg-purple-50 rounded-2xl px-4 py-1">
                 <FactRow label={t('educational.langTeaching')}>{langProfile.teachingLanguage}</FactRow>
                 <FactRow label={t('educational.langLevel')}><span className="font-semibold">{langProfile.requiredLevel}</span></FactRow>
                 <FactRow label={t('educational.langCertificates')}>
@@ -171,7 +171,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           ) : loc.localizedLanguageRequirements && (
             <div className="space-y-3">
               <SectionTitle icon={<Globe className="h-5 w-5 text-purple-500" />}>{t('educational.modalLanguageRequirements')}</SectionTitle>
-              <div className="bg-purple-50 rounded-lg p-4"><p className="text-gray-700">{loc.localizedLanguageRequirements}</p></div>
+              <div className="bg-purple-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedLanguageRequirements}</p></div>
             </div>
           )}
 
@@ -179,7 +179,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {glance && loc.localizedRequiredBackground && (
             <div className="space-y-3">
               <SectionTitle icon={<Send className="h-5 w-5 text-blue-500" />}>{t('educational.sectionHowToApply')}</SectionTitle>
-              <div className="bg-blue-50 rounded-lg p-4 space-y-2 text-sm text-gray-700">
+              <div className="bg-blue-50 rounded-2xl p-4 space-y-2 text-sm text-gray-700">
                 <p><span className="font-semibold">{t('educational.glanceChannel')}:</span> {glance.applicationChannel}</p>
                 <p><span className="font-semibold">{t('educational.glanceAdmission')}:</span> {glance.admissionMode}</p>
                 <p className="leading-relaxed">{loc.localizedRequiredBackground}</p>
@@ -189,14 +189,14 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {!glance && loc.localizedRequiredBackground && (
             <div className="space-y-3">
               <SectionTitle icon={<FileText className="h-5 w-5 text-blue-500" />}>{t('educational.modalRequiredBackground')}</SectionTitle>
-              <div className="bg-blue-50 rounded-lg p-4"><p className="text-gray-700">{loc.localizedRequiredBackground}</p></div>
+              <div className="bg-blue-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedRequiredBackground}</p></div>
             </div>
           )}
 
           {/* 5. About */}
           <div className="space-y-3">
             <SectionTitle icon={<BookOpen className="h-5 w-5 text-brand-strong" />}>{glance ? t('educational.sectionAbout') : t('educational.modalDescription')}</SectionTitle>
-            <div className="space-y-3 rounded-lg border-s-4 border-brand bg-muted/50 p-4">
+            <div className="space-y-3 rounded-2xl border-s-4 border-brand bg-muted/50 p-4">
               <p className="text-gray-700 leading-relaxed">{loc.detailedDesc}</p>
               {loc.localizedSuitableFor && (
                 <p className="text-gray-700 leading-relaxed flex gap-2"><Users className="h-4 w-4 mt-1 shrink-0 text-green-600" /><span><span className="font-semibold">{t('educational.modalSuitableFor')}:</span> {loc.localizedSuitableFor}</span></p>
@@ -208,13 +208,13 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {(loc.localizedCareerOpportunities || loc.localizedCareerProspects) && (
             <div className="space-y-3">
               <SectionTitle icon={<Briefcase className="h-5 w-5 text-amber-500" />}>{t('educational.modalCareerOpportunities')}</SectionTitle>
-              <div className="bg-amber-50 rounded-lg p-4"><p className="text-gray-700">{loc.localizedCareerOpportunities || loc.localizedCareerProspects}</p></div>
+              <div className="bg-amber-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedCareerOpportunities || loc.localizedCareerProspects}</p></div>
             </div>
           )}
           {!tiers && loc.localizedRequirements && (
             <div className="space-y-3">
               <h3 className="text-xl font-semibold text-gray-800">{t('educational.modalStudyRequirements')}</h3>
-              <div className="bg-gray-50 rounded-lg p-4"><p className="text-gray-700">{loc.localizedRequirements}</p></div>
+              <div className="bg-gray-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedRequirements}</p></div>
             </div>
           )}
 
@@ -222,7 +222,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {loc.localizedArab48Notes && (
             <div className="space-y-3">
               <SectionTitle icon={<AlertCircle className="h-5 w-5 text-red-500" />}>{t('educational.modalArab48Notes')}</SectionTitle>
-              <div className="bg-red-50 rounded-lg p-4 border-s-4 border-red-400"><p className="text-gray-700">{loc.localizedArab48Notes}</p></div>
+              <div className="bg-red-50 rounded-2xl p-4 border-s-4 border-red-400"><p className="text-gray-700">{loc.localizedArab48Notes}</p></div>
             </div>
           )}
 

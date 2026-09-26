@@ -3,12 +3,7 @@
   "hero": {
     "title": "Your Global Study Companion",
     "subtitle": "From your first decision to your first achievement... Darb is the safe bridge to your studies abroad",
-    "consultation": "Book a Free Consultation",
-    "stats": {
-      "satisfiedStudents": "Satisfied Students",
-      "educationalPartners": "Educational Partners",
-      "countriesWorldwide": "Countries Worldwide"
-    }
+    "consultation": "Book a Free Consultation"
   },
   "whyChooseUs": {
     "title": "Why Choose Darb?",
@@ -134,14 +129,6 @@
         "focus": "50% 75%"
       }
     ]
-  },
-  "aboutStats": {
-    "title": "Our Numbers Speak",
-    "subtitle": "Transparency and success are the foundation of our work, and these numbers reflect our students' trust in us.",
-    "satisfiedStudents": "Satisfied Students",
-    "partners": "Partners",
-    "countries": "Countries",
-    "successRate": "Success Rate"
   },
   "journey": {
     "title": "Your Journey to Studying Abroad",
@@ -298,13 +285,12 @@
     "hero": {
       "eyebrow": "DARB · Study International",
       "title": "Your path to studying in Germany",
-      "subtitle": "Tell us what you hope to study. Our team in Tamra will help you understand what comes next.",
       "imageAlt": "A German university setting representing the beginning of a study journey",
       "reassurance": "Get started with a profile assessment — free of charge",
       "campaign": "DARB"
     },
     "actions": {
-      "apply": "Tell DARB about my plans",
+      "apply": "Contact us",
       "whatsapp": "Talk to us on WhatsApp",
       "checkProfile": "Could this path fit you?",
       "startAssessment": "Start your profile assessment"

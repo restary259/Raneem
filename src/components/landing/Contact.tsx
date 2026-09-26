@@ -135,7 +135,7 @@ const Contact = () => {
         </div>
 
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:gap-12">
-          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} scroll-mt-28 overflow-hidden rounded-lg border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9`}>
+          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} scroll-mt-28 overflow-hidden rounded-2xl border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9`}>
             <div className={`mb-8 max-w-2xl text-center ${dir === "rtl" ? "md:text-right" : "md:text-left"}`}>
               <h2 className="text-3xl font-bold md:text-4xl">{t("contact.title")}</h2>
               <p className="mt-4 text-lg text-muted-foreground">{t("contact.subtitle")}</p>
@@ -201,9 +201,9 @@ const Contact = () => {
             <div>
               <h3 className="text-2xl font-bold text-primary">{t("contact.mapTitle")}</h3>
               <p className="mt-2 text-muted-foreground">{t("contact.mapSubtitle")}</p>
-              <div className="mt-5 h-[320px] overflow-hidden rounded-lg border border-border shadow-surface md:h-[390px]"><Map /></div>
+              <div className="mt-5 h-[320px] overflow-hidden rounded-2xl border border-border shadow-surface md:h-[390px]"><Map /></div>
             </div>
-            <div className="rounded-lg border border-border bg-background p-6">
+            <div className="rounded-2xl border border-border bg-background p-6">
               <h3 className="mb-4 text-center text-xl font-semibold">{t("contact.follow")}</h3>
               <div className="flex items-center justify-center gap-6">
                 <a href="https://www.instagram.com/darb_studyingermany/" aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="text-muted-foreground transition-colors hover:text-accent"><Instagram className="h-7 w-7" /></a>

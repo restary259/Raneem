@@ -18,7 +18,7 @@ const IdentityStage = ({ name, imageUrl, href, meta, featured = false, ratio = "
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "group grid min-h-32 min-w-0 place-items-center border border-border bg-background p-4 text-center transition-colors hover:border-brand/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+        "group grid min-h-32 min-w-0 place-items-center rounded-2xl border border-border bg-background p-4 text-center transition-colors hover:border-brand/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         featured && "sm:col-span-2",
       )}
     >

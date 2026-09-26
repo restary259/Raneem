@@ -23,7 +23,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
     <Card className="group hover:shadow-xl hover:border-accent/20 transition-all duration-300 h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg">
+          <div className="p-2 bg-primary/10 rounded-xl">
             <Icon className="h-6 w-6 text-primary group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />
           </div>
           <Badge variant="secondary" className="text-xs">

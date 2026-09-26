@@ -17,7 +17,7 @@ const LanguageSchoolCard: React.FC<LanguageSchoolCardProps> = ({
 }) => {
   return <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
-        <div className="bg-white p-4 rounded-lg mb-4 flex items-center justify-center border">
+        <div className="bg-white p-4 rounded-xl mb-4 flex items-center justify-center border">
           
         </div>
         <h3 className="text-lg font-bold mb-2">{school.name}</h3>
