@@ -235,7 +235,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
             {/* Time grid */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <p className="mb-3 text-sm font-semibold">{t("apply.availableTimes")}</p>
-              {working ? (
+              {working && slots.length === 0 ? (
                 <div className="flex justify-center py-6" role="status"><Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden="true" /></div>
               ) : daySlots.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">{t("apply.noTimes")}</p>
