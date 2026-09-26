@@ -49,18 +49,21 @@
   --color-trust: hsl(var(--trust));
   --color-editorial-paper: hsl(var(--editorial-paper));
   --color-hero-panel: hsl(var(--hero-panel));
-  --color-story-coral: hsl(var(--story-coral));
-  --color-story-rose: hsl(var(--story-rose));
-  --color-story-plum: hsl(var(--story-plum));
-  --color-story-sky: hsl(var(--story-sky));
-  --color-story-mint: hsl(var(--story-mint));
-  --color-story-lime: hsl(var(--story-lime));
-  --color-story-peach: hsl(var(--story-peach));
-  --color-story-foreground: hsl(var(--story-foreground));
-  --shadow-story: inset 0 1px 0 hsl(var(--story-foreground) / 0.3), 0 5px 0 hsl(var(--foreground) / 0.18), 0 14px 26px -12px hsl(var(--foreground) / 0.35);
-  --shadow-story-hover: inset 0 1px 0 hsl(var(--story-foreground) / 0.4), 0 8px 0 hsl(var(--foreground) / 0.18), 0 20px 32px -12px hsl(var(--foreground) / 0.4);
-  --shadow-story-tray: inset 0 1px 1px hsl(var(--story-foreground) / 0.18), 0 5px 12px hsl(var(--foreground) / 0.22);
-  --shadow-story-action: inset 0 1px 0 hsl(var(--story-foreground) / 0.25), 0 4px 0 hsl(var(--foreground) / 0.2);
+  /* DARB quiet brand: yellow = "look here", pale surfaces for rare highlight cards */
+  --color-highlight: hsl(var(--highlight));
+  --color-highlight-foreground: hsl(var(--highlight-foreground));
+  --color-highlight-surface: hsl(var(--highlight-surface));
+  --color-info-surface: hsl(var(--info-surface));
+  --color-canvas: hsl(var(--canvas));
+  --color-tint-green: hsl(var(--tint-green));
+  --color-tint-yellow: hsl(var(--tint-yellow));
+  --color-tint-orange: hsl(var(--tint-orange));
+  --color-tint-red: hsl(var(--tint-red));
+  --color-tint-pink: hsl(var(--tint-pink));
+  --color-tint-purple: hsl(var(--tint-purple));
+  --color-tint-blue: hsl(var(--darb-blue));
+  --shadow-quiet: 0 8px 30px rgba(8, 43, 102, 0.06);
+  --shadow-quiet-hover: 0 14px 40px rgba(8, 43, 102, 0.1);
 
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -170,22 +173,26 @@
   --editorial-paper: 210 20% 98%;
   --hero-panel: 0 0% 3%;
 
-  /* Deep, light-only visitor card colors; separate from dashboard status hues. */
-  --story-coral: 350 66% 35%;
-  --story-rose: 330 54% 34%;
-  --story-plum: 291 40% 31%;
-  --story-sky: 214 63% 32%;
-  --story-mint: 169 57% 25%;
-  --story-lime: 135 39% 25%;
-  --story-peach: 24 66% 34%;
-  --story-foreground: 0 0% 100%;
+  /* DARB quiet brand (public site): 75% white, navy authority, blue energy,
+     muted yellow only for "look here", muted spectrum as a small signature. */
+  --canvas: 216 45% 98%;              /* #F7F9FC */
+  --highlight: 44 89% 62%;            /* #F4C84A */
+  --highlight-foreground: 217.7 85.5% 21.6%;
+  --highlight-surface: 47 100% 94%;   /* #FFF8DE */
+  --info-surface: 214 100% 97%;       /* #EFF6FF */
+  --tint-green: 142 25% 54%;          /* #68A982 */
+  --tint-yellow: 44 89% 62%;          /* #F4C84A */
+  --tint-orange: 28 77% 62%;          /* #E99A52 */
+  --tint-red: 0 56% 66%;              /* #D97979 */
+  --tint-pink: 330 37% 66%;           /* #C987A8 */
+  --tint-purple: 248 41% 62%;         /* #8176C5 */
 
 
   --destructive: 0 90.6% 58.6%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
+  --border: 215 32% 92%;              /* #E5EAF1 */
+  --input: 215 32% 92%;
   --ring: 217.7 85.5% 21.6%;
 
   --radius: 0.5rem;
