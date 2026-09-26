@@ -249,4 +249,3 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
   </div>
   );
 }
-}
