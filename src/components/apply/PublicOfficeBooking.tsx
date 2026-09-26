@@ -16,7 +16,7 @@ const formatVisit = (iso: string, language: string) => new Intl.DateTimeFormat(l
 }).format(new Date(iso));
 const formatTime = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: OFFICE_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
 
-export default function PublicOfficeBooking({ token }: { token: string }) {
+export default function PublicOfficeBooking({ token, autoOpen = false }: { token: string; autoOpen?: boolean }) {
   const { t, i18n } = useTranslation("landing");
   const booking = useServerFn(managePublicBooking);
   const [slots, setSlots] = useState<string[]>([]);
@@ -43,10 +43,22 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
         setCurrent(typeof value.scheduled_at === "string" ? value.scheduled_at : "");
         setStatus(typeof value.status === "string" ? value.status : "");
       }
+      if (autoOpen) {
+        setOpen(true);
+        setWorking(true);
+        return booking({ data: { token, action: "availability" } }).then((result) => {
+          if (!live) return;
+          const available = result && typeof result === "object" && "slots" in result && Array.isArray(result.slots)
+            ? result.slots.filter((slot): slot is string => typeof slot === "string").sort() : [];
+          setSlots(available);
+          setSelectedDay(available.length ? dayKey(available[0]) : "");
+        }).catch(() => { if (live) { setOpen(false); setError(t("apply.bookingUnavailable")); } })
+          .finally(() => { if (live) setWorking(false); });
+      }
     }).catch(() => { if (live) setInvalid(true); })
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, [booking, token]);
+  }, [booking, token, autoOpen, t]);
 
   const days = useMemo(() => new Set(slots.map(dayKey)), [slots]);
   const daySlots = useMemo(() => slots.filter((slot) => dayKey(slot) === selectedDay), [slots, selectedDay]);
@@ -54,6 +66,9 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
   const lastDay = slots.length ? localDate(dayKey(slots[slots.length - 1])) : undefined;
 
   const loadSlots = async () => {
+    setSlots([]);
+    setSelectedDay("");
+    setSelected("");
     setOpen(true);
     setWorking(true);
     setError("");
@@ -105,7 +120,7 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
             dir={language === "ar" ? "rtl" : "ltr"}
             selected={selectedDay ? localDate(selectedDay) : undefined}
             onSelect={(day) => { setSelectedDay(day ? dateKey(day) : ""); setSelected(""); }}
-            disabled={(day) => !days.has(dateKey(day))}
+            disabled={(day) => working || !days.has(dateKey(day))}
             startMonth={firstDay}
             endMonth={lastDay}
             defaultMonth={firstDay}
@@ -116,7 +131,7 @@ export default function PublicOfficeBooking({ token }: { token: string }) {
         {selectedDay && <div className="space-y-3">
           <p className="text-sm font-semibold text-foreground">{t("apply.availableTimes")}</p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" dir="ltr">
-            {daySlots.map((slot) => <Button key={slot} type="button" variant={selected === slot ? "default" : "outline"} onClick={() => setSelected(slot)} aria-pressed={selected === slot} className="w-full rounded-md px-2 tabular-nums">
+            {daySlots.map((slot) => <Button key={slot} type="button" variant={selected === slot ? "default" : "outline"} disabled={working} onClick={() => setSelected(slot)} aria-pressed={selected === slot} className="w-full rounded-md px-2 tabular-nums">
               {selected === slot && <Check aria-hidden="true" />}{formatTime(slot)}
             </Button>)}
           </div>

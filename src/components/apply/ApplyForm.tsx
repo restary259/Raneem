@@ -311,7 +311,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <Button onClick={() => setShowBooking(true)} className="w-full"><CalendarDays aria-hidden="true" />{t("apply.bookVisit")}</Button>
             <Button variant="ghost" onClick={() => setDeferredBooking(true)} className="w-full">{t("apply.deferVisit")}</Button>
           </div>}
-          {showBooking && bookingToken && <div className="border-t border-border pt-6"><PublicOfficeBooking token={bookingToken} /></div>}
+          {showBooking && bookingToken && <div className="border-t border-border pt-6"><PublicOfficeBooking token={bookingToken} autoOpen /></div>}
           {bookingToken && <a className="inline-block text-sm text-brand-strong underline underline-offset-4" href={`/office-visit?token=${bookingToken}`}>{t("apply.saveVisitLink")}</a>}
           {deferredBooking && <p role="status" className="text-sm text-muted-foreground">{t("apply.deferredNotice")}</p>}
           <p className="border-t border-border pt-5 text-sm leading-6 text-muted-foreground">{t("apply.officeNext")}</p>
