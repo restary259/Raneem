@@ -143,12 +143,13 @@ const HomepageExperience = () => {
             <h2 id="homepage-next-step-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("homepage.nextStep.title")}</h2>
             <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">{t("homepage.nextStep.body")}</p>
           </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid gap-4 pb-2 sm:grid-cols-2 lg:grid-cols-3">
             {nextStepRoutes.map((item, index) => {
               const Icon = nextStepIcons[index] ?? Compass;
-              return <Link key={item.title} to={item.href} className={`group grid min-h-36 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 rounded-lg border border-primary/10 p-5 text-primary transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none ${nextStepSurfaces[index] ?? "bg-story-sky"}`}>
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Icon className="size-4.5" /></span>
-                <span className="min-w-0"><span className="block font-bold text-primary">{item.title}</span><span className="mt-2 block text-sm leading-6 text-primary/80">{item.description}</span></span><Arrow className="mt-1 size-4 text-primary transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+              return <Link key={item.title} to={item.href} className={`group relative isolate flex min-h-40 min-w-0 flex-col overflow-hidden rounded-lg border border-story-foreground/15 p-5 text-story-foreground shadow-story transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-story-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none ${nextStepSurfaces[index] ?? "bg-story-sky"}`}>
+                <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-linear-to-b from-story-foreground/12 via-transparent to-foreground/35" />
+                <span className="relative flex w-full items-start justify-between gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-lg border border-story-foreground/20 bg-story-foreground/10 shadow-story-tray"><Icon className="size-5" /></span><Arrow className="mt-1 size-4 shrink-0 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" /></span>
+                <span className="relative mt-4 min-w-0"><span className="block font-bold text-story-foreground">{item.title}</span><span className="mt-1 block text-sm leading-6 text-story-foreground/85">{item.description}</span></span>
               </Link>;
             })}
           </div>
