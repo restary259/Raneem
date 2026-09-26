@@ -55,7 +55,7 @@ describe("PublicOfficeBooking", () => {
     const time = await screen.findByRole("button", { name: "10:00" });
     await user.click(time);
     await user.click(screen.getByRole("button", { name: "apply.confirmVisit" }));
-    expect(time).toBeDisabled();
+    expect(screen.getByRole("button", { name: "10:00" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "apply.closeCalendar" })).toBeDisabled();
     resolveRequest({ scheduled_at: slots[0], status: "pending" });
     expect(await screen.findByText("apply.visitPending")).toBeInTheDocument();
