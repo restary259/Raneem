@@ -264,18 +264,54 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const BackIcon = isRtl ? ChevronRight : ChevronLeft;
   const stepTitles = [t("apply.personalStep"), t("apply.educationStep"), t("apply.reviewStep"), t("apply.companionStep")];
 
-  // ── Booking (strongly encouraged, skippable) ─────────────────────
+  // ── After submit: the student freely chooses WhatsApp or an early
+  //    office appointment. Booking is never forced. ─────────────────
   if (phase === "booking" && bookingToken) {
-    return (
-      <div dir={dir} className="mx-auto w-full max-w-4xl px-5 py-10 sm:py-14">
-        <div className="mb-6 space-y-2 text-start">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-brand-strong"><Sparkles className="size-3.5" aria-hidden="true" />{t("apply.bookEarlyEyebrow")}</p>
-          <h2 className="text-2xl font-bold leading-tight sm:text-3xl">{t("apply.bookEarlyTitle")}</h2>
-          <p className="text-sm leading-6 text-muted-foreground">{t("apply.bookEarlyBody")}</p>
+    if (bookingOpen) {
+      return (
+        <div dir={dir} className="mx-auto w-full max-w-4xl px-5 py-10 sm:py-14">
+          <div className="mb-6 space-y-2 text-start">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-brand-strong"><Sparkles className="size-3.5" aria-hidden="true" />{t("apply.bookEarlyEyebrow")}</p>
+            <h2 className="text-2xl font-bold leading-tight sm:text-3xl">{t("apply.bookEarlyTitle")}</h2>
+            <p className="text-sm leading-6 text-muted-foreground">{t("apply.bookEarlyBody")}</p>
+          </div>
+          <PublicOfficeBooking token={bookingToken} autoOpen onBooked={() => setPhase("processing")} />
+          <div className="mt-6 text-center">
+            <button type="button" onClick={() => setBookingOpen(false)} className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{t("apply.bookEarlyBack")}</button>
+          </div>
         </div>
-        <PublicOfficeBooking token={bookingToken} autoOpen onBooked={() => setPhase("processing")} />
-        <div className="mt-6 text-center">
-          <button type="button" onClick={() => setPhase("processing")} className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{t("apply.skipForNow")}</button>
+      );
+    }
+    return (
+      <div dir={dir} className="mx-auto w-full max-w-3xl px-5 py-10 sm:py-14">
+        <div className="mb-8 space-y-2 text-start">
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-brand-strong"><Sparkles className="size-3.5" aria-hidden="true" />{t("apply.bookEarlyEyebrow")}</p>
+          <h2 className="text-2xl font-bold leading-tight sm:text-3xl">{t("apply.nextStepTitle")}</h2>
+          <p className="text-sm leading-6 text-muted-foreground">{t("apply.nextStepBody")}</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setPhase("processing")}
+            className="group flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 text-start shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+          >
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-brand/10 text-brand-strong transition-colors group-hover:bg-brand/15"><MessageCircle className="size-6" aria-hidden="true" /></span>
+            <span className="space-y-1">
+              <span className="block text-lg font-bold text-foreground">{t("apply.chooseWhatsApp")}</span>
+              <span className="block text-sm leading-6 text-muted-foreground">{t("apply.chooseWhatsAppDesc")}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setBookingOpen(true)}
+            className="group flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 text-start shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+          >
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-brand/10 text-brand-strong transition-colors group-hover:bg-brand/15"><CalendarDays className="size-6" aria-hidden="true" /></span>
+            <span className="space-y-1">
+              <span className="block text-lg font-bold text-foreground">{t("apply.chooseBooking")}</span>
+              <span className="block text-sm leading-6 text-muted-foreground">{t("apply.chooseBookingDesc")}</span>
+            </span>
+          </button>
         </div>
       </div>
     );
@@ -313,8 +349,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                   {t("apply.viewMyMajor")}<ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden="true" />
                 </a>
               )}
-              <a href="/educational-programs" className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border px-6 text-sm font-semibold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                {t("apply.browsePrograms")}
+              <a href="/educational-programs" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand px-6 text-sm font-bold text-brand-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+                {t("apply.browsePrograms")}<ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden="true" />
               </a>
             </div>
           </div>
