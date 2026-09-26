@@ -116,7 +116,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
     return (
       <div className="space-y-5">
         <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-brand/10 text-brand-strong">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-primary/10 text-brand-strong">
             <CheckCircle2 className="size-7" aria-hidden="true" />
           </div>
           <h3 className="text-xl font-bold">{t("apply.visitRequestedTitle", "تم إرسال طلب زيارتك")}</h3>
@@ -188,14 +188,14 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
               <li key={label} className="flex flex-1 items-center gap-2">
                 <span
                   className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-colors ${
-                    done ? "bg-brand text-brand-foreground" : active ? "border-2 border-brand text-brand-strong" : "border border-border text-muted-foreground"
+                    done ? "bg-primary text-primary-foreground" : active ? "border-2 border-primary text-primary" : "border border-border text-muted-foreground"
                   }`}
                   aria-current={active ? "step" : undefined}
                 >
                   {done ? <Check className="size-3.5" aria-hidden="true" /> : i + 1}
                 </span>
                 <span className={`hidden text-xs font-medium sm:block ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
-                {i < steps.length - 1 && <span className={`h-px flex-1 ${done ? "bg-brand" : "bg-border"}`} aria-hidden="true" />}
+                {i < steps.length - 1 && <span className={`h-px flex-1 ${done ? "bg-primary" : "bg-border"}`} aria-hidden="true" />}
               </li>
             );
           })}
@@ -218,11 +218,11 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
               {/* Legend */}
               <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 border-t border-border pt-3 text-[11px] text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-full bg-brand/30 ring-1 ring-brand/50" aria-hidden="true" />
+                  <span className="size-2.5 rounded-full bg-primary/30 ring-1 ring-primary/50" aria-hidden="true" />
                   {t("apply.legendAvailable", "متاح")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-full bg-brand" aria-hidden="true" />
+                  <span className="size-2.5 rounded-full bg-primary" aria-hidden="true" />
                   {t("apply.legendSelected", "مختار")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
@@ -249,10 +249,10 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
                         type="button"
                         onClick={() => setSelected(slot)}
                         aria-pressed={isSelected}
-                        className={`rounded-lg border px-2 py-2.5 text-sm font-medium tabular-nums transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                        className={`rounded-lg border px-2 py-2.5 text-sm font-medium tabular-nums transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                           isSelected
-                            ? "border-brand bg-brand text-brand-foreground shadow-sm"
-                            : "border-border bg-background hover:border-brand/60 hover:bg-brand/5"
+                            ? "border-brand bg-primary text-primary-foreground shadow-sm"
+                            : "border-border bg-background hover:border-brand/60 hover:bg-primary/5"
                         }`}
                         dir="ltr"
                       >
