@@ -3,13 +3,12 @@
     "hero": {
       "eyebrow": "DARB · Study International",
       "title": "יעדים שונים",
-      "subtitle": "גרמניה מתחילה כאן.",
       "imageAlt": "סביבה אוניברסיטאית בגרמניה המייצגת את תחילת מסע הלימודים",
       "reassurance": "מתחילים בהערכת פרופיל — ללא עלות",
       "campaign": "אותו חלום"
     },
     "actions": {
-      "apply": "הערכת הפרופיל והגשת מועמדות",
+      "apply": "צור קשר",
       "whatsapp": "דברו איתנו בוואטסאפ",
       "checkProfile": "האם המסלול הזה מתאים לכם?",
       "startAssessment": "התחילו את הערכת הפרופיל"
