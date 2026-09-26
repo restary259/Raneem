@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { CaseService } from "@/services";
+import { supabase } from "@/integrations/supabase/client";
 import type { AttributionInfo } from "@/services/CaseService";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
