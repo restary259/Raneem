@@ -11,7 +11,7 @@
    - a WhatsApp message was queued and delivered to +972 52 940 2168,
    - the send log shows the result (sent / blocked and why).
 3. Book an office visit on that test application, confirm it as staff, and move its reminder time forward so the 24h/1h reminder fires now; confirm both the WhatsApp and the email reminder arrive.
-4. Email: because the form has no email field, I will either (a) add an optional email field to step 1 and send an "application received" email, or (b) test email only on reminders using an email added to the test case by staff. You choose in the approval.
+4. Email is out of scope for now — this test covers WhatsApp only.
 5. Clean up afterwards: archive the test case and appointment so they don't appear in the pipeline or KPIs.
 
 ## Notes
