@@ -6,6 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import path from "node:path";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 const CLOUD_PUBLIC_CONFIG = {
   VITE_SUPABASE_URL: "https://mzbadxfvxioedzdjxamc.supabase.co",
@@ -27,6 +28,7 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    plugins: [mcpPlugin()],
     // VITE_* values are compiled into both client and SSR route chunks. The
     // published Worker receives SUPABASE_* at request time, but route modules
     // initialize the browser client during module loading, before a request

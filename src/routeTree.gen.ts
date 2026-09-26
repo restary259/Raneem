@@ -23,6 +23,7 @@ import { Route as EducationalDestinationsRouteImport } from './routes/educationa
 import { Route as EducationalProgramsRouteImport } from './routes/educational-programs'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as LocationsRouteImport } from './routes/locations'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OfficeVisitRouteImport } from './routes/office-visit'
 import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PartnersRouteImport } from './routes/partners'
@@ -36,6 +37,7 @@ import { Route as StudentAuthRouteImport } from './routes/student-auth'
 import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -99,6 +101,7 @@ import { Route as TeamMessagesRouteImport } from './routes/team.messages'
 import { Route as TeamSpreadsheetRouteImport } from './routes/team.spreadsheet'
 import { Route as TeamSubmitRouteImport } from './routes/team.submit'
 import { Route as TeamWhatsappRouteImport } from './routes/team.whatsapp'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AdminCasesIdRouteImport } from './routes/admin.cases.$id'
 import { Route as StudentToolsBagrutRouteImport } from './routes/student.tools.bagrut'
 import { Route as StudentToolsCvRouteImport } from './routes/student.tools.cv'
@@ -188,6 +191,11 @@ const LocationsRoute = LocationsRouteImport.update({
   path: '/locations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OfficeVisitRoute = OfficeVisitRouteImport.update({
   id: '/office-visit',
   path: '/office-visit',
@@ -253,6 +261,12 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -571,6 +585,11 @@ const TeamWhatsappRoute = TeamWhatsappRouteImport.update({
   path: '/whatsapp',
   getParentRoute: () => TeamRoute,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCasesIdRoute = AdminCasesIdRouteImport.update({
   id: '/cases/$id',
   path: '/cases/$id',
@@ -681,6 +700,7 @@ export interface FileRoutesByFullPath {
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
   '/locations': typeof LocationsRoute
+  '/mcp': typeof McpRoute
   '/office-visit': typeof OfficeVisitRoute
   '/partner': typeof PartnerRouteWithChildren
   '/partners': typeof PartnersRoute
@@ -694,6 +714,7 @@ export interface FileRoutesByFullPath {
   '/student-dashboard': typeof StudentDashboardRoute
   '/team': typeof TeamRouteWithChildren
   '/terms': typeof TermsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/commission': typeof AdminCommissionRoute
@@ -757,6 +778,7 @@ export interface FileRoutesByFullPath {
   '/resources/': typeof ResourcesIndexRoute
   '/student/': typeof StudentIndexRoute
   '/team/': typeof TeamIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
@@ -789,6 +811,7 @@ export interface FileRoutesByTo {
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
   '/locations': typeof LocationsRoute
+  '/mcp': typeof McpRoute
   '/office-visit': typeof OfficeVisitRoute
   '/partners': typeof PartnersRoute
   '/partnership': typeof PartnershipRoute
@@ -799,6 +822,7 @@ export interface FileRoutesByTo {
   '/student-auth': typeof StudentAuthRoute
   '/student-dashboard': typeof StudentDashboardRoute
   '/terms': typeof TermsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/commission': typeof AdminCommissionRoute
@@ -862,6 +886,7 @@ export interface FileRoutesByTo {
   '/resources': typeof ResourcesIndexRoute
   '/student': typeof StudentIndexRoute
   '/team': typeof TeamIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
@@ -897,6 +922,7 @@ export interface FileRoutesById {
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
   '/locations': typeof LocationsRoute
+  '/mcp': typeof McpRoute
   '/office-visit': typeof OfficeVisitRoute
   '/partner': typeof PartnerRouteWithChildren
   '/partners': typeof PartnersRoute
@@ -910,6 +936,7 @@ export interface FileRoutesById {
   '/student-dashboard': typeof StudentDashboardRoute
   '/team': typeof TeamRouteWithChildren
   '/terms': typeof TermsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/commission': typeof AdminCommissionRoute
@@ -973,6 +1000,7 @@ export interface FileRoutesById {
   '/resources/': typeof ResourcesIndexRoute
   '/student/': typeof StudentIndexRoute
   '/team/': typeof TeamIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
@@ -1009,6 +1037,7 @@ export interface FileRouteTypes {
     | '/educational-programs'
     | '/faq'
     | '/locations'
+    | '/mcp'
     | '/office-visit'
     | '/partner'
     | '/partners'
@@ -1022,6 +1051,7 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/team'
     | '/terms'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/activity'
     | '/admin/analytics'
     | '/admin/commission'
@@ -1085,6 +1115,7 @@ export interface FileRouteTypes {
     | '/resources/'
     | '/student/'
     | '/team/'
+    | '/.lovable/oauth/consent'
     | '/admin/cases/$id'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
@@ -1117,6 +1148,7 @@ export interface FileRouteTypes {
     | '/educational-programs'
     | '/faq'
     | '/locations'
+    | '/mcp'
     | '/office-visit'
     | '/partners'
     | '/partnership'
@@ -1127,6 +1159,7 @@ export interface FileRouteTypes {
     | '/student-auth'
     | '/student-dashboard'
     | '/terms'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/activity'
     | '/admin/analytics'
     | '/admin/commission'
@@ -1190,6 +1223,7 @@ export interface FileRouteTypes {
     | '/resources'
     | '/student'
     | '/team'
+    | '/.lovable/oauth/consent'
     | '/admin/cases/$id'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
@@ -1224,6 +1258,7 @@ export interface FileRouteTypes {
     | '/educational-programs'
     | '/faq'
     | '/locations'
+    | '/mcp'
     | '/office-visit'
     | '/partner'
     | '/partners'
@@ -1237,6 +1272,7 @@ export interface FileRouteTypes {
     | '/student-dashboard'
     | '/team'
     | '/terms'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/activity'
     | '/admin/analytics'
     | '/admin/commission'
@@ -1300,6 +1336,7 @@ export interface FileRouteTypes {
     | '/resources/'
     | '/student/'
     | '/team/'
+    | '/.lovable/oauth/consent'
     | '/admin/cases/$id'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
@@ -1335,6 +1372,7 @@ export interface RootRouteChildren {
   EducationalProgramsRoute: typeof EducationalProgramsRoute
   FaqRoute: typeof FaqRoute
   LocationsRoute: typeof LocationsRoute
+  McpRoute: typeof McpRoute
   OfficeVisitRoute: typeof OfficeVisitRoute
   PartnerRoute: typeof PartnerRouteWithChildren
   PartnersRoute: typeof PartnersRoute
@@ -1348,6 +1386,7 @@ export interface RootRouteChildren {
   StudentDashboardRoute: typeof StudentDashboardRoute
   TeamRoute: typeof TeamRouteWithChildren
   TermsRoute: typeof TermsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   BlogSlugRoute: typeof BlogSlugRoute
   InvoiceTokenRoute: typeof InvoiceTokenRoute
   JoinCodeRoute: typeof JoinCodeRoute
@@ -1358,6 +1397,7 @@ export interface RootRouteChildren {
   ResourcesLebenslaufBuilderRoute: typeof ResourcesLebenslaufBuilderRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1464,6 +1504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/office-visit': {
       id: '/office-visit'
       path: '/office-visit'
@@ -1553,6 +1600,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -1996,6 +2050,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamWhatsappRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/cases/$id': {
       id: '/admin/cases/$id'
       path: '/cases/$id'
@@ -2316,6 +2377,7 @@ const rootRouteChildren: RootRouteChildren = {
   EducationalProgramsRoute: EducationalProgramsRoute,
   FaqRoute: FaqRoute,
   LocationsRoute: LocationsRoute,
+  McpRoute: McpRoute,
   OfficeVisitRoute: OfficeVisitRoute,
   PartnerRoute: PartnerRouteWithChildren,
   PartnersRoute: PartnersRoute,
@@ -2329,6 +2391,8 @@ const rootRouteChildren: RootRouteChildren = {
   StudentDashboardRoute: StudentDashboardRoute,
   TeamRoute: TeamRouteWithChildren,
   TermsRoute: TermsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   BlogSlugRoute: BlogSlugRoute,
   InvoiceTokenRoute: InvoiceTokenRoute,
   JoinCodeRoute: JoinCodeRoute,
@@ -2339,6 +2403,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesLebenslaufBuilderRoute: ResourcesLebenslaufBuilderRoute,
   BlogIndexRoute: BlogIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
