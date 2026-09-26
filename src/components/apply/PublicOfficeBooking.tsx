@@ -223,6 +223,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false, onBooked 
                   disabled={(date) => !days.has(dateKey(date))}
                   {...(firstDay && lastDay ? { startMonth: firstDay, endMonth: lastDay } : {})}
                   locale={language === "ar" ? ar : enUS}
+                  classNames={{ selected: "rounded-md bg-highlight font-bold text-highlight-foreground hover:bg-highlight hover:text-highlight-foreground focus:bg-highlight focus:text-highlight-foreground" }}
                 />
               </div>
               {/* Legend */}
@@ -232,7 +233,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false, onBooked 
                   {t("apply.legendAvailable", "متاح")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-full bg-primary" aria-hidden="true" />
+                  <span className="size-2.5 rounded-full bg-highlight" aria-hidden="true" />
                   {t("apply.legendSelected", "مختار")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
