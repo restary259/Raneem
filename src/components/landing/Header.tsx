@@ -97,7 +97,7 @@ const Header = () => {
                to="/apply"
                className="inline-flex min-h-11 flex-shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-brand px-6 text-sm font-bold text-brand-foreground shadow-surface transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
              >
-              {t('hero.apply')}
+              {t('nav.apply')}
             </Link>
           </div>
 
