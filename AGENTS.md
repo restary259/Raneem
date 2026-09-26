@@ -1919,3 +1919,9 @@ catalog school `alpha-aktiv`.
   HTTP/2 `INTERNAL_ERROR` and `uni-saarland.de` times out, which used to turn
   `main` red on its own. `major-intel-links.yml` sets the env var and runs it
   standalone (also bun-installed); that job is meant to go red on a real 404/410/5xx.
+
+## Public office visit requests (2026-09-26)
+- Public `/office-visit` uses a hashed 14-day opaque token and service-role-only booking RPC, because a case ID or phone number is not proof of ownership.
+- A visitor's 10:00–18:00 Sunday–Thursday slot is a pending request until their assigned team member explicitly confirms it, because assignment must not silently promise availability or send confirmed-appointment automation.
+- Public booking excludes overlapping one-hour office slots with a database exclusion constraint, because simultaneous applicants must not claim the same time.
+- Landing translations exist in bundled `src/locales` and public `public/locales`; update both, because visitors render the bundled copy while other namespace loads may use HTTP.
