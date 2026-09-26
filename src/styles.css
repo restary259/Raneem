@@ -49,6 +49,13 @@
   --color-trust: hsl(var(--trust));
   --color-editorial-paper: hsl(var(--editorial-paper));
   --color-hero-panel: hsl(var(--hero-panel));
+  --color-story-coral: hsl(var(--story-coral));
+  --color-story-rose: hsl(var(--story-rose));
+  --color-story-plum: hsl(var(--story-plum));
+  --color-story-sky: hsl(var(--story-sky));
+  --color-story-mint: hsl(var(--story-mint));
+  --color-story-lime: hsl(var(--story-lime));
+  --color-story-peach: hsl(var(--story-peach));
 
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -157,6 +164,15 @@
   --trust: 188.6 100% 30%;
   --editorial-paper: 210 20% 98%;
   --hero-panel: 0 0% 3%;
+
+  /* Light-only visitor card surfaces: DARB's spectrum softened for navy ink. */
+  --story-coral: 3 89% 87%;
+  --story-rose: 336 74% 86%;
+  --story-plum: 302 34% 84%;
+  --story-sky: 218 78% 86%;
+  --story-mint: 151 51% 82%;
+  --story-lime: 80 61% 79%;
+  --story-peach: 32 92% 83%;
 
   --destructive: 0 90.6% 58.6%;
   --destructive-foreground: 210 40% 98%;

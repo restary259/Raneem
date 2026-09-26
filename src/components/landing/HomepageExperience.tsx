@@ -42,6 +42,7 @@ type PathItem = TextItem & { href: string };
 const practicalIcons = [GraduationCap, Languages, Building2];
 const journeyIcons = [SearchCheck, Compass, FileCheck2, Languages, ShieldCheck, Home, Plane, GraduationCap];
 const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, MessageCircle, FileCheck2];
+const nextStepSurfaces = ["bg-story-sky", "bg-story-rose", "bg-story-lime", "bg-story-mint", "bg-story-peach", "bg-story-coral"];
 
 const examBrands = [
   { id: "TestDaF", label: "TestDaF", website: "https://www.testdaf.de/", logo: testDafLogo.url },
@@ -142,12 +143,12 @@ const HomepageExperience = () => {
             <h2 id="homepage-next-step-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("homepage.nextStep.title")}</h2>
             <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">{t("homepage.nextStep.body")}</p>
           </div>
-          <div className="mt-8 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {nextStepRoutes.map((item, index) => {
               const Icon = nextStepIcons[index] ?? Compass;
-              return <Link key={item.title} to={item.href} className="group grid min-h-36 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 bg-background p-5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+              return <Link key={item.title} to={item.href} className={`group grid min-h-36 min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 rounded-lg border border-primary/10 p-5 text-primary transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none ${nextStepSurfaces[index] ?? "bg-story-sky"}`}>
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground"><Icon className="size-4.5" /></span>
-                <span className="min-w-0"><span className="block font-bold text-primary">{item.title}</span><span className="mt-2 block text-sm leading-6 text-muted-foreground">{item.description}</span></span><Arrow className="mt-1 size-4 text-brand-strong transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                <span className="min-w-0"><span className="block font-bold text-primary">{item.title}</span><span className="mt-2 block text-sm leading-6 text-primary/80">{item.description}</span></span><Arrow className="mt-1 size-4 text-primary transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
               </Link>;
             })}
           </div>
