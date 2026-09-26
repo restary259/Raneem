@@ -34,6 +34,8 @@ import {
   XCircle,
   Loader2,
   RotateCcw,
+  CalendarDays,
+  Mail,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -293,6 +295,9 @@ const AdminPipelinePage = () => {
   const [cancelling, setCancelling] = useState(false);
   const [colLimits, setColLimits] = useState<Record<string, number>>({});
   const [attribution, setAttribution] = useState<Record<string, AttributionInfo> | null>(null);
+  const [caseAppointment, setCaseAppointment] = useState<any | null>(null);
+  const [appointmentLoading, setAppointmentLoading] = useState(false);
+  const [appointmentAction, setAppointmentAction] = useState<string | null>(null);
 
 
   /* ── fetch data ── */
@@ -359,13 +364,30 @@ const AdminPipelinePage = () => {
   /* ── sheet open — fetch fresh from DB to avoid stale cache ── */
   const openCase = async (c: Case) => {
     setEditMode(false);
+    setAppointmentLoading(true);
+    setCaseAppointment(null);
     setDraft(null);
     // Always fetch fresh — never trust the card's cached data
     try {
       const data = await CaseService.getById(c.id);
+      const { data: appt } = await supabase
+        .from("appointments")
+        .select("id, case_id, scheduled_at, duration_minutes, status, confirmation_status, public_booking, outcome, team_member_id")
+        .eq("case_id", c.id)
+        .is("outcome", null)
+        .order("scheduled_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (data) {
         setSelectedCase({ ...(data as any), assignee_name: c.assignee_name } as Case);
+        setCaseAppointment(appt ?? null);
       }
+    } catch (err: any) {
+      console.error("[openCase] fetch error:", err.message);
+      setSelectedCase(c);
+    } finally {
+      setAppointmentLoading(false);
+    }
     } catch (err: any) {
       console.error("[openCase] fetch error:", err.message);
       setSelectedCase(c); // fallback to card data
@@ -823,6 +845,41 @@ const AdminPipelinePage = () => {
                   <ExternalLink className="h-4 w-4" />
                   {t("admin.submissions.openFullCase")}
                 </Button>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Appointment</p>
+                    {appointmentLoading ? <Loader2 className="mt-3 size-4 animate-spin" /> : caseAppointment ? (
+                      <>
+                        <p className="mt-2 flex items-center gap-2 text-sm font-semibold"><CalendarDays className="size-4 text-primary" />{new Date(caseAppointment.scheduled_at).toLocaleString("en-IL", { timeZone: "Asia/Jerusalem", weekday: "short", dateStyle: "medium", timeStyle: "short" })}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{caseAppointment.confirmation_status === "confirmed" ? "Confirmed" : "Awaiting confirmation"}{caseAppointment.public_booking ? " · Public booking" : ""}</p>
+                      </>
+                    ) : <p className="mt-2 text-sm text-muted-foreground">No appointment linked to this case.</p>}
+                  </div>
+                  {caseAppointment?.confirmation_status === "pending" && selectedCase.assigned_to && <Button
+                    size="sm"
+                    disabled={!!appointmentAction}
+                    onClick={async () => {
+                      setAppointmentAction("confirm");
+                      try {
+                        const { error } = await supabase.rpc("confirm_public_appointment", { p_appointment_id: caseAppointment.id });
+                        if (error) throw error;
+                        toast({ description: "Appointment confirmed" });
+                        await openCase(selectedCase);
+                        await fetchData();
+                      } catch (err: any) {
+                        toast({ variant: "destructive", description: err.message ?? "Unable to confirm appointment" });
+                      } finally { setAppointmentAction(null); }
+                    }}
+                  >
+                    {appointmentAction === "confirm" ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Confirm
+                  </Button>}
+                </div>
+                {caseAppointment && selectedCase.assigned_to && caseAppointment.confirmation_status === "pending" && (
+                  <p className="mt-3 text-xs text-muted-foreground">Assigned staff can confirm this request from their appointment workspace too.</p>
+                )}
               </div>
 
               <div className="space-y-6">
