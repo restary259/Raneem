@@ -302,7 +302,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   if (submitted) {
     return (
       <div className="flex min-h-[65vh] items-start justify-center bg-background px-5 py-14 text-foreground" dir={dir}>
-        <div className="w-full max-w-lg space-y-6 text-start">
+        <div className="w-full max-w-2xl space-y-6 text-start">
           <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-brand-strong"><CheckCircle className="size-6" aria-hidden="true" /></div>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold leading-tight sm:text-3xl">{t("apply.successTitle")}</h2>
