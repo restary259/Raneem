@@ -282,15 +282,15 @@
   "homepage": {
     "hero": {
       "eyebrow": "DARB · Study International",
-      "title": "Your path to studying in Germany",
+      "title": "Complete program to study in Germany",
       "imageAlt": "A German university setting representing the beginning of a study journey",
       "reassurance": "Get started with a profile assessment — free of charge",
       "campaign": "DARB",
       "rotating": [
-        "Medicine and dentistry",
-        "Engineering and technology",
-        "Language and foundation year",
-        "Top German universities"
+        "University admission and language school",
+        "Student visa and blocked account",
+        "Bagrut recognition and foundation year",
+        "Housing and support until you arrive"
       ]
     },
     "actions": {
