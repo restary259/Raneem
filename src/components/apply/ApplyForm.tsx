@@ -140,7 +140,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const hasCompanions = applyingWith !== "alone";
 
   const canGoNext = () => {
-    if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone);
+    if (step === 1) return fullName.trim() && phone.trim() && isValidPhone(phone) && city.trim().length > 0;
     return true;
   };
 
@@ -348,7 +348,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                 ))}
               </div>
              </FieldGroup></details>
-            <FieldGroup label={isAr ? "المدينة (اختياري)" : "City (optional)"}>
+            <FieldGroup label={isAr ? "المدينة *" : "City *"}>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
             </FieldGroup>
           </div>
