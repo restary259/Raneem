@@ -6457,6 +6457,10 @@ export type Database = {
         Returns: undefined
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
+      create_public_appointment_access: {
+        Args: { p_case_id: string; p_token_hash: string }
+        Returns: undefined
+      }
       delete_catalog_entity: {
         Args: { p_id: string; p_kind: string }
         Returns: Json
