@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.reconcile_public_booking_request() FROM PUBLIC,anon,authenticated;
