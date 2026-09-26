@@ -85,7 +85,7 @@ serve(async (req) => {
     }).eq("id", appointment_id);
     if (apptUpdateError) {
       console.error("outcome: appointment update failed", apptUpdateError);
-      return new Response(JSON.stringify({ error: apptUpdateError.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Could not save the appointment outcome" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Update case status based on outcome
@@ -105,7 +105,7 @@ serve(async (req) => {
         // rather than pretending the whole operation succeeded.
         console.error("outcome: case status update failed", caseUpdateError);
         return new Response(
-          JSON.stringify({ error: caseUpdateError.message, outcome_saved: true }),
+          JSON.stringify({ error: "Outcome saved, but the case status could not be updated", outcome_saved: true }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
@@ -123,7 +123,7 @@ serve(async (req) => {
       if (newApptError) {
         console.error("outcome: reschedule insert failed", newApptError);
         return new Response(
-          JSON.stringify({ error: newApptError.message, outcome_saved: true }),
+          JSON.stringify({ error: "Outcome saved, but the new appointment could not be created", outcome_saved: true }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
