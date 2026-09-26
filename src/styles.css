@@ -947,6 +947,7 @@ a[href*="lovable.dev"] {
   position: relative;
   display: block;
   overflow: hidden;
+  padding-bottom: 0.14em;
 }
 
 .darb-rotating-ghost {
