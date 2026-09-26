@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import CaseApplicationInfo from "@/components/cases/CaseApplicationInfo";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -827,6 +828,13 @@ const AdminPipelinePage = () => {
                   )}
                 </div>
               </SheetHeader>
+              <div className="mt-4">
+                <CaseApplicationInfo
+                  caseId={selectedCase.id}
+                  preferredMajorId={(selectedCase as any).preferred_major_id ?? null}
+                  degreeInterest={selectedCase.degree_interest}
+                />
+              </div>
 
               <div className="pb-2">
                 <Button

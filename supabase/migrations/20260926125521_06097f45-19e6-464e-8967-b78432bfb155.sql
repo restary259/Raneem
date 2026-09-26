@@ -1,0 +1,1 @@
+UPDATE public.appointments a SET team_member_id = c.assigned_to, updated_at = now() FROM public.cases c WHERE a.case_id = c.id AND a.public_booking AND a.team_member_id IS NULL AND c.assigned_to IS NOT NULL AND a.outcome IS NULL;

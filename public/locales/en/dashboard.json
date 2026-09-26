@@ -3182,6 +3182,14 @@
       "notVerified": "Not verified yet",
       "saveFailed": "Could not save the field of study",
       "note": "This only records which field of study the case is about. It decides nothing about eligibility."
+    },
+    "application": {
+      "major": "Chosen major",
+      "visit": "Office visit",
+      "pending": "Pending confirmation",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "noVisit": "No visit booked"
     }
   },
   "partner": {
