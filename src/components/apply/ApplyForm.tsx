@@ -330,8 +330,8 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
       </div>
       <div className="space-y-6">
 
-        {/* Step 1 — Alone or with a friend */}
-        {step === 1 && (
+        {/* Step 3 — Alone or with a friend */}
+        {step === 3 && (
           <div className="space-y-4 animate-fade-in">
             <FieldGroup label={isAr ? "كيف رح تقدّم؟" : "How are you applying?"}>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
