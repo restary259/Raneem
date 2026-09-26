@@ -271,7 +271,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false, onBooked 
                         disabled={working}
                         className={`rounded-lg border px-2 py-2.5 text-sm font-medium tabular-nums transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                           isSelected
-                            ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                            ? "border-highlight bg-highlight font-bold text-highlight-foreground shadow-sm"
                             : "border-border bg-background hover:border-primary/60 hover:bg-primary/5"
                         }`}
                         dir="ltr"

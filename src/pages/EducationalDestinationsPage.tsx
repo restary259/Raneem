@@ -62,7 +62,7 @@ const EducationalDestinationsPage = () => {
             <div className="grid gap-9 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
               <div className="max-w-xl">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("destinations.introEyebrow")}</p>
-                <h2 id="destination-choice-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-5xl">
+                <h2 id="destination-choice-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-4xl">
                   {t("destinations.editorial.choiceTitle")}
                 </h2>
                 <p className="mt-4 text-base leading-8 text-muted-foreground">{t("destinations.editorial.choiceBody")}</p>
@@ -87,7 +87,7 @@ const EducationalDestinationsPage = () => {
           <div className="container">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("destinations.citiesEyebrow")}</p>
-              <h2 id="destination-cities-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-5xl">{t("destinations.editorial.citiesTitle")}</h2>
+              <h2 id="destination-cities-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("destinations.editorial.citiesTitle")}</h2>
               <p className="mt-4 text-base leading-7 text-muted-foreground">{t("destinations.editorial.citiesBody")}</p>
             </div>
 
@@ -102,7 +102,7 @@ const EducationalDestinationsPage = () => {
                       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 text-primary-foreground sm:p-7">
                         <div>
                           <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/70">{t(`destinations.cities.${city.id}.region`)}</p>
-                          <h3 className="mt-1 font-editorial text-4xl sm:text-6xl">{city.name}</h3>
+                          <h3 className="mt-1 font-editorial text-4xl sm:text-5xl">{city.name}</h3>
                         </div>
                         <span className="font-editorial text-5xl text-primary-foreground/35 sm:text-7xl">{String(index + 1).padStart(2, "0")}</span>
                       </div>
@@ -148,7 +148,7 @@ const EducationalDestinationsPage = () => {
             <div className="grid gap-8 lg:grid-cols-[0.62fr_1.38fr]">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("destinations.tu9Eyebrow")}</p>
-                <h2 id="destination-universities-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-5xl">{t("destinations.tu9Title")}</h2>
+                <h2 id="destination-universities-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("destinations.tu9Title")}</h2>
                 <p className="mt-4 leading-7 text-muted-foreground">{t("destinations.editorial.tu9Body")}</p>
                 <a href="https://www.tu9.de/en/" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex min-h-11 items-center gap-2 font-bold text-primary underline decoration-brand/50 underline-offset-4">{t("destinations.editorial.tu9Source")}<ArrowUpRight className="size-4" /></a>
               </div>
@@ -160,15 +160,14 @@ const EducationalDestinationsPage = () => {
           </div>
         </section>
 
-        <section className="relative overflow-hidden bg-primary text-primary-foreground">
-          <div className="container grid gap-7 py-14 sm:py-18 lg:grid-cols-[1fr_auto] lg:items-end">
+        <section className="relative overflow-hidden border-t border-border bg-canvas text-primary">
+          <div className="container grid gap-7 py-16 sm:py-24 lg:grid-cols-[1fr_auto] lg:items-end">
             <div className="max-w-3xl">
-              <h2 className="mt-3 text-balance font-editorial text-4xl leading-tight sm:text-6xl">{t("destinations.endTitle")}</h2>
-              <p className="mt-4 max-w-2xl leading-7 text-primary-foreground/75">{t("destinations.endBody")}</p>
+              <h2 className="mt-3 text-balance font-editorial text-4xl leading-tight sm:text-4xl">{t("destinations.endTitle")}</h2>
+              <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">{t("destinations.endBody")}</p>
             </div>
-            <Button asChild size="lg"><Link to="/apply">{t("destinations.endButton")}<Arrow /></Link></Button>
+            <Button asChild size="lg" variant="cta"><Link to="/apply">{t("destinations.endButton")}<Arrow /></Link></Button>
           </div>
-          <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg block rounded-none" />
         </section>
 
         <DarbContactCta />

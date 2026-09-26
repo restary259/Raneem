@@ -35,7 +35,7 @@ const WhoWeArePage = () => {
           <div className="container">
             <div className="mx-auto max-w-4xl text-center">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.story.eyebrow")}</p>
-              <h2 id="about-story-title" className="mt-3 text-balance font-editorial text-4xl leading-tight text-primary sm:text-6xl">{t("whoWeAre.story.title")}</h2>
+              <h2 id="about-story-title" className="mt-3 text-balance font-editorial text-4xl leading-tight text-primary sm:text-4xl">{t("whoWeAre.story.title")}</h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground">{t("whoWeAre.story.body")}</p>
             </div>
 
@@ -60,12 +60,12 @@ const WhoWeArePage = () => {
         <section className="bg-editorial-paper py-14 sm:py-20" aria-labelledby="about-direction-title">
           <div className="container">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.direction.eyebrow")}</p>
-            <h2 id="about-direction-title" className="mt-3 max-w-3xl text-balance text-3xl font-bold text-primary sm:text-5xl">{t("whoWeAre.direction.title")}</h2>
+            <h2 id="about-direction-title" className="mt-3 max-w-3xl text-balance text-3xl font-bold text-primary sm:text-4xl">{t("whoWeAre.direction.title")}</h2>
             <div className="mt-10 grid gap-px overflow-hidden border border-border bg-border lg:grid-cols-2">
-              <article className="bg-primary p-7 text-primary-foreground sm:p-10">
+              <article className="bg-info-surface p-7 sm:p-10">
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand">{t("whoWeAre.direction.missionLabel")}</p>
-                <h3 className="mt-5 font-editorial text-4xl leading-tight sm:text-5xl">{t("whoWeAre.direction.missionTitle")}</h3>
-                <p className="mt-5 max-w-xl leading-7 text-primary-foreground/75">{t("whoWeAre.direction.missionBody")}</p>
+                <h3 className="mt-5 font-editorial text-3xl leading-tight text-primary sm:text-4xl">{t("whoWeAre.direction.missionTitle")}</h3>
+                <p className="mt-5 max-w-xl leading-7 text-muted-foreground">{t("whoWeAre.direction.missionBody")}</p>
               </article>
               <article className="bg-background p-7 sm:p-10">
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{t("whoWeAre.direction.visionLabel")}</p>
@@ -80,7 +80,7 @@ const WhoWeArePage = () => {
           <div className="container grid gap-10 lg:grid-cols-[0.62fr_1.38fr]">
             <div className="lg:sticky lg:top-32 lg:self-start">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("whoWeAre.principles.eyebrow")}</p>
-              <h2 id="about-principles-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-5xl">{t("whoWeAre.principles.title")}</h2>
+              <h2 id="about-principles-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-4xl">{t("whoWeAre.principles.title")}</h2>
               <p className="mt-4 max-w-lg leading-7 text-muted-foreground">{t("whoWeAre.principles.body")}</p>
             </div>
             <div className="border-t border-border">
@@ -95,18 +95,17 @@ const WhoWeArePage = () => {
           </div>
         </section>
 
-        <section className="relative overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20" aria-labelledby="about-team-title">
+        <section className="relative overflow-hidden border-t border-border bg-canvas py-16 text-primary sm:py-24" aria-labelledby="about-team-title">
           <div className="container relative z-10 grid gap-9 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("whoWeAre.team.eyebrow")}</p>
-              <h2 id="about-team-title" className="mt-3 text-balance font-editorial text-4xl leading-tight sm:text-6xl">{t("whoWeAre.team.title")}</h2>
+              <h2 id="about-team-title" className="mt-3 text-balance font-editorial text-4xl leading-tight sm:text-4xl">{t("whoWeAre.team.title")}</h2>
             </div>
             <div className="max-w-2xl lg:justify-self-end">
-              <p className="text-base leading-8 text-primary-foreground/75">{t("whoWeAre.team.body")}</p>
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-6 inline-flex min-h-11 items-center gap-2 font-bold text-primary-foreground underline decoration-brand/70 underline-offset-4"><Mail className="size-4" />{t("whoWeAre.team.contact")}<ArrowUpRight className="size-4" /></a>
+              <p className="text-base leading-8 text-muted-foreground">{t("whoWeAre.team.body")}</p>
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-6 inline-flex min-h-11 items-center gap-2 font-bold text-primary underline decoration-highlight decoration-2 underline-offset-4"><Mail className="size-4" />{t("whoWeAre.team.contact")}<ArrowUpRight className="size-4" /></a>
             </div>
           </div>
-          <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 rounded-none" />
         </section>
 
         <DarbContactCta />
