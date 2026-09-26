@@ -239,7 +239,13 @@
     "summaryEmpty": "اختر التاريخ والوقت لعرض التفاصيل هنا.",
     "confirmVisit": "تأكيد طلب الزيارة",
     "visitRequestedTitle": "تم إرسال طلب زيارتك",
-    "visitRequestedBody": "سيؤكد فريق درب موعدك ويرسل لك التفاصيل عبر واتساب."
+    "visitRequestedBody": "سيؤكد فريق درب موعدك ويرسل لك التفاصيل عبر واتساب.",
+    "reviewStep": "مراجعة وإرسال",
+    "collectedData": "راجع بياناتك",
+    "consentDetails": "أوافق على أن يتواصل معي فريق درب بشأن طلبي.",
+    "consentAgree": "أوافق",
+    "applicationIntro": "بضع تفاصيل سريعة، وفريق درب يتولى الباقي.",
+    "slotTaken": "هذا الوقت حُجز للتو. اختر وقتًا آخر."
   },
   "homepage": {
     "hero": {

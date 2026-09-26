@@ -239,7 +239,13 @@
     "summaryEmpty": "Pick a date and time to see the details here.",
     "confirmVisit": "Confirm visit request",
     "visitRequestedTitle": "Your visit request was sent",
-    "visitRequestedBody": "The DARB team will confirm your appointment and message you on WhatsApp with the details."
+    "visitRequestedBody": "The DARB team will confirm your appointment and message you on WhatsApp with the details.",
+    "reviewStep": "Review & submit",
+    "collectedData": "Review your details",
+    "consentDetails": "I agree to be contacted about my application.",
+    "consentAgree": "I agree",
+    "applicationIntro": "A few quick details and the DARB team takes it from there.",
+    "slotTaken": "That time was just taken. Please pick another."
   },
   "homepage": {
     "hero": {
