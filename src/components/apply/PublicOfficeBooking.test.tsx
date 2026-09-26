@@ -29,9 +29,9 @@ describe("PublicOfficeBooking", () => {
     expect(await screen.findByText("apply.availableTimes")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "10:00" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "10:30" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "apply.requestVisit" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "apply.confirmVisit" })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "10:30" }));
-    await user.click(screen.getByRole("button", { name: "apply.requestVisit" }));
+    await user.click(screen.getByRole("button", { name: "apply.confirmVisit" }));
     await waitFor(() => expect(call).toHaveBeenCalledWith({ data: { token: "a".repeat(64), action: "book", slot: slots[1] } }));
     expect(await screen.findByText("apply.visitPending")).toBeInTheDocument();
   });
@@ -54,7 +54,7 @@ describe("PublicOfficeBooking", () => {
     render(<PublicOfficeBooking token={"a".repeat(64)} autoOpen />);
     const time = await screen.findByRole("button", { name: "10:00" });
     await user.click(time);
-    await user.click(screen.getByRole("button", { name: "apply.requestVisit" }));
+    await user.click(screen.getByRole("button", { name: "apply.confirmVisit" }));
     expect(time).toBeDisabled();
     expect(screen.getByRole("button", { name: "apply.closeCalendar" })).toBeDisabled();
     resolveRequest({ scheduled_at: slots[0], status: "pending" });

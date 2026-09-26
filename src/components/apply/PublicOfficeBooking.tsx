@@ -249,6 +249,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
                         type="button"
                         onClick={() => setSelected(slot)}
                         aria-pressed={isSelected}
+                        disabled={working}
                         className={`rounded-lg border px-2 py-2.5 text-sm font-medium tabular-nums transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                           isSelected
                             ? "border-primary bg-primary text-primary-foreground shadow-sm"
@@ -314,6 +315,7 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
             <button
               type="button"
               onClick={() => { setOpen(false); setSelected(""); setError(""); }}
+              disabled={working}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               <X className="size-3.5" aria-hidden="true" />
