@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { formatDateMedium } from "@/utils/dateUtils";
 import CaseMajorLink from "@/components/cases/CaseMajorLink";
+import CaseApplicationInfo from "@/components/cases/CaseApplicationInfo";
 
 interface Props {
   caseData: Record<string, any>;
@@ -79,6 +80,11 @@ export default function CaseOverviewPanel({ caseData }: Props) {
 
   return (
     <div className="space-y-3">
+      <CaseApplicationInfo
+        caseId={caseData.id}
+        preferredMajorId={caseData.preferred_major_id ?? null}
+        degreeInterest={caseData.degree_interest ?? null}
+      />
       <CaseMajorLink
         caseId={caseData.id}
         degreeInterest={caseData.degree_interest ?? null}
