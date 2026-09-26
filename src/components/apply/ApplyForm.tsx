@@ -69,6 +69,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   // Step 1 — Identity
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [passportType, setPassportType] = useState("");
   const [city, setCity] = useState("");
 
@@ -140,7 +141,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
 
   const canGoNext = () => {
     if (step === 1) return applyingWith === "alone" || Boolean(companions[0]?.name.trim() && isValidPhone(companions[0]?.phone ?? ""));
-    if (step === 2) return Boolean(fullName.trim() && phone.trim() && isValidPhone(phone) && city.trim());
+    if (step === 2) return Boolean(fullName.trim() && phone.trim() && isValidPhone(phone) && city.trim() && email.trim() && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim()));
     if (step === 3) return !showBagrut || Boolean(englishUnits && mathUnits);
     if (step === 4) return consentAgreed;
     return false;
@@ -200,6 +201,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
     const basePayload = {
       full_name: fullName.trim(),
       phone_number: phone.trim(),
+      email: email.trim().toLowerCase(),
       source: "apply_page",
       ref_code: refCode,
       city: city.trim() || null,
@@ -384,6 +386,9 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             </FieldGroup>
             <FieldGroup label={isAr ? "المدينة *" : "City *"}>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder={isAr ? "مثال: حيفا" : "e.g. Haifa"} dir={dir} className="h-11" />
+            </FieldGroup>
+            <FieldGroup label={isAr ? "البريد الإلكتروني *" : "Email *"}>
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={isAr ? "name@example.com" : "name@example.com"} dir="ltr" type="email" className="h-11" />
             </FieldGroup>
             <details className="text-start text-sm text-muted-foreground">
               <summary className="cursor-pointer font-medium">{t("apply.extraDetails")}</summary>
