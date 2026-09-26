@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { ar, enUS } from "date-fns/locale";
-import { CalendarDays, Check, Loader2, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
+import { CalendarDays, Check, Loader2, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { managePublicBooking } from "@/lib/publicBooking.functions";
@@ -95,7 +95,10 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
         setStatus(typeof result.status === "string" ? result.status : "pending");
       }
       setSelected(""); setOpen(false);
-    } catch { setError(t("apply.bookingUnavailable")); }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      setError(message === "Time unavailable" ? t("apply.slotTaken") : t("apply.bookingUnavailable"));
+    }
     finally { setWorking(false); }
   };
 
@@ -103,61 +106,145 @@ export default function PublicOfficeBooking({ token, autoOpen = false }: { token
   if (invalid) return <p role="alert" className="border-s-2 border-destructive bg-muted px-4 py-3 text-sm leading-6 text-foreground">{t("apply.invalidVisitLink")}</p>;
 
   return <div className="w-full space-y-5 text-start">
-    {current && <div role="status" className="border-s-2 border-brand bg-editorial-paper px-4 py-4">
-      <p className="text-xs font-semibold text-brand-strong">{t(status === "confirmed" ? "apply.visitConfirmed" : "apply.visitPending")}</p>
-      <p className="mt-1 font-semibold text-foreground" dir="auto">{formatVisit(current, language)}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{t("apply.officeLocation")}</p>
-    </div>}
-    {!open ? <Button type="button" onClick={loadSlots} variant={current ? "outline" : "default"} className="w-full" disabled={working}>
-      <CalendarDays aria-hidden="true" />{t(current ? "apply.changeVisit" : "apply.bookVisit")}
-    </Button> : <div className="space-y-5">
-      <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><MapPin className="size-4 text-brand-strong" aria-hidden="true" />{t("apply.pickTime")}</div>
-      {working && !slots.length ? <div className="flex h-48 items-center justify-center" role="status"><Loader2 className="size-5 animate-spin text-muted-foreground" /><span className="sr-only">{t("apply.loadingVisit")}</span></div> : slots.length && firstDay && lastDay ? <>
-        <div className="flex justify-center border border-border bg-card p-1 sm:p-3">
-          <Calendar
-            mode="single"
-            locale={language === "ar" ? ar : enUS}
-            numerals="latn"
-            dir={language === "ar" ? "rtl" : "ltr"}
-            selected={selectedDay ? localDate(selectedDay) : undefined}
-            onSelect={(day) => { setSelectedDay(day ? dateKey(day) : ""); setSelected(""); }}
-            disabled={(day) => working || !days.has(dateKey(day))}
-            startMonth={firstDay}
-            endMonth={lastDay}
-            defaultMonth={firstDay}
-            showOutsideDays={false}
-            className="pointer-events-auto w-fit p-2 [--rdp-day_button-width:40px] [--rdp-day_button-height:40px]"
-          />
+    {current && <div role="status" className="rounded-2xl border border-brand/20 bg-editorial-paper p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand-strong">
+          <CalendarDays className="size-5" aria-hidden="true" />
         </div>
-        {selectedDay && <div className="space-y-3">
-          <p className="text-sm font-semibold text-foreground">{t("apply.availableTimes")}</p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" dir="ltr">
-            {daySlots.map((slot) => <Button key={slot} type="button" variant={selected === slot ? "default" : "outline"} disabled={working || confirming} onClick={() => setSelected(slot)} aria-pressed={selected === slot} className="w-full rounded-md px-2 tabular-nums">
-              {selected === slot && <Check aria-hidden="true" />}{formatTime(slot)}
-            </Button>)}
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-strong">{t(status === "confirmed" ? "apply.visitConfirmed" : "apply.visitPending")}</p>
+          <p className="mt-1 font-semibold text-foreground" dir="auto">{formatVisit(current, language)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("apply.officeLocation")}</p>
+        </div>
+      </div>
+    </div>}
+
+    {!open ? (
+      <Button type="button" onClick={loadSlots} variant={current ? "outline" : "default"} className="h-11 w-full" disabled={working}>
+        <CalendarDays aria-hidden="true" />{t(current ? "apply.changeVisit" : "apply.bookVisit")}
+      </Button>
+    ) : (
+      <div className="space-y-5">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(290px,0.75fr)] lg:items-start">
+          <div className="space-y-5">
+            <div className="flex items-center gap-2">
+              <div className="flex size-9 items-center justify-center rounded-full bg-brand-strong/10 text-brand-strong">
+                <MapPin className="size-4" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{t("apply.pickTime")}</p>
+                <p className="text-xs text-muted-foreground">{t("apply.requestNotice")}</p>
+              </div>
+            </div>
+
+            {working && !slots.length ? (
+              <div className="flex h-52 items-center justify-center rounded-2xl border border-border bg-card" role="status">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                <span className="sr-only">{t("apply.loadingVisit")}</span>
+              </div>
+            ) : slots.length && firstDay && lastDay ? (
+              <>
+                <div className="rounded-2xl border border-border bg-card p-2 shadow-sm sm:p-3">
+                  <Calendar
+                    mode="single"
+                    locale={language === "ar" ? ar : enUS}
+                    numerals="latn"
+                    dir={language === "ar" ? "rtl" : "ltr"}
+                    selected={selectedDay ? localDate(selectedDay) : undefined}
+                    onSelect={(day) => { setSelectedDay(day ? dateKey(day) : ""); setSelected(""); }}
+                    disabled={(day) => working || !days.has(dateKey(day))}
+                    startMonth={firstDay}
+                    endMonth={lastDay}
+                    defaultMonth={firstDay}
+                    showOutsideDays={false}
+                    className="pointer-events-auto mx-auto w-fit p-1 sm:p-2 [--rdp-day_button-width:42px] [--rdp-day_button-height:42px]"
+                  />
+                </div>
+
+                {selectedDay && <div className="space-y-3">
+                  <p className="text-sm font-semibold text-foreground">{t("apply.availableTimes")}</p>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" dir="ltr">
+                    {daySlots.map((slot) => (
+                      <Button
+                        key={slot}
+                        type="button"
+                        variant={selected === slot ? "default" : "outline"}
+                        disabled={working || confirming}
+                        onClick={() => setSelected(slot)}
+                        aria-pressed={selected === slot}
+                        className="h-11 w-full rounded-xl px-2 tabular-nums transition-all duration-200"
+                      >
+                        {selected === slot && <Check aria-hidden="true" />}{formatTime(slot)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>}
+              </>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">{t("apply.noTimes")}</p>
+            )}
           </div>
-        </div>}
-        <p className="text-xs leading-5 text-muted-foreground">{t("apply.requestNotice")}</p>
-        {selected && !confirming && <div className="rounded-xl border border-border bg-muted/20 p-4 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-0.5 size-5 text-brand-strong shrink-0" aria-hidden="true" />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold">{t("apply.lastConfirmTitle")}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{t("apply.lastConfirmDescription")}</p>
-              <p className="mt-3 font-semibold text-foreground" dir="auto">{formatVisit(selected, language)}</p>
+
+          <aside className="rounded-2xl border border-border bg-card p-4 shadow-sm lg:sticky lg:top-6">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-strong/10 text-brand-strong">
+                <MapPin className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">DARB</p>
+                <p className="text-xs text-muted-foreground">{t("apply.officeLocation")}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-muted/40 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("apply.manageVisit")}</p>
+              <p className="mt-2 text-sm font-semibold text-foreground" dir="auto">
+                {selected ? formatVisit(selected, language) : t("apply.chooseTimePlaceholder", { defaultValue: language === "ar" ? "اختار وقتًا عشان تشوف التفاصيل هون." : "Choose a time to see the details here." })}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">{t("apply.officeLocation")}</p>
             </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setSelected("")}>{t("apply.changeTime")}</Button>
-            <Button type="button" className="flex-1" disabled={working} onClick={async () => { setConfirming(true); await change(current ? "reschedule" : "book"); setConfirming(false); }}><Check aria-hidden="true" />{t("apply.confirmAppointment")}</Button>
-          </div>
-        </div>}
-        {confirming && <div role="status" className="rounded-xl border border-border bg-muted/20 p-4 text-sm"><Loader2 className="me-2 inline size-4 animate-spin" />{t("apply.confirmingAppointment")}</div>}
-      </> : <p className="py-6 text-sm text-muted-foreground">{t("apply.noTimes")}</p>}
-      <Button type="button" variant="ghost" onClick={() => { setOpen(false); setError(""); }} className="w-full" disabled={working}>{t("apply.closeCalendar")}</Button>
-    </div>}
+
+            {selected && !confirming && (
+              <div className="mt-4 rounded-xl border border-brand/20 bg-brand/5 p-4 animate-fade-in motion-reduce:animate-none">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand-strong" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">{t("apply.lastConfirmTitle")}</p>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{t("apply.lastConfirmDescription")}</p>
+                  </div>
+                </div>
+                <div className="mt-4 border-t border-brand/10 pt-4">
+                  <p className="font-semibold text-foreground" dir="auto">{formatVisit(selected, language)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("apply.officeLocation")}</p>
+                </div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setSelected("")}>{t("apply.changeTime")}</Button>
+                  <Button type="button" className="flex-1" disabled={working} onClick={async () => { setConfirming(true); await change(current ? "reschedule" : "book"); setConfirming(false); }}>
+                    <Check aria-hidden="true" />{t("apply.confirmAppointment")}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {confirming && (
+              <div role="status" className="mt-4 rounded-xl border border-border bg-muted/30 p-4 text-sm">
+                <Loader2 className="me-2 inline size-4 animate-spin" />{t("apply.confirmingAppointment")}
+              </div>
+            )}
+
+            <div className="mt-4 rounded-xl border border-border bg-background/70 p-3">
+              <p className="text-xs leading-5 text-muted-foreground">
+                {t("apply.bookingReassurance", { defaultValue: language === "ar" ? "ما بيتثبت الموعد إلا بعد تأكيدك." : "Your appointment is not requested until you confirm this final step." })}
+              </p>
+            </div>
+          </aside>
+        </div>
+
+        <Button type="button" variant="ghost" onClick={() => { setOpen(false); setError(""); }} className="w-full" disabled={working}>{t("apply.closeCalendar")}</Button>
+      </div>
+    )}
+
     {current && !open && <Button type="button" variant="link" className="h-auto px-0 text-destructive" disabled={working} onClick={() => change("cancel")}>{t("apply.cancelVisit")}</Button>}
-    {error && <p role="alert" className="text-sm leading-6 text-destructive">{error === "availability" ? t("apply.bookingUnavailable") : error}</p>}
-  </div>;
+    {error && <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm leading-6 text-destructive">{error === "availability" ? t("apply.bookingUnavailable") : error}</p>}
+  </div>;>;
 }
