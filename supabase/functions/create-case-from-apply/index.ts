@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
       degree_interest,
       intake_notes,
       email,
+      preferred_major_id,
     } = body;
 
     // Required field validation
@@ -496,6 +497,13 @@ Deno.serve(async (req) => {
         p_entity_id: newCase.id,
         p_metadata: { source, partner_id: validatedPartnerId },
       });
+    }
+
+    // Student-selected major from the DARB majors list. Format-checked; the raw
+    // typed text stays in degree_interest. Non-fatal on failure.
+    if (typeof preferred_major_id === "string" && /^[a-z0-9-]{2,80}$/.test(preferred_major_id)) {
+      const { error: majorError } = await supabaseAdmin.from("cases").update({ preferred_major_id }).eq("id", newCase.id);
+      if (majorError) console.error("preferred_major_id could not be saved:", majorError.message);
     }
 
     // Issue booking authority only at initial creation, never from a bare case ID
