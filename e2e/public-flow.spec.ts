@@ -51,54 +51,54 @@ test.describe('public journey', () => {
     expect(payload?.data).toMatchObject({ full_name: 'Test Student', email: 'student@example.com' });
   });
 
-  test('apply starts with alone-or-friend choice and enforces Bagrut units', async ({ page }) => {
+  test('apply follows the requested four-step journey', async ({ page }) => {
+    let payload: Record<string, unknown> | undefined;
+    await page.route('**/functions/v1/create-case-from-apply', async (route) => {
+      payload = route.request().postDataJSON();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '{"id":"case-test","booking_token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}',
+      });
+    });
+    await page.route('**/rest/v1/consent_records*', (route) => route.fulfill({ status: 201, contentType: 'application/json', body: '[]' }));
+
     await page.goto('/apply');
     const form = page.getByTestId('apply-form');
+
     await expect(form).toHaveAttribute('data-step', '1');
     await expect(form.getByRole('button', { name: /لوحدك|alone/i })).toBeVisible();
     await expect(form.getByRole('button', { name: /صديق|friend/i })).toBeVisible();
 
     await form.getByRole('button', { name: /التالي|Next/ }).click();
     await expect(form).toHaveAttribute('data-step', '2');
-
     await form.getByPlaceholder(/أدخل اسمك الكامل|Enter your full name/).fill('Test Applicant');
     await form.locator('input[type="tel"]').fill('0501234567');
     await form.getByPlaceholder(/مثال: حيفا|e.g. Haifa/).fill('Haifa');
     await form.getByPlaceholder('name@example.com').fill('student@example.com');
     await form.getByRole('button', { name: /التالي|Next/ }).click();
-    await expect(form).toHaveAttribute('data-step', '3');
 
+    await expect(form).toHaveAttribute('data-step', '3');
     await form.getByRole('button', { name: /بجروت|Bagrut/i }).click();
     await expect(form.getByRole('button', { name: /التالي|Next/ })).toBeDisabled();
-    await form.getByRole('button', { name: /5/ }).nth(0).click();
+    await form.getByRole('button', { name: /^5$/ }).nth(0).click();
     await expect(form.getByRole('button', { name: /التالي|Next/ })).toBeDisabled();
-    await form.getByRole('button', { name: /5/ }).nth(1).click();
+    await form.getByRole('button', { name: /^5$/ }).nth(1).click();
     await form.getByRole('button', { name: /التالي|Next/ }).click();
+
     await expect(form).toHaveAttribute('data-step', '4');
     await expect(form.locator('details').first()).toBeVisible();
-  });
-
-  test('apply creates a case and reaches the final appointment confirmation UI', async ({ page }) => {
-    let payload: Record<string, unknown> | undefined;
-    await page.route('**/functions/v1/create-case-from-apply', async (route) => {
-      payload = route.request().postDataJSON();
-      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"id":"case-test","booking_token":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}' });
-    });
-    await page.route('**/rest/v1/consent_records*', (route) => route.fulfill({ status: 201, contentType: 'application/json', body: '[]' }));
-    await page.goto('/apply');
-    const form = page.getByTestId('apply-form');
-    await form.getByRole('button', { name: /التالي|Next/ }).click();
-    await form.getByPlaceholder(/أدخل اسمك الكامل|Enter your full name/).fill('Test Applicant');
-    await form.locator('input[type="tel"]').fill('0501234567');
-    await form.getByPlaceholder(/مثال: حيفا|e.g. Haifa/).fill('Haifa');
-    await form.getByRole('button', { name: /التالي|Next/ }).click();
-    await form.getByRole('button', { name: /أخرى|Other/ }).click();
-    await form.getByRole('button', { name: /التالي|Next/ }).click();
+    await expect(form.locator('input[type="checkbox"]')).toHaveCount(1);
     await form.locator('input[type="checkbox"]').first().check();
 
     await page.getByTestId('apply-submit').click();
     await expect.poll(() => payload).toBeTruthy();
-    expect(payload).toMatchObject({ full_name: 'Test Applicant', phone_number: '0501234567', source: 'apply_page' });
+    expect(payload).toMatchObject({
+      full_name: 'Test Applicant',
+      phone_number: '0501234567',
+      email: 'student@example.com',
+      source: 'apply_page',
+    });
     await expect(page.getByText(/تم استلام بياناتك|received your information/i).first()).toBeVisible();
     await expect(page.getByRole('button', { name: /احجز|book/i }).first()).toBeVisible();
   });
