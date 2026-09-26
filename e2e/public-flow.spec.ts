@@ -64,6 +64,7 @@ test.describe('public journey', () => {
     await form.getByPlaceholder(/أدخل اسمك الكامل|Enter your full name/).fill('Test Applicant');
     await form.locator('input[type="tel"]').fill('0501234567');
     await form.getByPlaceholder(/مثال: حيفا|e.g. Haifa/).fill('Haifa');
+    await form.getByPlaceholder('name@example.com').fill('student@example.com');
     await form.getByRole('button', { name: /التالي|Next/ }).click();
     await expect(form).toHaveAttribute('data-step', '3');
 
