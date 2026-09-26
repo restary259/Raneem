@@ -135,7 +135,7 @@ const Contact = () => {
         </div>
 
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:gap-12">
-          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} scroll-mt-28 overflow-hidden rounded-lg border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9`}>
+          <div id="contact-form" className={`${dir === "rtl" ? "text-right" : "text-left"} scroll-mt-28 overflow-hidden rounded-2xl border border-border bg-background p-5 shadow-surface sm:p-7 md:p-9`}>
             <div className={`mb-8 max-w-2xl text-center ${dir === "rtl" ? "md:text-right" : "md:text-left"}`}>
               <h2 className="text-3xl font-bold md:text-4xl">{t("contact.title")}</h2>
               <p className="mt-4 text-lg text-muted-foreground">{t("contact.subtitle")}</p>
