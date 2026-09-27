@@ -3,6 +3,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { sendWebPush, type PushSubscriptionRecord } from "../_shared/webpush.ts";
 import { requireAuth } from "../_shared/auth.ts";
 import { isCronDispatcher } from "../_shared/cronAuth.ts";
+import { notificationCategoryColumn } from "../_shared/notificationCategories.ts";
 
 /**
  * Drains the `push_notifications` pgmq queue and delivers Web Push messages.
@@ -27,21 +28,6 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 type Preferences = Record<string, unknown> | null;
-
-const CATEGORY_COLUMN: Record<string, string> = {
-  messages: "cat_messages",
-  appointments: "cat_appointments",
-  cases: "cat_cases",
-  payments: "cat_payments",
-  documents: "cat_documents",
-  profile: "cat_profile",
-  recruitment: "cat_recruitment",
-  // Incoming voice calls. Falls out of the notification_preferences.cat_calls
-  // column added in 20260928130000; without this mapping a call would be gated
-  // by cat_system instead of its own switch.
-  calls: "cat_calls",
-  system: "cat_system",
-};
 
 /** Minutes since midnight in the user's own timezone. */
 function localMinutes(timezone: string): number {
@@ -120,7 +106,7 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
     .eq("user_id", userId)
     .maybeSingle();
 
-  const categoryColumn = CATEGORY_COLUMN[category] ?? "cat_system";
+  const categoryColumn = notificationCategoryColumn(category);
   const pushEnabled = prefs ? prefs.push_enabled !== false : true;
   const categoryEnabled = prefs ? prefs[categoryColumn] !== false : true;
 

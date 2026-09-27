@@ -1925,3 +1925,44 @@ catalog school `alpha-aktiv`.
 - A visitor's 10:00–18:00 Sunday–Thursday slot is a pending request until their assigned team member explicitly confirms it, because assignment must not silently promise availability or send confirmed-appointment automation.
 - Public booking excludes overlapping one-hour office slots with a database exclusion constraint, because simultaneous applicants must not claim the same time.
 - Landing translations exist in bundled `src/locales` and public `public/locales`; update both, because visitors render the bundled copy while other namespace loads may use HTTP.
+
+## Role-aware notification settings (2026-09-27)
+- `src/lib/notificationCategories.ts` is the single source of truth for which
+  notification categories exist and which dashboard roles see them. Each entry
+  is `{ key, column, roles }` where `column` is the `notification_preferences`
+  `cat_*` boolean the push dispatcher gates on. `categoriesForRole(role)` is the
+  one accessor the settings UI uses — never hardcode a category list again.
+  A vitest guard asserts the component derives its switches from
+  `categoriesForRole(role)`.
+- `supabase/functions/_shared/notificationCategories.ts` is the deliberate Deno
+  mirror (Deno cannot import from `src/`); `push-dispatch` imports
+  `notificationCategoryColumn()` instead of its old local `CATEGORY_COLUMN`.
+  `notificationCategories.test.ts` fails the suite if the two files drift,
+  if a role list references an unknown category, if the SQL
+  `notification_category_for_source()` emits a category missing from the
+  catalog, or if an en/ar label is missing.
+- **Matrix is evidence-based, not assumed.** Producers verified: messages
+  (direct/case/whatsapp → all roles), appointments (notify_case_event +
+  reminders → admin/team/student), cases (case events + referral_accepted +
+  influencer created → all), payments (`payment_received`/`enrollment_paid` →
+  admin + **team** + partner + student; payout status → requestor family),
+  documents (document_requested/uploaded → admin/team/student; student upload
+  notifies student), profile (no in-app producer found; DB link fallback maps
+  to student — kept per product intent), recruitment (recruit_application →
+  admin + agent; link fallback → /partner/network), calls (any direct-thread
+  participant → all roles), system (welcome/digest/contact/custom → all).
+  Notable deviation from the spec draft: **Team member also sees Payments**,
+  because `notify_case_event` sends `payment_received`/`enrollment_paid` to the
+  assigned team member.
+- Role scoping is **display-only**: hidden categories are never written, and
+  `savePreference` upserts the full existing row (`{...prefs, ...patch}`), so a
+  hidden `cat_*` keeps its saved value and delivery is unchanged.
+- `NotificationBell` takes a required `role: AppRole` prop (passed from
+  `DashboardLayout`, which already has it) and forwards it to
+  `PushNotificationSettings`. Role-specific labels/descriptions live under
+  `pushSettings.categoryRole.<role>.<key>` and
+  `pushSettings.categoryRoleDesc.<role>.<key>` (en + ar + he); the component
+  falls back to the generic `pushSettings.categoryDesc.<key>` when a role has no
+  override. Partner-family roles get "Referral milestones" for Cases and
+  "Earnings" for Payments.
+- No database schema change. Build clean; full suite `1477 passed | 1 skipped`.
