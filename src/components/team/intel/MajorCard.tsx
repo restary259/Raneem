@@ -370,6 +370,9 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
               <div>
                 {programs.map((program) => {
                   const value = program.deadline.status === 'verified' ? program.deadline.value : null;
+                  const standard = program.deadline.status === 'unverified' && program.standardApplicationDeadline?.status === 'verified'
+                    ? program.standardApplicationDeadline.value
+                    : null;
                   const mode = program.admissionMode.status === 'verified' ? program.admissionMode.value : null;
                   const channel = program.applicationChannel.status === 'verified' ? program.applicationChannel.value : null;
                   const entrance = program.entranceRequirement.status === 'verified' ? program.entranceRequirement.value : null;
@@ -384,9 +387,20 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                       <Row label={t('intel.card.applicationChannel', 'Application channel')}>
                         {channel ? t(CHANNEL_KEYS[channel], channel) : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
                       </Row>
-                      <Row label={t('intel.row.deadline', 'Application deadline')}>
-                        {value ? (isAr ? value.semesterAR : value.semester) + ' — ' + value.deadline : <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>}
+                      <Row label={value ? t('intel.row.deadline', 'Application deadline') : standard ? t('intel.card.typicalPlanningDate', 'Typical planning date') : t('intel.row.deadline', 'Application deadline')}>
+                        {value ? (
+                          (isAr ? value.semesterAR : value.semester) + ' — ' + value.deadline
+                        ) : standard ? (
+                          <span className="font-medium">{standard.deadline}</span>
+                        ) : (
+                          <span className="text-muted-foreground">{t('intel.none', 'none published')}</span>
+                        )}
                       </Row>
+                      {standard && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {isAr ? standard.noteAR ?? standard.note : standard.note}
+                        </p>
+                      )}
                       {entrance && (
                         <Row label={t('intel.card.entranceProcedure', 'Entrance procedure')}>
                           {isAr
