@@ -50,7 +50,7 @@ describe("VoiceRecorder", () => {
   });
 
   it("starts on one tap and sends from the visible send control", async () => {
-    const onSend = vi.fn(async () => undefined);
+    const onSend = vi.fn(async (_file: File, _durationMs: number) => undefined);
     render(<VoiceRecorder onSend={onSend} />);
 
     await userEvent.click(screen.getByRole("button", { name: "chat.voice.record" }));
@@ -64,7 +64,7 @@ describe("VoiceRecorder", () => {
   });
 
   it("cancels an active recording without sending or crashing", async () => {
-    const onSend = vi.fn(async () => undefined);
+    const onSend = vi.fn(async (_file: File, _durationMs: number) => undefined);
     render(<VoiceRecorder onSend={onSend} />);
 
     await userEvent.click(screen.getByRole("button", { name: "chat.voice.record" }));
@@ -85,7 +85,7 @@ describe("VoiceRecorder", () => {
       configurable: true,
       value: { getUserMedia: vi.fn(() => permission) },
     });
-    const onSend = vi.fn(async () => undefined);
+    const onSend = vi.fn(async (_file: File, _durationMs: number) => undefined);
     const view = render(<VoiceRecorder onSend={onSend} />);
 
     await userEvent.click(screen.getByRole("button", { name: "chat.voice.record" }));
