@@ -5,6 +5,8 @@ export interface ChatAttachment {
   path: string;
   mime: string;
   size: number;
+  kind?: "file" | "voice";
+  durationMs?: number;
 }
 
 export interface ChatMessage {
@@ -191,6 +193,7 @@ export function splitChatBody(body: string, people: MentionablePerson[]): BodySe
 
 
 export const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
+export const MAX_VOICE_DURATION_MS = 5 * 60 * 1000;
 
 export const ALLOWED_ATTACHMENT_MIMES = [
   "image/png",
@@ -216,8 +219,33 @@ export function validateAttachmentFile(file: { size: number; type: string }): At
   return null;
 }
 
+export function validateVoiceRecording(
+  file: { size: number; type: string },
+  durationMs: number,
+): VoiceAttachmentError {
+  if (file.size > MAX_ATTACHMENT_BYTES) return "size";
+  if (!VOICE_ATTACHMENT_MIMES.includes(file.type as (typeof VOICE_ATTACHMENT_MIMES)[number])) {
+    return "mime";
+  }
+  if (!Number.isFinite(durationMs) || durationMs <= 0 || durationMs > MAX_VOICE_DURATION_MS) {
+    return "duration";
+  }
+  return null;
+}
+
 export function isImageAttachment(att: ChatAttachment): boolean {
   return att.mime.startsWith("image/");
+}
+
+export function isVoiceAttachment(att: ChatAttachment): boolean {
+  return att.kind === "voice" && att.mime.startsWith("audio/");
+}
+
+export function formatVoiceDuration(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return String(minutes) + ":" + String(remainder).padStart(2, "0");
 }
 
 export function formatFileSize(bytes: number): string {
