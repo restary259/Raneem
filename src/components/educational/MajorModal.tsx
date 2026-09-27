@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Clock, BookOpen, Users, FileText, Globe, Briefcase, AlertCircle, Scale, Building2, Lightbulb, Link2, Calculator, Send, GraduationCap, ClipboardCheck, Languages } from 'lucide-react';
+import { Clock, BookOpen, Users, FileText, Globe, Briefcase, AlertCircle, Scale, Building2, Lightbulb, Link2, Calculator, Send, GraduationCap, ClipboardCheck, Languages, X } from 'lucide-react';
 import { SubMajor } from '@/data/majorsData';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
@@ -43,9 +44,9 @@ const TierList = ({ icon, title, items, tone }: { icon: React.ReactNode; title: 
     <div className={`rounded-2xl p-4 ${tone}`}>
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <h4 className="font-semibold text-gray-800">{title}</h4>
+        <h4 className="font-semibold text-foreground">{title}</h4>
       </div>
-      <ul className="list-disc ps-5 space-y-1 text-sm text-gray-700 leading-relaxed">
+      <ul className="list-disc ps-5 space-y-1 text-sm text-muted-foreground leading-relaxed">
         {items.map((it, i) => <li key={i}>{it}</li>)}
       </ul>
     </div>
@@ -53,16 +54,16 @@ const TierList = ({ icon, title, items, tone }: { icon: React.ReactNode; title: 
 };
 
 const FactRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="grid grid-cols-[minmax(7rem,30%)_1fr] gap-3 py-2 border-b border-purple-100 last:border-0 text-sm">
-    <dt className="font-medium text-gray-600">{label}</dt>
-    <dd className="text-gray-800 leading-relaxed">{children}</dd>
+  <div className="grid grid-cols-[minmax(7rem,30%)_1fr] gap-3 py-2 border-b border-border last:border-0 text-sm">
+    <dt className="font-medium text-muted-foreground">{label}</dt>
+    <dd className="text-foreground leading-relaxed">{children}</dd>
   </div>
 );
 
 const GlanceChip = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="rounded-xl border border-gray-200 bg-white p-3 min-w-0">
-    <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">{icon}<span>{label}</span></div>
-    <div className="text-sm font-semibold text-gray-800 leading-snug break-words">{value}</div>
+  <div className="rounded-xl border border-border bg-card p-3 min-w-0">
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">{icon}<span>{label}</span></div>
+    <div className="text-sm font-semibold text-foreground leading-snug break-words">{value}</div>
   </div>
 );
 
@@ -82,14 +83,27 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl mx-4 max-h-[80vh] overflow-y-auto" dir={dir}>
-        <DialogHeader>
-          <DialogTitle className="mb-2 text-2xl font-bold text-primary">
-            {loc.name}
-            {major.nameDE && <span className="text-base font-normal text-muted-foreground block mt-1">{major.nameDE}</span>}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6">
+      <DialogPortal>
+        <DialogOverlay className="bg-black/50 backdrop-blur-sm" />
+        <DialogPrimitive.Content
+          dir={dir}
+          aria-describedby={undefined}
+          className="fixed inset-x-0 bottom-0 top-auto z-50 max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-border bg-card p-0 shadow-surface-lg outline-hidden duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85dvh] sm:max-w-[820px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=closed]:zoom-out-95 data-[state=open]:motion-reduce:animate-none data-[state=closed]:motion-reduce:animate-none"
+        >
+          <DialogTitle className="sr-only">{loc.name}</DialogTitle>
+          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-border bg-card/95 px-6 py-5 backdrop-blur-xs sm:rounded-t-3xl">
+            <div className="min-w-0">
+              <h2 className="text-2xl font-bold leading-tight text-primary">{loc.name}</h2>
+              {major.nameDE && <p className="mt-1 text-base font-normal text-muted-foreground">{major.nameDE}</p>}
+            </div>
+            <DialogPrimitive.Close
+              aria-label={t('common.close', 'Close')}
+              className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="h-4 w-4" />
+            </DialogPrimitive.Close>
+          </div>
+          <div className="space-y-6 px-6 py-6">
           {/* 1. At a glance */}
           {glance ? (
             <div className="space-y-2">
@@ -112,13 +126,13 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
               <SectionTitle icon={<Scale className="h-5 w-5 text-emerald-600" />}>{t('educational.sectionCanIGetIn')}</SectionTitle>
               {verified && (
                 <div className="bg-emerald-50 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center gap-2 font-semibold text-gray-800"><Calculator className="h-4 w-4 text-emerald-700" />{t('educational.bagrutTitle')}</div>
-                  <p className="text-sm text-gray-700 leading-relaxed">{t('educational.bagrutUnits')}</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{t('educational.bagrutFormula', { min: BAGRUT_PASS_MARK })}</p>
+                  <div className="flex items-center gap-2 font-semibold text-foreground"><Calculator className="h-4 w-4 text-emerald-700" />{t('educational.bagrutTitle')}</div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{t('educational.bagrutUnits')}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{t('educational.bagrutFormula', { min: BAGRUT_PASS_MARK })}</p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm" dir="ltr">
                       <thead>
-                        <tr className="text-gray-600 border-b border-emerald-200">
+                        <tr className="text-muted-foreground border-b border-emerald-200">
                           <th className="py-1 px-2 text-start font-medium">{t('educational.bagrutAvg')}</th>
                           <th className="py-1 px-2 text-start font-medium">{t('educational.germanGrade')}</th>
                         </tr>
@@ -156,7 +170,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
                 <FactRow label={t('educational.langLevel')}><span className="font-semibold">{langProfile.requiredLevel}</span></FactRow>
                 <FactRow label={t('educational.langCertificates')}>
                   <div className="flex flex-wrap gap-1.5">
-                    {langProfile.acceptedCertificates.map((c) => <Badge key={c} variant="secondary" className="bg-white text-gray-800 font-normal">{c}</Badge>)}
+                    {langProfile.acceptedCertificates.map((c) => <Badge key={c} variant="secondary" className="bg-card text-foreground font-normal">{c}</Badge>)}
                   </div>
                 </FactRow>
                 {langProfile.exceptions.length > 0 && (
@@ -171,7 +185,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           ) : loc.localizedLanguageRequirements && (
             <div className="space-y-3">
               <SectionTitle icon={<Globe className="h-5 w-5 text-purple-500" />}>{t('educational.modalLanguageRequirements')}</SectionTitle>
-              <div className="bg-purple-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedLanguageRequirements}</p></div>
+              <div className="bg-purple-50 rounded-2xl p-4"><p className="text-muted-foreground">{loc.localizedLanguageRequirements}</p></div>
             </div>
           )}
 
@@ -179,7 +193,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {glance && loc.localizedRequiredBackground && (
             <div className="space-y-3">
               <SectionTitle icon={<Send className="h-5 w-5 text-blue-500" />}>{t('educational.sectionHowToApply')}</SectionTitle>
-              <div className="bg-blue-50 rounded-2xl p-4 space-y-2 text-sm text-gray-700">
+              <div className="bg-blue-50 rounded-2xl p-4 space-y-2 text-sm text-muted-foreground">
                 <p><span className="font-semibold">{t('educational.glanceChannel')}:</span> {glance.applicationChannel}</p>
                 <p><span className="font-semibold">{t('educational.glanceAdmission')}:</span> {glance.admissionMode}</p>
                 <p className="leading-relaxed">{loc.localizedRequiredBackground}</p>
@@ -189,7 +203,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {!glance && loc.localizedRequiredBackground && (
             <div className="space-y-3">
               <SectionTitle icon={<FileText className="h-5 w-5 text-blue-500" />}>{t('educational.modalRequiredBackground')}</SectionTitle>
-              <div className="bg-blue-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedRequiredBackground}</p></div>
+              <div className="bg-blue-50 rounded-2xl p-4"><p className="text-muted-foreground">{loc.localizedRequiredBackground}</p></div>
             </div>
           )}
 
@@ -197,9 +211,9 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           <div className="space-y-3">
             <SectionTitle icon={<BookOpen className="h-5 w-5 text-brand-strong" />}>{glance ? t('educational.sectionAbout') : t('educational.modalDescription')}</SectionTitle>
             <div className="space-y-3 rounded-2xl border-s-4 border-brand bg-muted/50 p-4">
-              <p className="text-gray-700 leading-relaxed">{loc.detailedDesc}</p>
+              <p className="text-muted-foreground leading-relaxed">{loc.detailedDesc}</p>
               {loc.localizedSuitableFor && (
-                <p className="text-gray-700 leading-relaxed flex gap-2"><Users className="h-4 w-4 mt-1 shrink-0 text-green-600" /><span><span className="font-semibold">{t('educational.modalSuitableFor')}:</span> {loc.localizedSuitableFor}</span></p>
+                <p className="text-muted-foreground leading-relaxed flex gap-2"><Users className="h-4 w-4 mt-1 shrink-0 text-green-600" /><span><span className="font-semibold">{t('educational.modalSuitableFor')}:</span> {loc.localizedSuitableFor}</span></p>
               )}
             </div>
           </div>
@@ -208,13 +222,13 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {(loc.localizedCareerOpportunities || loc.localizedCareerProspects) && (
             <div className="space-y-3">
               <SectionTitle icon={<Briefcase className="h-5 w-5 text-amber-500" />}>{t('educational.modalCareerOpportunities')}</SectionTitle>
-              <div className="bg-amber-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedCareerOpportunities || loc.localizedCareerProspects}</p></div>
+              <div className="bg-amber-50 rounded-2xl p-4"><p className="text-muted-foreground">{loc.localizedCareerOpportunities || loc.localizedCareerProspects}</p></div>
             </div>
           )}
           {!tiers && loc.localizedRequirements && (
             <div className="space-y-3">
-              <h3 className="text-xl font-semibold text-gray-800">{t('educational.modalStudyRequirements')}</h3>
-              <div className="bg-gray-50 rounded-2xl p-4"><p className="text-gray-700">{loc.localizedRequirements}</p></div>
+              <h3 className="text-xl font-semibold text-foreground">{t('educational.modalStudyRequirements')}</h3>
+              <div className="bg-muted/50 rounded-2xl p-4"><p className="text-muted-foreground">{loc.localizedRequirements}</p></div>
             </div>
           )}
 
@@ -222,19 +236,19 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           {loc.localizedArab48Notes && (
             <div className="space-y-3">
               <SectionTitle icon={<AlertCircle className="h-5 w-5 text-red-500" />}>{t('educational.modalArab48Notes')}</SectionTitle>
-              <div className="bg-red-50 rounded-2xl p-4 border-s-4 border-red-400"><p className="text-gray-700">{loc.localizedArab48Notes}</p></div>
+              <div className="bg-red-50 rounded-2xl p-4 border-s-4 border-red-400"><p className="text-muted-foreground">{loc.localizedArab48Notes}</p></div>
             </div>
           )}
 
           {/* 8. Sources */}
           {sources.length > 0 && (
             <div className="space-y-3">
-              <SectionTitle icon={<Link2 className="h-5 w-5 text-gray-600" />}>{t('educational.modalSources')}</SectionTitle>
+              <SectionTitle icon={<Link2 className="h-5 w-5 text-muted-foreground" />}>{t('educational.modalSources')}</SectionTitle>
               <ol className="space-y-2 list-decimal ps-5">
                 {sources.map((s, i) => (
                   <li key={`${s.url}-${i}`} className="text-sm leading-relaxed">
                     <a href={s.url} target="_blank" rel="noopener noreferrer" className="break-words font-medium text-brand-strong underline underline-offset-2 hover:text-primary">{s.title}</a>
-                    <div className="text-gray-600">
+                    <div className="text-muted-foreground">
                       <span className="font-medium">{t('educational.sourceVerifies')}:</span> {s.verifies}
                       <span className="text-muted-foreground"> · {t('educational.sourceChecked', { date: s.checked })}</span>
                     </div>
@@ -245,7 +259,8 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
             </div>
           )}
         </div>
-      </DialogContent>
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   );
 };

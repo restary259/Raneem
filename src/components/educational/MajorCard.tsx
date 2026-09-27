@@ -48,7 +48,7 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
   return (
-    <button type="button" className="group flex h-full min-h-52 w-full flex-col rounded-2xl border border-border bg-card p-6 text-start shadow-quiet transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-quiet-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none" onClick={() => onMajorClick(major)}>
+    <button type="button" className="group flex h-full min-h-52 w-full flex-col rounded-2xl border border-border bg-card p-6 text-start shadow-quiet transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-quiet-hover active:translate-y-0 active:scale-[0.99] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none" onClick={() => onMajorClick(major)}>
       <span className="mb-5 flex w-full items-center justify-between gap-3">
         <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-info-surface text-brand"><BookOpen className="size-5" /></span>
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground"><span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${categoryTints[major.categoryId] ?? 'bg-tint-blue'}`} /><span className="truncate">{catTitle}</span></span>

@@ -2010,3 +2010,54 @@ catalog school `alpha-aktiv`.
   future PR adding a notification category must also supply Hebrew**, or the
   suite goes red. Still uncovered by this guard: the other Hebrew `dashboard.json`
   blocks (`chat`, `intel`, `team`).
+
+## Major Card modal redesign — `/educational-programs` (2026-09-27)
+
+- `src/components/educational/MajorModal.tsx` is a **shell-only redesign** of the
+  public "expanded Major Card". UI + UX changed; **content/data is frozen** —
+  same sections, order, copy, `majorLocale.ts` localization, and conditional
+  suppression rules. No new CTA, cost figure, or subjects list was added (the
+  data for those does not exist in `majorsData.ts`).
+- **Built on Radix `Dialog` Root, not `DialogContent`.** It uses
+  `DialogPortal` + `DialogOverlay` (exported from `ui/dialog.tsx`) plus a raw
+  `@radix-ui/react-dialog` `DialogPrimitive.Content`, mirroring the
+  `SearchAndFilter` / `PhotoLightbox` custom-overlay precedent. `DialogContent`
+  was NOT reused (its baked-in centered/`sm:rounded-lg`/opaque overlay fights
+  the spec), and `ui/dialog.tsx` is untouched, so every other dialog app-wide
+  is unaffected. Root still gives focus trap, Esc, click-outside, and
+  `react-remove-scroll` body lock for free.
+- **Responsive shell**: mobile = bottom sheet (`inset-x-0 bottom-0`,
+  `rounded-t-3xl`, `slide-in-from-bottom`); `sm+` = centered dialog
+  (`sm:left-1/2 sm:top-1/2 sm:-translate-x/y-1/2`, `sm:max-w-[820px]`,
+  `sm:rounded-3xl`). Backdrop is `bg-black/50 backdrop-blur-sm`. Entrance is
+  `tw-animate-css` `data-[state=open]:fade-in-0` / `zoom-in-95` /
+  `slide-in-from-bottom` (~200ms) with `data-[state=open]:motion-reduce:animate-none`
+  + `data-[state=closed]:motion-reduce:animate-none` (the variant prefix is
+  REQUIRED — a bare `motion-reduce:animate-none` is specificity 0,1,0 and loses
+  to `data-[state=open]:animate-in` at 0,2,0, so the opt-out would silently do
+  nothing). In RTL the
+  physical `left-1/2 -translate-x-1/2` centering is direction-agnostic (a
+  logical `start-1/2` would be wrong), so no `rtl:` override is needed.
+- **Header owns the close affordance**: a sticky header with the name (h2) +
+  German name and a `DialogPrimitive.Close` (×, `aria-label` `common.close`).
+  `DialogTitle` is `sr-only` to keep the accessible name without duplicating
+  visible text.
+- **Token alignment** (card ↔ modal share the design language): all hardcoded
+  `text-gray-*` / `border-purple-100` / `bg-white` / `bg-gray-50` swapped for
+  semantic tokens (`text-foreground`, `text-muted-foreground`, `border-border`,
+  `bg-card`, `bg-muted/50`). `MajorCard.tsx` gained an `active:scale-[0.99]`
+  press state so the click reads as "expand" (hover lift unchanged).
+- Guarded by `src/components/educational/__tests__/MajorModal.test.tsx` (5
+  cases): null major renders nothing; a verified major keeps every existing
+  section; a non-verified major suppresses verified-only sections; × and Esc
+  both call `onClose`; body gets `data-scroll-locked` while open (Radix's
+  `react-remove-scroll` locks via attribute + stylesheet, NOT inline style —
+  asserting `body.style.overflow` would fail).
+- **Dev-server caveat**: the Vite dev server intermittently throws
+  `Failed to fetch dynamically imported module: …/CookieBanner.tsx` during
+  dependency re-optimization. It is a pre-existing environment flake unrelated
+  to this change; the production `npm run build` output and the unit tests are
+  the reliable gates. `bun` is not on PATH in this image — install to
+  `~/.local/bin` via the GitHub release zip (no `unzip` binary; use Python
+  `zipfile`) and run `bun install --frozen-lockfile`.
+- Build clean; `npx vitest run` 1498 passed | 1 skipped (+5 new).
