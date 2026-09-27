@@ -131,6 +131,16 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [call, setCall] = useState<CallView | null>(null);
+  const [peerIsAdmin, setPeerIsAdmin] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setPeerIsAdmin(false);
+    if (!call?.peerId) return;
+    supabase
+      .rpc("has_role", { _user_id: call.peerId, _role: "admin" })
+      .then(({ data }) => { if (!cancelled) setPeerIsAdmin(data === true); });
+    return () => { cancelled = true; };
+  }, [call?.peerId]);
   const [muted, setMuted] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
