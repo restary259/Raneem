@@ -17,7 +17,10 @@ import type { AppRole } from "@/contexts/AuthContext";
 
 const ROOT = process.cwd();
 const KNOWN_KEYS = NOTIFICATION_CATEGORIES.map((c) => c.key);
-const PRIMARY_LOCALES = ["en", "ar"] as const;
+// Every locale the UI offers (src/i18n.ts supportedLngs). Hebrew falls back to
+// English at runtime, so a missing key would silently render English — the
+// guard below must fail instead, or the panel regresses one string at a time.
+const PRIMARY_LOCALES = ["en", "ar", "he"] as const;
 
 describe("notification category catalog", () => {
   it("uses unique keys and columns", () => {
@@ -98,6 +101,36 @@ describe("notification category catalog", () => {
     }
   });
 
+  /**
+   * Full key parity across offered locales. The runtime fallback
+   * (`fallbackLng: { he: ['en'] }`) hides a missing key by rendering English, so
+   * without this the panel quietly drifts out of sync one string at a time.
+   */
+  it("keeps every pushSettings key present in every locale", () => {
+    const leafKeys = (node: unknown, prefix = ""): string[] => {
+      if (typeof node !== "object" || node === null) return [prefix];
+      return Object.entries(node as Record<string, unknown>).flatMap(
+        ([key, value]) =>
+          leafKeys(value, prefix ? `${prefix}.${key}` : key),
+      );
+    };
+    const read = (lang: string) =>
+      JSON.parse(
+        fs.readFileSync(
+          path.join(ROOT, "public/locales", lang, "dashboard.json"),
+          "utf8",
+        ),
+      ).pushSettings;
+
+    const reference = leafKeys(read("en")).sort();
+    expect(reference.length).toBeGreaterThan(0);
+    for (const lang of PRIMARY_LOCALES) {
+      expect(leafKeys(read(lang)).sort(), `${lang} pushSettings keys`).toEqual(
+        reference,
+      );
+    }
+  });
+
   it("renders only known categories in the settings component", () => {
     const src = fs.readFileSync(
       path.join(
@@ -112,6 +145,11 @@ describe("notification category catalog", () => {
     expect(src).not.toMatch(/const CATEGORIES = \[/);
   });
 
+  /**
+   * Label coverage in every offered locale. `category`/`categoryDesc` are
+   * mandatory (they are the fallback every role relies on); `categoryRole` and
+   * `categoryRoleDesc` are optional overrides, but any that exist must be text.
+   */
   it("has a translated label for every rendered role/category pair", () => {
     for (const lang of PRIMARY_LOCALES) {
       const dict = JSON.parse(
@@ -121,6 +159,7 @@ describe("notification category catalog", () => {
         ),
       );
       const push = dict.pushSettings;
+      expect(push, `${lang} pushSettings`).toBeDefined();
       for (const key of KNOWN_KEYS) {
         expect(
           push.category[key],
