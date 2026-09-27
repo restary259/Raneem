@@ -37,7 +37,7 @@ export default function VoiceMessage({ att }: { att: ChatAttachment }) {
     return function () {
       window.removeEventListener("darb:voice-pause", onExternalPause);
       if (audioRef.current === activeAudio) {
-        audioRef.current.pause();
+        audioRef.current?.pause();
         activeAudio = null;
       }
     };

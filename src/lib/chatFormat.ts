@@ -218,6 +218,8 @@ export const ALLOWED_ATTACHMENT_MIMES = [
 
 export type AttachmentError = "size" | "mime" | null;
 
+export type VoiceAttachmentError = "size" | "mime" | "duration" | null;
+
 /** Client-side pre-check; the database validates again on send. */
 export function validateAttachmentFile(file: { size: number; type: string }): AttachmentError {
   if (file.size > MAX_ATTACHMENT_BYTES) return "size";

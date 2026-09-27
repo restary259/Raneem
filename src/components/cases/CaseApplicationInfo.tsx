@@ -24,7 +24,8 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
   useEffect(() => {
     let cancelled = false;
     setLoaded(false);
-    supabase
+    // office_id is newer than the generated DB types, so this query is cast.
+    (supabase as unknown as { from: (table: string) => any })
       .from("appointments")
       .select("scheduled_at, status, confirmation_status, outcome, office_id")
       .eq("case_id", caseId)
@@ -32,13 +33,13 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(async ({ data, error }) => {
+      .then(async ({ data, error }: { data: any; error: any }) => {
         if (cancelled) return;
         if (error) console.warn("visit lookup failed", error.message);
         const nextVisit = (data as Visit) ?? null;
         setVisit(nextVisit);
         if (nextVisit?.office_id) {
-          const { data: officeData } = await supabase
+          const { data: officeData } = await (supabase as unknown as { from: (table: string) => any })
             .from("offices")
             .select("name_ar, name_en, name_he, city, address_line_1, timezone")
             .eq("id", nextVisit.office_id)
@@ -123,7 +124,7 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
             </p>
           </div>
         </div>
-      ) : null;
+      ) : null}
     </section>
   );
 }

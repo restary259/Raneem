@@ -272,7 +272,7 @@ async function calculateAvailability(supabaseAdmin: any, officeId: string, servi
     const endMinutes = localMinutes(endParts);
     if (startMinutes < openMinutes || endMinutes > closeMinutes) continue;
 
-    const inBreak = breaks.some(function (item) {
+    const inBreak = breaks.some(function (item: { weekday: number; start: number | null; end: number | null }) {
       return item.weekday === weekday && item.start !== null && item.end !== null &&
         intervalOverlap(startMinutes, endMinutes, item.start, item.end);
     });
@@ -281,7 +281,7 @@ async function calculateAvailability(supabaseAdmin: any, officeId: string, servi
       continue;
     }
 
-    const inBlackout = blackouts.some(function (item) {
+    const inBlackout = blackouts.some(function (item: { start: number; end: number }) {
       return intervalOverlap(start.getTime(), end.getTime(), item.start, item.end);
     });
     if (inBlackout) {

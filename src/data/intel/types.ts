@@ -61,6 +61,8 @@ export interface DeadlineValue {
   semester: string;
   semesterAR: string;
   deadline: string;
+  note?: string;
+  noteAR?: string;
 }
 
 export interface ProgramIntel {

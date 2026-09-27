@@ -48,6 +48,7 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  Building2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
