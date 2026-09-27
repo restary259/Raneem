@@ -4127,8 +4127,8 @@
     },
     "filter": {
       "all": "All",
-      "cases": "Cases",
       "direct": "Direct",
+      "teams": "Teams",
       "unread": "Unread"
     },
     "attach": {
@@ -4273,6 +4273,7 @@
     },
     "section": {
       "direct": "Direct",
+      "teams": "Teams",
       "cases": "Cases",
       "partners": "Partners",
       "whatsapp": "WhatsApp"
