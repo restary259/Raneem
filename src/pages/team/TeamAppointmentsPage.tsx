@@ -670,14 +670,14 @@ export default function TeamAppointmentsPage() {
             {t("team.appointments.navToday")}
           </Button>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end sm:shrink-0">
           <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
             {(["day", "week", "month"] as CalendarView[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full transition-all capitalize",
+                  "px-3.5 py-1.5 text-xs font-medium rounded-full transition-all capitalize whitespace-nowrap",
                   view === v
                     ? "bg-background shadow-xs text-foreground"
                     : "text-muted-foreground hover:text-foreground",

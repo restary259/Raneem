@@ -2257,7 +2257,12 @@
       "dayAbbrevSat": "سبت",
       "visitRequests": "طلبات زيارة المكتب",
       "confirmVisit": "تأكيد الزيارة",
-      "visitConfirmed": "تم تأكيد الزيارة"
+      "visitConfirmed": "تم تأكيد الزيارة",
+      "officeLabel": "المكتب",
+      "officeSelect": "اختار المكتب",
+      "officeNone": "غير محدد",
+      "reassignTo": "تحويل إلى",
+      "reassigned": "تم تحويل الموعد"
     },
     "submit": {
       "title": "تقديم طالب جديد",

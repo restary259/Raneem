@@ -2239,7 +2239,12 @@
       "dayAbbrevSat": "Sat",
       "visitRequests": "Office visit requests",
       "confirmVisit": "Confirm visit",
-      "visitConfirmed": "Visit confirmed"
+      "visitConfirmed": "Visit confirmed",
+      "officeLabel": "Office",
+      "officeSelect": "Select office",
+      "officeNone": "Not assigned",
+      "reassignTo": "Reassign to",
+      "reassigned": "Appointment reassigned"
     },
     "submit": {
       "title": "Submit New Student",
