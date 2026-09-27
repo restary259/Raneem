@@ -27,7 +27,7 @@ import {
   type ThreadReadState,
 } from "@/services/CaseMessageService";
 import type { ChatMessage, MentionablePerson } from "@/lib/chatFormat";
-import { buildBankDetailsBody, type BankDetailsPayload } from "@/lib/chatFormat";
+import { buildBankDetailsBody, isVoiceAttachment, type BankDetailsPayload } from "@/lib/chatFormat";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
@@ -245,7 +245,15 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
         onSendBankDetails={isPartner ? () => openBankShare() : undefined}
         onSend={async (body, attachments, opts) => {
           await sendDirectMessage(threadId, body, attachments, opts.mentions);
-          void notifyNewMessageEmail({ threadType: "direct", threadId, preview: body });
+          void notifyNewMessageEmail({
+            threadType: "direct",
+            threadId,
+            preview:
+              body ||
+              (attachments.some((att) => isVoiceAttachment(att))
+                ? t("chat.voice.message")
+                : t("chat.attach.only")),
+          });
           await load();
         }}
       />
