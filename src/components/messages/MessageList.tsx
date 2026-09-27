@@ -25,12 +25,14 @@ import {
   formatTime,
   groupMessages,
   initials,
+  isVoiceAttachment,
   parseBankDetailsBody,
   splitChatBody,
   type ChatMessage,
   type MentionablePerson,
 } from "@/lib/chatFormat";
 import AttachmentPreview from "@/components/messages/AttachmentPreview";
+import VoiceMessage from "@/components/messages/VoiceMessage";
 import PayoutRequestCard from "@/components/messages/PayoutRequestCard";
 import BankDetailsCard from "@/components/messages/BankDetailsCard";
 
@@ -452,10 +454,14 @@ export default function MessageList({
                     })()}
 
                     {m.attachments.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {m.attachments.map((att) => (
-                          <AttachmentPreview key={att.path} att={att} />
-                        ))}
+                      <div className="flex flex-col items-start gap-2">
+                        {m.attachments.map((att) =>
+                          isVoiceAttachment(att) ? (
+                            <VoiceMessage key={att.path} att={att} mine={group.mine} />
+                          ) : (
+                            <AttachmentPreview key={att.path} att={att} />
+                          ),
+                        )}
                       </div>
                     )}
 
