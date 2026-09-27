@@ -7591,6 +7591,8 @@ export type Database = {
       save_office_configuration: {
         Args: {
           p_backup_user_id?: string
+          p_breaks?: Json
+          p_blackouts?: Json
           p_hours?: Json
           p_office: Json
           p_office_id?: string
