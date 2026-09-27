@@ -555,7 +555,13 @@
       "settle": "تسوية",
       "settling": "جاري التسوية…",
       "reassignSwitch": "تحويل مواعيد المكتب",
-      "reassignDesc": "يستطيع تحويل المواعيد لأعضاء آخرين في نفس المكتب."
+      "reassignDesc": "يستطيع تحويل المواعيد لأعضاء آخرين في نفس المكتب.",
+      "reassignEnableTitle": "السماح بتحويل المواعيد؟",
+      "reassignEnableBody": "{{name}} سيتمكن من تحويل المواعيد لأعضاء آخرين في نفس المكتب.",
+      "reassignDisableTitle": "إيقاف تحويل المواعيد؟",
+      "reassignDisableBody": "{{name}} لن يتمكن بعد الآن من تحويل المواعيد.",
+      "reassignEnabled": "تم تفعيل التحويل",
+      "reassignDisabled": "تم إيقاف التحويل"
     },
     "programs": {
       "title": "البرامج والسكن",

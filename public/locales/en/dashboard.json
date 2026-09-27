@@ -555,7 +555,13 @@
       "settle": "Settle",
       "settling": "Settling…",
       "reassignSwitch": "Reassign office appointments",
-      "reassignDesc": "Can move appointments to other members of their office."
+      "reassignDesc": "Can move appointments to other members of their office.",
+      "reassignEnableTitle": "Allow reassigning appointments?",
+      "reassignEnableBody": "{{name}} will be able to move appointments to other team members in the same office.",
+      "reassignDisableTitle": "Stop reassigning appointments?",
+      "reassignDisableBody": "{{name}} will no longer be able to move appointments to other team members.",
+      "reassignEnabled": "Reassigning enabled",
+      "reassignDisabled": "Reassigning disabled"
     },
     "programs": {
       "title": "Programs & Accommodations",
