@@ -1,4 +1,4 @@
-// DARB service worker — v5.0.2 (larger brand icon refresh)
+// DARB service worker — v5.4.0 (incoming voice-call ring)
 //
 // This worker replaces the old caching worker at the SAME URL so returning
 // browsers pick it up automatically on their next online visit.
@@ -8,12 +8,20 @@
 //     the old cached SPA shell can never be served against the new server-
 //     rendered app.
 //   - Every old cache is deleted on activate.
+//   - v5.4.0: a dedicated ring treatment for `category: 'calls'` notifications
+//     (louder repeat pattern, stays on screen until acted on, and carries the
+//     call id so the app can join the right call on tap). It is deliberately
+//     TAP-TO-OPEN ONLY — no Accept / Decline action buttons. The worker has no
+//     Supabase session, so it cannot authenticate an RPC; a button that looks
+//     actionable but silently fails is worse than no button. Accepting has to
+//     happen in the page, where it also has the user gesture iOS requires for
+//     microphone access.
 // What is preserved:
 //   - Web Push: the push / notificationclick / pushsubscriptionchange handlers
 //     are carried over verbatim, so existing push subscriptions keep working
 //     without users re-granting permission.
 
-const CACHE_VERSION = '5.3.0';
+const CACHE_VERSION = '5.4.0';
 
 // Unread count painted on the OS app icon while the app is closed. The open app
 // overwrites this with the authoritative total as soon as it is focused.
@@ -85,9 +93,16 @@ function parsePushData(event) {
   }
 }
 
+// An incoming call gets a repeating pattern so it reads as "someone is calling
+// you" rather than "you have a new message", and stays on screen until it is
+// tapped. The server sends priority 'high' for calls, but requiring it here
+// too means a future caller that forgets still gets a persistent ring.
+const CALL_VIBRATE = [400, 200, 400, 200, 400, 600];
+
 self.addEventListener('push', event => {
   const data = parsePushData(event);
   const title = data.title || 'درب';
+  const isCall = data.category === 'calls';
 
   event.waitUntil((async () => {
     await self.registration.showNotification(title, {
@@ -96,15 +111,20 @@ self.addEventListener('push', event => {
       badge: NOTIFICATION_BADGE,
       lang: 'ar',
       dir: 'rtl',
-      vibrate: [100, 50, 100],
+      vibrate: isCall ? CALL_VIBRATE : [100, 50, 100],
+      // push-dispatch tags a call as `calls:<notification id>`, so repeated
+      // calls stack instead of replacing each other — a missed call must not
+      // be overwritten by the next one.
       tag: data.tag || 'darb-notification',
       renotify: Boolean(data.tag),
-      requireInteraction: data.priority === 'high',
+      requireInteraction: isCall || data.priority === 'high',
       timestamp: Date.now(),
       data: {
         url: data.url || '/',
         notificationId: data.notificationId || null,
         category: data.category || 'system',
+        // The app reads this to rejoin call:<id> after the user taps through.
+        isCall,
       },
     });
 

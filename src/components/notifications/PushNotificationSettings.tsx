@@ -26,6 +26,10 @@ const CATEGORIES = [
   "documents",
   "profile",
   "recruitment",
+  // Incoming voice calls. Turning this off suppresses the PUSH ring only — a
+  // ringing call still shows in the app itself, and a call already in progress
+  // is unaffected.
+  "calls",
   "system",
 ] as const;
 
