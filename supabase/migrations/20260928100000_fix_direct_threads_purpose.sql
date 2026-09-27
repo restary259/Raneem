@@ -39,8 +39,8 @@ COMMENT ON COLUMN public.direct_threads.purpose IS
 -- with the staff member handling their case would otherwise be handed a fresh
 -- duplicate thread on every visit. Threads are one-to-one by construction
 -- (both start functions insert exactly two participants), so requiring exactly
--- one student plus exactly one non-student participant is the precise
--- fingerprint of a thread this function created.
+-- two participant rows carrying exactly one student plus exactly one
+-- non-student is the precise fingerprint of a thread this function created.
 --
 -- Threads linked to a payout_requests row are deliberately excluded: they keep
 -- their own identity (StudentMessagesPage lists them in a separate tab) and are
@@ -52,14 +52,14 @@ UPDATE public.direct_threads dt
    AND NOT EXISTS (
      SELECT 1 FROM public.payout_requests pr WHERE pr.thread_id = dt.id
    )
-   AND 1 = (
-     SELECT count(*) FROM public.direct_thread_participants p WHERE p.thread_id = dt.id
-   )
+   AND 2 = (
+      SELECT count(*) FROM public.direct_thread_participants p WHERE p.thread_id = dt.id
+    )
    AND EXISTS (
-     SELECT 1 FROM public.direct_thread_participants p
-      WHERE p.thread_id = dt.id
-        AND public.has_role(p.user_id, 'student'::app_role)
-   )
+      SELECT 1 FROM public.direct_thread_participants p
+       WHERE p.thread_id = dt.id
+         AND public.has_role(p.user_id, 'student'::app_role)
+    )
    AND EXISTS (
      SELECT 1 FROM public.direct_thread_participants p
       WHERE p.thread_id = dt.id
@@ -72,9 +72,9 @@ UPDATE public.direct_threads dt
 UPDATE public.direct_threads dt
    SET purpose = 'team_chat'
  WHERE dt.purpose IS NULL
-   AND 1 = (
-     SELECT count(*) FROM public.direct_thread_participants p WHERE p.thread_id = dt.id
-   )
+   AND 2 = (
+      SELECT count(*) FROM public.direct_thread_participants p WHERE p.thread_id = dt.id
+    )
    AND 2 = (
      SELECT count(*) FROM public.direct_thread_participants p
       WHERE p.thread_id = dt.id
