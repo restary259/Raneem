@@ -117,7 +117,8 @@
       "title": "Start with the AI advisor",
       "body": "Get a quick answer about studying in Germany, then use this form when your question needs staff follow-up or file context.",
       "action": "Open AI advisor"
-    }
+    },
+    "openMap": "Open the office in Google Maps"
   },
   "support": {
     "eyebrow": "CONTACT",
