@@ -553,7 +553,9 @@
       "settledHistory": "Settlement history",
       "settledTotal": "Settled: {{amount}}",
       "settle": "Settle",
-      "settling": "Settling…"
+      "settling": "Settling…",
+      "reassignSwitch": "Reassign office appointments",
+      "reassignDesc": "Can move appointments to other members of their office."
     },
     "programs": {
       "title": "Programs & Accommodations",

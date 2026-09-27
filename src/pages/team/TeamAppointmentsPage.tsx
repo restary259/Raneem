@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
+import ReassignAppointment from "@/components/team/ReassignAppointment";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 interface Appointment {
@@ -1219,7 +1220,7 @@ export default function TeamAppointmentsPage() {
                       appointmentId={selectedAppt.id}
                       officeId={selectedAppt.office_id}
                       currentMemberId={(selectedAppt as any).team_member_id}
-                      onReassigned={() => { setSelectedAppt(null); fetchAppointments(); }}
+                      onReassigned={() => { setSelectedAppt(null); fetchAppts(); }}
                     />
                   </div>
                   <DialogFooter className="flex-col gap-2 sm:flex-row">

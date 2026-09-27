@@ -553,7 +553,9 @@
       "settledHistory": "سجل التسويات",
       "settledTotal": "تمت تسويته: {{amount}}",
       "settle": "تسوية",
-      "settling": "جاري التسوية…"
+      "settling": "جاري التسوية…",
+      "reassignSwitch": "تحويل مواعيد المكتب",
+      "reassignDesc": "يستطيع تحويل المواعيد لأعضاء آخرين في نفس المكتب."
     },
     "programs": {
       "title": "البرامج والسكن",
