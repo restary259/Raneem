@@ -4,6 +4,7 @@ import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "@/lib/router-compat";
+import { shouldShowFloatingWidgets } from "@/lib/floatingWidgets";
 
 const WhatsAppFloatingButton = () => {
   const { t } = useTranslation();
@@ -12,7 +13,7 @@ const WhatsAppFloatingButton = () => {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const path = location.pathname;
-  const hidden = path === "/apply" || path === "/team-dashboard" || path === "/student-dashboard" || ["/admin", "/partner", "/agent", "/team", "/student"].some((p) => path === p || path.startsWith(`${p}/`));
+  const hidden = !shouldShowFloatingWidgets(path);
 
   useEffect(() => setOpen(false), [path]);
   useEffect(() => {

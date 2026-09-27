@@ -1236,6 +1236,11 @@ a[href*="lovable.dev"] {
   body:has([aria-label="Cookie consent"]) .whatsapp-side-tab {
     bottom: calc(17rem + env(safe-area-inset-bottom));
   }
+
+  /* The install tab sits above the WhatsApp tab, so it clears the notice too. */
+  body:has([aria-label="Cookie consent"]) .pwa-side-tab {
+    bottom: calc(20.25rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
