@@ -1,3 +1,4 @@
+import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@/lib/router-compat";
@@ -325,7 +326,9 @@ export default function MessageList({
                       : "bg-secondary text-secondary-foreground",
                   )}
                 >
-                  {initials(
+                  {group.authorRole === "admin" ? (
+                    <img src={darbLogoAsset.url} alt="DARB" className="h-full w-full rounded-full bg-background object-contain p-0.5" />
+                  ) : initials(
                     group.authorName ||
                       (group.authorRole
                         ? t(`case.messages.role.${group.authorRole}`, group.authorRole)
