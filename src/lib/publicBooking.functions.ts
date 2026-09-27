@@ -324,6 +324,31 @@ async function calculateAvailability(supabaseAdmin: any, officeId: string, servi
   };
 }
 
+const publicBookingStartRequest = z.object({
+  fullName: z.string().trim().min(2).max(120),
+  phone: z.string().trim().min(8).max(30),
+});
+
+export const startPublicBooking = createServerFn({ method: "POST" })
+  .inputValidator(function (input) { return publicBookingStartRequest.parse(input); })
+  .handler(async function ({ data }) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const result = await supabaseAdmin.rpc("create_public_booking_session", {
+      p_full_name: data.fullName,
+      p_phone: data.phone,
+    });
+
+    if (result.error) {
+      const message = String(result.error.message || "");
+      if (message.includes("Too many booking requests")) {
+        throw new Error("Too many booking requests");
+      }
+      throw new Error("Booking could not be started. Please check your details and try again.");
+    }
+
+    return (result.data || {}) as { token?: string; expires_at?: string };
+  });
+
 export const managePublicBooking = createServerFn({ method: "POST" })
   .inputValidator(function (input) { return request.parse(input); })
   .handler(async function ({ data }) {
