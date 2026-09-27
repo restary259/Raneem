@@ -66,7 +66,7 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
 
 function campaignDate(value: string | null, locale: string) {
   if (!value) return "—";
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-IL" : locale === "he" ? "he-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-IL" : locale === "he" ? "he-IL" : "en-GB", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
 }
 
 export default function WhatsAppCampaignsPage() {
