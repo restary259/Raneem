@@ -1,0 +1,131 @@
+{
+  "contactHero": {
+    "eyebrow": "תמיכה אנושית",
+    "title": "צרו קשר עם DARB",
+    "subtitle": "ספרו לנו במה אתם צריכים עזרה. לשאלה על תיק, מסמך, פגישה או שותפות, שלחו את הטופס והצוות שלנו יחזור אליכם.",
+    "imageAlt": "יועצת הסטודנטים של DARB מוכנה לעזור",
+    "heroImageAlt": "קו הרקיע של דיסלדורף לצד נהר הריין",
+    "advisorEyebrow": "דברו ישירות עם הצוות שלנו",
+    "advisorTitle": "דברו עם צוות DARB",
+    "advisorBody": "שתפו אותנו בשאלה שלכם, ונעזור לכם להבין מהו הצעד המעשי הבא במסלול הלימודים.",
+    "whatsappMessage": "שלום, אשמח לדבר עם DARB על לימודים בגרמניה.",
+    "aiLink": "צריכים תשובה כללית ומיידית? שאלו את יועץ הלימודים החכם"
+  },
+  "contact": {
+    "title": "כיצד נוכל לעזור?",
+    "subtitle": "שלחו לנו את השאלה שלכם וצוות DARB יחזור אליכם.",
+    "form": {
+      "fullName": "שם מלא",
+      "namePlaceholder": "השם המלא שלכם",
+      "email": "אימייל",
+      "emailPlaceholder": "your.email@example.com",
+      "whatsapp": "מספר WhatsApp",
+      "whatsappPlaceholder": "כולל קידומת מדינה",
+      "topic": "במה נוכל לעזור?",
+      "topicPlaceholder": "בחרו נושא",
+      "topicOptions": {
+        "admissions": "קבלה לאוניברסיטה",
+        "language_courses": "לימודי גרמנית",
+        "visa": "ויזה ושהייה",
+        "accommodation": "מגורים",
+        "partnership": "שותפות",
+        "general": "שאלה כללית"
+      },
+      "message": "הודעה או שאלה",
+      "messagePlaceholder": "כתבו כאן את השאלה או ההודעה שלכם...",
+      "submit": "שליחה",
+      "sending": "שולחים...",
+      "name": "שם מלא",
+      "destination": "מדינת עניין",
+      "destinationPlaceholder": "בחרו מדינה",
+      "destinationOptions": {
+        "germany": "גרמניה",
+        "romania": "רומניה",
+        "jordan": "ירדן"
+      },
+      "service": "שירות מבוקש",
+      "servicePlaceholder": "בחרו שירות",
+      "serviceOptions": [
+        "הגשה לאוניברסיטה",
+        "תרגום ואימות",
+        "קורסי שפה",
+        "ויזות ושהייה",
+        "שירותי דיור",
+        "קליטה ומעקב",
+        "ייעוץ אישי",
+        "פנייה כללית"
+      ],
+      "phone": "מספר טלפון",
+      "phonePlaceholder": "כולל קידומת מדינה",
+      "interestedMajor": "תחום לימודים מבוקש",
+      "majorPlaceholder": "בחרו תחום לימודים",
+      "city": "עיר",
+      "cityPlaceholder": "העיר שלכם",
+      "educationLevel": "רמת השכלה נוכחית",
+      "educationPlaceholder": "בחרו רמה",
+      "stillInSchool": "עדיין בבית ספר?",
+      "selectPlaceholder": "בחירה",
+      "englishUnits": "יחידות אנגלית",
+      "mathUnits": "יחידות מתמטיקה",
+      "majorOptions": {
+        "engineering": "הנדסה",
+        "business": "מנהל עסקים",
+        "medicine": "רפואה",
+        "humanities": "מדעי הרוח",
+        "natural-sciences": "מדעי הטבע"
+      },
+      "educationOptions": {
+        "highschool": "תיכון",
+        "bagrut": "בגרות",
+        "bachelor": "תואר ראשון",
+        "master": "תואר שני"
+      },
+      "yesNo": {
+        "yes": "כן",
+        "no": "לא"
+      }
+    },
+    "toast": {
+      "successTitle": "ההודעה נשלחה בהצלחה!",
+      "successDescription": "תודה שפניתם אלינו. אחד היועצים שלנו יחזור אליכם בקרוב.",
+      "errorTitle": "ההודעה לא נשלחה"
+    },
+    "consent": {
+      "collected": "שם מלא, אימייל או מספר טלפון, נושא ותוכן ההודעה",
+      "purpose": "אנחנו משתמשים בפרטים האלה רק כדי לענות לפנייה וליצור איתכם קשר לגביה.",
+      "agree": "אני מסכים/ה ש-DARB תעבד את הפרטים שלי ותיצור איתי קשר בנוגע לפנייה זו. *"
+    },
+    "follow": "עקבו אחרינו",
+    "mapTitle": "המשרד שלנו במפה",
+    "mapSubtitle": "מצאו את משרד DARB בטמרה.",
+    "mapFrameTitle": "מפה המציגה את משרד DARB בטמרה",
+    "validation": {
+      "fullName": "הזינו שם מלא.",
+      "email": "הזינו כתובת אימייל תקינה.",
+      "phone": "הזינו מספר טלפון תקין.",
+      "topic": "בחרו נושא לפנייה.",
+      "message": "כתבו הודעה באורך 5 תווים לפחות.",
+      "contact": "הזינו כתובת אימייל או מספר טלפון.",
+      "consent": "נדרשת הסכמה לפני השליחה.",
+      "review": "בדקו את השדות המסומנים.",
+      "cityRequired": "נדרשת עיר",
+      "educationRequired": "נדרשת רמת השכלה",
+      "stillInSchoolRequired": "אנא בחרו אם אתם עדיין בבית ספר"
+    },
+    "ai": {
+      "eyebrow": "הדרכה מהירה",
+      "title": "מתחילים עם יועץ ה-AI",
+      "body": "קבלו תשובה מהירה לגבי לימודים בגרמניה, ואז השתמשו בטופס זה כשהשאלה שלכם דורשת מעקב של הצוות או הקשר לתיק.",
+      "action": "פתיחת יועץ ה-AI"
+    },
+    "openMap": "פתיחת המשרד במפות Google"
+  },
+  "support": {
+    "eyebrow": "יצירת קשר",
+    "title": "צריכים מידע נוסף או שיש לכם שאלה?",
+    "subtitle": "נשמח לעזור לכם!",
+    "contact": "צרו קשר",
+    "whatsapp": "WhatsApp",
+    "apply": "התחילו את ההרשמה"
+  }
+}
