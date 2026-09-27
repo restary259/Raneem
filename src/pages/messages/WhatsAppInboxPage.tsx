@@ -65,7 +65,7 @@ const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
 const STAGES: LeadStage[] = WHATSAPP_LEAD_STAGES as LeadStage[];
 const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
 const TEMPLATE_PURPOSES = ["lead_received", "lead_followup", "inquiry_follow_up", "appointment_invitation", "appointment_confirmation", "consultation_confirmation", "appointment_reminder", "appointment_rescheduled", "documents_missing", "document_reminder", "profile_incomplete", "document_received", "payment_instruction", "payment_reminder", "payment_confirmed", "application_started", "application_submitted", "application_update", "student_welcome", "enrollment_confirmation", "next_steps", "support_followup", "case_update", "re_engagement"] as const;
-const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value));
 const fmtDay = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "full" }).format(new Date(value));
 const KNOWN_TYPES = ["image", "video", "audio", "document", "sticker", "location", "contacts", "reaction"];
 
