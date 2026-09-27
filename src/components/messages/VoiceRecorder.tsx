@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Lock, Mic, Play, RotateCcw, Square, Trash2, X } from "lucide-react";
+import { Check, Loader2, Lock, Mic, Play, RotateCcw, Square, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -376,6 +376,20 @@ export default function VoiceRecorder({
       setRecorderMode("preview");
     }
   };
+
+  if (mode === "sending") {
+    return (
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 items-center justify-center gap-2 rounded-2xl border bg-background px-3 py-2",
+          className,
+        )}
+      >
+        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        <span className="text-xs text-muted-foreground">{t("chat.voice.sending")}</span>
+      </div>
+    );
+  }
 
   if (mode === "idle") {
     return (
