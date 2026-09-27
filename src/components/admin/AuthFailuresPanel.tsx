@@ -60,7 +60,7 @@ const AuthFailuresPanel: React.FC = () => {
   }, [filtered]);
 
   const fmt = (iso: string) =>
-    new Date(iso).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
+    new Date(iso).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit' });
 
   return (
     <div className="space-y-4">
