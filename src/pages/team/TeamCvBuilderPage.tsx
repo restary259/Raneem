@@ -9,7 +9,7 @@ const TeamCvBuilderPage = () => {
         <h1 className="text-2xl font-semibold tracking-tight">{t("nav.cvBuilder", "CV builder")}</h1>
       </div>
       {/* embedded: only the form + preview panes scroll under the h-14 header;
-          the FAQ/toolbar stay put. stickyTopClassName is calibrated for the
+          the toolbar stays put. stickyTopClassName is calibrated for the
           dashboard's short header (not the tall public marketing header). */}
       <div className="lg:flex-1 lg:min-h-0">
         <LebenslaufBuilder embedded stickyTopClassName="lg:top-4" />
