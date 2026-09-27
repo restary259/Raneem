@@ -4,52 +4,91 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { clearAppBadge, updateAppBadge } from "@/lib/appBadge";
 
-/** Live count of unread in-app notifications for the signed-in user. */
+const REALTIME_RETRY_MS = 15_000;
+
 function useUnreadNotifications(enabled: boolean): number {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
 
   const load = useCallback(async () => {
     if (!enabled || !user?.id) return;
-    const { count: rows } = await (supabase as any)
+    const { count: rows, error } = await (supabase as any)
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("is_read", false);
-    setCount(rows ?? 0);
+    if (!error) setCount(rows ?? 0);
   }, [enabled, user?.id]);
 
   useEffect(() => {
-    load().catch(() => undefined);
+    void load();
   }, [load]);
 
   const loadRef = useRef(load);
   useEffect(() => {
     loadRef.current = load;
-  });
+  }, [load]);
 
   useEffect(() => {
     if (!enabled || !user?.id) return;
-    const channel = supabase
-      .channel("app-badge-notifications")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        () => {
-          loadRef.current().catch(() => undefined);
-        },
-      )
-      .subscribe();
+
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let disposed = false;
+    const channelName = `app-badge-notifications-${user.id}`;
+
+    const subscribe = () => {
+      if (disposed) return;
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => void loadRef.current(),
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => void loadRef.current(),
+        )
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") return;
+          if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            if (disposed) return;
+            retryTimer = setTimeout(() => {
+              retryTimer = undefined;
+              void supabase.removeChannel(channel);
+              subscribe();
+              void loadRef.current();
+            }, REALTIME_RETRY_MS);
+          }
+        });
+
+      return channel;
+    };
+
+    const channel = subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      void supabase.removeChannel(channel);
     };
   }, [enabled, user?.id]);
 
-  // A push landing while the tab is open should bump the badge immediately.
   useEffect(() => {
     if (!enabled || !("serviceWorker" in navigator)) return;
     const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === "PUSH_RECEIVED") loadRef.current().catch(() => undefined);
+      if (event.data?.type === "PUSH_RECEIVED") void loadRef.current();
     };
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onMessage);
@@ -58,10 +97,6 @@ function useUnreadNotifications(enabled: boolean): number {
   return count;
 }
 
-/**
- * Keeps the OS app-icon badge and the browser-tab badge in sync with the
- * user's unread notifications + unread messages. Mount once per session.
- */
 export function useAppBadge(): void {
   const { user } = useAuth();
   const signedIn = Boolean(user?.id);
