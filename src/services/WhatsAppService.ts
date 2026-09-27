@@ -97,10 +97,19 @@ export async function listWhatsAppTemplates() {
   fail(error); return (data ?? []) as WhatsAppTemplate[];
 }
 
+let staffCache: { at: number; promise: Promise<StaffMember[]> } | null = null;
+/** Staff list rarely changes; reuse it for 5 minutes instead of refetching per render. */
 export async function listWhatsAppStaff() {
-  const { data, error } = await supabase.rpc("get_whatsapp_staff_directory");
-  fail(error); return (data ?? []) as StaffMember[];
+  if (staffCache && Date.now() - staffCache.at < 300_000) return staffCache.promise;
+  const promise = (async () => {
+    const { data, error } = await supabase.rpc("get_whatsapp_staff_directory");
+    fail(error); return (data ?? []) as StaffMember[];
+  })();
+  staffCache = { at: Date.now(), promise };
+  promise.catch(() => { staffCache = null; });
+  return promise;
 }
+supabase.auth.onAuthStateChange(() => { staffCache = null; });
 
 export async function updateConversation(id: string, patch: Tables["whatsapp_conversations"]["Update"]) {
   const allowed: Record<string, unknown> = {};
@@ -130,14 +139,14 @@ export interface WhatsAppInboundStatus { lastInboundAt: string | null; inboundCo
  * read is reported as 0 rather than failing the page.
  */
 export async function getWhatsAppInboundStatus(): Promise<WhatsAppInboundStatus> {
-  const [inbound, latest, unrecognised] = await Promise.all([
-    supabase.from("whatsapp_messages").select("id", { count: "exact", head: true }).eq("direction", "inbound"),
-    supabase.from("whatsapp_messages").select("created_at").eq("direction", "inbound").order("created_at", { ascending: false }).limit(1),
+  const [stats, unrecognised] = await Promise.all([
+    (supabase as any).rpc("get_whatsapp_inbound_stats"),
     supabase.from("whatsapp_ingest_log").select("id", { count: "exact", head: true }),
   ]);
+  const row = (stats.data as Array<{ inbound_count: number; last_inbound_at: string | null }> | null)?.[0];
   return {
-    lastInboundAt: latest.data?.[0]?.created_at ?? null,
-    inboundCount: inbound.count ?? 0,
+    lastInboundAt: row?.last_inbound_at ?? null,
+    inboundCount: Number(row?.inbound_count ?? 0),
     unrecognisedCount: unrecognised.count ?? 0,
   };
 }

@@ -53,11 +53,20 @@ export interface StaffMember {
   role: string;
 }
 
-/** Staff the current user may open a direct chat with (server-filtered). */
+let directoryCache: { at: number; promise: Promise<StaffMember[]> } | null = null;
+supabase.auth.onAuthStateChange(() => { directoryCache = null; });
+
+/** Staff the current user may open a direct chat with (server-filtered). Cached 5 min per session. */
 export async function listStaffDirectory(): Promise<StaffMember[]> {
-  const { data, error } = await (supabase as any).rpc("get_staff_directory");
-  if (error) throw error;
-  return (data ?? []) as StaffMember[];
+  if (directoryCache && Date.now() - directoryCache.at < 300_000) return directoryCache.promise;
+  const promise = (async () => {
+    const { data, error } = await (supabase as any).rpc("get_staff_directory");
+    if (error) throw error;
+    return (data ?? []) as StaffMember[];
+  })();
+  directoryCache = { at: Date.now(), promise };
+  promise.catch(() => { directoryCache = null; });
+  return promise;
 }
 
 /** Team-member directory for users with the optional team-chat capability. */
