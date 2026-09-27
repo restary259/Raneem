@@ -7577,10 +7577,6 @@ export type Database = {
         }
         Returns: Json
       }
-
-        Args: { p_action: string; p_slot?: string; p_token_hash: string }
-        Returns: Json
-      }
       list_office_team_members: {
         Args: Record<string, never>
         Returns: {
@@ -7602,7 +7598,35 @@ export type Database = {
           p_routing_rules?: Json
           p_settings: Json
         }
-        Returns: Database["public"]["Tables"]["offices"]["Row"]
+        Returns: {
+          address_line_1: string | null
+          address_line_2: string | null
+          address_line_3: string | null
+          address_line_4: string | null
+          address_line_5: string | null
+          booking_enabled: boolean
+          city: string
+          country: string
+          created_at: string
+          deleted_at: string | null
+          display_order: number
+          email: string | null
+          id: string
+          map_url: string | null
+          name_ar: string
+          name_en: string
+          name_he: string
+          office_code: string | null
+          office_type: string
+          phone: string | null
+          postal_code: string | null
+          public_description_ar: string | null
+          public_description_en: string | null
+          public_description_he: string | null
+          slug: string
+          timezone: string
+          updated_at: string
+        }
       }
       mark_case_messages_read: {
         Args: { p_case_id: string }
