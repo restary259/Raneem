@@ -128,10 +128,7 @@ export default function VoiceMessage({ att }: { att: ChatAttachment }) {
 
   return (
     <div
-      className={cn(
-        "flex w-[min(300px,70vw)] items-center gap-2",
-        mine ? "text-primary-foreground" : "text-foreground",
-      )}
+      className="flex w-[min(300px,70vw)] items-center gap-2"
     >
       <button
         type="button"
@@ -192,12 +189,7 @@ export default function VoiceMessage({ att }: { att: ChatAttachment }) {
             );
           })}
         </div>
-        <div
-          className={cn(
-            "flex justify-end text-[10px] tabular-nums",
-            mine ? "text-primary-foreground/75" : "text-muted-foreground",
-          )}
-        >
+        <div className="flex justify-end text-[10px] tabular-nums text-muted-foreground">
           {timeLabel}
         </div>
       </div>
