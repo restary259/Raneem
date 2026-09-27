@@ -77,7 +77,7 @@ describe("PublicOfficeBooking", () => {
     render(<PublicOfficeBooking token={"a".repeat(64)} autoOpen />);
     const time = await screen.findByRole("button", { name: "10:00" });
     await user.click(time);
-    await user.click(screen.getByRole("button", { name: "apply.confirmVisit" }));
+    await user.click(screen.getByRole("button", { name: "Confirm appointment" }));
     expect(screen.getByRole("button", { name: "10:00" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "apply.closeCalendar" })).toBeDisabled();
     resolveRequest({ scheduled_at: slots[0], status: "pending" });
