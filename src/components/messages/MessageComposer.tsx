@@ -298,15 +298,15 @@ export default function MessageComposer({
   /** Insert a trigger character (`@` / `#`) at the caret and open its picker. */
   const handleVoiceSend = async (file: File, durationMs: number) => {
     const handle = uploadVoiceChatAttachmentWithProgress(threadType, threadId, file, durationMs);
+    const attachment = await handle.promise;
     try {
-      const attachment = await handle.promise;
       await onSend("", [attachment], {
         visibility: allowInternal ? visibility : "shared",
         kind: "text",
         mentions: [],
       });
-    } catch (err: any) {
-      handle.cancel();
+    } catch (err) {
+      await removeChatAttachment(attachment.path).catch(() => undefined);
       throw err;
     }
   };
