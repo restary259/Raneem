@@ -331,6 +331,66 @@ $$;
 REVOKE ALL ON FUNCTION public.resolve_office_assignee(uuid,text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.resolve_office_assignee(uuid,text) TO service_role;
 
+CREATE OR REPLACE FUNCTION public.resolve_office_assignee_for_slot(
+  p_office_id uuid,
+  p_slot timestamptz,
+  p_duration_minutes integer,
+  p_service_type text DEFAULT NULL,
+  p_exclude_appointment_id uuid DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT om.user_id
+  FROM public.office_members om
+  WHERE om.office_id = p_office_id
+    AND om.is_active = true
+    AND public.is_active_team_member(om.user_id)
+    AND EXISTS (
+      SELECT 1 FROM public.offices o
+      WHERE o.id = om.office_id
+        AND o.is_active = true
+        AND o.deleted_at IS NULL
+        AND o.booking_enabled = true
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM public.appointments a
+      WHERE a.id IS DISTINCT FROM p_exclude_appointment_id
+        AND a.team_member_id = om.user_id
+        AND a.status IN ('scheduled','confirmed')
+        AND a.outcome IS NULL
+        AND a.scheduled_at < p_slot + make_interval(mins => p_duration_minutes)
+        AND COALESCE(a.public_booking_end, a.scheduled_at + make_interval(mins => a.duration_minutes)) > p_slot
+    )
+  ORDER BY
+    CASE
+      WHEN p_service_type IS NOT NULL AND EXISTS (
+        SELECT 1 FROM public.office_routing_rules rr
+        WHERE rr.office_id = p_office_id
+          AND rr.service_type = p_service_type
+          AND rr.assigned_user_id = om.user_id
+          AND rr.is_active = true
+      ) THEN 0
+      WHEN om.is_primary = true THEN 1
+      ELSE 2
+    END,
+    COALESCE(
+      (SELECT MIN(rr.priority) FROM public.office_routing_rules rr
+       WHERE rr.office_id = p_office_id
+         AND rr.service_type = p_service_type
+         AND rr.assigned_user_id = om.user_id
+         AND rr.is_active = true),
+      om.priority
+    ),
+    om.created_at
+  LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION public.resolve_office_assignee_for_slot(uuid,timestamptz,integer,text,uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.resolve_office_assignee_for_slot(uuid,timestamptz,integer,text,uuid) TO service_role;
+
 -- Case assignment invariant: once a case has an office, an assigned
 -- person must be an active team_member belonging to that same office.
 -- This prevents Admin/Manager assignment from silently splitting the case
@@ -645,19 +705,21 @@ BEGIN
     RAISE EXCEPTION 'Time unavailable';
   END IF;
 
-  -- Reuse the currently assigned member only when that person is still an
-  -- active team member of the selected office. Otherwise route server-side.
-  SELECT om.user_id INTO v_assignee
-  FROM public.office_members om
-  WHERE om.office_id = v_office_id
-    AND om.user_id = COALESCE(v_appt.team_member_id, v_case.assigned_to)
-    AND om.is_active = true
-    AND public.is_active_team_member(om.user_id)
-  LIMIT 1;
-
-  IF v_assignee IS NULL THEN
-    v_assignee := public.resolve_office_assignee(v_office_id, p_service_type);
-  END IF;
+  -- Resolve an active team_member who belongs to the selected office and is
+  -- free for this exact slot. During reschedule, exclude the current appointment
+  -- from the conflict check so the appointment can move within the same window.
+  v_assignee := public.resolve_office_assignee_for_slot(
+    v_office_id,
+    p_slot,
+    COALESCE(
+      (SELECT default_duration_minutes
+       FROM public.office_booking_settings
+       WHERE office_id = v_office_id),
+      60
+    ),
+    p_service_type,
+    v_appt.id
+  );
 
   IF v_assignee IS NULL THEN
     RAISE EXCEPTION 'Office unavailable';
