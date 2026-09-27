@@ -1995,3 +1995,18 @@ catalog school `alpha-aktiv`.
   override. Partner-family roles get "Referral milestones" for Cases and
   "Earnings" for Payments.
 - No database schema change. Build clean; full suite `1477 passed | 1 skipped`.
+- **Hebrew parity completed (PR #107).** The `he` `pushSettings` block was
+  missing 39 of 62 keys (it predates role-aware settings — `he` had no
+  `pushSettings` at all before PR #105). It was invisible because `src/i18n.ts`
+  sets `fallbackLng: { he: ['en'] }`, so a missing key silently renders English,
+  and `i18nKeys.test.ts` only checks `["ar","en"]`. All 39 are now translated;
+  `en`/`ar`/`he` are 62/62 with no duplicates. No DB / edge-function /
+  dependency change — locale JSON + test only.
+- **The durable half of that fix is the guard, not the strings.**
+  `notificationCategories.test.ts` now has `PRIMARY_LOCALES = ["en","ar","he"]`
+  (was en/ar) plus a new `keeps every pushSettings key present in every locale`
+  test asserting every `pushSettings` leaf key exists in every offered locale
+  (verified to fail when one key is deleted). Consequence to remember: **any
+  future PR adding a notification category must also supply Hebrew**, or the
+  suite goes red. Still uncovered by this guard: the other Hebrew `dashboard.json`
+  blocks (`chat`, `intel`, `team`).
