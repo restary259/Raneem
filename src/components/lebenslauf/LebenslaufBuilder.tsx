@@ -47,7 +47,8 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
   embedded = false,
   stickyTopClassName = "lg:top-20",
 }) => {
-  const { t } = useTranslation("resources");
+  const { t, i18n } = useTranslation("resources");
+  const isRtl = i18n.dir() === "rtl";
   useCvFonts();
 
   const { data, setData, updateData, updatePersonal, updateDesign, updateSignature, saveDraft, loadDraft, clearAll, downloadPdf, generating } = useLebenslauf();
