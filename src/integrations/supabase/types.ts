@@ -7935,6 +7935,10 @@ export type Database = {
           status: string
         }[]
       }
+      send_bank_details_to_admin: {
+        Args: { p_thread_id: string }
+        Returns: string
+      }
       send_case_message: {
         Args: {
           p_attachments?: Json
@@ -7944,10 +7948,6 @@ export type Database = {
           p_mentions?: string[]
           p_visibility?: string
         }
-        Returns: string
-      }
-      send_bank_details_to_admin: {
-        Args: { p_thread_id: string }
         Returns: string
       }
       send_direct_message: {
