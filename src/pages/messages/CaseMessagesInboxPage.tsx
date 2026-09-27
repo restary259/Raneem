@@ -292,11 +292,7 @@ export default function CaseMessagesInboxPage() {
           selected ? "hidden" : "flex",
         )}
       >
-        <div>
-          <h1 className="text-xl font-semibold">{t("messagesInbox.title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("messagesInbox.subtitle")}</p>
-        </div>
-        <div className="flex items-center gap-2">
+  <div className="flex items-center gap-2">
           {totalUnread > 0 && (
             <Badge variant="destructive">
               {t("messagesInbox.unreadTotal", { count: totalUnread })}
