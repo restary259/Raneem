@@ -11,6 +11,7 @@ import { isVoiceAttachment, type ChatAttachment } from "@/lib/chatFormat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import DirectMessages from "@/components/messages/DirectMessages";
+import VoiceCallButton from "@/components/messages/VoiceCallButton";
 import { chatDisplayName } from "@/lib/chatIdentity";
 import ThreadList, { type ThreadListItem } from "@/components/messages/ThreadList";
 import StaffPickerDialog from "@/components/messages/StaffPickerDialog";
@@ -159,14 +160,21 @@ export default function PartnerMessagesPage({ viewerRole = "social_media_partner
                     </p>
                   )}
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="md:hidden"
-                  onClick={() => setSelected(null)}
-                >
-                  {t("chat.back")}
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <VoiceCallButton
+                    threadId={active.threadId}
+                    otherUserId={active.otherUserId}
+                    otherUserName={displayName(active.otherUserName, active.otherUserRole)}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="md:hidden"
+                    onClick={() => setSelected(null)}
+                  >
+                    {t("chat.back")}
+                  </Button>
+                </div>
               </div>
               <DirectMessages
                 threadId={active.threadId}

@@ -5318,5 +5318,21 @@
       "policies": "Policies",
       "documents": "Documents"
     }
+  },
+  "voiceCall": {
+    "call": "Call",
+    "incoming": "Incoming voice call",
+    "calling": "Calling…",
+    "connecting": "Connecting…",
+    "accept": "Accept",
+    "decline": "Decline",
+    "hangUp": "Hang up",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "declined": "Call declined",
+    "noAnswer": "No answer",
+    "failed": "The call could not connect",
+    "noMic": "Microphone is not available in this browser",
+    "unknown": "Unknown"
   }
 }
