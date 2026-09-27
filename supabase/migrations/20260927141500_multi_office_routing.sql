@@ -216,7 +216,7 @@ SET search_path = public AS $$
     WHERE ur.user_id = p_user_id
       AND ur.role = 'team_member'::public.app_role
       AND p.deleted_at IS NULL
-      AND COALESCE(p.deactivated_at, NULL) IS NULL
+      AND p.deactivated_at IS NULL
   );
 $$;
 
