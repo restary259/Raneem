@@ -491,11 +491,36 @@ export default function VoiceRecorder({
           </div>
 
           {mode === "recording" ? (
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex shrink-0 items-center gap-0.5">
               <span className="hidden text-[10px] text-muted-foreground sm:inline">
                 {t("chat.voice.lockHint")}
               </span>
-              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+              <Lock className="mx-0.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                aria-label={t("chat.voice.stop")}
+                title={t("chat.voice.stop")}
+                onClick={function () {
+                  stopRecording(true);
+                }}
+                className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10"
+              >
+                <Square className="h-4 w-4 fill-current" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                aria-label={t("chat.voice.send")}
+                title={t("chat.voice.send")}
+                onClick={function () {
+                  stopRecording(false);
+                }}
+                className="h-8 w-8 rounded-full"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
           ) : (
             <Button
