@@ -10,7 +10,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 const CLOUD_PUBLIC_CONFIG = {
   VITE_SUPABASE_URL: "https://mzbadxfvxioedzdjxamc.supabase.co",
   VITE_SUPABASE_PUBLISHABLE_KEY:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16YmFkeGZ2eGlvZWR6ZGp4YW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MDM1MTIsImV4cCI6MjA4NjE3OTUxMn0.YxLzUfifPZnRmO9yknRj4G-rx_CmkMjKyT5kaoJb6Qg",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16YmFkeGZ2aW9lZHpqeGFtYyIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzcwNjAzNTMyLCJleHAiOjIwODYxNzk1MTJ9.y0LzUfifPZnRmO9yknRj4G-rx_CmkMjKyT5kaoJb6Qg",
 } as const;
 
 const publicConfig = Object.fromEntries(
@@ -19,6 +19,20 @@ const publicConfig = Object.fromEntries(
     process.env[key] || fallback,
   ]),
 );
+
+const fixAppointmentDateFormatting = {
+  name: "fix-admin-appointment-date-formatting",
+  enforce: "post" as const,
+  transform(code: string, id: string) {
+    if (!id.endsWith("/src/pages/admin/AdminPipelinePage.tsx")) return null;
+
+    const invalid = 'new Date(caseAppointment.scheduled_at).toLocaleString("en-IL", { timeZone: "Asia/Jerusalem", weekday: "short", dateStyle: "medium", timeStyle: "short" })';
+    const fixed = 'new Date(caseAppointment.scheduled_at).toLocaleString("en-IL", { timeZone: "Asia/Jerusalem", weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false })';
+
+    if (!code.includes(invalid)) return null;
+    return code.replace(invalid, fixed);
+  },
+};
 
 export default defineConfig({
   tanstackStart: {
@@ -38,6 +52,7 @@ export default defineConfig({
         JSON.stringify(value),
       ]),
     ),
+    plugins: [fixAppointmentDateFormatting],
     resolve: {
       alias: {
         // React Email's htmlparser2 path needs entities v4.5.0; a nested v5+
