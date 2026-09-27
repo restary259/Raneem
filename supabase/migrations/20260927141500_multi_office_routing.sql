@@ -237,7 +237,7 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.validate_office_team_member() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.validate_office_team_member() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.validate_office_team_member() TO service_role;
 
 DROP TRIGGER IF EXISTS trg_validate_office_team_member ON public.office_members;
 CREATE TRIGGER trg_validate_office_team_member
@@ -329,6 +329,44 @@ $$;
 
 REVOKE ALL ON FUNCTION public.resolve_office_assignee(uuid,text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.resolve_office_assignee(uuid,text) TO service_role;
+
+-- Case assignment invariant: once a case has an office, an assigned
+-- person must be an active team_member belonging to that same office.
+-- This prevents Admin/Manager assignment from silently splitting the case
+-- location from the responsible staff member and keeps the public appointment
+-- assignment trigger safe.
+CREATE OR REPLACE FUNCTION public.validate_case_office_assignment()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public AS $
+BEGIN
+  IF NEW.office_id IS NOT NULL AND NEW.assigned_to IS NOT NULL THEN
+    IF NOT public.is_active_team_member(NEW.assigned_to)
+       OR NOT EXISTS (
+         SELECT 1
+         FROM public.office_members om
+         WHERE om.office_id = NEW.office_id
+           AND om.user_id = NEW.assigned_to
+           AND om.is_active = true
+       ) THEN
+      RAISE EXCEPTION 'Assigned team member must belong to the case office'
+        USING ERRCODE = 'check_violation';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.validate_case_office_assignment() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.validate_case_office_assignment() TO service_role, authenticated;
+
+DROP TRIGGER IF EXISTS trg_validate_case_office_assignment ON public.cases;
+CREATE TRIGGER trg_validate_case_office_assignment
+BEFORE INSERT OR UPDATE OF office_id, assigned_to
+ON public.cases
+FOR EACH ROW
+EXECUTE FUNCTION public.validate_case_office_assignment();
 
 -- ---------------------------------------------------------------------------
 -- RLS
@@ -838,7 +876,7 @@ GRANT EXECUTE ON FUNCTION public.validate_office_booking_configuration() TO auth
 
 DROP TRIGGER IF EXISTS trg_validate_office_booking_configuration ON public.offices;
 CREATE TRIGGER trg_validate_office_booking_configuration
-BEFORE INSERT OR UPDATE OF booking_enabled,is_active,deleted_at
+BEFORE INSERT OR UPDATE
 ON public.offices
 FOR EACH ROW
 EXECUTE FUNCTION public.validate_office_booking_configuration();
