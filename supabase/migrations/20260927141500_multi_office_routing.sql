@@ -340,7 +340,7 @@ CREATE OR REPLACE FUNCTION public.validate_case_office_assignment()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public AS $
+SET search_path = public AS $$
 BEGIN
   IF NEW.office_id IS NOT NULL AND NEW.assigned_to IS NOT NULL THEN
     IF NOT public.is_active_team_member(NEW.assigned_to)
@@ -357,7 +357,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.validate_case_office_assignment() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.validate_case_office_assignment() TO service_role, authenticated;
@@ -511,7 +511,7 @@ RETURNS uuid
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = public AS $
+SET search_path = public AS $$
   SELECT om.user_id
   FROM public.office_members om
   WHERE om.office_id = p_office_id
@@ -556,7 +556,7 @@ SET search_path = public AS $
     ),
     om.created_at
   LIMIT 1;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.resolve_office_assignee_for_slot(uuid,timestamptz,integer,text,uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.resolve_office_assignee_for_slot(uuid,timestamptz,integer,text,uuid) TO service_role;
@@ -967,7 +967,7 @@ CREATE OR REPLACE FUNCTION public.validate_office_booking_configuration()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public AS $
+SET search_path = public AS $$
 BEGIN
   IF NEW.booking_enabled AND (NOT NEW.is_active OR NEW.deleted_at IS NOT NULL) THEN
     RAISE EXCEPTION 'Booking can only be enabled for an active office';
@@ -997,7 +997,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.validate_office_booking_configuration() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.validate_office_booking_configuration() TO authenticated, service_role;
@@ -1016,7 +1016,7 @@ CREATE OR REPLACE FUNCTION public.deactivate_office_membership_when_team_role_re
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public AS $
+SET search_path = public AS $$
 BEGIN
   IF TG_OP = 'DELETE'
      AND OLD.role = 'team_member'::public.app_role THEN
@@ -1036,7 +1036,7 @@ BEGIN
   END IF;
   RETURN COALESCE(NEW, OLD);
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.deactivate_office_membership_when_team_role_removed() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.deactivate_office_membership_when_team_role_removed() TO service_role;
@@ -1053,7 +1053,7 @@ CREATE OR REPLACE FUNCTION public.deactivate_office_membership_on_profile_deacti
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public AS $
+SET search_path = public AS $$
 BEGIN
   IF NEW.deactivated_at IS NOT NULL
      AND OLD.deactivated_at IS NULL THEN
@@ -1066,7 +1066,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.deactivate_office_membership_on_profile_deactivation() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.deactivate_office_membership_on_profile_deactivation() TO service_role;
@@ -1095,7 +1095,7 @@ CREATE OR REPLACE FUNCTION public.save_office_configuration(
 RETURNS public.offices
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public AS $
+SET search_path = public AS $$
 DECLARE
   v_office public.offices%ROWTYPE;
   v_selected uuid[];
@@ -1294,7 +1294,7 @@ BEGIN
 
   RETURN v_office;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb,jsonb,jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb,jsonb,jsonb) TO authenticated;
