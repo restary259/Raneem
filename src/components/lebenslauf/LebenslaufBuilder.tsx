@@ -66,14 +66,20 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
   // Only the form + preview panes scroll in the dashboard; everything else
   // (toolbar, mobile toggle) stays put. On the public page (embedded=false)
   // the whole section scrolls as before.
-  const rootCls = embedded
+  // In RTL (Arabic) the side-by-side grid pushes the preview to the far
+  // left and feels broken, so the preview stacks above the form instead
+  // and the whole page scrolls naturally.
+  const splitPanes = embedded && !isRtl;
+  const rootCls = splitPanes
     ? "lebenslauf-builder lg:h-full lg:flex lg:flex-col lg:overflow-hidden"
     : "lebenslauf-builder";
-  const headerCls = embedded ? "lg:shrink-0" : "";
-  const gridCls = embedded
+  const headerCls = splitPanes ? "lg:shrink-0" : "";
+  const gridCls = splitPanes
     ? "grid grid-cols-1 lg:grid-cols-2 gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden"
-    : "grid grid-cols-1 lg:grid-cols-2 gap-6";
-  const paneCls = embedded ? "lg:overflow-y-auto lg:min-h-0 lg:pr-1" : "";
+    : isRtl
+      ? "grid grid-cols-1 gap-6"
+      : "grid grid-cols-1 lg:grid-cols-2 gap-6";
+  const paneCls = splitPanes ? "lg:overflow-y-auto lg:min-h-0 lg:pr-1" : "";
 
   return (
     <div className={rootCls}>
