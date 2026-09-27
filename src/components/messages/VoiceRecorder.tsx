@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, Lock, Mic, Play, Send, Square, Trash2, X } from "lucide-react";
+import { Loader2, Mic, Play, Send, Square, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,7 @@ const RECORDING_MIME_CANDIDATES = [
   "audio/ogg;codecs=opus",
 ] as const;
 
-type RecorderMode = "idle" | "recording" | "locked" | "preview" | "sending";
+type RecorderMode = "idle" | "recording" | "preview" | "sending";
 
 interface VoiceRecorderProps {
   disabled?: boolean;
@@ -64,7 +64,6 @@ export default function VoiceRecorder({
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const startedAtRef = useRef(0);
-  const lockedRef = useRef(false);
   const cancelBeforeReadyRef = useRef(false);
   const previewOnStopRef = useRef(false);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
@@ -111,7 +110,7 @@ export default function VoiceRecorder({
     clearPreview();
     chunksRef.current = [];
     recorderRef.current = null;
-    lockedRef.current = false;
+    stoppingRef.current = false;
     cancelBeforeReadyRef.current = false;
     previewOnStopRef.current = false;
     setElapsedMs(0);
@@ -138,16 +137,18 @@ export default function VoiceRecorder({
   }, [recordedUrl]);
 
   useEffect(function () {
-    if (mode !== "recording" && mode !== "locked") return;
+    if (mode !== "recording") return;
     const timer = window.setInterval(function () {
       if (!startedAtRef.current) return;
       const next = Date.now() - startedAtRef.current;
       if (next >= maxDurationMs) {
         setElapsedMs(maxDurationMs);
         previewOnStopRef.current = true;
-        lockedRef.current = true;
         const recorder = recorderRef.current;
-        if (recorder && recorder.state !== "inactive") recorder.stop();
+        if (recorder && recorder.state !== "inactive" && !stoppingRef.current) {
+          stoppingRef.current = true;
+          recorder.stop();
+        }
         return;
       }
       setElapsedMs(next);
@@ -204,7 +205,7 @@ export default function VoiceRecorder({
       return;
     }
 
-    if (previewOnStopRef.current || lockedRef.current) {
+    if (previewOnStopRef.current) {
       setRecordedFile(file);
       setRecordedUrl(URL.createObjectURL(file));
       setPlayingPreview(false);
@@ -290,14 +291,19 @@ export default function VoiceRecorder({
       chunksRef.current = [];
       startedAtRef.current = Date.now();
       setElapsedMs(0);
-      lockedRef.current = false;
       stoppingRef.current = false;
       cancelBeforeReadyRef.current = false;
       previewOnStopRef.current = false;
       setRecorderMode("recording");
 
       recorder.addEventListener("dataavailable", function (event) {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
+        if (
+          requestId === startRequestRef.current &&
+          !cancelBeforeReadyRef.current &&
+          event.data.size > 0
+        ) {
+          chunksRef.current.push(event.data);
+        }
       });
 
       recorder.addEventListener(
@@ -399,11 +405,10 @@ export default function VoiceRecorder({
       className={cn(
         "flex min-w-0 flex-1 items-center gap-2 rounded-2xl border bg-background px-2.5 py-1.5",
         mode === "recording" && "border-destructive/30 bg-destructive/[0.03]",
-        mode === "locked" && "border-primary/30 bg-primary/[0.03]",
         className,
       )}
     >
-      {mode === "recording" || mode === "locked" ? (
+      {mode === "recording" ? (
         <>
           <button
             type="button"
@@ -444,12 +449,7 @@ export default function VoiceRecorder({
             </div>
           </div>
 
-          {mode === "recording" ? (
-            <div className="flex shrink-0 items-center gap-0.5">
-              <span className="hidden text-[10px] text-muted-foreground sm:inline">
-                {t("chat.voice.lockHint")}
-              </span>
-              <Lock className="mx-0.5 h-3.5 w-3.5 text-muted-foreground" />
+          <div className="flex shrink-0 items-center gap-0.5">
               <button
                 type="button"
                 aria-label={t("chat.voice.stop")}
@@ -488,21 +488,7 @@ export default function VoiceRecorder({
               >
                 <Send className="h-4 w-4" />
               </button>
-            </div>
-          ) : (
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              aria-label={t("chat.voice.stop")}
-              onClick={function () {
-                stopRecording(true);
-              }}
-              className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10"
-            >
-              <Square className="h-4 w-4 fill-current" />
-            </Button>
-          )}
+          </div>
         </>
       ) : (
         <>

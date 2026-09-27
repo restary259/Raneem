@@ -4149,7 +4149,7 @@
     },
     "voice": {
       "record": "Record voice message",
-      "recordHint": "Hold to record · slide left to cancel · slide up to lock",
+      "recordHint": "Tap to record",
       "message": "Voice message",
       "recording": "Recording",
       "cancel": "Cancel recording",
