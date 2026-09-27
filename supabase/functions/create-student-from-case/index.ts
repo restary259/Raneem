@@ -281,7 +281,7 @@ serve(async (req) => {
       try {
         const alreadySent = await recentPendingInvite(email);
         if (alreadySent) {
-          console.log("create-student-from-case: skipped duplicate invite", { email, alreadySent });
+          console.log("create-student-from-case: skipped duplicate invite", { alreadySent });
           return "already_sent" as const;
         }
 
