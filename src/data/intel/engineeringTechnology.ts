@@ -11,6 +11,7 @@ import type { IntelSource } from './factTypes';
 import { fact, unverified } from './factTypes';
 import { COMPETITIVE_BGRUT_SOURCE, competitiveBagrutForMajor } from './competitiveBagrut';
 import type { MajorIntel, ProgramIntel } from './types';
+import { ISRAELI_BGRUT_SUBJECT_REQUIREMENTS } from './bagrutRequirements';
 
 const CHECKED = '2026-09-19';
 
@@ -248,11 +249,16 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         note: 'Maschinenbau B.Sc. is not admission-restricted (nicht zulassungsbeschränkt).',
         noteAR: 'بكالوريوس الهندسة الميكانيكية غير مقيّد القبول (بدون NC).',
       }),
-      subjectRequirements: unverified(
-        'OFFICIAL_REQUIREMENT',
-        'No programme-specific Israeli Bagrut subject/unit requirement was verified on the checked programme page. Do not add a mathematics or physics unit threshold.',
-        'لم يتم التحقق من شرط وحدات/مواد بجروت خاص بالبرنامج في صفحة البرنامج المفحوصة. لا تضف حداً لوحدات الرياضيات أو الفيزياء.',
-      ),
+      subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
       languageRequirement: SHARED_LANGUAGE,
       gradeRequirement: unverified(
         'OFFICIAL_REQUIREMENT',
@@ -291,11 +297,16 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         note: 'Elektrotechnik und Informationstechnik B.Sc. is not admission-restricted.',
         noteAR: 'بكالوريوس الهندسة الكهربائية وتقنية المعلومات غير مقيّد القبول.',
       }),
-      subjectRequirements: unverified(
-        'OFFICIAL_REQUIREMENT',
-        'No programme-specific Israeli Bagrut subject/unit requirement was verified on the checked programme page.',
-        'لم يتم التحقق من شرط مواد/وحدات بجروت خاص بالبرنامج في صفحة البرنامج المفحوصة.',
-      ),
+      subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
       languageRequirement: SHARED_LANGUAGE,
       gradeRequirement: unverified(
         'OFFICIAL_REQUIREMENT',
@@ -335,11 +346,16 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         note: 'Bauingenieurwesen B.Sc. is not admission-restricted.',
         noteAR: 'بكالوريوس الهندسة المدنية غير مقيّد القبول.',
       }),
-      subjectRequirements: unverified(
-        'OFFICIAL_REQUIREMENT',
-        'No programme-specific Israeli Bagrut subject/unit requirement was verified on the checked programme page. The six-week construction-site internship is recorded separately as a programme requirement.',
-        'لم يتم التحقق من شرط مواد/وحدات بجروت خاص بالبرنامج في صفحة البرنامج المفحوصة. تم تسجيل التدريب العملي لمدة ستة أسابيع بشكل منفصل كشرط للبرنامج.',
-      ),
+      subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
       languageRequirement: SHARED_LANGUAGE,
       gradeRequirement: unverified(
         'OFFICIAL_REQUIREMENT',
@@ -380,11 +396,16 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         note: 'Umweltschutztechnik B.Sc. is not admission-restricted.',
         noteAR: 'بكالوريوس هندسة حماية البيئة غير مقيّد القبول.',
       }),
-      subjectRequirements: unverified(
-        'OFFICIAL_REQUIREMENT',
-        'No programme-specific Israeli Bagrut subject/unit requirement was verified on the checked programme page.',
-        'لم يتم التحقق من شرط مواد/وحدات بجروت خاص بالبرنامج في صفحة البرنامج المفحوصة.',
-      ),
+      subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
       languageRequirement: SHARED_LANGUAGE,
       gradeRequirement: unverified(
         'OFFICIAL_REQUIREMENT',
@@ -424,11 +445,16 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         note: 'Materialwissenschaft B.Sc. is not admission-restricted.',
         noteAR: 'بكالوريوس علم وهندسة المواد غير مقيّد القبول.',
       }),
-      subjectRequirements: unverified(
-        'OFFICIAL_REQUIREMENT',
-        'No programme-specific Israeli Bagrut subject/unit requirement was verified on the checked programme page.',
-        'لم يتم التحقق من شرط مواد/وحدات بجروت خاص بالبرنامج في صفحة البرنامج المفحوصة.',
-      ),
+      subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
       languageRequirement: SHARED_LANGUAGE,
       gradeRequirement: unverified(
         'OFFICIAL_REQUIREMENT',
