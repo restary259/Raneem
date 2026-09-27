@@ -80,12 +80,13 @@ export default function PartnerMessagesPage({ viewerRole = "social_media_partner
     preview:
       thread.lastMessage?.kind === "payout_request"
         ? t("chat.payout.title")
-        : thread.lastMessage?.body ||
-          ((thread.lastMessage?.attachments ?? []) as ChatAttachment[]).some((att) =>
-            isVoiceAttachment(att),
-          )
-          ? t("chat.voice.message")
-          : t("messagesInbox.noMessagesYet"),
+        : thread.lastMessage?.body
+          ? thread.lastMessage.body
+          : ((thread.lastMessage?.attachments ?? []) as ChatAttachment[]).some((att) =>
+              isVoiceAttachment(att),
+            )
+            ? t("chat.voice.message")
+            : t("messagesInbox.noMessagesYet"),
     timestamp: thread.lastMessageAt,
     unread: thread.unread,
     otherUserId: thread.otherUserId,
