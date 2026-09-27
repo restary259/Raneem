@@ -454,7 +454,7 @@ export default function MessageList({
                     })()}
 
                     {m.attachments.length > 0 && (
-                      <div className="flex flex-col items-start gap-2">
+                      <div className="flex flex-wrap items-start gap-2">
                         {m.attachments.map((att) =>
                           isVoiceAttachment(att) ? (
                             <VoiceMessage key={att.path} att={att} mine={group.mine} />
