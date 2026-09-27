@@ -18,13 +18,7 @@ const WAVEFORM = Array.from({ length: 30 }, function (_, index) {
   return 0.3 + Math.min(0.7, value);
 });
 
-export default function VoiceMessage({
-  att,
-  mine = false,
-}: {
-  att: ChatAttachment;
-  mine?: boolean;
-}) {
+export default function VoiceMessage({ att }: { att: ChatAttachment }) {
   const { t } = useTranslation("dashboard");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [url, setUrl] = useState<string | null>(null);
