@@ -71,6 +71,7 @@ DECLARE
   v_mentions uuid[];
   v_mentioned uuid;
   v_preview text;
+  v_preview_ar text;
   v_is_voice boolean := false;
 BEGIN
   IF v_uid IS NULL THEN RAISE EXCEPTION 'Not authenticated'; END IF;
@@ -129,6 +130,10 @@ BEGIN
     WHEN btrim(COALESCE(p_body,'')) = '' THEN NULL
     ELSE left(btrim(p_body), 140)
   END;
+  v_preview_ar := CASE
+    WHEN v_is_voice THEN 'رسالة صوتية'
+    ELSE v_preview
+  END;
 
   IF v_role = 'student' THEN
     IF v_case.assigned_to IS NOT NULL AND NOT EXISTS (
@@ -140,7 +145,7 @@ BEGIN
               COALESCE(v_preview, 'Sent an attachment'), 'case_message', p_case_id,
               public.chat_sender_label(v_uid, v_case.assigned_to, 'ar'),
               public.chat_sender_label(v_uid, v_case.assigned_to, 'en'),
-              COALESCE(v_preview, 'أرسل مرفقًا'), COALESCE(v_preview, 'Sent an attachment'),
+              COALESCE(v_preview_ar, 'أرسل مرفقًا'), COALESCE(v_preview, 'Sent an attachment'),
               '/team/cases/' || p_case_id::text);
     END IF;
   ELSIF v_visibility = 'shared' AND v_case.student_user_id IS NOT NULL AND NOT EXISTS (
@@ -153,7 +158,7 @@ BEGIN
             'case_message', p_case_id,
             public.chat_sender_label(v_uid, v_case.student_user_id, 'ar'),
             public.chat_sender_label(v_uid, v_case.student_user_id, 'en'),
-            CASE WHEN v_kind = 'request' THEN 'طلب مستندًا' ELSE COALESCE(v_preview, 'أرسل مرفقًا') END,
+            CASE WHEN v_kind = 'request' THEN 'طلب مستندًا' ELSE COALESCE(v_preview_ar, 'أرسل مرفقًا') END,
             CASE WHEN v_kind = 'request' THEN 'Requested a document' ELSE COALESCE(v_preview, 'Sent an attachment') END,
             '/student/messages');
   END IF;
@@ -167,7 +172,7 @@ BEGIN
               COALESCE(v_preview, 'Sent an attachment'), 'case_mention', p_case_id,
               public.chat_sender_label(v_uid, v_mentioned, 'ar') || ' أشار إليك',
               public.chat_sender_label(v_uid, v_mentioned, 'en') || ' mentioned you',
-              COALESCE(v_preview, 'أرسل مرفقًا'), COALESCE(v_preview, 'Sent an attachment'),
+              COALESCE(v_preview_ar, 'أرسل مرفقًا'), COALESCE(v_preview, 'Sent an attachment'),
               CASE
                 WHEN public.has_role(v_mentioned, 'admin') THEN '/admin/messages'
                 WHEN v_mentioned = v_case.student_user_id THEN '/student/messages'
@@ -202,6 +207,7 @@ DECLARE
   v_other record;
   v_mentions uuid[];
   v_preview text;
+  v_preview_ar text;
   v_label_en text;
   v_label_ar text;
   v_mentioned boolean;
@@ -237,6 +243,10 @@ BEGIN
     WHEN v_body = '' THEN NULL
     ELSE left(v_body, 140)
   END;
+  v_preview_ar := CASE
+    WHEN v_is_voice THEN 'رسالة صوتية'
+    ELSE v_preview
+  END;
 
   FOR v_other IN
     SELECT p.user_id FROM public.direct_thread_participants p
@@ -256,7 +266,7 @@ BEGIN
             COALESCE(v_preview, 'Sent an attachment'), 'direct_message',
             CASE WHEN v_mentioned THEN v_label_ar || ' أشار إليك' ELSE v_label_ar END,
             CASE WHEN v_mentioned THEN v_label_en || ' mentioned you' ELSE v_label_en END,
-            COALESCE(v_preview, 'أرسل مرفقًا'), COALESCE(v_preview, 'Sent an attachment'),
+            COALESCE(v_preview_ar, 'أرسل مرفقًا'), COALESCE(v_preview, 'Sent an attachment'),
             CASE
               WHEN public.has_role(v_other.user_id, 'admin') THEN '/admin/messages'
               WHEN public.has_role(v_other.user_id, 'team_member') THEN '/team/messages'
