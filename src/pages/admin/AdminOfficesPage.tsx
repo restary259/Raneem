@@ -16,6 +16,8 @@ type TeamMember = { id: string; full_name: string };
 type OfficeMember = { id: string; office_id: string; user_id: string; membership_type: string; is_primary: boolean; is_active: boolean; priority: number };
 type DayHours = { office_id?: string; weekday: number; is_open: boolean; open_time: string; close_time: string };
 type RoutingRule = { id?: string; office_id?: string; service_type: string; assigned_user_id: string; priority: number; is_active: boolean };
+type OfficeBreak = { id?: string; office_id?: string; weekday: number; start_time: string; end_time: string; label: string; is_active: boolean };
+type OfficeBlackout = { id?: string; office_id?: string; starts_at: string; ends_at: string; reason: string; is_active: boolean };
 type Office = {
   id: string; name_ar: string; name_en: string; name_he: string; slug: string; office_code: string | null;
   office_type: OfficeType; country: string; city: string; address_line_1: string | null; phone: string | null;
@@ -64,6 +66,8 @@ const makeForm = () => ({
   minimum_lead_minutes: 120,
   maximum_days_ahead: 14,
   hours: makeHours(),
+  breaks: [] as OfficeBreak[],
+  blackouts: [] as OfficeBlackout[],
   routingRules: [] as RoutingRule[],
 });
 
@@ -89,7 +93,7 @@ export default function AdminOfficesPage() {
         type: "نوع المكتب", timezone: "المنطقة الزمنية", nameAr: "الاسم بالعربي", nameEn: "الاسم بالإنجليزي", nameHe: "الاسم بالعبرية",
         slug: "الرابط", code: "رمز المكتب", bookingEnabled: "السماح بالحجز", interval: "الفاصل (دقيقة)", duration: "مدة الموعد (دقيقة)",
         lead: "أقل مدة قبل الحجز (دقيقة)", horizon: "أقصى أيام للحجز", closed: "مغلق", open: "مفتوح", service: "الخدمة", member: "عضو الفريق",
-        addRule: "إضافة توجيه", none: "لا توجد قواعد إضافية", warning: "لتفعيل الحجز يجب اختيار عضو فريق أساسي.",
+        addRule: "إضافة توجيه", none: "لا توجد قواعد إضافية", addBreak: "إضافة استراحة", breaks: "الاستراحات", blackouts: "فترات الإغلاق", addBlackout: "إضافة فترة إغلاق", remove: "إزالة", warning: "لتفعيل الحجز يجب اختيار عضو فريق أساسي.",
         partner: "شريك", franchise: "فرانشايز", darb: "DARB", invalid: "يرجى تعبئة اسم المكتب والمدينة.",
       };
     }
@@ -102,7 +106,7 @@ export default function AdminOfficesPage() {
         type: "סוג משרד", timezone: "אזור זמן", nameAr: "שם בערבית", nameEn: "שם באנגלית", nameHe: "שם בעברית",
         slug: "Slug", code: "קוד משרד", bookingEnabled: "אפשר הזמנות", interval: "מרווח (דקות)", duration: "משך (דקות)",
         lead: "מינימום לפני הזמנה (דקות)", horizon: "מקסימום ימים קדימה", closed: "סגור", open: "פתוח", service: "שירות", member: "חבר צוות",
-        addRule: "הוספת ניתוב", none: "אין כללי ניתוב נוספים", warning: "יש לבחור חבר צוות ראשי לפני הפעלת הזמנות.",
+        addRule: "הוספת ניתוב", none: "אין כללי ניתוב נוספים", addBreak: "הוספת הפסקה", breaks: "הפסקות", blackouts: "סגירות", addBlackout: "הוספת סגירה", remove: "הסרה", warning: "יש לבחור חבר צוות ראשי לפני הפעלת הזמנות.",
         partner: "שותף", franchise: "זכיין", darb: "DARB", invalid: "יש למלא שם משרד ועיר.",
       };
     }
@@ -114,7 +118,7 @@ export default function AdminOfficesPage() {
       type: "Office type", timezone: "Timezone", nameAr: "Arabic name", nameEn: "English name", nameHe: "Hebrew name",
       slug: "Public slug", code: "Office code", bookingEnabled: "Enable booking", interval: "Slot interval (minutes)", duration: "Default duration (minutes)",
       lead: "Minimum lead time (minutes)", horizon: "Maximum days ahead", closed: "Closed", open: "Open", service: "Service", member: "Team member",
-      addRule: "Add routing rule", none: "No additional routing rules", warning: "Select a primary team member before enabling booking.",
+      addRule: "Add routing rule", none: "No additional routing rules", addBreak: "Add break", breaks: "Breaks", blackouts: "Blackout periods", addBlackout: "Add blackout", remove: "Remove", warning: "Select a primary team member before enabling booking.",
       partner: "Partner", franchise: "Franchise", darb: "DARB", invalid: "Office name and city are required.",
     };
   }, [language]);
@@ -124,6 +128,8 @@ export default function AdminOfficesPage() {
   const [members, setMembers] = useState<OfficeMember[]>([]);
   const [hours, setHours] = useState<DayHours[]>([]);
   const [rules, setRules] = useState<RoutingRule[]>([]);
+  const [breaks, setBreaks] = useState<OfficeBreak[]>([]);
+  const [blackouts, setBlackouts] = useState<OfficeBlackout[]>([]);
   const [settings, setSettings] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -139,20 +145,26 @@ export default function AdminOfficesPage() {
         (supabase.rpc as any)("list_office_team_members"),
         (supabase.from as any)("office_hours").select("*").order("weekday"),
         (supabase.from as any)("office_routing_rules").select("*").order("priority"),
+        (supabase.from as any)("office_breaks").select("*").order("weekday").order("start_time"),
+        (supabase.from as any)("office_blackouts").select("*").order("starts_at"),
         (supabase.from as any)("office_booking_settings").select("*"),
       ]);
-      const officeRes = results[0], memberRes = results[1], teamRes = results[2], hourRes = results[3], ruleRes = results[4], settingsRes = results[5];
+      const officeRes = results[0], memberRes = results[1], teamRes = results[2], hourRes = results[3], ruleRes = results[4], breakRes = results[5], blackoutRes = results[6], settingsRes = results[7];
       if (officeRes.error) throw officeRes.error;
       if (memberRes.error) throw memberRes.error;
       if (teamRes.error) throw teamRes.error;
       if (hourRes.error) throw hourRes.error;
       if (ruleRes.error) throw ruleRes.error;
+      if (breakRes.error) throw breakRes.error;
+      if (blackoutRes.error) throw blackoutRes.error;
       if (settingsRes.error) throw settingsRes.error;
       setOffices((officeRes.data || []) as Office[]);
       setMembers((memberRes.data || []) as OfficeMember[]);
       setTeamMembers((teamRes.data || []) as TeamMember[]);
       setHours((hourRes.data || []) as DayHours[]);
       setRules((ruleRes.data || []) as RoutingRule[]);
+      setBreaks((breakRes.data || []) as OfficeBreak[]);
+      setBlackouts((blackoutRes.data || []) as OfficeBlackout[]);
       const map: Record<string, number> = {};
       (settingsRes.data || []).forEach(function (s: any) {
         map[s.office_id + ":interval"] = Number(s.slot_interval_minutes);
@@ -201,6 +213,12 @@ export default function AdminOfficesPage() {
       minimum_lead_minutes: settings[office.id + ":lead"] || 120,
       maximum_days_ahead: settings[office.id + ":horizon"] || 14,
       hours: officeHours,
+      breaks: breaks.filter(function (b) { return b.office_id === office.id; }).map(function (b) {
+        return { id: b.id, office_id: office.id, weekday: b.weekday, start_time: b.start_time, end_time: b.end_time, label: b.label || "", is_active: b.is_active };
+      }),
+      blackouts: blackouts.filter(function (b) { return b.office_id === office.id; }).map(function (b) {
+        return { id: b.id, office_id: office.id, starts_at: b.starts_at.slice(0, 16), ends_at: b.ends_at.slice(0, 16), reason: b.reason || "", is_active: b.is_active };
+      }),
       routingRules: rules.filter(function (r) { return r.office_id === office.id; }).map(function (r) {
         return { id: r.id, office_id: office.id, service_type: r.service_type, assigned_user_id: r.assigned_user_id, priority: r.priority, is_active: r.is_active };
       }),
@@ -264,6 +282,12 @@ export default function AdminOfficesPage() {
         }),
         p_primary_user_id: form.primary_user_id || null,
         p_backup_user_id: form.backup_user_id || null,
+        p_breaks: form.breaks.filter(function (item) { return Boolean(item.start_time && item.end_time); }).map(function (item) {
+          return { weekday: item.weekday, start_time: item.start_time, end_time: item.end_time, label: item.label || "", is_active: Boolean(item.is_active) };
+        }),
+        p_blackouts: form.blackouts.filter(function (item) { return Boolean(item.starts_at && item.ends_at); }).map(function (item) {
+          return { starts_at: new Date(item.starts_at).toISOString(), ends_at: new Date(item.ends_at).toISOString(), reason: item.reason || "", is_active: Boolean(item.is_active) };
+        }),
         p_routing_rules: form.routingRules.filter(function (rule) {
           return Boolean(rule.service_type && rule.assigned_user_id);
         }).map(function (rule) {
@@ -424,6 +448,59 @@ export default function AdminOfficesPage() {
                   </div>;
                 })}
               </div>
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold">{labels.breaks}</h3>
+                <Button type="button" size="sm" variant="outline" onClick={function () {
+                  const openDay = form.hours.find(function (h) { return h.is_open; });
+                  setField("breaks", form.breaks.concat([{
+                    weekday: openDay ? openDay.weekday : 0,
+                    start_time: "13:00",
+                    end_time: "13:30",
+                    label: "",
+                    is_active: true,
+                  }]));
+                }}><Plus className="me-2 size-4" />{labels.addBreak}</Button>
+              </div>
+              {form.breaks.length ? form.breaks.map(function (item, index) {
+                return <div key={item.id || index} className="grid gap-2 rounded-xl border border-border p-3 md:grid-cols-[1fr_1fr_1fr_2fr_auto]">
+                  <Select value={String(item.weekday)} onValueChange={function (v) { setField("breaks", form.breaks.map(function (b, i) { return i === index ? Object.assign({}, b, { weekday: Number(v) }) : b; })); }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>{DAYS.map(function (entry) { return <SelectItem key={entry[0]} value={String(entry[0])}>{entry[1]}</SelectItem>; })}</SelectContent>
+                  </Select>
+                  <Input type="time" value={item.start_time} onChange={function (e) { setField("breaks", form.breaks.map(function (b, i) { return i === index ? Object.assign({}, b, { start_time: e.target.value }) : b; })); }} />
+                  <Input type="time" value={item.end_time} onChange={function (e) { setField("breaks", form.breaks.map(function (b, i) { return i === index ? Object.assign({}, b, { end_time: e.target.value }) : b; })); }} />
+                  <Input placeholder={labels.breaks} value={item.label} onChange={function (e) { setField("breaks", form.breaks.map(function (b, i) { return i === index ? Object.assign({}, b, { label: e.target.value }) : b; })); }} />
+                  <Button type="button" variant="ghost" size="icon" aria-label={labels.remove} onClick={function () { setField("breaks", form.breaks.filter(function (_, i) { return i !== index; })); }}><X className="size-4" /></Button>
+                </div>;
+              }) : <p className="text-sm text-muted-foreground">{labels.none}</p>}
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold">{labels.blackouts}</h3>
+                <Button type="button" size="sm" variant="outline" onClick={function () {
+                  const start = new Date();
+                  start.setHours(9, 0, 0, 0);
+                  const end = new Date(start.getTime() + 60 * 60 * 1000);
+                  setField("blackouts", form.blackouts.concat([{
+                    starts_at: start.toISOString().slice(0, 16),
+                    ends_at: end.toISOString().slice(0, 16),
+                    reason: "",
+                    is_active: true,
+                  }]));
+                }}><Plus className="me-2 size-4" />{labels.addBlackout}</Button>
+              </div>
+              {form.blackouts.length ? form.blackouts.map(function (item, index) {
+                return <div key={item.id || index} className="grid gap-2 rounded-xl border border-border p-3 md:grid-cols-[1fr_1fr_2fr_auto]">
+                  <Input type="datetime-local" value={item.starts_at} onChange={function (e) { setField("blackouts", form.blackouts.map(function (b, i) { return i === index ? Object.assign({}, b, { starts_at: e.target.value }) : b; })); }} />
+                  <Input type="datetime-local" value={item.ends_at} onChange={function (e) { setField("blackouts", form.blackouts.map(function (b, i) { return i === index ? Object.assign({}, b, { ends_at: e.target.value }) : b; })); }} />
+                  <Input placeholder={labels.blackouts} value={item.reason} onChange={function (e) { setField("blackouts", form.blackouts.map(function (b, i) { return i === index ? Object.assign({}, b, { reason: e.target.value }) : b; })); }} />
+                  <Button type="button" variant="ghost" size="icon" aria-label={labels.remove} onClick={function () { setField("blackouts", form.blackouts.filter(function (_, i) { return i !== index; })); }}><X className="size-4" /></Button>
+                </div>;
+              }) : <p className="text-sm text-muted-foreground">{labels.none}</p>}
             </section>
 
             <section className="space-y-3">
