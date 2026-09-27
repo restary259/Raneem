@@ -17,6 +17,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AgentRouteImport } from './routes/agent'
 import { Route as AiAdvisorRouteImport } from './routes/ai-advisor'
 import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as BookAppointmentRouteImport } from './routes/book-appointment'
 import { Route as BroadcastRouteImport } from './routes/broadcast'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as EducationalDestinationsRouteImport } from './routes/educational-destinations'
@@ -157,6 +158,11 @@ const AiAdvisorRoute = AiAdvisorRouteImport.update({
 const ApplyRoute = ApplyRouteImport.update({
   id: '/apply',
   path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookAppointmentRoute = BookAppointmentRouteImport.update({
+  id: '/book-appointment',
+  path: '/book-appointment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BroadcastRoute = BroadcastRouteImport.update({
@@ -681,6 +687,7 @@ export interface FileRoutesByFullPath {
   '/agent': typeof AgentRouteWithChildren
   '/ai-advisor': typeof AiAdvisorRoute
   '/apply': typeof ApplyRoute
+  '/book-appointment': typeof BookAppointmentRoute
   '/broadcast': typeof BroadcastRoute
   '/contact': typeof ContactRoute
   '/educational-destinations': typeof EducationalDestinationsRoute
@@ -790,6 +797,7 @@ export interface FileRoutesByTo {
   '/activate': typeof ActivateRoute
   '/ai-advisor': typeof AiAdvisorRoute
   '/apply': typeof ApplyRoute
+  '/book-appointment': typeof BookAppointmentRoute
   '/broadcast': typeof BroadcastRoute
   '/contact': typeof ContactRoute
   '/educational-destinations': typeof EducationalDestinationsRoute
@@ -899,6 +907,7 @@ export interface FileRoutesById {
   '/agent': typeof AgentRouteWithChildren
   '/ai-advisor': typeof AiAdvisorRoute
   '/apply': typeof ApplyRoute
+  '/book-appointment': typeof BookAppointmentRoute
   '/broadcast': typeof BroadcastRoute
   '/contact': typeof ContactRoute
   '/educational-destinations': typeof EducationalDestinationsRoute
@@ -1012,6 +1021,7 @@ export interface FileRouteTypes {
     | '/agent'
     | '/ai-advisor'
     | '/apply'
+    | '/book-appointment'
     | '/broadcast'
     | '/contact'
     | '/educational-destinations'
@@ -1121,6 +1131,7 @@ export interface FileRouteTypes {
     | '/activate'
     | '/ai-advisor'
     | '/apply'
+    | '/book-appointment'
     | '/broadcast'
     | '/contact'
     | '/educational-destinations'
@@ -1229,6 +1240,7 @@ export interface FileRouteTypes {
     | '/agent'
     | '/ai-advisor'
     | '/apply'
+    | '/book-appointment'
     | '/broadcast'
     | '/contact'
     | '/educational-destinations'
@@ -1341,6 +1353,7 @@ export interface RootRouteChildren {
   AgentRoute: typeof AgentRouteWithChildren
   AiAdvisorRoute: typeof AiAdvisorRoute
   ApplyRoute: typeof ApplyRoute
+  BookAppointmentRoute: typeof BookAppointmentRoute
   BroadcastRoute: typeof BroadcastRoute
   ContactRoute: typeof ContactRoute
   EducationalDestinationsRoute: typeof EducationalDestinationsRoute
@@ -1432,6 +1445,13 @@ declare module '@tanstack/react-router' {
       path: '/apply'
       fullPath: '/apply'
       preLoaderRoute: typeof ApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book-appointment': {
+      id: '/book-appointment'
+      path: '/book-appointment'
+      fullPath: '/book-appointment'
+      preLoaderRoute: typeof BookAppointmentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/broadcast': {
@@ -2331,6 +2351,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentRoute: AgentRouteWithChildren,
   AiAdvisorRoute: AiAdvisorRoute,
   ApplyRoute: ApplyRoute,
+  BookAppointmentRoute: BookAppointmentRoute,
   BroadcastRoute: BroadcastRoute,
   ContactRoute: ContactRoute,
   EducationalDestinationsRoute: EducationalDestinationsRoute,
