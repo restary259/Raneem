@@ -11,7 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 interface Props {
   userId: string;
   /** The profiles boolean column this toggle owns (admin-only guarded column). */
-  column: 'referral_code_enabled' | 'apply_form_enabled' | 'whatsapp_inbox_enabled' | 'internal_team_chat_enabled';
+  column: 'referral_code_enabled' | 'apply_form_enabled' | 'whatsapp_inbox_enabled' | 'internal_team_chat_enabled' | 'voice_calls_enabled';
+  /**
+   * Accessible name for the switch. The visible row text is a sibling, not a
+   * <label>, so without this the switch reaches assistive tech unnamed. Also
+   * lets tests target one toggle instead of counting switches by index.
+   */
+  label?: string;
   value: boolean;
   /** Called after the flag was persisted, with the new value. */
   onChanged: (next: boolean) => void;
@@ -31,7 +37,7 @@ interface Props {
  * admin-only settable via restrict_profiles_write.
  */
 const ProfileFeatureToggle: React.FC<Props> = ({
-  userId, column, value, onChanged,
+  userId, column, label, value, onChanged,
   enableTitle, enableBody, disableTitle, disableBody, enabledToast, disabledToast,
 }) => {
   const { t } = useTranslation('dashboard');
@@ -65,7 +71,7 @@ const ProfileFeatureToggle: React.FC<Props> = ({
 
   return (
     <>
-      <Switch checked={value} disabled={saving} onCheckedChange={(v) => setPending(v)} />
+      <Switch aria-label={label} checked={value} disabled={saving} onCheckedChange={(v) => setPending(v)} />
 
       <AlertDialog open={pending !== null} onOpenChange={(v) => { if (!v) setPending(null); }}>
         <AlertDialogContent onClick={stop}>

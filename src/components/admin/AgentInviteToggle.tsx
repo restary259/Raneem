@@ -63,7 +63,12 @@ const AgentInviteToggle: React.FC<Props> = ({
 
   return (
     <>
-      <Switch checked={canInvite} disabled={saving} onCheckedChange={(v) => setPending(v)} />
+      <Switch
+        aria-label={t('admin.agents.directInviteSwitch', 'Direct invites')}
+        checked={canInvite}
+        disabled={saving}
+        onCheckedChange={(v) => setPending(v)}
+      />
 
       <AlertDialog open={pending !== null} onOpenChange={(v) => { if (!v) setPending(null); }}>
         <AlertDialogContent onClick={stop}>

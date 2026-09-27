@@ -63,7 +63,12 @@ const AgentCreateAccountsToggle: React.FC<Props> = ({
 
   return (
     <>
-      <Switch checked={canCreateAccounts} disabled={saving} onCheckedChange={(v) => setPending(v)} />
+      <Switch
+        aria-label={t('admin.agents.createAccountSwitch', 'Manual account creation')}
+        checked={canCreateAccounts}
+        disabled={saving}
+        onCheckedChange={(v) => setPending(v)}
+      />
 
       <AlertDialog open={pending !== null} onOpenChange={(v) => { if (!v) setPending(null); }}>
         <AlertDialogContent onClick={stop}>

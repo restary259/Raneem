@@ -36,6 +36,10 @@ const CATEGORY_COLUMN: Record<string, string> = {
   documents: "cat_documents",
   profile: "cat_profile",
   recruitment: "cat_recruitment",
+  // Incoming voice calls. Falls out of the notification_preferences.cat_calls
+  // column added in 20260928130000; without this mapping a call would be gated
+  // by cat_system instead of its own switch.
+  calls: "cat_calls",
   system: "cat_system",
 };
 

@@ -26,10 +26,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound, MessageCircle } from "lucide-react";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound, MessageCircle, Phone } from "lucide-react";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
 import ProfileFeatureToggle from "./ProfileFeatureToggle";
+import VoiceCallsToggle from "./VoiceCallsToggle";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
 import { cn } from "@/lib/utils";
 import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
@@ -93,6 +94,8 @@ interface PanelProps {
   setWhatsappInboxEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   internalTeamChatEnabled: boolean;
   setInternalTeamChatEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  voiceCallsEnabled: boolean;
+  setVoiceCallsEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   onRetryAgentFlags: () => void;
   slots: PanelSlot;
   bodyClassName: string;
@@ -143,6 +146,8 @@ function MemberDetailPanel({
   setWhatsappInboxEnabled,
   internalTeamChatEnabled,
   setInternalTeamChatEnabled,
+  voiceCallsEnabled,
+  setVoiceCallsEnabled,
   onRetryAgentFlags,
   slots,
   bodyClassName,
@@ -401,6 +406,36 @@ function MemberDetailPanel({
             </CardContent>
           </Card>
         )}
+
+        {/* Voice calls — every role, because a call is gated by "these two
+            people can already message each other", not by role. */}
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              {t("admin.members.sectionCommunication", "Communication")}
+            </h3>
+
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10">
+                <Phone className="h-4 w-4 text-brand" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium leading-tight">
+                  {t("admin.members.voiceCallsTitle", "Voice calls")}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {t("admin.members.voiceCallsDesc", "Allow voice calls with people they already chat with directly.")}
+                </p>
+              </div>
+              <VoiceCallsToggle
+                userId={member.requester_id}
+                userName={member.full_name}
+                value={voiceCallsEnabled}
+                onChanged={setVoiceCallsEnabled}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Role-specific Actions */}
         {member.role === "agent" && (
@@ -681,20 +716,22 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   const [agentFlagsRetry, setAgentFlagsRetry] = useState(0);
   const [whatsappInboxEnabled, setWhatsappInboxEnabled] = useState(false);
   const [internalTeamChatEnabled, setInternalTeamChatEnabled] = useState(false);
+  const [voiceCallsEnabled, setVoiceCallsEnabled] = useState(false);
 
   useEffect(() => {
     setAgentFlags(null);
     setAgentFlagsError(false);
     setWhatsappInboxEnabled(false);
     setInternalTeamChatEnabled(false);
+    setVoiceCallsEnabled(false);
 
     if (!member?.requester_id) return;
 
     let stale = false;
     const loadProfileFlags = async () => {
       const select = member.role === "agent"
-        ? "agent_can_invite_directly, agent_can_create_accounts, whatsapp_inbox_enabled, internal_team_chat_enabled"
-        : "whatsapp_inbox_enabled, internal_team_chat_enabled";
+        ? "agent_can_invite_directly, agent_can_create_accounts, whatsapp_inbox_enabled, internal_team_chat_enabled, voice_calls_enabled"
+        : "whatsapp_inbox_enabled, internal_team_chat_enabled, voice_calls_enabled";
       const { data, error } = await supabase
         .from("profiles")
         .select(select)
@@ -711,6 +748,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
 
       setWhatsappInboxEnabled(!!(data as any)?.whatsapp_inbox_enabled);
       setInternalTeamChatEnabled(!!(data as any)?.internal_team_chat_enabled);
+      setVoiceCallsEnabled(!!(data as any)?.voice_calls_enabled);
 
       if (member.role === "agent") {
         setAgentFlags({
@@ -820,6 +858,8 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     setWhatsappInboxEnabled,
     internalTeamChatEnabled,
     setInternalTeamChatEnabled,
+    voiceCallsEnabled,
+    setVoiceCallsEnabled,
     onRetryAgentFlags: () => setAgentFlagsRetry((n) => n + 1),
   };
 

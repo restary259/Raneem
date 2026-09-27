@@ -107,6 +107,13 @@ const renderDrawer = () =>
 
 const switchState = (el: HTMLElement) => el.getAttribute('data-state');
 
+// The drawer renders one switch per per-profile flag, and that set grows as
+// flags are added (voice calls is a third). These queries name the switch
+// instead of counting by index, so a future flag cannot silently shift an
+// assertion onto the wrong control.
+const inviteSwitch = () => screen.getByRole('switch', { name: 'Direct invites' });
+const createSwitch = () => screen.getByRole('switch', { name: 'Manual account creation' });
+
 describe('MemberDetailDrawer agent permission toggles', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -121,10 +128,9 @@ describe('MemberDetailDrawer agent permission toggles', () => {
     };
     renderDrawer();
 
-    await waitFor(() => expect(screen.getAllByRole('switch')).toHaveLength(2));
-    const [invite, create] = screen.getAllByRole('switch');
-    expect(switchState(invite)).toBe('checked');
-    expect(switchState(create)).toBe('unchecked');
+    await waitFor(() => expect(inviteSwitch()).toBeInTheDocument());
+    expect(switchState(inviteSwitch())).toBe('checked');
+    expect(switchState(createSwitch())).toBe('unchecked');
   });
 
   it('grant persists and the switch flips ON (no snap-back)', async () => {
@@ -134,8 +140,8 @@ describe('MemberDetailDrawer agent permission toggles', () => {
     };
     renderDrawer();
 
-    await waitFor(() => expect(screen.getAllByRole('switch')).toHaveLength(2));
-    const invite = screen.getAllByRole('switch')[0];
+    await waitFor(() => expect(inviteSwitch()).toBeInTheDocument());
+    const invite = inviteSwitch();
     expect(switchState(invite)).toBe('unchecked');
 
     await userEvent.click(invite);
@@ -155,8 +161,8 @@ describe('MemberDetailDrawer agent permission toggles', () => {
     };
     renderDrawer();
 
-    await waitFor(() => expect(screen.getAllByRole('switch')).toHaveLength(2));
-    const invite = screen.getAllByRole('switch')[0];
+    await waitFor(() => expect(inviteSwitch()).toBeInTheDocument());
+    const invite = inviteSwitch();
     expect(switchState(invite)).toBe('checked');
 
     await userEvent.click(invite);
@@ -176,7 +182,9 @@ describe('MemberDetailDrawer agent permission toggles', () => {
     expect(
       await screen.findByText("Couldn't load this agent's permissions."),
     ).toBeInTheDocument();
-    expect(screen.queryAllByRole('switch')).toHaveLength(0);
+    // Only the agent switches are gated on the error; the voice-calls switch is
+    // not, so it stays mounted and this asserts the agent row is suppressed.
+    expect(screen.queryByRole('switch', { name: 'Direct invites' })).toBeNull();
     const callsAfterError = flagsCalls;
 
     flagsResult = {
@@ -185,8 +193,8 @@ describe('MemberDetailDrawer agent permission toggles', () => {
     };
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
 
-    await waitFor(() => expect(screen.getAllByRole('switch')).toHaveLength(2));
+    await waitFor(() => expect(inviteSwitch()).toBeInTheDocument());
     expect(flagsCalls).toBeGreaterThan(callsAfterError);
-    expect(switchState(screen.getAllByRole('switch')[1])).toBe('checked');
+    expect(switchState(createSwitch())).toBe('checked');
   });
 });
