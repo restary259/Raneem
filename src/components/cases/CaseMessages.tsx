@@ -21,6 +21,7 @@ import {
 import { listStaffDirectory } from "@/services/DirectMessageService";
 import { uploadChatAttachment } from "@/services/ChatAttachmentService";
 import {
+  isVoiceAttachment,
   validateAttachmentFile,
   type ChatMessage,
   type MentionablePerson,
@@ -271,7 +272,15 @@ export default function CaseMessages({ caseId, allowInternal = false, className 
             opts.mentions,
           );
           if (opts.visibility !== "internal") {
-            void notifyNewMessageEmail({ threadType: "case", threadId: caseId, preview: body });
+            void notifyNewMessageEmail({
+              threadType: "case",
+              threadId: caseId,
+              preview:
+                body ||
+                (attachments.some((att) => isVoiceAttachment(att))
+                  ? t("chat.voice.message")
+                  : t("chat.attach.only")),
+            });
           }
           await load();
         }}
