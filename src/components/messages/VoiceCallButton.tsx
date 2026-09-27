@@ -31,7 +31,7 @@ export default function VoiceCallButton({ threadId, otherUserId, otherUserName, 
     if (!me) return;
     (async () => {
       const other = otherUserId ?? (await getOtherParticipant(threadId, me));
-      if (cancelled || !other) return;
+      if (cancelled || !other || other === me) return;
       setPeer(other);
       const ok = await canCallUser(me, other);
       if (!cancelled) setAllowed(ok);
@@ -41,14 +41,15 @@ export default function VoiceCallButton({ threadId, otherUserId, otherUserName, 
     };
   }, [threadId, otherUserId, user?.id]);
 
-  if (!voice || !allowed || !peer) return null;
+  if (!voice || !allowed || !peer || peer === user?.id) return null;
 
   return (
     <Button
       size="sm"
       variant="outline"
       className={className ?? "gap-1 px-2 md:px-3"}
-      disabled={voice.phase !== "idle"}
+      disabled={voice.inCall}
+      title={voice.inCall ? t("voiceCall.youBusy", "You are already on a call") : undefined}
       aria-label={t("voiceCall.call", "Call")}
       onClick={() => void voice.startCall({ threadId, peerId: peer, peerName: otherUserName ?? undefined })}
     >
