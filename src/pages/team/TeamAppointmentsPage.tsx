@@ -60,9 +60,18 @@ interface Appointment {
   duration_minutes: number;
   notes: string | null;
   outcome: string | null;
+  office_id?: string | null;
   public_booking?: boolean;
   confirmation_status?: string;
   case?: { full_name: string; phone_number: string; status: string };
+}
+
+interface OfficeSummary {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  name_he: string;
+  city: string;
 }
 interface Case {
   id: string;
@@ -132,6 +141,8 @@ export default function TeamAppointmentsPage() {
   const [visitRequests, setVisitRequests] = useState<Appointment[]>([]);
   const [confirmingVisit, setConfirmingVisit] = useState<string | null>(null);
   const [myCases, setMyCases] = useState<Case[]>([]);
+  const [myOffices, setMyOffices] = useState<OfficeSummary[]>([]);
+  const [officeNames, setOfficeNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   /* ── Calendar ── */
@@ -151,6 +162,7 @@ export default function TeamAppointmentsPage() {
   const [newDuration, setNewDuration] = useState("60");
   const [newNotes, setNewNotes] = useState("");
   const [newCaseId, setNewCaseId] = useState("");
+  const [newOfficeId, setNewOfficeId] = useState("");
   const [manualName, setManualName] = useState("");
   const [useManualName, setUseManualName] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -184,7 +196,18 @@ export default function TeamAppointmentsPage() {
         .or(`scheduled_at.gte.${cutoff},outcome.is.null`)
         .order("scheduled_at");
       if (error) throw error;
-      setAppts((data as any[]) ?? []);
+      const appointmentRows = (data as any[]) ?? [];
+      setAppts(appointmentRows);
+      const appointmentOfficeIds = [...new Set(appointmentRows.map((row) => row.office_id).filter(Boolean))] as string[];
+      const officeLookupResult = appointmentOfficeIds.length
+        ? await (supabase.from as any)("offices").select("id,name_ar,name_en,name_he,city").in("id", appointmentOfficeIds)
+        : { data: [], error: null };
+      if (officeLookupResult.error) throw officeLookupResult.error;
+      const officeMap: Record<string, string> = {};
+      (officeLookupResult.data ?? []).forEach((office: OfficeSummary) => {
+        officeMap[office.id] = isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en;
+      });
+      setOfficeNames(officeMap);
       const { data: requested, error: requestError } = await supabase
         .from("appointments")
         .select("*, case:cases!inner(full_name, phone_number, status, assigned_to)")
@@ -202,7 +225,7 @@ export default function TeamAppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, i18n.language]);
 
   const confirmVisit = async (id: string) => {
     setConfirmingVisit(id);
@@ -222,11 +245,36 @@ export default function TeamAppointmentsPage() {
    */
   const apptErrorMessage = useCallback(
     (err: any) =>
-      String(err?.message ?? "").includes("APPT_BLOCKED")
+      /APPT_BLOCKED|Time unavailable/i.test(String(err?.message ?? ""))
         ? t("team.appointments.errConflict")
         : t("common.error"),
     [t],
   );
+
+  const fetchMyOffices = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data: membershipRows, error: membershipError } = await (supabase.from as any)("office_members")
+        .select("office_id")
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+      if (membershipError) throw membershipError;
+      const ids = [...new Set((membershipRows ?? []).map((row: any) => row.office_id).filter(Boolean))] as string[];
+      if (!ids.length) {
+        setMyOffices([]);
+        return;
+      }
+      const { data, error } = await (supabase.from as any)("offices")
+        .select("id,name_ar,name_en,name_he,city")
+        .in("id", ids)
+        .eq("is_active", true)
+        .is("deleted_at", null);
+      if (error) throw error;
+      setMyOffices((data ?? []) as OfficeSummary[]);
+    } catch (err) {
+      console.error("fetchMyOffices error:", err);
+    }
+  }, [user]);
 
   const fetchMyCases = useCallback(async () => {
     if (!user) return;
@@ -248,7 +296,8 @@ export default function TeamAppointmentsPage() {
   }, [fetchAppts]);
   useEffect(() => {
     fetchMyCases();
-  }, [fetchMyCases]);
+    fetchMyOffices();
+  }, [fetchMyCases, fetchMyOffices]);
 
   /* ══ DRAG & DROP ═════════════════════════════════════════════════════ */
   // Called from ApptBlock's onDragStart
@@ -336,6 +385,7 @@ export default function TeamAppointmentsPage() {
     setNewDuration("60");
     setNewNotes("");
     setNewCaseId("");
+    setNewOfficeId(myOffices.length === 1 ? myOffices[0].id : "");
     setManualName("");
     setUseManualName(false);
     setShowModal(true);
@@ -349,6 +399,7 @@ export default function TeamAppointmentsPage() {
     setNewDuration(String(appt.duration_minutes));
     setNewNotes(appt.notes ?? "");
     setNewCaseId(appt.case_id ?? "");
+    setNewOfficeId(appt.office_id ?? "");
     setManualName("");
     setUseManualName(false);
     setSelectedAppt(null);
@@ -369,6 +420,10 @@ export default function TeamAppointmentsPage() {
       toast({ variant: "destructive", description: t("team.appointments.errNoName") });
       return;
     }
+    if (!newOfficeId) {
+      toast({ variant: "destructive", description: isAr ? "اختار المكتب" : i18n.language.startsWith("he") ? "יש לבחור משרד" : "Select an office" });
+      return;
+    }
 
     // Working hours validation
     const [hh] = newTime.split(":").map(Number);
@@ -384,9 +439,9 @@ export default function TeamAppointmentsPage() {
       dt.setHours(h, m, 0, 0);
 
       if (editingAppt) {
-        const { error } = await supabase
-          .from("appointments")
+        const { error } = await (supabase.from as any)("appointments")
           .update({
+            office_id: newOfficeId,
             scheduled_at: dt.toISOString(),
             duration_minutes: parseInt(newDuration),
             notes: newNotes || null,
@@ -398,11 +453,11 @@ export default function TeamAppointmentsPage() {
       } else {
         let caseId = newCaseId;
         if (useManualName && manualName.trim()) {
-          const { data: cd, error: ce } = await supabase
-            .from("cases")
+          const { data: cd, error: ce } = await (supabase.from as any)("cases")
             .insert({
               full_name: manualName.trim(),
               assigned_to: user!.id,
+              office_id: newOfficeId,
               phone_number: "",
               status: "appointment_scheduled",
             })
@@ -411,8 +466,9 @@ export default function TeamAppointmentsPage() {
           if (ce) throw ce;
           caseId = (cd as any).id;
         }
-        const { error } = await supabase.from("appointments").insert({
+        const { error } = await (supabase.from as any)("appointments").insert({
           case_id: caseId,
+          office_id: newOfficeId,
           team_member_id: user!.id,
           scheduled_at: dt.toISOString(),
           duration_minutes: parseInt(newDuration),
@@ -554,6 +610,12 @@ export default function TeamAppointmentsPage() {
             {(appt.case as any)?.full_name ?? (appt as any)?.guest_name ?? "—"}
           </span>
         </div>
+        {!compact && appt.office_id && officeNames[appt.office_id] && (
+          <div className="mt-1 flex min-w-0 items-center gap-1 ps-2.5 text-[9px] font-medium opacity-75">
+            <Building2 className="h-2.5 w-2.5 shrink-0" />
+            <span className="truncate">{officeNames[appt.office_id]}</span>
+          </div>
+        )}
         {!compact && (
           <div className="flex items-center gap-1 mt-0.5 opacity-65 ps-2.5 min-w-0 w-full">
             <Clock className="h-2.5 w-2.5 shrink-0" />
@@ -646,7 +708,11 @@ export default function TeamAppointmentsPage() {
         <h2 className="mb-3 font-semibold text-foreground">{t("team.appointments.visitRequests")}</h2>
         <div className="grid gap-2 sm:grid-cols-2">
           {visitRequests.map((request) => <div key={request.id} className="flex items-center justify-between gap-3 border border-border bg-background p-3 text-sm">
-            <div className="min-w-0"><p className="truncate font-semibold">{request.case?.full_name}</p><p className="text-muted-foreground">{format(parseISO(request.scheduled_at), "EEE, MMM d · h:mm a")}</p></div>
+            <div className="min-w-0">
+  <p className="truncate font-semibold">{request.case?.full_name}</p>
+  <p className="text-muted-foreground">{format(parseISO(request.scheduled_at), "EEE, MMM d · h:mm a")}</p>
+  {request.office_id && officeNames[request.office_id] ? <p className="text-xs font-medium text-primary">{officeNames[request.office_id]}</p> : null}
+</div>
             <Button size="sm" disabled={confirmingVisit === request.id} onClick={() => confirmVisit(request.id)}>{t("team.appointments.confirmVisit")}</Button>
           </div>)}
         </div>
@@ -967,6 +1033,22 @@ export default function TeamAppointmentsPage() {
                 </div>
               )}
             </div>
+
+            {/* Office */}
+            {myOffices.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {isAr ? "المكتب" : i18n.language.startsWith("he") ? "משרד" : "Office"}
+                </Label>
+                <Select value={newOfficeId || "none"} onValueChange={function (value) { setNewOfficeId(value === "none" ? "" : value); }}>
+                  <SelectTrigger><SelectValue placeholder={isAr ? "اختار المكتب" : i18n.language.startsWith("he") ? "בחר משרד" : "Select office"} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{isAr ? "غير محدد" : i18n.language.startsWith("he") ? "לא מוגדר" : "Not assigned"}</SelectItem>
+                    {myOffices.map((office) => <SelectItem key={office.id} value={office.id}>{isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Date & Time */}
             <div className="grid grid-cols-2 gap-3">
