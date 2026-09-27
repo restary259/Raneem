@@ -2234,8 +2234,16 @@ catalog school `alpha-aktiv`.
   other IL field is filled**) and the empty-form case now asserts `errHolder`;
   `chatFormat.test.ts` + `BankDetailsShareDialog.test.tsx` payloads extend and
   assert the holder round-trip.
-- Build: `npm run build` (tsc+vite) clean; `npx vitest run` 1559 passed | 1
-  skipped, with ONE pre-existing unrelated failure in
-  `src/services/whatsappMerge.test.ts` (`supabase.auth.onAuthStateChange` of
-  undefined) that also fails on clean `HEAD` — not caused by this change.
+- Build: `npm run build` (tsc+vite) clean; `npx vitest run` 1562 passed | 1
+  skipped. A separate commit on the same PR (`2055a82`) repaired a
+  **main-branch regression** that had turned CI red for every PR:
+  `WhatsAppService.ts` (`e1b75a2`) added a module-level
+  `supabase.auth.onAuthStateChange(...)` side effect while
+  `whatsappMerge.test.ts` mocked the client as `{ supabase: {} }`, so
+  `supabase.auth` was undefined and the whole suite file failed to load before
+  running a single test. Fixed test-only by giving the mock the
+  `auth.onAuthStateChange` surface it calls — matching sibling mocks such as
+  `DataRequestsPanel.test.tsx` (which mocks `auth.getUser`). **Rule: any test
+  that mocks `@/integrations/supabase/client` must expose every client surface
+  the imported module touches at module scope**, or the file fails to load.
 
