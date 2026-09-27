@@ -215,7 +215,7 @@ export default function WhatsAppInboxPage({
   }, [load, role, whatsappAccessLoading, canAccessWhatsAppInbox]);
   useEffect(() => {
     if (role === "team_member" && (whatsappAccessLoading || !canAccessWhatsAppInbox)) return;
-    const channel = supabase.channel("whatsapp-workspace")
+    const channel = supabase.channel(`whatsapp-workspace:${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, queueRefreshThreads)
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, queueRefreshThreads)
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages" }, queueRefreshThreads)

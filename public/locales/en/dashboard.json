@@ -5340,7 +5340,10 @@
       "answered": "Voice call",
       "missed": "Missed call",
       "declined": "Declined call",
-      "cancelled": "Cancelled call"
-    }
+      "cancelled": "Cancelled call",
+      "failed": "Call failed"
+    },
+    "incomingTitle": "Incoming call",
+    "incomingSub": "DARB · Incoming voice call"
   }
 }

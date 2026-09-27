@@ -47,42 +47,74 @@ const ICE_SERVERS: RTCIceServer[] = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
 ];
 
-/** Looping tone via WebAudio: ring (incoming) or ringback (outgoing). */
-function startTone(kind: "ring" | "ringback"): () => void {
-  let ctx: AudioContext | null = null;
-  let timer: number | undefined;
+/**
+ * One shared AudioContext, unlocked on the user's first tap. Phones keep a
+ * context created without a gesture suspended (silent), which is why a fresh
+ * context per ring was inaudible.
+ */
+let sharedCtx: AudioContext | null = null;
+function getCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
   try {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    ctx = new AC();
-    const play = () => {
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const freqs = kind === "ring" ? [880, 660] : [440];
-      const bursts = kind === "ring" ? [0, 0.45] : [0];
-      bursts.forEach((offset) => {
-        freqs.forEach((f) => {
-          const o = ctx!.createOscillator();
-          const g = ctx!.createGain();
-          o.frequency.value = f;
-          g.gain.setValueAtTime(0.0001, now + offset);
-          g.gain.exponentialRampToValueAtTime(kind === "ring" ? 0.25 : 0.12, now + offset + 0.02);
-          g.gain.exponentialRampToValueAtTime(0.0001, now + offset + (kind === "ring" ? 0.4 : 1.2));
-          o.connect(g).connect(ctx!.destination);
-          o.start(now + offset);
-          o.stop(now + offset + 1.3);
-        });
-      });
-      if (kind === "ring") navigator.vibrate?.([400, 200, 400]);
-    };
-    play();
-    timer = window.setInterval(play, kind === "ring" ? 2000 : 3000);
+    if (!sharedCtx) {
+      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      sharedCtx = new AC();
+    }
+    if (sharedCtx.state === "suspended") void sharedCtx.resume().catch(() => undefined);
+    return sharedCtx;
   } catch {
-    /* audio unavailable */
+    return null;
   }
+}
+if (typeof window !== "undefined") {
+  const unlock = () => {
+    const ctx = getCtx();
+    if (ctx && ctx.state === "running") {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    }
+  };
+  window.addEventListener("pointerdown", unlock);
+  window.addEventListener("keydown", unlock);
+}
+
+/** Looping ringtone (incoming: bright melodic phone ring) or ringback (outgoing). */
+function startTone(kind: "ring" | "ringback"): () => void {
+  let timer: number | undefined;
+  const nodes: OscillatorNode[] = [];
+  const play = () => {
+    const ctx = getCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Ring: two quick trills of a classic dual-tone bell. Ringback: soft long tone.
+    const notes: Array<[number, number, number]> =
+      kind === "ring"
+        ? [0, 0.12, 0.24, 0.36, 0.48, 0.6, 1.0, 1.12, 1.24, 1.36, 1.48, 1.6].map((o, i) => [o, i % 2 ? 1175 : 1480, 0.1])
+        : [[0, 440, 1.2]];
+    notes.forEach(([offset, f, len]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = kind === "ring" ? "triangle" : "sine";
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, now + offset);
+      g.gain.exponentialRampToValueAtTime(kind === "ring" ? 0.5 : 0.15, now + offset + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + offset + len);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + offset);
+      o.stop(now + offset + len + 0.05);
+      nodes.push(o);
+      o.onended = () => nodes.splice(nodes.indexOf(o), 1);
+    });
+    if (kind === "ring") navigator.vibrate?.([500, 250, 500, 250, 500]);
+  };
+  play();
+  timer = window.setInterval(play, kind === "ring" ? 3000 : 3000);
   return () => {
     if (timer) window.clearInterval(timer);
     navigator.vibrate?.(0);
-    void ctx?.close().catch(() => undefined);
+    nodes.splice(0).forEach((o) => {
+      try { o.stop(); } catch { /* already stopped */ }
+    });
   };
 }
 
@@ -352,6 +384,22 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
     return startTone(phase === "incoming" ? "ring" : "ringback");
   }, [phase]);
 
+  // Flash the tab title so an incoming call is visible from another tab.
+  useEffect(() => {
+    if (phase !== "incoming") return;
+    const original = document.title;
+    const alert = `📞 ${t("voiceCall.incomingTitle", "Incoming call")}`;
+    let on = false;
+    const id = window.setInterval(() => {
+      on = !on;
+      document.title = on ? alert : original;
+    }, 1000);
+    return () => {
+      window.clearInterval(id);
+      document.title = original;
+    };
+  }, [phase, t]);
+
   // Keep-alive + timer while connected.
   useEffect(() => {
     if (phase !== "connected" || !call) return;
@@ -376,7 +424,58 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
     <VoiceCallContext.Provider value={{ phase, inCall: phase !== "idle", startCall }}>
       {children}
       <audio ref={audioRef} autoPlay playsInline className="hidden" />
-      {call && phase !== "idle" && (
+      {call && phase === "incoming" && (
+        <div
+          role="alertdialog"
+          aria-live="assertive"
+          aria-label={t("voiceCall.incomingTitle", "Incoming call")}
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-between bg-gradient-to-b from-brand via-primary to-emerald-600 px-6 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(4rem,env(safe-area-inset-top))] text-primary-foreground"
+        >
+          <p className="text-sm font-semibold uppercase tracking-widest opacity-90">
+            {t("voiceCall.incomingSub", "DARB · Incoming voice call")}
+          </p>
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative flex h-36 w-36 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-primary-foreground/30 motion-safe:animate-ping" />
+              <span className="absolute inset-3 rounded-full bg-primary-foreground/20 motion-safe:animate-pulse" />
+              <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-primary-foreground text-5xl font-bold text-primary shadow-2xl">
+                {(call.peerName || "?").charAt(0).toUpperCase()}
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold drop-shadow">{call.peerName || t("voiceCall.unknown", "Unknown")}</p>
+              <p className="mt-2 text-lg opacity-90 motion-safe:animate-pulse">{t("voiceCall.incoming", "Incoming voice call")}…</p>
+            </div>
+          </div>
+          <div className="flex w-full max-w-xs items-start justify-between">
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={hangUp}
+                disabled={busy}
+                aria-label={t("voiceCall.decline", "Decline")}
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-2xl ring-4 ring-primary-foreground/40 transition active:scale-95 disabled:opacity-60"
+              >
+                <PhoneOff className="h-9 w-9" />
+              </button>
+              <span className="text-sm font-semibold">{t("voiceCall.decline", "Decline")}</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={accept}
+                disabled={busy}
+                aria-label={t("voiceCall.accept", "Accept")}
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-primary-foreground shadow-2xl ring-4 ring-primary-foreground/40 transition active:scale-95 motion-safe:animate-bounce disabled:opacity-60"
+              >
+                <Phone className="h-9 w-9" />
+              </button>
+              <span className="text-sm font-semibold">{t("voiceCall.accept", "Accept")}</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {call && phase !== "idle" && phase !== "incoming" && (
         <div
           role="dialog"
           aria-live="assertive"
@@ -393,18 +492,7 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="mt-4 flex items-center justify-center gap-3">
-            {phase === "incoming" ? (
-              <>
-                <Button variant="destructive" size="lg" className="flex-1 gap-2 rounded-full" onClick={hangUp} disabled={busy}>
-                  <PhoneOff className="h-5 w-5" />
-                  {t("voiceCall.decline", "Decline")}
-                </Button>
-                <Button size="lg" className="flex-1 gap-2 rounded-full" onClick={accept} disabled={busy}>
-                  <Phone className="h-5 w-5" />
-                  {t("voiceCall.accept", "Accept")}
-                </Button>
-              </>
-            ) : (
+            {(
               <>
                 {phase !== "outgoing" && (
                   <Button

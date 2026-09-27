@@ -569,13 +569,15 @@ function CallLogLine({ body }: { body: string }) {
   const secs = Number(dur) || 0;
   const mmss = `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
   const label =
-    status === "answered"
+    status === "answered" || status === "ended"
       ? `${t("voiceCall.log.answered", "Voice call")} · ${mmss}`
       : status === "declined"
         ? t("voiceCall.log.declined", "Declined call")
         : status === "cancelled"
           ? t("voiceCall.log.cancelled", "Cancelled call")
-          : t("voiceCall.log.missed", "Missed call");
+          : status === "failed"
+            ? t("voiceCall.log.failed", "Call failed")
+            : t("voiceCall.log.missed", "Missed call");
   return (
     <p className="flex items-center gap-2 text-sm text-muted-foreground">
       <PhoneCall className="h-4 w-4 shrink-0" />
