@@ -460,7 +460,7 @@ export default function CaseMessagesInboxPage() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="shrink-0 md:hidden"
+                    className="shrink-0"
                     aria-label={t("chat.back")}
                     onClick={() => setSelected(null)}
                   >
