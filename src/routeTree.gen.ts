@@ -1648,13 +1648,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReferralsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/offices': {
-      id: '/admin/offices'
-      path: '/offices'
-      fullPath: '/admin/offices'
-      preLoaderRoute: typeof AdminOfficesRouteImport
-      parentRoute: typeof AdminRouteImport
-    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
