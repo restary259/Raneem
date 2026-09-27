@@ -707,11 +707,9 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
-  '/admin/offices': typeof AdminOfficesRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
-  '/admin/offices': typeof AdminOfficesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spreadsheet': typeof AdminSpreadsheetRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -1042,7 +1040,6 @@ export interface FileRouteTypes {
     | '/admin/pipeline'
     | '/admin/programs'
     | '/admin/referrals'
-    | '/admin/offices'
     | '/admin/offices'
     | '/admin/settings'
     | '/admin/spreadsheet'
@@ -1621,7 +1618,7 @@ declare module '@tanstack/react-router' {
       path: '/offices'
       fullPath: '/admin/offices'
       preLoaderRoute: typeof AdminOfficesRouteImport
-      parentRoute: typeof AdminRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/messages': {
       id: '/admin/messages'
