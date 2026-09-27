@@ -496,6 +496,71 @@ $$;
 REVOKE ALL ON FUNCTION public.list_office_team_members() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.list_office_team_members() TO authenticated, service_role;
 
+-- Slot-level routing resolver. It only returns active team members of the
+-- selected office who are free for the requested slot. This keeps the public
+-- booking RPC authoritative even when a client sends a slot that was not in
+-- the previously displayed availability list.
+CREATE OR REPLACE FUNCTION public.resolve_office_assignee_for_slot(
+  p_office_id uuid,
+  p_slot timestamptz,
+  p_duration_minutes integer,
+  p_service_type text DEFAULT NULL,
+  p_exclude_appointment_id uuid DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public AS $
+  SELECT om.user_id
+  FROM public.office_members om
+  WHERE om.office_id = p_office_id
+    AND om.is_active = true
+    AND public.is_active_team_member(om.user_id)
+    AND NOT EXISTS (
+      SELECT 1
+      FROM public.appointments a
+      WHERE a.team_member_id = om.user_id
+        AND a.id IS DISTINCT FROM p_exclude_appointment_id
+        AND a.status IN ('scheduled','confirmed')
+        AND a.outcome IS NULL
+        AND a.scheduled_at < p_slot + make_interval(mins => p_duration_minutes)
+        AND COALESCE(
+          a.public_booking_end,
+          a.scheduled_at + make_interval(mins => a.duration_minutes)
+        ) > p_slot
+    )
+  ORDER BY
+    CASE
+      WHEN p_service_type IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM public.office_routing_rules rr
+        WHERE rr.office_id = p_office_id
+          AND rr.service_type = p_service_type
+          AND rr.assigned_user_id = om.user_id
+          AND rr.is_active = true
+      ) THEN 0
+      WHEN om.is_primary THEN 1
+      ELSE 2
+    END,
+    COALESCE(
+      (
+        SELECT MIN(rr.priority)
+        FROM public.office_routing_rules rr
+        WHERE rr.office_id = p_office_id
+          AND rr.service_type = p_service_type
+          AND rr.assigned_user_id = om.user_id
+          AND rr.is_active = true
+      ),
+      om.priority
+    ),
+    om.created_at
+  LIMIT 1;
+$;
+
+REVOKE ALL ON FUNCTION public.resolve_office_assignee_for_slot(uuid,timestamptz,integer,text,uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.resolve_office_assignee_for_slot(uuid,timestamptz,integer,text,uuid) TO service_role;
+
 -- ---------------------------------------------------------------------------
 -- Replace public appointment RPC with office-aware routing.
 -- Existing 3-argument signature is deliberately removed so no legacy caller
@@ -522,7 +587,14 @@ DECLARE
   v_office public.offices%ROWTYPE;
   v_office_id uuid;
   v_assignee uuid;
-  v_created uuid;
+  v_settings public.office_booking_settings%ROWTYPE;
+  v_hours public.office_hours%ROWTYPE;
+  v_local timestamp;
+  v_local_end timestamp;
+  v_duration integer;
+  v_slot_interval integer;
+  v_minimum_lead integer;
+  v_maximum_days integer;
 BEGIN
   IF auth.role() IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'Forbidden';
@@ -601,7 +673,6 @@ BEGIN
   END IF;
 
   v_office_id := COALESCE(p_office_id, v_appt.office_id, v_case.office_id);
-
   IF v_office_id IS NULL THEN
     RAISE EXCEPTION 'Choose an office';
   END IF;
@@ -615,6 +686,73 @@ BEGIN
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Office unavailable';
+  END IF;
+
+  SELECT *
+  INTO v_settings
+  FROM public.office_booking_settings
+  WHERE office_id = v_office_id;
+
+  v_slot_interval := COALESCE(v_settings.slot_interval_minutes, 30);
+  v_duration := COALESCE(v_settings.default_duration_minutes, 60);
+  v_minimum_lead := COALESCE(v_settings.minimum_lead_minutes, 120);
+  v_maximum_days := COALESCE(v_settings.maximum_days_ahead, 14);
+
+  -- Enforce the office's configured timezone at the database boundary.
+  v_local := p_slot AT TIME ZONE v_office.timezone;
+  v_local_end := (p_slot + make_interval(mins => v_duration)) AT TIME ZONE v_office.timezone;
+
+  IF p_slot < now() + make_interval(mins => v_minimum_lead)
+     OR p_slot > now() + make_interval(days => v_maximum_days)
+     OR extract(second FROM p_slot) <> 0
+     OR MOD(
+       extract(hour FROM v_local)::integer * 60
+       + extract(minute FROM v_local)::integer,
+       v_slot_interval
+     ) <> 0
+  THEN
+    RAISE EXCEPTION 'Time unavailable';
+  END IF;
+
+  SELECT *
+  INTO v_hours
+  FROM public.office_hours
+  WHERE office_id = v_office_id
+    AND weekday = extract(dow FROM v_local)::integer
+    AND is_open = true
+  LIMIT 1;
+
+  IF NOT FOUND
+     OR v_hours.open_time IS NULL
+     OR v_hours.close_time IS NULL
+     OR v_local::time < v_hours.open_time
+     OR v_local_end::time > v_hours.close_time
+     OR v_local_end::date IS DISTINCT FROM v_local::date
+  THEN
+    RAISE EXCEPTION 'Time unavailable';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.office_breaks b
+    WHERE b.office_id = v_office_id
+      AND b.weekday = extract(dow FROM v_local)::integer
+      AND b.is_active = true
+      AND b.start_time < v_local_end::time
+      AND b.end_time > v_local::time
+  ) THEN
+    RAISE EXCEPTION 'Time unavailable';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.office_blackouts b
+    WHERE b.office_id = v_office_id
+      AND b.is_active = true
+      AND b.starts_at < p_slot + make_interval(mins => v_duration)
+      AND b.ends_at > p_slot
+  ) THEN
+    RAISE EXCEPTION 'Time unavailable';
   END IF;
 
   IF v_appt.id IS NOT NULL
@@ -641,30 +779,20 @@ BEGIN
     RAISE EXCEPTION 'Choose a time';
   END IF;
 
-  IF p_slot < now() + interval '2 hours' THEN
+  -- Only an active team member belonging to this office can receive the
+  -- appointment. The resolver also skips members already occupied at slot.
+  v_assignee := public.resolve_office_assignee_for_slot(
+    v_office_id,
+    p_slot,
+    v_duration,
+    p_service_type,
+    v_appt.id
+  );
+
+  IF v_assignee IS NULL THEN
     RAISE EXCEPTION 'Time unavailable';
   END IF;
 
-  -- Reuse the currently assigned member only when that person is still an
-  -- active team member of the selected office. Otherwise route server-side.
-  SELECT om.user_id INTO v_assignee
-  FROM public.office_members om
-  WHERE om.office_id = v_office_id
-    AND om.user_id = COALESCE(v_appt.team_member_id, v_case.assigned_to)
-    AND om.is_active = true
-    AND public.is_active_team_member(om.user_id)
-  LIMIT 1;
-
-  IF v_assignee IS NULL THEN
-    v_assignee := public.resolve_office_assignee(v_office_id, p_service_type);
-  END IF;
-
-  IF v_assignee IS NULL THEN
-    RAISE EXCEPTION 'Office unavailable';
-  END IF;
-
-  -- The office and assignee are snapshotted onto the case when this is a new
-  -- booking or a reschedule to a different office.
   UPDATE public.cases
   SET office_id = v_office_id,
       assigned_to = v_assignee,
@@ -683,7 +811,6 @@ BEGIN
         status = 'scheduled',
         updated_at = now()
     WHERE id = v_appt.id;
-    v_created := v_appt.id;
   ELSE
     INSERT INTO public.appointments (
       case_id,
@@ -700,15 +827,15 @@ BEGIN
       v_office_id,
       v_assignee,
       p_slot,
-      COALESCE((SELECT default_duration_minutes FROM public.office_booking_settings WHERE office_id = v_office_id), 60),
+      v_duration,
       'scheduled',
       true,
       'pending'
     )
-    RETURNING id INTO v_created;
+    RETURNING id INTO v_appt.id;
 
     UPDATE public.public_appointment_access
-    SET appointment_id = v_created,
+    SET appointment_id = v_appt.id,
         updated_at = now()
     WHERE case_id = v_case.id;
   END IF;
@@ -731,7 +858,6 @@ EXCEPTION
     RAISE EXCEPTION 'Time unavailable';
 END;
 $$;
-
 REVOKE ALL ON FUNCTION public.manage_public_appointment(text,text,timestamptz,uuid,text)
   FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.manage_public_appointment(text,text,timestamptz,uuid,text)
