@@ -59,12 +59,15 @@ const HEBREW_CHAR = /[\u0590-\u05FF]/;
 const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F]/;
 
 /**
- * Keys whose value is deliberately locale-independent: brand names, URLs,
- * asset paths, CSS/icon tokens, element ids, placeholders and codes. These may
- * legitimately be identical to English in every locale.
+ * Keys whose value is deliberately locale-independent: URLs, asset paths,
+ * element ids, placeholders and short codes. Kept deliberately NARROW — a wide
+ * pattern is a silent hole. In particular do NOT exempt `brand`/`campaign`/`icon`
+ * (they hold user-visible brand words that Arabic translates: `Darb` → `درب`),
+ * nor `.value.*` (the spreadsheet value labels mix real prose with proper nouns
+ * like `PayPal`, so a blanket exemption would hide regressions).
  */
 const IDENTICAL_BY_DESIGN =
-  /(url|href|image|avatar|focus|icon|fileUrl|fileSize|\.id$|Placeholder|placeholder|\.ph\.|^number$|^brand$|^code$|^slug$|^key$|^level$|^bic$|^iban$|path$|^campaign$|Campaign$|\.value\.|template)/i;
+  /(url|href|image|avatar|focus|fileUrl|fileSize|\.id$|Placeholder|placeholder|\.ph\.|^number$|^code$|^slug$|^key$|^bic$|^iban$|path$)/i;
 
 /**
  * Prose keys whose value must be translated. A key qualifies when English and

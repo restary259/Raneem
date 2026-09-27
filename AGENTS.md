@@ -2061,9 +2061,16 @@ catalog school `alpha-aktiv`.
   when **English and Arabic differ and the Arabic value contains Arabic script**.
   Arabic is used purely as evidence that a string is translatable, so this
   cannot invent work for proper nouns. `IDENTICAL_BY_DESIGN` exempts URLs,
-  asset paths, icon/CSS tokens, `.id`/`.key`/`.code` fields, placeholders and
-  `template`/`.value.` keys, which a locale may legitimately leave in English.
-  Verified non-vacuous: reintroducing an English `studentGallery.title` fails it.
+  asset paths, element ids, placeholders and short codes — and is kept
+  deliberately NARROW: a wide pattern is itself a silent hole. Do **not** add
+  `brand`/`campaign`/`icon` (they hold user-visible brand words Arabic
+  translates: `Darb` → `درب`) or `.value.` (the spreadsheet value labels mix
+  prose with proper nouns like `PayPal`, so a blanket exemption hides
+  regressions). A first pass of this guard exempted both and hid two untranslated
+  keys (`landing.homepage.hero.campaign`, `blog.brand`); both are now translated
+  as `דארב` and the exempted-pattern regression is caught.
+  Verified non-vacuous: reintroducing an English `studentGallery.title` or
+  `blog.brand` fails it.
 - Consequence to remember: **adding a new English string that Arabic also
   translates now requires Hebrew, at the value level**, not just a stub key.
 - Three keys stay intentionally non-Hebrew and are covered by the exemptions:
