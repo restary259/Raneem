@@ -34,12 +34,15 @@ function useUnreadNotifications(enabled: boolean): number {
 
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     let disposed = false;
-    const channelName = `app-badge-notifications-${user.id}`;
+    // Unique per mount/attempt: supabase.channel() returns an existing channel
+    // for a reused topic, and adding callbacks after subscribe() throws.
+    const channelName = () =>
+      `app-badge-notifications-${user.id}-${Math.random().toString(36).slice(2, 10)}`;
 
     const subscribe = () => {
       if (disposed) return;
       const channel = supabase
-        .channel(channelName)
+        .channel(channelName())
         .on(
           "postgres_changes",
           {
