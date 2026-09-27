@@ -71,6 +71,7 @@ export default function VoiceRecorder({
   const previewOnStopRef = useRef(false);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
   const unmountedRef = useRef(false);
+  const startRequestRef = useRef(0);
 
   const isActive = mode !== "idle";
 
@@ -99,6 +100,13 @@ export default function VoiceRecorder({
   };
 
   const reset = function () {
+    startRequestRef.current += 1;
+    if (unmountedRef.current) {
+      chunksRef.current = [];
+      recorderRef.current = null;
+      stopStream();
+      return;
+    }
     clearPreview();
     chunksRef.current = [];
     recorderRef.current = null;
@@ -115,6 +123,7 @@ export default function VoiceRecorder({
   useEffect(function () {
     return function () {
       unmountedRef.current = true;
+      cancelBeforeReadyRef.current = true;
       recorderRef.current?.stop();
       stopStream();
       if (recordedUrl) URL.revokeObjectURL(recordedUrl);
@@ -229,6 +238,9 @@ export default function VoiceRecorder({
 
   const startRecording = async function () {
     if (disabled || isActive) return;
+    const requestId = startRequestRef.current + 1;
+    startRequestRef.current = requestId;
+    cancelBeforeReadyRef.current = false;
     setError(null);
     clearPreview();
 
@@ -241,12 +253,13 @@ export default function VoiceRecorder({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
-      if (cancelBeforeReadyRef.current) {
-        reset();
+      if (requestId !== startRequestRef.current || cancelBeforeReadyRef.current) {
+        stream.getTracks().forEach(function (track) {
+          track.stop();
+        });
         return;
       }
+      streamRef.current = stream;
 
       const shouldStopImmediately = !pointerDownRef.current || releaseBeforeReadyRef.current;
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : undefined);
