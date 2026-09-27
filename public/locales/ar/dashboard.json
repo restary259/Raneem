@@ -2689,7 +2689,8 @@
     "majorIntel": "معلومات التخصصات",
     "partnerSchools": "مدارس الشركاء",
     "whatsapp": "صندوق واتساب",
-    "whatsappCampaigns": "حملات واتساب"
+    "whatsappCampaigns": "حملات واتساب",
+    "offices": "المكاتب"
   },
   "case": {
     "status": {
@@ -3219,7 +3220,8 @@
       "pending": "بانتظار التأكيد",
       "confirmed": "مؤكدة",
       "cancelled": "ملغاة",
-      "noVisit": "لا توجد زيارة محجوزة"
+      "noVisit": "لا توجد زيارة محجوزة",
+      "office": "المكتب"
     }
   },
   "partner": {

@@ -2671,7 +2671,8 @@
     "majorIntel": "Major Intelligence",
     "partnerSchools": "Partner Schools",
     "whatsapp": "WhatsApp Inbox",
-    "whatsappCampaigns": "WhatsApp campaigns"
+    "whatsappCampaigns": "WhatsApp campaigns",
+    "offices": "Offices"
   },
   "case": {
     "status": {
@@ -3201,7 +3202,8 @@
       "pending": "Pending confirmation",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
-      "noVisit": "No visit booked"
+      "noVisit": "No visit booked",
+      "office": "Office"
     }
   },
   "partner": {

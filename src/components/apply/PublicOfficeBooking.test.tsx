@@ -10,7 +10,7 @@ vi.mock("@/lib/publicBooking.functions", () => ({ managePublicBooking: vi.fn() }
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }) }));
 
 const OFFICE_ID = "11111111-1111-1111-1111-111111111111";
-const slots = ["2026-09-27T07:00:00.000Z", "2026-09-27T07:30:00.000Z", "2026-09-28T07:00:00.000Z"];
+const slots = ["2099-09-27T07:00:00.000Z", "2099-09-27T07:30:00.000Z", "2099-09-28T07:00:00.000Z"];
 const offices = [{
   id: OFFICE_ID,
   name_ar: "مكتب درب · طمرة",
@@ -61,8 +61,8 @@ describe("PublicOfficeBooking", () => {
 
   it("keeps unavailable days visible so occupied slots are not hidden", async () => {
     const unavailableSlots = [
-      "2026-09-27T07:00:00.000Z",
-      "2026-09-27T07:30:00.000Z",
+      "2099-09-27T07:00:00.000Z",
+      "2099-09-27T07:30:00.000Z",
     ];
     call.mockImplementation(async ({ data }: { data: { action: string; slot?: string } }) => {
       if (data.action === "read") return { scheduled_at: null, status: null, office_id: null };
