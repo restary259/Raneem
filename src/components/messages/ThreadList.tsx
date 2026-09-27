@@ -112,7 +112,7 @@ export default function ThreadList({
               )}
             >
               {item.title === t("chat.adminLabel") ? (
-                <img src={darbLogoAsset.url} alt="DARB" className="h-full w-full rounded-full bg-background object-contain p-0.5" />
+                <img src={darbLogoAsset.url} alt="DARB" className="h-full w-full rounded-full bg-background object-contain p-0" />
               ) : initials(item.title)}
             </div>
             {online && (
