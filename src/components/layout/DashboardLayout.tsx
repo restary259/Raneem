@@ -476,16 +476,23 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   };
 
 
+  // Lock the page behind the dashboard so a swipe can't drag the frame/top bar.
+  useEffect(() => {
+    const els = [document.documentElement, document.body];
+    els.forEach((el) => el.classList.add("dashboard-locked"));
+    return () => els.forEach((el) => el.classList.remove("dashboard-locked"));
+  }, []);
+
   return (
     <SidebarProvider>
-      <div className={cn("flex h-screen w-full overflow-hidden bg-background", isRtl && "dir-rtl")}>
+      <div className={cn("fixed inset-0 flex h-[100dvh] w-full overflow-hidden overscroll-none bg-background", isRtl && "dir-rtl")}>
         <Sidebar side={isRtl ? "right" : "left"} collapsible="icon">
           <SidebarNav role={role} />
         </Sidebar>
 
         <div className="flex min-h-0 flex-1 min-w-0 flex-col overflow-hidden">
           {/* Top header */}
-          <header className={cn("flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur sticky top-0 z-10 sm:px-4", chatFullscreen && "max-md:hidden")}>
+          <header className={cn("flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur z-10 touch-none sm:px-4", chatFullscreen && "hidden")}>
             <SidebarTrigger className="h-11 w-11 shrink-0" />
             <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
               <LanguageSwitcher />

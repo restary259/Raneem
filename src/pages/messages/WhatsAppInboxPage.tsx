@@ -172,7 +172,7 @@ export default function WhatsAppInboxPage({
   const [nameDraft, setNameDraft] = useState("");
   const [editingName, setEditingName] = useState(false);
 
-  useChatFullscreen(!!mobile && !!selectedId);
+  useChatFullscreen(!!selectedId);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
