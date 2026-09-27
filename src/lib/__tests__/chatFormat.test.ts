@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   dayLabel,
   formatFileSize,
+  formatVoiceDuration,
   groupMessages,
   initials,
+  isVoiceAttachment,
   validateAttachmentFile,
+  validateVoiceRecording,
   type ChatMessage,
 } from "@/lib/chatFormat";
 
@@ -81,4 +84,36 @@ describe("chatFormat", () => {
     expect(initials("Rana Dwahde")).toBe("RD");
     expect(initials(null)).toBe("?");
   });
+
+  it("validates voice recordings and formats their duration", () => {
+    const voice = { size: 48_000, type: "audio/webm" };
+    expect(validateVoiceRecording(voice, 7_250)).toBeNull();
+    expect(validateVoiceRecording(voice, 0)).toBe("duration");
+    expect(validateVoiceRecording(voice, 5 * 60 * 1000 + 1)).toBe("duration");
+    expect(validateVoiceRecording({ size: 48_000, type: "audio/wav" }, 7_250)).toBe("mime");
+    expect(formatVoiceDuration(7_250)).toBe("0:07");
+    expect(formatVoiceDuration(65_000)).toBe("1:05");
+  });
+
+  it("recognizes voice attachment metadata without treating files as voice", () => {
+    expect(
+      isVoiceAttachment({
+        name: "voice.webm",
+        path: "direct/t/voice.webm",
+        mime: "audio/webm",
+        size: 48_000,
+        kind: "voice",
+        durationMs: 7_250,
+      }),
+    ).toBe(true);
+    expect(
+      isVoiceAttachment({
+        name: "voice.webm",
+        path: "direct/t/voice.webm",
+        mime: "audio/webm",
+        size: 48_000,
+      }),
+    ).toBe(false);
+  });
+
 });
