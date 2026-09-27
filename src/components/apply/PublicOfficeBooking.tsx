@@ -150,7 +150,7 @@ export default function PublicOfficeBooking({
       setSlots(nextSlots);
       setUnavailable(nextUnavailable);
       if (nextSlots.length) {
-        const tz = office?.timezone || selectedOffice?.timezone || "Asia/Jerusalem";
+        const tz = office?.timezone || "Asia/Jerusalem";
         setSelectedDay(dayKey(nextSlots[0], tz));
       }
     } catch (err) {
