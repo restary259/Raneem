@@ -5333,6 +5333,14 @@
     "noAnswer": "No answer",
     "failed": "The call could not connect",
     "noMic": "Microphone is not available in this browser",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "busy": "This person is on another call. Try again later.",
+    "youBusy": "You are already on a call",
+    "log": {
+      "answered": "Voice call",
+      "missed": "Missed call",
+      "declined": "Declined call",
+      "cancelled": "Cancelled call"
+    }
   }
 }
