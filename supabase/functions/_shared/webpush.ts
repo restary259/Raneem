@@ -22,6 +22,27 @@ export interface SendOptions {
   topic?: string;
 }
 
+const PUSH_HOST_SUFFIXES = [
+  "fcm.googleapis.com",
+  "android.googleapis.com",
+  "push.services.mozilla.com",
+  "notify.windows.com",
+  "push.apple.com",
+];
+
+/** True only for https endpoints on a known browser push service. */
+export function isAllowedPushEndpoint(endpoint: unknown): boolean {
+  if (typeof endpoint !== "string" || endpoint.length > 2048) return false;
+  try {
+    const u = new URL(endpoint);
+    if (u.protocol !== "https:" || u.port !== "" || u.username || u.password) return false;
+    const host = u.hostname.toLowerCase();
+    return PUSH_HOST_SUFFIXES.some((s) => host === s || host.endsWith("." + s));
+  } catch {
+    return false;
+  }
+}
+
 export interface SendResult {
   status: number;
   ok: boolean;
@@ -177,6 +198,9 @@ export async function sendWebPush(
   vapid: { publicKey: string; privateKey: string; subject: string },
   options: SendOptions = {},
 ): Promise<SendResult> {
+  if (!isAllowedPushEndpoint(subscription.endpoint)) {
+    return { ok: false, status: 0, gone: true, error: "endpoint not allowed" };
+  }
   try {
     const audience = new URL(subscription.endpoint).origin;
     const [authorization, body] = await Promise.all([
