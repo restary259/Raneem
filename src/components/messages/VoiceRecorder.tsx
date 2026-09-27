@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Loader2, Lock, Mic, Play, RotateCcw, Square, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -310,7 +310,7 @@ export default function VoiceRecorder({
     }
   };
 
-  const handlePointerDown = function (event: React.PointerEvent<HTMLButtonElement>) {
+  const handlePointerDown = function (event: ReactPointerEvent<HTMLButtonElement>) {
     if (event.button !== 0 || disabled || isActive) return;
     event.preventDefault();
     pointerDownRef.current = true;
