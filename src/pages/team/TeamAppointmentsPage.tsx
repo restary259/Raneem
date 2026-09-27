@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
+import ReassignAppointment from "@/components/team/ReassignAppointment";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 interface Appointment {
@@ -628,12 +629,15 @@ export default function TeamAppointmentsPage() {
     );
   };
 
+  const officeLabel = (office: OfficeSummary) =>
+    isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en;
+
   /* ══ RENDER ══════════════════════════════════════════════════════════ */
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       {/* ── HEADER ── */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto sm:flex-1">
           <Button
             variant="ghost"
             size="icon"
@@ -667,14 +671,14 @@ export default function TeamAppointmentsPage() {
             {t("team.appointments.navToday")}
           </Button>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end sm:shrink-0">
           <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
             {(["day", "week", "month"] as CalendarView[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-full transition-all capitalize",
+                  "px-3.5 py-1.5 text-xs font-medium rounded-full transition-all capitalize whitespace-nowrap",
                   view === v
                     ? "bg-background shadow-xs text-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -1036,24 +1040,30 @@ export default function TeamAppointmentsPage() {
             </div>
 
             {/* Office */}
-            {myOffices.length > 0 && (
+            {myOffices.length === 1 && (
+              <p className="text-xs text-muted-foreground">
+                {t("team.appointments.officeLabel", "Office")}:{" "}
+                <span className="font-medium text-foreground">{officeLabel(myOffices[0])}</span>
+              </p>
+            )}
+            {myOffices.length > 1 && (
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {isAr ? "المكتب" : i18n.language.startsWith("he") ? "משרד" : "Office"}
+                  {t("team.appointments.officeLabel", "Office")}
                 </Label>
                 <Select value={newOfficeId || "none"} onValueChange={function (value) { setNewOfficeId(value === "none" ? "" : value); }}>
-                  <SelectTrigger><SelectValue placeholder={isAr ? "اختار المكتب" : i18n.language.startsWith("he") ? "בחר משרד" : "Select office"} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("team.appointments.officeSelect", "Select office")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">{isAr ? "غير محدد" : i18n.language.startsWith("he") ? "לא מוגדר" : "Not assigned"}</SelectItem>
-                    {myOffices.map((office) => <SelectItem key={office.id} value={office.id}>{isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en}</SelectItem>)}
+                    <SelectItem value="none">{t("team.appointments.officeNone", "Not assigned")}</SelectItem>
+                    {myOffices.map((office) => <SelectItem key={office.id} value={office.id}>{officeLabel(office)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             )}
 
             {/* Date & Time */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
+            <div className="grid grid-cols-2 items-start gap-3">
+              <div className="min-w-0 space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {t("team.appointments.labelDate")}
                 </Label>
@@ -1061,7 +1071,7 @@ export default function TeamAppointmentsPage() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start font-normal", !newDate && "text-muted-foreground")}
+                      className={cn("h-10 w-full justify-start rounded-full px-4 text-sm font-normal", !newDate && "text-muted-foreground")}
                     >
                       <CalendarIcon className="me-2 h-4 w-4" />
                       {newDate ? format(newDate, "MMM d, yyyy") : t("team.appointments.placeholderDate")}
@@ -1078,20 +1088,19 @@ export default function TeamAppointmentsPage() {
                   </PopoverContent>
                 </Popover>
               </div>
-              <div className="space-y-1.5">
+              <div className="min-w-0 space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t("team.appointments.labelTime")}{" "}
-                  <span className="text-muted-foreground/60 normal-case font-normal">
-                    {t("team.appointments.labelTimeRange")}
-                  </span>
+                  {t("team.appointments.labelTime")}
                 </Label>
                 <Input
                   type="time"
+                  className="h-10 w-full min-w-0 max-w-full rounded-full px-4 text-sm [appearance:none]"
                   value={newTime}
                   min="08:00"
                   max="19:59"
                   onChange={(e) => setNewTime(e.target.value)}
                 />
+                <p className="text-[11px] text-muted-foreground">{t("team.appointments.labelTimeRange")}</p>
               </div>
             </div>
 
@@ -1207,6 +1216,12 @@ export default function TeamAppointmentsPage() {
                         <p className="text-sm text-foreground/80 leading-relaxed">{selectedAppt.notes}</p>
                       </div>
                     )}
+                    <ReassignAppointment
+                      appointmentId={selectedAppt.id}
+                      officeId={selectedAppt.office_id}
+                      currentMemberId={(selectedAppt as any).team_member_id}
+                      onReassigned={() => { setSelectedAppt(null); fetchAppts(); }}
+                    />
                   </div>
                   <DialogFooter className="flex-col gap-2 sm:flex-row">
                     <div className="flex gap-2 flex-1">

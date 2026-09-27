@@ -553,7 +553,15 @@
       "settledHistory": "Settlement history",
       "settledTotal": "Settled: {{amount}}",
       "settle": "Settle",
-      "settling": "Settling…"
+      "settling": "Settling…",
+      "reassignSwitch": "Reassign office appointments",
+      "reassignDesc": "Can move appointments to other members of their office.",
+      "reassignEnableTitle": "Allow reassigning appointments?",
+      "reassignEnableBody": "{{name}} will be able to move appointments to other team members in the same office.",
+      "reassignDisableTitle": "Stop reassigning appointments?",
+      "reassignDisableBody": "{{name}} will no longer be able to move appointments to other team members.",
+      "reassignEnabled": "Reassigning enabled",
+      "reassignDisabled": "Reassigning disabled"
     },
     "programs": {
       "title": "Programs & Accommodations",
@@ -2239,7 +2247,12 @@
       "dayAbbrevSat": "Sat",
       "visitRequests": "Office visit requests",
       "confirmVisit": "Confirm visit",
-      "visitConfirmed": "Visit confirmed"
+      "visitConfirmed": "Visit confirmed",
+      "officeLabel": "Office",
+      "officeSelect": "Select office",
+      "officeNone": "Not assigned",
+      "reassignTo": "Reassign to",
+      "reassigned": "Appointment reassigned"
     },
     "submit": {
       "title": "Submit New Student",

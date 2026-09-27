@@ -553,7 +553,15 @@
       "settledHistory": "سجل التسويات",
       "settledTotal": "تمت تسويته: {{amount}}",
       "settle": "تسوية",
-      "settling": "جاري التسوية…"
+      "settling": "جاري التسوية…",
+      "reassignSwitch": "تحويل مواعيد المكتب",
+      "reassignDesc": "يستطيع تحويل المواعيد لأعضاء آخرين في نفس المكتب.",
+      "reassignEnableTitle": "السماح بتحويل المواعيد؟",
+      "reassignEnableBody": "{{name}} سيتمكن من تحويل المواعيد لأعضاء آخرين في نفس المكتب.",
+      "reassignDisableTitle": "إيقاف تحويل المواعيد؟",
+      "reassignDisableBody": "{{name}} لن يتمكن بعد الآن من تحويل المواعيد.",
+      "reassignEnabled": "تم تفعيل التحويل",
+      "reassignDisabled": "تم إيقاف التحويل"
     },
     "programs": {
       "title": "البرامج والسكن",
@@ -2257,7 +2265,12 @@
       "dayAbbrevSat": "سبت",
       "visitRequests": "طلبات زيارة المكتب",
       "confirmVisit": "تأكيد الزيارة",
-      "visitConfirmed": "تم تأكيد الزيارة"
+      "visitConfirmed": "تم تأكيد الزيارة",
+      "officeLabel": "المكتب",
+      "officeSelect": "اختار المكتب",
+      "officeNone": "غير محدد",
+      "reassignTo": "تحويل إلى",
+      "reassigned": "تم تحويل الموعد"
     },
     "submit": {
       "title": "تقديم طالب جديد",
