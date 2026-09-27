@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
 import { ar, enUS } from "date-fns/locale";
@@ -131,7 +131,7 @@ export default function PublicOfficeBooking({
     };
   }, [language]);
 
-  async function loadAvailability(officeId: string) {
+  const loadAvailability = useCallback(async function (officeId: string) {
     if (!officeId) return;
     setWorking(true);
     setError("");
@@ -159,7 +159,7 @@ export default function PublicOfficeBooking({
     } finally {
       setWorking(false);
     }
-  }
+  }, [booking, token, t]);
 
   useEffect(() => {
     let live = true;
@@ -211,7 +211,7 @@ export default function PublicOfficeBooking({
     return () => {
       live = false;
     };
-  }, [booking, token, autoOpen]);
+  }, [booking, token, autoOpen, loadAvailability]);
 
   const loadSlots = async () => {
     const officeId = selectedOfficeId || currentOfficeId || offices[0]?.id || "";
