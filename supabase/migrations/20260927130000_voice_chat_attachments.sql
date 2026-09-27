@@ -211,13 +211,22 @@ DECLARE
   v_label_en text;
   v_label_ar text;
   v_mentioned boolean;
-  v_is_voice boolean := false;
 BEGIN
   IF v_me IS NULL THEN RAISE EXCEPTION 'Not authenticated'; END IF;
   IF v_body = '' AND jsonb_array_length(v_att) = 0 THEN RAISE EXCEPTION 'Message body required'; END IF;
   IF length(v_body) > 5000 THEN RAISE EXCEPTION 'Message is too long'; END IF;
   IF NOT public.is_direct_thread_member(p_thread_id, v_me) THEN
     RAISE EXCEPTION 'You are not a participant in this conversation';
+  END IF;
+
+  -- Students may only post into their own payout conversation thread(s), never
+  -- as a general direct channel. The payout flow inserts the payout_requests
+  -- row before calling this, so the payout card message still posts.
+  IF public.has_role(v_me, 'student'::app_role) AND NOT EXISTS (
+    SELECT 1 FROM public.payout_requests pr
+    WHERE pr.thread_id = p_thread_id AND pr.requestor_id = v_me
+  ) THEN
+    RAISE EXCEPTION 'Students can only message their payout conversation';
   END IF;
 
   SELECT COALESCE(array_agg(DISTINCT m), '{}'::uuid[]) INTO v_mentions
