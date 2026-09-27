@@ -1,10 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
-import { validateAttachmentFile, type ChatAttachment } from "@/lib/chatFormat";
+import {
+  validateAttachmentFile,
+  validateVoiceRecording,
+  type ChatAttachment,
+} from "@/lib/chatFormat";
 
 const BUCKET = "chat-attachments";
 
 export class AttachmentValidationError extends Error {
-  constructor(public reason: "size" | "mime") {
+  constructor(public reason: "size" | "mime" | "duration") {
     super(reason);
   }
 }
@@ -24,13 +28,15 @@ export interface UploadHandle {
  * storage REST endpoint with the caller's session token. The path layout
  * `{case|direct}/{threadId}/{uuid}-{name}` is what storage RLS checks.
  */
-export function uploadChatAttachmentWithProgress(
+function uploadAttachmentWithProgress(
   threadType: "case" | "direct",
   threadId: string,
   file: File,
+  validate: () => "size" | "mime" | "duration" | null,
+  meta: Pick<ChatAttachment, "kind" | "durationMs">,
   onProgress?: (percent: number) => void,
 ): UploadHandle {
-  const invalid = validateAttachmentFile(file);
+  const invalid = validate();
   if (invalid) {
     return {
       promise: Promise.reject(new AttachmentValidationError(invalid)),
@@ -38,7 +44,7 @@ export function uploadChatAttachmentWithProgress(
     };
   }
 
-  const path = `${threadType}/${threadId}/${crypto.randomUUID()}-${safeName(file.name)}`;
+  const path = threadType + "/" + threadId + "/" + crypto.randomUUID() + "-" + safeName(file.name);
   const xhr = new XMLHttpRequest();
 
   const promise = new Promise<ChatAttachment>((resolve, reject) => {
@@ -51,8 +57,8 @@ export function uploadChatAttachmentWithProgress(
           return;
         }
         const base = import.meta.env.VITE_SUPABASE_URL as string;
-        xhr.open("POST", `${base}/storage/v1/object/${BUCKET}/${encodeURI(path)}`);
-        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.open("POST", base + "/storage/v1/object/" + BUCKET + "/" + encodeURI(path));
+        xhr.setRequestHeader("Authorization", "Bearer " + token);
         xhr.setRequestHeader("apikey", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string);
         xhr.setRequestHeader("x-upsert", "false");
         if (file.type) xhr.setRequestHeader("Content-Type", file.type);
@@ -67,9 +73,15 @@ export function uploadChatAttachmentWithProgress(
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             onProgress?.(100);
-            resolve({ name: file.name, path, mime: file.type, size: file.size });
+            resolve({
+              name: file.name,
+              path,
+              mime: file.type,
+              size: file.size,
+              ...meta,
+            });
           } else {
-            let message = `HTTP ${xhr.status}`;
+            let message = "HTTP " + xhr.status;
             try {
               const parsed = JSON.parse(xhr.responseText);
               message = parsed.message || parsed.error || message;
@@ -85,6 +97,48 @@ export function uploadChatAttachmentWithProgress(
   });
 
   return { promise, cancel: () => xhr.abort() };
+}
+
+/**
+ * Upload one ordinary file into the private chat bucket with progress reporting.
+ * The browser and database both validate the allowed document/image MIME list.
+ */
+export function uploadChatAttachmentWithProgress(
+  threadType: "case" | "direct",
+  threadId: string,
+  file: File,
+  onProgress?: (percent: number) => void,
+): UploadHandle {
+  return uploadAttachmentWithProgress(
+    threadType,
+    threadId,
+    file,
+    () => validateAttachmentFile(file),
+    {},
+    onProgress,
+  );
+}
+
+/**
+ * Upload a recorded voice note. Audio types are deliberately separated from
+ * ordinary file attachments so arbitrary audio files cannot enter via the
+ * normal attach picker.
+ */
+export function uploadVoiceChatAttachmentWithProgress(
+  threadType: "case" | "direct",
+  threadId: string,
+  file: File,
+  durationMs: number,
+  onProgress?: (percent: number) => void,
+): UploadHandle {
+  return uploadAttachmentWithProgress(
+    threadType,
+    threadId,
+    file,
+    () => validateVoiceRecording(file, durationMs),
+    { kind: "voice", durationMs },
+    onProgress,
+  );
 }
 
 /** Simple promise wrapper kept for callers that do not need progress. */
