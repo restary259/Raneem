@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Check, Lock, Mic, Play, RotateCcw, Square, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-export const MAX_VOICE_DURATION_MS = 5 * 60 * 1000;
-const MIN_SEND_DURATION_MS = 250;
+import {
+  formatVoiceDuration,
+  MAX_VOICE_DURATION_MS,
+  validateVoiceRecording,
+} from "@/lib/chatFormat";
 const RECORDING_MIME_CANDIDATES = [
   "audio/webm;codecs=opus",
   "audio/webm",
@@ -34,13 +36,6 @@ function extensionForMime(mime: string): string {
   if (mime.includes("mp4")) return "m4a";
   if (mime.includes("ogg")) return "ogg";
   return "webm";
-}
-
-export function formatVoiceDuration(ms: number): string {
-  const seconds = Math.max(0, Math.floor(ms / 1000));
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  return String(minutes) + ":" + String(remainder).padStart(2, "0");
 }
 
 const BARS = Array.from({ length: 28 }, function (_, index) {
@@ -163,7 +158,7 @@ export default function VoiceRecorder({
 
     const durationMs = Math.min(
       maxDurationMs,
-      Math.max(MIN_SEND_DURATION_MS, Date.now() - startedAtRef.current),
+      Math.max(250, Date.now() - startedAtRef.current),
     );
     setElapsedMs(durationMs);
 
@@ -177,6 +172,18 @@ export default function VoiceRecorder({
       type: blob.type || "audio/webm",
       lastModified: Date.now(),
     });
+    const invalid = validateVoiceRecording(file, durationMs);
+    if (invalid) {
+      setError(
+        invalid === "duration"
+          ? t("chat.voice.error.duration")
+          : invalid === "size"
+            ? t("chat.voice.error.size")
+            : t("chat.voice.error.format"),
+      );
+      reset();
+      return;
+    }
 
     if (previewOnStopRef.current || lockedRef.current) {
       setRecordedFile(file);
