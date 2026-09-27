@@ -168,6 +168,11 @@ export default function VoiceMessage({
           onClick={seek}
           onKeyDown={function (event) {
             const audio = audioRef.current;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              void toggle();
+              return;
+            }
             if (!audio || duration <= 0) return;
             if (event.key === "ArrowRight") {
               event.preventDefault();
