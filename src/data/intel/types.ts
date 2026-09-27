@@ -84,6 +84,8 @@ export interface ProgramIntel {
   gradeRequirement: VerifiedFact<GradeRequirementValue>;
   entranceRequirement: VerifiedFact<string>;
   deadline: VerifiedFact<DeadlineValue>;
+  /** Sourced planning fallback used only when no programme-specific deadline is verified. */
+  standardApplicationDeadline?: VerifiedFact<DeadlineValue>;
   documents: VerifiedFact<string[]>;
   /** Tuition / fee notes that are officially published. */
   fees?: VerifiedFact<string>;
