@@ -56,7 +56,9 @@ import { searchCasesForMention } from "@/services/CaseMessageService";
 import {
   removeChatAttachment,
   uploadChatAttachmentWithProgress,
+  uploadVoiceChatAttachmentWithProgress,
 } from "@/services/ChatAttachmentService";
+import VoiceRecorder from "@/components/messages/VoiceRecorder";
 
 interface MessageComposerProps {
   threadType: "case" | "direct";
@@ -123,6 +125,7 @@ export default function MessageComposer({
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [caseQuery, setCaseQuery] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [voiceActive, setVoiceActive] = useState(false);
   const isMobile = useIsMobile();
 
   /* The suggestion lists close on a real click outside the composer, not on
@@ -293,6 +296,21 @@ export default function MessageComposer({
   };
 
   /** Insert a trigger character (`@` / `#`) at the caret and open its picker. */
+  const handleVoiceSend = async (file: File, durationMs: number) => {
+    const handle = uploadVoiceChatAttachmentWithProgress(threadType, threadId, file, durationMs);
+    try {
+      const attachment = await handle.promise;
+      await onSend("", [attachment], {
+        visibility: allowInternal ? visibility : "shared",
+        kind: "text",
+        mentions: [],
+      });
+    } catch (err: any) {
+      handle.cancel();
+      throw err;
+    }
+  };
+
   const insertToken = (token: "@" | "#") => {
     const el = textRef.current;
     const caret = el?.selectionStart ?? body.length;
@@ -466,8 +484,8 @@ export default function MessageComposer({
 
       {/* One WhatsApp-style row. `dir="ltr"` pins `+` to the left and send to the
           right in every language; the textarea keeps `dir="auto"` for Arabic. */}
-      <div dir="ltr" className="flex items-end gap-1.5">
-        <div className="flex shrink-0 items-center gap-1 pb-1">
+      <div dir="ltr" className={cn("flex items-end gap-1.5", voiceActive && "w-full")}>
+        <div className={cn("flex shrink-0 items-center gap-1 pb-1", voiceActive && "hidden")}>
           <input
             ref={fileRef}
             type="file"
@@ -609,7 +627,12 @@ export default function MessageComposer({
         </div>
 
 
-        <div className="relative min-w-0 flex-1 rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20">
+        <div
+          className={cn(
+            "relative min-w-0 flex-1 rounded-2xl border bg-background px-3 py-2 transition-colors focus-within:border-primary/40 focus-within:ring-1 focus-within:ring-primary/20",
+            voiceActive && "hidden",
+          )}
+        >
         {mentionMatches.length > 0 && (
           <ul className="absolute bottom-full z-30 mb-2 w-64 overflow-hidden rounded-lg border bg-popover shadow-lg">
             {mentionMatches.map((person) => (
@@ -700,15 +723,23 @@ export default function MessageComposer({
         />
       </div>
 
-        <Button
-          size="icon"
-          onClick={handleSend}
-          aria-label={t("case.messages.send")}
-          disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
-          className="mb-0.5 h-9 w-9 shrink-0 rounded-full sm:h-8 sm:w-8"
-        >
-          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
+        <VoiceRecorder
+          disabled={disabled || sending || uploading || kind === "request"}
+          className={voiceActive ? "flex-1" : undefined}
+          onActiveChange={setVoiceActive}
+          onSend={handleVoiceSend}
+        />
+        {!voiceActive && (
+          <Button
+            size="icon"
+            onClick={handleSend}
+            aria-label={t("case.messages.send")}
+            disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
+            className="mb-0.5 h-9 w-9 shrink-0 rounded-full sm:h-8 sm:w-8"
+          >
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        )}
       </div>
 
 
