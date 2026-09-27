@@ -2010,3 +2010,37 @@ catalog school `alpha-aktiv`.
   future PR adding a notification category must also supply Hebrew**, or the
   suite goes red. Still uncovered by this guard: the other Hebrew `dashboard.json`
   blocks (`chat`, `intel`, `team`).
+
+## Hebrew localization complete (all pages/namespaces) — 2026-09-27
+- Hebrew (`he`) now has **full key coverage across all 14 public namespaces**:
+  `about`, `blog`, `broadcast`, `common`, `contact`, `dashboard`, `faq`,
+  `landing`, `legal`, `partners`, `partnership`, `resources`, `services`,
+  `whatsapp` — 0 missing keys (`scripts/check-he-locales.py`).
+- `public/locales/{en,ar,he}` are the source of truth served by the HTTP
+  backend (`/locales/{{lng}}/{{ns}}.json`). A subset ALSO exists under
+  `src/locales/{en,ar,he}` and is imported eagerly in `src/i18n.ts`
+  (`common, landing, contact, broadcast, legal`) so first paint never waits on
+  the network. **These two trees must stay identical** — the sync has only ever
+  been manual, which is exactly how Hebrew came to have
+  `src/locales/he/contact.json` while every other bundled namespace was
+  English-only (Hebrew first paint rendered English). Now mirrored for all five.
+- New guard `src/lib/hebrewLocaleCoverage.test.ts`: every EN namespace must
+  exist in `he` with **full leaf-key coverage**, and each `src/locales/he/*`
+  bundled copy must **deep-equal** its `public/locales/he/*` counterpart. This
+  is the regression fence — a new English string without Hebrew now fails CI.
+  (Note: `src/i18n.ts` sets `fallbackLng: { he: ['en'] }`, so a missing Hebrew
+  key silently renders English; only this guard catches it.)
+- Two latently-untranslated **legal/factual** surfaces were created from
+  scratch: `faq.json` (87 keys, source-backed answers on Bagrut recognition,
+  Studienkolleg, uni-assist, blocked account, visa for Israeli passports,
+  working/graduation) and `legal.json` (150 keys: privacy / terms /
+  accessibility). Keep these aligned with their English originals whenever
+  policy or official figures change — they are legally operative copy.
+- Helper scripts (repo-utility, not runtime): `scripts/check-he-locales.py`
+  (coverage report), `scripts/show-he-missing.py`, `scripts/merge-i18n-tsv.py`
+  (path-safe TSV merger, the fastest way to translate a whole section without
+  JSON-quoting overhead), `scripts/check-he-mixed.py` (flags Latin runs with
+  Hebrew on **both** sides — the real half-translated-word signal; one-sided
+  Hebrew-prefix + proper-noun like `ו-Studienkolleg` is a false positive).
+- Build clean; `npx vitest run` 1514 passed | 1 skipped.
+
