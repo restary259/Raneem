@@ -129,6 +129,12 @@ export default function VoiceRecorder({
       stopStream();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(function () {
+    return function () {
+      if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    };
   }, [recordedUrl]);
 
   useEffect(function () {
