@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { getAttachmentUrl } from "@/services/ChatAttachmentService";
@@ -53,9 +53,16 @@ export default function VoiceMessage({ att }: { att: ChatAttachment }) {
   );
 
   const toggle = async function () {
-    if (failed) return;
+    if (failed) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setCurrentTime(0);
+      setPlaying(false);
+      setFailed(false);
+      setUrl(null);
+    }
 
-    let sourceUrl = url;
+    let sourceUrl = failed ? null : url;
     if (!sourceUrl) {
       setLoading(true);
       try {
@@ -91,6 +98,7 @@ export default function VoiceMessage({ att }: { att: ChatAttachment }) {
         setFailed(true);
         setPlaying(false);
         if (activeAudio === audio) activeAudio = null;
+        audioRef.current = null;
       });
     }
 
@@ -135,12 +143,18 @@ export default function VoiceMessage({ att }: { att: ChatAttachment }) {
         onClick={function () {
           void toggle();
         }}
-        aria-label={playing ? t("chat.voice.pause") : t("chat.voice.play")}
+        aria-label={failed
+          ? t("chat.voice.retry")
+          : playing
+            ? t("chat.voice.pause")
+            : t("chat.voice.play")}
         disabled={loading || failed}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? (
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />
+        ) : failed ? (
+          <RotateCcw className="h-4 w-4" />
         ) : playing ? (
           <Pause className="h-4 w-4 fill-current" />
         ) : (
