@@ -6,6 +6,7 @@ import { Building2, CalendarDays, Check, CheckCircle2, Clock, Loader2, MapPin, S
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { managePublicBooking } from "@/lib/publicBooking.functions";
+import OfficeCard from "@/components/common/OfficeCard";
 
 type Office = {
   id: string;
@@ -320,8 +321,15 @@ export default function PublicOfficeBooking({
   return <BookingFlow />;
 
   function BookingFlow() {
-    const phase = selected ? 3 : selectedDay ? 2 : selectedOfficeId ? 1 : 0;
-    const stepLabels = [ui.chooseOffice, t("apply.bookingStepDate", "اختر التاريخ"), t("apply.bookingStepTime", "اختر الوقت"), t("apply.bookingStepConfirm", "التأكيد")];
+    const multiOffice = offices.length > 1;
+    const basePhase = selected ? 3 : selectedDay ? 2 : selectedOfficeId ? 1 : 0;
+    const phase = multiOffice ? basePhase : Math.max(0, basePhase - 1);
+    const stepLabels = [
+      ...(multiOffice ? [ui.chooseOffice] : []),
+      t("apply.bookingStepDate", "اختر التاريخ"),
+      t("apply.bookingStepTime", "اختر الوقت"),
+      t("apply.bookingStepConfirm", "التأكيد"),
+    ];
 
     return (
       <div className="space-y-5">
@@ -341,6 +349,7 @@ export default function PublicOfficeBooking({
 
         <div className="grid gap-4 lg:grid-cols-[1.35fr_0.85fr]">
           <div className="space-y-4">
+            {multiOffice && (
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <div className="mb-4">
                 <div className="flex items-center gap-2"><Building2 className="size-4 text-primary" /><p className="text-sm font-semibold">{ui.chooseOffice}</p></div>
@@ -369,8 +378,8 @@ export default function PublicOfficeBooking({
                   );
                 })}
               </div>
-              {!offices.length && <p className="py-4 text-sm text-muted-foreground">{ui.noOffices}</p>}
             </div>
+            )}
 
             {selectedOfficeId && (
               <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
@@ -417,6 +426,7 @@ export default function PublicOfficeBooking({
           </div>
 
           <aside className="space-y-4">
+            {selectedOffice && <OfficeCard office={selectedOffice} />}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <p className="mb-4 text-sm font-semibold">{t("apply.summaryTitle", "تفاصيل الزيارة")}</p>
               {selected ? (
