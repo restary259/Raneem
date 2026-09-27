@@ -492,18 +492,7 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="mt-4 flex items-center justify-center gap-3">
-            {phase === "incoming" ? (
-              <>
-                <Button variant="destructive" size="lg" className="flex-1 gap-2 rounded-full" onClick={hangUp} disabled={busy}>
-                  <PhoneOff className="h-5 w-5" />
-                  {t("voiceCall.decline", "Decline")}
-                </Button>
-                <Button size="lg" className="flex-1 gap-2 rounded-full" onClick={accept} disabled={busy}>
-                  <Phone className="h-5 w-5" />
-                  {t("voiceCall.accept", "Accept")}
-                </Button>
-              </>
-            ) : (
+            {(
               <>
                 {phase !== "outgoing" && (
                   <Button
