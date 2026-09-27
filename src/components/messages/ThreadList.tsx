@@ -18,6 +18,12 @@ const CATEGORY_STYLE: Record<ThreadCategory, { bar: string; avatar: string; badg
     badge: "border-primary/30 text-primary",
     dot: "bg-primary",
   },
+  teams: {
+    bar: "bg-indigo-500",
+    avatar: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+    badge: "border-indigo-500/30 text-indigo-700 dark:text-indigo-300",
+    dot: "bg-indigo-500",
+  },
   cases: {
     bar: toneClasses("submitted").line,
     avatar: toneClasses("submitted").chip,
