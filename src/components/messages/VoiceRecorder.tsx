@@ -74,6 +74,7 @@ export default function VoiceRecorder({
   const unmountedRef = useRef(false);
   const startRequestRef = useRef(0);
   const startingRef = useRef(false);
+  const lastControlActionAtRef = useRef(0);
 
   const isActive = mode !== "idle";
 
@@ -470,6 +471,7 @@ export default function VoiceRecorder({
               event.preventDefault();
               event.stopPropagation();
               pointerDownRef.current = false;
+              lastControlActionAtRef.current = Date.now();
               cancelRecording();
             }}
             onClick={function (event) {
@@ -513,10 +515,13 @@ export default function VoiceRecorder({
                   event.preventDefault();
                   event.stopPropagation();
                   pointerDownRef.current = false;
+                  lastControlActionAtRef.current = Date.now();
                   stopRecording(true);
                 }}
                 onClick={function (event) {
                   event.stopPropagation();
+                  if (Date.now() - lastControlActionAtRef.current < 500) return;
+                  stopRecording(true);
                 }}
                 className="relative z-10 flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-full text-destructive transition-colors hover:bg-destructive/10"
               >
@@ -530,10 +535,13 @@ export default function VoiceRecorder({
                   event.preventDefault();
                   event.stopPropagation();
                   pointerDownRef.current = false;
+                  lastControlActionAtRef.current = Date.now();
                   stopRecording(false);
                 }}
                 onClick={function (event) {
                   event.stopPropagation();
+                  if (Date.now() - lastControlActionAtRef.current < 500) return;
+                  stopRecording(false);
                 }}
                 className="relative z-10 flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:bg-primary/90 active:scale-95"
               >
