@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { isVoiceAttachment, type ChatAttachment } from "@/lib/chatFormat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import DirectMessages from "@/components/messages/DirectMessages";
@@ -79,7 +80,12 @@ export default function PartnerMessagesPage({ viewerRole = "social_media_partner
     preview:
       thread.lastMessage?.kind === "payout_request"
         ? t("chat.payout.title")
-        : thread.lastMessage?.body || t("messagesInbox.noMessagesYet"),
+        : thread.lastMessage?.body ||
+          ((thread.lastMessage?.attachments ?? []) as ChatAttachment[]).some((att) =>
+            isVoiceAttachment(att),
+          )
+          ? t("chat.voice.message")
+          : t("messagesInbox.noMessagesYet"),
     timestamp: thread.lastMessageAt,
     unread: thread.unread,
     otherUserId: thread.otherUserId,
