@@ -30,11 +30,19 @@ export default function VoiceCallButton({ threadId, otherUserId, otherUserName, 
     const me = user?.id;
     if (!me) return;
     (async () => {
-      const other = otherUserId ?? (await getOtherParticipant(threadId, me));
-      if (cancelled || !other) return;
-      setPeer(other);
-      const ok = await canCallUser(me, other);
-      if (!cancelled) setAllowed(ok);
+      // Any failure here means "we cannot prove this call is allowed", which is
+      // the same outcome as not allowed: stay hidden. An uncaught rejection would
+      // surface as a global unhandledrejection for a purely cosmetic control.
+      try {
+        const other = otherUserId ?? (await getOtherParticipant(threadId, me));
+        if (cancelled || !other) return;
+        const ok = await canCallUser(me, other);
+        if (cancelled) return;
+        setPeer(other);
+        setAllowed(ok);
+      } catch {
+        if (!cancelled) setAllowed(false);
+      }
     })();
     return () => {
       cancelled = true;
