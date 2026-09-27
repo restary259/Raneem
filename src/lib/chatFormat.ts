@@ -18,7 +18,7 @@ export interface ChatMessage {
   createdAt: string;
   visibility?: "internal" | "shared";
   attachments: ChatAttachment[];
-  kind: "text" | "request" | "payout_request" | "bank_share";
+  kind: "text" | "request" | "payout_request" | "bank_share" | "call";
   requestStatus?: string | null;
   editedAt?: string | null;
   mentions?: string[];
