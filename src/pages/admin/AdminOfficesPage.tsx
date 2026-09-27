@@ -217,57 +217,66 @@ export default function AdminOfficesPage() {
       toast({ variant: "destructive", description: labels.warning });
       return;
     }
+    if (form.primary_user_id && form.backup_user_id && form.primary_user_id === form.backup_user_id) {
+      toast({ variant: "destructive", description: labels.warning });
+      return;
+    }
+
     setSaving(true);
     try {
+      const slug = form.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "")
+        || form.name_en.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "");
       const officePayload = {
-        name_ar: form.name_ar.trim(), name_en: form.name_en.trim(), name_he: form.name_he.trim(),
-        slug: form.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "") || form.name_en.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
-        office_code: form.office_code.trim() || null, office_type: form.office_type, country: form.country.trim() || "IL",
-        city: form.city.trim(), address_line_1: form.address_line_1.trim() || null, phone: form.phone.trim() || null,
-        email: form.email.trim() || null, map_url: form.map_url.trim() || null, timezone: form.timezone.trim() || "Asia/Jerusalem",
-        booking_enabled: form.booking_enabled, is_active: form.is_active, display_order: Number(form.display_order) || 0,
+        name_ar: form.name_ar.trim(),
+        name_en: form.name_en.trim(),
+        name_he: form.name_he.trim(),
+        slug: slug,
+        office_code: form.office_code.trim() || null,
+        office_type: form.office_type,
+        country: form.country.trim() || "IL",
+        city: form.city.trim(),
+        address_line_1: form.address_line_1.trim() || null,
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        map_url: form.map_url.trim() || null,
+        timezone: form.timezone.trim() || "Asia/Jerusalem",
+        booking_enabled: form.booking_enabled,
+        is_active: form.is_active,
+        display_order: Number(form.display_order) || 0,
       };
-      const officeResult = form.id
-        ? await (supabase.from as any)("offices").update(officePayload).eq("id", form.id).select("*").single()
-        : await (supabase.from as any)("offices").insert(officePayload).select("*").single();
-      if (officeResult.error) throw officeResult.error;
-      const office = officeResult.data as Office;
 
-      const settingsResult = await (supabase.from as any)("office_booking_settings").upsert({
-        office_id: office.id, slot_interval_minutes: Number(form.slot_interval_minutes), default_duration_minutes: Number(form.default_duration_minutes),
-        minimum_lead_minutes: Number(form.minimum_lead_minutes), maximum_days_ahead: Number(form.maximum_days_ahead),
-      }, { onConflict: "office_id" });
-      if (settingsResult.error) throw settingsResult.error;
+      const { error } = await (supabase.rpc as any)("save_office_configuration", {
+        p_office_id: form.id || null,
+        p_office: officePayload,
+        p_settings: {
+          slot_interval_minutes: Number(form.slot_interval_minutes),
+          default_duration_minutes: Number(form.default_duration_minutes),
+          minimum_lead_minutes: Number(form.minimum_lead_minutes),
+          maximum_days_ahead: Number(form.maximum_days_ahead),
+        },
+        p_hours: form.hours.map(function (h) {
+          return {
+            weekday: h.weekday,
+            is_open: h.is_open,
+            open_time: h.is_open ? h.open_time : null,
+            close_time: h.is_open ? h.close_time : null,
+          };
+        }),
+        p_primary_user_id: form.primary_user_id || null,
+        p_backup_user_id: form.backup_user_id || null,
+        p_routing_rules: form.routingRules.filter(function (rule) {
+          return Boolean(rule.service_type && rule.assigned_user_id);
+        }).map(function (rule) {
+          return {
+            service_type: rule.service_type,
+            assigned_user_id: rule.assigned_user_id,
+            priority: Number(rule.priority) || 100,
+            is_active: Boolean(rule.is_active),
+          };
+        }),
+      });
 
-      const deleteHours = await (supabase.from as any)("office_hours").delete().eq("office_id", office.id);
-      if (deleteHours.error) throw deleteHours.error;
-      const insertHours = await (supabase.from as any)("office_hours").insert(form.hours.map(function (h) {
-        return { office_id: office.id, weekday: h.weekday, is_open: h.is_open, open_time: h.is_open ? h.open_time : null, close_time: h.is_open ? h.close_time : null };
-      }));
-      if (insertHours.error) throw insertHours.error;
-
-      const deactivateMembers = await (supabase.from as any)("office_members").update({ is_active: false, is_primary: false }).eq("office_id", office.id);
-      if (deactivateMembers.error) throw deactivateMembers.error;
-
-      const selected = [form.primary_user_id, form.backup_user_id].filter(Boolean).filter(function (v, i, arr) { return arr.indexOf(v) === i; });
-      for (let index = 0; index < selected.length; index += 1) {
-        const result = await (supabase.from as any)("office_members").upsert({
-          office_id: office.id, user_id: selected[index], membership_type: index === 0 ? "operator" : "backup",
-          is_primary: index === 0, is_active: true, priority: index + 1,
-        }, { onConflict: "office_id,user_id" });
-        if (result.error) throw result.error;
-      }
-
-      const deleteRules = await (supabase.from as any)("office_routing_rules").delete().eq("office_id", office.id);
-      if (deleteRules.error) throw deleteRules.error;
-      const selectedMembers = new Set(selected);
-      const cleanRules = form.routingRules.filter(function (r) { return selectedMembers.has(r.assigned_user_id) && r.assigned_user_id; });
-      if (cleanRules.length) {
-        const result = await (supabase.from as any)("office_routing_rules").insert(cleanRules.map(function (r) {
-          return { office_id: office.id, service_type: r.service_type, assigned_user_id: r.assigned_user_id, priority: Number(r.priority) || 100, is_active: r.is_active };
-        }));
-        if (result.error) throw result.error;
-      }
+      if (error) throw error;
 
       toast({ description: labels.save });
       setDialogOpen(false);
@@ -292,7 +301,34 @@ export default function AdminOfficesPage() {
     return found ? found.full_name : id;
   }
 
-  if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+  function serviceLabel(serviceType: string) {
+    const map: Record<string, string> = language.startsWith("ar")
+      ? {
+          consultation: "استشارة",
+          university_application: "تقديم جامعي",
+          language: "لغة",
+          visa: "فيزا",
+          accommodation: "سكن",
+        }
+      : language.startsWith("he")
+        ? {
+            consultation: "ייעוץ",
+            university_application: "הרשמה לאוניברסיטה",
+            language: "שפה",
+            visa: "ויזה",
+            accommodation: "מגורים",
+          }
+        : {
+            consultation: "Consultation",
+            university_application: "University applications",
+            language: "Language",
+            visa: "Visa",
+            accommodation: "Accommodation",
+          };
+    return map[serviceType] ?? serviceType;
+  }
+
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">{language.startsWith("ar") ? "جاري التحميل…" : language.startsWith("he") ? "טוען…" : "Loading…"}</div>;
 
   return (
     <div className="space-y-6 p-4 md:p-6" dir={isRtl ? "rtl" : "ltr"}>
@@ -395,7 +431,7 @@ export default function AdminOfficesPage() {
               {form.routingRules.length ? form.routingRules.map(function (rule, index) {
                 const memberChoices = [form.primary_user_id, form.backup_user_id].filter(Boolean);
                 return <div key={rule.id || index} className="grid gap-2 rounded-xl border border-border p-3 md:grid-cols-[1fr_1fr_auto_auto]">
-                  <Select value={rule.service_type} onValueChange={function (v) { setField("routingRules", form.routingRules.map(function (r, i) { return i === index ? Object.assign({}, r, { service_type: v }) : r; })); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{SERVICE_TYPES.map(function (entry) { return <SelectItem key={entry[0]} value={entry[0]}>{entry[1]}</SelectItem>; })}</SelectContent></Select>
+                  <Select value={rule.service_type} onValueChange={function (v) { setField("routingRules", form.routingRules.map(function (r, i) { return i === index ? Object.assign({}, r, { service_type: v }) : r; })); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{SERVICE_TYPES.map(function (entry) { return <SelectItem key={entry[0]} value={entry[0]}>{serviceLabel(entry[0])}</SelectItem>; })}</SelectContent></Select>
                   <Select value={rule.assigned_user_id || "none"} onValueChange={function (v) { setField("routingRules", form.routingRules.map(function (r, i) { return i === index ? Object.assign({}, r, { assigned_user_id: v === "none" ? "" : v }) : r; })); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">{labels.noMember}</SelectItem>{memberChoices.map(function (id) { return <SelectItem key={id} value={id}>{memberName(id)}</SelectItem>; })}</SelectContent></Select>
                   <Input className="md:w-24" type="number" min={1} value={rule.priority} onChange={function (e) { setField("routingRules", form.routingRules.map(function (r, i) { return i === index ? Object.assign({}, r, { priority: Number(e.target.value) }) : r; })); }} />
                   <Button type="button" variant="ghost" size="icon" onClick={function () { setField("routingRules", form.routingRules.filter(function (_, i) { return i !== index; })); }} aria-label="Remove rule"><X className="size-4" /></Button>
