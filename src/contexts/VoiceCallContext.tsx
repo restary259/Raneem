@@ -1,4 +1,4 @@
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-icon.png.asset.json";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";
@@ -450,7 +450,7 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
               <span className="absolute inset-0 rounded-full bg-primary-foreground/30 motion-safe:animate-ping" />
               <span className="absolute inset-3 rounded-full bg-primary-foreground/20 motion-safe:animate-pulse" />
               <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-primary-foreground text-5xl font-bold text-primary shadow-2xl">
-                {peerIsAdmin ? <img src={darbLogoAsset.url} alt="DARB" className="h-full w-full rounded-full object-contain p-3" /> : (call.peerName || "?").charAt(0).toUpperCase()}
+                {peerIsAdmin ? <img src={darbLogoAsset.url} alt="DARB" className="h-full w-full rounded-full bg-background object-contain p-1.5" /> : (call.peerName || "?").charAt(0).toUpperCase()}
               </div>
             </div>
             <div className="text-center">
