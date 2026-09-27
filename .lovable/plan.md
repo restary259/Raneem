@@ -1,4 +1,4 @@
-# Deploy the four voice-call migrations
+# Deploy the four voice-call migrations and add a call button in chat (desktop and mobile)
 
 ## Verification result (done)
 
