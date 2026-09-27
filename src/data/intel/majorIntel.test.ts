@@ -65,6 +65,8 @@ describe('Major Intelligence coverage', () => {
         expect(program.programName.trim()).toBeTruthy();
         expect(program.programNameAR.trim()).toBeTruthy();
         expect(program.programUrl.startsWith('https://')).toBe(true);
+        expect(program.languageRequirement.status).toBe('verified');
+        expect(program.languageRequirement.value).not.toBeNull();
 
         if (program.languageRequirement.status === 'verified' && program.languageRequirement.value) {
           expect(['German', 'English']).toContain(program.languageRequirement.value.language);
@@ -72,6 +74,13 @@ describe('Major Intelligence coverage', () => {
             program.languageRequirement.value.minimumLevel,
           );
           expect(program.languageRequirement.value.certificates.length).toBeGreaterThan(0);
+        }
+
+        if (program.deadline.status === 'unverified') {
+          expect(program.standardApplicationDeadline?.status).toBe('verified');
+          expect(program.standardApplicationDeadline?.factType).toBe('DARB_OPERATIONAL_GUIDANCE');
+          expect(program.standardApplicationDeadline?.value?.deadline).toContain('15.07.');
+          expect(program.standardApplicationDeadline?.value?.deadline).toContain('15.01.');
         }
       }
     }
