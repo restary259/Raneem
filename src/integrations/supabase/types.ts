@@ -2836,6 +2836,7 @@ export type Database = {
       notification_preferences: {
         Row: {
           cat_appointments: boolean
+          cat_calls: boolean
           cat_cases: boolean
           cat_documents: boolean
           cat_messages: boolean
@@ -2854,6 +2855,7 @@ export type Database = {
         }
         Insert: {
           cat_appointments?: boolean
+          cat_calls?: boolean
           cat_cases?: boolean
           cat_documents?: boolean
           cat_messages?: boolean
@@ -2872,6 +2874,7 @@ export type Database = {
         }
         Update: {
           cat_appointments?: boolean
+          cat_calls?: boolean
           cat_cases?: boolean
           cat_documents?: boolean
           cat_messages?: boolean
