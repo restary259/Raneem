@@ -58,6 +58,28 @@ describe("PublicOfficeBooking", () => {
     expect(screen.queryByText("apply.visitPending")).not.toBeInTheDocument();
   });
 
+
+  it("keeps unavailable days visible so occupied slots are not hidden", async () => {
+    const unavailableSlots = [
+      "2026-09-27T07:00:00.000Z",
+      "2026-09-27T07:30:00.000Z",
+    ];
+    call.mockImplementation(async ({ data }: { data: { action: string; slot?: string } }) => {
+      if (data.action === "read") return { scheduled_at: null, status: null, office_id: null };
+      if (data.action === "offices") return { offices, current_office_id: null };
+      if (data.action === "availability") return { office: offices[0], slots: [], unavailable: unavailableSlots };
+      return { scheduled_at: data.slot, status: "pending", office_id: OFFICE_ID };
+    });
+
+    render(<PublicOfficeBooking token={"a".repeat(64)} autoOpen />);
+
+    const unavailable = await screen.findByRole("button", {
+      name: /10:00.*apply\.legendUnavailable/i,
+    });
+    expect(unavailable).toBeDisabled();
+    expect(unavailable).toHaveTextContent("10:00");
+  });
+
   it("shows no active controls for an expired private link", async () => {
     call.mockRejectedValue(new Error("expired"));
     render(<PublicOfficeBooking token={"a".repeat(64)} />);

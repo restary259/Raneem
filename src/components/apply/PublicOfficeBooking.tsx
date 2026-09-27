@@ -82,14 +82,18 @@ export default function PublicOfficeBooking({
   );
 
   const selectedTimezone = selectedOffice?.timezone || officeTimezone || "Asia/Jerusalem";
-  const days = useMemo(() => new Set(slots.map((slot) => dayKey(slot, selectedTimezone))), [slots, selectedTimezone]);
+  const visibleSlots = useMemo(() => [...slots, ...unavailable].sort(), [slots, unavailable]);
+  const days = useMemo(
+    () => new Set(visibleSlots.map((slot) => dayKey(slot, selectedTimezone))),
+    [visibleSlots, selectedTimezone],
+  );
   const available = useMemo(() => new Set(slots), [slots]);
   const daySlots = useMemo(
-    () => [...slots, ...unavailable].filter((slot) => dayKey(slot, selectedTimezone) === selectedDay).sort(),
-    [slots, unavailable, selectedDay, selectedTimezone],
+    () => visibleSlots.filter((slot) => dayKey(slot, selectedTimezone) === selectedDay).sort(),
+    [visibleSlots, selectedDay, selectedTimezone],
   );
-  const firstDay = slots.length ? localDate(dayKey(slots[0], selectedTimezone)) : undefined;
-  const lastDay = slots.length ? localDate(dayKey(slots[slots.length - 1], selectedTimezone)) : undefined;
+  const firstDay = visibleSlots.length ? localDate(dayKey(visibleSlots[0], selectedTimezone)) : undefined;
+  const lastDay = visibleSlots.length ? localDate(dayKey(visibleSlots[visibleSlots.length - 1], selectedTimezone)) : undefined;
 
   const ui = useMemo(() => {
     if (language.startsWith("ar")) {
@@ -149,9 +153,10 @@ export default function PublicOfficeBooking({
       const nextUnavailable = slotStrings(result, "unavailable");
       setSlots(nextSlots);
       setUnavailable(nextUnavailable);
-      if (nextSlots.length) {
+      const visible = [...nextSlots, ...nextUnavailable].sort();
+      if (visible.length) {
         const tz = office?.timezone || "Asia/Jerusalem";
-        setSelectedDay(dayKey(nextSlots[0], tz));
+        setSelectedDay(dayKey(visible[0], tz));
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
