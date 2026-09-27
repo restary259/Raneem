@@ -4159,6 +4159,7 @@
       "delete": "Delete recording",
       "play": "Play voice message",
       "pause": "Pause voice message",
+      "retry": "Retry voice message",
       "progress": "Voice message progress",
       "sending": "Sending voice message…",
       "error": {
