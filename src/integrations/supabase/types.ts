@@ -437,6 +437,7 @@ export type Database = {
           status: string
           team_member_id: string | null
           updated_at: string
+          office_id: string | null
         }
         Insert: {
           case_id?: string | null
@@ -457,6 +458,7 @@ export type Database = {
           status?: string
           team_member_id?: string | null
           updated_at?: string
+          office_id?: string | null
         }
         Update: {
           case_id?: string | null
@@ -477,8 +479,17 @@ export type Database = {
           status?: string
           team_member_id?: string | null
           updated_at?: string
+          office_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "appointments_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+
           {
             foreignKeyName: "appointments_case_id_fkey"
             columns: ["case_id"]
@@ -1366,6 +1377,7 @@ export type Database = {
           status: string
           student_user_id: string | null
           updated_at: string
+          office_id: string | null
         }
         Insert: {
           archived?: boolean
@@ -1414,6 +1426,7 @@ export type Database = {
           status?: string
           student_user_id?: string | null
           updated_at?: string
+          office_id?: string | null
         }
         Update: {
           archived?: boolean
@@ -1462,8 +1475,17 @@ export type Database = {
           status?: string
           student_user_id?: string | null
           updated_at?: string
+          office_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cases_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+
           {
             foreignKeyName: "cases_intel_intake_updated_by_fkey"
             columns: ["intel_intake_updated_by"]
@@ -3376,6 +3398,325 @@ export type Database = {
             columns: ["thread_id"]
             isOneToOne: false
             referencedRelation: "direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offices: {
+        Row: {
+          id: string
+          name_ar: string
+          name_en: string
+          name_he: string
+          slug: string
+          office_code: string | null
+          office_type: string
+          country: string
+          city: string
+          address_line_1: string | null
+          address_line_2: string | null
+          postal_code: string | null
+          phone: string | null
+          email: string | null
+          map_url: string | null
+          timezone: string
+          public_description_ar: string | null
+          public_description_en: string | null
+          public_description_he: string | null
+          booking_enabled: boolean
+          is_active: boolean
+          display_order: number
+          deleted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name_ar: string
+          name_en: string
+          name_he?: string
+          slug: string
+          office_code?: string | null
+          office_type?: string
+          country?: string
+          city: string
+          address_line_1?: string | null
+          address_line_2?: string | null
+          postal_code?: string | null
+          phone?: string | null
+          email?: string | null
+          map_url?: string | null
+          timezone?: string
+          public_description_ar?: string | null
+          public_description_en?: string | null
+          public_description_he?: string | null
+          booking_enabled?: boolean
+          is_active?: boolean
+          display_order?: number
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name_ar?: string
+          name_en?: string
+          name_he?: string
+          slug?: string
+          office_code?: string | null
+          office_type?: string
+          country?: string
+          city?: string
+          address_line_1?: string | null
+          address_line_2?: string | null
+          postal_code?: string | null
+          phone?: string | null
+          email?: string | null
+          map_url?: string | null
+          timezone?: string
+          public_description_ar?: string | null
+          public_description_en?: string | null
+          public_description_he?: string | null
+          booking_enabled?: boolean
+          is_active?: boolean
+          display_order?: number
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      office_members: {
+        Row: {
+          id: string
+          office_id: string
+          user_id: string
+          membership_type: string
+          is_primary: boolean
+          is_active: boolean
+          priority: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          office_id: string
+          user_id: string
+          membership_type?: string
+          is_primary?: boolean
+          is_active?: boolean
+          priority?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          office_id?: string
+          user_id?: string
+          membership_type?: string
+          is_primary?: boolean
+          is_active?: boolean
+          priority?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_members_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_hours: {
+        Row: {
+          id: string
+          office_id: string
+          weekday: number
+          is_open: boolean
+          open_time: string | null
+          close_time: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          office_id: string
+          weekday: number
+          is_open?: boolean
+          open_time?: string | null
+          close_time?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          office_id?: string
+          weekday?: number
+          is_open?: boolean
+          open_time?: string | null
+          close_time?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_hours_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_breaks: {
+        Row: {
+          id: string
+          office_id: string
+          weekday: number
+          start_time: string
+          end_time: string
+          label: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          office_id: string
+          weekday: number
+          start_time: string
+          end_time: string
+          label?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          office_id?: string
+          weekday?: number
+          start_time?: string
+          end_time?: string
+          label?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_breaks_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_blackouts: {
+        Row: {
+          id: string
+          office_id: string
+          starts_at: string
+          ends_at: string
+          reason: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          office_id: string
+          starts_at: string
+          ends_at: string
+          reason?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          office_id?: string
+          starts_at?: string
+          ends_at?: string
+          reason?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_blackouts_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_booking_settings: {
+        Row: {
+          office_id: string
+          slot_interval_minutes: number
+          default_duration_minutes: number
+          minimum_lead_minutes: number
+          maximum_days_ahead: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          office_id: string
+          slot_interval_minutes?: number
+          default_duration_minutes?: number
+          minimum_lead_minutes?: number
+          maximum_days_ahead?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          office_id?: string
+          slot_interval_minutes?: number
+          default_duration_minutes?: number
+          minimum_lead_minutes?: number
+          maximum_days_ahead?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      office_routing_rules: {
+        Row: {
+          id: string
+          office_id: string
+          service_type: string
+          assigned_user_id: string
+          priority: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          office_id: string
+          service_type: string
+          assigned_user_id: string
+          priority?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          office_id?: string
+          service_type?: string
+          assigned_user_id?: string
+          priority?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_routing_rules_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
             referencedColumns: ["id"]
           },
         ]
@@ -7227,8 +7568,41 @@ export type Database = {
         Returns: undefined
       }
       manage_public_appointment: {
+        Args: {
+          p_action: string
+          p_office_id?: string
+          p_service_type?: string
+          p_slot?: string
+          p_token_hash: string
+        }
+        Returns: Json
+      }
+
         Args: { p_action: string; p_slot?: string; p_token_hash: string }
         Returns: Json
+      }
+      list_office_team_members: {
+        Args: Record<string, never>
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
+      resolve_office_assignee: {
+        Args: { p_office_id: string; p_service_type?: string }
+        Returns: string
+      }
+      save_office_configuration: {
+        Args: {
+          p_backup_user_id?: string
+          p_hours?: Json
+          p_office: Json
+          p_office_id?: string
+          p_primary_user_id?: string
+          p_routing_rules?: Json
+          p_settings: Json
+        }
+        Returns: Database["public"]["Tables"]["offices"]["Row"]
       }
       mark_case_messages_read: {
         Args: { p_case_id: string }
