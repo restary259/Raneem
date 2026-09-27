@@ -859,7 +859,7 @@ const AdminPipelinePage = () => {
                     <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Appointment</p>
                     {appointmentLoading ? <Loader2 className="mt-3 size-4 animate-spin" /> : caseAppointment ? (
                       <>
-                        <p className="mt-2 flex items-center gap-2 text-sm font-semibold"><CalendarDays className="size-4 text-primary" />{new Date(caseAppointment.scheduled_at).toLocaleString("en-IL", { timeZone: "Asia/Jerusalem", weekday: "short", dateStyle: "medium", timeStyle: "short" })}</p>
+                        <p className="mt-2 flex items-center gap-2 text-sm font-semibold"><CalendarDays className="size-4 text-primary" />{new Date(caseAppointment.scheduled_at).toLocaleString("en-IL", { timeZone: "Asia/Jerusalem", weekday: "short", year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{caseAppointment.confirmation_status === "confirmed" ? "Confirmed" : "Awaiting confirmation"}{caseAppointment.public_booking ? " · Public booking" : ""}</p>
                       </>
                     ) : <p className="mt-2 text-sm text-muted-foreground">No appointment linked to this case.</p>}
