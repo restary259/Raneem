@@ -182,7 +182,8 @@
       "country": "מדינה",
       "addDetails": "הוספת פרטי בנק",
       "manageDetails": "ניהול פרטי הבנק",
-      "missing": "פרטי הבנק שלכם עדיין לא נשמרו. הוסיפו אותם תחילה."
+      "missing": "פרטי הבנק שלכם עדיין לא נשמרו. הוסיפו אותם תחילה.",
+      "accountHolder": "בעל החשבון"
     },
     "section": {
       "direct": "ישיר",
@@ -3490,7 +3491,11 @@
       "errBranch": "מספר הסניף חייב להיות 2-4 ספרות",
       "errAccount": "מספר החשבון חייב להיות 4-12 ספרות",
       "errIban": "הזינו IBAN תקין",
-      "errIbanRequired": "נדרש IBAN או שם בנק"
+      "errIbanRequired": "נדרש IBAN או שם בנק",
+      "accountHolder": "שם בעל החשבון",
+      "accountHolderPlaceholder": "שם מלא כפי שהוא בחשבון",
+      "accountHolderHint": "עליו להתאים לשם הרשום בבנק.",
+      "errHolder": "נדרש שם בעל החשבון"
     },
     "recruitWizardTitle": "גיוס שותף או שגריר",
     "perRecruitRateHint": "נצבר כשסטודנט שהביא המגויס הזה משלם.",

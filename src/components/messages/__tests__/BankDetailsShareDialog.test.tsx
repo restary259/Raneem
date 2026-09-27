@@ -30,6 +30,7 @@ vi.mock('@/lib/router-compat', () => ({
 
 const EMPTY: BankDetailsPayload = {
   bankCountry: 'il',
+  bankHolder: '',
   bankName: '',
   bankBranch: '',
   bankAccount: '',
@@ -39,6 +40,7 @@ const EMPTY: BankDetailsPayload = {
 
 const FILLED: BankDetailsPayload = {
   bankCountry: 'il',
+  bankHolder: 'Moshe Cohen',
   bankName: 'Bank Hapoalim',
   bankBranch: '123',
   bankAccount: '456789',

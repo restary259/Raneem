@@ -3866,6 +3866,7 @@ export type Database = {
           agent_id: string | null
           apply_form_enabled: boolean
           arrival_date: string | null
+          bank_account_holder: string | null
           bank_account_number: string | null
           bank_branch: string | null
           bank_country: string | null
@@ -3938,6 +3939,7 @@ export type Database = {
           agent_id?: string | null
           apply_form_enabled?: boolean
           arrival_date?: string | null
+          bank_account_holder?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
           bank_country?: string | null
@@ -4010,6 +4012,7 @@ export type Database = {
           agent_id?: string | null
           apply_form_enabled?: boolean
           arrival_date?: string | null
+          bank_account_holder?: string | null
           bank_account_number?: string | null
           bank_branch?: string | null
           bank_country?: string | null

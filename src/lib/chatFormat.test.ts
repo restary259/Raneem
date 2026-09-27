@@ -9,6 +9,7 @@ import {
 
 const IL: BankDetailsPayload = {
   bankCountry: "il",
+  bankHolder: "Moshe Cohen",
   bankName: "Bank Hapoalim",
   bankBranch: "123",
   bankAccount: "456789",
@@ -18,6 +19,7 @@ const IL: BankDetailsPayload = {
 
 const DE: BankDetailsPayload = {
   bankCountry: "de",
+  bankHolder: "Anna Schmidt",
   bankName: "Commerzbank",
   bankBranch: "",
   bankAccount: "",
@@ -42,7 +44,7 @@ describe("chatFormat bank-details share", () => {
   it("reports empty details as not shareable", () => {
     expect(hasBankDetails(null)).toBe(false);
     expect(
-      hasBankDetails({ bankCountry: "il", bankName: "", bankBranch: "", bankAccount: "", iban: "", bic: "" }),
+      hasBankDetails({ bankCountry: "il", bankHolder: "", bankName: "", bankBranch: "", bankAccount: "", iban: "", bic: "" }),
     ).toBe(false);
     expect(hasBankDetails(IL)).toBe(true);
   });
@@ -59,6 +61,7 @@ describe("chatFormat bank-details share", () => {
 
   it("keeps the human-readable fallback block for admins", () => {
     const body = buildBankDetailsBody(IL);
+    expect(body).toContain("Account holder: Moshe Cohen");
     expect(body).toContain("Bank name: Bank Hapoalim");
     expect(body).toContain("IBAN: IL620108000000099999999");
     // blank fields render the em-dash placeholder, never "undefined"

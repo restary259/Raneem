@@ -13,6 +13,7 @@ type BankCountry = "il" | "de";
 
 interface BankData {
   bank_country: BankCountry;
+  bank_account_holder: string;
   bank_name: string;
   bank_branch: string;
   bank_account_number: string;
@@ -23,6 +24,7 @@ interface BankData {
 
 const EMPTY: BankData = {
   bank_country: "il",
+  bank_account_holder: "",
   bank_name: "",
   bank_branch: "",
   bank_account_number: "",
@@ -33,10 +35,11 @@ const EMPTY: BankData = {
 
 /**
  * Shared payout-bank beneficiary editor. Reads/writes the single set of profiles
- * bank columns (bank_country, bank_name, bank_branch, bank_account_number, iban,
- * bic, iban_confirmed_at) that every payout-earning role uses. The
- * restrict_profiles_write trigger blocks non-admins from changing the confirmed
- * bank fields once iban_confirmed_at is set; this form never writes that column.
+ * bank columns (bank_country, bank_account_holder, bank_name, bank_branch,
+ * bank_account_number, iban, bic, iban_confirmed_at) that every payout-earning
+ * role uses. The restrict_profiles_write trigger blocks non-admins from changing
+ * the confirmed bank fields once iban_confirmed_at is set; this form never
+ * writes that column.
  *
  * One implementation for Partner, Ambassador and Agent — do not fork.
  */
@@ -54,13 +57,14 @@ export default function BankDetailsEditor({ userId }: { userId: string }) {
     (async () => {
       const { data: row } = await (supabase as any)
         .from("profiles")
-        .select("bank_country, bank_name, bank_branch, bank_account_number, iban, bic, iban_confirmed_at")
+        .select("bank_country, bank_account_holder, bank_name, bank_branch, bank_account_number, iban, bic, iban_confirmed_at")
         .eq("id", userId)
         .maybeSingle();
       if (!active) return;
       if (row) {
         setData({
           bank_country: (row.bank_country as BankCountry) ?? "il",
+          bank_account_holder: row.bank_account_holder ?? "",
           bank_name: row.bank_name ?? "",
           bank_branch: row.bank_branch ?? "",
           bank_account_number: row.bank_account_number ?? "",
@@ -80,6 +84,10 @@ export default function BankDetailsEditor({ userId }: { userId: string }) {
     setData((d) => ({ ...d, [field]: value }));
 
   const save = async () => {
+    if (!data.bank_account_holder.trim()) {
+      toast({ variant: "destructive", description: t("agent.bank.errHolder", "Account holder name is required") });
+      return;
+    }
     if (data.bank_country === "il") {
       if (!data.bank_name.trim()) {
         toast({ variant: "destructive", description: t("agent.bank.errBankName", "Bank name is required") });
@@ -109,6 +117,7 @@ export default function BankDetailsEditor({ userId }: { userId: string }) {
       .from("profiles")
       .update({
         bank_country: data.bank_country,
+        bank_account_holder: data.bank_account_holder.trim() || null,
         bank_name: data.bank_name.trim() || null,
         bank_branch: data.bank_country === "il" ? (data.bank_branch.trim() || null) : null,
         bank_account_number: data.bank_country === "il" ? (data.bank_account_number.trim() || null) : null,
@@ -179,6 +188,11 @@ export default function BankDetailsEditor({ userId }: { userId: string }) {
             {data.bank_country === "il" ? (
               <>
                 <div className="space-y-1.5">
+                  <Label htmlFor="bd-holder">{t("agent.bank.accountHolder", "Account holder name")}</Label>
+                  <Input id="bd-holder" value={data.bank_account_holder} disabled={locked} onChange={(e) => update("bank_account_holder", e.target.value)} placeholder={t("agent.bank.accountHolderPlaceholder", "Full name on the account")} />
+                  <p className="text-xs text-muted-foreground">{t("agent.bank.accountHolderHint", "Must match the name registered with the bank.")}</p>
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="bd-name">{t("agent.bank.bankName", "Bank name")}</Label>
                   <Input id="bd-name" value={data.bank_name} disabled={locked} onChange={(e) => update("bank_name", e.target.value)} placeholder={t("agent.bank.bankNamePlaceholder", "e.g. Bank Hapoalim")} />
                 </div>
@@ -200,6 +214,11 @@ export default function BankDetailsEditor({ userId }: { userId: string }) {
               </>
             ) : (
               <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="bd-holder-de">{t("agent.bank.accountHolder", "Account holder name")}</Label>
+                  <Input id="bd-holder-de" value={data.bank_account_holder} disabled={locked} onChange={(e) => update("bank_account_holder", e.target.value)} placeholder={t("agent.bank.accountHolderPlaceholder", "Full name on the account")} />
+                  <p className="text-xs text-muted-foreground">{t("agent.bank.accountHolderHint", "Must match the name registered with the bank.")}</p>
+                </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="bd-iban-de">{t("agent.bank.iban", "IBAN")}</Label>
                   <Input id="bd-iban-de" value={data.iban} disabled={locked} onChange={(e) => update("iban", e.target.value)} dir="ltr" placeholder="DE89 3704 0044 0532 0130 00" className="font-mono" />

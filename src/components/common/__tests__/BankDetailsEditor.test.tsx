@@ -63,6 +63,7 @@ describe('BankDetailsEditor', () => {
   it('loads existing Israeli details into the fields', async () => {
     state.row = {
       bank_country: 'il',
+      bank_account_holder: 'Moshe Cohen',
       bank_name: 'Bank Hapoalim',
       bank_branch: '123',
       bank_account_number: '456789',
@@ -74,6 +75,7 @@ describe('BankDetailsEditor', () => {
     render(<BankDetailsEditor userId="u1" />);
 
     expect(await screen.findByDisplayValue('Bank Hapoalim')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Moshe Cohen')).toBeInTheDocument();
     expect(screen.getByDisplayValue('123')).toBeInTheDocument();
     expect(screen.getByDisplayValue('456789')).toBeInTheDocument();
     // IL hides the German-only BIC field
@@ -95,6 +97,7 @@ describe('BankDetailsEditor', () => {
   it('saves the full column payload including bank_country and bic', async () => {
     state.row = {
       bank_country: 'de',
+      bank_account_holder: 'Anna Schmidt',
       bank_name: 'Commerzbank',
       bank_branch: null,
       bank_account_number: null,
@@ -111,6 +114,7 @@ describe('BankDetailsEditor', () => {
     await waitFor(() => expect(state.updatePayload).not.toBeNull());
     expect(state.updatePayload).toEqual({
       bank_country: 'de',
+      bank_account_holder: 'Anna Schmidt',
       bank_name: 'Commerzbank',
       bank_branch: null,
       bank_account_number: null,
@@ -123,6 +127,7 @@ describe('BankDetailsEditor', () => {
   it('disables the country cards, inputs and Save once confirmed', async () => {
     state.row = {
       bank_country: 'il',
+      bank_account_holder: 'Moshe Cohen',
       bank_name: 'Bank Hapoalim',
       bank_branch: '123',
       bank_account_number: '456789',
@@ -135,12 +140,13 @@ describe('BankDetailsEditor', () => {
     await screen.findByDisplayValue('Bank Hapoalim');
 
     expect(screen.getByDisplayValue('Bank Hapoalim')).toBeDisabled();
+    expect(screen.getByDisplayValue('Moshe Cohen')).toBeDisabled();
     expect(screen.getByDisplayValue('123')).toBeDisabled();
     expect(screen.getByRole('button', { name: /Save bank details/ })).toBeDisabled();
     expect(screen.getByText('Bank details are confirmed and can only be changed by an admin.')).toBeInTheDocument();
   });
 
-  it('rejects missing Israeli bank information with a destructive toast', async () => {
+  it('rejects a missing account holder name with a destructive toast', async () => {
     render(<BankDetailsEditor userId="u1" />);
     await screen.findByText('Israeli account');
 
@@ -149,7 +155,31 @@ describe('BankDetailsEditor', () => {
     expect(state.updatePayload).toBeNull();
     expect(state.toast).toHaveBeenCalledWith({
       variant: 'destructive',
-      description: 'Bank name is required',
+      description: 'Account holder name is required',
+    });
+  });
+
+  it('requires the holder even when the rest of the Israeli fields are filled', async () => {
+    state.row = {
+      bank_country: 'il',
+      bank_account_holder: null,
+      bank_name: 'Bank Hapoalim',
+      bank_branch: '123',
+      bank_account_number: '456789',
+      iban: null,
+      bic: null,
+      iban_confirmed_at: null,
+    };
+
+    render(<BankDetailsEditor userId="u1" />);
+    await screen.findByDisplayValue('Bank Hapoalim');
+
+    await userEvent.click(screen.getByRole('button', { name: /Save bank details/ }));
+
+    expect(state.updatePayload).toBeNull();
+    expect(state.toast).toHaveBeenCalledWith({
+      variant: 'destructive',
+      description: 'Account holder name is required',
     });
   });
 });

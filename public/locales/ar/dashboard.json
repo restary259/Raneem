@@ -4346,7 +4346,8 @@
       "country": "الدولة",
       "addDetails": "أضف التفاصيل البنكية",
       "manageDetails": "إدارة التفاصيل البنكية",
-      "missing": "تفاصيلك البنكية غير محفوظة بعد. أضفها أولاً."
+      "missing": "تفاصيلك البنكية غير محفوظة بعد. أضفها أولاً.",
+      "accountHolder": "صاحب الحساب"
     },
     "section": {
       "direct": "مباشر",
@@ -4598,7 +4599,11 @@
       "errBranch": "رقم الفرع يجب أن يكون 2-4 أرقام",
       "errAccount": "رقم الحساب يجب أن يكون 4-12 رقماً",
       "errIban": "أدخل IBAN صحيح",
-      "errIbanRequired": "IBAN أو اسم البنك مطلوب"
+      "errIbanRequired": "IBAN أو اسم البنك مطلوب",
+      "accountHolder": "اسم صاحب الحساب",
+      "accountHolderPlaceholder": "الاسم الكامل كما في الحساب",
+      "accountHolderHint": "يجب أن يطابق الاسم المسجّل لدى البنك.",
+      "errHolder": "اسم صاحب الحساب مطلوب"
     },
     "recruitWizardTitle": "تجنيد شريك أو سفير",
     "perRecruitRateHint": "تُكتسب عندما يدفع طالب أحضره هذا المُجنَّد.",

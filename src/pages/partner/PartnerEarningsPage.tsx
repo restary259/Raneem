@@ -55,7 +55,7 @@ export default function PartnerEarningsPage() {
       (supabase as any).rpc("get_my_role"),
       (supabase as any)
         .from("profiles")
-        .select("bank_name, bank_branch, bank_account_number, iban, bic")
+        .select("bank_account_holder, bank_name, bank_branch, bank_account_number, iban, bic")
         .eq("id", uid)
         .maybeSingle(),
     ]);
@@ -64,7 +64,7 @@ export default function PartnerEarningsPage() {
     // needed here — the editor itself lives on the profile page.
     const bank = bankRes?.data;
     setBankDetailsReady(
-      Boolean(bank?.bank_name || bank?.bank_branch || bank?.bank_account_number || bank?.iban || bank?.bic),
+      Boolean(bank?.bank_account_holder || bank?.bank_name || bank?.bank_branch || bank?.bank_account_number || bank?.iban || bank?.bic),
     );
 
     const globalRate = roleRes?.data === "ambassador"
