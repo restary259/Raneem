@@ -4147,6 +4147,32 @@
       "loading": "Loading preview…",
       "retry": "Retry"
     },
+    "voice": {
+      "record": "Record voice message",
+      "recordHint": "Hold to record · slide left to cancel · slide up to lock",
+      "message": "Voice message",
+      "recording": "Recording",
+      "cancel": "Cancel recording",
+      "stop": "Stop recording",
+      "lockHint": "↑ Lock",
+      "send": "Send voice message",
+      "delete": "Delete recording",
+      "play": "Play voice message",
+      "pause": "Pause voice message",
+      "progress": "Voice message progress",
+      "sending": "Sending voice message…",
+      "error": {
+        "unsupported": "Voice recording is not supported in this browser.",
+        "permission": "Microphone access was denied. Check your browser permission and try again.",
+        "unavailable": "The microphone could not be started.",
+        "empty": "No audio was captured.",
+        "duration": "The recording is outside the allowed length.",
+        "size": "The recording is too large.",
+        "format": "This browser produced an unsupported audio format.",
+        "upload": "The voice message could not be sent.",
+        "playback": "The recording could not be played."
+      }
+    },
     "openAttachment": "Open attachment",
     "request": {
       "badge": "Document request",
