@@ -76,15 +76,18 @@ describe('calculated grade never satisfies an official requirement', () => {
   });
 });
 
-describe('unverified requirements never pass', () => {
-  it('reports an unverified programme language requirement as NOT_DETERMINABLE', () => {
+describe('verified programme requirements are evaluated', () => {
+  it('evaluates TUM Informatik against its verified German requirement', () => {
     const row = evaluateProgram(cs, tum, strong).rows.find((r) => r.key === 'language')!;
-    expect(row.status).toBe('NOT_DETERMINABLE');
-    expect(row.requirement).toBeNull();
+    expect(row.requirement).toContain('German B2');
+    expect(row.status).toBe('MEETS');
   });
 
-  it('never returns MEETS overall while facts are missing', () => {
-    expect(evaluateProgram(cs, tum, strong).overall).toBe('NOT_DETERMINABLE');
+  it('still stays NOT_DETERMINABLE when a verified requirement has no student evidence', () => {
+    const row = evaluateProgram(cs, tum, { ...strong, germanLevel: undefined, germanCertificate: undefined }).rows.find(
+      (r) => r.key === 'language',
+    )!;
+    expect(row.status).toBe('NOT_DETERMINABLE');
   });
 });
 
