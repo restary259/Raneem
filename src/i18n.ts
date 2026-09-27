@@ -18,6 +18,7 @@ import broadcastHe from './locales/he/broadcast.json';
 import commonHe from './locales/he/common.json';
 import contactHe from './locales/he/contact.json';
 import landingHe from './locales/he/landing.json';
+import legalHe from './locales/he/legal.json';
 
 const savedLang = typeof window !== 'undefined' ? localStorage.getItem('i18n_lang') : null;
 
@@ -38,7 +39,7 @@ i18n
     resources: {
       ar: { common: commonAr, landing: landingAr, contact: contactAr, legal: legalAr, broadcast: broadcastAr },
       en: { common: commonEn, landing: landingEn, contact: contactEn, legal: legalEn, broadcast: broadcastEn },
-      he: { common: commonHe, landing: landingHe, contact: contactHe, broadcast: broadcastHe },
+      he: { common: commonHe, landing: landingHe, contact: contactHe, broadcast: broadcastHe, legal: legalHe },
     },
     debug: false,
     interpolation: {

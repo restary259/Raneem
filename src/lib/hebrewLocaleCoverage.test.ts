@@ -15,12 +15,11 @@ const ROOT = process.cwd();
 const EN_DIR = path.join(ROOT, "public", "locales", "en");
 const HE_DIR = path.join(ROOT, "public", "locales", "he");
 
-// `dashboard.json` is the in-app UI (~4.7k keys). It is tracked separately so a
-// partial rollout does not block the public-facing namespaces, which are
-// complete. `legal` and `faq` carry legally operative and factual content and
-// are pending native review.
-const TRACKED_SEPARATELY = new Set(["dashboard.json"]);
-const PENDING_NATIVE_REVIEW = new Set(["legal.json", "faq.json"]);
+// `dashboard.json` is the in-app UI (~4.8k keys); it lives in the same
+// public/locales tree as everything else, so it is covered by the standard
+// check rather than exempted.
+const TRACKED_SEPARATELY = new Set<string>([]);
+const PENDING_NATIVE_REVIEW = new Set<string>([]);
 
 const leafPaths = (node: unknown, prefix = ""): string[] => {
   if (Array.isArray(node)) {
@@ -81,7 +80,7 @@ describe("he locale coverage", () => {
  * the HTTP backend — otherwise first paint and on-demand loads disagree.
  */
 describe("he bundled locale copies", () => {
-  const BUNDLED = ["common", "landing", "contact", "broadcast"];
+  const BUNDLED = ["common", "landing", "contact", "broadcast", "legal"];
 
   it.each(BUNDLED)("src/locales/he/%s.json matches public/locales/he", (ns) => {
     const bundled = read(path.join(ROOT, "src", "locales", "he"), `${ns}.json`);
