@@ -332,7 +332,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                           title={collapsed ? navLabel(item.key) : undefined}
                         >
                           <item.icon className="h-4 w-4 shrink-0" />
-                          {!collapsed && <span className="flex-1 text-start">{t(item.key, item.key)}</span>}
+                          {!collapsed && <span className="flex-1 text-start">{navLabel(item.key)}</span>}
                           {!collapsed && (
                             <ChevronDown
                               className={cn(
