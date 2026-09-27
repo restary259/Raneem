@@ -20,13 +20,14 @@ interface Props {
  * page-break overlay shows exactly where the PDF will slice.
  */
 const CVPreview: React.FC<Props> = ({ data, id = "cv-preview" }) => {
-  const { t, i18n } = useTranslation("resources");
+  const { t } = useTranslation("resources");
   const dir = data.contentLanguage === "ar" ? "rtl" : "ltr";
   // UI direction (not the CV content language): in RTL the sheet's box is
   // laid out from the right edge, so the scale transform must anchor at
   // "top right" — "top left" would shrink the sheet leftward and push it
-  // off the left edge of the column.
-  const uiRtl = i18n.dir() === "rtl";
+  // off the left edge of the column. Read the live <html dir> so tests that
+  // mock useTranslation without i18n still work.
+  const uiRtl = typeof document !== "undefined" && document.dir === "rtl";
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
