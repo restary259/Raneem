@@ -31,6 +31,7 @@ import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
 import ProfileFeatureToggle from "./ProfileFeatureToggle";
 import VoiceCallsToggle from "./VoiceCallsToggle";
+import ReassignAppointmentsToggle from "./ReassignAppointmentsToggle";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
 import { cn } from "@/lib/utils";
 import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";

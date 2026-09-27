@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 interface Props {
   userId: string;
   /** The profiles boolean column this toggle owns (admin-only guarded column). */
-  column: 'referral_code_enabled' | 'apply_form_enabled' | 'whatsapp_inbox_enabled' | 'internal_team_chat_enabled' | 'voice_calls_enabled';
+  column: 'referral_code_enabled' | 'apply_form_enabled' | 'whatsapp_inbox_enabled' | 'internal_team_chat_enabled' | 'voice_calls_enabled' | 'can_reassign_office_appointments';
   /**
    * Accessible name for the switch. The visible row text is a sibling, not a
    * <label>, so without this the switch reaches assistive tech unnamed. Also
