@@ -12,6 +12,7 @@ import { registerServiceWorker } from "@/utils/pwaUtils";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { DashboardRouteFallback, PublicRouteFallback } from "@/components/shell/RouteFallbacks";
+import { VoiceCallProvider } from "@/contexts/VoiceCallContext";
 
 // Non-critical global widgets — deferred off the critical path
 const WhatsAppFloatingButton = lazy(() => import("@/components/common/WhatsAppFloatingButton"));
@@ -104,9 +105,17 @@ const AppShell = () => {
         )}
         {/* A layout-matched shell paints immediately while the route chunk
             loads, instead of a blank frame that reads as a frozen app. */}
-        <Suspense fallback={isDashboardPath ? <DashboardRouteFallback /> : <PublicRouteFallback />}>
-          <Outlet />
-        </Suspense>
+        {isDashboardPath ? (
+          <VoiceCallProvider>
+            <Suspense fallback={<DashboardRouteFallback />}>
+              <Outlet />
+            </Suspense>
+          </VoiceCallProvider>
+        ) : (
+          <Suspense fallback={<PublicRouteFallback />}>
+            <Outlet />
+          </Suspense>
+        )}
         {!isApplyPage && !isDashboardPath && idleReady && (
           <Suspense fallback={null}>
             <WhatsAppFloatingButton />

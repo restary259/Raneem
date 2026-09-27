@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import CaseMessages from "@/components/cases/CaseMessages";
 import DirectMessages from "@/components/messages/DirectMessages";
+import VoiceCallButton from "@/components/messages/VoiceCallButton";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
@@ -153,7 +154,12 @@ export default function StudentMessagesPage() {
         ) : showPayout ? (
           <DirectMessages threadId={payoutThreadId!} className="flex-1 overflow-hidden" />
         ) : showTeam ? (
-          <DirectMessages threadId={teamThreadId!} className="flex-1 overflow-hidden" />
+          <>
+            <div className="flex items-center justify-end border-b p-2">
+              <VoiceCallButton threadId={teamThreadId!} />
+            </div>
+            <DirectMessages threadId={teamThreadId!} className="flex-1 overflow-hidden" />
+          </>
         ) : fallbackPayout ? (
           <DirectMessages threadId={payoutThreadId!} className="flex-1 overflow-hidden" />
         ) : (

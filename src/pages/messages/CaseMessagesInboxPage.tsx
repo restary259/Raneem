@@ -33,6 +33,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import CaseMessages from "@/components/cases/CaseMessages";
 import DirectMessages from "@/components/messages/DirectMessages";
+import VoiceCallButton from "@/components/messages/VoiceCallButton";
 import ThreadList, { type ThreadListItem } from "@/components/messages/ThreadList";
 import StaffPickerDialog from "@/components/messages/StaffPickerDialog";
 import {
@@ -489,6 +490,13 @@ export default function CaseMessagesInboxPage() {
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1 md:gap-2">
+                  {activeDirect && (
+                    <VoiceCallButton
+                      threadId={activeDirect.threadId}
+                      otherUserId={activeDirect.otherUserId}
+                      otherUserName={activeDirect.otherUserName}
+                    />
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
