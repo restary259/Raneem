@@ -44,6 +44,7 @@ import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminOfficesRouteImport } from './routes/admin.offices'
 import { Route as AdminPipelineRouteImport } from './routes/admin.pipeline'
 import { Route as AdminProgramsRouteImport } from './routes/admin.programs'
 import { Route as AdminReferralsRouteImport } from './routes/admin.referrals'
@@ -291,6 +292,11 @@ const AdminMembersRoute = AdminMembersRouteImport.update({
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOfficesRoute = AdminOfficesRouteImport.update({
+  id: '/offices',
+  path: '/offices',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPipelineRoute = AdminPipelineRouteImport.update({
@@ -701,9 +707,11 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/offices': typeof AdminOfficesRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
+  '/admin/offices': typeof AdminOfficesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spreadsheet': typeof AdminSpreadsheetRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -809,6 +817,7 @@ export interface FileRoutesByTo {
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
+  '/admin/offices': typeof AdminOfficesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spreadsheet': typeof AdminSpreadsheetRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -920,6 +929,7 @@ export interface FileRoutesById {
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
+  '/admin/offices': typeof AdminOfficesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spreadsheet': typeof AdminSpreadsheetRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -1032,6 +1042,8 @@ export interface FileRouteTypes {
     | '/admin/pipeline'
     | '/admin/programs'
     | '/admin/referrals'
+    | '/admin/offices'
+    | '/admin/offices'
     | '/admin/settings'
     | '/admin/spreadsheet'
     | '/admin/students'
@@ -1604,6 +1616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMembersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/offices': {
+      id: '/admin/offices'
+      path: '/offices'
+      fullPath: '/admin/offices'
+      preLoaderRoute: typeof AdminOfficesRouteImport
+      parentRoute: typeof AdminRouteImport
+    }
     '/admin/messages': {
       id: '/admin/messages'
       path: '/messages'
@@ -1631,6 +1650,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/referrals'
       preLoaderRoute: typeof AdminReferralsRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/offices': {
+      id: '/admin/offices'
+      path: '/offices'
+      fullPath: '/admin/offices'
+      preLoaderRoute: typeof AdminOfficesRouteImport
+      parentRoute: typeof AdminRouteImport
     }
     '/admin/settings': {
       id: '/admin/settings'
@@ -2136,6 +2162,7 @@ interface AdminRouteChildren {
   AdminPipelineRoute: typeof AdminPipelineRoute
   AdminProgramsRoute: typeof AdminProgramsRoute
   AdminReferralsRoute: typeof AdminReferralsRoute
+  AdminOfficesRoute: typeof AdminOfficesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSpreadsheetRoute: typeof AdminSpreadsheetRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
@@ -2158,6 +2185,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPipelineRoute: AdminPipelineRoute,
   AdminProgramsRoute: AdminProgramsRoute,
   AdminReferralsRoute: AdminReferralsRoute,
+  AdminOfficesRoute: AdminOfficesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSpreadsheetRoute: AdminSpreadsheetRoute,
   AdminStudentsRoute: AdminStudentsRoute,
