@@ -82,7 +82,7 @@ function intervalOverlap(startA: number, endA: number, startB: number, endB: num
 }
 
 function timeToMinutes(value: string) {
-  const match = /^([0-2]\\d):([0-5]\\d)/.exec(value);
+  const match = /^([0-2]\d):([0-5]\d)/.exec(value);
   if (!match) return null;
   return Number(match[1]) * 60 + Number(match[2]);
 }
@@ -333,9 +333,6 @@ export const startPublicBooking = createServerFn({ method: "POST" })
   .inputValidator(function (input) { return publicBookingStartRequest.parse(input); })
   .handler(async function ({ data }) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // The RPC exists on the live database but is missing from the generated
-    // types snapshot (types.ts is auto-generated — do not hand-edit).
-    // @ts-expect-error -- create_public_booking_session not in generated types
     const result = await supabaseAdmin.rpc("create_public_booking_session", {
       p_full_name: data.fullName,
       p_phone: data.phone,
@@ -379,7 +376,7 @@ export const managePublicBooking = createServerFn({ method: "POST" })
       p_token_hash: tokenHash,
       p_action: data.action,
       p_slot: data.slot,
-      p_office_id: data.officeId || null,
+      p_office_id: data.officeId || undefined,
       p_service_type: data.serviceType || "consultation",
     });
 

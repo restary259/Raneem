@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { Instagram, Facebook, Mail, MessageCircle, Sparkles } from "lucide-react";
+import { Instagram, Facebook, Mail, MessageCircle, Sparkles, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router-compat";
@@ -202,6 +202,7 @@ const Contact = () => {
               <h3 className="text-2xl font-bold text-primary">{t("contact.mapTitle")}</h3>
               <p className="mt-2 text-muted-foreground">{t("contact.mapSubtitle")}</p>
               <div className="mt-5 h-[320px] overflow-hidden rounded-2xl border border-border shadow-surface md:h-[390px]"><Map /></div>
+              <a href="https://maps.app.goo.gl/TdyRtqBiTX9CY8y39" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"><MapPin className="h-4 w-4" aria-hidden="true" />{t("contact.openMap")}</a>
             </div>
             <div className="rounded-2xl border border-border bg-background p-6">
               <h3 className="mb-4 text-center text-xl font-semibold">{t("contact.follow")}</h3>

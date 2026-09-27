@@ -6818,6 +6818,10 @@ export type Database = {
         Args: { p_case_id: string; p_token_hash: string }
         Returns: undefined
       }
+      create_public_booking_session: {
+        Args: { p_full_name: string; p_phone: string }
+        Returns: Json
+      }
       delete_catalog_entity: {
         Args: { p_id: string; p_kind: string }
         Returns: Json
@@ -7583,7 +7587,13 @@ export type Database = {
         Returns: undefined
       }
       manage_public_appointment: {
-        Args: { p_action: string; p_slot?: string; p_token_hash: string }
+        Args: {
+          p_action: string
+          p_office_id?: string
+          p_service_type?: string
+          p_slot?: string
+          p_token_hash: string
+        }
         Returns: Json
       }
       mark_case_messages_read: {

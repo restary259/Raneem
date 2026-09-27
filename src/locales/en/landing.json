@@ -656,5 +656,9 @@
       "arrivalTitle": "Preparation does not end with an admission application",
       "arrivalBody": "Visa-file organization, insurance and accommodation coordination, travel preparation, and understanding your first steps in Germany are part of a connected journey."
     }
+  },
+  "office": {
+    "label": "DARB office",
+    "openMap": "Open in Google Maps"
   }
 }

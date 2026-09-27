@@ -391,5 +391,9 @@
     "manageVisit": "שלבי ההזמנה",
     "heroTitle": "הגשת בקשה",
     "heroSubtitle": "מלאו כמה פרטים בסיסיים, וצוות DARB ילווה אתכם בכל שלב עד ההגעה לגרמניה."
+  },
+  "office": {
+    "label": "משרד DARB",
+    "openMap": "פתיחה במפות Google"
   }
 }
