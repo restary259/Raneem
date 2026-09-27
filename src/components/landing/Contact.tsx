@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { Instagram, Facebook, Mail, MessageCircle, Sparkles } from "lucide-react";
+import { Instagram, Facebook, Mail, MessageCircle, Sparkles, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router-compat";
