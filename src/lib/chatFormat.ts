@@ -220,6 +220,19 @@ export type AttachmentError = "size" | "mime" | null;
 
 export type VoiceAttachmentError = "size" | "mime" | "duration" | null;
 
+/** Normalize browser MediaRecorder MIME variants to the exact values accepted by the backend. */
+export function normalizeVoiceMime(mime: string): string {
+  const normalized = mime.trim().toLowerCase().replace(/\s+/g, "");
+  if (normalized.startsWith("audio/webm")) {
+    return normalized.includes("codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm";
+  }
+  if (normalized.startsWith("audio/ogg")) {
+    return normalized.includes("codecs=opus") ? "audio/ogg;codecs=opus" : "audio/ogg";
+  }
+  if (normalized.startsWith("audio/mp4")) return "audio/mp4";
+  return normalized;
+}
+
 /** Client-side pre-check; the database validates again on send. */
 export function validateAttachmentFile(file: { size: number; type: string }): AttachmentError {
   if (file.size > MAX_ATTACHMENT_BYTES) return "size";
@@ -234,7 +247,8 @@ export function validateVoiceRecording(
   durationMs: number,
 ): VoiceAttachmentError {
   if (file.size > MAX_ATTACHMENT_BYTES) return "size";
-  if (!VOICE_ATTACHMENT_MIMES.includes(file.type as (typeof VOICE_ATTACHMENT_MIMES)[number])) {
+  const mime = normalizeVoiceMime(file.type);
+  if (!VOICE_ATTACHMENT_MIMES.includes(mime as (typeof VOICE_ATTACHMENT_MIMES)[number])) {
     return "mime";
   }
   if (!Number.isFinite(durationMs) || durationMs <= 0 || durationMs > MAX_VOICE_DURATION_MS) {
