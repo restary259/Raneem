@@ -34,12 +34,15 @@ function useUnreadNotifications(enabled: boolean): number {
 
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     let disposed = false;
-    const channelName = `app-badge-notifications-${user.id}`;
+    // Unique per mount/attempt: supabase.channel() returns an existing channel
+    // for a reused topic, and adding callbacks after subscribe() throws.
+    const channelName = () =>
+      `app-badge-notifications-${user.id}-${Math.random().toString(36).slice(2, 10)}`;
 
     const subscribe = () => {
       if (disposed) return;
       const channel = supabase
-        .channel(channelName)
+        .channel(channelName())
         .on(
           "postgres_changes",
           {
@@ -64,10 +67,12 @@ function useUnreadNotifications(enabled: boolean): number {
           if (status === "SUBSCRIBED") return;
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             if (disposed) return;
-            retryTimer = setTimeout(() => {
+            if (retryTimer) return;
+            retryTimer = setTimeout(async () => {
               retryTimer = undefined;
-              void supabase.removeChannel(channel);
-              subscribe();
+              await supabase.removeChannel(channel).catch(() => undefined);
+              if (disposed) return;
+              current = subscribe();
               void loadRef.current();
             }, REALTIME_RETRY_MS);
           }
@@ -76,12 +81,12 @@ function useUnreadNotifications(enabled: boolean): number {
       return channel;
     };
 
-    const channel = subscribe();
+    let current = subscribe();
 
     return () => {
       disposed = true;
       if (retryTimer) clearTimeout(retryTimer);
-      void supabase.removeChannel(channel);
+      if (current) void supabase.removeChannel(current);
     };
   }, [enabled, user?.id]);
 

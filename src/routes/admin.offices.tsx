@@ -1,13 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import AdminOfficesPage from "@/pages/admin/AdminOfficesPage";
 
 export const Route = createFileRoute("/admin/offices")({
-  component: function AdminOfficesRoute() {
-    return (
-      <ProtectedRoute allowedRoles={["admin"]}>
-        <DashboardLayout role="admin" />
-      </ProtectedRoute>
-    );
-  },
+  component: AdminOfficesPage,
 });

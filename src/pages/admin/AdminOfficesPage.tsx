@@ -90,7 +90,7 @@ export default function AdminOfficesPage() {
         slug: "الرابط", code: "رمز المكتب", bookingEnabled: "السماح بالحجز", interval: "الفاصل (دقيقة)", duration: "مدة الموعد (دقيقة)",
         lead: "أقل مدة قبل الحجز (دقيقة)", horizon: "أقصى أيام للحجز", closed: "مغلق", open: "مفتوح", service: "الخدمة", member: "عضو الفريق",
         addRule: "إضافة توجيه", none: "لا توجد قواعد إضافية", warning: "لتفعيل الحجز يجب اختيار عضو فريق أساسي.",
-        partner: "شريك", franchise: "فرانشايز", darb: "DARB", invalid: "يرجى تعبئة اسم المكتب والمدينة.",
+        partner: "شريك", franchise: "فرانشايز", darb: "DARB", invalid: "يرجى تعبئة اسم المكتب والمدينة.", samePerson: "يجب أن يكون العضو الاحتياط مختلفاً عن العضو الأساسي.", saved: "تم حفظ المكتب",
       };
     }
     if (language.startsWith("he")) {
@@ -103,7 +103,7 @@ export default function AdminOfficesPage() {
         slug: "Slug", code: "קוד משרד", bookingEnabled: "אפשר הזמנות", interval: "מרווח (דקות)", duration: "משך (דקות)",
         lead: "מינימום לפני הזמנה (דקות)", horizon: "מקסימום ימים קדימה", closed: "סגור", open: "פתוח", service: "שירות", member: "חבר צוות",
         addRule: "הוספת ניתוב", none: "אין כללי ניתוב נוספים", warning: "יש לבחור חבר צוות ראשי לפני הפעלת הזמנות.",
-        partner: "שותף", franchise: "זכיין", darb: "DARB", invalid: "יש למלא שם משרד ועיר.",
+        partner: "שותף", franchise: "זכיין", darb: "DARB", invalid: "יש למלא שם משרד ועיר.", samePerson: "חבר הגיבוי חייב להיות שונה מהחבר הראשי.", saved: "המשרד נשמר",
       };
     }
     return {
@@ -115,7 +115,7 @@ export default function AdminOfficesPage() {
       slug: "Public slug", code: "Office code", bookingEnabled: "Enable booking", interval: "Slot interval (minutes)", duration: "Default duration (minutes)",
       lead: "Minimum lead time (minutes)", horizon: "Maximum days ahead", closed: "Closed", open: "Open", service: "Service", member: "Team member",
       addRule: "Add routing rule", none: "No additional routing rules", warning: "Select a primary team member before enabling booking.",
-      partner: "Partner", franchise: "Franchise", darb: "DARB", invalid: "Office name and city are required.",
+      partner: "Partner", franchise: "Franchise", darb: "DARB", invalid: "Office name and city are required.", samePerson: "Backup member must be different from the primary member.", saved: "Office saved",
     };
   }, [language]);
 
@@ -218,7 +218,7 @@ export default function AdminOfficesPage() {
       return;
     }
     if (form.primary_user_id && form.backup_user_id && form.primary_user_id === form.backup_user_id) {
-      toast({ variant: "destructive", description: labels.warning });
+      toast({ variant: "destructive", description: labels.samePerson });
       return;
     }
 
@@ -278,7 +278,7 @@ export default function AdminOfficesPage() {
 
       if (error) throw error;
 
-      toast({ description: labels.save });
+      toast({ description: labels.saved });
       setDialogOpen(false);
       await load();
     } catch (error: any) {
