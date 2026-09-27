@@ -5,16 +5,13 @@ import { formatThreadTime, initials } from "@/lib/chatFormat";
 import { toneClasses } from "@/lib/statusTokens";
 
 /** Sidebar sections, in the order staff work through them. */
-export type ThreadCategory = "direct" | "cases" | "partners" | "whatsapp";
+export type ThreadCategory = "direct" | "teams" | "cases" | "partners" | "whatsapp";
 
-export const THREAD_CATEGORY_ORDER: ThreadCategory[] = ["direct", "cases", "partners", "whatsapp"];
+export const THREAD_CATEGORY_ORDER: ThreadCategory[] = ["direct", "teams", "cases", "partners", "whatsapp"];
 
 /** One restrained colour identity per section — indicators only, never fills.
  *  Anchored on semantic tones so avatars/badges stay legible in dark & aurora. */
-const CATEGORY_STYLE: Record<
-  ThreadCategory,
-  { bar: string; avatar: string; badge: string; dot: string }
-> = {
+const CATEGORY_STYLE: Record<ThreadCategory, { bar: string; avatar: string; badge: string; dot: string }> = {
   direct: {
     bar: "bg-primary",
     avatar: "bg-primary/15 text-primary",
@@ -98,10 +95,7 @@ export default function ThreadList({
         >
           <span
             aria-hidden="true"
-            className={cn(
-              "absolute inset-y-0 w-1 ltr:left-0 rtl:right-0",
-              active ? style.bar : "bg-transparent",
-            )}
+            className={cn("absolute inset-y-0 w-1 ltr:left-0 rtl:right-0", active ? style.bar : "bg-transparent")}
           />
           <div className="relative mt-0.5 shrink-0">
             <div
@@ -122,41 +116,25 @@ export default function ThreadList({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span
-                className={cn("truncate text-sm", item.unread > 0 ? "font-bold" : "font-medium")}
-              >
+              <span className={cn("truncate text-sm", item.unread > 0 ? "font-bold" : "font-medium")}>
                 {item.title}
               </span>
               {!grouped && (
-                <Badge
-                  variant="outline"
-                  className={cn("shrink-0 text-[11px] font-normal", style.badge)}
-                >
+                <Badge variant="outline" className={cn("shrink-0 text-[11px] font-normal", style.badge)}>
                   {t(`chat.type.${item.type}`)}
                 </Badge>
               )}
             </div>
-            {item.subtitle && (
-              <p className="truncate text-[11px] text-muted-foreground">{item.subtitle}</p>
-            )}
-            <p
-              className={cn(
-                "truncate text-xs",
-                item.unread > 0 ? "text-foreground" : "text-muted-foreground",
-              )}
-            >
+            {item.subtitle && <p className="truncate text-[11px] text-muted-foreground">{item.subtitle}</p>}
+            <p className={cn("truncate text-xs", item.unread > 0 ? "text-foreground" : "text-muted-foreground")}>
               {item.preview}
             </p>
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <span className="text-[11px] tabular-nums text-muted-foreground">
-              {formatThreadTime(item.timestamp)}
-            </span>
+            <span className="text-[11px] tabular-nums text-muted-foreground">{formatThreadTime(item.timestamp)}</span>
             {item.unread > 0 && (
-              <Badge className="h-5 min-w-5 justify-center px-1.5 text-[11px] tabular-nums">
-                {item.unread}
-              </Badge>
+              <Badge className="h-5 min-w-5 justify-center px-1.5 text-[11px] tabular-nums">{item.unread}</Badge>
             )}
           </div>
         </button>
@@ -182,13 +160,9 @@ export default function ThreadList({
               <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {t(`chat.section.${category}`)}
               </span>
-              <span className="text-[11px] tabular-nums text-muted-foreground">
-                {rows.length}
-              </span>
+              <span className="text-[11px] tabular-nums text-muted-foreground">{rows.length}</span>
               {unread > 0 && (
-                <Badge className="ms-auto h-5 min-w-5 justify-center px-1.5 text-[11px] tabular-nums">
-                  {unread}
-                </Badge>
+                <Badge className="ms-auto h-5 min-w-5 justify-center px-1.5 text-[11px] tabular-nums">{unread}</Badge>
               )}
             </div>
             <ul className="divide-y">{rows.map(renderRow)}</ul>
