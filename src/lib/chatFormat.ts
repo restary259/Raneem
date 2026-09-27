@@ -195,6 +195,14 @@ export function splitChatBody(body: string, people: MentionablePerson[]): BodySe
 export const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 export const MAX_VOICE_DURATION_MS = 5 * 60 * 1000;
 
+export const VOICE_ATTACHMENT_MIMES = [
+  "audio/webm",
+  "audio/webm;codecs=opus",
+  "audio/mp4",
+  "audio/ogg",
+  "audio/ogg;codecs=opus",
+] as const;
+
 export const ALLOWED_ATTACHMENT_MIMES = [
   "image/png",
   "image/jpeg",
