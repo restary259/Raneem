@@ -4,6 +4,7 @@ import { Check, GraduationCap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { searchMajors } from "@/data/intel/majorIntel";
 import type { MajorIntel } from "@/data/intel/types";
+import { isArabicUi } from "@/lib/localeData";
 
 export interface MajorValue {
   text: string;
@@ -11,7 +12,8 @@ export interface MajorValue {
 }
 
 export function majorLabel(m: MajorIntel, lang: string) {
-  return lang.startsWith("ar") || lang.startsWith("he") ? m.canonicalAR : m.canonicalEN;
+  // Majors are AR/EN only, so Hebrew reads English rather than Arabic.
+  return isArabicUi(lang) ? m.canonicalAR : m.canonicalEN;
 }
 
 /**
