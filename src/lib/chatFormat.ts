@@ -393,6 +393,8 @@ export const ALLOWED_ATTACHMENT_LABEL = "PNG, JPG, WEBP, GIF, PDF, DOC(X), XLS(X
 /** Bank fields shared from a partner/ambassador/agent profile into the admin chat. */
 export interface BankDetailsPayload {
   bankCountry: string;
+  /** Beneficiary (account owner) name — not the bank's name. */
+  bankHolder: string;
   bankName: string;
   bankBranch: string;
   bankAccount: string;
@@ -411,6 +413,7 @@ export const BANK_DETAILS_MARKER = "::bank-details::";
 export function buildBankDetailsBody(details: BankDetailsPayload): string {
   const json = JSON.stringify(details);
   const human = [
+    `Account holder: ${details.bankHolder || "—"}`,
     `Bank name: ${details.bankName || "—"}`,
     `Branch: ${details.bankBranch || "—"}`,
     `Account number: ${details.bankAccount || "—"}`,
@@ -434,6 +437,7 @@ export function parseBankDetailsBody(body: string | null | undefined): BankDetai
     const parsed = JSON.parse(jsonLine.trim());
     return {
       bankCountry: String(parsed.bankCountry ?? ""),
+      bankHolder: String(parsed.bankHolder ?? ""),
       bankName: String(parsed.bankName ?? ""),
       bankBranch: String(parsed.bankBranch ?? ""),
       bankAccount: String(parsed.bankAccount ?? ""),
@@ -448,5 +452,5 @@ export function parseBankDetailsBody(body: string | null | undefined): BankDetai
 /** True when every bank field is blank (nothing meaningful to share). */
 export function hasBankDetails(d: BankDetailsPayload | null): boolean {
   if (!d) return false;
-  return Boolean(d.bankName || d.bankBranch || d.bankAccount || d.iban || d.bic);
+  return Boolean(d.bankHolder || d.bankName || d.bankBranch || d.bankAccount || d.iban || d.bic);
 }

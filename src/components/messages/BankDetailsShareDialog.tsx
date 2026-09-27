@@ -38,6 +38,7 @@ export default function BankDetailsShareDialog({
   const canSend = hasBankDetails(details);
 
   const fields: { key: string; label: string; value: string; mono?: boolean }[] = [
+    { key: "bankHolder", label: t("chat.bankShare.accountHolder", "Account holder"), value: details?.bankHolder ?? "" },
     { key: "bankName", label: t("chat.bankShare.bankName", "Bank name"), value: details?.bankName ?? "" },
     { key: "branch", label: t("chat.bankShare.branch", "Branch number"), value: details?.bankBranch ?? "" },
     { key: "account", label: t("chat.bankShare.account", "Account number"), value: details?.bankAccount ?? "", mono: true },

@@ -161,11 +161,12 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
     try {
       const { data: row } = await supabase
         .from("profiles")
-        .select("bank_country, bank_name, bank_branch, bank_account_number, iban, bic")
+        .select("bank_country, bank_account_holder, bank_name, bank_branch, bank_account_number, iban, bic")
         .eq("id", user?.id ?? "")
         .maybeSingle();
       setBankDetails({
         bankCountry: (row?.bank_country as string) ?? "",
+        bankHolder: (row?.bank_account_holder as string) ?? "",
         bankName: (row?.bank_name as string) ?? "",
         bankBranch: (row?.bank_branch as string) ?? "",
         bankAccount: (row?.bank_account_number as string) ?? "",

@@ -4328,7 +4328,8 @@
       "country": "Country",
       "addDetails": "Add bank details",
       "manageDetails": "Manage bank details",
-      "missing": "Your bank details are not saved yet. Add them first."
+      "missing": "Your bank details are not saved yet. Add them first.",
+      "accountHolder": "Account holder"
     },
     "section": {
       "direct": "Direct",
@@ -4580,7 +4581,11 @@
       "errBranch": "Branch must be 2-4 digits",
       "errAccount": "Account number must be 4-12 digits",
       "errIban": "Enter a valid IBAN",
-      "errIbanRequired": "IBAN or bank name is required"
+      "errIbanRequired": "IBAN or bank name is required",
+      "accountHolder": "Account holder name",
+      "accountHolderPlaceholder": "Full name on the account",
+      "accountHolderHint": "Must match the name registered with the bank.",
+      "errHolder": "Account holder name is required"
     },
     "recruitWizardTitle": "Recruit a partner or ambassador",
     "perRecruitRateHint": "Earned when a student brought by this recruit pays.",

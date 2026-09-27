@@ -2198,3 +2198,52 @@ catalog school `alpha-aktiv`.
   Again loads fine); verification was done via the suite + a static check of the
   built bundle, not the browser.
 
+## Bank account holder (beneficiary) name — added (2026-09-27)
+- **Gap found**: the shared bank editor collected only the BANK's name
+  (`profiles.bank_name`), branch, account number, IBAN and BIC — there was no
+  field for the *account holder* (the person/entity owning the account), which
+  payouts need. `bank_name` is the institution ("Bank Hapoalim"), NOT the
+  beneficiary, so the two must not be conflated.
+- **New column** `profiles.bank_account_holder text` (migration
+  `20260930000000_bank_account_holder.sql`, MANUAL DEPLOY — `supabase db push` /
+  dashboard SQL editor; the Vercel build and `ci.yml` never apply DDL).
+- `restrict_profiles_write` recreated VERBATIM from `20260928110000` with ONE
+  addition: `bank_account_holder` joins the confirmed-bank guard, so once
+  `iban_confirmed_at` is set a non-admin cannot redirect a verified payout by
+  swapping only the beneficiary name. **Timestamp must stay newer than
+  `20260928110000`** — an out-of-order re-run of the older file would drop the
+  guard.
+- `send_bank_details_to_admin` recreated to read and emit the holder: JSON key
+  `bankHolder` sits right after `bankCountry` (key order must match
+  `BankDetailsPayload`), and the human fallback block gains an `Account holder:`
+  first line. The emptiness check (`BANK_DETAILS_MISSING`) now also considers the
+  holder.
+- **Single source of truth, do not fork**:
+  `src/components/common/BankDetailsEditor.tsx` (one editor for
+  Partner/Ambassador/Agent) gained the holder input in BOTH the IL and DE
+  branches and requires it on save (`agent.bank.errHolder`) — a payout row
+  without a beneficiary is not usable. `src/lib/chatFormat.ts`
+  (`BankDetailsPayload.bankHolder`, `buildBankDetailsBody`,
+  `parseBankDetailsBody`, `hasBankDetails`) is the one parser;
+  `BankDetailsCard` + `BankDetailsShareDialog` render the holder row;
+  `DirectMessages` selects + maps it; `PartnerEarningsPage`'s payout-readiness
+  boolean counts it.
+- i18n: `agent.bank.accountHolder/accountHolderPlaceholder/accountHolderHint/errHolder`
+  and `chat.bankShare.accountHolder` added to en + ar + he `dashboard.json`.
+- Tests: `BankDetailsEditor.test.tsx` +1 case (**holder required even when every
+  other IL field is filled**) and the empty-form case now asserts `errHolder`;
+  `chatFormat.test.ts` + `BankDetailsShareDialog.test.tsx` payloads extend and
+  assert the holder round-trip.
+- Build: `npm run build` (tsc+vite) clean; `npx vitest run` 1562 passed | 1
+  skipped. A separate commit on the same PR (`2055a82`) repaired a
+  **main-branch regression** that had turned CI red for every PR:
+  `WhatsAppService.ts` (`e1b75a2`) added a module-level
+  `supabase.auth.onAuthStateChange(...)` side effect while
+  `whatsappMerge.test.ts` mocked the client as `{ supabase: {} }`, so
+  `supabase.auth` was undefined and the whole suite file failed to load before
+  running a single test. Fixed test-only by giving the mock the
+  `auth.onAuthStateChange` surface it calls — matching sibling mocks such as
+  `DataRequestsPanel.test.tsx` (which mocks `auth.getUser`). **Rule: any test
+  that mocks `@/integrations/supabase/client` must expose every client surface
+  the imported module touches at module scope**, or the file fails to load.
+
