@@ -1281,3 +1281,11 @@ a[href*="lovable.dev"] {
     padding-top: calc(var(--darb-header-height, 112px) + 3rem);
   }
 }
+
+/* Dashboards: the frame is fixed; only <main> scrolls, no rubber-band drag. */
+html.dashboard-locked,
+body.dashboard-locked {
+  overflow: hidden;
+  overscroll-behavior: none;
+  height: 100%;
+}

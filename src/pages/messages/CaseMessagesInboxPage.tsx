@@ -89,7 +89,7 @@ export default function CaseMessagesInboxPage() {
   const online = useOnlineUsers();
   const isMobile = useIsMobile();
   const [prefs, setPrefs] = useState<NotificationPrefs>({ notify_in_app: true, notify_email: true });
-  useChatFullscreen(!!isMobile && !!selected);
+  useChatFullscreen(!!selected);
   const isRtl = document.documentElement.dir === "rtl";
   const BackIcon = isRtl ? ArrowRight : ArrowLeft;
 

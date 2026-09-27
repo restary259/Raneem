@@ -93,7 +93,7 @@ export default function PartnerMessagesPage({ viewerRole = "social_media_partner
     otherUserId: thread.otherUserId,
   }));
 
-  useChatFullscreen(!!isMobile && !!selected);
+  useChatFullscreen(!!selected);
 
   const active = threads.find((thread) => thread.threadId === selected) ?? null;
 
