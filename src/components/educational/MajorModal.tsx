@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Clock, BookOpen, Users, FileText, Globe, Briefcase, AlertCircle, Scale, Building2, Lightbulb, Link2, Calculator, Send, GraduationCap, ClipboardCheck, Languages, X } from 'lucide-react';
 import { SubMajor } from '@/data/majorsData';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +16,32 @@ interface MajorModalProps {
   onClose: () => void;
   major: SubMajor | null;
 }
+
+/**
+ * Section ids in document order. The same ids are used as anchor targets on the
+ * section wrappers below and as the entries of the sticky in-card navigation, so
+ * a new section only has to be added once here AND be given the matching id.
+ */
+type SectionId =
+  | 'canIGetIn'
+  | 'language'
+  | 'howToApply'
+  | 'about'
+  | 'careers'
+  | 'requirements'
+  | 'arab48'
+  | 'sources';
+
+const SECTION_ORDER: SectionId[] = [
+  'canIGetIn',
+  'language',
+  'howToApply',
+  'about',
+  'careers',
+  'requirements',
+  'arab48',
+  'sources',
+];
 
 /** Sample Bagrut averages shown in the conversion table (Western digits, en-US). */
 const BAGRUT_SAMPLES = [80, 85, 90, 93, 95, 100];
@@ -70,6 +97,63 @@ const GlanceChip = ({ icon, label, value }: { icon: React.ReactNode; label: stri
 const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
   const { t, i18n } = useTranslation('common');
   const { dir } = useDirection();
+  // The dialog content lives in a portal that Radix mounts in a LATER commit than
+  // the component that declares this effect, so a plain ref object is still null
+  // when the effect first runs (and the effect would never re-run). Holding the
+  // node in state via a callback ref makes the setup run when it actually attaches.
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
+  const sectionRefs = useRef<Partial<Record<SectionId, HTMLElement | null>>>({});
+  const [active, setActive] = useState<SectionId | null>(null);
+
+  // Track which section is currently in view, so the rail highlights the right
+  // entry as the user scrolls. rAF-throttled; the scroll container is the dialog
+  // body itself, not the document.
+  useEffect(() => {
+    if (!isOpen || !major || !scrollEl) return;
+    const root = scrollEl;
+    let frame = 0;
+    const compute = () => {
+      frame = 0;
+      const available = SECTION_ORDER.filter((id) => sectionRefs.current[id]);
+      if (!available.length) {
+        setActive(null);
+        return;
+      }
+      // Pin both ends: at the very top the first section is in view and at the
+      // bottom the last one is. Without this, content shorter than the viewport
+      // would read every section as already "passed".
+      const atBottom = root.scrollTop + root.clientHeight >= root.scrollHeight - 2;
+      if (root.scrollTop <= 0) {
+        setActive(available[0]);
+        return;
+      }
+      if (atBottom) {
+        setActive(available[available.length - 1]);
+        return;
+      }
+      const rootTop = root.getBoundingClientRect().top;
+      let current: SectionId = available[0];
+      for (const id of available) {
+        const el = sectionRefs.current[id]!;
+        // A section counts as "reached" once its top passes just below the
+        // header; the last one that has done so is the active entry.
+        if (el.getBoundingClientRect().top - rootTop <= 96) current = id;
+      }
+      setActive(current);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(compute);
+    };
+    compute();
+    root.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      root.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [isOpen, major, scrollEl]);
+
   if (!major) return null;
 
   const lang = i18n.language;
@@ -81,6 +165,31 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
   const verified = Boolean(major.lastVerified);
   const duration = loc.localizedDuration || (lang === 'en' ? '6 semesters' : '6 فصول دراسية');
 
+  // Only the sections actually rendered for this major become nav entries, so
+  // the rail can never point at (or jump to) a section that was suppressed.
+  const sections: { id: SectionId; label: string }[] = [];
+  const push = (id: SectionId, label: string) => sections.push({ id, label });
+  if (verified || tiers) push('canIGetIn', t('educational.sectionCanIGetIn', 'Can I get in?'));
+  if (langProfile || loc.localizedLanguageRequirements)
+    push('language', langProfile ? t('educational.sectionLanguage', 'Language requirements') : t('educational.modalLanguageRequirements', 'Language Requirements'));
+  if (glance && loc.localizedRequiredBackground) push('howToApply', t('educational.sectionHowToApply', 'How to apply'));
+  push('about', glance ? t('educational.sectionAbout', 'What you study & who it suits') : t('educational.modalDescription', 'Description'));
+  if (loc.localizedCareerOpportunities || loc.localizedCareerProspects) push('careers', t('educational.modalCareerOpportunities', 'Career Opportunities in Germany'));
+  if (!tiers && loc.localizedRequirements) push('requirements', t('educational.modalStudyRequirements', 'Study Requirements'));
+  if (loc.localizedArab48Notes) push('arab48', t('educational.modalArab48Notes', 'Notes for Arab 48 Students'));
+  if (sources.length > 0) push('sources', t('educational.modalSources', 'Sources'));
+
+  const goTo = (id: SectionId) => {
+    const el = sectionRefs.current[id];
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActive(id);
+  };
+
+  const registerSection = (id: SectionId) => (el: HTMLElement | null) => {
+    sectionRefs.current[id] = el;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogPortal>
@@ -88,22 +197,48 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
         <DialogPrimitive.Content
           dir={dir}
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 top-auto z-50 max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-border bg-card p-0 shadow-surface-lg outline-hidden duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85dvh] sm:max-w-[820px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=closed]:zoom-out-95 data-[state=open]:motion-reduce:animate-none data-[state=closed]:motion-reduce:animate-none"
+          className="fixed inset-x-0 bottom-0 top-auto z-50 flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl border border-border bg-card p-0 shadow-surface-lg outline-hidden duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85dvh] sm:max-w-[820px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=closed]:zoom-out-95 data-[state=open]:motion-reduce:animate-none data-[state=closed]:motion-reduce:animate-none"
         >
           <DialogTitle className="sr-only">{loc.name}</DialogTitle>
-          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-border bg-card/95 px-6 py-5 backdrop-blur-xs sm:rounded-t-3xl">
-            <div className="min-w-0">
-              <h2 className="text-2xl font-bold leading-tight text-primary">{loc.name}</h2>
-              {major.nameDE && <p className="mt-1 text-base font-normal text-muted-foreground">{major.nameDE}</p>}
+          <div className="shrink-0 border-b border-border bg-card/95 backdrop-blur-xs sm:rounded-t-3xl">
+            <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3">
+              <div className="min-w-0">
+                <h2 className="text-2xl font-bold leading-tight text-primary">{loc.name}</h2>
+                {major.nameDE && <p className="mt-1 text-base font-normal text-muted-foreground">{major.nameDE}</p>}
+              </div>
+              <DialogPrimitive.Close
+                aria-label={t('common.close', 'Close')}
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="h-4 w-4" />
+              </DialogPrimitive.Close>
             </div>
-            <DialogPrimitive.Close
-              aria-label={t('common.close', 'Close')}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <X className="h-4 w-4" />
-            </DialogPrimitive.Close>
+            {sections.length > 1 && (
+              <nav
+                aria-label={t('educational.navSections', 'Jump to a section')}
+                className="flex gap-1.5 overflow-x-auto px-6 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {sections.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-current={active === id ? 'true' : undefined}
+                    onClick={() => goTo(id)}
+                    className={cn(
+                      'shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+                      active === id
+                        ? 'border-brand bg-brand text-brand-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground',
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </nav>
+            )}
           </div>
-          <div className="space-y-6 px-6 py-6">
+          <div ref={setScrollEl} className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+          <div className="space-y-6">
           {/* 1. At a glance */}
           {glance ? (
             <div className="space-y-2">
@@ -122,7 +257,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
           {/* 2. Can I get in? */}
           {(verified || tiers) && (
-            <div className="space-y-3">
+            <div id="canIGetIn" ref={registerSection('canIGetIn')} className="scroll-mt-24 space-y-3">
               <SectionTitle icon={<Scale className="h-5 w-5 text-emerald-600" />}>{t('educational.sectionCanIGetIn')}</SectionTitle>
               {verified && (
                 <div className="bg-emerald-50 rounded-2xl p-4 space-y-3">
@@ -163,7 +298,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
           {/* 3. Language */}
           {langProfile ? (
-            <div className="space-y-3">
+            <div id="language" ref={registerSection('language')} className="scroll-mt-24 space-y-3">
               <SectionTitle icon={<Globe className="h-5 w-5 text-purple-500" />}>{t('educational.sectionLanguage')}</SectionTitle>
               <dl className="bg-purple-50 rounded-2xl px-4 py-1">
                 <FactRow label={t('educational.langTeaching')}>{langProfile.teachingLanguage}</FactRow>
@@ -183,7 +318,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
               <p className="text-xs text-muted-foreground">{t('educational.langSourceNote')}</p>
             </div>
           ) : loc.localizedLanguageRequirements && (
-            <div className="space-y-3">
+            <div id="language" ref={registerSection('language')} className="scroll-mt-24 space-y-3">
               <SectionTitle icon={<Globe className="h-5 w-5 text-purple-500" />}>{t('educational.modalLanguageRequirements')}</SectionTitle>
               <div className="bg-purple-50 rounded-2xl p-4"><p className="text-muted-foreground">{loc.localizedLanguageRequirements}</p></div>
             </div>
@@ -191,7 +326,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
           {/* 4. How to apply */}
           {glance && loc.localizedRequiredBackground && (
-            <div className="space-y-3">
+            <div id="howToApply" ref={registerSection('howToApply')} className="scroll-mt-24 space-y-3">
               <SectionTitle icon={<Send className="h-5 w-5 text-blue-500" />}>{t('educational.sectionHowToApply')}</SectionTitle>
               <div className="bg-blue-50 rounded-2xl p-4 space-y-2 text-sm text-muted-foreground">
                 <p><span className="font-semibold">{t('educational.glanceChannel')}:</span> {glance.applicationChannel}</p>
@@ -208,7 +343,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
           )}
 
           {/* 5. About */}
-          <div className="space-y-3">
+          <div id="about" ref={registerSection('about')} className="scroll-mt-24 space-y-3">
             <SectionTitle icon={<BookOpen className="h-5 w-5 text-brand-strong" />}>{glance ? t('educational.sectionAbout') : t('educational.modalDescription')}</SectionTitle>
             <div className="space-y-3 rounded-2xl border-s-4 border-brand bg-muted/50 p-4">
               <p className="text-muted-foreground leading-relaxed">{loc.detailedDesc}</p>
@@ -220,13 +355,13 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
           {/* 6. Careers */}
           {(loc.localizedCareerOpportunities || loc.localizedCareerProspects) && (
-            <div className="space-y-3">
+            <div id="careers" ref={registerSection('careers')} className="scroll-mt-24 space-y-3">
               <SectionTitle icon={<Briefcase className="h-5 w-5 text-amber-500" />}>{t('educational.modalCareerOpportunities')}</SectionTitle>
               <div className="bg-amber-50 rounded-2xl p-4"><p className="text-muted-foreground">{loc.localizedCareerOpportunities || loc.localizedCareerProspects}</p></div>
             </div>
           )}
           {!tiers && loc.localizedRequirements && (
-            <div className="space-y-3">
+            <div id="requirements" ref={registerSection('requirements')} className="scroll-mt-24 space-y-3">
               <h3 className="text-xl font-semibold text-foreground">{t('educational.modalStudyRequirements')}</h3>
               <div className="bg-muted/50 rounded-2xl p-4"><p className="text-muted-foreground">{loc.localizedRequirements}</p></div>
             </div>
@@ -234,7 +369,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
           {/* 7. Arab 48 notes */}
           {loc.localizedArab48Notes && (
-            <div className="space-y-3">
+            <div id="arab48" ref={registerSection('arab48')} className="scroll-mt-24 space-y-3">
               <SectionTitle icon={<AlertCircle className="h-5 w-5 text-red-500" />}>{t('educational.modalArab48Notes')}</SectionTitle>
               <div className="bg-red-50 rounded-2xl p-4 border-s-4 border-red-400"><p className="text-muted-foreground">{loc.localizedArab48Notes}</p></div>
             </div>
@@ -242,7 +377,7 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
 
           {/* 8. Sources */}
           {sources.length > 0 && (
-            <div className="space-y-3">
+            <div id="sources" ref={registerSection('sources')} className="scroll-mt-24 space-y-3">
               <SectionTitle icon={<Link2 className="h-5 w-5 text-muted-foreground" />}>{t('educational.modalSources')}</SectionTitle>
               <ol className="space-y-2 list-decimal ps-5">
                 {sources.map((s, i) => (
@@ -258,7 +393,8 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
               <p className="text-xs text-muted-foreground">{t('educational.sourcesDisclaimer')}</p>
             </div>
           )}
-        </div>
+          </div>
+          </div>
         </DialogPrimitive.Content>
       </DialogPortal>
     </Dialog>
