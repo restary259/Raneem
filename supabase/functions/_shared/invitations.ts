@@ -178,6 +178,8 @@ export interface ReconcilePendingInvitationsInput {
   email: string;
   userId: string;
   invitationType: InvitationType;
+  /** When set, only invitations owned by this agent are closed. */
+  agentId?: string;
 }
 
 /**
@@ -205,7 +207,7 @@ export async function reconcilePendingInvitations(
   const email = input.email.trim().toLowerCase();
   const userId = input.userId;
 
-  const { data, error } = await admin
+  let query = admin
     .from("user_invitations")
     .update({
       status: "accepted",
@@ -214,8 +216,11 @@ export async function reconcilePendingInvitations(
     })
     .eq("status", "pending")
     .ilike("invited_email", email)
-    .eq("invitation_type", input.invitationType)
-    .select("id");
+    .eq("invitation_type", input.invitationType);
+  // Scope to the verified agent's own invitations so one agent can never
+  // close (and take over) another agent's pending invitation.
+  if (input.agentId) query = query.eq("agent_id", input.agentId);
+  const { data, error } = await query.select("id");
 
   if (error) {
     // Non-fatal: reconciliation is defense-in-depth. The DB trigger covers the

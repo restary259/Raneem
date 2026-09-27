@@ -186,6 +186,7 @@ serve(async (req) => {
       email,
       userId,
       invitationType: ROLE_LABEL[role] as "partner" | "ambassador",
+      agentId,
     });
 
     // Send the branded DARB welcome/credentials email so the recruit gets a
