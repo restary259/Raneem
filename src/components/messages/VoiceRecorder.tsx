@@ -112,6 +112,8 @@ export default function VoiceRecorder({
     clearPreview();
     chunksRef.current = [];
     recorderRef.current = null;
+    pointerDownRef.current = false;
+    keyboardDownRef.current = false;
     lockedRef.current = false;
     releaseBeforeReadyRef.current = false;
     cancelBeforeReadyRef.current = false;
