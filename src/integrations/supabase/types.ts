@@ -7601,9 +7601,7 @@ export type Database = {
         Returns: {
           address_line_1: string | null
           address_line_2: string | null
-          address_line_3: string | null
-          address_line_4: string | null
-          address_line_5: string | null
+          postal_code: string | null
           booking_enabled: boolean
           city: string
           country: string
@@ -7619,7 +7617,6 @@ export type Database = {
           office_code: string | null
           office_type: string
           phone: string | null
-          postal_code: string | null
           public_description_ar: string | null
           public_description_en: string | null
           public_description_he: string | null
