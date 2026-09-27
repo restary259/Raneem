@@ -303,7 +303,7 @@ export default function PublicOfficeBooking({
           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={function () { void change("cancel"); }} disabled={working}>{t("apply.cancelVisit")}</Button>
         </div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        {open && <BookingFlow />}
+        {open && BookingFlow()}
       </div>
     );
   }
@@ -318,7 +318,7 @@ export default function PublicOfficeBooking({
     );
   }
 
-  return <BookingFlow />;
+  return BookingFlow();
 
   function BookingFlow() {
     const multiOffice = offices.length > 1;
