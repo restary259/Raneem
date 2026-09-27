@@ -3872,6 +3872,7 @@ export type Database = {
           bank_name: string | null
           bic: string | null
           biometric_photo_url: string | null
+          can_reassign_office_appointments: boolean
           case_id: string | null
           city: string | null
           commission_amount: number
@@ -3943,6 +3944,7 @@ export type Database = {
           bank_name?: string | null
           bic?: string | null
           biometric_photo_url?: string | null
+          can_reassign_office_appointments?: boolean
           case_id?: string | null
           city?: string | null
           commission_amount?: number
@@ -4014,6 +4016,7 @@ export type Database = {
           bank_name?: string | null
           bic?: string | null
           biometric_photo_url?: string | null
+          can_reassign_office_appointments?: boolean
           case_id?: string | null
           city?: string | null
           commission_amount?: number
@@ -6857,6 +6860,10 @@ export type Database = {
         Args: { p_a: string; p_b: string }
         Returns: boolean
       }
+      can_reassign_in_office: {
+        Args: { p_office_id: string }
+        Returns: boolean
+      }
       cancel_payout_request: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -7578,6 +7585,13 @@ export type Database = {
           suggested_referred_by: string
         }[]
       }
+      list_office_members: {
+        Args: { p_office_id: string }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       list_office_team_members: {
         Args: never
         Returns: {
@@ -7781,6 +7795,10 @@ export type Database = {
       }
       reassign_case: {
         Args: { p_case_id: string; p_new_assignee: string }
+        Returns: undefined
+      }
+      reassign_office_appointment: {
+        Args: { p_appointment_id: string; p_new_member_id: string }
         Returns: undefined
       }
       record_case_commission: {
