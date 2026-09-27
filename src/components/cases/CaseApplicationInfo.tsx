@@ -39,7 +39,7 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
         const nextVisit = (data as Visit) ?? null;
         setVisit(nextVisit);
         if (nextVisit?.office_id) {
-          const { data: officeData } = await supabase
+          const { data: officeData } = await (supabase as unknown as { from: (table: string) => any })
             .from("offices")
             .select("name_ar, name_en, name_he, city, address_line_1, timezone")
             .eq("id", nextVisit.office_id)
