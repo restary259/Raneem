@@ -69,7 +69,18 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
     : visit.confirmation_status === "pending" ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400";
 
   const when = visit
-    ? new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Jerusalem", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(visit.scheduled_at))
+    ? new Intl.DateTimeFormat(
+        i18n.language.startsWith("ar") ? "ar-u-nu-latn" : i18n.language.startsWith("he") ? "he" : "en-US",
+        {
+          timeZone: office?.timezone || "Asia/Jerusalem",
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23",
+        },
+      ).format(new Date(visit.scheduled_at))
     : null;
 
   return (
