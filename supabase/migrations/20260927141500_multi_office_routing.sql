@@ -1079,6 +1079,8 @@ EXECUTE FUNCTION public.deactivate_office_membership_on_profile_deactivation();
 
 -- Atomic office configuration write. All related settings/members/hours/rules
 -- are changed in one database transaction. Only Admin may call it.
+DROP FUNCTION IF EXISTS public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb);
+
 CREATE OR REPLACE FUNCTION public.save_office_configuration(
   p_office_id uuid,
   p_office jsonb,
@@ -1086,7 +1088,9 @@ CREATE OR REPLACE FUNCTION public.save_office_configuration(
   p_hours jsonb,
   p_primary_user_id uuid DEFAULT NULL,
   p_backup_user_id uuid DEFAULT NULL,
-  p_routing_rules jsonb DEFAULT '[]'::jsonb
+  p_routing_rules jsonb DEFAULT '[]'::jsonb,
+  p_breaks jsonb DEFAULT '[]'::jsonb,
+  p_blackouts jsonb DEFAULT '[]'::jsonb
 )
 RETURNS public.offices
 LANGUAGE plpgsql
@@ -1100,6 +1104,7 @@ DECLARE
   v_rule_user uuid;
   v_rule_priority integer;
   v_rule_active boolean;
+  v_item jsonb;
 BEGIN
   IF NOT public.has_role(auth.uid(), 'admin'::public.app_role) THEN
     RAISE EXCEPTION 'Forbidden';
@@ -1230,6 +1235,32 @@ BEGIN
   FROM jsonb_array_elements(COALESCE(p_hours,'[]'::jsonb)) AS item
   WHERE (item->>'weekday')::integer BETWEEN 0 AND 6;
 
+  DELETE FROM public.office_breaks WHERE office_id=v_office.id;
+  INSERT INTO public.office_breaks (office_id,weekday,start_time,end_time,label,is_active)
+  SELECT
+    v_office.id,
+    (item->>'weekday')::integer,
+    (item->>'start_time')::time,
+    (item->>'end_time')::time,
+    NULLIF(trim(item->>'label'),''),
+    COALESCE((item->>'is_active')::boolean,true)
+  FROM jsonb_array_elements(COALESCE(p_breaks,'[]'::jsonb)) AS item
+  WHERE (item->>'weekday')::integer BETWEEN 0 AND 6
+    AND NULLIF(item->>'start_time','') IS NOT NULL
+    AND NULLIF(item->>'end_time','') IS NOT NULL;
+
+  DELETE FROM public.office_blackouts WHERE office_id=v_office.id;
+  INSERT INTO public.office_blackouts (office_id,starts_at,ends_at,reason,is_active)
+  SELECT
+    v_office.id,
+    (item->>'starts_at')::timestamptz,
+    (item->>'ends_at')::timestamptz,
+    NULLIF(trim(item->>'reason'),''),
+    COALESCE((item->>'is_active')::boolean,true)
+  FROM jsonb_array_elements(COALESCE(p_blackouts,'[]'::jsonb)) AS item
+  WHERE NULLIF(item->>'starts_at','') IS NOT NULL
+    AND NULLIF(item->>'ends_at','') IS NOT NULL;
+
   DELETE FROM public.office_routing_rules WHERE office_id=v_office.id;
   FOR v_rule IN SELECT * FROM jsonb_array_elements(COALESCE(p_routing_rules,'[]'::jsonb))
   LOOP
@@ -1265,8 +1296,8 @@ BEGIN
 END;
 $;
 
-REVOKE ALL ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb) TO authenticated;
+REVOKE ALL ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb,jsonb,jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb,jsonb,jsonb) TO authenticated;
 
 -- Keep timestamps current for direct Admin updates.
 CREATE OR REPLACE FUNCTION public.touch_office_updated_at()
