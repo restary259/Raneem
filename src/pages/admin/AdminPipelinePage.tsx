@@ -49,7 +49,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { formatDistanceToNow } from "date-fns";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
@@ -65,7 +72,6 @@ import { toneClasses } from "@/lib/statusTokens";
 
 /** Stages that are never shown as board columns (end states). */
 const NON_BOARD_STATUSES = ["forgotten", "cancelled"];
-
 
 const STATUS_LABELS: Record<string, { en: string; ar: string; color: string }> = {
   new: { en: "New", ar: "جديد", color: toneClasses("new").chip },
@@ -263,7 +269,6 @@ function AttributionBadge({
 
 /* ─────────────────────────── main component ─────────────────────────── */
 
-
 const AdminPipelinePage = () => {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
@@ -273,8 +278,6 @@ const AdminPipelinePage = () => {
   const boardStatuses = activeStatuses.filter((s) => !NON_BOARD_STATUSES.includes(s.key));
   const statusLabel = (key: string) =>
     activeStatuses.some((s) => s.key === key) ? pipelineLabel(key, isRtl) : undefined;
-
-
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -301,14 +304,10 @@ const AdminPipelinePage = () => {
   const [appointmentLoading, setAppointmentLoading] = useState(false);
   const [appointmentAction, setAppointmentAction] = useState<string | null>(null);
 
-
   /* ── fetch data ── */
   const fetchData = useCallback(async () => {
     try {
-      const [caseRows, members] = await Promise.all([
-        CaseService.listActive(),
-        CaseService.listTeamMembers(),
-      ]);
+      const [caseRows, members] = await Promise.all([CaseService.listActive(), CaseService.listTeamMembers()]);
       const profileMap: Record<string, string> = {};
       members.forEach((p) => {
         profileMap[p.id] = p.full_name;
@@ -334,7 +333,6 @@ const AdminPipelinePage = () => {
     }
   }, [toast]);
 
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -346,7 +344,7 @@ const AdminPipelinePage = () => {
     if (!caseId || cases.length === 0 || selectedCase) return;
     const target = cases.find((c) => c.id === caseId);
     if (target) openCase(target);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cases, searchParams]);
 
   /* ── assign ── */
@@ -355,7 +353,7 @@ const AdminPipelinePage = () => {
     try {
       await CaseService.assign(caseId, userId);
       await fetchData();
-      toast({ description: t('admin.pipeline.caseAssigned', 'Case assigned successfully') });
+      toast({ description: t("admin.pipeline.caseAssigned", "Case assigned successfully") });
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message });
     } finally {
@@ -374,7 +372,9 @@ const AdminPipelinePage = () => {
       const data = await CaseService.getById(c.id);
       const { data: appt, error: apptError } = await supabase
         .from("appointments")
-        .select("id, case_id, scheduled_at, duration_minutes, status, confirmation_status, public_booking, outcome, team_member_id")
+        .select(
+          "id, case_id, scheduled_at, duration_minutes, status, confirmation_status, public_booking, outcome, team_member_id",
+        )
         .eq("case_id", c.id)
         .is("outcome", null)
         .order("scheduled_at", { ascending: false })
@@ -480,7 +480,6 @@ const AdminPipelinePage = () => {
     }
   };
 
-
   /* ── duplicate phone detection ── */
   const phoneCount = cases.reduce<Record<string, number>>((acc, c) => {
     acc[c.phone_number] = (acc[c.phone_number] ?? 0) + 1;
@@ -507,7 +506,7 @@ const AdminPipelinePage = () => {
   const statusColor = (status: string) =>
     boardStatuses.some((s) => s.key === status)
       ? statusColorClass(status)
-      : STATUS_LABELS[status]?.color ?? "bg-muted";
+      : (STATUS_LABELS[status]?.color ?? "bg-muted");
 
   const sourceMeta: Record<string, { label: string; cls: string }> = {
     apply_page: { label: "Apply", cls: toneClasses("new").chip },
@@ -582,7 +581,9 @@ const AdminPipelinePage = () => {
                   <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${statusColor(status)}`}>
                     {label(status)}
                   </span>
-                  <span className="text-xs text-muted-foreground font-medium">{allStatusCases.length.toLocaleString("en-US")}</span>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {allStatusCases.length.toLocaleString("en-US")}
+                  </span>
                 </div>
 
                 <div className="space-y-2">
@@ -592,16 +593,14 @@ const AdminPipelinePage = () => {
                     ))
                   ) : statusCases.length === 0 ? (
                     <div className="h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
-                      <p className="text-xs text-muted-foreground">{t('admin.pipeline.emptyColumn')}</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.pipeline.emptyColumn")}</p>
                     </div>
                   ) : (
                     statusCases.map((c) => {
-
                       const days = daysSince(c.last_activity_at);
                       // SLA thresholds come from the shared policy module so the
                       // board never drifts from Command Center / other consumers.
-                      const isRedStale =
-                        (status === "new" && days >= SLA_DAYS[CaseStatus.NEW]) || c.is_no_show;
+                      const isRedStale = (status === "new" && days >= SLA_DAYS[CaseStatus.NEW]) || c.is_no_show;
                       const isOrangeStale =
                         !isRedStale &&
                         ((status === "contacted" && days >= SLA_DAYS[CaseStatus.CONTACTED]) ||
@@ -642,7 +641,9 @@ const AdminPipelinePage = () => {
 
                             {/* Duplicate phone warning */}
                             {hasDuplicatePhone(c) && (
-                              <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded border w-fit ${toneClasses("payment").chip}`}>
+                              <div
+                                className={`flex items-center gap-1 px-1.5 py-0.5 rounded border w-fit ${toneClasses("payment").chip}`}
+                              >
                                 <AlertTriangle className="h-3 w-3 shrink-0" />
                                 <span className="text-[10px] font-semibold">Duplicate Phone</span>
                               </div>
@@ -652,12 +653,16 @@ const AdminPipelinePage = () => {
                             {(c.english_units != null || c.math_units != null) && (
                               <div className="flex items-center gap-1.5">
                                 {c.english_units != null && (
-                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("new").chip}`}>
+                                  <span
+                                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("new").chip}`}
+                                  >
                                     EN {c.english_units}
                                   </span>
                                 )}
                                 {c.math_units != null && (
-                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("appointment").chip}`}>
+                                  <span
+                                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("appointment").chip}`}
+                                  >
                                     MA {c.math_units}
                                   </span>
                                 )}
@@ -671,7 +676,7 @@ const AdminPipelinePage = () => {
                               </p>
                             ) : (
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
-                                {t('admin.pipeline.unassigned')}
+                                {t("admin.pipeline.unassigned")}
                               </span>
                             )}
 
@@ -682,7 +687,7 @@ const AdminPipelinePage = () => {
                               </span>
                               {hasApplyInfo(c) && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                                  {t('admin.pipeline.hasInfo')}
+                                  {t("admin.pipeline.hasInfo")}
                                 </span>
                               )}
                             </div>
@@ -697,11 +702,11 @@ const AdminPipelinePage = () => {
                                 <SelectTrigger className="h-7 text-xs">
                                   <div className="flex items-center gap-1">
                                     <User className="h-3 w-3" />
-                                    <SelectValue placeholder={t('admin.pipeline.assignPlaceholder')} />
+                                    <SelectValue placeholder={t("admin.pipeline.assignPlaceholder")} />
                                   </div>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="unassigned">{t('admin.pipeline.unassigned')}</SelectItem>
+                                  <SelectItem value="unassigned">{t("admin.pipeline.unassigned")}</SelectItem>
                                   {teamMembers.map((tm) => (
                                     <SelectItem key={tm.id} value={tm.id}>
                                       {tm.full_name} — {tm.email}
@@ -733,7 +738,6 @@ const AdminPipelinePage = () => {
                     </Button>
                   )}
                 </div>
-
               </div>
             );
           })}
@@ -783,7 +787,7 @@ const AdminPipelinePage = () => {
                           const shown = referralDiscount > 0 ? referralDiscount : legacyDiscount;
                           return shown > 0 ? (
                             <span className={`text-xs border px-2 py-0.5 rounded ${toneClasses("enrolled").chip}`}>
-                              {t('admin.pipeline.discount')}: ₪{shown}
+                              {t("admin.pipeline.discount")}: ₪{shown}
                             </span>
                           ) : null;
                         })()}
@@ -857,34 +861,68 @@ const AdminPipelinePage = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Appointment</p>
-                    {appointmentLoading ? <Loader2 className="mt-3 size-4 animate-spin" /> : caseAppointment ? (
+                    {appointmentLoading ? (
+                      <Loader2 className="mt-3 size-4 animate-spin" />
+                    ) : caseAppointment ? (
                       <>
-                        <p className="mt-2 flex items-center gap-2 text-sm font-semibold"><CalendarDays className="size-4 text-primary" />{new Date(caseAppointment.scheduled_at).toLocaleString("en-IL", { timeZone: "Asia/Jerusalem", weekday: "short", dateStyle: "medium", timeStyle: "short" })}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{caseAppointment.confirmation_status === "confirmed" ? "Confirmed" : "Awaiting confirmation"}{caseAppointment.public_booking ? " · Public booking" : ""}</p>
+                        <p className="mt-2 flex items-center gap-2 text-sm font-semibold">
+                          <CalendarDays className="size-4 text-primary" />
+                          {new Date(caseAppointment.scheduled_at).toLocaleString("en-IL", {
+                            timeZone: "Asia/Jerusalem",
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {caseAppointment.confirmation_status === "confirmed" ? "Confirmed" : "Awaiting confirmation"}
+                          {caseAppointment.public_booking ? " · Public booking" : ""}
+                        </p>
                       </>
-                    ) : <p className="mt-2 text-sm text-muted-foreground">No appointment linked to this case.</p>}
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">No appointment linked to this case.</p>
+                    )}
                   </div>
-                  {caseAppointment?.confirmation_status === "pending" && selectedCase.assigned_to && <Button
-                    size="sm"
-                    disabled={!!appointmentAction}
-                    onClick={async () => {
-                      setAppointmentAction("confirm");
-                      try {
-                        const { error } = await supabase.rpc("confirm_public_appointment", { p_appointment_id: caseAppointment.id });
-                        if (error) throw error;
-                        toast({ description: "Appointment confirmed" });
-                        await openCase(selectedCase);
-                        await fetchData();
-                      } catch (err: any) {
-                        toast({ variant: "destructive", description: err.message ?? "Unable to confirm appointment" });
-                      } finally { setAppointmentAction(null); }
-                    }}
-                  >
-                    {appointmentAction === "confirm" ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Confirm
-                  </Button>}
+                  {caseAppointment?.confirmation_status === "pending" && selectedCase.assigned_to && (
+                    <Button
+                      size="sm"
+                      disabled={!!appointmentAction}
+                      onClick={async () => {
+                        setAppointmentAction("confirm");
+                        try {
+                          const { error } = await supabase.rpc("confirm_public_appointment", {
+                            p_appointment_id: caseAppointment.id,
+                          });
+                          if (error) throw error;
+                          toast({ description: "Appointment confirmed" });
+                          await openCase(selectedCase);
+                          await fetchData();
+                        } catch (err: any) {
+                          toast({
+                            variant: "destructive",
+                            description: err.message ?? "Unable to confirm appointment",
+                          });
+                        } finally {
+                          setAppointmentAction(null);
+                        }
+                      }}
+                    >
+                      {appointmentAction === "confirm" ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Check className="size-4" />
+                      )}{" "}
+                      Confirm
+                    </Button>
+                  )}
                 </div>
                 {caseAppointment && selectedCase.assigned_to && caseAppointment.confirmation_status === "pending" && (
-                  <p className="mt-3 text-xs text-muted-foreground">Assigned staff can confirm this request from their appointment workspace too.</p>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Assigned staff can confirm this request from their appointment workspace too.
+                  </p>
                 )}
               </div>
 
@@ -1313,7 +1351,13 @@ const AdminPipelinePage = () => {
       </AlertDialog>
 
       {/* ── Cancel Case Confirmation Dialog ── */}
-      <Dialog open={adminCancelOpen} onOpenChange={(open) => { setAdminCancelOpen(open); if (!open) setCancelReason(""); }}>
+      <Dialog
+        open={adminCancelOpen}
+        onOpenChange={(open) => {
+          setAdminCancelOpen(open);
+          if (!open) setCancelReason("");
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
@@ -1321,7 +1365,10 @@ const AdminPipelinePage = () => {
               {t("case.cancel.title", "Cancel Case")}
             </DialogTitle>
             <DialogDescription>
-              {t("case.cancel.desc", "This will permanently mark the case as cancelled. You can view it later in the Cancelled tab.")}
+              {t(
+                "case.cancel.desc",
+                "This will permanently mark the case as cancelled. You can view it later in the Cancelled tab.",
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -1335,7 +1382,14 @@ const AdminPipelinePage = () => {
             />
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setAdminCancelOpen(false); setCancelReason(""); }} disabled={cancelling}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAdminCancelOpen(false);
+                setCancelReason("");
+              }}
+              disabled={cancelling}
+            >
               {t("common.back", "Back")}
             </Button>
             <Button variant="destructive" onClick={cancelSelectedCase} disabled={cancelling}>
