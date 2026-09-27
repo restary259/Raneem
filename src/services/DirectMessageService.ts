@@ -18,7 +18,7 @@ export interface DirectMessage {
 }
 
 export function toChatMessage(m: DirectMessage): ChatMessage {
-  const kind = m.payout_request_id ? "payout_request" : "text";
+  const kind = m.payout_request_id ? "payout_request" : m.kind === "call" ? "call" : "text";
   return {
     id: m.id,
     authorId: m.author_id,
@@ -26,7 +26,7 @@ export function toChatMessage(m: DirectMessage): ChatMessage {
     authorRole: m.author_role,
     body: m.body,
     createdAt: m.created_at,
-    attachments: (m.attachments ?? []) as ChatAttachment[],
+    attachments: (kind === "call" ? [] : (m.attachments ?? [])) as ChatAttachment[],
     kind,
     requestStatus: m.request_status ?? null,
     payoutRequestId: m.payout_request_id ?? null,

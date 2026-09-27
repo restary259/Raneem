@@ -37,6 +37,7 @@ interface CallView {
 
 interface VoiceCallContextValue {
   phase: Phase;
+  inCall: boolean;
   startCall: (args: { threadId: string; peerId: string; peerName?: string }) => Promise<void>;
 }
 
@@ -45,6 +46,45 @@ const VoiceCallContext = createContext<VoiceCallContextValue | null>(null);
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
 ];
+
+/** Looping tone via WebAudio: ring (incoming) or ringback (outgoing). */
+function startTone(kind: "ring" | "ringback"): () => void {
+  let ctx: AudioContext | null = null;
+  let timer: number | undefined;
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    ctx = new AC();
+    const play = () => {
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const freqs = kind === "ring" ? [880, 660] : [440];
+      const bursts = kind === "ring" ? [0, 0.45] : [0];
+      bursts.forEach((offset) => {
+        freqs.forEach((f) => {
+          const o = ctx!.createOscillator();
+          const g = ctx!.createGain();
+          o.frequency.value = f;
+          g.gain.setValueAtTime(0.0001, now + offset);
+          g.gain.exponentialRampToValueAtTime(kind === "ring" ? 0.25 : 0.12, now + offset + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + offset + (kind === "ring" ? 0.4 : 1.2));
+          o.connect(g).connect(ctx!.destination);
+          o.start(now + offset);
+          o.stop(now + offset + 1.3);
+        });
+      });
+      if (kind === "ring") navigator.vibrate?.([400, 200, 400]);
+    };
+    play();
+    timer = window.setInterval(play, kind === "ring" ? 2000 : 3000);
+  } catch {
+    /* audio unavailable */
+  }
+  return () => {
+    if (timer) window.clearInterval(timer);
+    navigator.vibrate?.(0);
+    void ctx?.close().catch(() => undefined);
+  };
+}
 
 export function useVoiceCall() {
   return useContext(VoiceCallContext);
@@ -184,12 +224,18 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
       } catch (err: any) {
         streamRef.current?.getTracks().forEach((tr) => tr.stop());
         streamRef.current = null;
-        toast({ variant: "destructive", description: err?.message ?? String(err) });
+        const msg: string = err?.message ?? String(err);
+        toast({
+          variant: "destructive",
+          description: /already on another call/i.test(msg)
+            ? t("voiceCall.busy", "This person is on another call. Try again later.")
+            : msg,
+        });
       } finally {
         setBusy(false);
       }
     },
-    [createPeer, joinChannel, me, toast],
+    [createPeer, joinChannel, me, t, toast],
   );
 
   const showIncoming = useCallback(
@@ -300,6 +346,12 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(id);
   }, [call, cleanup, t, toast]);
 
+  // Ring / ringback while waiting.
+  useEffect(() => {
+    if (phase !== "incoming" && phase !== "outgoing") return;
+    return startTone(phase === "incoming" ? "ring" : "ringback");
+  }, [phase]);
+
   // Keep-alive + timer while connected.
   useEffect(() => {
     if (phase !== "connected" || !call) return;
@@ -321,7 +373,7 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
           : `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
   return (
-    <VoiceCallContext.Provider value={{ phase, startCall }}>
+    <VoiceCallContext.Provider value={{ phase, inCall: phase !== "idle", startCall }}>
       {children}
       <audio ref={audioRef} autoPlay playsInline className="hidden" />
       {call && phase !== "idle" && (

@@ -5783,6 +5783,7 @@ export type Database = {
       voice_calls: {
         Row: {
           answered_at: string | null
+          call_logged: boolean
           callee_id: string
           caller_id: string
           created_at: string
@@ -5796,6 +5797,7 @@ export type Database = {
         }
         Insert: {
           answered_at?: string | null
+          call_logged?: boolean
           callee_id: string
           caller_id: string
           created_at?: string
@@ -5809,6 +5811,7 @@ export type Database = {
         }
         Update: {
           answered_at?: string | null
+          call_logged?: boolean
           callee_id?: string
           caller_id?: string
           created_at?: string

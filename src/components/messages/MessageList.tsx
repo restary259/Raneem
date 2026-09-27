@@ -12,6 +12,7 @@ import {
   Paperclip,
   Pencil,
   Trash2,
+  PhoneCall,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -430,7 +431,9 @@ export default function MessageList({
                         </div>
                       </div>
                     ) : (
-                      m.body &&
+                      m.kind === "call" ? (
+                        <CallLogLine body={m.body} />
+                      ) : m.body &&
                       m.kind !== "payout_request" &&
                       !parseBankDetailsBody(m.body) && (
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -559,3 +562,24 @@ export default function MessageList({
   );
 }
 
+
+function CallLogLine({ body }: { body: string }) {
+  const { t } = useTranslation("dashboard");
+  const [, status = "", dur = "0"] = body.split(":");
+  const secs = Number(dur) || 0;
+  const mmss = `${String(Math.floor(secs / 60)).padStart(2, "0")}:${String(secs % 60).padStart(2, "0")}`;
+  const label =
+    status === "answered"
+      ? `${t("voiceCall.log.answered", "Voice call")} · ${mmss}`
+      : status === "declined"
+        ? t("voiceCall.log.declined", "Declined call")
+        : status === "cancelled"
+          ? t("voiceCall.log.cancelled", "Cancelled call")
+          : t("voiceCall.log.missed", "Missed call");
+  return (
+    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+      <PhoneCall className="h-4 w-4 shrink-0" />
+      {label}
+    </p>
+  );
+}
