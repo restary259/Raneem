@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CalendarClock, GraduationCap } from "lucide-react";
+import { CalendarClock, GraduationCap, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { majorsData } from "@/data/majorsData";
 
@@ -10,13 +10,15 @@ interface Props {
   degreeInterest: string | null;
 }
 
-type Visit = { scheduled_at: string; status: string; confirmation_status: string | null; outcome: string | null };
+type Visit = { scheduled_at: string; status: string; confirmation_status: string | null; outcome: string | null; office_id: string | null };
+type Office = { name_ar: string; name_en: string; name_he: string; city: string; address_line_1: string | null; timezone: string };
 
 /** Chosen major + office visit booked on the apply form. Read-only. */
 export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeInterest }: Props) {
   const { t, i18n } = useTranslation("dashboard");
   const isAr = (i18n?.language ?? "") === "ar";
   const [visit, setVisit] = useState<Visit | null>(null);
+  const [office, setOffice] = useState<Office | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
     setLoaded(false);
     supabase
       .from("appointments")
-      .select("scheduled_at, status, confirmation_status, outcome")
+      .select("scheduled_at, status, confirmation_status, outcome, office_id")
       .eq("case_id", caseId)
       .eq("public_booking", true)
       .order("created_at", { ascending: false })
@@ -33,7 +35,18 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) console.warn("visit lookup failed", error.message);
-        setVisit((data as Visit) ?? null);
+        const nextVisit = (data as Visit) ?? null;
+        setVisit(nextVisit);
+        if (nextVisit?.office_id) {
+          const { data: officeData } = await supabase
+            .from("offices")
+            .select("name_ar, name_en, name_he, city, address_line_1, timezone")
+            .eq("id", nextVisit.office_id)
+            .maybeSingle();
+          if (!cancelled) setOffice((officeData as Office) ?? null);
+        } else {
+          setOffice(null);
+        }
         setLoaded(true);
       });
     return () => { cancelled = true; };
@@ -86,6 +99,20 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
           )}
         </div>
       </div>
+      {office ? (
+        <div className="flex min-w-0 items-start gap-2">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-[11px] text-muted-foreground">{t("case.application.office", "Office")}</p>
+            <p className="truncate text-sm font-medium" title={isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en}>
+              {isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {office.address_line_1 || office.city}
+            </p>
+          </div>
+        </div>
+      ) : null;
     </section>
   );
 }
