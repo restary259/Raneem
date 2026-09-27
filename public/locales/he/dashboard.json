@@ -100,5 +100,52 @@
       "reassignTo": "העבר אל",
       "reassigned": "הפגישה הועברה"
     }
+  },
+  "pushSettings": {
+    "categoryDesc": {
+      "messages": "צ׳אטים והודעות ישירות.",
+      "appointments": "תזכורות לפגישות ושינויים.",
+      "cases": "עדכונים על התקדמות התיק.",
+      "payments": "תשלומים, חשבוניות ועמלות.",
+      "documents": "בקשות מסמכים והעלאות.",
+      "profile": "השלמת הפרופיל ושינויים.",
+      "recruitment": "בקשות שותפות וגיוס חדשות.",
+      "calls": "שיחות קוליות נכנסות.",
+      "system": "התראות חשבון ומערכת כלליות."
+    },
+    "categoryRole": {
+      "social_media_partner": {
+        "cases": "אבני דרך בהפניה",
+        "payments": "הכנסות"
+      },
+      "ambassador": {
+        "cases": "אבני דרך בהפניה",
+        "payments": "הכנסות"
+      },
+      "agent": {
+        "cases": "אבני דרך בהפניה",
+        "payments": "הכנסות"
+      },
+      "team_member": {
+        "profile": "פרופיל הסטודנט"
+      },
+      "student": {
+        "profile": "הפרופיל"
+      }
+    },
+    "categoryRoleDesc": {
+      "social_media_partner": {
+        "cases": "כשסטודנט שהפנית מגיע לאבן דרך.",
+        "payments": "כשההכנסות שלך מאושרות או משולמות."
+      },
+      "ambassador": {
+        "cases": "כשסטודנט שהפנית מגיע לאבן דרך.",
+        "payments": "כשההכנסות שלך מאושרות או משולמות."
+      },
+      "agent": {
+        "cases": "כשסטודנט שהפנית מגיע לאבן דרך.",
+        "payments": "כשההכנסות שלך מאושרות או משולמות."
+      }
+    }
   }
 }

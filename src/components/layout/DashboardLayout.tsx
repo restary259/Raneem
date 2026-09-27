@@ -522,7 +522,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              {user && <NotificationBell />}
+              {user && <NotificationBell role={role} />}
 
               <TooltipProvider>
                 <Tooltip>
