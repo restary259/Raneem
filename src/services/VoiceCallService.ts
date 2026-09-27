@@ -29,6 +29,9 @@ export const isLiveStatus = (s: VoiceCallStatus | undefined | null) =>
   s === "ringing" || s === "accepted";
 
 export async function canCallUser(me: string, other: string): Promise<boolean> {
+  // Admins may call anyone; the server turns the other person's calling on.
+  const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: me, _role: "admin" });
+  if (isAdmin === true) return true;
   const { data, error } = await supabase.rpc("can_communicate_directly", { p_a: me, p_b: other });
   if (error) return false;
   return data === true;
