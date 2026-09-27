@@ -100,7 +100,7 @@ export default function VoiceRecorder({
     setPlayingPreview(false);
   };
 
-  const reset = function () {
+  const reset = function (errorMessage?: string) {
     startRequestRef.current += 1;
     startingRef.current = false;
     if (unmountedRef.current) {
@@ -119,9 +119,9 @@ export default function VoiceRecorder({
     cancelBeforeReadyRef.current = false;
     previewOnStopRef.current = false;
     setElapsedMs(0);
-    setError(null);
+    setError(errorMessage ?? null);
     stopStream();
-    if (!unmountedRef.current) setRecorderMode("idle");
+    setRecorderMode("idle");
   };
 
   useEffect(function () {
@@ -181,8 +181,7 @@ export default function VoiceRecorder({
     setElapsedMs(durationMs);
 
     if (blob.size === 0) {
-      setError(t("chat.voice.error.empty"));
-      reset();
+      reset(t("chat.voice.error.empty"));
       return;
     }
 
@@ -192,14 +191,13 @@ export default function VoiceRecorder({
     });
     const invalid = validateVoiceRecording(file, durationMs);
     if (invalid) {
-      setError(
+      reset(
         invalid === "duration"
           ? t("chat.voice.error.duration")
           : invalid === "size"
             ? t("chat.voice.error.size")
             : t("chat.voice.error.format"),
       );
-      reset();
       return;
     }
 
