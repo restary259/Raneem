@@ -96,6 +96,14 @@ const SOURCES: IntelSource[] = [
     checkedAt: CHECKED,
   },
   {
+    id: 'tud-international-language',
+    url: 'https://www.tu-darmstadt.de/studieren/studieninteressierte/bewerbung_zulassung_tu/internationale_studierende/index.de.jsp',
+    title: 'TU Darmstadt — International student language requirements',
+    titleAR: 'TU دارمشتات — متطلبات اللغة للطلاب الدوليين',
+    authority: 'university',
+    checkedAt: '2026-09-27',
+  },
+  {
     id: 'stg-int-bew',
     url: 'https://uni-stuttgart.de/studium/bewerbung/international-degree/bewerbung/',
     title: 'Universität Stuttgart — Bewerbungsinformationen für internationale Studieninteressierte',
@@ -150,10 +158,26 @@ const PROGRAMS: ProgramIntel[] = [
       'No programme-specific Bagrut subject or unit requirement was found beyond the anabin access rule. Do not invent one; check the FPSO and the aptitude-assessment statute.',
       'لا يوجد شرط مواد أو وحدات خاص بالبرنامج غير قاعدة anabin. لا تفترض شرطاً؛ راجع لائحة البرنامج ولائحة إثبات الأهلية.',
     ),
-    languageRequirement: unverified(
+    languageRequirement: fact(
+      {
+        language: 'German',
+        minimumLevel: 'B2',
+        certificates: [
+          'DSH-2',
+          'DSD II (B2 in all four sections)',
+          'telc Deutsch C1 Hochschule',
+          'TestDaF level 4 in all four sections',
+          'Goethe Certificate C2',
+          'ÖSD Certificate C2',
+        ],
+      },
       'OFFICIAL_LANGUAGE',
-      'The programme is taught in German, but the exact accepted certificates and minimum level must be read from the TUM Sprachnachweise page for this programme.',
-      'البرنامج يُدرَّس بالألمانية، لكن الشهادات المقبولة والمستوى الأدنى يجب قراءتها من صفحة إثباتات اللغة في TUM لهذا البرنامج.',
+      'tum-sprach',
+      '2026-09-27',
+      {
+        note: 'TUM states that DSD II is sufficient with B2 in all four sections; it also accepts DSH-2, TestDaF level 4 in all sections, telc C1 Hochschule and higher certificates.',
+        noteAR: 'تذكر TUM أن DSD II يكفي عند مستوى B2 في الأجزاء الأربعة، كما تقبل DSH-2 وTestDaF مستوى 4 في جميع الأجزاء وtelc C1 Hochschule وشهادات أعلى.',
+      }
     ),
     gradeRequirement: unverified(
       'OFFICIAL_REQUIREMENT',
@@ -185,7 +209,7 @@ const PROGRAMS: ProgramIntel[] = [
       { noteAR: 'رسوم الفصل، بالإضافة إلى رسوم دراسية للطلاب الدوليين من خارج الاتحاد الأوروبي.' },
     ),
     programUrl: 'https://www.cit.tum.de/en/cit/studium/studiengaenge/bachelor-informatik/',
-    lastVerified: CHECKED,
+    lastVerified: '2026-09-27',
   },
   {
     id: 'rwth-informatik-bsc',
@@ -197,10 +221,15 @@ const PROGRAMS: ProgramIntel[] = [
     programNameDE: 'Bachelor Informatik',
     programNameAR: 'علوم الحاسوب Informatik (بكالوريوس)',
     degreeLevel: 'bachelor',
-    teachingLanguage: unverified(
+    teachingLanguage: fact(
+      ['German', 'English'],
       'OFFICIAL_LANGUAGE',
-      'The teaching language was not stated on the checked application page. The per-programme row in the RWTH Sprachanforderungen PDF is the authoritative place to read it.',
-      'لغة التدريس غير مذكورة في صفحة التقديم المفحوصة. الصف الخاص بالبرنامج في ملف متطلبات اللغة هو المرجع.',
+      'rwth-sprach',
+      '2026-09-27',
+      {
+        note: 'RWTH lists Informatik B.Sc. under the German-and-English language route (§ 3 Abs. 7 and 8 ÜPO).',
+        noteAR: 'تدرج RWTH برنامج Informatik B.Sc. ضمن مسار اللغة الألمانية والإنجليزية (§ 3 Abs. 7 و8 ÜPO).',
+      }
     ),
     admissionMode: fact('nc', 'OFFICIAL_ADMISSION_MODE', 'rwth-info-bew', CHECKED, {
       note: 'The faculty application page explains the NC (restricted admission) procedure for this programme.',
@@ -218,10 +247,39 @@ const PROGRAMS: ProgramIntel[] = [
       'No programme-specific Bagrut subject or unit requirement was found on the checked pages.',
       'لا يوجد شرط مواد أو وحدات خاص بالبرنامج في الصفحات المفحوصة.',
     ),
-    languageRequirement: unverified(
+    languageRequirement: fact(
+      {
+        language: 'German',
+        minimumLevel: 'C1',
+        certificates: [
+          'DSH-2',
+          'TestDaF level 4 in all four sections',
+          'Goethe Certificate C1 or higher',
+          'ÖSD C1',
+          'telc Deutsch C1 Hochschule',
+          'DSD II',
+        ],
+        additionalLanguage: {
+          language: 'English',
+          minimumLevel: 'B2',
+          certificates: [
+            'TOEFL iBT 90',
+            'IELTS 6.0',
+            'Cambridge B2 First (grade B)',
+            'Cambridge C1 Advanced',
+            'Cambridge C2 Proficiency',
+            'PTE Academic 60',
+            'UNIcert II or higher',
+          ],
+        },
+      },
       'OFFICIAL_LANGUAGE',
-      'RWTH lists the accepted language proof per programme in the Sprachanforderungen PDF. Read the Informatik B.Sc. row there instead of assuming a level.',
-      'تدرج RWTH إثبات اللغة المقبول لكل برنامج في ملف متطلبات اللغة. اقرأ صف Informatik B.Sc. بدل افتراض مستوى.',
+      'rwth-sprach',
+      '2026-09-27',
+      {
+        note: 'The checked RWTH language sheet places Informatik B.Sc. in the German-and-English route. The German requirement is recorded as C1-level planning guidance from the accepted DSH/TestDaF/Goethe/telc evidence; English is B2.',
+        noteAR: 'ملف متطلبات اللغة في RWTH يضع Informatik B.Sc. ضمن مسار الألمانية والإنجليزية. تم تسجيل الألمانية على مستوى C1 كتمثيل تخطيطي استناداً إلى إثباتات DSH وTestDaF وGoethe وtelc المقبولة؛ والإنجليزية B2.',
+      }
     ),
     gradeRequirement: fact(
       {
@@ -261,7 +319,7 @@ const PROGRAMS: ProgramIntel[] = [
     ),
     programUrl:
       'https://www.informatik.rwth-aachen.de/cms/informatik/studium/vor-dem-studium/bewerbungsinfos/~npqh/bachelor-informatik/',
-    lastVerified: CHECKED,
+    lastVerified: '2026-09-27',
   },
   {
     id: 'tud-informatik-bsc',
@@ -295,10 +353,29 @@ const PROGRAMS: ProgramIntel[] = [
       'The overview names a university entrance qualification plus interest in logical problem solving and mathematics — no Bagrut unit or grade requirement is published.',
       'النظرة العامة تذكر شهادة تؤهل للجامعة واهتماماً بحل المسائل المنطقية والرياضيات — دون شرط وحدات أو علامات بجروت.',
     ),
-    languageRequirement: unverified(
+    languageRequirement: fact(
+      {
+        language: 'German',
+        minimumLevel: 'C1',
+        certificates: [
+          'DSH-2',
+          'TestDaF TDN 16',
+          'DSD II',
+          'Goethe Certificate C1',
+          'Goethe Certificate C2',
+          'ÖSD C1',
+          'ÖSD C2',
+          'telc Deutsch C1 Hochschule',
+          'UNIcert III',
+        ],
+      },
       'OFFICIAL_LANGUAGE',
-      'The programme is taught in German; the accepted proof was not read on the checked pages.',
-      'البرنامج يُدرَّس بالألمانية؛ إثبات اللغة المقبول غير مقروء في الصفحات المفحوصة.',
+      'tud-international-language',
+      '2026-09-27',
+      {
+        note: 'TU Darmstadt requires DSH-2 for German-taught Bachelor programmes and lists C1-level certificates such as Goethe C1/C2, ÖSD C1/C2 and telc C1 Hochschule as alternatives.',
+        noteAR: 'تطلب TU دارمشتات DSH-2 لبرامج البكالوريوس التي تُدرّس بالألمانية وتدرج شهادات بمستوى C1 مثل Goethe C1/C2 وÖSD C1/C2 وtelc C1 Hochschule كبدائل.',
+      }
     ),
     gradeRequirement: unverified(
       'OFFICIAL_REQUIREMENT',
@@ -326,7 +403,7 @@ const PROGRAMS: ProgramIntel[] = [
     ),
     programUrl:
       'https://www.informatik.tu-darmstadt.de/studium_fb20/im_studium/studiengaenge_liste/informatik_bsc.de.jsp',
-    lastVerified: CHECKED,
+    lastVerified: '2026-09-27',
   },
   {
     id: 'stuttgart-informatik-bsc',
@@ -338,10 +415,15 @@ const PROGRAMS: ProgramIntel[] = [
     programNameDE: 'Bachelor Informatik',
     programNameAR: 'علوم الحاسوب Informatik (بكالوريوس)',
     degreeLevel: 'bachelor',
-    teachingLanguage: unverified(
+    teachingLanguage: fact(
+      ['German'],
       'OFFICIAL_LANGUAGE',
-      'Teaching language not read on the checked pages — open the programme page before stating it.',
-      'لغة التدريس غير مقروءة في الصفحات المفحوصة — افتح صفحة البرنامج قبل ذكرها.',
+      'stg-int-bew',
+      '2026-09-27',
+      {
+        note: 'University of Stuttgart requires German for German-taught degree programmes.',
+        noteAR: 'جامعة شتوتغارت تتطلب الألمانية للبرامج التي تُدرّس بالألمانية.',
+      }
     ),
     admissionMode: unverified(
       'OFFICIAL_ADMISSION_MODE',
@@ -360,10 +442,23 @@ const PROGRAMS: ProgramIntel[] = [
       'No programme-specific Bagrut subject or unit requirement was read.',
       'لم يُقرأ أي شرط مواد أو وحدات خاص بالبرنامج.',
     ),
-    languageRequirement: unverified(
+    languageRequirement: fact(
+      {
+        language: 'German',
+        minimumLevel: 'C1',
+        certificates: [
+          'TestDaF 4x4',
+          'Goethe Certificate C1 or C2',
+          'DSD II',
+        ],
+      },
       'OFFICIAL_LANGUAGE',
-      'Language proof not read on the checked pages.',
-      'إثبات اللغة غير مقروء في الصفحات المفحوصة.',
+      'stg-int-bew',
+      '2026-09-27',
+      {
+        note: 'University of Stuttgart states that sufficient German is required and identifies C1/TestDaF 4x4 as the required level for study in German-taught programmes.',
+        noteAR: 'تذكر جامعة شتوتغارت أن إثبات الألمانية الكافي مطلوب وتحدد مستوى C1/TestDaF 4x4 كالمستوى اللازم للدراسة في البرامج الألمانية.',
+      }
     ),
     gradeRequirement: unverified(
       'OFFICIAL_REQUIREMENT',
@@ -403,7 +498,7 @@ const PROGRAMS: ProgramIntel[] = [
       { noteAR: 'الطلاب الدوليون من غير مواطني دول الاتحاد الأوروبي/المنطقة الاقتصادية يدفعون رسوماً دراسية في بادن-فورتمبيرغ.' },
     ),
     programUrl: 'https://uni-stuttgart.de/studium/bewerbung/international-degree/bewerbung/',
-    lastVerified: CHECKED,
+    lastVerified: '2026-09-27',
   },
 ];
 
