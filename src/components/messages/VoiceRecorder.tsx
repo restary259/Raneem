@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Loader2, Lock, Mic, Play, RotateCcw, Square, Trash2, X } from "lucide-react";
+import { Loader2, Lock, Mic, Play, Send, Square, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -260,7 +260,13 @@ export default function VoiceRecorder({
     const mimeType = supportedMimeType();
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       startingRef.current = false;
       if (requestId !== startRequestRef.current || cancelBeforeReadyRef.current) {
         stream.getTracks().forEach(function (track) {
@@ -563,14 +569,9 @@ export default function VoiceRecorder({
             onClick={function () {
               void sendPreview();
             }}
-            disabled={mode === "sending"}
             className="h-8 w-8 rounded-full"
           >
-            {mode === "sending" ? (
-              <RotateCcw className="h-4 w-4 animate-spin" />
-            ) : (
-              <Check className="h-4 w-4" />
-            )}
+            <Send className="h-4 w-4" />
           </Button>
         </>
       )}
