@@ -145,7 +145,7 @@ export default function VoiceMessage({
           void toggle();
         }}
         aria-label={playing ? t("chat.voice.pause") : t("chat.voice.play")}
-        disabled={!url || failed}
+        disabled={loading || failed}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? (
@@ -191,13 +191,7 @@ export default function VoiceMessage({
                 aria-hidden="true"
                 className={cn(
                   "flex-1 rounded-full transition-colors",
-                  mine
-                    ? index < playedBars
-                      ? "bg-primary-foreground"
-                      : "bg-primary-foreground/35"
-                    : index < playedBars
-                      ? "bg-primary"
-                      : "bg-foreground/25",
+                  index < playedBars ? "bg-primary" : "bg-primary/35",
                 )}
                 style={{ height: Math.round(height * 20) + "px" }}
               />
