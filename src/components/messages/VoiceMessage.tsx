@@ -35,21 +35,13 @@ export default function VoiceMessage({
   const [failed, setFailed] = useState(false);
 
   useEffect(function () {
-    let active = true;
-    getAttachmentUrl(att.path)
-      .then(function (signedUrl) {
-        if (active) setUrl(signedUrl);
-      })
-      .catch(function () {
-        if (active) setFailed(true);
-      });
-    return function () {
-      active = false;
+    const onExternalPause = function (event: Event) {
+      const custom = event as CustomEvent<HTMLAudioElement>;
+      if (custom.detail === audioRef.current) setPlaying(false);
     };
-  }, [att.path]);
-
-  useEffect(function () {
+    window.addEventListener("darb:voice-pause", onExternalPause);
     return function () {
+      window.removeEventListener("darb:voice-pause", onExternalPause);
       if (audioRef.current === activeAudio) {
         audioRef.current.pause();
         activeAudio = null;
@@ -67,11 +59,26 @@ export default function VoiceMessage({
   );
 
   const toggle = async function () {
-    if (!url || failed) return;
+    if (failed) return;
+
+    if (!url) {
+      setLoading(true);
+      try {
+        const signedUrl = await getAttachmentUrl(att.path);
+        setUrl(signedUrl);
+      } catch {
+        setFailed(true);
+        setLoading(false);
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
 
     let audio = audioRef.current;
     if (!audio) {
-      audio = new Audio(url);
+      const sourceUrl = url || await getAttachmentUrl(att.path);
+      audio = new Audio(sourceUrl);
       audio.preload = "metadata";
       audioRef.current = audio;
 
@@ -95,7 +102,10 @@ export default function VoiceMessage({
       });
     }
 
-    if (activeAudio && activeAudio !== audio) activeAudio.pause();
+    if (activeAudio && activeAudio !== audio) {
+      activeAudio.pause();
+      window.dispatchEvent(new CustomEvent<HTMLAudioElement>("darb:voice-pause", { detail: activeAudio }));
+    }
 
     if (audio.paused) {
       setLoading(true);
