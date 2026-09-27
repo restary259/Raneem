@@ -723,13 +723,14 @@ export default function MessageComposer({
         />
       </div>
 
-        <VoiceRecorder
-          disabled={disabled || sending || uploading || kind === "request"}
-          className={voiceActive ? "flex-1" : undefined}
-          onActiveChange={setVoiceActive}
-          onSend={handleVoiceSend}
-        />
-        {!voiceActive && (
+        {(!body.trim() && ready.length === 0 && kind === "text") ? (
+          <VoiceRecorder
+            disabled={disabled || sending || uploading}
+            className={voiceActive ? "flex-1" : undefined}
+            onActiveChange={setVoiceActive}
+            onSend={handleVoiceSend}
+          />
+        ) : (
           <Button
             size="icon"
             onClick={handleSend}
