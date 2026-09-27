@@ -292,7 +292,7 @@ export default function CaseMessagesInboxPage() {
           selected ? "hidden" : "flex",
         )}
       >
-  <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
           {totalUnread > 0 && (
             <Badge variant="destructive">
               {t("messagesInbox.unreadTotal", { count: totalUnread })}
@@ -378,91 +378,154 @@ export default function CaseMessagesInboxPage() {
         </div>
       </div>
 
-      <Card className={cn("min-h-0 flex-1 overflow-hidden", FS_CHAT)}>
-        <div className="flex h-full min-h-0">
-          <aside className={cn("flex w-full shrink-0 flex-col border-e md:w-[360px]", selected && "hidden md:flex")}>
-            <div className="border-b p-3">
-              <div className="relative">
-                <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t("messagesInbox.search")}
-                  className="ps-8"
-                />
-              </div>
-              <div className="mt-2 flex gap-1 overflow-x-auto pb-0.5">
-                {filters.map((f) => (
-                  <Button
-                    key={f.key}
-                    size="sm"
-                    variant={filter === f.key ? "secondary" : "ghost"}
-                    className="shrink-0 gap-1"
-                    onClick={() => setFilter(f.key)}
-                  >
-                    {f.label}
-                    {f.count ? <Badge variant="outline" className="px-1.5 text-[10px]">{f.count}</Badge> : null}
-                  </Button>
-                ))}
-              </div>
+      <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-[300px_1fr] lg:grid-cols-[340px_1fr]">
+        <Card
+          className={cn(
+            "min-h-0 flex-col overflow-hidden md:flex",
+            selected ? "hidden" : "flex",
+          )}
+        >
+          <div className="space-y-2 border-b p-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute inset-y-0 my-auto h-4 w-4 text-muted-foreground ltr:left-2 rtl:right-2" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("messagesInbox.searchPlaceholder")}
+                className="ltr:pl-8 rtl:pr-8"
+              />
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              {loading ? (
-                <div className="flex h-32 items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : items.length === 0 ? (
-                <div className="flex h-40 flex-col items-center justify-center gap-2 px-6 text-center text-sm text-muted-foreground">
-                  <MessageCircle className="h-5 w-5" />
-                  <span>{t("messagesInbox.empty")}</span>
-                </div>
-              ) : (
-                <ThreadList
-                  items={items}
-                  selectedId={selected?.id ?? null}
-                  onSelect={(item) => setSelected({ type: item.type, id: item.id })}
-                  muted={muted}
-                />
-              )}
+            <div className="flex flex-wrap gap-1">
+              {filters.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setFilter(f.key)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-xs transition-colors",
+                    filter === f.key
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "hover:bg-accent",
+                  )}
+                >
+                  {f.label}
+                  {f.count ? ` (${f.count})` : ""}
+                </button>
+              ))}
             </div>
-          </aside>
+          </div>
 
-          <section className={cn("min-w-0 flex-1", !selected && "hidden md:flex md:items-center md:justify-center")}>
-            {selected ? (
-              <div className="flex h-full min-h-0 w-full flex-col">
-                <div className="flex items-center gap-2 border-b px-3 py-2">
-                  <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelected(null)}>
-                    <BackIcon className="h-4 w-4" />
-                  </Button>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">
-                      {selected.type === "case" ? activeCase?.caseName : activeDirect?.otherUserName}
-                    </div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {selected.type === "case" ? activeCase?.caseReference : getRoleLabel(activeDirect?.otherUserRole, t)}
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={toggleMute} aria-label={isMuted ? t("chat.unmute") : t("chat.mute")}>
-                    {isMuted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <div className="min-h-0 flex-1">
-                  {selected.type === "case" && activeCase ? (
-                    <CaseMessages caseId={activeCase.caseId} />
-                  ) : selected.type === "direct" && activeDirect ? (
-                    <DirectMessages thread={activeDirect} currentUserId={user?.id ?? ""} />
-                  ) : null}
-                </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="flex max-w-sm flex-col items-center gap-2 px-6 text-center text-muted-foreground">
-                <MessageSquare className="h-8 w-8" />
-                <p className="text-sm">{t("messagesInbox.selectHint")}</p>
-              </div>
+              <ThreadList
+                items={items}
+                selectedId={selected?.id ?? null}
+                onSelect={(item) => { if (item.type === "whatsapp") return; setSelected({ type: item.type, id: item.id }); }}
+                emptyLabel={t("messagesInbox.empty")}
+                onlineUserIds={online}
+                grouped={filter === "all"}
+              />
             )}
-          </section>
-        </div>
-      </Card>
+          </div>
+        </Card>
+
+        <Card
+          className={cn(
+            "min-h-0 flex-col overflow-hidden md:flex md:rounded-lg md:border",
+            selected ? `flex ${FS_CHAT}` : "hidden",
+          )}
+        >
+          {activeCase || activeDirect ? (
+            <>
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b bg-card p-2 md:p-3">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="shrink-0 md:hidden"
+                    aria-label={t("chat.back")}
+                    onClick={() => setSelected(null)}
+                  >
+                    <BackIcon className="h-4 w-4" />
+                  </Button>
+                  <div className="min-w-0">
+                  <p className="flex items-center gap-2 truncate font-medium">
+                    {activeCase ? activeCase.caseName : activeDirect!.otherUserName}
+                    {activeDirect?.otherUserId && online.has(activeDirect.otherUserId) && (
+                      <span className={`flex items-center gap-1 text-[11px] font-normal ${toneClasses("enrolled").text}`}>
+                        <span className={`h-2 w-2 rounded-full ${toneClasses("enrolled").dot}`} />
+                        {t("chat.presence.online")}
+                      </span>
+                    )}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {activeCase
+                      ? activeCase.caseReference ?? t("chat.type.case")
+                      : activeDirect!.otherUserRole
+                        ? t(
+                            `case.messages.role.${activeDirect!.otherUserRole}`,
+                            activeDirect!.otherUserRole,
+                          )
+                        : t("chat.type.direct")}
+                  </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1 md:gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 px-2 md:px-3"
+                    onClick={toggleMute}
+                    aria-label={isMuted ? t("chat.unmute") : t("chat.mute")}
+                  >
+                    {isMuted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                    <span className="hidden md:inline">
+                      {isMuted ? t("chat.unmute") : t("chat.mute")}
+                    </span>
+                  </Button>
+                  {activeCase && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="px-2 md:px-3"
+                      onClick={() => navigate(`${basePath}/cases/${activeCase.caseId}`)}
+                    >
+                      <FolderOpen className="h-4 w-4 md:hidden" />
+                      <span className="hidden md:inline">{t("messagesInbox.openCase")}</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex min-h-0 flex-1 flex-col">
+                {activeCase ? (
+                  <CaseMessages
+                    key={activeCase.caseId}
+                    caseId={activeCase.caseId}
+                    allowInternal
+                    className="flex min-h-0 flex-1 flex-col"
+                  />
+                ) : (
+                  <DirectMessages
+                    key={activeDirect!.threadId}
+                    threadId={activeDirect!.threadId}
+                    className="flex min-h-0 flex-1 flex-col"
+                  />
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-muted-foreground">
+              <MessageSquare className="h-6 w-6" />
+              <p className="text-sm">{t("messagesInbox.selectThread")}</p>
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
