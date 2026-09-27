@@ -424,7 +424,58 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
     <VoiceCallContext.Provider value={{ phase, inCall: phase !== "idle", startCall }}>
       {children}
       <audio ref={audioRef} autoPlay playsInline className="hidden" />
-      {call && phase !== "idle" && (
+      {call && phase === "incoming" && (
+        <div
+          role="alertdialog"
+          aria-live="assertive"
+          aria-label={t("voiceCall.incomingTitle", "Incoming call")}
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-between bg-gradient-to-b from-brand via-primary to-emerald-600 px-6 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(4rem,env(safe-area-inset-top))] text-primary-foreground"
+        >
+          <p className="text-sm font-semibold uppercase tracking-widest opacity-90">
+            {t("voiceCall.incomingSub", "DARB · Incoming voice call")}
+          </p>
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative flex h-36 w-36 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-primary-foreground/30 motion-safe:animate-ping" />
+              <span className="absolute inset-3 rounded-full bg-primary-foreground/20 motion-safe:animate-pulse" />
+              <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-primary-foreground text-5xl font-bold text-primary shadow-2xl">
+                {(call.peerName || "?").charAt(0).toUpperCase()}
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold drop-shadow">{call.peerName || t("voiceCall.unknown", "Unknown")}</p>
+              <p className="mt-2 text-lg opacity-90 motion-safe:animate-pulse">{t("voiceCall.incoming", "Incoming voice call")}…</p>
+            </div>
+          </div>
+          <div className="flex w-full max-w-xs items-start justify-between">
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={hangUp}
+                disabled={busy}
+                aria-label={t("voiceCall.decline", "Decline")}
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-2xl ring-4 ring-primary-foreground/40 transition active:scale-95 disabled:opacity-60"
+              >
+                <PhoneOff className="h-9 w-9" />
+              </button>
+              <span className="text-sm font-semibold">{t("voiceCall.decline", "Decline")}</span>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={accept}
+                disabled={busy}
+                aria-label={t("voiceCall.accept", "Accept")}
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500 text-primary-foreground shadow-2xl ring-4 ring-primary-foreground/40 transition active:scale-95 motion-safe:animate-bounce disabled:opacity-60"
+              >
+                <Phone className="h-9 w-9" />
+              </button>
+              <span className="text-sm font-semibold">{t("voiceCall.accept", "Accept")}</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {call && phase !== "idle" && phase !== "incoming" && (
         <div
           role="dialog"
           aria-live="assertive"
