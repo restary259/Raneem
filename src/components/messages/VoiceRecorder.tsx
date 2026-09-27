@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Loader2, Lock, Mic, Play, RotateCcw, Square, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -310,42 +310,55 @@ export default function VoiceRecorder({
     }
   };
 
-  const handlePointerDown = function (event: ReactPointerEvent<HTMLButtonElement>) {
+  const handlePointerDown = function (event: React.PointerEvent<HTMLButtonElement>) {
     if (event.button !== 0 || disabled || isActive) return;
     event.preventDefault();
     pointerDownRef.current = true;
     pointerStartRef.current = { x: event.clientX, y: event.clientY };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
     void startRecording();
   };
 
-  const handlePointerMove = function (event: ReactPointerEvent<HTMLButtonElement>) {
-    if (!pointerDownRef.current || modeRef.current !== "recording") return;
-    const dx = event.clientX - pointerStartRef.current.x;
-    const dy = event.clientY - pointerStartRef.current.y;
+  useEffect(function () {
+    const onPointerMove = function (event: PointerEvent) {
+      if (!pointerDownRef.current || modeRef.current !== "recording") return;
+      const dx = event.clientX - pointerStartRef.current.x;
+      const dy = event.clientY - pointerStartRef.current.y;
 
-    if (dx < -80) {
-      cancelRecording();
+      if (dx < -80) {
+        pointerDownRef.current = false;
+        cancelRecording();
+        return;
+      }
+
+      if (dy < -80) {
+        lockedRef.current = true;
+        setRecorderMode("locked");
+      }
+    };
+
+    const onPointerUp = function () {
+      if (!pointerDownRef.current) return;
       pointerDownRef.current = false;
-      return;
-    }
+      if (modeRef.current === "recording") stopRecording(false);
+    };
 
-    if (dy < -80) {
-      lockedRef.current = true;
-      setRecorderMode("locked");
-    }
-  };
+    const onPointerCancel = function () {
+      if (!pointerDownRef.current) return;
+      pointerDownRef.current = false;
+      cancelRecording();
+    };
 
-  const handlePointerUp = function (event: ReactPointerEvent<HTMLButtonElement>) {
-    if (!pointerDownRef.current) return;
-    pointerDownRef.current = false;
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+    return function () {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+    };
+  }, []);
 
-    if (modeRef.current === "recording") {
-      stopRecording(false);
-    } else if (modeRef.current === "locked") {
-      event.currentTarget.releasePointerCapture?.(event.pointerId);
-    }
-  };
+
 
   const togglePreview = async function () {
     const audio = audioPreviewRef.current;
