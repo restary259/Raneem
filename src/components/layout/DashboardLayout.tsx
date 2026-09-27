@@ -485,7 +485,7 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
 
         <div className="flex min-h-0 flex-1 min-w-0 flex-col overflow-hidden">
           {/* Top header */}
-          <header className="flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur sticky top-0 z-10 sm:px-4">
+          <header className={cn("flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur sticky top-0 z-10 sm:px-4", chatFullscreen && "max-md:hidden")}>
             <SidebarTrigger className="h-11 w-11 shrink-0" />
             <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
               <LanguageSwitcher />
