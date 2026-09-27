@@ -434,6 +434,17 @@ function MemberDetailPanel({
                 onChanged={setVoiceCallsEnabled}
               />
             </div>
+            {member.role === "team_member" && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{t("admin.members.reassignSwitch", "Reassign office appointments")}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t("admin.members.reassignDesc", "Can move appointments to other members of their office.")}
+                  </p>
+                </div>
+                <ReassignAppointmentsToggle userId={member.requester_id} userName={member.full_name} />
+              </div>
+            )}
           </CardContent>
         </Card>
 

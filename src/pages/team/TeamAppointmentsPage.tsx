@@ -1215,6 +1215,12 @@ export default function TeamAppointmentsPage() {
                         <p className="text-sm text-foreground/80 leading-relaxed">{selectedAppt.notes}</p>
                       </div>
                     )}
+                    <ReassignAppointment
+                      appointmentId={selectedAppt.id}
+                      officeId={selectedAppt.office_id}
+                      currentMemberId={(selectedAppt as any).team_member_id}
+                      onReassigned={() => { setSelectedAppt(null); fetchAppointments(); }}
+                    />
                   </div>
                   <DialogFooter className="flex-col gap-2 sm:flex-row">
                     <div className="flex gap-2 flex-1">
