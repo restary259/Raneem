@@ -3900,6 +3900,7 @@ export type Database = {
           id: string
           influencer_id: string | null
           intake_month: string | null
+          internal_team_chat_enabled: boolean
           is_manager: boolean
           language_school_id: string | null
           linked_case_id: string | null
@@ -3969,6 +3970,7 @@ export type Database = {
           id: string
           influencer_id?: string | null
           intake_month?: string | null
+          internal_team_chat_enabled?: boolean
           is_manager?: boolean
           language_school_id?: string | null
           linked_case_id?: string | null
@@ -4038,6 +4040,7 @@ export type Database = {
           id?: string
           influencer_id?: string | null
           intake_month?: string | null
+          internal_team_chat_enabled?: boolean
           is_manager?: boolean
           language_school_id?: string | null
           linked_case_id?: string | null
@@ -7300,6 +7303,14 @@ export type Database = {
         Args: { p_referral_type: string; p_student_id: string }
         Returns: number
       }
+      get_team_chat_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          role: string
+        }[]
+      }
       get_team_member_commission_rate: { Args: never; Returns: number }
       get_team_members_commission: { Args: never; Returns: Json }
       get_thread_read_state: {
@@ -7355,6 +7366,10 @@ export type Database = {
           full_name: string
           id: string
         }[]
+      }
+      has_internal_team_chat_access: {
+        Args: { p_user: string }
+        Returns: boolean
       }
       has_permission: {
         Args: { _permission: string; _user_id: string }
@@ -7823,6 +7838,10 @@ export type Database = {
       settle_cash_collection: { Args: { p_case_id: string }; Returns: Json }
       start_direct_thread: { Args: { p_other_user: string }; Returns: string }
       start_student_team_member_thread: { Args: never; Returns: string }
+      start_team_chat_thread: {
+        Args: { p_other_user: string }
+        Returns: string
+      }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
       submit_case_payment: {
         Args: {
