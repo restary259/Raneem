@@ -165,7 +165,7 @@ SELECT
   'IL',
   'Tamra',
   'Asia/Jerusalem',
-  true,
+  false,
   true,
   1
 WHERE NOT EXISTS (
@@ -792,6 +792,284 @@ $$;
 
 REVOKE ALL ON FUNCTION public.confirm_public_appointment(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.confirm_public_appointment(uuid) TO authenticated;
+
+
+-- Booking-enabled offices must have a live primary team member and at least
+-- one open day. This protects the invariant even if Admin writes via SQL/RPC.
+CREATE OR REPLACE FUNCTION public.validate_office_booking_configuration()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public AS $
+BEGIN
+  IF NEW.booking_enabled AND (NOT NEW.is_active OR NEW.deleted_at IS NOT NULL) THEN
+    RAISE EXCEPTION 'Booking can only be enabled for an active office';
+  END IF;
+
+  IF NEW.booking_enabled AND NOT EXISTS (
+    SELECT 1
+    FROM public.office_members om
+    WHERE om.office_id = NEW.id
+      AND om.is_primary = true
+      AND om.is_active = true
+      AND public.is_active_team_member(om.user_id)
+  ) THEN
+    RAISE EXCEPTION 'Booking requires an active primary team member';
+  END IF;
+
+  IF NEW.booking_enabled AND NOT EXISTS (
+    SELECT 1
+    FROM public.office_hours oh
+    WHERE oh.office_id = NEW.id
+      AND oh.is_open = true
+      AND oh.open_time IS NOT NULL
+      AND oh.close_time IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'Booking requires at least one open office day';
+  END IF;
+
+  RETURN NEW;
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.validate_office_booking_configuration() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.validate_office_booking_configuration() TO authenticated, service_role;
+
+DROP TRIGGER IF EXISTS trg_validate_office_booking_configuration ON public.offices;
+CREATE TRIGGER trg_validate_office_booking_configuration
+BEFORE INSERT OR UPDATE OF booking_enabled,is_active,deleted_at
+ON public.offices
+FOR EACH ROW
+EXECUTE FUNCTION public.validate_office_booking_configuration();
+
+-- If an admin removes a team_member role, any office memberships for that
+-- account are deactivated immediately. Re-adding the role does not silently
+-- restore old office access; Admin must explicitly reassign the member.
+CREATE OR REPLACE FUNCTION public.deactivate_office_membership_when_team_role_removed()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public AS $
+BEGIN
+  IF TG_OP = 'DELETE'
+     AND OLD.role = 'team_member'::public.app_role THEN
+    UPDATE public.office_members
+    SET is_active = false,
+        is_primary = false,
+        updated_at = now()
+    WHERE user_id = OLD.user_id AND is_active = true;
+  ELSIF TG_OP = 'UPDATE'
+     AND OLD.role = 'team_member'::public.app_role
+     AND NEW.role IS DISTINCT FROM OLD.role THEN
+    UPDATE public.office_members
+    SET is_active = false,
+        is_primary = false,
+        updated_at = now()
+    WHERE user_id = OLD.user_id AND is_active = true;
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.deactivate_office_membership_when_team_role_removed() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.deactivate_office_membership_when_team_role_removed() TO service_role;
+
+DROP TRIGGER IF EXISTS trg_deactivate_office_membership_when_team_role_removed ON public.user_roles;
+CREATE TRIGGER trg_deactivate_office_membership_when_team_role_removed
+AFTER DELETE OR UPDATE OF role ON public.user_roles
+FOR EACH ROW
+EXECUTE FUNCTION public.deactivate_office_membership_when_team_role_removed();
+
+-- Atomic office configuration write. All related settings/members/hours/rules
+-- are changed in one database transaction. Only Admin may call it.
+CREATE OR REPLACE FUNCTION public.save_office_configuration(
+  p_office_id uuid,
+  p_office jsonb,
+  p_settings jsonb,
+  p_hours jsonb,
+  p_primary_user_id uuid DEFAULT NULL,
+  p_backup_user_id uuid DEFAULT NULL,
+  p_routing_rules jsonb DEFAULT '[]'::jsonb
+)
+RETURNS public.offices
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public AS $
+DECLARE
+  v_office public.offices%ROWTYPE;
+  v_selected uuid[];
+  v_rule jsonb;
+  v_service_type text;
+  v_rule_user uuid;
+  v_rule_priority integer;
+  v_rule_active boolean;
+BEGIN
+  IF NOT public.has_role(auth.uid(), 'admin'::public.app_role) THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NULLIF(trim(COALESCE(p_office->>'name_ar','')), '') IS NULL
+     OR NULLIF(trim(COALESCE(p_office->>'name_en','')), '') IS NULL
+     OR NULLIF(trim(COALESCE(p_office->>'city','')), '') IS NULL THEN
+    RAISE EXCEPTION 'Office name and city are required';
+  END IF;
+
+  IF p_primary_user_id IS NOT NULL AND NOT public.is_active_team_member(p_primary_user_id) THEN
+    RAISE EXCEPTION 'Only active team members can be assigned to an office';
+  END IF;
+
+  IF p_backup_user_id IS NOT NULL
+     AND p_backup_user_id IS DISTINCT FROM p_primary_user_id
+     AND NOT public.is_active_team_member(p_backup_user_id) THEN
+    RAISE EXCEPTION 'Only active team members can be assigned to an office';
+  END IF;
+
+  IF p_primary_user_id IS NOT NULL AND p_backup_user_id IS NOT NULL
+     AND p_primary_user_id = p_backup_user_id THEN
+    RAISE EXCEPTION 'Primary and backup members must be different';
+  END IF;
+
+  IF p_office_id IS NULL THEN
+    INSERT INTO public.offices (
+      name_ar,name_en,name_he,slug,office_code,office_type,country,city,
+      address_line_1,address_line_2,postal_code,phone,email,map_url,timezone,
+      public_description_ar,public_description_en,public_description_he,
+      booking_enabled,is_active,display_order
+    )
+    VALUES (
+      trim(p_office->>'name_ar'), trim(p_office->>'name_en'), COALESCE(trim(p_office->>'name_he'),''),
+      trim(p_office->>'slug'), NULLIF(trim(p_office->>'office_code'),''), COALESCE(p_office->>'office_type','darb'),
+      COALESCE(NULLIF(trim(p_office->>'country'),''),'IL'), trim(p_office->>'city'),
+      NULLIF(trim(p_office->>'address_line_1'),''), NULLIF(trim(p_office->>'address_line_2'),''),
+      NULLIF(trim(p_office->>'postal_code'),''), NULLIF(trim(p_office->>'phone'),''),
+      NULLIF(trim(p_office->>'email'),''), NULLIF(trim(p_office->>'map_url'),''),
+      COALESCE(NULLIF(trim(p_office->>'timezone'),''),'Asia/Jerusalem'),
+      NULLIF(trim(p_office->>'public_description_ar'),''), NULLIF(trim(p_office->>'public_description_en'),''),
+      NULLIF(trim(p_office->>'public_description_he'),''), false,
+      COALESCE((p_office->>'is_active')::boolean, true),
+      COALESCE((p_office->>'display_order')::integer, 0)
+    )
+    RETURNING * INTO v_office;
+  ELSE
+    UPDATE public.offices
+    SET
+      name_ar=trim(p_office->>'name_ar'),
+      name_en=trim(p_office->>'name_en'),
+      name_he=COALESCE(trim(p_office->>'name_he'),''),
+      slug=trim(p_office->>'slug'),
+      office_code=NULLIF(trim(p_office->>'office_code'),''),
+      office_type=COALESCE(p_office->>'office_type','darb'),
+      country=COALESCE(NULLIF(trim(p_office->>'country'),''),'IL'),
+      city=trim(p_office->>'city'),
+      address_line_1=NULLIF(trim(p_office->>'address_line_1'),''),
+      address_line_2=NULLIF(trim(p_office->>'address_line_2'),''),
+      postal_code=NULLIF(trim(p_office->>'postal_code'),''),
+      phone=NULLIF(trim(p_office->>'phone'),''),
+      email=NULLIF(trim(p_office->>'email'),''),
+      map_url=NULLIF(trim(p_office->>'map_url'),''),
+      timezone=COALESCE(NULLIF(trim(p_office->>'timezone'),''),'Asia/Jerusalem'),
+      public_description_ar=NULLIF(trim(p_office->>'public_description_ar'),''),
+      public_description_en=NULLIF(trim(p_office->>'public_description_en'),''),
+      public_description_he=NULLIF(trim(p_office->>'public_description_he'),''),
+      is_active=COALESCE((p_office->>'is_active')::boolean, true),
+      display_order=COALESCE((p_office->>'display_order')::integer, 0),
+      booking_enabled=false
+    WHERE id=p_office_id
+      AND deleted_at IS NULL
+    RETURNING * INTO v_office;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Office not found';
+    END IF;
+  END IF;
+
+  -- Configure team first while booking is still disabled, then enable it only
+  -- after all dependencies are valid.
+  UPDATE public.office_members
+  SET is_active=false, is_primary=false, updated_at=now()
+  WHERE office_id=v_office.id;
+
+  v_selected := ARRAY_REMOVE(ARRAY[p_primary_user_id,p_backup_user_id],NULL);
+
+  IF p_primary_user_id IS NOT NULL THEN
+    INSERT INTO public.office_members (office_id,user_id,membership_type,is_primary,is_active,priority)
+    VALUES (v_office.id,p_primary_user_id,'operator',true,true,1)
+    ON CONFLICT (office_id,user_id) DO UPDATE
+      SET membership_type='operator',is_primary=true,is_active=true,priority=1,updated_at=now();
+  END IF;
+
+  IF p_backup_user_id IS NOT NULL THEN
+    INSERT INTO public.office_members (office_id,user_id,membership_type,is_primary,is_active,priority)
+    VALUES (v_office.id,p_backup_user_id,'backup',false,true,2)
+    ON CONFLICT (office_id,user_id) DO UPDATE
+      SET membership_type='backup',is_primary=false,is_active=true,priority=2,updated_at=now();
+  END IF;
+
+  INSERT INTO public.office_booking_settings (
+    office_id,slot_interval_minutes,default_duration_minutes,minimum_lead_minutes,maximum_days_ahead
+  )
+  VALUES (
+    v_office.id,
+    GREATEST(5,LEAST(120,COALESCE((p_settings->>'slot_interval_minutes')::integer,30))),
+    GREATEST(15,LEAST(240,COALESCE((p_settings->>'default_duration_minutes')::integer,60))),
+    GREATEST(0,COALESCE((p_settings->>'minimum_lead_minutes')::integer,120)),
+    GREATEST(1,LEAST(90,COALESCE((p_settings->>'maximum_days_ahead')::integer,14)))
+  )
+  ON CONFLICT (office_id) DO UPDATE
+  SET slot_interval_minutes=EXCLUDED.slot_interval_minutes,
+      default_duration_minutes=EXCLUDED.default_duration_minutes,
+      minimum_lead_minutes=EXCLUDED.minimum_lead_minutes,
+      maximum_days_ahead=EXCLUDED.maximum_days_ahead,
+      updated_at=now();
+
+  DELETE FROM public.office_hours WHERE office_id=v_office.id;
+  INSERT INTO public.office_hours (office_id,weekday,is_open,open_time,close_time)
+  SELECT
+    v_office.id,
+    (item->>'weekday')::integer,
+    COALESCE((item->>'is_open')::boolean,false),
+    CASE WHEN COALESCE((item->>'is_open')::boolean,false) THEN NULLIF(item->>'open_time','')::time ELSE NULL END,
+    CASE WHEN COALESCE((item->>'is_open')::boolean,false) THEN NULLIF(item->>'close_time','')::time ELSE NULL END
+  FROM jsonb_array_elements(COALESCE(p_hours,'[]'::jsonb)) AS item
+  WHERE (item->>'weekday')::integer BETWEEN 0 AND 6;
+
+  DELETE FROM public.office_routing_rules WHERE office_id=v_office.id;
+  FOR v_rule IN SELECT * FROM jsonb_array_elements(COALESCE(p_routing_rules,'[]'::jsonb))
+  LOOP
+    v_service_type := NULLIF(trim(v_rule->>'service_type'),'');
+    v_rule_user := NULLIF(v_rule->>'assigned_user_id','')::uuid;
+    v_rule_priority := GREATEST(1,COALESCE((v_rule->>'priority')::integer,100));
+    v_rule_active := COALESCE((v_rule->>'is_active')::boolean,true);
+
+    IF v_service_type IS NOT NULL AND v_rule_user IS NOT NULL AND v_rule_active THEN
+      IF NOT public.is_active_team_member(v_rule_user)
+         OR NOT EXISTS (
+           SELECT 1 FROM public.office_members om
+           WHERE om.office_id=v_office.id AND om.user_id=v_rule_user AND om.is_active=true
+         ) THEN
+        RAISE EXCEPTION 'Routing target must be an active team member of the office';
+      END IF;
+
+      INSERT INTO public.office_routing_rules (
+        office_id,service_type,assigned_user_id,priority,is_active
+      ) VALUES (
+        v_office.id,v_service_type,v_rule_user,v_rule_priority,true
+      );
+    END IF;
+  END LOOP;
+
+  UPDATE public.offices
+  SET booking_enabled=COALESCE((p_office->>'booking_enabled')::boolean,false),
+      updated_at=now()
+  WHERE id=v_office.id
+  RETURNING * INTO v_office;
+
+  RETURN v_office;
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.save_office_configuration(uuid,jsonb,jsonb,jsonb,uuid,uuid,jsonb) TO authenticated;
 
 -- Keep timestamps current for direct Admin updates.
 CREATE OR REPLACE FUNCTION public.touch_office_updated_at()
