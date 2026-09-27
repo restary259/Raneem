@@ -72,6 +72,7 @@ export default function VoiceRecorder({
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
   const unmountedRef = useRef(false);
   const startRequestRef = useRef(0);
+  const startingRef = useRef(false);
 
   const isActive = mode !== "idle";
 
@@ -93,7 +94,6 @@ export default function VoiceRecorder({
       audioPreviewRef.current.pause();
       audioPreviewRef.current.currentTime = 0;
     }
-    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setRecordedUrl(null);
     setRecordedFile(null);
     setPlayingPreview(false);
@@ -101,6 +101,7 @@ export default function VoiceRecorder({
 
   const reset = function () {
     startRequestRef.current += 1;
+    startingRef.current = false;
     if (unmountedRef.current) {
       chunksRef.current = [];
       recorderRef.current = null;
@@ -126,10 +127,9 @@ export default function VoiceRecorder({
       cancelBeforeReadyRef.current = true;
       recorderRef.current?.stop();
       stopStream();
-      if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [recordedUrl]);
 
   useEffect(function () {
     if (mode !== "recording" && mode !== "locked") return;
@@ -237,7 +237,8 @@ export default function VoiceRecorder({
   };
 
   const startRecording = async function () {
-    if (disabled || isActive) return;
+    if (disabled || isActive || modeRef.current !== "idle" || startingRef.current) return;
+    startingRef.current = true;
     const requestId = startRequestRef.current + 1;
     startRequestRef.current = requestId;
     cancelBeforeReadyRef.current = false;
@@ -253,6 +254,7 @@ export default function VoiceRecorder({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      startingRef.current = false;
       if (requestId !== startRequestRef.current || cancelBeforeReadyRef.current) {
         stream.getTracks().forEach(function (track) {
           track.stop();
@@ -290,6 +292,7 @@ export default function VoiceRecorder({
 
       if (shouldStopImmediately) stopRecording(false);
     } catch (err: any) {
+      startingRef.current = false;
       stopStream();
       const name = err?.name;
       setError(
