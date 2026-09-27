@@ -59,12 +59,26 @@ describe('Major Intelligence coverage', () => {
       expect(major.aliases.ar.length).toBeGreaterThan(0);
       expect(major.sources.length).toBeGreaterThanOrEqual(3);
 
+      expect(major.bagrutAccess?.status).toBe('verified');
+      expect(major.bagrutAccess?.value).toEqual({
+        mathUnits: 3,
+        englishUnits: 4,
+        furtherUnits: 4,
+      });
+
       for (const program of major.programs) {
         expect(program.universityName.trim()).toBeTruthy();
         expect(program.universityNameAR.trim()).toBeTruthy();
         expect(program.programName.trim()).toBeTruthy();
         expect(program.programNameAR.trim()).toBeTruthy();
         expect(program.programUrl.startsWith('https://')).toBe(true);
+        expect(program.foreignQualification.status).toBe('verified');
+        expect(program.subjectRequirements.status).toBe('verified');
+        expect(program.subjectRequirements.value).toEqual(expect.arrayContaining([
+          expect.objectContaining({ subject: 'mathematics', units: 3 }),
+          expect.objectContaining({ subject: 'english', units: 4 }),
+          expect.objectContaining({ subject: 'further_subject', units: 4 }),
+        ]));
         expect(program.languageRequirement.status).toBe('verified');
         expect(program.languageRequirement.value).not.toBeNull();
 
@@ -74,6 +88,12 @@ describe('Major Intelligence coverage', () => {
             program.languageRequirement.value.minimumLevel,
           );
           expect(program.languageRequirement.value.certificates.length).toBeGreaterThan(0);
+        }
+
+        if (program.languageRequirement.factType === 'DARB_OPERATIONAL_GUIDANCE') {
+          expect(program.languageRequirement.value?.language).toBe('German');
+          expect(program.languageRequirement.value?.minimumLevel).toBe('C1');
+          expect(program.languageRequirement.sourceId).toBeNull();
         }
 
         if (program.deadline.status === 'unverified') {
