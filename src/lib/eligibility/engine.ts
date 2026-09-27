@@ -169,8 +169,11 @@ export function evaluateProgram(
   const rows: CheckRow[] = [...evaluateBagrutAccess(major, intake)];
 
   // Programme-specific subject requirements.
+  // The shared anabin/DAAD Bagrut access rule is already evaluated above.
+  // Do not duplicate those same three subject checks as programme-specific requirements.
   const subj = program.subjectRequirements;
-  if (subj.status === 'verified' && subj.value) {
+  const isSharedBagrutAccess = subj.sourceId !== null && subj.sourceId === major.bagrutAccess?.sourceId;
+  if (!isSharedBagrutAccess && subj.status === 'verified' && subj.value) {
     for (const s of subj.value) {
       const actual =
         s.subject === 'mathematics'
