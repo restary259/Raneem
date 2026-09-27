@@ -27,7 +27,7 @@ export function formatDateMedium<F = string>(value: string | null | undefined, f
 /** `Aug 10, 2026, 5:23 AM`. */
 export function formatDateTime<F = string>(value: string | null | undefined, fallback: F): string | F {
   return value
-    ? new Date(value).toLocaleString(DISPLAY_LOCALE, { dateStyle: "medium", timeStyle: "short" })
+    ? new Date(value).toLocaleString(DISPLAY_LOCALE, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
     : fallback;
 }
 
