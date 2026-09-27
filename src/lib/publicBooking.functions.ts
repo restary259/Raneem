@@ -82,7 +82,7 @@ function intervalOverlap(startA: number, endA: number, startB: number, endB: num
 }
 
 function timeToMinutes(value: string) {
-  const match = /^([0-2]\\d):([0-5]\\d)/.exec(value);
+  const match = /^([0-2]\d):([0-5]\d)/.exec(value);
   if (!match) return null;
   return Number(match[1]) * 60 + Number(match[2]);
 }
