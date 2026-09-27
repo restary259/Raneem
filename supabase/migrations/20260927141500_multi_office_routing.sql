@@ -216,6 +216,7 @@ SET search_path = public AS $$
     WHERE ur.user_id = p_user_id
       AND ur.role = 'team_member'::public.app_role
       AND p.deleted_at IS NULL
+      AND COALESCE(p.deactivated_at, NULL) IS NULL
   );
 $$;
 
@@ -488,6 +489,7 @@ SET search_path = public AS $$
   WHERE public.has_role(auth.uid(), 'admin'::public.app_role)
     AND ur.role = 'team_member'::public.app_role
     AND p.deleted_at IS NULL
+    AND p.deactivated_at IS NULL
   ORDER BY p.full_name;
 $$;
 
@@ -918,6 +920,36 @@ CREATE TRIGGER trg_deactivate_office_membership_when_team_role_removed
 AFTER DELETE OR UPDATE OF role ON public.user_roles
 FOR EACH ROW
 EXECUTE FUNCTION public.deactivate_office_membership_when_team_role_removed();
+
+-- Keep office membership state aligned with profile deactivation. A deactivated
+-- team member must not remain an active office assignee.
+CREATE OR REPLACE FUNCTION public.deactivate_office_membership_on_profile_deactivation()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public AS $
+BEGIN
+  IF NEW.deactivated_at IS NOT NULL
+     AND OLD.deactivated_at IS NULL THEN
+    UPDATE public.office_members
+    SET is_active = false,
+        is_primary = false,
+        updated_at = now()
+    WHERE user_id = NEW.id
+      AND is_active = true;
+  END IF;
+  RETURN NEW;
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.deactivate_office_membership_on_profile_deactivation() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.deactivate_office_membership_on_profile_deactivation() TO service_role;
+
+DROP TRIGGER IF EXISTS trg_deactivate_office_membership_on_profile_deactivation ON public.profiles;
+CREATE TRIGGER trg_deactivate_office_membership_on_profile_deactivation
+AFTER UPDATE OF deactivated_at ON public.profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.deactivate_office_membership_on_profile_deactivation();
 
 -- Atomic office configuration write. All related settings/members/hours/rules
 -- are changed in one database transaction. Only Admin may call it.
