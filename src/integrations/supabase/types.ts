@@ -7447,6 +7447,13 @@ export type Database = {
         }[]
       }
       get_whatsapp_health: { Args: never; Returns: Json }
+      get_whatsapp_inbound_stats: {
+        Args: never
+        Returns: {
+          inbound_count: number
+          last_inbound_at: string
+        }[]
+      }
       get_whatsapp_ingest_failures: {
         Args: { p_include_resolved?: boolean }
         Returns: {
