@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Landmark, Loader2 } from "lucide-react";
-import { toneClasses } from "@/lib/statusTokens";
+import { Landmark, Loader2, Settings2 } from "lucide-react";
+import { Link } from "@/lib/router-compat";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ interface Props {
   open: boolean;
   details: BankDetailsPayload | null;
   submitting: boolean;
+  bankDetailsPath: string;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
@@ -23,11 +24,13 @@ interface Props {
 /**
  * Preview step before a partner/ambassador/agent sends their saved bank details
  * into the admin chat. Fields come from the `profiles` row — nothing is typed.
+ * The editor that populates that row lives at `bankDetailsPath`.
  */
 export default function BankDetailsShareDialog({
   open,
   details,
   submitting,
+  bankDetailsPath,
   onOpenChange,
   onConfirm,
 }: Props) {
@@ -75,9 +78,25 @@ export default function BankDetailsShareDialog({
               ))}
             </div>
 
-            {!canSend && (
-              <p className={`text-xs ${toneClasses("payment").text}`}>{t("chat.bankShare.empty", "No bank details saved yet. Add your bank details in Bank details first.")}</p>
-            )}
+            {/* Always offer a destination to the editor so a user with no saved
+                details can add them without leaving the chat. */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">
+                {canSend
+                  ? t("chat.bankShare.reviewHint", "Review your saved bank details below. They will be sent to Administration for processing your payouts.")
+                  : t("chat.bankShare.empty", "No bank details saved yet. Add your bank details in Bank details first.")}
+              </p>
+              <Link
+                to={bankDetailsPath}
+                onClick={() => onOpenChange(false)}
+                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline"
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+                {canSend
+                  ? t("chat.bankShare.manageDetails", "Manage bank details")
+                  : t("chat.bankShare.addDetails", "Add bank details")}
+              </Link>
+            </div>
           </div>
         )}
 

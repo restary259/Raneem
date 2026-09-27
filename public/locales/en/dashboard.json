@@ -3240,7 +3240,9 @@
       "breakdown": "Commission Breakdown",
       "noQualifying": "No students have reached submission stage yet.",
       "pending": "In Pipeline (not yet qualifying)",
-      "studentCount": "{{count}} students"
+      "studentCount": "{{count}} students",
+      "bankDetails": "Bank details",
+      "bankDetailsSaved": "Bank details saved"
     },
     "visibility": {
       "referralOnlyHint": "Referral-only mode: apply/contact cases are hidden."
@@ -4323,7 +4325,10 @@
       "account": "Account number",
       "iban": "IBAN",
       "bic": "BIC / SWIFT",
-      "country": "Country"
+      "country": "Country",
+      "addDetails": "Add bank details",
+      "manageDetails": "Manage bank details",
+      "missing": "Your bank details are not saved yet. Add them first."
     },
     "section": {
       "direct": "Direct",

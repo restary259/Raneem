@@ -1925,3 +1925,33 @@ catalog school `alpha-aktiv`.
 - A visitor's 10:00–18:00 Sunday–Thursday slot is a pending request until their assigned team member explicitly confirms it, because assignment must not silently promise availability or send confirmed-appointment automation.
 - Public booking excludes overlapping one-hour office slots with a database exclusion constraint, because simultaneous applicants must not claim the same time.
 - Landing translations exist in bundled `src/locales` and public `public/locales`; update both, because visitors render the bundled copy while other namespace loads may use HTTP.
+
+## Bank details: one shared editor + server-authoritative chat share (2026-09-27)
+- **One editor for every payout-earning role.** `src/components/common/BankDetailsEditor.tsx`
+  is the single implementation (country selector IL/DE, dynamic field sets, validation,
+  full column payload incl. `bank_country`/`bic`, and the confirmed lock). It replaces the
+  previously orphaned common form (which lacked `bank_country`/`bic` and used legacy
+  `influencer.earnings.*` keys) and the standalone `AgentBankDetailsPage` form (now a ~20-line
+  wrapper resolving `useAuth()` → `<BankDetailsEditor userId>`). It uses `agent.bank.*`.
+- **Surfaces:** `PartnerProfilePage` renders it after personal details (covers partner +
+  ambassador, both on `/partner/profile`); the Agent surface is still
+  `/agent/earnings?tab=bank` (and the `/agent/bank-details` redirect). `PartnerEarningsPage`
+  gained a **Bank details / Bank details saved** shortcut next to the payout CTA linking to
+  `/partner/profile` (boolean readiness only — no bank fields rendered there).
+- **Chat share is now server-authoritative.** `BankDetailsShareDialog` takes a
+  `bankDetailsPath` and always offers an **Add / Manage bank details** link (`chat.bankShare.addDetails` /
+  `.manageDetails`); `DirectMessages` derives the path per role
+  (`agent → /agent/earnings?tab=bank`, else `/partner/profile`) and
+  `submitBankShare()` now calls the RPC `send_bank_details_to_admin(p_thread_id)` instead of
+  sending a browser-built body. The RPC (migration `20260929000000_bank_details_chat_security.sql`,
+  **MANUAL DEPLOY**) reads the caller's own saved `profiles` row, requires the caller to be a
+  thread participant AND an admin participant, rejects empty details (`BANK_DETAILS_MISSING`),
+  posts via `send_direct_message`, and tags the row `kind='bank_share'`. The body keeps the
+  `::bank-details::` marker + camelCase JSON so `parseBankDetailsBody`/`BankDetailsCard` render
+  unchanged.
+- i18n: `chat.bankShare.{addDetails,manageDetails,missing}` + `partner.earnings.{bankDetails,bankDetailsSaved}`
+  added to en + ar (parity-guarded). Orphan i18n left intentionally.
+- Tests: `chatFormat.test.ts`, `common/__tests__/BankDetailsEditor.test.tsx`,
+  `messages/__tests__/BankDetailsShareDialog.test.tsx`; `e2e/bank-details.spec.ts`
+  (session-injected, skipped in CI). Build + `npx vitest run` 1484 pass.
+

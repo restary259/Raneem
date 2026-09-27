@@ -7946,6 +7946,10 @@ export type Database = {
         }
         Returns: string
       }
+      send_bank_details_to_admin: {
+        Args: { p_thread_id: string }
+        Returns: string
+      }
       send_direct_message: {
         Args: {
           p_attachments?: Json

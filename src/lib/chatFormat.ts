@@ -388,7 +388,7 @@ export function formatThreadTime(iso: string | null, now: Date = new Date()): st
 /** Human-readable list of the extensions users may attach. */
 export const ALLOWED_ATTACHMENT_LABEL = "PNG, JPG, WEBP, GIF, PDF, DOC(X), XLS(X), TXT";
 
-/* ── Bank-details share (no DB kind; encoded in the message body) ──────────── */
+/* ── Bank-details share (kind='bank_share', marker kept for rendering) ─────── */
 
 /** Bank fields shared from a partner/ambassador/agent profile into the admin chat. */
 export interface BankDetailsPayload {

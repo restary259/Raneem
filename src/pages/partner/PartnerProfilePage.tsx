@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
+import BankDetailsEditor from "@/components/common/BankDetailsEditor";
 import { validatePassword } from "@/components/auth/PasswordStrength";
 import { buildReferralUrl } from "@/lib/referral";
 import { User, Lock, Link2, Copy, Check, ChevronRight } from "lucide-react";
@@ -200,6 +201,10 @@ export default function PartnerProfilePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Bank details are the payout prerequisite for both partners and
+          ambassadors — one shared editor with the agent surface. */}
+      {user && <BankDetailsEditor userId={user.id} />}
 
       {referralUrl && (
         <Card>
