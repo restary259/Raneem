@@ -99,10 +99,7 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
           <CVForm data={data} setData={setData} updatePersonal={updatePersonal} updateData={updateData} updateDesign={updateDesign} updateSignature={updateSignature} errors={errors} />
         </div>
         <div className={`${mobileTab === "preview" ? "block" : "hidden"} lg:block ${paneCls}`}>
-          {/* w-fit + mx-auto keeps the "Preview / معاينة" heading aligned with
-              the CV sheet's own width in every language, so the heading sits
-              directly above the sheet without pushing it in RTL. */}
-          <div className={`w-fit mx-auto lg:sticky ${stickyTopClassName}`}>
+          <div className={`lg:sticky ${stickyTopClassName}`}>
             <h3 className="text-lg font-medium mb-3 print:hidden">{t("lebenslaufBuilder.preview")}</h3>
             <CVPreview data={data} />
           </div>
