@@ -110,8 +110,7 @@ describe("notification category catalog", () => {
     const leafKeys = (node: unknown, prefix = ""): string[] => {
       if (typeof node !== "object" || node === null) return [prefix];
       return Object.entries(node as Record<string, unknown>).flatMap(
-        ([key, value]) =>
-          leafKeys(value, prefix ? `${prefix}.${key}` : key),
+        ([key, value]) => leafKeys(value, prefix ? `${prefix}.${key}` : key),
       );
     };
     const read = (lang: string) =>
