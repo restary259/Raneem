@@ -2010,3 +2010,99 @@ catalog school `alpha-aktiv`.
   future PR adding a notification category must also supply Hebrew**, or the
   suite goes red. Still uncovered by this guard: the other Hebrew `dashboard.json`
   blocks (`chat`, `intel`, `team`).
+
+## Hebrew localization complete (all pages/namespaces) — 2026-09-27
+- Hebrew (`he`) now has **full key coverage across all 14 public namespaces**:
+  `about`, `blog`, `broadcast`, `common`, `contact`, `dashboard`, `faq`,
+  `landing`, `legal`, `partners`, `partnership`, `resources`, `services`,
+  `whatsapp` — 0 missing keys (`scripts/check-he-locales.py`).
+- `public/locales/{en,ar,he}` are the source of truth served by the HTTP
+  backend (`/locales/{{lng}}/{{ns}}.json`). A subset ALSO exists under
+  `src/locales/{en,ar,he}` and is imported eagerly in `src/i18n.ts`
+  (`common, landing, contact, broadcast, legal`) so first paint never waits on
+  the network. **These two trees must stay identical** — the sync has only ever
+  been manual, which is exactly how Hebrew came to have
+  `src/locales/he/contact.json` while every other bundled namespace was
+  English-only (Hebrew first paint rendered English). Now mirrored for all five.
+- New guard `src/lib/hebrewLocaleCoverage.test.ts`: every EN namespace must
+  exist in `he` with **full leaf-key coverage**, and each `src/locales/he/*`
+  bundled copy must **deep-equal** its `public/locales/he/*` counterpart. This
+  is the regression fence — a new English string without Hebrew now fails CI.
+  (Note: `src/i18n.ts` sets `fallbackLng: { he: ['en'] }`, so a missing Hebrew
+  key silently renders English; only this guard catches it.)
+- Two latently-untranslated **legal/factual** surfaces were created from
+  scratch: `faq.json` (87 keys, source-backed answers on Bagrut recognition,
+  Studienkolleg, uni-assist, blocked account, visa for Israeli passports,
+  working/graduation) and `legal.json` (150 keys: privacy / terms /
+  accessibility). Keep these aligned with their English originals whenever
+  policy or official figures change — they are legally operative copy.
+- Helper scripts (repo-utility, not runtime): `scripts/check-he-locales.py`
+  (coverage report), `scripts/show-he-missing.py`, `scripts/merge-i18n-tsv.py`
+  (path-safe TSV merger, the fastest way to translate a whole section without
+  JSON-quoting overhead), `scripts/check-he-mixed.py` (flags Latin runs with
+  Hebrew on **both** sides — the real half-translated-word signal; one-sided
+  Hebrew-prefix + proper-noun like `ו-Studienkolleg` is a false positive).
+- Build clean; `npx vitest run` 1528 passed | 1 skipped.
+
+### Key presence is not translation — the value guard (2026-09-27)
+- The coverage checks above only compare **leaf-key paths**. A Hebrew value
+  copied verbatim from English satisfies them while still rendering English
+  (and because `fallbackLng: { he: ['en'] }`, a missing value is
+  indistinguishable from a deliberate fallback). An early pass of this work
+  reported "0 missing keys" while ~29 user-visible strings were still English —
+  including the homepage `studentGallery` (title, subtitle, every
+  `destination: "Germany"` and the student names — `HomepageExperience` renders
+  it via `src/pages/Index.tsx`), `nav.broadcast` / `seo.broadcastTitle`,
+  `resourcesPage.badge`, the `servicesHero` / `partnershipHero` /
+  `broadcastHero` eyebrows, `homepage.hero.eyebrow` and
+  `costCalc.transportLabel`.
+- `hebrewLocaleCoverage.test.ts` now has a second assertion,
+  `has translated Hebrew values, not English copies`: a key must be translated
+  when **English and Arabic differ and the Arabic value contains Arabic script**.
+  Arabic is used purely as evidence that a string is translatable, so this
+  cannot invent work for proper nouns. `IDENTICAL_BY_DESIGN` exempts URLs,
+  asset paths, element ids, placeholders and short codes — and is kept
+  deliberately NARROW: a wide pattern is itself a silent hole. Do **not** add
+  `brand`/`campaign`/`icon` (they hold user-visible brand words Arabic
+  translates: `Darb` → `درب`) or `.value.` (the spreadsheet value labels mix
+  prose with proper nouns like `PayPal`, so a blanket exemption hides
+  regressions). A first pass of this guard exempted both and hid two untranslated
+  keys (`landing.homepage.hero.campaign`, `blog.brand`); both are now translated
+  as `דארב` and the exempted-pattern regression is caught.
+  Verified non-vacuous: reintroducing an English `studentGallery.title` or
+  `blog.brand` fails it.
+- Consequence to remember: **adding a new English string that Arabic also
+  translates now requires Hebrew, at the value level**, not just a stub key.
+- Three keys stay intentionally non-Hebrew and are covered by the exemptions:
+  the German word `Studienkolleg` (rendered `Studienkolleg (שנת מכינה)`),
+  `Europass (אירופס)`, and the `Deutschlandticket` ticket name.
+- `team.appointments.labelTimeRange` was also **rewritten** in the original pass
+  (EN `(8 am – 8 pm)` / AR `(8 ص – 8 م)` → HE `(8:00–20:00)`). A translation PR
+  must not change meaning; it is now `(8:00 – 20:00)` — same 12-hour form as
+  EN/AR.
+
+### Native-review gate for legal / FAQ Hebrew (OPEN — do not treat as reviewed)
+- `public/locales/he/legal.json` (privacy policy, terms of use, accessibility
+  statement) and `public/locales/he/faq.json` (Bagrut recognition,
+  Studienkolleg, uni-assist, the blocked account, the Israeli-passport visa
+  route, working after graduation) are **newly authored Hebrew**, not
+  professionally reviewed. They carry legally operative copy and cite official
+  figures (EUR 11,904 / 992 blocked account, 140 full days, the 18-month
+  post-study permit) and source URLs.
+- `src/lib/consent.ts` ties `POLICY_VERSION` to this copy, so it must be
+  reviewed by a qualified native Hebrew speaker — and for the privacy/terms
+  text, by someone able to confirm it matches the English operative meaning —
+  before it is relied on. Treat this as an operator/reviewer decision; nothing
+  in the repo enforces it.
+- The earlier `PENDING_NATIVE_REVIEW` exemption in the coverage test was
+  **removed** (its lists are now empty) because key coverage is complete. That
+  removes the *mechanical* reminder, not the review obligation above.
+
+### Repo hygiene
+- `scripts/mirror-he-bundled-locales.py` mirrors `public/locales/he/*` into the
+  eagerly-bundled `src/locales/he/*` (the two must stay byte-identical; the
+  coverage test enforces it). It was originally committed at the repo root as
+  `.tmp_he_bundle.py`, which was wrong — temp files do not belong at the root
+  and every sibling is documented under `scripts/`.
+
+
