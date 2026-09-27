@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { DollarSign, Award, Clock, Info, History, CheckCircle2, Hourglass, Send, Lock } from "lucide-react";
+import { DollarSign, Award, Clock, Info, History, CheckCircle2, Hourglass, Send, Lock, Landmark } from "lucide-react";
 import { toneClasses } from "@/lib/statusTokens";
 import { LoadingState } from "@/components/shell";
 import { useDirection } from "@/hooks/useDirection";
@@ -35,6 +35,7 @@ export default function PartnerEarningsPage() {
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [paidCaseMap, setPaidCaseMap] = useState<Record<string, string>>({});
   const [payoutPreview, setPayoutPreview] = useState<any>(null);
+  const [bankDetailsReady, setBankDetailsReady] = useState(false);
 
 
   const { summary: earnings, refetch: refetchEarnings } = useEarningsSummary(true);
@@ -44,7 +45,7 @@ export default function PartnerEarningsPage() {
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
-    const [overrideRes, settingsRes, roleRes] = await Promise.all([
+    const [overrideRes, settingsRes, roleRes, bankRes] = await Promise.all([
       fetchPartnerVisibilityOverride(uid),
       (supabase as any)
         .from("platform_settings")
@@ -52,7 +53,19 @@ export default function PartnerEarningsPage() {
         .limit(1)
         .maybeSingle(),
       (supabase as any).rpc("get_my_role"),
+      (supabase as any)
+        .from("profiles")
+        .select("bank_name, bank_branch, bank_account_number, iban, bic")
+        .eq("id", uid)
+        .maybeSingle(),
     ]);
+
+    // Payout prerequisite: at least one bank field saved. Only a boolean is
+    // needed here — the editor itself lives on the profile page.
+    const bank = bankRes?.data;
+    setBankDetailsReady(
+      Boolean(bank?.bank_name || bank?.bank_branch || bank?.bank_account_number || bank?.iban || bank?.bic),
+    );
 
     const globalRate = roleRes?.data === "ambassador"
       ? Number(settingsRes.data?.ambassador_commission_rate ?? 0)
@@ -196,17 +209,29 @@ export default function PartnerEarningsPage() {
           <DollarSign className="h-6 w-6 text-primary" />
           {t("partner.earningsTitle")}
         </h1>
-        {/* Payout is requested inside the Administration chat. */}
-        {canRequestPayout && (
-          <Button asChild className="gap-2 shrink-0" size="sm">
-            <Link to="/partner/messages">
-              <Send className="h-4 w-4" />
-              {isAr
-                ? `طلب صرف ₪${unlockedAmount.toLocaleString("en-US")} عبر المحادثة`
-                : `Request payout ₪${unlockedAmount.toLocaleString("en-US")} in chat`}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Payout prerequisite shortcut — the editor itself lives on the
+              profile page (single implementation, no bank fields here). */}
+          <Button asChild variant="outline" size="sm" className="gap-2 shrink-0">
+            <Link to="/partner/profile">
+              {bankDetailsReady ? <CheckCircle2 className="h-4 w-4 text-[hsl(var(--status-enrolled))]" /> : <Landmark className="h-4 w-4" />}
+              {bankDetailsReady
+                ? t("partner.earnings.bankDetailsSaved", "Bank details saved")
+                : t("partner.earnings.bankDetails", "Bank details")}
             </Link>
           </Button>
-        )}
+          {/* Payout is requested inside the Administration chat. */}
+          {canRequestPayout && (
+            <Button asChild className="gap-2 shrink-0" size="sm">
+              <Link to="/partner/messages">
+                <Send className="h-4 w-4" />
+                {isAr
+                  ? `طلب صرف ₪${unlockedAmount.toLocaleString("en-US")} عبر المحادثة`
+                  : `Request payout ₪${unlockedAmount.toLocaleString("en-US")} in chat`}
+              </Link>
+            </Button>
+          )}
+        </div>
 
         {hasOpenRequest && (
           <div className="flex items-center gap-1.5 text-xs text-[hsl(var(--status-contacted))] bg-[hsl(var(--status-contacted)/0.1)] border border-[hsl(var(--status-contacted)/0.3)] rounded-full px-3 py-1.5">

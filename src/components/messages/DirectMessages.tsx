@@ -27,7 +27,7 @@ import {
   type ThreadReadState,
 } from "@/services/CaseMessageService";
 import type { ChatMessage, MentionablePerson } from "@/lib/chatFormat";
-import { buildBankDetailsBody, isVoiceAttachment, type BankDetailsPayload } from "@/lib/chatFormat";
+import { isVoiceAttachment, type BankDetailsPayload } from "@/lib/chatFormat";
 import { notifyNewMessageEmail } from "@/services/NotificationService";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { useTypingIndicator } from "@/hooks/useTypingIndicator";
@@ -46,6 +46,8 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   const isStaff = role === "admin" || role === "team_member";
   const isPartner = role === "social_media_partner" || role === "ambassador" || role === "agent";
   const caseLinkBase = role === "admin" ? "/admin/cases" : "/team/cases";
+  // Where this role edits the profiles bank row the share preview reads from.
+  const bankDetailsPath = role === "agent" ? "/agent/earnings?tab=bank" : "/partner/profile";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -177,11 +179,15 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
   };
 
   const submitBankShare = async () => {
-    if (!bankDetails) return;
     setBankSubmitting(true);
     try {
-      const body = buildBankDetailsBody(bankDetails);
-      await sendDirectMessage(threadId, body, [], []);
+      // Server-authoritative: the RPC reads the caller's saved profiles row,
+      // verifies an admin is in this thread, and posts the marker body itself.
+      // The browser preview above is display-only and never sent.
+      const { error } = await (supabase as any).rpc("send_bank_details_to_admin", {
+        p_thread_id: threadId,
+      });
+      if (error) throw error;
       void notifyNewMessageEmail({
         threadType: "direct",
         threadId,
@@ -191,7 +197,13 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
       toast({ description: t("chat.bankShare.sent", "Bank details sent to Administration") });
       await load();
     } catch (err: any) {
-      toast({ variant: "destructive", description: err.message });
+      const missing = String(err?.message ?? "").includes("BANK_DETAILS_MISSING");
+      toast({
+        variant: "destructive",
+        description: missing
+          ? t("chat.bankShare.missing", "Your bank details are not saved yet. Add them first.")
+          : err.message,
+      });
     } finally {
       setBankSubmitting(false);
     }
@@ -270,6 +282,7 @@ export default function DirectMessages({ threadId, className }: DirectMessagesPr
         open={bankShareOpen}
         details={bankDetails}
         submitting={bankSubmitting}
+        bankDetailsPath={bankDetailsPath}
         onOpenChange={setBankShareOpen}
         onConfirm={submitBankShare}
       />

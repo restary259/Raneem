@@ -3258,7 +3258,9 @@
       "breakdown": "تفاصيل العمولة",
       "noQualifying": "لم يصل أي طالب لمرحلة التقديم بعد.",
       "pending": "قيد الإجراء (لم يتأهل بعد)",
-      "studentCount": "{{count}} طالب"
+      "studentCount": "{{count}} طالب",
+      "bankDetails": "التفاصيل البنكية",
+      "bankDetailsSaved": "التفاصيل البنكية محفوظة"
     },
     "visibility": {
       "referralOnlyHint": "وضع الإحالة فقط: حالات التقديم والتواصل مخفية."
@@ -4341,7 +4343,10 @@
       "account": "رقم الحساب",
       "iban": "IBAN",
       "bic": "BIC / SWIFT",
-      "country": "الدولة"
+      "country": "الدولة",
+      "addDetails": "أضف التفاصيل البنكية",
+      "manageDetails": "إدارة التفاصيل البنكية",
+      "missing": "تفاصيلك البنكية غير محفوظة بعد. أضفها أولاً."
     },
     "section": {
       "direct": "مباشر",
