@@ -6,6 +6,7 @@ import {
   groupMessages,
   initials,
   isVoiceAttachment,
+  normalizeVoiceMime,
   validateAttachmentFile,
   validateVoiceRecording,
   type ChatMessage,
@@ -91,6 +92,8 @@ describe("chatFormat", () => {
     expect(validateVoiceRecording(voice, 0)).toBe("duration");
     expect(validateVoiceRecording(voice, 5 * 60 * 1000 + 1)).toBe("duration");
     expect(validateVoiceRecording({ size: 48_000, type: "audio/wav" }, 7_250)).toBe("mime");
+    expect(validateVoiceRecording({ size: 48_000, type: "audio/webm; codecs=opus; bitrate=48000" }, 7_250)).toBeNull();
+    expect(normalizeVoiceMime("audio/ogg; codecs=opus; bitrate=48000")).toBe("audio/ogg;codecs=opus");
     expect(formatVoiceDuration(7_250)).toBe("0:07");
     expect(formatVoiceDuration(65_000)).toBe("1:05");
   });

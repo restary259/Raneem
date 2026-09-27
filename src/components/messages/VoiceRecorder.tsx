@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, Lock, Mic, Play, Send, Square, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   formatVoiceDuration,
   MAX_VOICE_DURATION_MS,
+  normalizeVoiceMime,
   validateVoiceRecording,
 } from "@/lib/chatFormat";
 const RECORDING_MIME_CANDIDATES = [
@@ -63,17 +64,14 @@ export default function VoiceRecorder({
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const startedAtRef = useRef(0);
-  const pointerDownRef = useRef(false);
-  const keyboardDownRef = useRef(false);
-  const pointerStartRef = useRef({ x: 0, y: 0 });
   const lockedRef = useRef(false);
-  const releaseBeforeReadyRef = useRef(false);
   const cancelBeforeReadyRef = useRef(false);
   const previewOnStopRef = useRef(false);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
   const unmountedRef = useRef(false);
   const startRequestRef = useRef(0);
   const startingRef = useRef(false);
+  const stoppingRef = useRef(false);
   const lastControlActionAtRef = useRef(0);
 
   const isActive = mode !== "idle";
@@ -113,10 +111,7 @@ export default function VoiceRecorder({
     clearPreview();
     chunksRef.current = [];
     recorderRef.current = null;
-    pointerDownRef.current = false;
-    keyboardDownRef.current = false;
     lockedRef.current = false;
-    releaseBeforeReadyRef.current = false;
     cancelBeforeReadyRef.current = false;
     previewOnStopRef.current = false;
     setElapsedMs(0);
@@ -129,7 +124,8 @@ export default function VoiceRecorder({
     return function () {
       unmountedRef.current = true;
       cancelBeforeReadyRef.current = true;
-      recorderRef.current?.stop();
+      const recorder = recorderRef.current;
+      if (recorder && recorder.state !== "inactive") recorder.stop();
       stopStream();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -161,15 +157,21 @@ export default function VoiceRecorder({
     };
   }, [mode, maxDurationMs]);
 
-  const finalizeRecording = async function () {
+  const finalizeRecording = async function (requestId: number, recorder: MediaRecorder) {
+    if (requestId !== startRequestRef.current || unmountedRef.current) {
+      stopStream();
+      return;
+    }
+    stoppingRef.current = false;
     if (cancelBeforeReadyRef.current) {
       reset();
       return;
     }
 
-    const recorder = recorderRef.current;
+    const rawMime = recorder.mimeType || supportedMimeType() || "audio/webm";
+    const normalizedMime = normalizeVoiceMime(rawMime);
     const blob = new Blob(chunksRef.current, {
-      type: recorder?.mimeType || supportedMimeType() || "audio/webm",
+      type: normalizedMime,
     });
     chunksRef.current = [];
     recorderRef.current = null;
@@ -186,8 +188,8 @@ export default function VoiceRecorder({
       return;
     }
 
-    const file = new File([blob], "voice-" + Date.now() + "." + extensionForMime(blob.type), {
-      type: blob.type || "audio/webm",
+    const file = new File([blob], "voice-" + Date.now() + "." + extensionForMime(normalizedMime), {
+      type: normalizedMime,
       lastModified: Date.now(),
     });
     const invalid = validateVoiceRecording(file, durationMs);
@@ -224,13 +226,16 @@ export default function VoiceRecorder({
   };
 
   const stopRecording = function (preview: boolean) {
+    if (stoppingRef.current) return;
     previewOnStopRef.current = preview;
     const recorder = recorderRef.current;
     if (!recorder) {
-      releaseBeforeReadyRef.current = true;
       return;
     }
-    if (recorder.state !== "inactive") recorder.stop();
+    if (recorder.state !== "inactive") {
+      stoppingRef.current = true;
+      recorder.stop();
+    }
   };
 
   const cancelRecording = function () {
@@ -238,6 +243,8 @@ export default function VoiceRecorder({
     previewOnStopRef.current = false;
     const recorder = recorderRef.current;
     if (recorder && recorder.state !== "inactive") {
+      if (stoppingRef.current) return;
+      stoppingRef.current = true;
       recorder.stop();
     } else {
       reset();
@@ -277,7 +284,6 @@ export default function VoiceRecorder({
       }
       streamRef.current = stream;
 
-      const shouldStopImmediately = !pointerDownRef.current || releaseBeforeReadyRef.current;
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : undefined);
 
       recorderRef.current = recorder;
@@ -285,7 +291,7 @@ export default function VoiceRecorder({
       startedAtRef.current = Date.now();
       setElapsedMs(0);
       lockedRef.current = false;
-      releaseBeforeReadyRef.current = false;
+      stoppingRef.current = false;
       cancelBeforeReadyRef.current = false;
       previewOnStopRef.current = false;
       setRecorderMode("recording");
@@ -297,14 +303,13 @@ export default function VoiceRecorder({
       recorder.addEventListener(
         "stop",
         function () {
-          void finalizeRecording();
+          void finalizeRecording(requestId, recorder);
         },
         { once: true },
       );
 
       recorder.start(250);
 
-      if (shouldStopImmediately) stopRecording(false);
     } catch (err: any) {
       startingRef.current = false;
       stopStream();
@@ -317,56 +322,6 @@ export default function VoiceRecorder({
       setRecorderMode("idle");
     }
   };
-
-  const handlePointerDown = function (event: ReactPointerEvent<HTMLButtonElement>) {
-    if (event.button !== 0 || disabled || isActive) return;
-    event.preventDefault();
-    pointerDownRef.current = true;
-    pointerStartRef.current = { x: event.clientX, y: event.clientY };
-    void startRecording();
-  };
-
-  useEffect(function () {
-    const onPointerMove = function (event: PointerEvent) {
-      if (!pointerDownRef.current || modeRef.current !== "recording") return;
-      const dx = event.clientX - pointerStartRef.current.x;
-      const dy = event.clientY - pointerStartRef.current.y;
-
-      if (dx < -80) {
-        pointerDownRef.current = false;
-        cancelRecording();
-        return;
-      }
-
-      if (dy < -80) {
-        lockedRef.current = true;
-        setRecorderMode("locked");
-      }
-    };
-
-    const onPointerUp = function () {
-      if (!pointerDownRef.current) return;
-      pointerDownRef.current = false;
-      if (modeRef.current === "recording") stopRecording(false);
-    };
-
-    const onPointerCancel = function () {
-      if (!pointerDownRef.current) return;
-      pointerDownRef.current = false;
-      cancelRecording();
-    };
-
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerCancel);
-    return function () {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", onPointerCancel);
-    };
-  }, []);
-
-
 
   const togglePreview = async function () {
     const audio = audioPreviewRef.current;
@@ -420,21 +375,8 @@ export default function VoiceRecorder({
           disabled={disabled}
           aria-label={t("chat.voice.record")}
           title={t("chat.voice.recordHint")}
-          onPointerDown={handlePointerDown}
-          onKeyDown={function (event) {
-            if ((event.key === "Enter" || event.key === " ") && !event.repeat) {
-              event.preventDefault();
-              keyboardDownRef.current = true;
-              void startRecording();
-            }
-          }}
-          onKeyUp={function (event) {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              if (!keyboardDownRef.current) return;
-              keyboardDownRef.current = false;
-              if (modeRef.current === "recording") stopRecording(false);
-            }
+          onClick={function () {
+            void startRecording();
           }}
           onContextMenu={function (event) {
             event.preventDefault();
@@ -470,7 +412,6 @@ export default function VoiceRecorder({
             onPointerDown={function (event) {
               event.preventDefault();
               event.stopPropagation();
-              pointerDownRef.current = false;
               lastControlActionAtRef.current = Date.now();
               cancelRecording();
             }}
@@ -516,7 +457,6 @@ export default function VoiceRecorder({
                 onPointerDown={function (event) {
                   event.preventDefault();
                   event.stopPropagation();
-                  pointerDownRef.current = false;
                   lastControlActionAtRef.current = Date.now();
                   stopRecording(true);
                 }}
@@ -536,7 +476,6 @@ export default function VoiceRecorder({
                 onPointerDown={function (event) {
                   event.preventDefault();
                   event.stopPropagation();
-                  pointerDownRef.current = false;
                   lastControlActionAtRef.current = Date.now();
                   stopRecording(false);
                 }}
