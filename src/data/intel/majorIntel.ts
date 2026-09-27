@@ -13,6 +13,7 @@ import { ENGINEERING_TECHNOLOGY_MAJORS } from './engineeringTechnology';
 import { COMPUTER_IT_MAJORS } from './computerIt';
 import { REMAINING_MAJOR_INTEL } from './remainingMajorIntel';
 import { attachUniversityRecommendations } from './universityRecommendations';
+import { STANDARD_APPLICATION_DEADLINE } from './standardApplicationDeadlines';
 
 export const VERIFIED_MAJORS: MajorIntel[] = [
   COMPUTER_SCIENCE_INTEL,
@@ -46,7 +47,20 @@ const STUBS: MajorIntel[] = majorsData.flatMap((category) =>
     })),
 );
 
-export const ALL_MAJOR_INTEL: MajorIntel[] = [...VERIFIED_MAJORS, ...STUBS].map(attachUniversityRecommendations);
+function attachStandardApplicationDeadline(major: MajorIntel): MajorIntel {
+  return {
+    ...major,
+    programs: major.programs.map((program) =>
+      program.deadline.status === 'unverified'
+        ? { ...program, standardApplicationDeadline: STANDARD_APPLICATION_DEADLINE }
+        : program,
+    ),
+  };
+}
+
+export const ALL_MAJOR_INTEL: MajorIntel[] = [...VERIFIED_MAJORS, ...STUBS]
+  .map(attachStandardApplicationDeadline)
+  .map(attachUniversityRecommendations);
 
 export function getMajorIntel(id: string): MajorIntel | undefined {
   return ALL_MAJOR_INTEL.find((m) => m.id === id);
