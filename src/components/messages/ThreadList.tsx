@@ -1,3 +1,4 @@
+import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -110,7 +111,9 @@ export default function ThreadList({
                 style.avatar,
               )}
             >
-              {initials(item.title)}
+              {item.title === t("chat.adminLabel") ? (
+                <img src={darbLogoAsset.url} alt="DARB" className="h-full w-full rounded-full bg-background object-contain p-0.5" />
+              ) : initials(item.title)}
             </div>
             {online && (
               <span
