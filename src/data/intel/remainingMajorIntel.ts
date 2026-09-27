@@ -8,7 +8,7 @@
  */
 import type { IntelSource } from './factTypes';
 import { fact, unverified } from './factTypes';
-import type { MajorIntel, ProgramIntel } from './types';
+import type { LanguageRequirementValue, MajorIntel, ProgramIntel } from './types';
 import { majorsData } from '@/data/majorsData';
 import { ISRAELI_BGRUT_SUBJECT_REQUIREMENTS } from './bagrutRequirements';
 import { COMPETITIVE_BGRUT_SOURCE, competitiveBagrutForMajor } from './competitiveBagrut';
