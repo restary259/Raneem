@@ -67,10 +67,12 @@ function useUnreadNotifications(enabled: boolean): number {
           if (status === "SUBSCRIBED") return;
           if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             if (disposed) return;
-            retryTimer = setTimeout(() => {
+            if (retryTimer) return;
+            retryTimer = setTimeout(async () => {
               retryTimer = undefined;
-              void supabase.removeChannel(channel);
-              subscribe();
+              await supabase.removeChannel(channel).catch(() => undefined);
+              if (disposed) return;
+              current = subscribe();
               void loadRef.current();
             }, REALTIME_RETRY_MS);
           }
@@ -79,12 +81,12 @@ function useUnreadNotifications(enabled: boolean): number {
       return channel;
     };
 
-    const channel = subscribe();
+    let current = subscribe();
 
     return () => {
       disposed = true;
       if (retryTimer) clearTimeout(retryTimer);
-      void supabase.removeChannel(channel);
+      if (current) void supabase.removeChannel(current);
     };
   }, [enabled, user?.id]);
 
