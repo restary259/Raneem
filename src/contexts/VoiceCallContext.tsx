@@ -47,42 +47,74 @@ const ICE_SERVERS: RTCIceServer[] = [
   { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
 ];
 
-/** Looping tone via WebAudio: ring (incoming) or ringback (outgoing). */
-function startTone(kind: "ring" | "ringback"): () => void {
-  let ctx: AudioContext | null = null;
-  let timer: number | undefined;
+/**
+ * One shared AudioContext, unlocked on the user's first tap. Phones keep a
+ * context created without a gesture suspended (silent), which is why a fresh
+ * context per ring was inaudible.
+ */
+let sharedCtx: AudioContext | null = null;
+function getCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
   try {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    ctx = new AC();
-    const play = () => {
-      if (!ctx) return;
-      const now = ctx.currentTime;
-      const freqs = kind === "ring" ? [880, 660] : [440];
-      const bursts = kind === "ring" ? [0, 0.45] : [0];
-      bursts.forEach((offset) => {
-        freqs.forEach((f) => {
-          const o = ctx!.createOscillator();
-          const g = ctx!.createGain();
-          o.frequency.value = f;
-          g.gain.setValueAtTime(0.0001, now + offset);
-          g.gain.exponentialRampToValueAtTime(kind === "ring" ? 0.25 : 0.12, now + offset + 0.02);
-          g.gain.exponentialRampToValueAtTime(0.0001, now + offset + (kind === "ring" ? 0.4 : 1.2));
-          o.connect(g).connect(ctx!.destination);
-          o.start(now + offset);
-          o.stop(now + offset + 1.3);
-        });
-      });
-      if (kind === "ring") navigator.vibrate?.([400, 200, 400]);
-    };
-    play();
-    timer = window.setInterval(play, kind === "ring" ? 2000 : 3000);
+    if (!sharedCtx) {
+      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      sharedCtx = new AC();
+    }
+    if (sharedCtx.state === "suspended") void sharedCtx.resume().catch(() => undefined);
+    return sharedCtx;
   } catch {
-    /* audio unavailable */
+    return null;
   }
+}
+if (typeof window !== "undefined") {
+  const unlock = () => {
+    const ctx = getCtx();
+    if (ctx && ctx.state === "running") {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    }
+  };
+  window.addEventListener("pointerdown", unlock);
+  window.addEventListener("keydown", unlock);
+}
+
+/** Looping ringtone (incoming: bright melodic phone ring) or ringback (outgoing). */
+function startTone(kind: "ring" | "ringback"): () => void {
+  let timer: number | undefined;
+  const nodes: OscillatorNode[] = [];
+  const play = () => {
+    const ctx = getCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Ring: two quick trills of a classic dual-tone bell. Ringback: soft long tone.
+    const notes: Array<[number, number, number]> =
+      kind === "ring"
+        ? [0, 0.12, 0.24, 0.36, 0.48, 0.6, 1.0, 1.12, 1.24, 1.36, 1.48, 1.6].map((o, i) => [o, i % 2 ? 1175 : 1480, 0.1])
+        : [[0, 440, 1.2]];
+    notes.forEach(([offset, f, len]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = kind === "ring" ? "triangle" : "sine";
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, now + offset);
+      g.gain.exponentialRampToValueAtTime(kind === "ring" ? 0.5 : 0.15, now + offset + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + offset + len);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + offset);
+      o.stop(now + offset + len + 0.05);
+      nodes.push(o);
+      o.onended = () => nodes.splice(nodes.indexOf(o), 1);
+    });
+    if (kind === "ring") navigator.vibrate?.([500, 250, 500, 250, 500]);
+  };
+  play();
+  timer = window.setInterval(play, kind === "ring" ? 3000 : 3000);
   return () => {
     if (timer) window.clearInterval(timer);
     navigator.vibrate?.(0);
-    void ctx?.close().catch(() => undefined);
+    nodes.splice(0).forEach((o) => {
+      try { o.stop(); } catch { /* already stopped */ }
+    });
   };
 }
 
@@ -351,6 +383,22 @@ export function VoiceCallProvider({ children }: { children: ReactNode }) {
     if (phase !== "incoming" && phase !== "outgoing") return;
     return startTone(phase === "incoming" ? "ring" : "ringback");
   }, [phase]);
+
+  // Flash the tab title so an incoming call is visible from another tab.
+  useEffect(() => {
+    if (phase !== "incoming") return;
+    const original = document.title;
+    const alert = `📞 ${t("voiceCall.incomingTitle", "Incoming call")}`;
+    let on = false;
+    const id = window.setInterval(() => {
+      on = !on;
+      document.title = on ? alert : original;
+    }, 1000);
+    return () => {
+      window.clearInterval(id);
+      document.title = original;
+    };
+  }, [phase, t]);
 
   // Keep-alive + timer while connected.
   useEffect(() => {
