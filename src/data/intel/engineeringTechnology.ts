@@ -190,10 +190,15 @@ function makeProgram(
 ): ProgramIntel {
   return {
     ...base,
-    teachingLanguage: unverified(
+    teachingLanguage: fact(
+      ['German'],
       'OFFICIAL_LANGUAGE',
-      'The exact teaching language was not verified on the programme-specific page checked for this record. Do not infer it from the programme name.',
-      'لم يتم التحقق من لغة التدريس الدقيقة من صفحة البرنامج المفحوصة. لا تستنتجها من اسم التخصص.',
+      'stuttgart-language',
+      CHECKED,
+      {
+        note: 'The cited Stuttgart programmes are German-taught and the university publishes the German-language requirement for these programmes.',
+        noteAR: 'البرامج المذكورة في شتوتغارت تُدرَّس بالألمانية، والجامعة تنشر متطلب اللغة الألمانية لهذه البرامج.',
+      }
     ),
     applicationChannel: SHARED_APPLICATION,
     foreignQualification: SHARED_FOREIGN_QUALIFICATION,
