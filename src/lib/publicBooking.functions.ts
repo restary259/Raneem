@@ -333,7 +333,6 @@ export const startPublicBooking = createServerFn({ method: "POST" })
   .inputValidator(function (input) { return publicBookingStartRequest.parse(input); })
   .handler(async function ({ data }) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // The RPC exists on the live database but is missing from the generated
     const result = await supabaseAdmin.rpc("create_public_booking_session", {
       p_full_name: data.fullName,
       p_phone: data.phone,
