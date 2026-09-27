@@ -123,7 +123,7 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
             </p>
           </div>
         </div>
-      ) : null;
+      ) : null}
     </section>
   );
 }
