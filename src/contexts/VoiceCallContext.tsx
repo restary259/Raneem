@@ -1,4 +1,4 @@
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-icon.png.asset.json";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";

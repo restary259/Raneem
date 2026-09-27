@@ -1,4 +1,4 @@
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-icon.png.asset.json";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

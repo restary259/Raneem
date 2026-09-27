@@ -1,4 +1,4 @@
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-icon.png.asset.json";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@/lib/router-compat";
