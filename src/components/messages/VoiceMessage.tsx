@@ -61,23 +61,21 @@ export default function VoiceMessage({
   const toggle = async function () {
     if (failed) return;
 
-    if (!url) {
+    let sourceUrl = url;
+    if (!sourceUrl) {
       setLoading(true);
       try {
-        const signedUrl = await getAttachmentUrl(att.path);
-        setUrl(signedUrl);
+        sourceUrl = await getAttachmentUrl(att.path);
+        setUrl(sourceUrl);
       } catch {
         setFailed(true);
         setLoading(false);
         return;
-      } finally {
-        setLoading(false);
       }
     }
 
     let audio = audioRef.current;
     if (!audio) {
-      const sourceUrl = url || await getAttachmentUrl(att.path);
       audio = new Audio(sourceUrl);
       audio.preload = "metadata";
       audioRef.current = audio;
