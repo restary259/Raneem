@@ -12,6 +12,7 @@ import {
   Paperclip,
   Pencil,
   Trash2,
+  PhoneCall,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
