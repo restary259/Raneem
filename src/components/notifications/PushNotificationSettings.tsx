@@ -17,23 +17,11 @@ import {
   type PushDiagnostics,
   type PushStatus,
 } from "@/lib/webPush";
-
-const CATEGORIES = [
-  "messages",
-  "appointments",
-  "cases",
-  "payments",
-  "documents",
-  "profile",
-  "recruitment",
-  // Incoming voice calls. Turning this off suppresses the PUSH ring only — a
-  // ringing call still shows in the app itself, and a call already in progress
-  // is unaffected.
-  "calls",
-  "system",
-] as const;
-
-type CategoryKey = (typeof CATEGORIES)[number];
+import {
+  categoriesForRole,
+  NOTIFICATION_CATEGORIES,
+} from "@/lib/notificationCategories";
+import type { AppRole } from "@/contexts/AuthContext";
 
 interface PreferenceRow {
   user_id: string;
@@ -45,7 +33,7 @@ interface PreferenceRow {
 }
 
 /** Per-device push enrolment plus per-category delivery preferences. */
-const PushNotificationSettings: React.FC = () => {
+const PushNotificationSettings: React.FC<{ role: AppRole }> = ({ role }) => {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
@@ -54,6 +42,10 @@ const PushNotificationSettings: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [testing, setTesting] = useState(false);
   const [diagnostics, setDiagnostics] = useState<PushDiagnostics | null>(null);
+
+  // Only the categories this role can actually receive are rendered; the rest
+  // keep whatever value is already saved.
+  const categories = categoriesForRole(role);
 
   const loadPreferences = useCallback(async (uid: string) => {
     const { data } = await (supabase as any)
@@ -68,14 +60,18 @@ const PushNotificationSettings: React.FC = () => {
         email_enabled: true,
         quiet_hours_start: null,
         quiet_hours_end: null,
-        ...Object.fromEntries(CATEGORIES.map((c) => [`cat_${c}`, true])),
+        ...Object.fromEntries(
+          NOTIFICATION_CATEGORIES.map((c) => [c.column, true]),
+        ),
       },
     );
   }, []);
 
   useEffect(() => {
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) return;
       setUserId(session.user.id);
       setStatus(await getPushStatus());
@@ -90,7 +86,10 @@ const PushNotificationSettings: React.FC = () => {
     setPrefs({ ...prefs, ...patch });
     const { error } = await (supabase as any)
       .from("notification_preferences")
-      .upsert({ ...prefs, ...patch, user_id: userId }, { onConflict: "user_id" });
+      .upsert(
+        { ...prefs, ...patch, user_id: userId },
+        { onConflict: "user_id" },
+      );
     if (error) {
       // Roll back so the switch never shows a state the server rejected.
       setPrefs(previous);
@@ -126,13 +125,17 @@ const PushNotificationSettings: React.FC = () => {
     setTesting(false);
     toast({
       variant: result.ok ? "default" : "destructive",
-      description: result.ok ? t("pushSettings.testSent") : t("pushSettings.testFailed"),
+      description: result.ok
+        ? t("pushSettings.testSent")
+        : t("pushSettings.testFailed"),
     });
     setDiagnostics(await getPushDiagnostics());
   };
 
   const capability = status?.capability;
-  const subscribed = Boolean(status?.subscribed && status.permission === "granted");
+  const subscribed = Boolean(
+    status?.subscribed && status.permission === "granted",
+  );
 
   const diagnosticRows: Array<[string, string]> = diagnostics
     ? [
@@ -141,7 +144,12 @@ const PushNotificationSettings: React.FC = () => {
         ["device", `${diagnostics.platform} · ${diagnostics.browser}`],
         ["installed", diagnostics.standalone ? "yes" : "no"],
         ["origin", diagnostics.origin],
-        ["worker", diagnostics.swState ? `${diagnostics.swState} (${diagnostics.swScope})` : "none"],
+        [
+          "worker",
+          diagnostics.swState
+            ? `${diagnostics.swState} (${diagnostics.swScope})`
+            : "none",
+        ],
         ["endpoint", diagnostics.endpointHost ?? "none"],
         [
           "stored",
@@ -152,17 +160,27 @@ const PushNotificationSettings: React.FC = () => {
               : "inactive",
         ],
         ["lastSuccess", diagnostics.lastSuccessAt ?? "—"],
-        ["lastError", diagnostics.lastErrorStatus ? String(diagnostics.lastErrorStatus) : "—"],
+        [
+          "lastError",
+          diagnostics.lastErrorStatus
+            ? String(diagnostics.lastErrorStatus)
+            : "—",
+        ],
       ]
     : [];
 
   return (
     <div className="space-y-5">
       <div className="flex items-start gap-3">
-        <BellRing className="h-5 w-5 text-brand mt-0.5 shrink-0" aria-hidden="true" />
+        <BellRing
+          className="h-5 w-5 text-brand mt-0.5 shrink-0"
+          aria-hidden="true"
+        />
         <div>
           <h3 className="font-semibold text-sm">{t("pushSettings.title")}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">{t("pushSettings.subtitle")}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t("pushSettings.subtitle")}
+          </p>
         </div>
       </div>
 
@@ -177,7 +195,9 @@ const PushNotificationSettings: React.FC = () => {
 
       {capability === "unsupported" && (
         <Alert variant="destructive">
-          <AlertDescription className="text-xs">{t("pushSettings.unsupported")}</AlertDescription>
+          <AlertDescription className="text-xs">
+            {t("pushSettings.unsupported")}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -188,7 +208,12 @@ const PushNotificationSettings: React.FC = () => {
               {t("pushSettings.enableOnThisDevice")}
             </Label>
             <div className="flex items-center gap-2">
-              {busy && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />}
+              {busy && (
+                <Loader2
+                  className="h-4 w-4 animate-spin text-muted-foreground"
+                  aria-hidden="true"
+                />
+              )}
               <Switch
                 id="push-device"
                 checked={subscribed}
@@ -199,13 +224,24 @@ const PushNotificationSettings: React.FC = () => {
           </div>
 
           {status?.permission === "denied" && (
-            <p className="text-xs text-destructive">{t("pushSettings.errors.denied")}</p>
+            <p className="text-xs text-destructive">
+              {t("pushSettings.errors.denied")}
+            </p>
           )}
 
           {subscribed && (
-            <Button variant="outline" size="sm" onClick={handleTest} disabled={testing} className="w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTest}
+              disabled={testing}
+              className="w-full"
+            >
               {testing ? (
-                <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="h-4 w-4 me-2 animate-spin"
+                  aria-hidden="true"
+                />
               ) : (
                 <Send className="h-4 w-4 me-2" aria-hidden="true" />
               )}
@@ -219,16 +255,33 @@ const PushNotificationSettings: React.FC = () => {
         <>
           <Separator />
           <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">{t("pushSettings.categories")}</p>
-            {CATEGORIES.map((cat: CategoryKey) => (
-              <div key={cat} className="flex items-center justify-between gap-4">
-                <Label htmlFor={`cat-${cat}`} className="text-sm font-normal">
-                  {t(`pushSettings.category.${cat}`)}
-                </Label>
+            <p className="text-xs font-medium text-muted-foreground">
+              {t("pushSettings.categories")}
+            </p>
+            {categories.map((cat) => (
+              <div
+                key={cat.key}
+                className="flex items-center justify-between gap-4"
+              >
+                <div className="space-y-0.5">
+                  <Label
+                    htmlFor={`cat-${cat.key}`}
+                    className="text-sm font-normal"
+                  >
+                    {t(`pushSettings.categoryRole.${role}.${cat.key}`, {
+                      defaultValue: t(`pushSettings.category.${cat.key}`),
+                    })}
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t(`pushSettings.categoryRoleDesc.${role}.${cat.key}`, {
+                      defaultValue: t(`pushSettings.categoryDesc.${cat.key}`),
+                    })}
+                  </p>
+                </div>
                 <Switch
-                  id={`cat-${cat}`}
-                  checked={prefs[`cat_${cat}`] !== false}
-                  onCheckedChange={(v) => savePreference({ [`cat_${cat}`]: v })}
+                  id={`cat-${cat.key}`}
+                  checked={prefs[cat.column] !== false}
+                  onCheckedChange={(v) => savePreference({ [cat.column]: v })}
                 />
               </div>
             ))}
@@ -236,13 +289,17 @@ const PushNotificationSettings: React.FC = () => {
 
           <Separator />
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">{t("pushSettings.quietHours")}</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {t("pushSettings.quietHours")}
+            </p>
             <div className="flex items-center gap-2">
               <input
                 type="time"
                 aria-label={t("pushSettings.quietFrom")}
                 value={prefs.quiet_hours_start ?? ""}
-                onChange={(e) => savePreference({ quiet_hours_start: e.target.value || null })}
+                onChange={(e) =>
+                  savePreference({ quiet_hours_start: e.target.value || null })
+                }
                 className="flex-1 h-9 rounded-md border border-input bg-background px-2 text-sm"
               />
               <span className="text-xs text-muted-foreground">—</span>
@@ -250,11 +307,15 @@ const PushNotificationSettings: React.FC = () => {
                 type="time"
                 aria-label={t("pushSettings.quietTo")}
                 value={prefs.quiet_hours_end ?? ""}
-                onChange={(e) => savePreference({ quiet_hours_end: e.target.value || null })}
+                onChange={(e) =>
+                  savePreference({ quiet_hours_end: e.target.value || null })
+                }
                 className="flex-1 h-9 rounded-md border border-input bg-background px-2 text-sm"
               />
             </div>
-            <p className="text-[11px] text-muted-foreground">{t("pushSettings.quietHint")}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {t("pushSettings.quietHint")}
+            </p>
           </div>
         </>
       )}
@@ -268,9 +329,14 @@ const PushNotificationSettings: React.FC = () => {
         <dl className="mt-2 space-y-1 text-[11px] text-muted-foreground">
           {diagnostics ? (
             diagnosticRows.map(([label, value]) => (
-              <div key={label} className="flex items-start justify-between gap-3">
+              <div
+                key={label}
+                className="flex items-start justify-between gap-3"
+              >
                 <dt>{t(`pushSettings.diagnostics.${label}`)}</dt>
-                <dd className="font-mono text-foreground/80 break-all text-end">{value}</dd>
+                <dd className="font-mono text-foreground/80 break-all text-end">
+                  {value}
+                </dd>
               </div>
             ))
           ) : (

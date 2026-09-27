@@ -4819,6 +4819,51 @@
       "stored": "Saved subscription",
       "lastSuccess": "Last delivery",
       "lastError": "Last error"
+    },
+    "categoryDesc": {
+      "messages": "Chat and direct messages.",
+      "appointments": "Appointment reminders and changes.",
+      "cases": "Updates on case progress.",
+      "payments": "Payments, invoices and commissions.",
+      "documents": "Document requests and uploads.",
+      "profile": "Profile completeness and changes.",
+      "recruitment": "New partner and recruit applications.",
+      "calls": "Incoming voice calls.",
+      "system": "General account and system alerts."
+    },
+    "categoryRole": {
+      "social_media_partner": {
+        "cases": "Referral milestones",
+        "payments": "Earnings"
+      },
+      "ambassador": {
+        "cases": "Referral milestones",
+        "payments": "Earnings"
+      },
+      "agent": {
+        "cases": "Referral milestones",
+        "payments": "Earnings"
+      },
+      "team_member": {
+        "profile": "Student profile"
+      },
+      "student": {
+        "profile": "Profile"
+      }
+    },
+    "categoryRoleDesc": {
+      "social_media_partner": {
+        "cases": "When a student you referred reaches a milestone.",
+        "payments": "When your earnings are approved or paid."
+      },
+      "ambassador": {
+        "cases": "When a student you referred reaches a milestone.",
+        "payments": "When your earnings are approved or paid."
+      },
+      "agent": {
+        "cases": "When a student you referred reaches a milestone.",
+        "payments": "When your earnings are approved or paid."
+      }
     }
   },
   "pushOnboarding": {
