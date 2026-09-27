@@ -12,6 +12,7 @@ import { registerServiceWorker } from "@/utils/pwaUtils";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { DashboardRouteFallback, PublicRouteFallback } from "@/components/shell/RouteFallbacks";
+import { isDashboardPath as isDashboardPathname, shouldShowFloatingWidgets } from "@/lib/floatingWidgets";
 import { VoiceCallProvider } from "@/contexts/VoiceCallContext";
 
 // Non-critical global widgets — deferred off the critical path
@@ -83,11 +84,14 @@ const AppShell = () => {
   const isApplyPage = location.pathname === "/apply";
 
   // Paths that use DashboardLayout (no bottom nav / chat).
-  // Every dashboard role prefix must be listed here, otherwise the public
-  // BottomNav renders on top of the dashboard's own MobileBottomNav.
-  const isDashboardPath = ["/admin", "/team", "/partner", "/agent", "/student"].some(
-    (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
-  );
+  // Every dashboard role prefix must be listed in `floatingWidgets.ts`,
+  // otherwise the public BottomNav renders on top of the dashboard's own
+  // MobileBottomNav.
+  const isDashboardPath = isDashboardPathname(location.pathname);
+
+  // The floating public widgets (WhatsApp tab + app-install tab) belong to the
+  // public site only — they are never rendered inside a dashboard.
+  const showFloatingWidgets = shouldShowFloatingWidgets(location.pathname);
 
   return (
     <TooltipProvider>
@@ -116,18 +120,18 @@ const AppShell = () => {
             <Outlet />
           </Suspense>
         )}
-        {!isApplyPage && !isDashboardPath && idleReady && (
+        {showFloatingWidgets && idleReady && (
           <Suspense fallback={null}>
             <WhatsAppFloatingButton />
           </Suspense>
         )}
-        {!isApplyPage && !isDashboardPath && idleReady && (
+        {showFloatingWidgets && idleReady && (
           <Suspense fallback={null}>
             <PWAInstaller />
             <CookieBanner />
           </Suspense>
         )}
-        {!isDashboardPath && !isApplyPage && <BottomNav />}
+        {showFloatingWidgets && <BottomNav />}
       </div>
     </TooltipProvider>
   );
