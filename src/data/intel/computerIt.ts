@@ -29,6 +29,24 @@ const SRC_KMK: IntelSource = {
   checkedAt: '2026-09-19',
 };
 
+const BAMBERG_LANGUAGE_SOURCE: IntelSource = {
+  id: 'uni-bamberg-language-requirements',
+  url: 'https://www.uni-bamberg.de/studium/interesse-internationale/ohne-austauschprogramm-bachelor/vor-der-bewerbung/',
+  title: 'University of Bamberg — German language requirements for Bachelor programmes',
+  titleAR: 'جامعة بامبرغ — متطلبات اللغة الألمانية لبرامج البكالوريوس',
+  authority: 'university',
+  checkedAt: '2026-09-27',
+};
+
+const ANSBACH_LANGUAGE_SOURCE: IntelSource = {
+  id: 'hs-ansbach-language-requirements',
+  url: 'https://www.hs-ansbach.de/infos/fuer-studieninteressierte/bewerbung-bachelor-und-masterstudiengaenge',
+  title: 'Hochschule Ansbach — Language requirements for Bachelor programmes',
+  titleAR: 'جامعة أنسباخ للعلوم التطبيقية — متطلبات اللغة لبرامج البكالوريوس',
+  authority: 'university',
+  checkedAt: '2026-09-27',
+};
+
 const BAGRUT_EN =
   "Israeli Te'udat bagrut is listed in anabin as direct university access for all subjects when it includes Mathematics 3 units, English 4 units and one further subject at 4 units.";
 const BAGRUT_AR =
@@ -121,10 +139,19 @@ const AI_PROGRAM: ProgramIntel = {
     'No additional Israeli Bagrut subject or unit threshold was verified for this programme.',
     'لم يتم التحقق من أي شرط إضافي لمواد أو وحدات البجروت لهذا البرنامج.',
   ),
-  languageRequirement: unverified(
+  languageRequirement: fact(
+    {
+      language: 'German',
+      minimumLevel: 'B2',
+      certificates: ['telc Deutsch B2', 'TestDaF level 3 in all four sections', 'DSH-1', 'Goethe Certificate B2', 'ÖSD Certificate B2', 'DSD II'],
+    },
     'OFFICIAL_LANGUAGE',
-    'The programme is German-taught, but an exact CEFR/certificate minimum was not verified from the checked programme page.',
-    'البرنامج بالألمانية، لكن لم يتم التحقق من حد CEFR أو قائمة الشهادات الدقيقة من صفحة البرنامج المفحوصة.',
+    'uni-bamberg-language-requirements',
+    '2026-09-27',
+    {
+      note: 'University of Bamberg states that most undergraduate programmes require German B2; higher C1 requirements are limited to specified subjects such as German Studies and Psychology.',
+      noteAR: 'تذكر جامعة بامبرغ أن معظم برامج البكالوريوس تتطلب الألمانية B2؛ ومتطلبات C1 الأعلى تقتصر على تخصصات محددة مثل Germanistik وعلم النفس.',
+    }
   ),
   gradeRequirement: unverified(
     'OFFICIAL_REQUIREMENT',
@@ -147,7 +174,7 @@ const AI_PROGRAM: ProgramIntel = {
     'قائمة الوثائق الخاصة بالبرنامج لم تُقرأ في صفحة البرنامج المفحوصة.',
   ),
   programUrl: AI_PROGRAM_SOURCE.url,
-  lastVerified: CHECKED,
+  lastVerified: '2026-09-27',
 };
 
 const CYBER_SOURCE: IntelSource = {
@@ -343,10 +370,19 @@ const CLOUD_PROGRAM: ProgramIntel = {
     'No additional Israeli Bagrut subject or unit threshold was verified for Informatik.',
     'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت لتخصص Informatik.',
   ),
-  languageRequirement: unverified(
+  languageRequirement: fact(
+    {
+      language: 'German',
+      minimumLevel: 'B2',
+      certificates: ['telc Deutsch B2', 'TestDaF level 3 in all four sections', 'DSH-1', 'Goethe Certificate B2', 'ÖSD Certificate B2', 'DSD II'],
+    },
     'OFFICIAL_LANGUAGE',
-    'The programme is German-taught, but a programme-specific minimum certificate level was not independently verified in this pass.',
-    'البرنامج بالألمانية، لكن الحد الأدنى الخاص بالشهادات لم يتم التحقق منه بشكل مستقل في هذا المرور.',
+    'uni-bamberg-language-requirements',
+    '2026-09-27',
+    {
+      note: 'University of Bamberg states that most undergraduate programmes require German B2; the cited Informatik route is not one of the subjects listed as requiring C1.',
+      noteAR: 'تذكر جامعة بامبرغ أن معظم برامج البكالوريوس تتطلب الألمانية B2؛ ومسار Informatik المذكور ليس من التخصصات المدرجة التي تتطلب C1.',
+    }
   ),
   gradeRequirement: unverified(
     'OFFICIAL_REQUIREMENT',
@@ -369,7 +405,7 @@ const CLOUD_PROGRAM: ProgramIntel = {
     'لم تتم قراءة الوثائق الكاملة لحاملي الشهادات الأجنبية من صفحة البرنامج.',
   ),
   programUrl: BAMBERG_CS_SOURCE.url,
-  lastVerified: CHECKED,
+  lastVerified: '2026-09-27',
 };
 
 const GAME_SOURCE: IntelSource = {
@@ -409,10 +445,26 @@ const GAME_PROGRAM: ProgramIntel = {
     'No additional Israeli Bagrut subject/unit threshold was verified for the programme.',
     'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت لهذا البرنامج.',
   ),
-  languageRequirement: unverified(
+  languageRequirement: fact(
+    {
+      language: 'German',
+      minimumLevel: 'B2',
+      certificates: [
+        'DSD II',
+        'DSH-1 (B2)',
+        'TestDaF level 3 in all four sections',
+        'Goethe Certificate B2',
+        'telc Deutsch C1 Hochschule',
+        'ÖSD C1',
+      ],
+    },
     'OFFICIAL_LANGUAGE',
-    'The programme is German-taught; the exact certificate minimum was not verified on the checked programme page.',
-    'البرنامج بالألمانية؛ الحد الأدنى الدقيق للشهادة لم يتم التحقق منه من صفحة البرنامج المفحوصة.',
+    'hs-ansbach-language-requirements',
+    '2026-09-27',
+    {
+      note: 'Hochschule Ansbach accepts German proof including DSH-1 (B2), TestDaF level 3 in all four parts and Goethe B2 for German-taught Bachelor programmes.',
+      noteAR: 'تقبل Hochschule Ansbach إثباتات ألمانية تشمل DSH-1 (B2) وTestDaF مستوى 3 في الأجزاء الأربعة وGoethe B2 لبرامج البكالوريوس الألمانية.',
+    }
   ),
   gradeRequirement: unverified(
     'OFFICIAL_REQUIREMENT',
@@ -435,7 +487,7 @@ const GAME_PROGRAM: ProgramIntel = {
     'لم تُقرأ قائمة الوثائق الكاملة لحاملي الشهادات الأجنبية من الصفحة المفحوصة.',
   ),
   programUrl: GAME_SOURCE.url,
-  lastVerified: CHECKED,
+  lastVerified: '2026-09-27',
 };
 
 const INFO_SOURCE: IntelSource = {
@@ -475,10 +527,19 @@ const INFO_PROGRAM: ProgramIntel = {
     'No additional Israeli Bagrut subject/unit threshold was verified for Wirtschaftsinformatik.',
     'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت لتخصص Wirtschaftsinformatik.',
   ),
-  languageRequirement: unverified(
+  languageRequirement: fact(
+    {
+      language: 'German',
+      minimumLevel: 'B2',
+      certificates: ['telc Deutsch B2', 'TestDaF level 3 in all four sections', 'DSH-1', 'Goethe Certificate B2', 'ÖSD Certificate B2', 'DSD II'],
+    },
     'OFFICIAL_LANGUAGE',
-    'The programme is German-led, but the exact certificate minimum for an Israeli applicant was not independently verified in this pass.',
-    'البرنامج بالألمانية، لكن الحد الأدنى الدقيق للشهادة لطالب إسرائيلي لم يتم التحقق منه بشكل مستقل في هذا المرور.',
+    'uni-bamberg-language-requirements',
+    '2026-09-27',
+    {
+      note: 'University of Bamberg states that most undergraduate programmes require German B2; the cited Wirtschaftsinformatik programme is not among the subjects listed with a C1 exception.',
+      noteAR: 'تذكر جامعة بامبرغ أن معظم برامج البكالوريوس تتطلب الألمانية B2؛ وبرنامج Wirtschaftsinformatik المذكور ليس ضمن التخصصات المستثناة التي تتطلب C1.',
+    }
   ),
   gradeRequirement: unverified(
     'OFFICIAL_REQUIREMENT',
@@ -510,7 +571,7 @@ const INFO_PROGRAM: ProgramIntel = {
     'لم تُقرأ قائمة الوثائق الكاملة لحاملي الشهادات الأجنبية من صفحة البرنامج المفحوصة.',
   ),
   programUrl: INFO_SOURCE.url,
-  lastVerified: CHECKED,
+  lastVerified: '2026-09-27',
 };
 
 export const ARTIFICIAL_INTELLIGENCE_INTEL = commonMajor(
@@ -520,7 +581,7 @@ export const ARTIFICIAL_INTELLIGENCE_INTEL = commonMajor(
   'Künstliche Intelligenz',
   { ar: ['الذكاء الاصطناعي', 'ذكاء اصطناعي'], he: ['בינה מלאכותית'], en: ['Artificial Intelligence', 'AI'], de: ['Künstliche Intelligenz', 'KI'] },
   [AI_PROGRAM],
-  [AI_PROGRAM_SOURCE],
+  [AI_PROGRAM_SOURCE, BAMBERG_LANGUAGE_SOURCE],
 );
 
 export const CYBERSECURITY_INTEL = commonMajor(
@@ -550,7 +611,7 @@ export const CLOUD_COMPUTING_INTEL = commonMajor(
   'Cloud Computing',
   { ar: ['الحوسبة السحابية', 'كلاود'], he: ['מחשוב ענן'], en: ['Cloud Computing', 'Cloud'], de: ['Cloud Computing', 'Cloud Computing'] },
   [CLOUD_PROGRAM],
-  [BAMBERG_CS_SOURCE],
+  [BAMBERG_CS_SOURCE, BAMBERG_LANGUAGE_SOURCE],
 );
 
 export const GAME_DEVELOPMENT_INTEL = commonMajor(
@@ -560,7 +621,7 @@ export const GAME_DEVELOPMENT_INTEL = commonMajor(
   'Game Design',
   { ar: ['تطوير الألعاب', 'تصميم الألعاب'], he: ['פיתוח משחקים', 'עיצוב משחקים'], en: ['Game Development', 'Game Design'], de: ['Game Design', 'Spieleentwicklung'] },
   [GAME_PROGRAM],
-  [GAME_SOURCE],
+  [GAME_SOURCE, ANSBACH_LANGUAGE_SOURCE],
 );
 
 export const INFORMATION_MANAGEMENT_INTEL = commonMajor(
@@ -570,7 +631,7 @@ export const INFORMATION_MANAGEMENT_INTEL = commonMajor(
   'Wirtschaftsinformatik',
   { ar: ['إدارة المعلومات', 'إدارة تكنولوجيا المعلومات', 'نظم المعلومات'], he: ['ניהול מידע', 'מערכות מידע'], en: ['Information Management', 'IT Management', 'Information Systems'], de: ['Wirtschaftsinformatik', 'Informationsmanagement'] },
   [INFO_PROGRAM],
-  [INFO_SOURCE],
+  [INFO_SOURCE, BAMBERG_LANGUAGE_SOURCE],
 );
 
 /**
