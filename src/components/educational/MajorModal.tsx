@@ -8,6 +8,7 @@ import { SubMajor } from '@/data/majorsData';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 import { getLocalizedMajor, getLocalizedTiers, getLocalizedSources, getLocalizedGlance, getLocalizedLanguageProfile } from '@/utils/majorLocale';
+import { isArabicUi } from '@/lib/localeData';
 import { bagrutToGermanGrade, BAGRUT_PASS_MARK } from '@/utils/gradeConverter';
 
 interface MajorModalProps {
@@ -79,7 +80,8 @@ const MajorModal = ({ isOpen, onClose, major }: MajorModalProps) => {
   const glance = getLocalizedGlance(major, lang);
   const langProfile = getLocalizedLanguageProfile(major, lang);
   const verified = Boolean(major.lastVerified);
-  const duration = loc.localizedDuration || (lang === 'en' ? '6 semesters' : '6 فصول دراسية');
+  // The dataset has no Hebrew copy, so Hebrew shows the English default.
+  const duration = loc.localizedDuration || (isArabicUi(lang) ? '6 فصول دراسية' : '6 semesters');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

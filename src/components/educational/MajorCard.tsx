@@ -4,6 +4,7 @@ import { SubMajor } from '@/data/majorsData';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/hooks/useDirection';
 import { getLocalizedMajor } from '@/utils/majorLocale';
+import { isArabicUi } from '@/lib/localeData';
 
 interface MajorCardProps {
   major: SubMajor & { categoryTitle: string; categoryTitleEN?: string; categoryId: string };
@@ -31,7 +32,7 @@ const MajorCard = ({ major, onMajorClick, searchQuery }: MajorCardProps) => {
   const { isRtl } = useDirection();
   const lang = i18n.language;
   const loc = getLocalizedMajor(major, lang);
-  const catTitle = lang === 'en' ? (major.categoryTitleEN || major.categoryTitle) : major.categoryTitle;
+  const catTitle = isArabicUi(lang) ? major.categoryTitle : (major.categoryTitleEN || major.categoryTitle);
 
   const highlightText = (text: string, query: string) => {
     if (!text || !query?.trim()) return text || '';
