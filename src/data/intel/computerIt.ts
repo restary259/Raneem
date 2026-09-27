@@ -7,6 +7,7 @@
 import type { IntelSource } from './factTypes';
 import { fact, unverified, guidance } from './factTypes';
 import type { MajorIntel, ProgramIntel } from './types';
+import { ISRAELI_BGRUT_SUBJECT_REQUIREMENTS } from './bagrutRequirements';
 
 const CHECKED = '2026-09-19';
 export const COMPUTER_IT_LAST_VERIFIED = '2026-09';
@@ -134,11 +135,16 @@ const AI_PROGRAM: ProgramIntel = {
   foreignQualification: fact(BAGRUT_EN, 'OFFICIAL_REQUIREMENT', 'anabin-isr', '2026-09-19', {
     noteAR: BAGRUT_AR,
   }),
-  subjectRequirements: unverified(
-    'OFFICIAL_REQUIREMENT',
-    'No additional Israeli Bagrut subject or unit threshold was verified for this programme.',
-    'لم يتم التحقق من أي شرط إضافي لمواد أو وحدات البجروت لهذا البرنامج.',
-  ),
+  subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
   languageRequirement: fact(
     {
       language: 'German',
@@ -211,11 +217,16 @@ const CYBER_PROGRAM: ProgramIntel = {
   foreignQualification: fact(BAGRUT_EN, 'OFFICIAL_REQUIREMENT', 'anabin-isr', '2026-09-19', {
     noteAR: BAGRUT_AR,
   }),
-  subjectRequirements: unverified(
-    'OFFICIAL_REQUIREMENT',
-    'No additional Israeli Bagrut subject or unit threshold was verified from the checked programme page.',
-    'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت من صفحة البرنامج المفحوصة.',
-  ),
+  subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
   languageRequirement: fact(
     { language: 'English' as const, minimumLevel: 'B2' as const, certificates: ['B2 advanced English (recommended)'] },
     'OFFICIAL_LANGUAGE',
@@ -294,11 +305,16 @@ const DATA_PROGRAM: ProgramIntel = {
     noteAR: 'صفحة البرنامج تربط بمسار التقديم/التسجيل في الجامعة لحاملي شهادات القبول الجامعي الأجنبية.',
   }),
   foreignQualification: fact(BAGRUT_EN, 'OFFICIAL_REQUIREMENT', 'anabin-isr', '2026-09-19', { noteAR: BAGRUT_AR }),
-  subjectRequirements: unverified(
-    'OFFICIAL_REQUIREMENT',
-    'No additional Israeli Bagrut subject or unit threshold was verified on the programme page.',
-    'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت من صفحة البرنامج.',
-  ),
+  subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
   languageRequirement: fact(
     { language: 'German' as const, minimumLevel: 'B2' as const, certificates: ['German B2'] },
     'OFFICIAL_LANGUAGE',
@@ -365,11 +381,16 @@ const CLOUD_PROGRAM: ProgramIntel = {
     noteAR: 'مسار البرنامج العام يُدار من جامعة بامبرغ.',
   }),
   foreignQualification: fact(BAGRUT_EN, 'OFFICIAL_REQUIREMENT', 'anabin-isr', '2026-09-19', { noteAR: BAGRUT_AR }),
-  subjectRequirements: unverified(
-    'OFFICIAL_REQUIREMENT',
-    'No additional Israeli Bagrut subject or unit threshold was verified for Informatik.',
-    'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت لتخصص Informatik.',
-  ),
+  subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
   languageRequirement: fact(
     {
       language: 'German',
@@ -440,11 +461,16 @@ const GAME_PROGRAM: ProgramIntel = {
     noteAR: 'التقديم يتم عبر Hochschule Ansbach.',
   }),
   foreignQualification: fact(BAGRUT_EN, 'OFFICIAL_REQUIREMENT', 'anabin-isr', '2026-09-19', { noteAR: BAGRUT_AR }),
-  subjectRequirements: unverified(
-    'OFFICIAL_REQUIREMENT',
-    'No additional Israeli Bagrut subject/unit threshold was verified for the programme.',
-    'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت لهذا البرنامج.',
-  ),
+  subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
   languageRequirement: fact(
     {
       language: 'German',
@@ -522,11 +548,16 @@ const INFO_PROGRAM: ProgramIntel = {
     noteAR: 'مسار البرنامج العام يُدار من جامعة بامبرغ.',
   }),
   foreignQualification: fact(BAGRUT_EN, 'OFFICIAL_REQUIREMENT', 'anabin-isr', '2026-09-19', { noteAR: BAGRUT_AR }),
-  subjectRequirements: unverified(
-    'OFFICIAL_REQUIREMENT',
-    'No additional Israeli Bagrut subject/unit threshold was verified for Wirtschaftsinformatik.',
-    'لم يتم التحقق من شرط إضافي لمواد أو وحدات البجروت لتخصص Wirtschaftsinformatik.',
-  ),
+  subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
+      'OFFICIAL_REQUIREMENT',
+      'anabin-isr',
+      '2026-09-27',
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
+    ),
   languageRequirement: fact(
     {
       language: 'German',
