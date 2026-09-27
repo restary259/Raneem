@@ -707,6 +707,7 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/offices': typeof AdminOfficesRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
@@ -812,10 +813,10 @@ export interface FileRoutesByTo {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/offices': typeof AdminOfficesRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
-  '/admin/offices': typeof AdminOfficesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spreadsheet': typeof AdminSpreadsheetRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -924,10 +925,10 @@ export interface FileRoutesById {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/offices': typeof AdminOfficesRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
-  '/admin/offices': typeof AdminOfficesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/spreadsheet': typeof AdminSpreadsheetRoute
   '/admin/students': typeof AdminStudentsRoute
@@ -1037,10 +1038,10 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/members'
     | '/admin/messages'
+    | '/admin/offices'
     | '/admin/pipeline'
     | '/admin/programs'
     | '/admin/referrals'
-    | '/admin/offices'
     | '/admin/settings'
     | '/admin/spreadsheet'
     | '/admin/students'
@@ -1143,6 +1144,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/members'
     | '/admin/messages'
+    | '/admin/offices'
     | '/admin/pipeline'
     | '/admin/programs'
     | '/admin/referrals'
@@ -1253,6 +1255,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/members'
     | '/admin/messages'
+    | '/admin/offices'
     | '/admin/pipeline'
     | '/admin/programs'
     | '/admin/referrals'
@@ -1613,18 +1616,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMembersRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/offices': {
-      id: '/admin/offices'
-      path: '/offices'
-      fullPath: '/admin/offices'
-      preLoaderRoute: typeof AdminOfficesRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/messages': {
       id: '/admin/messages'
       path: '/messages'
       fullPath: '/admin/messages'
       preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/offices': {
+      id: '/admin/offices'
+      path: '/offices'
+      fullPath: '/admin/offices'
+      preLoaderRoute: typeof AdminOfficesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/pipeline': {
@@ -2149,10 +2152,10 @@ interface AdminRouteChildren {
   AdminInboxRoute: typeof AdminInboxRoute
   AdminMembersRoute: typeof AdminMembersRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminOfficesRoute: typeof AdminOfficesRoute
   AdminPipelineRoute: typeof AdminPipelineRoute
   AdminProgramsRoute: typeof AdminProgramsRoute
   AdminReferralsRoute: typeof AdminReferralsRoute
-  AdminOfficesRoute: typeof AdminOfficesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSpreadsheetRoute: typeof AdminSpreadsheetRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
@@ -2172,10 +2175,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInboxRoute: AdminInboxRoute,
   AdminMembersRoute: AdminMembersRoute,
   AdminMessagesRoute: AdminMessagesRoute,
+  AdminOfficesRoute: AdminOfficesRoute,
   AdminPipelineRoute: AdminPipelineRoute,
   AdminProgramsRoute: AdminProgramsRoute,
   AdminReferralsRoute: AdminReferralsRoute,
-  AdminOfficesRoute: AdminOfficesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSpreadsheetRoute: AdminSpreadsheetRoute,
   AdminStudentsRoute: AdminStudentsRoute,
