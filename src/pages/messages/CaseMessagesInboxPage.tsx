@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useInternalTeamChatAccess } from "@/hooks/useInternalTeamChatAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { isVoiceAttachment } from "@/lib/chatFormat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import CaseMessages from "@/components/cases/CaseMessages";
@@ -157,13 +158,21 @@ export default function CaseMessagesInboxPage() {
   }, [load]);
 
   const items: ThreadListItem[] = useMemo(() => {
+    const previewFor = (message: { body?: string | null; attachments?: any[] | null }, fallback: string) => {
+      if (message.body) return message.body;
+      if ((message.attachments ?? []).some((att) => isVoiceAttachment(att))) {
+        return t("chat.voice.message");
+      }
+      return fallback;
+    };
+
     const caseItems: ThreadListItem[] = threads.map((thread) => ({
       id: thread.caseId,
       type: "case",
       category: "cases" as const,
       title: thread.caseName,
       subtitle: thread.caseReference,
-      preview: thread.lastMessage.body || t("chat.attach.only"),
+      preview: previewFor(thread.lastMessage, t("chat.attach.only")),
       timestamp: thread.lastMessage.created_at,
       unread: thread.unread,
     }));
@@ -179,7 +188,9 @@ export default function CaseMessagesInboxPage() {
         subtitle: thread.otherUserRole
           ? t(`case.messages.role.${thread.otherUserRole}`, thread.otherUserRole)
           : null,
-        preview: thread.lastMessage?.body || t("messagesInbox.noMessagesYet"),
+        preview: thread.lastMessage
+          ? previewFor(thread.lastMessage, t("messagesInbox.noMessagesYet"))
+          : t("messagesInbox.noMessagesYet"),
         timestamp: thread.lastMessageAt,
         unread: thread.unread,
         otherUserId: thread.otherUserId,
