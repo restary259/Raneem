@@ -476,6 +476,8 @@ export default function VoiceRecorder({
             }}
             onClick={function (event) {
               event.stopPropagation();
+              if (Date.now() - lastControlActionAtRef.current < 500) return;
+              cancelRecording();
             }}
             className="relative z-10 flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
