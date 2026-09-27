@@ -62,7 +62,7 @@ import {
 } from "@/services/DirectMessageService";
 
 const FS_CHAT =
-  "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none";
+  "max-md:fixed max-md:inset-0 max-md:z-[70] max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none max-md:pt-[env(safe-area-inset-top)] max-md:pb-[env(safe-area-inset-bottom)]";
 
 type Filter = "all" | "direct" | "teams" | "unread";
 
