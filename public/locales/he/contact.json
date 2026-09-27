@@ -34,7 +34,56 @@
       "message": "הודעה או שאלה",
       "messagePlaceholder": "כתבו כאן את השאלה או ההודעה שלכם...",
       "submit": "שליחה",
-      "sending": "שולחים..."
+      "sending": "שולחים...",
+      "name": "שם מלא",
+      "destination": "מדינת עניין",
+      "destinationPlaceholder": "בחרו מדינה",
+      "destinationOptions": {
+        "germany": "גרמניה",
+        "romania": "רומניה",
+        "jordan": "ירדן"
+      },
+      "service": "שירות מבוקש",
+      "servicePlaceholder": "בחרו שירות",
+      "serviceOptions": [
+        "הגשה לאוניברסיטה",
+        "תרגום ואימות",
+        "קורסי שפה",
+        "ויזות ושהייה",
+        "שירותי דיור",
+        "קליטה ומעקב",
+        "ייעוץ אישי",
+        "פנייה כללית"
+      ],
+      "phone": "מספר טלפון",
+      "phonePlaceholder": "כולל קידומת מדינה",
+      "interestedMajor": "תחום לימודים מבוקש",
+      "majorPlaceholder": "בחרו תחום לימודים",
+      "city": "עיר",
+      "cityPlaceholder": "העיר שלכם",
+      "educationLevel": "רמת השכלה נוכחית",
+      "educationPlaceholder": "בחרו רמה",
+      "stillInSchool": "עדיין בבית ספר?",
+      "selectPlaceholder": "בחירה",
+      "englishUnits": "יחידות אנגלית",
+      "mathUnits": "יחידות מתמטיקה",
+      "majorOptions": {
+        "engineering": "הנדסה",
+        "business": "מנהל עסקים",
+        "medicine": "רפואה",
+        "humanities": "מדעי הרוח",
+        "natural-sciences": "מדעי הטבע"
+      },
+      "educationOptions": {
+        "highschool": "תיכון",
+        "bagrut": "בגרות",
+        "bachelor": "תואר ראשון",
+        "master": "תואר שני"
+      },
+      "yesNo": {
+        "yes": "כן",
+        "no": "לא"
+      }
     },
     "toast": {
       "successTitle": "ההודעה נשלחה בהצלחה!",
@@ -58,7 +107,16 @@
       "message": "כתבו הודעה באורך 5 תווים לפחות.",
       "contact": "הזינו כתובת אימייל או מספר טלפון.",
       "consent": "נדרשת הסכמה לפני השליחה.",
-      "review": "בדקו את השדות המסומנים."
+      "review": "בדקו את השדות המסומנים.",
+      "cityRequired": "נדרשת עיר",
+      "educationRequired": "נדרשת רמת השכלה",
+      "stillInSchoolRequired": "אנא בחרו אם אתם עדיין בבית ספר"
+    },
+    "ai": {
+      "eyebrow": "הדרכה מהירה",
+      "title": "מתחילים עם יועץ ה-AI",
+      "body": "קבלו תשובה מהירה לגבי לימודים בגרמניה, ואז השתמשו בטופס זה כשהשאלה שלכם דורשת מעקב של הצוות או הקשר לתיק.",
+      "action": "פתיחת יועץ ה-AI"
     },
     "openMap": "פתיחת המשרד במפות Google"
   },
