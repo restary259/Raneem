@@ -426,6 +426,7 @@ export type Database = {
           guest_name: string | null
           id: string
           notes: string | null
+          office_id: string | null
           outcome: string | null
           outcome_notes: string | null
           outcome_recorded_at: string | null
@@ -446,6 +447,7 @@ export type Database = {
           guest_name?: string | null
           id?: string
           notes?: string | null
+          office_id?: string | null
           outcome?: string | null
           outcome_notes?: string | null
           outcome_recorded_at?: string | null
@@ -466,6 +468,7 @@ export type Database = {
           guest_name?: string | null
           id?: string
           notes?: string | null
+          office_id?: string | null
           outcome?: string | null
           outcome_notes?: string | null
           outcome_recorded_at?: string | null
@@ -484,6 +487,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
             referencedColumns: ["id"]
           },
           {
@@ -1349,6 +1359,7 @@ export type Database = {
           last_activity_at: string
           lawyer_commission: number
           math_units: number | null
+          office_id: string | null
           origin: string | null
           partner_id: string | null
           partner_link_id: string | null
@@ -1397,6 +1408,7 @@ export type Database = {
           last_activity_at?: string
           lawyer_commission?: number
           math_units?: number | null
+          office_id?: string | null
           origin?: string | null
           partner_id?: string | null
           partner_link_id?: string | null
@@ -1445,6 +1457,7 @@ export type Database = {
           last_activity_at?: string
           lawyer_commission?: number
           math_units?: number | null
+          office_id?: string | null
           origin?: string | null
           partner_id?: string | null
           partner_link_id?: string | null
@@ -1476,6 +1489,13 @@ export type Database = {
             columns: ["intel_major_confirmed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
             referencedColumns: ["id"]
           },
           {
@@ -2940,6 +2960,333 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      office_blackouts: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          is_active: boolean
+          office_id: string
+          reason: string | null
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          is_active?: boolean
+          office_id: string
+          reason?: string | null
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          is_active?: boolean
+          office_id?: string
+          reason?: string | null
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_blackouts_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_booking_settings: {
+        Row: {
+          created_at: string
+          default_duration_minutes: number
+          maximum_days_ahead: number
+          minimum_lead_minutes: number
+          office_id: string
+          slot_interval_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_duration_minutes?: number
+          maximum_days_ahead?: number
+          minimum_lead_minutes?: number
+          office_id: string
+          slot_interval_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_duration_minutes?: number
+          maximum_days_ahead?: number
+          minimum_lead_minutes?: number
+          office_id?: string
+          slot_interval_minutes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_booking_settings_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: true
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_breaks: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          is_active: boolean
+          label: string | null
+          office_id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          office_id: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          office_id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_breaks_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_hours: {
+        Row: {
+          close_time: string | null
+          created_at: string
+          id: string
+          is_open: boolean
+          office_id: string
+          open_time: string | null
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          close_time?: string | null
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          office_id: string
+          open_time?: string | null
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          close_time?: string | null
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          office_id?: string
+          open_time?: string | null
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_hours_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_members: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          membership_type: string
+          office_id: string
+          priority: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          membership_type?: string
+          office_id: string
+          priority?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          membership_type?: string
+          office_id?: string
+          priority?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_members_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_routing_rules: {
+        Row: {
+          assigned_user_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          office_id: string
+          priority: number
+          service_type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_user_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          office_id: string
+          priority?: number
+          service_type: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_user_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          office_id?: string
+          priority?: number
+          service_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_routing_rules_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offices: {
+        Row: {
+          address_line_1: string | null
+          address_line_2: string | null
+          booking_enabled: boolean
+          city: string
+          country: string
+          created_at: string
+          deleted_at: string | null
+          display_order: number
+          email: string | null
+          id: string
+          is_active: boolean
+          map_url: string | null
+          name_ar: string
+          name_en: string
+          name_he: string
+          office_code: string | null
+          office_type: string
+          phone: string | null
+          postal_code: string | null
+          public_description_ar: string | null
+          public_description_en: string | null
+          public_description_he: string | null
+          slug: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          booking_enabled?: boolean
+          city: string
+          country?: string
+          created_at?: string
+          deleted_at?: string | null
+          display_order?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          map_url?: string | null
+          name_ar: string
+          name_en: string
+          name_he?: string
+          office_code?: string | null
+          office_type?: string
+          phone?: string | null
+          postal_code?: string | null
+          public_description_ar?: string | null
+          public_description_en?: string | null
+          public_description_he?: string | null
+          slug: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          booking_enabled?: boolean
+          city?: string
+          country?: string
+          created_at?: string
+          deleted_at?: string | null
+          display_order?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          map_url?: string | null
+          name_ar?: string
+          name_en?: string
+          name_he?: string
+          office_code?: string | null
+          office_type?: string
+          phone?: string | null
+          postal_code?: string | null
+          public_description_ar?: string | null
+          public_description_en?: string | null
+          public_description_he?: string | null
+          slug?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       partner_clicks: {
         Row: {
@@ -6633,6 +6980,7 @@ export type Database = {
           last_activity_at: string
           lawyer_commission: number
           math_units: number | null
+          office_id: string | null
           origin: string | null
           partner_id: string | null
           partner_link_id: string | null
@@ -7039,6 +7387,7 @@ export type Database = {
         Returns: undefined
       }
       is_active_agent: { Args: { p_uid: string }; Returns: boolean }
+      is_active_team_member: { Args: { p_user_id: string }; Returns: boolean }
       is_admin_session: { Args: never; Returns: boolean }
       is_direct_thread_member: {
         Args: { _thread_id: string; _user_id: string }
@@ -7102,6 +7451,13 @@ export type Database = {
           source: string
           suggested_partner_id: string
           suggested_referred_by: string
+        }[]
+      }
+      list_office_team_members: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
         }[]
       }
       list_partner_directory: {
@@ -7376,6 +7732,50 @@ export type Database = {
           intel_intake_updated_by: string
           intel_student_intake: Json
         }[]
+      }
+      save_office_configuration: {
+        Args: {
+          p_backup_user_id?: string
+          p_hours: Json
+          p_office: Json
+          p_office_id: string
+          p_primary_user_id?: string
+          p_routing_rules?: Json
+          p_settings: Json
+        }
+        Returns: {
+          address_line_1: string | null
+          address_line_2: string | null
+          booking_enabled: boolean
+          city: string
+          country: string
+          created_at: string
+          deleted_at: string | null
+          display_order: number
+          email: string | null
+          id: string
+          is_active: boolean
+          map_url: string | null
+          name_ar: string
+          name_en: string
+          name_he: string
+          office_code: string | null
+          office_type: string
+          phone: string | null
+          postal_code: string | null
+          public_description_ar: string | null
+          public_description_en: string | null
+          public_description_he: string | null
+          slug: string
+          timezone: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "offices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       search_cases_for_mention: {
         Args: { p_query: string }
