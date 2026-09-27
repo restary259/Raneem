@@ -64,6 +64,7 @@ import {
   Receipt,
   Wrench,
   ClipboardEdit,
+  Building2,
   Hotel,
   School,
 } from "lucide-react";
@@ -134,7 +135,8 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
       icon: Settings,
       href: "",
       children: [
-        { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },\n        { key: "nav.offices", icon: Building2, href: "/admin/offices" },
+        { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },
+        { key: "nav.offices", icon: Building2, href: "/admin/offices" },
         { key: "nav.activity", icon: Activity, href: "/admin/activity" },
         { key: "nav.settings", icon: Settings, href: "/admin/settings" },
       ],
