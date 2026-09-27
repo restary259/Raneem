@@ -465,8 +465,17 @@ export default function VoiceRecorder({
           <button
             type="button"
             aria-label={t("chat.voice.cancel")}
-            onClick={cancelRecording}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            title={t("chat.voice.cancel")}
+            onPointerDown={function (event) {
+              event.preventDefault();
+              event.stopPropagation();
+              pointerDownRef.current = false;
+              cancelRecording();
+            }}
+            onClick={function (event) {
+              event.stopPropagation();
+            }}
+            className="relative z-10 flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -496,31 +505,40 @@ export default function VoiceRecorder({
                 {t("chat.voice.lockHint")}
               </span>
               <Lock className="mx-0.5 h-3.5 w-3.5 text-muted-foreground" />
-              <Button
+              <button
                 type="button"
-                size="icon"
-                variant="ghost"
                 aria-label={t("chat.voice.stop")}
                 title={t("chat.voice.stop")}
-                onClick={function () {
+                onPointerDown={function (event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  pointerDownRef.current = false;
                   stopRecording(true);
                 }}
-                className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10"
+                onClick={function (event) {
+                  event.stopPropagation();
+                }}
+                className="relative z-10 flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-full text-destructive transition-colors hover:bg-destructive/10"
               >
                 <Square className="h-4 w-4 fill-current" />
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                size="icon"
                 aria-label={t("chat.voice.send")}
                 title={t("chat.voice.send")}
-                onClick={function () {
+                onPointerDown={function (event) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  pointerDownRef.current = false;
                   stopRecording(false);
                 }}
-                className="h-8 w-8 rounded-full"
+                onClick={function (event) {
+                  event.stopPropagation();
+                }}
+                className="relative z-10 flex h-8 w-8 shrink-0 touch-none items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:bg-primary/90 active:scale-95"
               >
                 <Send className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
           ) : (
             <Button
