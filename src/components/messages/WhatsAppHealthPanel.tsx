@@ -32,7 +32,7 @@ export default function WhatsAppHealthPanel({ isAdmin }: { isAdmin: boolean }) {
   const [busy, setBusy] = useState<string | null>(null);
 
   const fmt = (value: string | null) =>
-    value ? new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
+    value ? new Intl.DateTimeFormat(i18n.language === "ar" ? "ar-IL" : "en-GB", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(value)) : "—";
 
   const load = useCallback(async () => {
     try {
