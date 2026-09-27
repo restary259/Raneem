@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+// WhatsAppService registers a module-level supabase.auth.onAuthStateChange
+// listener, so the mock must expose `auth` (the sibling supabase mocks do too).
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }) } },
+}));
 import { mergeWhatsAppMessages } from "./WhatsAppService";
 const m = (id: string, t: string, p: string | null = null) => ({ id, created_at: t, provider_message_id: p } as any);
 describe("mergeWhatsAppMessages", () => {
