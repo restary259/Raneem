@@ -457,7 +457,7 @@ export default function MessageList({
                       <div className="flex flex-wrap items-start gap-2">
                         {m.attachments.map((att) =>
                           isVoiceAttachment(att) ? (
-                            <VoiceMessage key={att.path} att={att} mine={group.mine} />
+                            <VoiceMessage key={att.path} att={att} />
                           ) : (
                             <AttachmentPreview key={att.path} att={att} />
                           ),
