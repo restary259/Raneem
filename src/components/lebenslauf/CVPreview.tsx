@@ -67,7 +67,7 @@ const CVPreview: React.FC<Props> = ({ data, id = "cv-preview" }) => {
         className="cv-scale-container print:transform-none print:w-full"
         style={{
           width: A4_W_PX,
-          transformOrigin: "top left",
+          transformOrigin: uiRtl ? "top right" : "top left",
           transform: `scale(${scale})`,
         }}
       >
