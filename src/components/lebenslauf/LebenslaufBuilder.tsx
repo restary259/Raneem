@@ -103,8 +103,8 @@ const LebenslaufBuilder: React.FC<LebenslaufBuilderProps> = ({
         <div className={`print:hidden ${mobileTab === "edit" ? "block" : "hidden"} lg:block ${paneCls}`}>
           <CVForm data={data} setData={setData} updatePersonal={updatePersonal} updateData={updateData} updateDesign={updateDesign} updateSignature={updateSignature} errors={errors} />
         </div>
-        <div className={`${mobileTab === "preview" ? "block" : "hidden"} lg:block ${paneCls}`}>
-          <div className={`lg:sticky ${stickyTopClassName}`}>
+        <div className={`${mobileTab === "preview" ? "block" : "hidden"} lg:block ${isRtl ? "lg:order-first" : ""} ${paneCls}`}>
+          <div className={isRtl ? "" : `lg:sticky ${stickyTopClassName}`}>
             <h3 className="text-lg font-medium mb-3 print:hidden">{t("lebenslaufBuilder.preview")}</h3>
             <CVPreview data={data} />
           </div>
