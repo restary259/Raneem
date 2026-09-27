@@ -393,25 +393,26 @@ export default function VoiceRecorder({
 
   if (mode === "idle") {
     return (
-      <button
-        type="button"
-        disabled={disabled}
-        aria-label={t("chat.voice.record")}
-        title={t("chat.voice.recordHint")}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={cancelRecording}
-        onContextMenu={function (event) {
-          event.preventDefault();
-        }}
-        className={cn(
-          "flex h-9 w-9 shrink-0 touch-none items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-8",
-          className,
+      <div className={cn("flex min-w-0 items-center gap-1", className)}>
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label={t("chat.voice.record")}
+          title={t("chat.voice.recordHint")}
+          onPointerDown={handlePointerDown}
+          onContextMenu={function (event) {
+            event.preventDefault();
+          }}
+          className="flex h-9 w-9 shrink-0 touch-none items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-8"
+        >
+          <Mic className="h-[18px] w-[18px]" />
+        </button>
+        {error && (
+          <span className="max-w-[220px] truncate text-[10px] text-destructive" role="alert">
+            {error}
+          </span>
         )}
-      >
-        <Mic className="h-[18px] w-[18px]" />
-      </button>
+      </div>
     );
   }
 
