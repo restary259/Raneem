@@ -124,7 +124,8 @@ interface MobileBottomNavProps {
 
 export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const location = useLocation();
-  const { t } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation('dashboard');
+  const language = i18n.language;
   const [moreOpen, setMoreOpen] = useState(false);
   const items = MOBILE_NAV_CONFIG[role] ?? [];
   // Mirror the sidebar: hide Apply when the member's apply_form_enabled admin
@@ -161,7 +162,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.refer': t('nav.refer', 'Refer'),
     'nav.contacts': t('nav.contacts', 'Contacts'),
     'nav.programs': t('nav.programs', 'Programs'),
-    'nav.offices': t('nav.offices', 'Offices'),
+    'nav.offices': t('nav.offices', language.startsWith('ar') ? 'المكاتب' : language.startsWith('he') ? 'משרדים' : 'Offices'),
     'nav.submissions': t('nav.submissions', 'Submissions'),
     'nav.messages': t('nav.messages', 'Messages'),
     'nav.staffInbox': t('nav.staffInbox', 'Inbox'),
