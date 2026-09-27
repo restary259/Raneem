@@ -45,7 +45,15 @@ describe("PublicOfficeBooking", () => {
     expect(screen.getByRole("button", { name: "Confirm appointment" })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "10:30" }));
     await user.click(screen.getByRole("button", { name: "Confirm appointment" }));
-    await waitFor(() => expect(call).toHaveBeenCalledWith({ data: { token: "a".repeat(64), action: "book", slot: slots[1] } }));
+    await waitFor(() => expect(call).toHaveBeenCalledWith({
+      data: {
+        token: "a".repeat(64),
+        action: "book",
+        slot: slots[1],
+        officeId: OFFICE_ID,
+        serviceType: "consultation",
+      },
+    }));
     expect(await screen.findByText("apply.visitRequestedTitle")).toBeInTheDocument();
     expect(screen.queryByText("apply.visitPending")).not.toBeInTheDocument();
   });
