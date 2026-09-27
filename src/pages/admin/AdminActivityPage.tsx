@@ -62,7 +62,7 @@ const AdminActivityPage = () => {
   });
 
   const fmt = (ts: string) =>
-    new Date(ts).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'medium' });
+    new Date(ts).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit', second: '2-digit' });
 
   const entityColor: Record<string, string> = {
     case: 'bg-primary/10 text-primary',
