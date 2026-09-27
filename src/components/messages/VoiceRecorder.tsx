@@ -64,6 +64,7 @@ export default function VoiceRecorder({
   const chunksRef = useRef<Blob[]>([]);
   const startedAtRef = useRef(0);
   const pointerDownRef = useRef(false);
+  const keyboardDownRef = useRef(false);
   const pointerStartRef = useRef({ x: 0, y: 0 });
   const lockedRef = useRef(false);
   const releaseBeforeReadyRef = useRef(false);
@@ -413,6 +414,21 @@ export default function VoiceRecorder({
           aria-label={t("chat.voice.record")}
           title={t("chat.voice.recordHint")}
           onPointerDown={handlePointerDown}
+          onKeyDown={function (event) {
+            if ((event.key === "Enter" || event.key === " ") && !event.repeat) {
+              event.preventDefault();
+              keyboardDownRef.current = true;
+              void startRecording();
+            }
+          }}
+          onKeyUp={function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              if (!keyboardDownRef.current) return;
+              keyboardDownRef.current = false;
+              if (modeRef.current === "recording") stopRecording(false);
+            }
+          }}
           onContextMenu={function (event) {
             event.preventDefault();
           }}
