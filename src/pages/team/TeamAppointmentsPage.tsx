@@ -225,7 +225,7 @@ export default function TeamAppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, i18n.language]);
 
   const confirmVisit = async (id: string) => {
     setConfirmingVisit(id);
