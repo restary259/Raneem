@@ -3925,6 +3925,7 @@ export type Database = {
           updated_at: string
           updated_by_student_at: string | null
           visa_status: string
+          voice_calls_enabled: boolean
           whatsapp_inbox_enabled: boolean
         }
         Insert: {
@@ -3995,6 +3996,7 @@ export type Database = {
           updated_at?: string
           updated_by_student_at?: string | null
           visa_status?: string
+          voice_calls_enabled?: boolean
           whatsapp_inbox_enabled?: boolean
         }
         Update: {
@@ -4065,6 +4067,7 @@ export type Database = {
           updated_at?: string
           updated_by_student_at?: string | null
           visa_status?: string
+          voice_calls_enabled?: boolean
           whatsapp_inbox_enabled?: boolean
         }
         Relationships: [
@@ -5748,6 +5751,82 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_call_locks: {
+        Row: {
+          call_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_call_locks_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "voice_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_calls: {
+        Row: {
+          answered_at: string | null
+          callee_id: string
+          caller_id: string
+          created_at: string
+          end_reason: string | null
+          ended_at: string | null
+          ended_by: string | null
+          id: string
+          last_activity_at: string
+          status: string
+          thread_id: string
+        }
+        Insert: {
+          answered_at?: string | null
+          callee_id: string
+          caller_id: string
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: string
+          thread_id: string
+        }
+        Update: {
+          answered_at?: string | null
+          callee_id?: string
+          caller_id?: string
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          id?: string
+          last_activity_at?: string
+          status?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_calls_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_campaign_recipients: {
         Row: {
           attempt_count: number
@@ -6763,6 +6842,14 @@ export type Database = {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean
       }
+      can_access_voice_call: {
+        Args: { p_call_id: string; p_user: string }
+        Returns: boolean
+      }
+      can_communicate_directly: {
+        Args: { p_a: string; p_b: string }
+        Returns: boolean
+      }
       cancel_payout_request: {
         Args: { p_request_id: string }
         Returns: undefined
@@ -7382,6 +7469,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_voice_calls_access: { Args: { p_user: string }; Returns: boolean }
       has_whatsapp_inbox_access: { Args: { p_user: string }; Returns: boolean }
       insert_lead_from_apply: {
         Args: {
