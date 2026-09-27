@@ -148,7 +148,7 @@ export default function VoiceMessage({ att }: { att: ChatAttachment }) {
           : playing
             ? t("chat.voice.pause")
             : t("chat.voice.play")}
-        disabled={loading || failed}
+        disabled={loading}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? (
