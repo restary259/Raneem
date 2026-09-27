@@ -28,7 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useInternalTeamChatAccess } from "@/hooks/useInternalTeamChatAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { isVoiceAttachment } from "@/lib/chatFormat";
+import { isVoiceAttachment, type ChatAttachment } from "@/lib/chatFormat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import CaseMessages from "@/components/cases/CaseMessages";
@@ -158,7 +158,10 @@ export default function CaseMessagesInboxPage() {
   }, [load]);
 
   const items: ThreadListItem[] = useMemo(() => {
-    const previewFor = (message: { body?: string | null; attachments?: any[] | null }, fallback: string) => {
+    const previewFor = (
+      message: { body?: string | null; attachments?: ChatAttachment[] | null },
+      fallback: string,
+    ) => {
       if (message.body) return message.body;
       if ((message.attachments ?? []).some((att) => isVoiceAttachment(att))) {
         return t("chat.voice.message");
