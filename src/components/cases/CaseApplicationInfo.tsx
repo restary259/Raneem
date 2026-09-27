@@ -33,7 +33,7 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
-      .then(async ({ data, error }) => {
+      .then(async ({ data, error }: { data: any; error: any }) => {
         if (cancelled) return;
         if (error) console.warn("visit lookup failed", error.message);
         const nextVisit = (data as Visit) ?? null;
