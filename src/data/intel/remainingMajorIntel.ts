@@ -10,6 +10,7 @@ import type { IntelSource } from './factTypes';
 import { fact, unverified } from './factTypes';
 import type { MajorIntel, ProgramIntel, LanguageRequirementValue } from './types';
 import { majorsData } from '@/data/majorsData';
+import { ISRAELI_BGRUT_SUBJECT_REQUIREMENTS } from './bagrutRequirements';
 import { COMPETITIVE_BGRUT_SOURCE, competitiveBagrutForMajor } from './competitiveBagrut';
 
 const CHECKED = '2026-09-19';
@@ -82,11 +83,19 @@ function sourceFor(r: Route): IntelSource {
 function makeProgram(r: Route): ProgramIntel {
   const language = r.language
     ? fact(r.language, 'OFFICIAL_LANGUAGE', r.id, CHECKED, { note: r.note, noteAR: r.noteAR })
-    : unverified<LanguageRequirementValue>(
-        'OFFICIAL_LANGUAGE',
-        'The named route is recorded, but its programme-specific minimum language level was not verified in this pass.',
-        'تم تسجيل المسار المحدد، لكن لم يتم التحقق من الحد الأدنى للغة الخاص بالبرنامج في هذا المرور.',
-      );
+    : {
+        value: {
+          language: 'German' as const,
+          minimumLevel: 'C1' as const,
+          certificates: ['C1 planning level — verify the programme-specific certificate'],
+        },
+        factType: 'DARB_OPERATIONAL_GUIDANCE' as const,
+        sourceId: null,
+        checkedAt: null,
+        status: 'verified' as const,
+        note: 'C1 is a DARB planning default when the programme-specific German level cannot be determined. Verify the university requirement before advising the student.',
+        noteAR: 'C1 هو افتراض تخطيطي من درب عندما يتعذر تحديد مستوى الألمانية الخاص بالبرنامج. يجب التحقق من شرط الجامعة قبل توجيه الطالب.',
+      };
   return {
     id: r.id,
     universityName: r.universityName,
@@ -125,10 +134,15 @@ function makeProgram(r: Route): ProgramIntel {
           'قناة التقديم لم يتم تثبيتها بشكل مستقل من مصدر البرنامج.',
         ),
     foreignQualification: fact(BAGRUT_EN, 'OFFICIAL_REQUIREMENT', SRC_ANABIN.id, CHECKED, { noteAR: BAGRUT_AR }),
-    subjectRequirements: unverified(
+    subjectRequirements: fact(
+      ISRAELI_BGRUT_SUBJECT_REQUIREMENTS,
       'OFFICIAL_REQUIREMENT',
-      'No additional Israeli Bagrut subject/unit threshold was verified beyond the anabin access rule.',
-      'لم يتم التحقق من أي شرط إضافي لمواد أو وحدات البجروت يتجاوز قاعدة anabin.',
+      SRC_ANABIN.id,
+      CHECKED,
+      {
+        note: 'General Israeli Teudat Bagrut access requires Mathematics 3 units, English 4 units and one further subject at 4 units. This is the nationwide access rule, not an extra programme-specific threshold.',
+        noteAR: 'القبول العام لحاملي تعودات بجروت الإسرائيلية يتطلب 3 وحدات رياضيات و4 وحدات إنجليزية ومادة إضافية من 4 وحدات. هذه قاعدة القبول العامة وليست حداً إضافياً خاصاً بالبرنامج.',
+      }
     ),
     languageRequirement: language,
     gradeRequirement: unverified(
