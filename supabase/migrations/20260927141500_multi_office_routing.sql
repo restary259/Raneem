@@ -220,7 +220,7 @@ SET search_path = public AS $$
 $$;
 
 REVOKE ALL ON FUNCTION public.is_active_team_member(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.is_active_team_member(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.is_active_team_member(uuid) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.validate_office_team_member()
 RETURNS trigger
@@ -328,7 +328,7 @@ SET search_path = public AS $$
 $$;
 
 REVOKE ALL ON FUNCTION public.resolve_office_assignee(uuid,text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.resolve_office_assignee(uuid,text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.resolve_office_assignee(uuid,text) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- RLS
@@ -447,7 +447,8 @@ SET search_path = public AS $$
   SELECT p.id, p.full_name
   FROM public.profiles p
   JOIN public.user_roles ur ON ur.user_id = p.id
-  WHERE ur.role = 'team_member'::public.app_role
+  WHERE public.has_role(auth.uid(), 'admin'::public.app_role)
+    AND ur.role = 'team_member'::public.app_role
     AND p.deleted_at IS NULL
   ORDER BY p.full_name;
 $$;
