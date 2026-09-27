@@ -2155,4 +2155,46 @@ catalog school `alpha-aktiv`.
   `.tmp_he_bundle.py`, which was wrong — temp files do not belong at the root
   and every sibling is documented under `scripts/`.
 
+## Major Card modal — in-card section navigation (2026-09-27)
+- `src/components/educational/MajorModal.tsx` is the public expanded Major Card
+  (clicking a card on `/educational-programs`). It has a persistent pill rail in
+  the **sticky header** so a reader jumps to a section instead of scrolling to it.
+  It reuses the shell from PR #109 (centered rounded dialog, blurred backdrop,
+  mobile bottom-sheet) — the rail is additive; copy/suppression rules unchanged.
+- **Nav entries are derived from what actually renders, never hardcoded.** The
+  same conditional expressions that gate each section also `push()` its nav
+  entry, so a suppressed section (no verified data) can never appear in the rail
+  and a shown section is always reachable. `sections.length > 1` hides the rail
+  entirely for a bare major (the "Description"-only case), where a one-item nav
+  would be pure noise. A test asserts every rail entry has a real heading.
+- **Active-section tracking**: rAF-throttled `scroll`/`resize` listener on the
+  dialog body, cached `getBoundingClientRect()` diff against the container top
+  (threshold 96px ≈ the sticky header). Both ends are pinned (`scrollTop <= 0`
+  → first section, `scrollTop + clientHeight >= scrollHeight - 2` → last), so a
+  major whose content is shorter than the viewport doesn't highlight the last
+  section on open. The listener is attached to the dialog body, not `window`,
+  because `document` is not the scroller inside a Radix dialog.
+- **Radix portal gotcha (this was the bug that broke the first implementation)**:
+  `DialogPrimitive.Content` renders through a portal mounted in a *later commit*
+  than the component that declares the effect, so `scrollRef.current` was still
+  `null` when the effect first ran and the effect never re-ran → nothing was ever
+  highlighted. Fixed by holding the node in **state** via a callback ref
+  (`const [scrollEl, setScrollEl] = useState<HTMLDivElement|null>(null)`;
+  `ref={setScrollEl}`) and keying the effect on `scrollEl`, so setup runs when the
+  node actually attaches. Do not "simplify" this back to a plain `useRef`.
+- `scroll-mt-24` on each section div offsets the sticky header for the smooth
+  `scrollIntoView({ behavior: 'smooth', block: 'start' })`; `aria-current="true"`
+  marks the active pill. Rail is RTL-safe (`dir` inherited, no physical props).
+- i18n: one new key `educational.navSections` (the `<nav aria-label>`) added to
+  en + ar + he in BOTH locale trees — `src/locales/*` (bundled) AND
+  `public/locales/*` (HTTP-served) — because the sync guard compares them. Note
+  pre-existing drift: `public/locales/{en,ar}/common.json` carry `edImageAlt` /
+  `imageAlt` that `src/locales/{en,ar}` lack; `he` is in sync. Don't "fix" that
+  by copying files wholesale — it is unrelated to this feature.
+- Build clean; `npx vitest run` 1538 passed | 1 skipped (+5 `MajorModal` nav
+  cases incl. the "every entry has a heading" contract and the sparse-major
+  suppression case). The dev server here has a pre-existing
+  "Failed to fetch dynamically imported module" flake on first load (retry/Try
+  Again loads fine); verification was done via the suite + a static check of the
+  built bundle, not the browser.
 
