@@ -245,7 +245,7 @@ export default function TeamAppointmentsPage() {
    */
   const apptErrorMessage = useCallback(
     (err: any) =>
-      String(err?.message ?? "").includes("APPT_BLOCKED")
+      /APPT_BLOCKED|Time unavailable/i.test(String(err?.message ?? ""))
         ? t("team.appointments.errConflict")
         : t("common.error"),
     [t],
@@ -420,7 +420,7 @@ export default function TeamAppointmentsPage() {
       toast({ variant: "destructive", description: t("team.appointments.errNoName") });
       return;
     }
-    if (!editingAppt && myOffices.length > 0 && !newOfficeId) {
+    if (!newOfficeId) {
       toast({ variant: "destructive", description: isAr ? "اختار المكتب" : i18n.language.startsWith("he") ? "יש לבחור משרד" : "Select an office" });
       return;
     }
@@ -439,9 +439,9 @@ export default function TeamAppointmentsPage() {
       dt.setHours(h, m, 0, 0);
 
       if (editingAppt) {
-        const { error } = await supabase
-          .from("appointments")
+        const { error } = await (supabase.from as any)("appointments")
           .update({
+            office_id: newOfficeId,
             scheduled_at: dt.toISOString(),
             duration_minutes: parseInt(newDuration),
             notes: newNotes || null,
@@ -453,11 +453,11 @@ export default function TeamAppointmentsPage() {
       } else {
         let caseId = newCaseId;
         if (useManualName && manualName.trim()) {
-          const { data: cd, error: ce } = await supabase
-            .from("cases")
+          const { data: cd, error: ce } = await (supabase.from as any)("cases")
             .insert({
               full_name: manualName.trim(),
               assigned_to: user!.id,
+              office_id: newOfficeId,
               phone_number: "",
               status: "appointment_scheduled",
             })
@@ -466,9 +466,9 @@ export default function TeamAppointmentsPage() {
           if (ce) throw ce;
           caseId = (cd as any).id;
         }
-        const { error } = await supabase.from("appointments").insert({
+        const { error } = await (supabase.from as any)("appointments").insert({
           case_id: caseId,
-          office_id: newOfficeId || (myOffices.length === 1 ? myOffices[0].id : null),
+          office_id: newOfficeId,
           team_member_id: user!.id,
           scheduled_at: dt.toISOString(),
           duration_minutes: parseInt(newDuration),
