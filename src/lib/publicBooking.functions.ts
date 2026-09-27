@@ -122,15 +122,26 @@ async function getBookableOffices(supabaseAdmin: any) {
   const userIds = [...new Set((membersResult.data || []).map(function (row: any) { return row.user_id; }))];
   if (!userIds.length) return [];
 
-  const rolesResult = await supabaseAdmin
-    .from("user_roles")
-    .select("user_id")
-    .in("user_id", userIds)
-    .eq("role", "team_member");
+  const [rolesResult, profilesResult] = await Promise.all([
+    supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .in("user_id", userIds)
+      .eq("role", "team_member"),
+    supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .in("id", userIds)
+      .is("deleted_at", null),
+  ]);
 
-  if (rolesResult.error) throw new Error("Offices are temporarily unavailable.");
+  if (rolesResult.error || profilesResult.error) throw new Error("Offices are temporarily unavailable.");
 
-  const teamIds = new Set((rolesResult.data || []).map(function (row: any) { return row.user_id; }));
+  const roleTeamIds = new Set((rolesResult.data || []).map(function (row: any) { return row.user_id; }));
+  const liveProfileIds = new Set((profilesResult.data || []).map(function (row: any) { return row.id; }));
+  const teamIds = new Set(
+    [...roleTeamIds].filter(function (id) { return liveProfileIds.has(id); }),
+  );
   const validOfficeIds = new Set(
     (membersResult.data || [])
       .filter(function (row: any) { return teamIds.has(row.user_id); })
@@ -182,14 +193,25 @@ async function calculateAvailability(supabaseAdmin: any, officeId: string, servi
   if (!members.length) throw new Error("Office unavailable");
 
   const memberIds = members.map(function (member) { return member.user_id; });
-  const rolesResult = await supabaseAdmin
-    .from("user_roles")
-    .select("user_id")
-    .in("user_id", memberIds)
-    .eq("role", "team_member");
-  if (rolesResult.error) throw new Error("Office availability is temporarily unavailable.");
+  const [rolesResult, profilesResult] = await Promise.all([
+    supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .in("user_id", memberIds)
+      .eq("role", "team_member"),
+    supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .in("id", memberIds)
+      .is("deleted_at", null),
+  ]);
+  if (rolesResult.error || profilesResult.error) throw new Error("Office availability is temporarily unavailable.");
 
-  const activeTeamIds = new Set((rolesResult.data || []).map(function (row: any) { return row.user_id; }));
+  const roleTeamIds = new Set((rolesResult.data || []).map(function (row: any) { return row.user_id; }));
+  const liveProfileIds = new Set((profilesResult.data || []).map(function (row: any) { return row.id; }));
+  const activeTeamIds = new Set(
+    [...roleTeamIds].filter(function (id) { return liveProfileIds.has(id); }),
+  );
   const eligibleMembers = members.filter(function (member) { return activeTeamIds.has(member.user_id); });
   if (!eligibleMembers.length) throw new Error("Office unavailable");
 
