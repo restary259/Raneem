@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { serverErrorResponse } from "../_shared/errors.ts";
-import { sendWebPush } from "../_shared/webpush.ts";
+import { isAllowedPushEndpoint, sendWebPush } from "../_shared/webpush.ts";
 
 
 serve(async (req) => {
@@ -45,6 +45,13 @@ serve(async (req) => {
       if (user_id !== authenticatedUserId) {
         return new Response(JSON.stringify({ error: "Cannot subscribe for another user" }), {
           status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!isAllowedPushEndpoint(subscription?.endpoint)) {
+        return new Response(JSON.stringify({ error: "Invalid push endpoint" }), {
+          status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
