@@ -244,6 +244,14 @@ function SidebarNav({ role }: { role: AppRole }) {
   );
 
   const unreadMessages = useUnreadCaseMessages(true);
+  const navLabel = (key: string) =>
+    key === "nav.offices"
+      ? i18n.language.startsWith("ar")
+        ? "المكاتب"
+        : i18n.language.startsWith("he")
+          ? "משרדים"
+          : "Offices"
+      : t(key, key);
 
   const isItemActive = (item: NavItem): boolean => {
     if (!item.href) return false;
@@ -321,7 +329,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                             parentActive && "bg-primary/10 text-primary font-medium neon-active neon-primary",
                             collapsed && "justify-center px-2",
                           )}
-                          title={collapsed ? t(item.key, item.key) : undefined}
+                          title={collapsed ? navLabel(item.key) : undefined}
                         >
                           <item.icon className="h-4 w-4 shrink-0" />
                           {!collapsed && <span className="flex-1 text-start">{t(item.key, item.key)}</span>}
@@ -353,7 +361,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                                     )}
                                   >
                                     <child.icon className="h-4 w-4 shrink-0" />
-                                    <span>{t(child.key, child.key)}</span>
+                                    <span>{navLabel(child.key)}</span>
                                     {child.key === "nav.messages" && unreadMessages > 0 && (
                                       <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
                                         {unreadMessages}
