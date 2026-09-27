@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
   const admin = createClient(supabaseUrl, serviceKey);
   const { data: invoiceRow, error: invoiceError } = await admin
     .from("case_invoices")
-    .select("student_email")
+    .select("student_email, case_id")
     .eq("invoice_number", invoiceNumber)
     .maybeSingle();
 
@@ -62,6 +62,20 @@ Deno.serve(async (req) => {
   if (invoiceRow.student_email.toLowerCase() !== recipientEmail.toLowerCase()) {
     console.error("Invoice recipient mismatch — refusing to send", { invoiceNumber });
     return json({ error: "Recipient does not match the invoice's student email" }, 403);
+  }
+
+  // A team member may only send invoices for cases assigned to them.
+  // Admins and internal service-role callers are unrestricted.
+  if (!auth.isServiceRole && !auth.roles.includes("admin")) {
+    const { data: caseRow } = await admin
+      .from("cases")
+      .select("assigned_to")
+      .eq("id", invoiceRow.case_id)
+      .maybeSingle();
+    if (!caseRow || caseRow.assigned_to !== auth.userId) {
+      console.warn("send-case-invoice: caller not assigned to case", { userId: auth.userId });
+      return json({ error: "This invoice's case is not assigned to you" }, 403);
+    }
   }
 
   const result = await sendAppEmail("case-invoice", invoiceRow.student_email, {
