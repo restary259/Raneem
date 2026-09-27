@@ -24,7 +24,8 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
   useEffect(() => {
     let cancelled = false;
     setLoaded(false);
-    supabase
+    // office_id is newer than the generated DB types, so this query is cast.
+    (supabase as unknown as { from: (table: string) => any })
       .from("appointments")
       .select("scheduled_at, status, confirmation_status, outcome, office_id")
       .eq("case_id", caseId)

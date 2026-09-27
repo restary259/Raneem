@@ -570,7 +570,7 @@ export default function VoiceRecorder({
           <button
             type="button"
             aria-label={t("chat.voice.delete")}
-            onClick={reset}
+            onClick={function () { reset(); }}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Trash2 className="h-4 w-4" />
@@ -640,7 +640,7 @@ export default function VoiceRecorder({
           className="hidden"
         />
       )}
-      {mode === "sending" && <span className="sr-only">{t("chat.voice.sending")}</span>}
+      {(mode as string) === "sending" && <span className="sr-only">{t("chat.voice.sending")}</span>}
     </div>
   );
 }
