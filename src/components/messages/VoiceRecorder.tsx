@@ -244,17 +244,17 @@ export default function VoiceRecorder({
 
   const startRecording = async function () {
     if (disabled || isActive || modeRef.current !== "idle" || startingRef.current) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setError(t("chat.voice.error.unsupported"));
+      return;
+    }
+
     startingRef.current = true;
     const requestId = startRequestRef.current + 1;
     startRequestRef.current = requestId;
     cancelBeforeReadyRef.current = false;
     setError(null);
     clearPreview();
-
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError(t("chat.voice.error.unsupported"));
-      return;
-    }
 
     const mimeType = supportedMimeType();
 
