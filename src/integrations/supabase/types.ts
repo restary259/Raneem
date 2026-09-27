@@ -6764,6 +6764,7 @@ export type Database = {
       }
     }
     Functions: {
+      accept_voice_call: { Args: { p_call_id: string }; Returns: Json }
       admin_adjust_case_service: {
         Args: {
           p_case_service_id: string
@@ -6854,6 +6855,7 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      cancel_voice_call: { Args: { p_call_id: string }; Returns: undefined }
       catalog_dependency_report: {
         Args: { p_id: string; p_kind: string }
         Returns: Json
@@ -6870,6 +6872,7 @@ export type Database = {
           valid: boolean
         }[]
       }
+      cleanup_stale_voice_calls: { Args: never; Returns: number }
       clear_case_thread: { Args: { p_case_id: string }; Returns: number }
       clear_must_change_password: { Args: never; Returns: undefined }
       confirm_agency_service_fee: { Args: { p_case_id: string }; Returns: Json }
@@ -6912,6 +6915,7 @@ export type Database = {
         Args: { p_full_name: string; p_phone: string }
         Returns: Json
       }
+      decline_voice_call: { Args: { p_call_id: string }; Returns: undefined }
       delete_catalog_entity: {
         Args: { p_id: string; p_kind: string }
         Returns: Json
@@ -6950,6 +6954,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      end_voice_call: { Args: { p_call_id: string }; Returns: undefined }
       ensure_agent_recruit_link: {
         Args: never
         Returns: {
@@ -6962,6 +6967,10 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: undefined
       }
+      finish_voice_call: {
+        Args: { p_actor: string; p_call_id: string; p_end_reason: string }
+        Returns: undefined
+      }
       fulfil_document_request: {
         Args: { p_attachment: Json; p_message_id: string }
         Returns: undefined
@@ -6971,6 +6980,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Json
       }
+      get_active_voice_call: { Args: never; Returns: Json }
       get_admin_cash_collections: {
         Args: never
         Returns: {
@@ -7408,6 +7418,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_voice_call: { Args: { p_call_id: string }; Returns: Json }
       get_whatsapp_dashboard: { Args: never; Returns: Json }
       get_whatsapp_failed_jobs: {
         Args: never
@@ -7471,6 +7482,7 @@ export type Database = {
       }
       has_voice_calls_access: { Args: { p_user: string }; Returns: boolean }
       has_whatsapp_inbox_access: { Args: { p_user: string }; Returns: boolean }
+      heartbeat_voice_call: { Args: { p_call_id: string }; Returns: undefined }
       insert_lead_from_apply: {
         Args: {
           p_accommodation?: boolean
@@ -7928,6 +7940,10 @@ export type Database = {
       start_student_team_member_thread: { Args: never; Returns: string }
       start_team_chat_thread: {
         Args: { p_other_user: string }
+        Returns: string
+      }
+      start_voice_call: {
+        Args: { p_callee_id: string; p_thread_id?: string }
         Returns: string
       }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
