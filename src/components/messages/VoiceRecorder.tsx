@@ -1,0 +1,519 @@
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useTranslation } from "react-i18next";
+import { Check, Lock, Mic, Play, RotateCcw, Square, Trash2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+
+export const MAX_VOICE_DURATION_MS = 5 * 60 * 1000;
+const MIN_SEND_DURATION_MS = 250;
+const RECORDING_MIME_CANDIDATES = [
+  "audio/webm;codecs=opus",
+  "audio/webm",
+  "audio/mp4",
+  "audio/ogg;codecs=opus",
+] as const;
+
+type RecorderMode = "idle" | "recording" | "locked" | "preview" | "sending";
+
+interface VoiceRecorderProps {
+  disabled?: boolean;
+  className?: string;
+  maxDurationMs?: number;
+  onSend: (file: File, durationMs: number) => Promise<void>;
+  onActiveChange?: (active: boolean) => void;
+}
+
+function supportedMimeType(): string {
+  if (typeof MediaRecorder === "undefined") return "";
+  return RECORDING_MIME_CANDIDATES.find(function (mime) {
+    return MediaRecorder.isTypeSupported(mime);
+  }) || "";
+}
+
+function extensionForMime(mime: string): string {
+  if (mime.includes("mp4")) return "m4a";
+  if (mime.includes("ogg")) return "ogg";
+  return "webm";
+}
+
+export function formatVoiceDuration(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return String(minutes) + ":" + String(remainder).padStart(2, "0");
+}
+
+const BARS = Array.from({ length: 28 }, function (_, index) {
+  const wave = Math.abs(Math.sin(index * 1.73) * 0.62 + Math.cos(index * 0.47) * 0.28);
+  return 0.3 + Math.min(0.7, wave);
+});
+
+export default function VoiceRecorder({
+  disabled = false,
+  className,
+  maxDurationMs = MAX_VOICE_DURATION_MS,
+  onSend,
+  onActiveChange,
+}: VoiceRecorderProps) {
+  const { t } = useTranslation("dashboard");
+  const [mode, setMode] = useState<RecorderMode>("idle");
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [recordedFile, setRecordedFile] = useState<File | null>(null);
+  const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [playingPreview, setPlayingPreview] = useState(false);
+
+  const modeRef = useRef<RecorderMode>("idle");
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const startedAtRef = useRef(0);
+  const pointerDownRef = useRef(false);
+  const pointerStartRef = useRef({ x: 0, y: 0 });
+  const lockedRef = useRef(false);
+  const releaseBeforeReadyRef = useRef(false);
+  const cancelBeforeReadyRef = useRef(false);
+  const previewOnStopRef = useRef(false);
+  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+  const unmountedRef = useRef(false);
+
+  const isActive = mode !== "idle";
+
+  const setRecorderMode = function (next: RecorderMode) {
+    modeRef.current = next;
+    setMode(next);
+    onActiveChange?.(next !== "idle");
+  };
+
+  const stopStream = function () {
+    streamRef.current?.getTracks().forEach(function (track) {
+      track.stop();
+    });
+    streamRef.current = null;
+  };
+
+  const clearPreview = function () {
+    if (audioPreviewRef.current) {
+      audioPreviewRef.current.pause();
+      audioPreviewRef.current.currentTime = 0;
+    }
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    setRecordedUrl(null);
+    setRecordedFile(null);
+    setPlayingPreview(false);
+  };
+
+  const reset = function () {
+    clearPreview();
+    chunksRef.current = [];
+    recorderRef.current = null;
+    lockedRef.current = false;
+    releaseBeforeReadyRef.current = false;
+    cancelBeforeReadyRef.current = false;
+    previewOnStopRef.current = false;
+    setElapsedMs(0);
+    setError(null);
+    stopStream();
+    if (!unmountedRef.current) setRecorderMode("idle");
+  };
+
+  useEffect(function () {
+    return function () {
+      unmountedRef.current = true;
+      recorderRef.current?.stop();
+      stopStream();
+      if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(function () {
+    if (mode !== "recording" && mode !== "locked") return;
+    const timer = window.setInterval(function () {
+      if (!startedAtRef.current) return;
+      const next = Date.now() - startedAtRef.current;
+      if (next >= maxDurationMs) {
+        setElapsedMs(maxDurationMs);
+        previewOnStopRef.current = true;
+        lockedRef.current = true;
+        const recorder = recorderRef.current;
+        if (recorder && recorder.state !== "inactive") recorder.stop();
+        return;
+      }
+      setElapsedMs(next);
+    }, 100);
+    return function () {
+      window.clearInterval(timer);
+    };
+  }, [mode, maxDurationMs]);
+
+  const finalizeRecording = async function () {
+    if (cancelBeforeReadyRef.current) {
+      reset();
+      return;
+    }
+
+    const recorder = recorderRef.current;
+    const blob = new Blob(chunksRef.current, {
+      type: recorder?.mimeType || supportedMimeType() || "audio/webm",
+    });
+    chunksRef.current = [];
+    recorderRef.current = null;
+    stopStream();
+
+    const durationMs = Math.min(
+      maxDurationMs,
+      Math.max(MIN_SEND_DURATION_MS, Date.now() - startedAtRef.current),
+    );
+    setElapsedMs(durationMs);
+
+    if (blob.size === 0) {
+      setError(t("chat.voice.error.empty"));
+      reset();
+      return;
+    }
+
+    const file = new File([blob], "voice-" + Date.now() + "." + extensionForMime(blob.type), {
+      type: blob.type || "audio/webm",
+      lastModified: Date.now(),
+    });
+
+    if (previewOnStopRef.current || lockedRef.current) {
+      setRecordedFile(file);
+      setRecordedUrl(URL.createObjectURL(file));
+      setPlayingPreview(false);
+      previewOnStopRef.current = false;
+      setRecorderMode("preview");
+      return;
+    }
+
+    setRecorderMode("sending");
+    try {
+      await onSend(file, durationMs);
+      if (!unmountedRef.current) reset();
+    } catch (err: any) {
+      setRecordedFile(file);
+      setRecordedUrl(URL.createObjectURL(file));
+      setError(err?.message || t("chat.voice.error.upload"));
+      setRecorderMode("preview");
+    }
+  };
+
+  const stopRecording = function (preview: boolean) {
+    previewOnStopRef.current = preview;
+    const recorder = recorderRef.current;
+    if (!recorder) {
+      releaseBeforeReadyRef.current = true;
+      return;
+    }
+    if (recorder.state !== "inactive") recorder.stop();
+  };
+
+  const cancelRecording = function () {
+    cancelBeforeReadyRef.current = true;
+    previewOnStopRef.current = false;
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    } else {
+      reset();
+    }
+  };
+
+  const startRecording = async function () {
+    if (disabled || isActive) return;
+    setError(null);
+    clearPreview();
+
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setError(t("chat.voice.error.unsupported"));
+      return;
+    }
+
+    const mimeType = supportedMimeType();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      if (cancelBeforeReadyRef.current) {
+        reset();
+        return;
+      }
+
+      const shouldStopImmediately = !pointerDownRef.current || releaseBeforeReadyRef.current;
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType: mimeType } : undefined);
+
+      recorderRef.current = recorder;
+      chunksRef.current = [];
+      startedAtRef.current = Date.now();
+      setElapsedMs(0);
+      lockedRef.current = false;
+      releaseBeforeReadyRef.current = false;
+      cancelBeforeReadyRef.current = false;
+      previewOnStopRef.current = false;
+      setRecorderMode("recording");
+
+      recorder.addEventListener("dataavailable", function (event) {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      });
+
+      recorder.addEventListener(
+        "stop",
+        function () {
+          void finalizeRecording();
+        },
+        { once: true },
+      );
+
+      recorder.start(250);
+
+      if (shouldStopImmediately) stopRecording(false);
+    } catch (err: any) {
+      stopStream();
+      const name = err?.name;
+      setError(
+        name === "NotAllowedError" || name === "PermissionDeniedError"
+          ? t("chat.voice.error.permission")
+          : t("chat.voice.error.unavailable"),
+      );
+      setRecorderMode("idle");
+    }
+  };
+
+  const handlePointerDown = function (event: ReactPointerEvent<HTMLButtonElement>) {
+    if (event.button !== 0 || disabled || isActive) return;
+    event.preventDefault();
+    pointerDownRef.current = true;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    void startRecording();
+  };
+
+  const handlePointerMove = function (event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!pointerDownRef.current || modeRef.current !== "recording") return;
+    const dx = event.clientX - pointerStartRef.current.x;
+    const dy = event.clientY - pointerStartRef.current.y;
+
+    if (dx < -80) {
+      cancelRecording();
+      pointerDownRef.current = false;
+      return;
+    }
+
+    if (dy < -80) {
+      lockedRef.current = true;
+      setRecorderMode("locked");
+    }
+  };
+
+  const handlePointerUp = function (event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!pointerDownRef.current) return;
+    pointerDownRef.current = false;
+
+    if (modeRef.current === "recording") {
+      stopRecording(false);
+    } else if (modeRef.current === "locked") {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
+  };
+
+  const togglePreview = async function () {
+    const audio = audioPreviewRef.current;
+    if (!audio) return;
+
+    if (audio.paused) {
+      try {
+        await audio.play();
+        setPlayingPreview(true);
+      } catch {
+        setError(t("chat.voice.error.playback"));
+      }
+    } else {
+      audio.pause();
+      setPlayingPreview(false);
+    }
+  };
+
+  const sendPreview = async function () {
+    if (!recordedFile || mode === "sending") return;
+    setError(null);
+    setRecorderMode("sending");
+    try {
+      await onSend(recordedFile, elapsedMs);
+      reset();
+    } catch (err: any) {
+      setError(err?.message || t("chat.voice.error.upload"));
+      setRecorderMode("preview");
+    }
+  };
+
+  if (mode === "idle") {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        aria-label={t("chat.voice.record")}
+        title={t("chat.voice.recordHint")}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={cancelRecording}
+        onContextMenu={function (event) {
+          event.preventDefault();
+        }}
+        className={cn(
+          "flex h-9 w-9 shrink-0 touch-none items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-8",
+          className,
+        )}
+      >
+        <Mic className="h-[18px] w-[18px]" />
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 flex-1 items-center gap-2 rounded-2xl border bg-background px-2.5 py-1.5",
+        mode === "recording" && "border-destructive/30 bg-destructive/[0.03]",
+        mode === "locked" && "border-primary/30 bg-primary/[0.03]",
+        className,
+      )}
+    >
+      {mode === "recording" || mode === "locked" ? (
+        <>
+          <button
+            type="button"
+            aria-label={t("chat.voice.cancel")}
+            onClick={cancelRecording}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="flex shrink-0 items-center gap-1 text-sm tabular-nums text-foreground">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
+              {formatVoiceDuration(elapsedMs)}
+            </span>
+            <div className="flex h-8 min-w-0 flex-1 items-center gap-0.5 overflow-hidden">
+              {BARS.map(function (height, index) {
+                return (
+                  <span
+                    key={index}
+                    aria-hidden="true"
+                    className="flex-1 rounded-full bg-destructive/35"
+                    style={{ height: Math.round(height * 24) + "px" }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {mode === "recording" ? (
+            <div className="flex shrink-0 items-center gap-1">
+              <span className="hidden text-[10px] text-muted-foreground sm:inline">
+                {t("chat.voice.lockHint")}
+              </span>
+              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          ) : (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={t("chat.voice.stop")}
+              onClick={function () {
+                stopRecording(true);
+              }}
+              className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10"
+            >
+              <Square className="h-4 w-4 fill-current" />
+            </Button>
+          )}
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            aria-label={t("chat.voice.delete")}
+            onClick={reset}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
+            aria-label={playingPreview ? t("chat.voice.pause") : t("chat.voice.play")}
+            onClick={function () {
+              void togglePreview();
+            }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
+          >
+            {playingPreview ? (
+              <Square className="h-3.5 w-3.5 fill-current" />
+            ) : (
+              <Play className="h-4 w-4 fill-current" />
+            )}
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex h-7 items-center gap-0.5 overflow-hidden">
+              {BARS.map(function (height, index) {
+                return (
+                  <span
+                    key={index}
+                    aria-hidden="true"
+                    className="flex-1 rounded-full bg-primary/35"
+                    style={{ height: Math.round(height * 20) + "px" }}
+                  />
+                );
+              })}
+            </div>
+            {error && (
+              <p className="truncate text-[10px] text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            {formatVoiceDuration(elapsedMs)}
+          </span>
+
+          <Button
+            type="button"
+            size="icon"
+            aria-label={t("chat.voice.send")}
+            onClick={function () {
+              void sendPreview();
+            }}
+            disabled={mode === "sending"}
+            className="h-8 w-8 rounded-full"
+          >
+            {mode === "sending" ? (
+              <RotateCcw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+          </Button>
+        </>
+      )}
+
+      {recordedUrl && (
+        <audio
+          ref={audioPreviewRef}
+          src={recordedUrl}
+          preload="metadata"
+          onEnded={function () {
+            setPlayingPreview(false);
+          }}
+          className="hidden"
+        />
+      )}
+      {mode === "sending" && <span className="sr-only">{t("chat.voice.sending")}</span>}
+    </div>
+  );
+}
