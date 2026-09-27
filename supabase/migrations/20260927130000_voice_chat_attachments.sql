@@ -211,6 +211,7 @@ DECLARE
   v_label_en text;
   v_label_ar text;
   v_mentioned boolean;
+  v_is_voice boolean := false;
 BEGIN
   IF v_me IS NULL THEN RAISE EXCEPTION 'Not authenticated'; END IF;
   IF v_body = '' AND jsonb_array_length(v_att) = 0 THEN RAISE EXCEPTION 'Message body required'; END IF;
