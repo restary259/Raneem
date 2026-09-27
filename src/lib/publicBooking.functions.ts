@@ -132,7 +132,8 @@ async function getBookableOffices(supabaseAdmin: any) {
       .from("profiles")
       .select("id")
       .in("id", userIds)
-      .is("deleted_at", null),
+      .is("deleted_at", null)
+      .is("deactivated_at", null),
   ]);
 
   if (rolesResult.error || profilesResult.error) throw new Error("Offices are temporarily unavailable.");
