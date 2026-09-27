@@ -1,7 +1,7 @@
 {
   "homepage": {
     "hero": {
-      "eyebrow": "DARB · Study International",
+      "eyebrow": "DARB · למידה בינלאומית",
       "title": "תכנית מלאה ללימודים בגרמניה",
       "imageAlt": "סביבה אוניברסיטאית בגרמניה המייצגת את תחילת מסע הלימודים",
       "reassurance": "מתחילים בהערכת פרופיל — ללא עלות",
@@ -584,66 +584,66 @@
     ]
   },
   "studentGallery": {
-    "title": "Our Students Around the World",
-    "subtitle": "See the inspiring success stories of our students at top universities worldwide.",
+    "title": "הסטודנטים שלנו ברחבי העולם",
+    "subtitle": "צפו בסיפורי ההצלחה המעוררים של הסטודנטים שלנו באוניברסיטאות המובילות בעולם.",
     "students": [
       {
         "name": "",
-        "destination": "Germany",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/19a7a716-743b-42f3-b98f-836a36a365d8.webp",
         "focus": "50% 30%"
       },
       {
-        "name": "Naseem Khatib",
-        "destination": "Germany",
+        "name": "נסים ח׳טיב",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/a8e524a4-fa5d-42ce-a497-f991a17b39bb.webp",
         "focus": "50% 55%"
       },
       {
-        "name": "Yazan Dawahde",
-        "destination": "Germany",
+        "name": "יזן דואחדה",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/5ea3a257-c055-46c3-a5ce-85067e67b401.webp",
         "focus": "50% 80%"
       },
       {
         "name": "",
-        "destination": "Germany",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/4e4eb6e1-6d93-4bc9-82da-7a11c8b7b2d4.webp",
         "focus": "50% 70%"
       },
       {
         "name": "",
-        "destination": "Germany",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/e42cefe5-bba2-4e2b-bd5b-fb4da05e4c6b.webp",
         "focus": "50% 60%"
       },
       {
-        "name": "Adam Diab",
-        "destination": "Germany",
+        "name": "אדם דיאב",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/28a02fa1-8618-4821-aa55-98152e26886a.webp",
         "focus": "50% 40%"
       },
       {
         "name": "",
-        "destination": "Germany",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/2df2a47a-8c67-4b8a-932b-192562d5472f.webp",
         "focus": "50% 55%"
       },
       {
-        "name": "Adam Diab",
-        "destination": "Germany",
+        "name": "אדם דיאב",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/ad84e26f-4c17-4fd2-8998-8bb99eb98062.webp",
         "focus": "50% 75%"
       },
       {
         "name": "",
-        "destination": "Germany",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/6cd7ab4d-f888-4ab4-92f1-3f3ca3905606.webp",
         "focus": "50% 50%"
       },
       {
         "name": "",
-        "destination": "Germany",
+        "destination": "גרמניה",
         "image": "/lovable-uploads/b88bf7f9-2a94-4112-8c34-6b83771686e7.webp",
         "focus": "50% 75%"
       }

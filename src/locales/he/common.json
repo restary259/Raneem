@@ -8,9 +8,9 @@
     "resources": "משאבים",
     "universityFinder": "חיפוש אוניברסיטה",
     "contact": "צור קשר",
-    "brand": "Darb",
+    "brand": "דארב",
     "locations": "המיקומים שלנו",
-    "broadcast": "Darb Broadcast",
+    "broadcast": "שידורי דארב",
     "studentPortal": "פורטל הסטודנטים",
     "majorQuiz": "שאלון תחום לימודים",
     "more": "עוד",
@@ -51,10 +51,10 @@
     "eyebrow": "יצירת קשר עם DARB",
     "title": "צריכים עזרה בצעד הבא?",
     "subtitle": "יש לכם שאלה על לימודים בגרמניה? דברו עם DARB ונעזור לכם להבין מה הצעד הבא.",
-    "whatsapp": "WhatsApp",
+    "whatsapp": "וואטסאפ",
     "contact": "צור קשר",
     "apply": "התחילו את ההרשמה",
-    "phoneLabel": "WhatsApp",
+    "phoneLabel": "וואטסאפ",
     "emailLabel": "אימייל",
     "compactTitle": "מעדיפים לדבר עם הצוות שלנו?",
     "compactSubtitle": "נשמח לעזור לכם להבין את האפשרויות ואת הצעד הבא.",
@@ -347,7 +347,7 @@
     "universityLogoNote": "סמלי האוניברסיטאות מוצגים לצורכי זיהוי ומקשרים לאתר הרשמי של כל אוניברסיטה. זכויות המותג והסימן המסחרי נשארות בידי האוניברסיטאות."
   },
   "loader": {
-    "brand": "Darb",
+    "brand": "דארב",
     "tagline": "השותף שלכם ללימודים בחו״ל"
   },
   "officeLocations": {
@@ -734,7 +734,7 @@
     "quizDesc": "גלו את תחום הלימודים המתאים לכם ביותר בגרמניה עם השאלון החכם שלנו.",
     "advisorTitle": "יועץ AI — Darb",
     "advisorDesc": "דברו עם יועץ ה-AI של Darb על קבלה, ויזות, שפה וחיי סטודנטים בגרמניה.",
-    "broadcastTitle": "Darb Broadcast",
+    "broadcastTitle": "שידורי דארב",
     "broadcastDesc": "צפו בסרטונים חינוכיים ובשידורים חיים מהמומחים שלנו על לימודים בגרמניה.",
     "partnersTitle": "השותפים שלנו — Darb",
     "partnersDesc": "עיינו בשותפים המוסמכים שלנו — אוניברסיטאות ומוסדות — ברחבי העולם.",

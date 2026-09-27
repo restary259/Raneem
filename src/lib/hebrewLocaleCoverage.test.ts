@@ -14,6 +14,9 @@ import path from "node:path";
 const ROOT = process.cwd();
 const EN_DIR = path.join(ROOT, "public", "locales", "en");
 const HE_DIR = path.join(ROOT, "public", "locales", "he");
+// Arabic is referenced only as translation evidence: a string Arabic translates
+// is a string Hebrew must translate too.
+const AR_DIR = path.join(ROOT, "public", "locales", "ar");
 
 // `dashboard.json` is the in-app UI (~4.8k keys); it lives in the same
 // public/locales tree as everything else, so it is covered by the standard
@@ -35,6 +38,48 @@ const leafPaths = (node: unknown, prefix = ""): string[] => {
 
 const read = (dir: string, file: string): unknown =>
   JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
+
+/** `path -> leaf value` for every scalar in a dictionary. */
+const leafEntries = (node: unknown, prefix = ""): Map<string, unknown> => {
+  const out = new Map<string, unknown>();
+  const walk = (n: unknown, p: string) => {
+    if (Array.isArray(n)) {
+      n.forEach((v, i) => walk(v, `${p}[${i}]`));
+    } else if (n && typeof n === "object") {
+      for (const [k, v] of Object.entries(n)) walk(v, p ? `${p}.${k}` : k);
+    } else {
+      out.set(p, n);
+    }
+  };
+  walk(node, prefix);
+  return out;
+};
+
+const HEBREW_CHAR = /[\u0590-\u05FF]/;
+const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F]/;
+
+/**
+ * Keys whose value is deliberately locale-independent: brand names, URLs,
+ * asset paths, CSS/icon tokens, element ids, placeholders and codes. These may
+ * legitimately be identical to English in every locale.
+ */
+const IDENTICAL_BY_DESIGN =
+  /(url|href|image|avatar|focus|icon|fileUrl|fileSize|\.id$|Placeholder|placeholder|\.ph\.|^number$|^brand$|^code$|^slug$|^key$|^level$|^bic$|^iban$|path$|^campaign$|Campaign$|\.value\.|template)/i;
+
+/**
+ * Prose keys whose value must be translated. A key qualifies when English and
+ * Arabic differ and the Arabic value actually contains Arabic script — i.e. an
+ * existing reviewer decided this string is translatable, so Hebrew must not
+ * silently fall back to English.
+ */
+const TRANSLATABLE = (key: string, en: unknown, ar: unknown): boolean => {
+  if (typeof en !== "string" || typeof ar !== "string") return false;
+  if (en.trim().length < 4) return false;
+  if (en === ar) return false;
+  if (!ARABIC_CHAR.test(ar)) return false;
+  if (HEBREW_CHAR.test(en)) return false;
+  return !IDENTICAL_BY_DESIGN.test(key);
+};
 
 describe("he locale coverage", () => {
   const namespaces = fs
@@ -71,6 +116,37 @@ describe("he locale coverage", () => {
     );
     expect(unaccounted).toEqual([]);
   });
+
+  /**
+   * Key presence alone does not mean translated: a Hebrew value copied verbatim
+   * from English still satisfies the coverage check above while rendering
+   * English to the user (the runtime `fallbackLng: { he: ['en'] }` makes a
+   * missing value indistinguishable from a fallback). This asserts the value,
+   * not just the path, for every string the Arabic locale proves translatable.
+   */
+  it.each(namespaces)(
+    "%s has translated Hebrew values, not English copies",
+    (file) => {
+      const en = leafEntries(read(EN_DIR, file));
+      const ar = leafEntries(read(AR_DIR, file));
+      const he = leafEntries(read(HE_DIR, file));
+
+      const untranslated = [...en.entries()]
+        .filter(([key, enValue]) => {
+          if (!TRANSLATABLE(key, enValue, ar.get(key))) return false;
+          const heValue = he.get(key);
+          return typeof heValue === "string" && heValue === enValue;
+        })
+        .map(([key]) => key);
+
+      expect(
+        untranslated,
+        `public/locales/he/${file} renders English for ${untranslated.length} key(s):\n  ${untranslated
+          .slice(0, 25)
+          .join("\n  ")}`,
+      ).toEqual([]);
+    },
+  );
 });
 
 /**

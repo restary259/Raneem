@@ -21,7 +21,7 @@
     "insuranceShort": "ביטוח בריאות פרטי (לטווח קצר)",
     "additionalOptions": "אפשרויות נוספות",
     "mobileLabel": "סים O2 ללא הגבלה",
-    "transportLabel": "Deutschlandticket",
+    "transportLabel": "כרטיס Deutschlandticket",
     "visaLabel": "אגרת ויזה",
     "foodBudget": "תקציב מזון חודשי",
     "resultsTitle": "פירוט עלויות משוער",
@@ -77,7 +77,7 @@
     "westernunion": "Western Union",
     "arrivesInHours": "מגיע בתוך שעות",
     "arrivesInDays": "1-2 ימי עסקים",
-    "exchangeRateDetail": "1 ILS = {{rate}} {{currency}}",
+    "exchangeRateDetail": "1 ש״ח = {{rate}} {{currency}}",
     "bestRecommendation": "ההמלצה הטובה ביותר",
     "bestRecommendationText": "כדי להעביר {{amount}} ש״ח ל{{country}}, האפשרות הטובה ביותר היא <1>{{service}}</1> ל<2>{{bank}}</2>: תקבלו כ-<3>{{received}} {{currency}}</3> בתוך {{time}} בעלות כוללת של {{fee}} ש״ח.",
     "receivingBank": "בנק קולט",
@@ -142,7 +142,7 @@
     "templates": {
       "academic": "אקדמי / מחקרי",
       "germanStandard": "גרמני סטנדרטי",
-      "europass": "Europass",
+      "europass": "Europass (אירופס)",
       "modernSidebar": "סרגל צד מודרני"
     },
     "sections": {
@@ -346,7 +346,7 @@
         "fileUrl": "/downloads/heidelberg-medical-guide.pdf"
       }
     ],
-    "badge": "DARB RESOURCES",
+    "badge": "המשאבים של דארב",
     "imageAlt": "סטודנט משתמש במשאבי לימוד דיגיטליים"
   },
   "tabs": {
