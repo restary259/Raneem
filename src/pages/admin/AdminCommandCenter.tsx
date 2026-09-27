@@ -314,7 +314,7 @@ const AdminCommandCenter = () => {
 
   const formatTime = (ts: string) => {
     const d = new Date(ts);
-    return d.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
+    return d.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit' });
   };
 
   return (
