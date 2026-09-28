@@ -2261,11 +2261,12 @@ catalog school `alpha-aktiv`.
   from the page path. Keep that re-export until the test is repointed.
 - **What was deliberately NOT extracted:** the list pane, composer,
   conversation header, lead panel, templates/overview panels and the
-  `startDialog`/`adminTeamToggle`/`conversationOnlyView` fragments. They close
+  `startDialog`/`conversationOnlyView` fragments. They close
   over ~15+ `useState` values plus `active`/`messages`/`threads`, so extracting
   them means 20-40-prop drilling that would make the code worse, not better.
   The right next step is **state hooks** (`useWhatsAppThreads`,
   `useWhatsAppConversation`, `useWhatsAppComposer`), not more JSX moves.
+
 - Removed on the way: the dead `Field()` helper, and the now-unused
   `ConversationState`/`LeadStage`/`Shimmer`/`Tag` imports.
 - The new modules are prettier-formatted and lint-clean. The page itself still
@@ -2277,6 +2278,31 @@ catalog school `alpha-aktiv`.
   (`APPOINTMENT_TEMPLATE_PRESETS_AR`). Audience is Arabic-only for now, so the
   presets were left as-is, but any future Hebrew/English staff rollout must
   localize them too.
+
+## WhatsApp: Admin/Team view switch removed (2026-09-28)
+- The WhatsApp workspace had an in-page segmented **Admin / Team view** toggle
+  (`adminTeamPreview`), rendered only for admins, that let an admin preview the
+  simplified team inbox. It was removed: the control was dead on the pinned team
+  route, and workspace mode should be a function of route + role, not UI state.
+- `teamMode` is now `const teamMode = inboxOnly;` — a team member (or an admin on
+  `/team/whatsapp`) is pinned to the simplified inbox; an admin on
+  `/admin/whatsapp` gets the full workspace.
+- **The team-mode capability is deliberately KEPT** (this is not a feature
+  removal). An admin still grants a team member WhatsApp access via
+  `profiles.whatsapp_inbox_enabled` (`useWhatsAppInboxAccess`); that access
+  renders through the same `if (teamMode)` branch and `inboxOnly` prop as
+  before. Do **not** delete `if (teamMode)`, the `teamMode` conditionals, or
+  `inboxOnly` — that would break the team member's assigned-only inbox.
+- Removed along with the control: the `adminTeamPreview` state, the
+  `adminTeamToggle` JSX, both render sites (the team-branch header and the
+  admin-branch bar), and the now-orphaned `tabs.admin` / `tabs.team` /
+  `tabs.viewToggle` locale keys (en + ar + he).
+- Guarded by `src/pages/messages/__tests__/whatsappViewSwitchGuard.test.ts`
+  (source scan): asserts no `adminTeam*` symbol or `tabs.team` key returns,
+  that `teamMode` derives from `inboxOnly`, and that `if (teamMode)` survives.
+  Verified non-vacuous — reintroducing the toggle fails 2 of the 4 cases.
+- Build clean; full suite green (1628 passed | 1 skipped, +4 new).
+
 ## Arabic/Israel SEO hardening (2026-09-28)
 
 Audience is Arabic-speaking Israeli Arabs, mobile-first; Hebrew/English
