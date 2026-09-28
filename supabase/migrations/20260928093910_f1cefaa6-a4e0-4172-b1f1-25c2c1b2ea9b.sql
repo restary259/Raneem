@@ -1,0 +1,1 @@
+ALTER TABLE public.appointment_reminders ADD COLUMN IF NOT EXISTS attempts int NOT NULL DEFAULT 0;
