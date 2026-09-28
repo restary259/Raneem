@@ -817,7 +817,7 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-            <div className={cn("grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+            <div className={cn("hidden lg:grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
         <div className={cn("min-h-0 flex-col overflow-hidden bg-card", "hidden lg:flex")}>
