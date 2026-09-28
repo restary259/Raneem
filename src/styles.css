@@ -1294,3 +1294,20 @@ body.dashboard-locked {
   overscroll-behavior: none;
   height: 100%;
 }
+
+/* WhatsApp-style chat surface */
+:root {
+  --wa-incoming: oklch(1 0 0);
+  --wa-outgoing: oklch(0.93 0.07 145);
+  --wa-wallpaper: oklch(0.95 0.012 85);
+}
+.dark {
+  --wa-incoming: oklch(0.27 0.012 240);
+  --wa-outgoing: oklch(0.38 0.07 165);
+  --wa-wallpaper: oklch(0.18 0.01 240);
+}
+@utility wa-wallpaper {
+  background-color: var(--wa-wallpaper);
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
