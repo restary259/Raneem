@@ -99,7 +99,8 @@
     "loadOlder": "Load older messages",
     "loadingOlder": "Loading…",
     "expired": "Expired",
-    "moreActions": "More actions"
+    "moreActions": "More actions",
+    "state": "Status"
   },
   "profile": {
     "title": "Lead profile",
