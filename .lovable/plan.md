@@ -28,4 +28,4 @@ robots.txt now tells Google not to show the **Apply page** (`/apply`). That keep
 
 ## Plan
 1. No changes needed for safety.
-2. Only if you want: allow the Apply page to appear in Google.
+2. Make the Apply page visible in Google: in robots.txt, remove the `Disallow: /apply` line so `/apply` is crawlable. Nothing else changes.
