@@ -102,7 +102,9 @@
     "notFoundDesc": "ייתכן שהיא נמחקה או שהקישור שגוי.",
     "backToInbox": "חזרה לתיבת הדואר",
     "loadFailed": "לא ניתן לטעון את ההודעות.",
-    "loading": "טוען שיחה…"
+    "loading": "טוען שיחה…",
+    "mediaUnavailable": "הקובץ כבר לא זמין",
+    "voiceFormatUnsupported": "הדפדפן מקליט בפורמט ש-WhatsApp לא מקבל. השתמשו ב-Safari, Firefox או Chrome עדכני."
   },
   "profile": {
     "title": "פרופיל הליד",

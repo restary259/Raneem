@@ -102,7 +102,9 @@
     "notFoundDesc": "It may have been removed or the link is wrong.",
     "backToInbox": "Back to inbox",
     "loadFailed": "Unable to load messages.",
-    "loading": "Loading conversation…"
+    "loading": "Loading conversation…",
+    "mediaUnavailable": "File no longer available",
+    "voiceFormatUnsupported": "This browser records in a format WhatsApp does not accept. Please use Safari, Firefox or a recent Chrome."
   },
   "profile": {
     "title": "Lead profile",

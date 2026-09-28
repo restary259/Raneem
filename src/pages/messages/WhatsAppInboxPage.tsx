@@ -1,4 +1,6 @@
 import { WhatsAppPurposeCatalog } from "@/components/messages/WhatsAppPurposeCatalog";
+import VoiceRecorder from "@/components/messages/VoiceRecorder";
+const WHATSAPP_VOICE_MIMES = ["audio/ogg;codecs=opus", "audio/mp4", "audio/aac"] as const;
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
@@ -491,6 +493,20 @@ export default function WhatsAppInboxPage({
     } catch (e) { toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.send") }); }
     finally { setSending(false); }
   };
+  const sendVoiceNote = async (file: File) => {
+    if (!active) return;
+    const mime = (file.type || "").toLowerCase();
+    if (mime.includes("webm")) throw new Error(t("conversation.voiceFormatUnsupported", "This browser records in a format WhatsApp does not accept. Please use Safari, Firefox or a recent Chrome."));
+    const clean = mime.split(";")[0] || "audio/ogg";
+    const voiceFile = new File([file], "voice-" + Date.now() + (clean.includes("ogg") ? ".ogg" : ".m4a"), { type: clean });
+    try {
+      await sendWhatsAppMedia(active.id, voiceFile, "");
+      await reloadConversation();
+    } catch (e) {
+      toast({ variant: "destructive", description: e instanceof Error ? e.message : t("errors.send") });
+      throw e;
+    }
+  };
   const syncTemplates = async () => {
     setTemplateSyncing(true);
     try { const result = await syncWhatsAppTemplates(); setTemplates(await listWhatsAppTemplates()); toast({ description: t("templates.synced", { count: result.synced }) }); }
@@ -779,7 +795,11 @@ export default function WhatsAppInboxPage({
                       <span className="ms-1 truncate text-[11px] text-muted-foreground" title={t("conversation.windowOpen")}>24h · {formatDuration(windowRemaining)}</span>
                     )}
                   </div>
-                  <PromptInputSubmit status={sending ? "submitted" : undefined} disabled={sending || (!composer.trim() && !attachment)} aria-label={t("conversation.send")} />
+                  {!composer.trim() && !attachment ? (
+                    <VoiceRecorder disabled={sending} mimeCandidates={WHATSAPP_VOICE_MIMES} onSend={sendVoiceNote} />
+                  ) : (
+                    <PromptInputSubmit status={sending ? "submitted" : undefined} disabled={sending || (!composer.trim() && !attachment)} aria-label={t("conversation.send")} />
+                  )}
                 </PromptInputFooter>
               </PromptInput>
               )}

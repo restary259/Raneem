@@ -286,6 +286,11 @@ export async function sendWhatsAppMedia(conversationId: string, file: File, capt
   });
 }
 
+/** Pulls an incoming/echoed attachment from WhatsApp into the private bucket (once). */
+export function fetchWhatsAppMedia(messageId: string) {
+  return invokeWhatsAppConnector<{ path: string; mime: string | null; filename: string | null }>({ action: "fetch_media", message_id: messageId });
+}
+
 /** Signed URL so staff can open an attachment from the private bucket. */
 export async function whatsAppMediaUrl(path: string) {
   const { data, error } = await supabase.storage.from("whatsapp-media").createSignedUrl(path, 60 * 60);

@@ -24,11 +24,15 @@ interface VoiceRecorderProps {
   maxDurationMs?: number;
   onSend: (file: File, durationMs: number) => Promise<void>;
   onActiveChange?: (active: boolean) => void;
+  /** Override the recording format preference (e.g. WhatsApp needs mp4/ogg, not webm). */
+  mimeCandidates?: readonly string[];
 }
+
+let activeCandidates: readonly string[] = RECORDING_MIME_CANDIDATES;
 
 function supportedMimeType(): string {
   if (typeof MediaRecorder === "undefined") return "";
-  return RECORDING_MIME_CANDIDATES.find(function (mime) {
+  return activeCandidates.find(function (mime) {
     return MediaRecorder.isTypeSupported(mime);
   }) || "";
 }
@@ -50,6 +54,7 @@ export default function VoiceRecorder({
   maxDurationMs = MAX_VOICE_DURATION_MS,
   onSend,
   onActiveChange,
+  mimeCandidates,
 }: VoiceRecorderProps) {
   const { t } = useTranslation("dashboard");
   const [mode, setMode] = useState<RecorderMode>("idle");
@@ -266,6 +271,7 @@ export default function VoiceRecorder({
     setError(null);
     clearPreview();
 
+    activeCandidates = mimeCandidates ?? RECORDING_MIME_CANDIDATES;
     const mimeType = supportedMimeType();
 
     try {
