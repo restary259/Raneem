@@ -817,8 +817,7 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-      <div className="darb-spectrum darb-spectrum-sm mb-0 shrink-0 [border-radius:0]" aria-hidden="true" />
-      <div className={cn("grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+            <div className={cn("grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
         <div className={cn("min-h-0 flex-col overflow-hidden bg-card", "hidden lg:flex")}>
@@ -1022,7 +1021,6 @@ export default function WhatsAppInboxPage({
       <div className="flex min-h-0 flex-1 lg:hidden">
         {!active && (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
-            <div className="darb-spectrum darb-spectrum-sm shrink-0 [border-radius:0]" aria-hidden="true" />
             <div className="shrink-0 space-y-2 border-b border-border/60 p-3">
               <div className="relative">
                 <Search className="pointer-events-none absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1111,28 +1109,30 @@ export default function WhatsAppInboxPage({
 
   return (
     <div dir={rtl ? "rtl" : "ltr"} className={cn("mx-auto flex h-full w-full min-w-0 max-w-[1800px] min-h-0 flex-col overflow-hidden", embedded ? "pb-0" : "pb-20 md:pb-4")}>
-      {!embedded && <PageHeader title={t("title")} subtitle={t("subtitle")} actions={<><div className="flex items-center gap-2">{isAdmin && adminTeamToggle}<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div></>} />}
-      {embedded && <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">{t("title")}</h2><p className="text-sm text-muted-foreground">{t("subtitle")}</p></div><div className="flex items-center gap-2">{isAdmin && adminTeamToggle}<WhatsAppActions receiving={receiving} connectedLabel={t("connected")} statusLabel={statusLabel} refreshLabel={t("actions.refresh")} startLabel={t("start.action")} onRefresh={load} onStart={() => setStartOpen(true)} /></div></div>}
-      <div className="mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-          <span className={cn("h-2 w-2 shrink-0 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} />
-          <span className="truncate">{t("number")} · {statusLabel}</span>
-          <Badge variant="outline" className="h-5 text-[10px]">{businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}</Badge>
+      <div className="mb-2 flex shrink-0 items-center justify-between gap-2 border-b border-border/60 pb-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="truncate text-lg font-semibold">{view === "inbox" ? t("tabs.inbox") : view === "dashboard" ? t("tabs.dashboard") : view === "templates" ? t("tabs.templates") : t("tabs.health", "Delivery health")}</h2>
+          <span className={cn("h-2 w-2 shrink-0 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} title={statusLabel} aria-label={statusLabel} />
         </div>
-        <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5 text-xs" role="tablist">
-          <button type="button" role="tab" aria-selected={view === "inbox"} onClick={() => setView("inbox")} className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium", view === "inbox" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground")}><MessageCircle className="h-3.5 w-3.5" />{t("tabs.inbox")}</button>
+        <div className="flex shrink-0 items-center gap-1">
+          {view !== "inbox" && <Button size="sm" variant="ghost" onClick={() => setView("inbox")}><MessageCircle className="me-1.5 h-4 w-4" />{t("tabs.inbox")}</Button>}
+          <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setStartOpen(true)} aria-label={t("start.action")}><Plus className="h-5 w-5" /></Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className={cn("flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium", view !== "inbox" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground")}><Wrench className="h-3.5 w-3.5" />{view === "inbox" ? t("tabs.tools", "Tools") : view === "dashboard" ? t("tabs.dashboard") : view === "templates" ? t("tabs.templates") : t("tabs.health", "Delivery health")}</button>
+              <Button size="icon" variant="ghost" className="rounded-full" aria-label={t("tabs.tools", "Tools")}><MoreVertical className="h-5 w-5" /></Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align={rtl ? "start" : "end"}>
+            <DropdownMenuContent align={rtl ? "start" : "end"} className="w-60">
+              <div className="px-2 py-1.5 text-xs text-muted-foreground"><p dir="ltr" className="text-start">{t("number")}</p><p>{statusLabel} · {businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}</p></div>
+              <DropdownMenuItem onSelect={() => void load()}><RefreshCw className="me-2 h-4 w-4" />{t("actions.refresh")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setView("dashboard")}><LayoutGrid className="me-2 h-4 w-4" />{t("tabs.dashboard")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setView("health")}><ShieldCheck className="me-2 h-4 w-4" />{t("tabs.health", "Delivery health")}</DropdownMenuItem>
               {canManageTemplates && <DropdownMenuItem onSelect={() => setView("templates")}><FileText className="me-2 h-4 w-4" />{t("tabs.templates")}</DropdownMenuItem>}
+            
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+      {isAdmin && <div className="mb-2 shrink-0">{adminTeamToggle}</div>}
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)} className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         <TabsContent value="inbox" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col">{inboxWorkspace(false)}</TabsContent>
         <TabsContent value="dashboard" className="m-0 min-w-0 space-y-4">
