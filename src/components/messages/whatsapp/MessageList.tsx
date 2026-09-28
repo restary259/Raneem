@@ -33,8 +33,8 @@ export function MessageList({
   const { t, i18n } = useTranslation("whatsapp");
   const lang = i18n.language;
   return (
-    <Conversation className="min-h-0 min-w-0 flex-1">
-      <ConversationContent className="min-w-0 gap-1.5 px-3 py-3">
+    <Conversation className="wa-wallpaper min-h-0 min-w-0 flex-1">
+      <ConversationContent className="min-w-0 gap-1 px-3 py-3 sm:px-8">
         {hasOlder && (
           <div className="flex justify-center">
             <Button
@@ -65,7 +65,7 @@ export function MessageList({
               <div key={m.id} className="space-y-2">
                 {newDay && (
                   <div className="flex justify-center pt-1">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/80">
+                    <span className="rounded-lg bg-card/90 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
                       {fmtDay(m.created_at, lang)}
                     </span>
                   </div>
@@ -76,10 +76,10 @@ export function MessageList({
                 >
                   <MessageContent
                     className={cn(
-                      "max-w-[78%] rounded-2xl px-3 py-1.5",
+                      "max-w-[82%] rounded-lg px-2.5 py-1.5 text-[14.5px] leading-snug text-foreground shadow-sm sm:max-w-[65%]",
                       m.direction === "inbound"
-                        ? "rounded-ss-sm bg-muted/60"
-                        : "rounded-se-sm bg-brand text-brand-foreground",
+                        ? "rounded-ss-none bg-[var(--wa-incoming)]"
+                        : "rounded-se-none bg-[var(--wa-outgoing)]",
                     )}
                   >
                     {m.media_url ? (
@@ -107,10 +107,7 @@ export function MessageList({
                     )}
                     <span
                       className={cn(
-                        "mt-0.5 block text-end text-[10px]",
-                        m.direction === "outbound"
-                          ? "text-brand-foreground/70"
-                          : "text-muted-foreground",
+                        "mt-0.5 block text-end text-[10.5px] text-muted-foreground",
                       )}
                     >
                       {fmt(m.created_at, lang)}
