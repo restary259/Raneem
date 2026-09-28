@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const rpc = vi.fn();
@@ -37,6 +37,7 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("AppointmentActionMenu", () => {
+  afterEach(() => cleanup());
   beforeEach(() => {
     rpc.mockReset();
     invoke.mockReset();
