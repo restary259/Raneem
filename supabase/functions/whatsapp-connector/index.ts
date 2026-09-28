@@ -377,6 +377,65 @@ serve(async (req) => {
       return json({ template: updated }, 200, corsHeaders);
     }
 
+    if (action === "fetch_media") {
+      // Download a WhatsApp attachment (voice note, photo, file) once and keep it
+      // in the private bucket so staff can play/open it from the dashboard.
+      const messageId = String(input?.message_id ?? "");
+      if (!messageId) return json({ error: "Message is required" }, 400, corsHeaders);
+      const { data: msg, error: msgError } = await admin
+        .from("whatsapp_messages")
+        .select("id, conversation_id, message_type, media_url, media_provider_id, media_mime_type, media_filename")
+        .eq("id", messageId)
+        .maybeSingle();
+      if (msgError) throw msgError;
+      if (!msg) return json({ error: "Message not found" }, 404, corsHeaders);
+      if (msg.media_url) return json({ path: msg.media_url, mime: msg.media_mime_type, filename: msg.media_filename }, 200, corsHeaders);
+      if (!msg.media_provider_id) return json({ error: "This message has no attachment" }, 404, corsHeaders);
+
+      const meta = await provider(`/media/${encodeURIComponent(msg.media_provider_id)}`, "GET");
+      if (!meta.ok) return json({ error: "WhatsApp no longer has this file", status: meta.status, details: meta.text.slice(0, 300) }, meta.status === 404 ? 404 : 502, corsHeaders);
+      const info = JSON.parse(meta.text || "{}") as { url?: string; mime_type?: string; file_size?: number };
+      const MAX = 100 * 1024 * 1024;
+      if (!info.url) return json({ error: "WhatsApp returned no file link" }, 502, corsHeaders);
+      if (Number(info.file_size ?? 0) > MAX) return json({ error: "File is too large to show" }, 413, corsHeaders);
+
+      const download = await fetch(`${GATEWAY}/media_download`, {
+        headers: {
+          Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY") ?? ""}`,
+          "X-Connection-Api-Key": Deno.env.get("WHATSAPP_API_KEY") ?? "",
+          "X-WhatsApp-Media-URL": info.url,
+        },
+      });
+      if (!download.ok || !download.body) {
+        return json({ error: "The file could not be downloaded", status: download.status }, 502, corsHeaders);
+      }
+      const reader = download.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let total = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > MAX) {
+          await reader.cancel();
+          return json({ error: "File is too large to show" }, 413, corsHeaders);
+        }
+        chunks.push(value);
+      }
+      const bytes = new Uint8Array(total);
+      let offset = 0;
+      for (const c of chunks) { bytes.set(c, offset); offset += c.byteLength; }
+
+      const mime = (info.mime_type || download.headers.get("content-type") || "application/octet-stream").split(";")[0].trim();
+      const ext = (mime.split("/")[1] || "bin").replace(/[^a-z0-9]/gi, "").slice(0, 8) || "bin";
+      const path = `${msg.conversation_id}/in-${msg.id}.${ext}`;
+      const { error: upErr } = await admin.storage.from("whatsapp-media").upload(path, bytes, { contentType: mime, upsert: true });
+      if (upErr) throw upErr;
+      const { error: updErr } = await admin.from("whatsapp_messages").update({ media_url: path, media_mime_type: msg.media_mime_type ?? mime }).eq("id", msg.id);
+      if (updErr) throw updErr;
+      return json({ path, mime: msg.media_mime_type ?? mime, filename: msg.media_filename }, 200, corsHeaders);
+    }
+
     if (action === "send") {
       const conversationId = String(input?.conversation_id ?? "");
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
