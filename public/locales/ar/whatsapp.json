@@ -102,7 +102,9 @@
     "notFoundDesc": "ربما حُذفت أو أن الرابط غير صحيح.",
     "backToInbox": "العودة إلى الوارد",
     "loadFailed": "تعذّر تحميل الرسائل.",
-    "loading": "جارٍ تحميل المحادثة…"
+    "loading": "جارٍ تحميل المحادثة…",
+    "mediaUnavailable": "الملف لم يعد متاحًا",
+    "voiceFormatUnsupported": "هذا المتصفح يسجّل بصيغة لا يقبلها واتساب. استخدم Safari أو Firefox أو نسخة حديثة من Chrome."
   },
   "profile": {
     "title": "ملف الطالب",

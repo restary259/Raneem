@@ -636,6 +636,7 @@ serve(async (req) => {
         const media: Record<string, unknown> = { link: mediaUrl };
         if (storedBody && mediaType !== "audio") media.caption = storedBody.slice(0, 1024);
         if (mediaType === "document" && mediaFilename) media.filename = mediaFilename;
+        if (mediaType === "audio" && (mediaMime ?? "").includes("ogg")) media.voice = true;
         providerBody = { messaging_product: "whatsapp", to, type: mediaType, [mediaType]: media };
         messageType = mediaType;
         storedBody = storedBody || mediaFilename || "";
