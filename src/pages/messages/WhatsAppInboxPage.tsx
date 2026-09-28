@@ -814,7 +814,7 @@ export default function WhatsAppInboxPage({
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
       <div className="darb-spectrum darb-spectrum-sm mb-0 shrink-0 [border-radius:0]" aria-hidden="true" />
-      <div className={cn("grid min-h-0 flex-1 gap-0 lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+      <div className={cn("grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
         <div className={cn("min-h-0 flex-col overflow-hidden bg-card", "hidden lg:flex")}>
@@ -859,8 +859,8 @@ export default function WhatsAppInboxPage({
         {/* Chat — desktop only when browsing the inbox; mobile uses the dedicated
             conversation-only view after a thread is selected. */}
         <div className={cn(
-          "min-h-0 min-w-0",
-          active ? "block" : "hidden lg:block",
+          "min-h-0 min-w-0 flex-col overflow-hidden",
+          active ? "flex" : "hidden lg:flex",
         )}>
           {conversationOnlyView}
         </div>
@@ -898,6 +898,7 @@ export default function WhatsAppInboxPage({
                 <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
                 <div className="mt-3"><p className="mb-1 text-[11px] text-muted-foreground">{t("profile.stage", "Lead stage")}</p>{leadStageControl}</div>
               </div>
+              <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
               <WhatsAppCrmContextPanel lead={active.lead} />
               <ScrollArea className="min-h-0 flex-1">
                 {!simplified && (
@@ -999,6 +1000,7 @@ export default function WhatsAppInboxPage({
             <div className="space-y-4">
               <SheetHeader className="text-start"><SheetTitle dir="auto">{active.lead.student_name || active.lead.whatsapp_number}</SheetTitle><p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p></SheetHeader>
               <div><p className="mb-1 text-[11px] text-muted-foreground">{t("profile.stage", "Lead stage")}</p>{leadStageControl}</div>
+              <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
               <WhatsAppCrmContextPanel lead={active.lead} />
               {!simplified && <TagEditor label={t("profile.tags", "Tags")} tags={active.lead.tags ?? []} onChange={(tags) => void saveLead({ tags })} addLabel={t("profile.addTag", "Add a tag")} />}
               <div>
