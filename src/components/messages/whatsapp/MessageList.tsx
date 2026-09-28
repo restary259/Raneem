@@ -82,12 +82,15 @@ export function MessageList({
                         : "rounded-se-none bg-[var(--wa-outgoing)]",
                     )}
                   >
-                    {m.media_url ? (
+                    {m.media_url || m.media_provider_id ? (
                       <MediaBubble
                         path={m.media_url}
+                        messageId={m.id}
+                        messageType={m.message_type}
                         mime={m.media_mime_type}
                         filename={m.media_filename}
                         openLabel={t("conversation.openFile", "Open file")}
+                        unavailableLabel={t("conversation.mediaUnavailable", "File no longer available")}
                       />
                     ) : (
                       m.message_type !== "text" && (
