@@ -41,6 +41,26 @@ Deno.serve(async (req) => {
       userId = profile?.id || null;
     }
 
+    // Authority check: admins/service role may notify anyone; team members may
+    // only notify students on cases assigned to them.
+    const isAdmin = auth.isServiceRole || auth.roles.includes("admin");
+    if (userId && !isAdmin) {
+      const { data: ownedCase } = await serviceClient
+        .from("cases")
+        .select("id")
+        .eq("student_user_id", userId)
+        .eq("assigned_to", auth.userId ?? "")
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      if (!ownedCase) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let notifTitle = "";
     let notifBody = "";
 
