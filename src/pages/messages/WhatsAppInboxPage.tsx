@@ -2,7 +2,7 @@ import { WhatsAppPurposeCatalog } from "@/components/messages/WhatsAppPurposeCat
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, LayoutGrid, PanelRight, Wrench, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, LayoutGrid, PanelRight, Wrench, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -17,10 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
-import { Shimmer } from "@/components/ai-elements/shimmer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
 import { useToast } from "@/hooks/use-toast";
@@ -39,44 +36,30 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, getWhatsAppMessage, listConversationMessages, mergeWhatsAppMessages, WHATSAPP_PAGE_SIZE, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
   markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppMarketingConsent, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
-  searchWhatsAppCases, type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
+  searchWhatsAppCases, type AiAssistResult, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
+import {
+  APPOINTMENT_TEMPLATE_PRESETS_AR,
+  CONSENT,
+  DISPLAY_STATES,
+  INTENTS,
+  LANGUAGES,
+  PRIORITIES,
+  QUICK_REPLY_IDS,
+  QUICK_TABS,
+  STAGES,
+  TEMPLATE_PURPOSES,
+  threadNeedsReply,
+  type QuickTab,
+} from "@/components/messages/whatsapp/constants";
+import { fmt } from "@/components/messages/whatsapp/format";
+import { ConversationRow } from "@/components/messages/whatsapp/ConversationRow";
+import { WhatsAppActions } from "@/components/messages/whatsapp/WhatsAppActions";
+import { TagEditor } from "@/components/messages/whatsapp/TagEditor";
+import { Metric } from "@/components/messages/whatsapp/Metric";
+import { MessageList } from "@/components/messages/whatsapp/MessageList";
 
-const DISPLAY_STATES: ConversationState[] = ["waiting_for_team", "open", "waiting_for_student", "closed"];
-const QUICK_TABS = ["all", "unread", "read", "needsReply"] as const;
-type QuickTab = (typeof QUICK_TABS)[number];
-const PRIORITIES = ["normal", "high", "urgent"] as const;
-const INTENTS = ["medicine", "engineering", "computer_science", "language_course", "visa", "accommodation", "cost", "appointment", "documents", "application_status", "existing_student", "other"] as const;
-const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
-
-const QUICK_REPLIES_AR = [
-  { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب 🙌 شو حابب تعرف عن الدراسة بألمانيا؟" },
-  { id: "major", label: "السؤال عن التخصص", text: "أكيد! شو التخصص أو مجال الدراسة اللي عم تفكّر تدرسه بألمانيا؟" },
-  { id: "appointment", label: "اقتراح موعد", text: "أكيد، فينا نرتّبلك استشارة مع فريق درب. أي يوم ووقت بناسبك؟" },
-  { id: "apply", label: "إرسال رابط التقديم", text: "بتقدر تعبّي طلبك مع درب من هون: https://darb.agency/apply" },
-  { id: "documents", label: "رفع المستندات بشكل آمن", text: "للحفاظ على خصوصية معلوماتك، ارفع المستندات من خلال بوابة درب الآمنة، مش عبر واتساب." },
-  { id: "payment", label: "متابعة الدفع", text: "أكيد، بساعدك بخطوات الدفع. شو النقطة اللي بدك توضيح عنها؟" },
-];
-
-const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
-  appointment_confirmation: "أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا.",
-  appointment_reminder: "أهلاً! تذكير من درب: عندك موعد معنا بكرا بخصوص الدراسة بألمانيا. إذا احتجت تغيّر الموعد، ابعتلنا.",
-};
-const STAGES: LeadStage[] = WHATSAPP_LEAD_STAGES as LeadStage[];
-const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
-const TEMPLATE_PURPOSES = ["lead_received", "lead_followup", "inquiry_follow_up", "appointment_invitation", "appointment_confirmation", "consultation_confirmation", "appointment_reminder", "appointment_rescheduled", "documents_missing", "document_reminder", "profile_incomplete", "document_received", "payment_instruction", "payment_reminder", "payment_confirmed", "application_started", "application_submitted", "application_update", "student_welcome", "enrollment_confirmation", "next_steps", "support_followup", "case_update", "re_engagement"] as const;
-const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const fmtDay = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "full" }).format(new Date(value));
-const KNOWN_TYPES = ["image", "video", "audio", "document", "sticker", "location", "contacts", "reaction"];
-
-/** needs_reply is derived, never stored: an inbound message that has no later outbound reply and the conversation is not closed. */
-function threadNeedsReply(thread: WhatsAppThread): boolean {
-  if (!thread.last_inbound_at) return false;
-  if (normalizeWhatsAppState(thread.state) === "closed") return false;
-  const lastIn = new Date(thread.last_inbound_at).getTime();
-  const lastOut = thread.last_outbound_at ? new Date(thread.last_outbound_at).getTime() : Number.NaN;
-  return Number.isFinite(lastIn) && (!Number.isFinite(lastOut) || lastIn > lastOut);
-}
+export { ConversationRow };
 
 export default function WhatsAppInboxPage({
   embedded = false,
@@ -684,41 +667,12 @@ export default function WhatsAppInboxPage({
             <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
             <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-              <Conversation className="min-h-0 min-w-0 flex-1">
-                <ConversationContent className="min-w-0 gap-3">
-                {hasOlder && (
-                  <div className="flex justify-center">
-                    <Button size="sm" variant="ghost" className="h-6 text-[11px] text-muted-foreground" disabled={loadingOlder} onClick={() => void loadOlder()}>
-                      {loadingOlder ? t("conversation.loadingOlder", "Loading…") : t("conversation.loadOlder", "Load older messages")}
-                    </Button>
-                  </div>
-                )}
-                {messages.length ? messages.map((m, index) => {
-                  const previous = index > 0 ? messages[index - 1] : null;
-                  const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
-                  const body = m.body?.trim();
-                  const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
-                  return (
-                    <div key={m.id} className="space-y-2">
-                      {newDay && <div className="flex justify-center pt-1"><span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/80">{fmtDay(m.created_at, i18n.language)}</span></div>}
-                      <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-1.5", m.direction === "inbound" ? "rounded-ss-sm bg-muted/60" : "rounded-se-sm bg-brand text-brand-foreground")}>
-                          {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
-                          {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className={cn("mt-0.5 block text-end text-[10px]", m.direction === "outbound" ? "text-brand-foreground/70" : "text-muted-foreground")}>
-                            {fmt(m.created_at, i18n.language)}
-                            {m.direction === "outbound" && (m.is_echo
-                              ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
-                              : <span title={t(`delivery.${m.delivery_status}`, m.delivery_status)}> {deliveryMark(m.delivery_status)}</span>)}
-                          </span>
-                        </MessageContent>
-                      </Message>
-                    </div>
-                  );
-                }) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}
-                </ConversationContent>
-                <ConversationScrollButton />
-              </Conversation>
+              <MessageList
+                messages={messages}
+                hasOlder={hasOlder}
+                loadingOlder={loadingOlder}
+                onLoadOlder={() => void loadOlder()}
+              />
             </div>
             <div className="shrink-0 space-y-2 border-t border-border/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <div className="flex items-center gap-1.5 px-1 text-[11px]" title={windowClosed ? t("conversation.templateRequired") : t("conversation.windowOpen")}>
@@ -734,7 +688,7 @@ export default function WhatsAppInboxPage({
                       <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
-                        {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
+                        {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("owner.assignToMe", "Assign to me") : member.full_name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <Select value={active.priority ?? "normal"} onValueChange={(value) => void saveConversation({ priority: value })}><SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger><SelectContent>{PRIORITIES.map((priority) => <SelectItem key={priority} value={priority}>{t(`priority.${priority}`, priority)}</SelectItem>)}</SelectContent></Select>
@@ -757,7 +711,7 @@ export default function WhatsAppInboxPage({
                     {t("owner.takenBy", "With {{name}}", { name: staff.find((member) => member.id === active.assigned_to)?.full_name ?? t("filters.unassigned") })}
                   </Badge>
                 ))}
-                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLIES_AR.map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
+                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLY_IDS.map((id) => <DropdownMenuItem key={id} onSelect={() => setComposer(t(`quickReplies.${id}.text`))}>{t(`quickReplies.${id}.label`)}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
               )}
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
@@ -970,7 +924,7 @@ export default function WhatsAppInboxPage({
                           <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
-                            {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
+                            {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("owner.assignToMe", "Assign to me") : member.full_name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <Select value={active.intent ?? "other"} onValueChange={(value) => void saveConversation({ intent: value })}>
@@ -1266,84 +1220,4 @@ export default function WhatsAppInboxPage({
       {startDialog}
     </div>
   );
-}
-
-function WhatsAppActions({ receiving, connectedLabel, statusLabel, refreshLabel, startLabel, onRefresh, onStart }: { receiving: boolean; connectedLabel: string; statusLabel: string; refreshLabel: string; startLabel: string; onRefresh: () => void; onStart: () => void }) {
-  return <div className="flex flex-wrap items-center gap-2"><span className="flex items-center gap-1.5 text-xs font-medium" title={statusLabel}><span className={cn("h-2 w-2 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} />{receiving ? connectedLabel : statusLabel}</span><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
-}
-
-function Field({ label, value, onBlur, type = "text" }: { label: string; value: string; onBlur: (value: string) => void; type?: string }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-  return <div><Label className="text-xs">{label}</Label><Input type={type} className="mt-1" value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft !== value && onBlur(draft)} /></div>;
-}
-function TagEditor({ label, tags, onChange, addLabel }: { label: string; tags: string[]; onChange: (tags: string[]) => void; addLabel: string }) {
-  const [draft, setDraft] = useState("");
-  const add = () => { const tag = draft.trim(); if (!tag || tags.includes(tag)) return; onChange([...tags, tag]); setDraft(""); };
-  return <div><Label className="text-xs">{label}</Label><div className="mt-1 flex gap-2"><Input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); add(); } }} placeholder={addLabel} /><Button type="button" size="icon" variant="outline" onClick={add} aria-label={addLabel}><Tag className="h-4 w-4" /></Button></div>{tags.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{tags.map((tag) => <Badge key={tag} variant="secondary" className="gap-1">{tag}<button type="button" onClick={() => onChange(tags.filter((item) => item !== tag))} aria-label={`${addLabel}: ${tag}`}><X className="h-3 w-3" /></button></Badge>)}</div>}</div>;
-}
-function Metric({ icon: Icon, label, value }: { icon: typeof Inbox; label: string; value: string | number }) {
-  return <Card className="rounded-lg p-3.5 shadow-none"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p><p className="mt-1.5 text-2xl font-semibold">{value}</p></div><div className="rounded-md bg-brand/10 p-2 text-brand"><Icon className="h-4.5 w-4.5" /></div></div></Card>;
-}
-
-/** Attachments live in a private bucket, so each bubble asks for its own signed link. */
-function MediaBubble({ path, mime, filename, openLabel }: { path: string; mime: string | null; filename: string | null; openLabel: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void whatsAppMediaUrl(path).then((signed) => { if (!cancelled) setUrl(signed); }).catch(() => undefined);
-    return () => { cancelled = true; };
-  }, [path]);
-  if (!url) return <div className="mb-1 h-24 w-40 animate-pulse rounded-md bg-muted" />;
-  if (mime?.startsWith("image/")) return <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={filename ?? ""} className="mb-1 max-h-56 rounded-md object-cover" /></a>;
-  if (mime?.startsWith("video/")) return <video src={url} controls className="mb-1 max-h-56 rounded-md" />;
-  if (mime?.startsWith("audio/")) return <audio src={url} controls className="mb-1 w-56" />;
-  return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
-}
-
-function initials(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "#";
-  if (/^\+?\d/.test(parts[0])) return parts[0].replace(/\D/g, "").slice(-2);
-  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
-}
-
-export function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
-  const { t } = useTranslation("whatsapp");
-  const name = thread.lead.student_name || thread.lead.whatsapp_number;
-  const lastAt = thread.last_inbound_at ?? thread.last_outbound_at;
-  const unread = (thread.unread_count ?? 0) > 0;
-  const time = lastAt ? new Intl.DateTimeFormat("en-GB", new Date(lastAt).toDateString() === new Date(now).toDateString() ? { hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "short" }).format(new Date(lastAt)) : "";
-  return (
-    <button type="button" onClick={onSelect} className={cn("relative flex w-full items-center gap-2.5 border-b border-border/40 px-3 py-2 text-start transition-colors hover:bg-muted/40", active && "bg-brand/5")}>
-      {active && <span className="absolute inset-y-0 start-0 w-0.5 bg-brand" aria-hidden="true" />}
-      <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-[11px] font-semibold", unread ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground")}>{initials(name)}</span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center justify-between gap-2">
-          <span dir="auto" className={cn("truncate text-[13px]", unread ? "font-semibold" : "font-medium")}>{name}</span>
-          <span className={cn("shrink-0 text-[10px]", unread ? "font-semibold text-brand" : "text-muted-foreground")}>{time}</span>
-        </span>
-        <span className="mt-0.5 flex items-center justify-between gap-2">
-          <span dir="auto" className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</span>
-          {unread && <span className="grid h-4.5 min-w-4.5 shrink-0 place-items-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-foreground">{thread.unread_count}</span>}
-        </span>
-        <span className="mt-1 flex flex-wrap items-center gap-1">
-          <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-medium", whatsappStageClass(thread.lead.lead_stage))}>{whatsappStageLabel(thread.lead.lead_stage, lang)}</span>
-          {!thread.lead.student_name && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">{t("identity.nameMissing", "No name yet")}</Badge>}
-          {!simplified && thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="h-4 px-1.5 text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
-          {!simplified && isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="h-4 px-1.5 text-[9px]">{t("sla.overdue")}</Badge>}
-        </span>
-      </span>
-    </button>
-  );
-}
-
-function deliveryMark(status: string | null | undefined): string {
-  switch (status) {
-    case "read": return "✓✓";
-    case "delivered": return "✓✓";
-    case "sent": case "accepted": return "✓";
-    case "failed": return "⚠";
-    default: return "…";
-  }
 }
