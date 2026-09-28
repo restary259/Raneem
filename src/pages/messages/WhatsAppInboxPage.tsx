@@ -17,8 +17,6 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
@@ -45,7 +43,6 @@ import {
   CONSENT,
   DISPLAY_STATES,
   INTENTS,
-  KNOWN_TYPES,
   LANGUAGES,
   PRIORITIES,
   QUICK_REPLY_IDS,
@@ -55,12 +52,12 @@ import {
   threadNeedsReply,
   type QuickTab,
 } from "@/components/messages/whatsapp/constants";
-import { deliveryMark, fmt, fmtDay, initials } from "@/components/messages/whatsapp/format";
+import { fmt } from "@/components/messages/whatsapp/format";
 import { ConversationRow } from "@/components/messages/whatsapp/ConversationRow";
 import { WhatsAppActions } from "@/components/messages/whatsapp/WhatsAppActions";
 import { TagEditor } from "@/components/messages/whatsapp/TagEditor";
 import { Metric } from "@/components/messages/whatsapp/Metric";
-import { MediaBubble } from "@/components/messages/whatsapp/MediaBubble";
+import { MessageList } from "@/components/messages/whatsapp/MessageList";
 
 export { ConversationRow };
 
@@ -670,41 +667,12 @@ export default function WhatsAppInboxPage({
             <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
             <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-              <Conversation className="min-h-0 min-w-0 flex-1">
-                <ConversationContent className="min-w-0 gap-3">
-                {hasOlder && (
-                  <div className="flex justify-center">
-                    <Button size="sm" variant="ghost" className="h-6 text-[11px] text-muted-foreground" disabled={loadingOlder} onClick={() => void loadOlder()}>
-                      {loadingOlder ? t("conversation.loadingOlder", "Loading…") : t("conversation.loadOlder", "Load older messages")}
-                    </Button>
-                  </div>
-                )}
-                {messages.length ? messages.map((m, index) => {
-                  const previous = index > 0 ? messages[index - 1] : null;
-                  const newDay = !previous || new Date(previous.created_at).toDateString() !== new Date(m.created_at).toDateString();
-                  const body = m.body?.trim();
-                  const typeLabel = KNOWN_TYPES.includes(m.message_type) ? t(`messageType.${m.message_type}`) : t("messageType.unknown");
-                  return (
-                    <div key={m.id} className="space-y-2">
-                      {newDay && <div className="flex justify-center pt-1"><span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/80">{fmtDay(m.created_at, i18n.language)}</span></div>}
-                      <Message from={m.direction === "outbound" ? "user" : "assistant"} className={m.direction === "outbound" ? "ms-auto" : "me-auto"}>
-                        <MessageContent className={cn("max-w-[78%] rounded-2xl px-3 py-1.5", m.direction === "inbound" ? "rounded-ss-sm bg-muted/60" : "rounded-se-sm bg-brand text-brand-foreground")}>
-                          {m.media_url ? <MediaBubble path={m.media_url} mime={m.media_mime_type} filename={m.media_filename} openLabel={t("conversation.openFile", "Open file")} /> : m.message_type !== "text" && <p className="mb-1 text-xs font-medium opacity-80">{typeLabel}</p>}
-                          {body ? <p className="whitespace-pre-wrap">{body}</p> : m.message_type === "text" && <p className="text-xs italic opacity-70">{t("messageType.unknown")}</p>}
-                          <span className={cn("mt-0.5 block text-end text-[10px]", m.direction === "outbound" ? "text-brand-foreground/70" : "text-muted-foreground")}>
-                            {fmt(m.created_at, i18n.language)}
-                            {m.direction === "outbound" && (m.is_echo
-                              ? <> · {t("delivery.fromPhone", "sent from the phone")}</>
-                              : <span title={t(`delivery.${m.delivery_status}`, m.delivery_status)}> {deliveryMark(m.delivery_status)}</span>)}
-                          </span>
-                        </MessageContent>
-                      </Message>
-                    </div>
-                  );
-                }) : <ConversationEmptyState title={t("conversation.noMessages")} description={t("empty.description")} icon={<Inbox className="h-8 w-8" />} />}
-                </ConversationContent>
-                <ConversationScrollButton />
-              </Conversation>
+              <MessageList
+                messages={messages}
+                hasOlder={hasOlder}
+                loadingOlder={loadingOlder}
+                onLoadOlder={() => void loadOlder()}
+              />
             </div>
             <div className="shrink-0 space-y-2 border-t border-border/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <div className="flex items-center gap-1.5 px-1 text-[11px]" title={windowClosed ? t("conversation.templateRequired") : t("conversation.windowOpen")}>
