@@ -243,14 +243,22 @@ export default function WhatsAppInboxPage({
   const parameterCount = useMemo(() => [...selectedTemplateText.matchAll(/{{\s*(\d+)\s*}}/g)].length, [selectedTemplateText]);
   const [hasOlder, setHasOlder] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messagesError, setMessagesError] = useState(false);
+  const [messagesReload, setMessagesReload] = useState(0);
   useEffect(() => {
+    setMessagesError(false);
     setMessages([]); setNotes([]); setAiResult(null); setComposer(""); setTemplateId(null); setTemplateParameters([]); setAttachment(null); setHasOlder(false);
     if (!selectedId) return;
+    let cancelled = false;
+    setMessagesLoading(true);
     Promise.all([listConversationMessages(selectedId), listConversationNotes(selectedId)])
-      .then(([m, n]) => { setMessages(m); setNotes(n); setHasOlder(m.length >= WHATSAPP_PAGE_SIZE); })
-      .catch(() => toast({ variant: "destructive", description: t("errors.load") }));
+      .then(([m, n]) => { if (cancelled) return; setMessages(m); setNotes(n); setHasOlder(m.length >= WHATSAPP_PAGE_SIZE); })
+      .catch(() => { if (!cancelled) setMessagesError(true); })
+      .finally(() => { if (!cancelled) setMessagesLoading(false); });
     void markConversationRead(selectedId).catch(() => undefined);
-  }, [selectedId, t, toast]);
+    return () => { cancelled = true; };
+  }, [selectedId, messagesReload]);
   const loadOlder = async () => {
     if (!selectedId || loadingOlder || !messages.length) return;
     setLoadingOlder(true);
@@ -616,7 +624,18 @@ export default function WhatsAppInboxPage({
   const conversationOnlyView = (
     <div className={cn("flex min-h-0 h-full max-h-full w-full flex-col overflow-hidden bg-background", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh]")}>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {!active ? (
+        {!active && selectedId ? (
+          <>
+            <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-3 py-2">
+              <Button size="icon" variant="ghost" onClick={closeConversation} aria-label={t("actions.back")}>
+                <Back className="h-4 w-4" />
+              </Button>
+              <p className="text-sm text-muted-foreground">{t("conversation.notFound", "Conversation not found")}</p>
+            </div>
+            <EmptyState title={t("conversation.notFound", "Conversation not found")} description={t("conversation.notFoundDesc", "It may have been removed or the link is wrong.")} icon={MessageCircle} className="flex-1" />
+            <div className="flex justify-center pb-6"><Button variant="outline" onClick={closeConversation}>{t("conversation.backToInbox", "Back to inbox")}</Button></div>
+          </>
+        ) : !active ? (
           <EmptyState title={t("empty.select")} description={t("empty.description")} icon={MessageCircle} className="flex-1" />
         ) : (
           <>
@@ -670,12 +689,25 @@ export default function WhatsAppInboxPage({
               </DropdownMenu>
             </div>
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+              {messagesError ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+                  <p className="text-sm text-muted-foreground">{t("conversation.loadFailed", "Unable to load messages.")}</p>
+                  <Button variant="outline" size="sm" onClick={() => setMessagesReload((n) => n + 1)}>{t("actions.retry")}</Button>
+                </div>
+              ) : messagesLoading && !messages.length ? (
+                <div className="flex flex-1 flex-col gap-3 p-4" aria-busy="true" aria-label={t("conversation.loading", "Loading conversation…")}>
+                  {[60, 40, 70, 50, 35].map((w, i) => (
+                    <div key={i} className={cn("h-9 animate-pulse rounded-lg bg-muted", i % 2 ? "ms-auto" : "me-auto")} style={{ width: `${w}%` }} />
+                  ))}
+                </div>
+              ) : (
               <MessageList
                 messages={messages}
                 hasOlder={hasOlder}
                 loadingOlder={loadingOlder}
                 onLoadOlder={() => void loadOlder()}
               />
+              )}
             </div>
             <div className="shrink-0 space-y-2 border-t border-border/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               {windowClosed && (
@@ -813,7 +845,7 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-            <div className={cn("hidden lg:grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+            <div className={cn(selectedId ? "grid" : "hidden lg:grid", "min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
         <div className={cn("min-h-0 flex-col overflow-hidden bg-card", "hidden lg:flex")}>
@@ -859,7 +891,7 @@ export default function WhatsAppInboxPage({
             conversation-only view after a thread is selected. */}
         <div className={cn(
           "min-h-0 min-w-0 flex-col overflow-hidden",
-          active ? "flex" : "hidden lg:flex",
+          selectedId ? "flex" : "hidden lg:flex",
         )}>
           {conversationOnlyView}
         </div>

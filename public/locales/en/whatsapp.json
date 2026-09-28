@@ -97,7 +97,12 @@
     "loadingOlder": "Loading…",
     "expired": "Expired",
     "moreActions": "More actions",
-    "state": "Status"
+    "state": "Status",
+    "notFound": "Conversation not found",
+    "notFoundDesc": "It may have been removed or the link is wrong.",
+    "backToInbox": "Back to inbox",
+    "loadFailed": "Unable to load messages.",
+    "loading": "Loading conversation…"
   },
   "profile": {
     "title": "Lead profile",
