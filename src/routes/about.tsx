@@ -3,6 +3,8 @@ import WhoWeArePage from "@/pages/WhoWeArePage";
 import { jsonLdScript, routeText } from "@/lib/routeMeta";
 import { buildBreadcrumbList } from "@/lib/breadcrumbs";
 
+const SITE = "https://darb.agency";
+
 export const Route = createFileRoute("/about")({
   head: () => {
     const title = routeText("seo.whoWeAreTitle");
@@ -14,8 +16,10 @@ export const Route = createFileRoute("/about")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
+        { property: "og:url", content: `${SITE}/about` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
+      links: [{ rel: "canonical", href: `${SITE}/about` }],
       scripts: [
         jsonLdScript(
           buildBreadcrumbList([

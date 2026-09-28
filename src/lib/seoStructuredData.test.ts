@@ -80,6 +80,17 @@ describe("public page structured data is server-rendered", () => {
     const source = read(file);
     expect(source).toMatch(/BreadcrumbList|buildBreadcrumbList/);
   });
+
+  it.each(PUBLIC_ROUTES)("%s is self-canonical", (file) => {
+    // A route head() that omits `links` leaves the SSR HTML with the root's
+    // og:url (the homepage) and no canonical at all, which tells a crawler
+    // every page is a duplicate of `/`. Each public route must declare both.
+    const source = read(file);
+    expect(source, `${file} has no canonical link`).toMatch(
+      /rel:\s*"canonical"/,
+    );
+    expect(source, `${file} has no og:url`).toMatch(/property:\s*"og:url"/);
+  });
 });
 
 describe("head() sources non-bundled namespaces from imported locale JSON", () => {
@@ -92,9 +103,7 @@ describe("head() sources non-bundled namespaces from imported locale JSON", () =
     ["blog.$slug.tsx", "blog"],
   ])("%s imports the %s locale JSON", (file, ns) => {
     const source = read(file);
-    expect(source).toMatch(
-      new RegExp(`public/locales/ar/${ns}\\.json`),
-    );
+    expect(source).toMatch(new RegExp(`public/locales/ar/${ns}\\.json`));
   });
 
   it("does not hardcode Arabic meta literals in the localized routes", () => {

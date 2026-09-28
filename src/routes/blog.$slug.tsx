@@ -64,7 +64,12 @@ export const Route = createFileRoute("/blog/$slug")({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Darb", item: `${SITE}/` },
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Darb",
+              item: `${SITE}/`,
+            },
             {
               "@type": "ListItem",
               position: 2,

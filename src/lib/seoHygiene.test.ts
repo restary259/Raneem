@@ -45,6 +45,41 @@ describe("public robots.txt", () => {
   it("points at the canonical sitemap", () => {
     expect(robots).toContain("Sitemap: https://darb.agency/sitemap.xml");
   });
+
+  it("does not let the /partner prefix hide the public /partnership page", () => {
+    // robots.txt matching is prefix-based, so `Disallow: /partner` also matches
+    // `/partnership` (and `/partners`). Both are public pages the sitemap
+    // advertises, so they must be re-allowed and the longest-match rule must
+    // resolve to Allow.
+    const rules = robots
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => /^(Allow|Disallow):/.test(line))
+      .map((line) => {
+        const index = line.indexOf(":");
+        return {
+          kind: line.slice(0, index),
+          value: line.slice(index + 1).trim(),
+        };
+      });
+
+    const matchFor = (target: string) => {
+      let best: { kind: string; value: string } | null = null;
+      for (const rule of rules) {
+        if (
+          rule.value &&
+          (target === rule.value || target.startsWith(rule.value))
+        ) {
+          if (!best || rule.value.length > best.value.length) best = rule;
+        }
+      }
+      return best?.kind;
+    };
+
+    expect(matchFor("/partnership")).toBe("Allow");
+    expect(matchFor("/partners")).toBe("Allow");
+    expect(matchFor("/partner/earnings")).toBe("Disallow");
+  });
 });
 
 describe("Darb local entity", () => {

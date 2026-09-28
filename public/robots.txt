@@ -7,6 +7,10 @@ Disallow: /student/
 Disallow: /admin
 Disallow: /team
 Disallow: /partner
+# /partnership and /partners are public pages advertised in the sitemap;
+# name them explicitly so the prefix-based /partner rule does not hide them.
+Allow: /partnership
+Allow: /partners
 Disallow: /agent
 Disallow: /reset-password
 Disallow: /activate

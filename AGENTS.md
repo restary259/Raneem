@@ -2347,14 +2347,32 @@ indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
   **live domain** that `/sitemap.xml` (200, `application/xml`) and `/robots.txt`
   (200, `text/plain`) are served, not rewritten to the shell, and
   `/who-we-are` is a real 404 — so no `vercel.json` change was needed.
-- The root `LocalBusiness` node is emitted for every route (it names the Tamra
-  office, which is a legitimate site-wide entity); its `@id`/`url` still point
-  at `/locations#tamra`.
-- Build clean; `npx vitest run` 1616 passed | 1 skipped (96 files); eslint 0
+- **robots exclusion is prefix-based, so a bare `Disallow: /partner` also hides
+  the public `/partnership` page** (and `/partners`, the redirect) that the
+  sitemap advertises. `robots.txt` therefore pairs the prefix rule with explicit
+  `Allow: /partnership` / `Allow: /partners`; per RFC 9309 the longest match
+  wins, so `/partner/earnings` stays disallowed while the public pages resolve to
+  Allow. Guarded (with a real longest-match resolver) by `seoHygiene.test.ts`.
+  When adding a private prefix, always check whether a public sibling shares it.
+- **Every public route declares its own canonical + `og:url`.** A route `head()`
+  that omits `links` inherits the root's `og:url` (the homepage) and ships **no
+  canonical**, so a crawler is told every page is a duplicate of `/`. `about`,
+  `contact`, `locations`, `partnership`, `educational-destinations` were missing
+  both (and `services`/`resources`/`educational-programs` were missing
+  `og:url`); all now declare `links: [{ rel: "canonical", … }]` + `og:url`,
+  matching the routes that already did. Guarded per-route by
+  `seoStructuredData.test.ts`.
+- **`/educational-programs` `ItemList.numberOfItems` must equal the emitted
+  `itemListElement` length.** It previously announced 73 but sliced to 30 (a
+  leftover client-side cap while the page renders all 73), which both failed
+  validators and dropped 43 courses from the structured data. The slice is
+  removed; the count and the list come from the same array (73 = 73).
+- Build clean; `npx vitest run` 1628 passed | 1 skipped (96 files); eslint 0
   errors on all touched files. Dev-server SSR spot-check confirmed
   `addressCountry: "IL"`, `areaServed` Israel, and the entity graph + page
   schema + a `BreadcrumbList` in the initial HTML for `/`, `/about`,
   `/services`, `/faq`, `/blog`, `/educational-programs` (with `FAQPage`
-  appearing exactly once — no double emission).
+  appearing exactly once — no double emission), self-referential
+  canonical/`og:url` on every public route, and a matching ItemList count.
 
 

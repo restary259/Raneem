@@ -32,6 +32,7 @@ export const Route = createFileRoute("/educational-programs")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
+        { property: "og:url", content: `${SITE}/educational-programs` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
       links: [{ rel: "canonical", href: `${SITE}/educational-programs` }],
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/educational-programs")({
           mainEntity: {
             "@type": "ItemList",
             numberOfItems: allSubMajors.length,
-            itemListElement: allSubMajors.slice(0, 30).map((major, index) => ({
+            itemListElement: allSubMajors.map((major, index) => ({
               "@type": "ListItem",
               position: index + 1,
               item: {
