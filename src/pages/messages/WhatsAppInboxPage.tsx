@@ -20,7 +20,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
-import { Shimmer } from "@/components/ai-elements/shimmer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWhatsAppInboxAccess } from "@/hooks/useWhatsAppInboxAccess";
 import { useToast } from "@/hooks/use-toast";
@@ -39,39 +38,27 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   addInternalNote, createWhatsAppTemplate, getWhatsAppInboundStatus, getWhatsAppMessage, listConversationMessages, mergeWhatsAppMessages, WHATSAPP_PAGE_SIZE, listConversationNotes, listWhatsAppStaff, listWhatsAppTemplates, listWhatsAppThreads, normalizeWhatsAppNumber,
   markConversationRead, requestWhatsAppAiAssist, resumeWhatsAppConversation, scheduleWhatsAppTemplateFollowUp, sendWhatsAppMedia, sendWhatsAppTemplate, sendWhatsAppText, setWhatsAppConversationAssignment, setWhatsAppMarketingConsent, setWhatsAppTemplateFlags, snoozeWhatsAppConversation, startWhatsAppConversation, syncWhatsAppTemplates, updateConversation, updateLead, whatsAppMediaUrl,
-  searchWhatsAppCases, type AiAssistResult, type ConversationState, type LeadStage, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
+  searchWhatsAppCases, type AiAssistResult, type StaffMember, type WhatsAppCaseSearchResult, type WhatsAppInboundStatus, type WhatsAppMessage, type WhatsAppNote, type WhatsAppTemplate, type WhatsAppThread,
 } from "@/services/WhatsAppService";
+import {
+  APPOINTMENT_TEMPLATE_PRESETS_AR,
+  CONSENT,
+  DISPLAY_STATES,
+  INTENTS,
+  KNOWN_TYPES,
+  LANGUAGES,
+  PRIORITIES,
+  QUICK_REPLY_IDS,
+  QUICK_TABS,
+  STAGES,
+  TEMPLATE_PURPOSES,
+  threadNeedsReply,
+  type QuickTab,
+} from "@/components/messages/whatsapp/constants";
+import { deliveryMark, fmt, fmtDay, initials } from "@/components/messages/whatsapp/format";
+import { ConversationRow } from "@/components/messages/whatsapp/ConversationRow";
 
-const DISPLAY_STATES: ConversationState[] = ["waiting_for_team", "open", "waiting_for_student", "closed"];
-const QUICK_TABS = ["all", "unread", "read", "needsReply"] as const;
-type QuickTab = (typeof QUICK_TABS)[number];
-const PRIORITIES = ["normal", "high", "urgent"] as const;
-const INTENTS = ["medicine", "engineering", "computer_science", "language_course", "visa", "accommodation", "cost", "appointment", "documents", "application_status", "existing_student", "other"] as const;
-const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
-
-/** Quick replies are localized under `quickReplies.*` (en/ar/he), not hardcoded
- *  Arabic — an English or Hebrew staff member must not insert Arabic text. */
-const QUICK_REPLY_IDS = ["hello", "major", "appointment", "apply", "documents", "payment"] as const;
-
-const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
-  appointment_confirmation: "أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا.",
-  appointment_reminder: "أهلاً! تذكير من درب: عندك موعد معنا بكرا بخصوص الدراسة بألمانيا. إذا احتجت تغيّر الموعد، ابعتلنا.",
-};
-const STAGES: LeadStage[] = WHATSAPP_LEAD_STAGES as LeadStage[];
-const CONSENT = ["unknown", "granted", "declined", "withdrawn"] as const;
-const TEMPLATE_PURPOSES = ["lead_received", "lead_followup", "inquiry_follow_up", "appointment_invitation", "appointment_confirmation", "consultation_confirmation", "appointment_reminder", "appointment_rescheduled", "documents_missing", "document_reminder", "profile_incomplete", "document_received", "payment_instruction", "payment_reminder", "payment_confirmed", "application_started", "application_submitted", "application_update", "student_welcome", "enrollment_confirmation", "next_steps", "support_followup", "case_update", "re_engagement"] as const;
-const fmt = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const fmtDay = (value: string, lang: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar-IL" : "en-GB", { dateStyle: "full" }).format(new Date(value));
-const KNOWN_TYPES = ["image", "video", "audio", "document", "sticker", "location", "contacts", "reaction"];
-
-/** needs_reply is derived, never stored: an inbound message that has no later outbound reply and the conversation is not closed. */
-function threadNeedsReply(thread: WhatsAppThread): boolean {
-  if (!thread.last_inbound_at) return false;
-  if (normalizeWhatsAppState(thread.state) === "closed") return false;
-  const lastIn = new Date(thread.last_inbound_at).getTime();
-  const lastOut = thread.last_outbound_at ? new Date(thread.last_outbound_at).getTime() : Number.NaN;
-  return Number.isFinite(lastIn) && (!Number.isFinite(lastOut) || lastIn > lastOut);
-}
+export { ConversationRow };
 
 export default function WhatsAppInboxPage({
   embedded = false,
@@ -1269,11 +1256,6 @@ function WhatsAppActions({ receiving, connectedLabel, statusLabel, refreshLabel,
   return <div className="flex flex-wrap items-center gap-2"><span className="flex items-center gap-1.5 text-xs font-medium" title={statusLabel}><span className={cn("h-2 w-2 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} />{receiving ? connectedLabel : statusLabel}</span><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
 }
 
-function Field({ label, value, onBlur, type = "text" }: { label: string; value: string; onBlur: (value: string) => void; type?: string }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-  return <div><Label className="text-xs">{label}</Label><Input type={type} className="mt-1" value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft !== value && onBlur(draft)} /></div>;
-}
 function TagEditor({ label, tags, onChange, addLabel }: { label: string; tags: string[]; onChange: (tags: string[]) => void; addLabel: string }) {
   const [draft, setDraft] = useState("");
   const add = () => { const tag = draft.trim(); if (!tag || tags.includes(tag)) return; onChange([...tags, tag]); setDraft(""); };
@@ -1295,52 +1277,5 @@ function MediaBubble({ path, mime, filename, openLabel }: { path: string; mime: 
   if (mime?.startsWith("image/")) return <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={filename ?? ""} className="mb-1 max-h-56 rounded-md object-cover" /></a>;
   if (mime?.startsWith("video/")) return <video src={url} controls className="mb-1 max-h-56 rounded-md" />;
   if (mime?.startsWith("audio/")) return <audio src={url} controls className="mb-1 w-56" />;
-  return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
-}
-
-function initials(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "#";
-  if (/^\+?\d/.test(parts[0])) return parts[0].replace(/\D/g, "").slice(-2);
-  return (parts[0][0] + (parts[1]?.[0] ?? "")).toUpperCase();
-}
-
-export function ConversationRow({ thread, active, simplified, now, lang, onSelect }: { thread: WhatsAppThread; active: boolean; simplified: boolean; now: number; lang: string; onSelect: () => void }) {
-  const { t } = useTranslation("whatsapp");
-  const name = thread.lead.student_name || thread.lead.whatsapp_number;
-  const lastAt = thread.last_inbound_at ?? thread.last_outbound_at;
-  const unread = (thread.unread_count ?? 0) > 0;
-  const time = lastAt ? new Intl.DateTimeFormat("en-GB", new Date(lastAt).toDateString() === new Date(now).toDateString() ? { hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "short" }).format(new Date(lastAt)) : "";
-  return (
-    <button type="button" onClick={onSelect} className={cn("relative flex w-full items-center gap-2.5 border-b border-border/40 px-3 py-2 text-start transition-colors hover:bg-muted/40", active && "bg-brand/5")}>
-      {active && <span className="absolute inset-y-0 start-0 w-0.5 bg-brand" aria-hidden="true" />}
-      <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full text-[11px] font-semibold", unread ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground")}>{initials(name)}</span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center justify-between gap-2">
-          <span dir="auto" className={cn("truncate text-[13px]", unread ? "font-semibold" : "font-medium")}>{name}</span>
-          <span className={cn("shrink-0 text-[10px]", unread ? "font-semibold text-brand" : "text-muted-foreground")}>{time}</span>
-        </span>
-        <span className="mt-0.5 flex items-center justify-between gap-2">
-          <span dir="auto" className="truncate text-xs text-muted-foreground">{thread.last_message_preview ?? ""}</span>
-          {unread && <span className="grid h-4.5 min-w-4.5 shrink-0 place-items-center rounded-full bg-brand px-1 text-[10px] font-semibold text-brand-foreground">{thread.unread_count}</span>}
-        </span>
-        <span className="mt-1 flex flex-wrap items-center gap-1">
-          <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-medium", whatsappStageClass(thread.lead.lead_stage))}>{whatsappStageLabel(thread.lead.lead_stage, lang)}</span>
-          {!thread.lead.student_name && <Badge variant="outline" className="h-4 px-1.5 text-[9px]">{t("identity.nameMissing", "No name yet")}</Badge>}
-          {!simplified && thread.priority !== "normal" && <Badge variant={thread.priority === "urgent" ? "destructive" : "outline"} className="h-4 px-1.5 text-[9px]">{t(`priority.${thread.priority}`, thread.priority)}</Badge>}
-          {!simplified && isWhatsAppSlaOverdue(thread, now) && <Badge variant="destructive" className="h-4 px-1.5 text-[9px]">{t("sla.overdue")}</Badge>}
-        </span>
-      </span>
-    </button>
-  );
-}
-
-function deliveryMark(status: string | null | undefined): string {
-  switch (status) {
-    case "read": return "✓✓";
-    case "delivered": return "✓✓";
-    case "sent": case "accepted": return "✓";
-    case "failed": return "⚠";
-    default: return "…";
-  }
+    return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
 }
