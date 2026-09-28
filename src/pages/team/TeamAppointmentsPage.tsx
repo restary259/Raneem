@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import AppointmentActionMenu from "@/components/team/AppointmentActionMenu";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -746,7 +747,7 @@ export default function TeamAppointmentsPage() {
   <p className="text-muted-foreground">{format(parseISO(request.scheduled_at), "EEE, MMM d · h:mm a")}</p>
   {request.office_id && officeNames[request.office_id] ? <p className="text-xs font-medium text-primary">{officeNames[request.office_id]}</p> : null}
 </div>
-            <Button size="sm" disabled={confirmingVisit === request.id} onClick={() => confirmVisit(request.id)}>{t("team.appointments.confirmVisit")}</Button>
+            <AppointmentActionMenu appointmentId={request.id} onDone={() => { void fetchAppointments(); }} />
           </div>)}
         </div>
       </section>}
