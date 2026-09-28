@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useNavigate } from "@/lib/router-compat";
+import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -300,6 +300,44 @@ export default function TeamAppointmentsPage() {
     fetchMyCases();
     fetchMyOffices();
   }, [fetchMyCases, fetchMyOffices]);
+
+  /* ── Deep link: /team/appointments?appointment=<id> ──
+     An appointment reminder push opens the exact appointment. Handled once per
+     opened query value; navigating within the board (or back/forward) must not
+     re-open a stale detail modal. The appointment may be outside the fetched
+     window (a past terminal one), so fall back to a direct lookup when it is
+     not in the current list. */
+  const [searchParams] = useSearchParams();
+  const deepLinkId = searchParams.get("appointment") || "";
+  const deepLinkHandled = useRef<string | null>(null);
+  useEffect(() => {
+    if (!deepLinkId || !user || loading) return;
+    if (deepLinkHandled.current === deepLinkId) return;
+    deepLinkHandled.current = deepLinkId;
+
+    const existing = appts.find((a) => a.id === deepLinkId);
+    if (existing) {
+      setCurrentDate(parseISO(existing.scheduled_at));
+      setSelectedAppt(existing);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*, case:cases(full_name, phone_number, status)")
+        .eq("id", deepLinkId)
+        .maybeSingle();
+      if (cancelled || error || !data) return;
+      const appt = data as Appointment;
+      setCurrentDate(parseISO(appt.scheduled_at));
+      setSelectedAppt(appt);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [deepLinkId, user, loading, appts]);
 
   /* ══ DRAG & DROP ═════════════════════════════════════════════════════ */
   // Called from ApptBlock's onDragStart

@@ -2247,3 +2247,84 @@ catalog school `alpha-aktiv`.
   that mocks `@/integrations/supabase/client` must expose every client surface
   the imported module touches at module scope**, or the file fails to load.
 
+
+## Appointment "starting soon" alert (2026-09-28)
+- The appointment notification pipeline is EXTENDED, not duplicated:
+  `sync_appointment_reminders` (SQL) -> `send-appointment-reminders` (edge) ->
+  `emit_notification` -> `notifications` -> `push_notifications` pgmq ->
+  `push-dispatch` -> `_shared/webpush.ts` -> Web Push. The `appointments`
+  notification category (admin/team_member/student) is reused unchanged.
+- **Three reminder windows**, assigned to the appointment's `team_member_id`
+  (`recipient_id`) only — never broadcast:
+  | kind | when | priority | channels |
+  |------|------|----------|----------|
+  | `t_24h` | 24h before | `medium` | in-app + push + email |
+  | `t_1h` | 1h before | `high` | in-app + push + email |
+  | `t_15m` | 15m before | `time_sensitive` | in-app + push (NO email) |
+- **Single content source**: `supabase/functions/_shared/appointmentReminder.ts`
+  is deliberately dependency-free so BOTH the Deno worker and vitest import it
+  (`buildReminderContent`, `formatTimeRange`, `formatShortDate`, `reminderTag`,
+  `reminderLink`, `appointmentIdFromLink`, `pushTag`). Times render in
+  `Asia/Jerusalem` with Western numerals (a locale-independent `en-GB` 24h
+  clock), so Arabic screens never show Arabic-Indic digits.
+- Migration `20260928160000_appointment_starting_soon.sql` (**MANUAL DEPLOY** —
+  `supabase db push` / dashboard SQL editor; Vercel build and CI never run DDL):
+  1. `appointment_reminders` kind CHECK gains `'t_15m'`; adds `push_sent_at` +
+     `email_sent_at` (backfilled from `sent_at` for delivered history).
+  2. `sync_appointment_reminders` re-issued from the live `20260926093118`
+     definition with only the `t_15m` insert added.
+  3. a priority-aware `emit_notification(..., _dedupe_key, _priority)`. It is
+     NOT an overload: both old signatures are `DROP`ped first and exactly one
+     11-argument function is created. Overloading is impossible here — an
+     11-arg signature with a trailing default also serves any 10-arg call, so
+     PostgreSQL raises `function ... is not unique` (PostgREST PGRST203) and
+     every existing caller breaks (trg_notify_case_event calls it 9× per case
+     event, plus WhatsApp-inbound and recruit_application). With a single
+     function, 7/8/9/10-arg calls still resolve via the trailing defaults.
+     Mirrors 20260820170000_cash_collection_workflow.sql (drops both
+     `confirm_agency_service_payment` signatures for the same reason), and a
+     re-run therefore also HEALS a DB that already applied the overload form.
+     Granted to `service_role` only.
+- **Per-channel idempotency** (the reason the 15-minute push never double-fires):
+  the worker tracks `push_sent_at` and `email_sent_at` independently and stamps
+  `sent_at` only when BOTH required legs are done. A failed email (24h/1h)
+  re-runs on the next 5-min cron tick but SKIPS the already-pushed leg — the old
+  "mark sent only if push AND email both succeeded" model would have re-pushed
+  on every email failure. The 15m alert has no email leg, so it settles on the
+  push alone.
+- **`time_sensitive` is its own priority, not generic `high`.** `push-dispatch`
+  treats `high` OR `time_sensitive` as urgent (quiet-hours break-through,
+  `urgency: high`, `ttl 86400`) while forward propagation keeps the distinct
+  value so the service worker can route it: `public/service-worker.js` v5.5.0
+  gives `priority: 'time_sensitive'` a short `TIME_SENSITIVE_VIBRATE`
+  (`[250,100,250]`) + `requireInteraction`, separate from the `CALL_VIBRATE`
+  ring (`category: 'calls'`) and from plain `high`.
+- **Per-appointment push tag**: `pushTag()` returns
+  `appointment:<appointmentId>:<priority>` for `category: 'appointments'`
+  (derived by `appointmentIdFromLink` from the notification's link, so no
+  schema change is needed) and the pre-existing
+  `<category>:<caseId|notificationId>` for everything else. Two appointments
+  therefore never replace each other in the notification center.
+- **Deep link**: the reminder link is `/team/appointments?appointment=<id>`
+  (not the generic board). `src/routes/team.appointments.index.tsx` declares a
+  `validateSearch` for it and `TeamAppointmentsPage` opens that exact
+  appointment's detail modal once per query value (a `useRef` guard prevents
+  back/forward from re-opening a stale modal; it falls back to a direct
+  `.eq('id', …)` lookup when the appointment is outside the fetched window).
+- **Deploy-window safety**: until the migration replaces it, the 11-argument
+  `emit_notification` does not exist. The worker detects that error
+  (`PGRST202` / "does not exist") and retries the legacy 10-arg call, so a
+  reminder still lands (as a normal alert) instead of being lost.
+- **Honest limitation**: this is Web Push / Home-Screen-PWA, NOT native APNs.
+  It behaves like Apple's Calendar "Time Sensitive" alert (urgent + persistent,
+  breaks Focus/Summary), but the literal iOS `interruption-level: time-sensitive`
+  field is reserved for native APNs and is NOT set here. Do not claim the
+  literal label appears identically.
+- `types.ts`: `appointment_reminders` Row/Insert/Update gained
+  `push_sent_at`/`email_sent_at`; `emit_notification` Args gained `_priority?`.
+- Tests: `src/lib/appointmentReminder.test.ts` (16 cases: window wording,
+  priority, channel flags, timezone/Western-numeral time range, per-appointment
+  tag) + `src/lib/appointmentReminderPipeline.test.ts` (6 static guards over the
+  SQL/Deno/SW/route so a future edit can't silently drop the 15m window, re-fold
+  `time_sensitive`, or re-couple the push/email legs). Build (`vite build`) +
+  `tsc --noEmit` clean; `npx vitest run` 1584 passed | 1 skipped (+22 new).

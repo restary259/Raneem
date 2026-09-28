@@ -1,4 +1,4 @@
-// DARB service worker — v5.4.0 (incoming voice-call ring)
+// DARB service worker — v5.5.0 (time-sensitive appointment alerts)
 //
 // This worker replaces the old caching worker at the SAME URL so returning
 // browsers pick it up automatically on their next online visit.
@@ -16,12 +16,18 @@
 //     actionable but silently fails is worse than no button. Accepting has to
 //     happen in the page, where it also has the user gesture iOS requires for
 //     microphone access.
+//   - v5.5.0: an explicit `priority: 'time_sensitive'` treatment for the
+//     appointment "starting soon" alert — a short attention-getting vibration
+//     and a persistent (requireInteraction) notification that survives Focus
+//     and the Notification Summary. It is a DISTINCT value rather than the
+//     generic `high`, so appointment behaviour can evolve without changing
+//     how other high-priority alerts (or calls) present.
 // What is preserved:
 //   - Web Push: the push / notificationclick / pushsubscriptionchange handlers
-//     are carried over verbatim, so existing push subscriptions keep working
-//     without users re-granting permission.
+//     are carried over, so existing push subscriptions keep working without
+//     users re-granting permission.
 
-const CACHE_VERSION = '5.4.0';
+const CACHE_VERSION = '5.5.0';
 
 // Unread count painted on the OS app icon while the app is closed. The open app
 // overwrites this with the authoritative total as soon as it is focused.
@@ -98,11 +104,15 @@ function parsePushData(event) {
 // tapped. The server sends priority 'high' for calls, but requiring it here
 // too means a future caller that forgets still gets a persistent ring.
 const CALL_VIBRATE = [400, 200, 400, 200, 400, 600];
+// The appointment "starting soon" alert uses a tighter, purposeful pattern:
+// clearly different from a message, but shorter than a call ring.
+const TIME_SENSITIVE_VIBRATE = [250, 100, 250];
 
 self.addEventListener('push', event => {
   const data = parsePushData(event);
   const title = data.title || 'درب';
   const isCall = data.category === 'calls';
+  const isTimeSensitive = data.priority === 'time_sensitive';
 
   event.waitUntil((async () => {
     await self.registration.showNotification(title, {
@@ -111,13 +121,16 @@ self.addEventListener('push', event => {
       badge: NOTIFICATION_BADGE,
       lang: 'ar',
       dir: 'rtl',
-      vibrate: isCall ? CALL_VIBRATE : [100, 50, 100],
-      // push-dispatch tags a call as `calls:<notification id>`, so repeated
-      // calls stack instead of replacing each other — a missed call must not
-      // be overwritten by the next one.
+      vibrate: isCall ? CALL_VIBRATE : isTimeSensitive ? TIME_SENSITIVE_VIBRATE : [100, 50, 100],
+      // push-dispatch tags a call as `calls:<notification id>` and an
+      // appointment as `appointment:<appointment id>:<window>`, so repeated
+      // alerts stack instead of replacing each other — a missed call or a
+      // different appointment must not be overwritten by the next one.
       tag: data.tag || 'darb-notification',
       renotify: Boolean(data.tag),
-      requireInteraction: isCall || data.priority === 'high',
+      // A call ring and a time-sensitive appointment alert both stay on screen
+      // until acted on; other 'high' alerts keep the previous behaviour.
+      requireInteraction: isCall || isTimeSensitive || data.priority === 'high',
       timestamp: Date.now(),
       data: {
         url: data.url || '/',

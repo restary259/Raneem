@@ -4,6 +4,7 @@ import { sendWebPush, type PushSubscriptionRecord } from "../_shared/webpush.ts"
 import { requireAuth } from "../_shared/auth.ts";
 import { isCronDispatcher } from "../_shared/cronAuth.ts";
 import { notificationCategoryColumn } from "../_shared/notificationCategories.ts";
+import { pushTag } from "../_shared/appointmentReminder.ts";
 
 /**
  * Drains the `push_notifications` pgmq queue and delivers Web Push messages.
@@ -110,6 +111,11 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
   const pushEnabled = prefs ? prefs.push_enabled !== false : true;
   const categoryEnabled = prefs ? prefs[categoryColumn] !== false : true;
 
+  // `time_sensitive` is the appointment-starting-soon level: it is urgent for
+  // quiet-hours and urgency purposes while still being a distinct value the
+  // service worker routes to its own persistent treatment.
+  const isUrgent = priority === "high" || priority === "time_sensitive";
+
   const base = {
     notification_id: notificationId,
     user_id: userId,
@@ -125,8 +131,8 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
     logs.push({ ...base, result: "skipped_preferences" });
     return { drop: true, logs };
   }
-  // High-priority alerts always break through quiet hours.
-  if (priority !== "high" && inQuietHours(prefs as Preferences)) {
+  // High/time-sensitive alerts always break through quiet hours.
+  if (!isUrgent && inQuietHours(prefs as Preferences)) {
     logs.push({ ...base, result: "skipped_quiet_hours" });
     return { drop: true, logs };
   }
@@ -154,7 +160,15 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
     title: notification.title_ar || notification.title,
     body: notification.body_ar || notification.body,
     url: notification.link || "/",
-    tag: `${category}:${notification.case_id ?? notificationId}`,
+    // Appointment reminders get a per-appointment tag so two appointments never
+    // replace each other; everything else keeps the existing scheme.
+    tag: pushTag({
+      category,
+      link: notification.link,
+      caseId: notification.case_id,
+      notificationId,
+      priority,
+    }),
     notificationId,
     category,
     priority,
@@ -174,7 +188,7 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
         record,
         payload,
         { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY, subject: VAPID_SUBJECT },
-        { ttl: priority === "high" ? 86400 : 3600, urgency: priority === "high" ? "high" : "normal" },
+        { ttl: isUrgent ? 86400 : 3600, urgency: isUrgent ? "high" : "normal" },
       );
 
       logs.push({
