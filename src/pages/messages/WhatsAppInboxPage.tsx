@@ -688,8 +688,7 @@ export default function WhatsAppInboxPage({
                       <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
-                        {user?.id && active.assigned_to !== user.id && <SelectItem value={user.id}>{t("owner.assignToMe", "Assign to me")}</SelectItem>}
-                        {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
+                        {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("owner.assignToMe", "Assign to me") : member.full_name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     <Select value={active.priority ?? "normal"} onValueChange={(value) => void saveConversation({ priority: value })}><SelectTrigger className="h-8 w-[120px] text-xs"><SelectValue /></SelectTrigger><SelectContent>{PRIORITIES.map((priority) => <SelectItem key={priority} value={priority}>{t(`priority.${priority}`, priority)}</SelectItem>)}</SelectContent></Select>
@@ -925,8 +924,7 @@ export default function WhatsAppInboxPage({
                           <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
-                            {user?.id && active.assigned_to !== user.id && <SelectItem value={user.id}>{t("owner.assignToMe", "Assign to me")}</SelectItem>}
-                            {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
+                            {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("owner.assignToMe", "Assign to me") : member.full_name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <Select value={active.intent ?? "other"} onValueChange={(value) => void saveConversation({ intent: value })}>
