@@ -1,4 +1,4 @@
-German guide for Israeli students 
+Darb German Guide for israeli students 
 
 Study-in-Germany guidance platform for Arabic-speaking students, plus the
 internal admin / team / partner / student dashboards.
