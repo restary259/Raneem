@@ -174,15 +174,31 @@ export default function TeamAppointmentsPage() {
   // Push reminders deep-link to /team/appointments?appointment=<id>; open it once loaded.
   const deepLinkHandled = useRef(false);
   useEffect(() => {
-    if (deepLinkHandled.current || appts.length === 0 || typeof window === "undefined") return;
-    const id = new URLSearchParams(window.location.search).get("appointment");
+    if (deepLinkHandled.current || loading || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("appointment");
     if (!id) return;
-    const match = appts.find((a) => a.id === id);
-    if (!match) return;
     deepLinkHandled.current = true;
-    setCurrentDate(new Date(match.scheduled_at));
-    setSelectedAppt(match);
-  }, [appts]);
+    const open = (match: Appointment) => {
+      setCurrentDate(new Date(match.scheduled_at));
+      setSelectedAppt(match);
+    };
+    params.delete("appointment");
+    const qs = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    const local = appts.find((a) => a.id === id);
+    if (local) { open(local); return; }
+    // Not in the loaded list (e.g. older) — fetch that single row (RLS applies).
+    supabase
+      .from("appointments")
+      .select("*, case:cases(full_name, phone_number, status)")
+      .eq("id", id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) { console.warn("[appointments] deep link fetch failed", error.message); return; }
+        if (data) open(data as unknown as Appointment);
+      });
+  }, [appts, loading]);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
 
   /* ── Delete ── */

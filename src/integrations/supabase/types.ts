@@ -382,6 +382,7 @@ export type Database = {
       appointment_reminders: {
         Row: {
           appointment_id: string
+          attempts: number
           created_at: string
           due_at: string
           email_sent_at: string | null
@@ -393,6 +394,7 @@ export type Database = {
         }
         Insert: {
           appointment_id: string
+          attempts?: number
           created_at?: string
           due_at: string
           email_sent_at?: string | null
@@ -404,6 +406,7 @@ export type Database = {
         }
         Update: {
           appointment_id?: string
+          attempts?: number
           created_at?: string
           due_at?: string
           email_sent_at?: string | null
