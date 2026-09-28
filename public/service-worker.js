@@ -1,4 +1,4 @@
-// DARB service worker — v5.4.0 (incoming voice-call ring)
+// DARB service worker — v5.5.0 (appointment reminders)
 //
 // This worker replaces the old caching worker at the SAME URL so returning
 // browsers pick it up automatically on their next online visit.
@@ -21,7 +21,7 @@
 //     are carried over verbatim, so existing push subscriptions keep working
 //     without users re-granting permission.
 
-const CACHE_VERSION = '5.4.0';
+const CACHE_VERSION = '5.5.0';
 
 // Unread count painted on the OS app icon while the app is closed. The open app
 // overwrites this with the authoritative total as soon as it is focused.
@@ -121,7 +121,7 @@ self.addEventListener('push', event => {
       // be overwritten by the next one.
       tag: data.tag || 'darb-notification',
       renotify: Boolean(data.tag),
-      requireInteraction: isCall || data.priority === 'high',
+      requireInteraction: isCall || isAppointmentSoon || data.priority === 'high',
       timestamp: Date.now(),
       data: {
         url: data.url || '/',
@@ -134,7 +134,8 @@ self.addEventListener('push', event => {
 
     // Red count on the installed app icon (home screen / dock / taskbar).
     // Prefer the server's authoritative unread count; fall back to +1.
-    if (typeof data.badge === 'number') await setBadge(data.badge);
+    if (isAppointment) { /* leave badge untouched */ }
+    else if (typeof data.badge === 'number') await setBadge(data.badge);
     else await bumpBadge(1);
 
     // Let any open tab refresh its bell/badge without waiting for realtime.
