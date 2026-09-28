@@ -4874,6 +4874,17 @@
         "cases": "When a student you referred reaches a milestone.",
         "payments": "When your earnings are approved or paid."
       }
+    },
+    "device": {
+      "title": "This device",
+      "installed": "Installed on Home Screen",
+      "status": "Notifications",
+      "enabled": "Enabled",
+      "blocked": "Blocked in device settings",
+      "off": "Not enabled",
+      "lastDelivery": "Last delivered",
+      "yes": "Yes",
+      "no": "No"
     }
   },
   "pushOnboarding": {
@@ -4886,7 +4897,14 @@
     "installHint": "On iPhone, add DARB to your Home Screen first, then open it from there to enable notifications.",
     "enable": "Enable notifications",
     "later": "Maybe later",
-    "enabled": "Notifications are on for this device."
+    "enabled": "Notifications are on for this device.",
+    "testSent": "Notifications are on — a test notification is on its way.",
+    "iosTitle": "Notifications work in the DARB app",
+    "iosStep1": "Tap the Share button in Safari",
+    "iosStep2": "Choose \"Add to Home Screen\"",
+    "iosStep3": "Open DARB from your Home Screen",
+    "iosStep4": "Tap \"Enable notifications\"",
+    "installed": "I installed DARB"
   },
   "studentFees": {
     "title": "Fees & invoice",

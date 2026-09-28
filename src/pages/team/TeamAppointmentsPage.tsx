@@ -171,6 +171,18 @@ export default function TeamAppointmentsPage() {
 
   /* ── Detail modal ── */
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
+  // Push reminders deep-link to /team/appointments?appointment=<id>; open it once loaded.
+  const deepLinkHandled = useRef(false);
+  useEffect(() => {
+    if (deepLinkHandled.current || appts.length === 0 || typeof window === "undefined") return;
+    const id = new URLSearchParams(window.location.search).get("appointment");
+    if (!id) return;
+    const match = appts.find((a) => a.id === id);
+    if (!match) return;
+    deepLinkHandled.current = true;
+    setCurrentDate(new Date(match.scheduled_at));
+    setSelectedAppt(match);
+  }, [appts]);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
 
   /* ── Delete ── */

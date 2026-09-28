@@ -184,6 +184,33 @@ const PushNotificationSettings: React.FC<{ role: AppRole }> = ({ role }) => {
         </div>
       </div>
 
+      {diagnostics && (
+        <div className="rounded-lg border border-border p-3 text-xs space-y-1">
+          <p className="font-semibold text-sm">{t("pushSettings.device.title")}</p>
+          <p className="text-muted-foreground">
+            {diagnostics.platform} · {diagnostics.browser}
+          </p>
+          <p>
+            {t("pushSettings.device.installed")}:{" "}
+            {diagnostics.standalone ? t("pushSettings.device.yes") : t("pushSettings.device.no")}
+          </p>
+          <p>
+            {t("pushSettings.device.status")}:{" "}
+            {diagnostics.permission === "denied"
+              ? t("pushSettings.device.blocked")
+              : diagnostics.permission === "granted" && diagnostics.storedActive
+                ? t("pushSettings.device.enabled")
+                : t("pushSettings.device.off")}
+          </p>
+          <p>
+            {t("pushSettings.device.lastDelivery")}:{" "}
+            {diagnostics.lastSuccessAt
+              ? new Date(diagnostics.lastSuccessAt).toLocaleString("en-US")
+              : "—"}
+          </p>
+        </div>
+      )}
+
       {capability === "requires_install" && (
         <Alert>
           <Smartphone className="h-4 w-4" aria-hidden="true" />
