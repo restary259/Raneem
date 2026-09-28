@@ -54,6 +54,7 @@ export default function VoiceRecorder({
   maxDurationMs = MAX_VOICE_DURATION_MS,
   onSend,
   onActiveChange,
+  mimeCandidates,
 }: VoiceRecorderProps) {
   const { t } = useTranslation("dashboard");
   const [mode, setMode] = useState<RecorderMode>("idle");
@@ -270,6 +271,7 @@ export default function VoiceRecorder({
     setError(null);
     clearPreview();
 
+    activeCandidates = mimeCandidates ?? RECORDING_MIME_CANDIDATES;
     const mimeType = supportedMimeType();
 
     try {
