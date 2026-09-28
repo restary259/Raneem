@@ -42,7 +42,7 @@ export default function TeamInboxPage() {
     // this subtree — h-full gives the tabs a definite height and lets the chat
     // scroll internally instead of stretching the page.
     <Tabs value={tab} onValueChange={changeTab} className="flex h-full min-h-0 min-w-0 flex-col gap-0 overflow-hidden">
-      <div className="sticky top-0 z-20 shrink-0 border-0 border-b-0 bg-background px-2 py-2 shadow-none sm:px-6">
+      <div className="sticky top-0 z-20 shrink-0 border-b border-border/60 bg-background px-2 py-1 shadow-none sm:px-6">
         <SegmentedTabs
           items={[
             {
@@ -67,7 +67,7 @@ export default function TeamInboxPage() {
         <CaseMessagesInboxPage />
       </TabsContent>
       {canRenderWhatsAppTab && (
-        <TabsContent value="whatsapp" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-2 sm:px-6">
+        <TabsContent value="whatsapp" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <WhatsAppInboxPage embedded canManageTemplates={role === "admin"} inboxOnly={role !== "admin"} />
         </TabsContent>
       )}
