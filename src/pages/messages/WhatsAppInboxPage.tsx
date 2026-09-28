@@ -137,9 +137,12 @@ export default function WhatsAppInboxPage({
   const [startResults, setStartResults] = useState<WhatsAppCaseSearchResult[]>([]);
   const [searchingCases, setSearchingCases] = useState(false);
   const [starting, setStarting] = useState(false);
-  const [adminTeamPreview, setAdminTeamPreview] = useState(false);
   const [inboxTab, setInboxTab] = useState<QuickTab>("all");
-  const teamMode = inboxOnly || (isAdmin && adminTeamPreview);
+  // The workspace mode is fixed by role/route, never toggled in the UI: a
+  // team member (or an admin viewing the team route) is pinned to the simplified
+  // inbox, an admin gets the full workspace. The team-mode *rendering* is kept
+  // intact so an admin can still grant a team member WhatsApp access.
+  const teamMode = inboxOnly;
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [followUpTemplateId, setFollowUpTemplateId] = useState<string | null>(null);
   const [followUpParameters, setFollowUpParameters] = useState<string[]>([]);
@@ -773,13 +776,6 @@ export default function WhatsAppInboxPage({
 
   const advisorName = active?.lead.assigned_advisor ? staff.find((member) => member.id === active.lead.assigned_advisor)?.full_name ?? null : null;
 
-  const adminTeamToggle = (
-    <div className="flex items-center rounded-md bg-muted p-0.5 text-xs" role="group" aria-label={t("tabs.viewToggle", "View")}>
-      <button type="button" aria-pressed={!teamMode} onClick={() => setAdminTeamPreview(false)} className={cn("rounded px-2.5 py-1 font-medium", !teamMode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>{t("tabs.admin", "Admin")}</button>
-      <button type="button" aria-pressed={teamMode} onClick={() => setAdminTeamPreview(true)} className={cn("rounded px-2.5 py-1 font-medium", teamMode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>{t("tabs.team", "Team view")}</button>
-    </div>
-  );
-
   const quickTabs = (
     <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5">
       {QUICK_TABS.map((key) => (
@@ -1088,7 +1084,6 @@ export default function WhatsAppInboxPage({
         <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2">
           <span className={cn("h-2.5 w-2.5 rounded-full", receiving ? "bg-emerald-500" : "bg-red-500")} title={receiving ? t("connection.connected") : t("connection.disconnected")} aria-label={receiving ? t("connection.connected") : t("connection.disconnected")} />
           <div className="flex flex-wrap items-center gap-2">
-            {isAdmin && adminTeamToggle}
             <Button size="sm" variant="outline" onClick={() => setStartOpen(true)}><Plus className="me-2 h-4 w-4" />{t("start.action")}</Button>
             <Button size="icon" variant="outline" onClick={load} aria-label={t("actions.refresh")}><RefreshCw className="h-4 w-4" /></Button>
           </div>
@@ -1128,7 +1123,6 @@ export default function WhatsAppInboxPage({
           </DropdownMenu>
         </div>
       </div>
-      {isAdmin && <div className="shrink-0 border-b border-border/60 px-3 py-2">{adminTeamToggle}</div>}
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)} className="flex min-h-0 min-w-0 flex-1 flex-col gap-0">
         <div className={cn("shrink-0 justify-center border-b border-border/60 px-3 py-2", active && view === "inbox" ? "hidden lg:flex" : "flex")}>
           <TabsList className="mx-auto flex w-fit max-w-full justify-center gap-1 overflow-x-auto">
