@@ -384,8 +384,10 @@ export type Database = {
           appointment_id: string
           created_at: string
           due_at: string
+          email_sent_at: string | null
           id: string
           kind: string
+          push_sent_at: string | null
           recipient_id: string
           sent_at: string | null
         }
@@ -393,8 +395,10 @@ export type Database = {
           appointment_id: string
           created_at?: string
           due_at: string
+          email_sent_at?: string | null
           id?: string
           kind: string
+          push_sent_at?: string | null
           recipient_id: string
           sent_at?: string | null
         }
@@ -402,8 +406,10 @@ export type Database = {
           appointment_id?: string
           created_at?: string
           due_at?: string
+          email_sent_at?: string | null
           id?: string
           kind?: string
+          push_sent_at?: string | null
           recipient_id?: string
           sent_at?: string | null
         }

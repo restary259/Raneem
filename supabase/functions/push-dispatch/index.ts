@@ -89,7 +89,7 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
 
   const { data: notification, error: notifError } = await admin
     .from("notifications")
-    .select("id, user_id, title, body, title_ar, body_ar, title_en, body_en, link, category, priority, case_id, source")
+    .select("id, user_id, title, body, title_ar, body_ar, title_en, body_en, link, category, priority, case_id, source, metadata")
     .eq("id", notificationId)
     .maybeSingle();
 
@@ -150,11 +150,17 @@ async function processMessage(msg: { msg_id: number; read_ct: number; message: R
     .eq("user_id", userId)
     .eq("is_read", false);
 
+  const meta = notification.metadata as { type?: string; appointment_id?: string } | null;
   const payload = {
     title: notification.title_ar || notification.title,
     body: notification.body_ar || notification.body,
     url: notification.link || "/",
-    tag: `${category}:${notification.case_id ?? notificationId}`,
+    type: meta?.type ?? null,
+    // Appointment reminders are tagged per appointment + window so different
+    // appointments never replace each other on the lock screen.
+    tag: meta?.appointment_id
+      ? `appointment:${meta.appointment_id}:${meta.type ?? "reminder"}`
+      : `${category}:${notification.case_id ?? notificationId}`,
     notificationId,
     category,
     priority,

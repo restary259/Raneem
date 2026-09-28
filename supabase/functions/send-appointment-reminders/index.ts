@@ -54,7 +54,7 @@ serve(async (req) => {
   try {
     const { data: due, error } = await admin
       .from("appointment_reminders")
-      .select("id, appointment_id, recipient_id, kind, due_at")
+      .select("id, appointment_id, recipient_id, kind, due_at, push_sent_at, email_sent_at")
       .is("sent_at", null)
       .lte("due_at", new Date().toISOString())
       .order("due_at", { ascending: true })
@@ -95,67 +95,73 @@ serve(async (req) => {
 
       const when = new Date(appt.scheduled_at);
       const whenText = when.toISOString().slice(0, 16).replace("T", " ");
-      const isOneHour = reminder.kind === "t_1h";
+      const kind = reminder.kind as "t_24h" | "t_1h" | "t_15m";
       const label = studentName || caseReference || whenText;
+      const copy = {
+        t_24h: { en: "Appointment tomorrow", ar: "لديك موعد غداً", priority: "medium", window: "24h" },
+        t_1h: { en: "Appointment in 1 hour", ar: "موعدك بعد ساعة", priority: "high", window: "1h" },
+        t_15m: { en: "Appointment starting soon", ar: "موعدك يبدأ بعد 15 دقيقة", priority: "high", window: "15m" },
+      }[kind] ?? { en: "Appointment reminder", ar: "تذكير بموعد", priority: "medium", window: "24h" };
+      const link = `/team/appointments?appointment=${appt.id}`;
+      const now = () => new Date().toISOString();
+      const body = `${label} — ${whenText}`;
 
-      // In-app notification; the notifications trigger fans this out to push.
-      // Idempotent via _dedupe_key, so a retry that only needs the email will
-      // not create a duplicate in-app notification.
-      const { error: notifyError } = await admin.rpc("emit_notification", {
-        _user_id: reminder.recipient_id,
-        _actor_id: null,
-        _source: "appointment",
-        _title_en: isOneHour ? "Appointment in 1 hour" : "Appointment tomorrow",
-        _title_ar: isOneHour ? "موعدك بعد ساعة" : "لديك موعد غداً",
-        _body_en: `${label} — ${whenText}`,
-        _body_ar: `${label} — ${whenText}`,
-        _case_id: appt.case_id,
-        _link: "/team/appointments",
-        _dedupe_key: `appt-reminder-${reminder.id}`,
-      });
-      if (notifyError) {
-        console.warn("[appointment-reminder] in-app notification failed", notifyError.message);
-      }
-
-      // Best-effort email; never blocks the in-app/push reminder. The reminder
-      // is only marked sent_at once the in-app notification succeeded AND the
-      // email path succeeded (or there was no email to send), so a downstream
-      // 401/500 leaves sent_at NULL and the cron retries on the next run.
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("email, full_name")
-        .eq("id", reminder.recipient_id)
-        .maybeSingle();
-
-      let emailSent = true; // no email to send => treat as success
-      if (profile?.email) {
-        emailSent = await sendReminderEmail(profile.email, reminder.id, {
-          recipientName: profile.full_name ?? "",
-          studentName,
-          caseReference,
-          whenText,
-          windowLabel: isOneHour ? "1h" : "24h",
-          notes: appt.notes ?? "",
-          link: "https://darb.agency/team/appointments",
+      // Push/in-app channel, tracked separately from email so an email failure
+      // can never trigger a second push. Idempotent via the unique dedupe_key.
+      // NOTE: iOS Home Screen web apps only honour standard Web Push; there is
+      // no "time-sensitive" interruption level for PWAs, so priority=high maps
+      // to push Urgency: high instead. Do not add a fake interruption-level.
+      let pushOk = Boolean(reminder.push_sent_at);
+      if (!pushOk) {
+        const { error: notifyError } = await admin.from("notifications").insert({
+          user_id: reminder.recipient_id,
+          source: "appointment",
+          category: "appointments",
+          priority: copy.priority,
+          title: copy.ar,
+          body,
+          title_en: copy.en,
+          title_ar: copy.ar,
+          body_en: body,
+          body_ar: body,
+          case_id: appt.case_id,
+          link,
+          metadata: { type: `appointment_${copy.window}`, appointment_id: appt.id },
+          dedupe_key: `appt-reminder-${reminder.id}`,
         });
+        if (notifyError && notifyError.code !== "23505") {
+          console.warn("[appointment-reminder] notification failed", notifyError.message);
+        } else {
+          pushOk = true;
+          await admin.from("appointment_reminders").update({ push_sent_at: now() }).eq("id", reminder.id);
+        }
       }
 
-      // Only stamp sent_at once the reminder was actually delivered. A failed
-      // email or in-app notification must not be marked "sent", or the cron
-      // would never retry it.
-      if (notifyError || !emailSent) {
-        console.warn(
-          `[appointment-reminder not marked sent] reminder=${reminder.id} notify_ok=${!notifyError} email_ok=${emailSent}`,
-        );
+      // Email channel: skipped for the 15-minute alert (too late to be useful).
+      let emailOk = kind === "t_15m" || Boolean(reminder.email_sent_at);
+      if (!emailOk) {
+        const { data: profile } = await admin
+          .from("profiles").select("email, full_name").eq("id", reminder.recipient_id).maybeSingle();
+        emailOk = profile?.email
+          ? await sendReminderEmail(profile.email, reminder.id, {
+              recipientName: profile.full_name ?? "",
+              studentName, caseReference, whenText,
+              windowLabel: copy.window,
+              notes: appt.notes ?? "",
+              link: `https://darb.agency${link}`,
+            })
+          : true;
+        if (emailOk) await admin.from("appointment_reminders").update({ email_sent_at: now() }).eq("id", reminder.id);
+      }
+
+      if (!pushOk || !emailOk) {
+        console.warn(`[appointment-reminder partial] reminder=${reminder.id} push_ok=${pushOk} email_ok=${emailOk}`);
         continue;
       }
-
-      await admin
-        .from("appointment_reminders")
-        .update({ sent_at: new Date().toISOString() })
-        .eq("id", reminder.id);
+      await admin.from("appointment_reminders").update({ sent_at: now() }).eq("id", reminder.id);
       sent++;
     }
+
 
     return json({ ok: true, sent });
   } catch (e) {

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { subscribeToPush, unsubscribeFromPush } from "@/lib/webPush";
+import { refreshPushSubscription, unsubscribeFromPush } from "@/lib/webPush";
 
 export type AppRole = "admin" | "team_member" | "social_media_partner" | "ambassador" | "student" | "agent";
 
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // user doesn't have to manually toggle it back on every session.
         // - We only do this when permission is already 'granted' — never prompt
         //   the OS dialog without an explicit user gesture.
-        // - subscribeToPush re-uses the existing browser endpoint if the OS
+        // - refreshPushSubscription never prompts; it re-registers the endpoint the OS
         //   already has one (fast path), or asks the push service for a new one.
         if (
           event === "SIGNED_IN" &&
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           typeof Notification !== "undefined" &&
           Notification.permission === "granted"
         ) {
-          subscribeToPush(session.user.id).catch((err) => {
+          refreshPushSubscription(session.user.id).catch((err) => {
             console.warn("[auth] push re-subscribe after login failed:", err);
           });
         }

@@ -3,6 +3,7 @@
   "short_name": "درب",
   "description": "درب ترافقك خطوة بخطوة نحو الدراسة في ألمانيا: معادلة البجروت، القبول الجامعي، التأشيرة والسكن، بدعم عربي كامل.",
   "start_url": "/?source=pwa",
+  "id": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#082B66",
