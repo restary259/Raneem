@@ -813,8 +813,11 @@ export default function WhatsAppInboxPage({
     <>
       {/* The student panel only appears once a conversation is open, so the
           inbox never shows two identical "choose a conversation" panels. */}
-      <div className="darb-spectrum darb-spectrum-sm mb-0 shrink-0 [border-radius:0]" aria-hidden="true" />
-      <div className={cn("grid min-h-0 flex-1 gap-0 lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
+      {/* Below lg the grid only participates in the flex layout when a thread is
+          open; otherwise the mobile list below owns the height. Two flex-1
+          siblings would otherwise split the viewport 50/50 and leave a blank
+          band above the list. */}
+      <div className={cn("min-h-0 flex-1 gap-0 lg:divide-x lg:divide-border/60 rtl:lg:divide-x-reverse", active ? "grid" : "hidden lg:grid", active ? "lg:grid-cols-[300px_minmax(0,1fr)_320px]" : "lg:grid-cols-[320px_minmax(0,1fr)]")}>
 
         {/* Conversations */}
         <div className={cn("min-h-0 flex-col overflow-hidden bg-card", "hidden lg:flex")}>
@@ -1013,10 +1016,9 @@ export default function WhatsAppInboxPage({
       </Sheet>
       {/* Mobile follows the internal Messages pattern:
           list first, then a full-surface conversation after selection. */}
-      <div className="flex min-h-0 flex-1 lg:hidden">
+      <div className={cn("flex min-h-0 flex-1 lg:hidden", active && "hidden")}>
         {!active && (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
-            <div className="darb-spectrum darb-spectrum-sm shrink-0 [border-radius:0]" aria-hidden="true" />
             <div className="shrink-0 space-y-2 border-b border-border/60 p-3">
               <div className="relative">
                 <Search className="pointer-events-none absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
