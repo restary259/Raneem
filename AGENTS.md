@@ -2247,3 +2247,33 @@ catalog school `alpha-aktiv`.
   that mocks `@/integrations/supabase/client` must expose every client surface
   the imported module touches at module scope**, or the file fails to load.
 
+
+## WhatsApp workspace split (2026-09-28)
+- `src/pages/messages/WhatsAppInboxPage.tsx` was a 1,349-line monolith. It is
+  now 1,225 lines with the reusable pieces under
+  `src/components/messages/whatsapp/`: `constants.ts` (filter/taxonomy
+  vocabulary + `threadNeedsReply`), `format.ts` (`fmt`/`fmtDay`/`initials`/
+  `deliveryMark`), `ConversationRow.tsx`, `MessageList.tsx` (owns the
+  ai-elements `Conversation` scroll container — do not re-inline it),
+  `WhatsAppActions.tsx`, `TagEditor.tsx`, `Metric.tsx`, `MediaBubble.tsx`.
+- The page still re-exports `ConversationRow` (`export { ConversationRow }`)
+  because `src/pages/messages/__tests__/WhatsAppInboxRow.test.tsx` imports it
+  from the page path. Keep that re-export until the test is repointed.
+- **What was deliberately NOT extracted:** the list pane, composer,
+  conversation header, lead panel, templates/overview panels and the
+  `startDialog`/`adminTeamToggle`/`conversationOnlyView` fragments. They close
+  over ~15+ `useState` values plus `active`/`messages`/`threads`, so extracting
+  them means 20-40-prop drilling that would make the code worse, not better.
+  The right next step is **state hooks** (`useWhatsAppThreads`,
+  `useWhatsAppConversation`, `useWhatsAppComposer`), not more JSX moves.
+- Removed on the way: the dead `Field()` helper, and the now-unused
+  `ConversationState`/`LeadStage`/`Shimmer`/`Tag` imports.
+- The new modules are prettier-formatted and lint-clean. The page itself still
+  carries ~383 pre-existing `prettier/prettier` errors (minified one-line JSX
+  style predating this work); they are NOT build-gated. Do not run
+  `eslint --fix` on the whole page in an unrelated PR — it inflates the diff.
+- Localization note: quick replies were hardcoded Arabic (`QUICK_REPLIES_AR`)
+  while the appointment-template presets still are
+  (`APPOINTMENT_TEMPLATE_PRESETS_AR`). Audience is Arabic-only for now, so the
+  presets were left as-is, but any future Hebrew/English staff rollout must
+  localize them too.
