@@ -3,23 +3,26 @@ import { useTranslation } from "react-i18next";
 import { CalendarClock, GraduationCap, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { majorsData } from "@/data/majorsData";
+import AppointmentActionMenu from "@/components/team/AppointmentActionMenu";
 
 interface Props {
   caseId: string;
   preferredMajorId: string | null;
   degreeInterest: string | null;
+  onChanged?: () => void;
 }
 
-type Visit = { scheduled_at: string; status: string; confirmation_status: string | null; outcome: string | null; office_id: string | null };
+type Visit = { id: string; scheduled_at: string; status: string; confirmation_status: string | null; outcome: string | null; office_id: string | null };
 type Office = { name_ar: string; name_en: string; name_he: string; city: string; address_line_1: string | null; timezone: string };
 
 /** Chosen major + office visit booked on the apply form. Read-only. */
-export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeInterest }: Props) {
+export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeInterest, onChanged }: Props) {
   const { t, i18n } = useTranslation("dashboard");
   const isAr = (i18n?.language ?? "") === "ar";
   const [visit, setVisit] = useState<Visit | null>(null);
   const [office, setOffice] = useState<Office | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +30,7 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
     // office_id is newer than the generated DB types, so this query is cast.
     (supabase as unknown as { from: (table: string) => any })
       .from("appointments")
-      .select("scheduled_at, status, confirmation_status, outcome, office_id")
+      .select("id, scheduled_at, status, confirmation_status, outcome, office_id")
       .eq("case_id", caseId)
       .eq("public_booking", true)
       .order("created_at", { ascending: false })
@@ -51,7 +54,7 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
         setLoaded(true);
       });
     return () => { cancelled = true; };
-  }, [caseId]);
+  }, [caseId, reload]);
 
   const major = preferredMajorId
     ? majorsData.flatMap((c) => c.subMajors).find((m) => m.id === preferredMajorId)
@@ -105,6 +108,11 @@ export default function CaseApplicationInfo({ caseId, preferredMajorId, degreeIn
             <>
               <p className="text-sm font-medium" dir="ltr">{when}</p>
               <p className={`text-xs ${visitTone}`}>{visitStatus}</p>
+              {visit.status !== "cancelled" && visit.confirmation_status === "pending" && (
+                <div className="mt-2">
+                  <AppointmentActionMenu appointmentId={visit.id} onDone={() => { setReload((n) => n + 1); onChanged?.(); }} />
+                </div>
+              )}
             </>
           ) : (
             <p className="text-sm text-muted-foreground">{t("case.application.noVisit", "No visit booked")}</p>
