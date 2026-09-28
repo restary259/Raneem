@@ -54,7 +54,7 @@ serve(async (req) => {
   try {
     const { data: due, error } = await admin
       .from("appointment_reminders")
-      .select("id, appointment_id, recipient_id, kind, due_at, push_sent_at, email_sent_at")
+      .select("id, appointment_id, recipient_id, kind, due_at, push_sent_at, email_sent_at, attempts")
       .is("sent_at", null)
       .lte("due_at", new Date().toISOString())
       .order("due_at", { ascending: true })
@@ -94,9 +94,27 @@ serve(async (req) => {
       }
 
       const when = new Date(appt.scheduled_at);
-      const whenText = when.toISOString().slice(0, 16).replace("T", " ");
+      // Show the office's local time (Israel), not UTC.
+      const whenText = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Jerusalem", dateStyle: "medium", timeStyle: "short",
+      }).format(when);
       const kind = reminder.kind as "t_24h" | "t_1h" | "t_15m";
       const label = studentName || caseReference || whenText;
+
+      // Staleness guard: never send a reminder after the meeting started, and
+      // drop 24h/1h reminders that are more than half their window late.
+      const nowMs = Date.now();
+      const lateMs = nowMs - new Date(reminder.due_at).getTime();
+      const halfWindow = { t_24h: 12 * 3600e3, t_1h: 30 * 60e3, t_15m: Infinity }[kind] ?? Infinity;
+      const attempts = ((reminder as { attempts?: number }).attempts ?? 0) + 1;
+      if (when.getTime() <= nowMs || lateMs > halfWindow || attempts > 5) {
+        console.warn(`[appointment-reminder closed] reminder=${reminder.id} kind=${kind} late_ms=${lateMs} attempts=${attempts}`);
+        await admin.from("appointment_reminders")
+          .update({ sent_at: new Date().toISOString(), attempts })
+          .eq("id", reminder.id);
+        continue;
+      }
+      await admin.from("appointment_reminders").update({ attempts }).eq("id", reminder.id);
       const copy = {
         t_24h: { en: "Appointment tomorrow", ar: "لديك موعد غداً", priority: "medium", window: "24h" },
         t_1h: { en: "Appointment in 1 hour", ar: "موعدك بعد ساعة", priority: "high", window: "1h" },
