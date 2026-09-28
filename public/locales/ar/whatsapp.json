@@ -99,7 +99,8 @@
     "loadOlder": "تحميل الرسائل الأقدم",
     "loadingOlder": "جارٍ التحميل…",
     "expired": "منتهية",
-    "moreActions": "إجراءات إضافية"
+    "moreActions": "إجراءات إضافية",
+    "state": "الحالة"
   },
   "profile": {
     "title": "ملف الطالب",
