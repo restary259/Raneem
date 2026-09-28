@@ -1,4 +1,4 @@
-# Audit: GitHub database changes vs live database
+# Audit: GitHub SQL migrations and database changes vs live database
 
 ## Result
 Everything from the recent GitHub changes is already live in the database. **No further deploy is needed.**
