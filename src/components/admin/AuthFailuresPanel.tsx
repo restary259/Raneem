@@ -93,7 +93,7 @@ const AuthFailuresPanel: React.FC = () => {
           </CardTitle>
           <div className="flex items-center gap-2">
             <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="w-[170px]">
+              <SelectTrigger className="w-full sm:w-[170px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

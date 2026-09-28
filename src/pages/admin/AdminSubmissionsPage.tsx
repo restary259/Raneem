@@ -577,7 +577,7 @@ const AdminSubmissionsPage = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 w-full max-w-[1600px] mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
             {t("admin.submissions.title", "Submitted Applications")}
@@ -800,7 +800,7 @@ const AdminSubmissionsPage = () => {
               {/* Payment Details */}
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-2">{t("admin.submissions.paymentDetails")}</h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-muted-foreground">DARB service total:</span>
                     <p className="font-medium">Calculated in the Finance section above.</p>

@@ -148,7 +148,7 @@ const AdminCommissionHubPage: React.FC = () => {
 
         {/* ── Overview ── */}
         <TabsContent value="overview" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 [&>*]:min-w-0">
             <KpiCard icon={UserCog} label={t("commissionHub.kpiTeam", "Team members")} value={overview?.team_members_total ?? 0} />
             <KpiCard icon={Network} label={t("commissionHub.kpiAgents", "Agents")} value={overview?.agents_total ?? 0}
               sub={t("commissionHub.kpiCustom", "{{count}} custom", { count: overview?.agents_custom ?? 0 })} />
@@ -207,7 +207,7 @@ const AdminCommissionHubPage: React.FC = () => {
                 const display = draft !== undefined ? draft : r.value;
                 return (
                   <div key={r.key} className="flex items-center gap-3 flex-wrap" data-testid={`rate-row-${r.key}`}>
-                    <Label className="flex-1 min-w-[180px] text-sm">{r.label}</Label>
+                    <Label className="w-full sm:w-auto sm:flex-1 sm:min-w-[180px] break-words text-sm">{r.label}</Label>
                     <div className="relative w-40">
                       <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
                       <Input
@@ -815,7 +815,7 @@ const StudentReferralSection: React.FC<{
             const display = draft !== undefined ? draft : f.value;
             return (
               <div key={f.key} className="flex items-center gap-3 flex-wrap">
-                <Label className="flex-1 min-w-[180px] text-sm">{f.label}</Label>
+                <Label className="w-full sm:w-auto sm:flex-1 sm:min-w-[180px] break-words text-sm">{f.label}</Label>
                 <div className="relative w-40">
                   <span className="absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₪</span>
                   <Input
@@ -848,7 +848,7 @@ const StudentReferralSection: React.FC<{
               placeholder={t("commissionHub.studentIdPlaceholder", "Student UUID")}
               value={newStudentId}
               onChange={(e) => setNewStudentId(e.target.value)}
-              className="flex-1 min-w-[200px] h-9 font-mono text-xs"
+              className="w-full sm:w-auto sm:flex-1 sm:min-w-[200px] h-9 font-mono text-xs"
             />
             <select
               value={newType}

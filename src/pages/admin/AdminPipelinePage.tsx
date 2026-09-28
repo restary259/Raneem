@@ -542,7 +542,7 @@ const AdminPipelinePage = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[200px]">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t("admin.pipeline.searchPlaceholder", "Search by name or phone...")}
@@ -680,7 +680,7 @@ const AdminPipelinePage = () => {
                               </span>
                             )}
 
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
                               <span className="text-xs text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {days}d
@@ -1103,7 +1103,7 @@ const AdminPipelinePage = () => {
                       <label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
                         <BookOpen className="h-3.5 w-3.5" /> Education Level
                       </label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {EDUCATION_OPTIONS.map((o) => (
                           <ChipBtn
                             key={o.value}

@@ -157,7 +157,7 @@ const DataRequestsPanel: React.FC<Props> = ({ search = '', onCount }) => {
               {row.message && <p className="text-sm">{row.message}</p>}
 
               <div className="flex flex-wrap items-end gap-3">
-                <div className="min-w-[180px]">
+                <div className="w-full sm:w-auto sm:min-w-[180px]">
                   <Select
                     value={row.status}
                     onValueChange={(value) => update(row, { status: value })}
@@ -174,7 +174,7 @@ const DataRequestsPanel: React.FC<Props> = ({ search = '', onCount }) => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1 min-w-[220px]">
+                <div className="w-full sm:w-auto sm:flex-1 sm:min-w-[220px]">
                   <Textarea
                     rows={2}
                     value={notes[row.id] ?? row.admin_note ?? ''}
