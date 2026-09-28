@@ -211,14 +211,14 @@ export default function MemberList({
                   )}
                   onClick={() => onRowClick(member)}
                 >
-                  <TableCell className="px-4 py-3">
+                  <TableCell className="px-4 py-3 max-w-[180px] sm:max-w-[280px]">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
                         <RoleIcon className="h-4 w-4 text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{member.full_name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+                        <p className="text-sm font-medium truncate" title={member.full_name ?? undefined}>{member.full_name}</p>
+                        <p className="text-xs text-muted-foreground truncate" title={member.email ?? undefined}>{member.email}</p>
                       </div>
                     </div>
                   </TableCell>
