@@ -1,4 +1,4 @@
-# Admin dashboard: rendering verification results and fix plan
+# Admin dashboard: rendering verification results and fix plan (Option A: fix, then you send phone screenshots)
 
 ## What was verified
 - Signed a test browser in as the admin account (ranimdwahde3@gmail.com). Every admin page stops at **Two-Factor Verification**, which needs a live 6-digit code from your authenticator app. I cannot, and should not, bypass that screen, so no admin page could be viewed on screen yet.
