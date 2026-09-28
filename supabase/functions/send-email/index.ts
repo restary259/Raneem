@@ -63,7 +63,7 @@ serve(async (req) => {
       });
     }
 
-    if (!form_source) {
+    if (!form_source || typeof form_source !== 'string' || !/^[a-z0-9_-]{1,50}$/i.test(form_source)) {
       return new Response(JSON.stringify({ error: "form_source is required", success: false }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -91,7 +91,7 @@ serve(async (req) => {
       });
     }
 
-    const sanitizedData = { ...formData, name, email, whatsapp, message, service };
+    const sanitizedData = { name, email, whatsapp, message, service };
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
