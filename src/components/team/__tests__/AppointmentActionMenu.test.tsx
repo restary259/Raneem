@@ -18,6 +18,17 @@ vi.mock("@/lib/functionError", () => ({ readFunctionError: async (e: any) => e?.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_k: string, fb?: string) => fb ?? _k }),
 }));
+// Radix dropdowns rely on pointer events jsdom lacks; render items inline.
+vi.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: any) => <>{children}</>,
+  DropdownMenuContent: ({ children }: any) => <div role="menu">{children}</div>,
+  DropdownMenuItem: ({ children, onSelect }: any) => (
+    <div role="menuitem" onClick={() => onSelect?.(new Event("select"))}>
+      {children}
+    </div>
+  ),
+}));
 
 import AppointmentActionMenu from "../AppointmentActionMenu";
 
