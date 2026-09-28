@@ -1,4 +1,4 @@
-# درب التعليمية — Darb Agency
+German guide for Israeli students 
 
 Study-in-Germany guidance platform for Arabic-speaking students, plus the
 internal admin / team / partner / student dashboards.
