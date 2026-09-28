@@ -320,8 +320,8 @@ const AdminCommandCenter = () => {
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold text-foreground">{t('admin.commandCenter.title', 'Command Center')}</h1>
           <p className="text-muted-foreground text-sm mt-1">{t('admin.commandCenter.subtitle', 'Real-time overview of all activity')}</p>
         </div>
@@ -371,7 +371,7 @@ const AdminCommandCenter = () => {
               ) : (
                 <p className={`text-3xl font-bold text-foreground ${kpi.value ? 'neon-kpi neon-primary' : ''}`}>{countsError ? '—' : kpi.value ?? 0}</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
+              <p className="text-xs text-muted-foreground mt-1 break-words">{kpi.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -380,7 +380,7 @@ const AdminCommandCenter = () => {
       {/* Cash Collection — confirmed cash payments not yet handed to admin.
           Replaces the old "Outstanding balances" queue: one source of truth,
           oldest first, settle inline. */}
-      <Card className="border-amber-500/40">
+      <Card className="min-w-0 border-amber-500/40">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Banknote className="h-4 w-4 text-amber-600" />
@@ -411,7 +411,7 @@ const AdminCommandCenter = () => {
             <div className="divide-y">
               {cashCollections.map((row) => (
                 <div key={row.payment_id} className="flex items-center justify-between gap-3 py-2.5 flex-wrap">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {row.student_name ?? '—'}
                       {row.case_reference && (
@@ -475,14 +475,14 @@ const AdminCommandCenter = () => {
                 <div key={entry.id} className="flex items-start gap-3 py-2 border-b border-border/50 last:border-0">
                   <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground">
+                    <p className="text-sm text-foreground break-words">
                       <span className="font-medium">{entry.actor_name || t('admin.commandCenter.system', 'System')}</span>
                       {' — '}
                       <span className="text-muted-foreground">{entry.action}</span>
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">{formatTime(entry.created_at)}</p>
                   </div>
-                  <Badge variant="outline" className="text-xs shrink-0">{entry.entity_type}</Badge>
+                  <Badge variant="outline" className="text-xs shrink-0 max-w-[40%] truncate" title={entry.entity_type}>{entry.entity_type}</Badge>
                 </div>
               ))}
             </div>
@@ -491,16 +491,16 @@ const AdminCommandCenter = () => {
       </Card>
 
       {/* Action queues */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         {queues.map((q) => (
-          <Card key={q.key}>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <q.icon className={`h-4 w-4 ${q.tone}`} />
-                {q.title}
-                <Badge variant="secondary">{q.rows.length}</Badge>
+          <Card key={q.key} className="min-w-0 overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
+              <CardTitle className="text-base flex min-w-0 flex-wrap items-center gap-2">
+                <q.icon className={`h-4 w-4 shrink-0 ${q.tone}`} />
+                <span className="min-w-0 break-words">{q.title}</span>
+                <Badge variant="secondary" className="shrink-0">{q.rows.length}</Badge>
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => navigate(q.href)}>
+              <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate(q.href)}>
                 {t('admin.commandCenter.viewAll', 'View all')}
               </Button>
             </CardHeader>
@@ -517,13 +517,13 @@ const AdminCommandCenter = () => {
                 <div className="divide-y">
                   {q.rows.map((row) => (
                     <div key={row.id} className="flex items-center justify-between gap-3 py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{row.title}</p>
-                        <p className="truncate text-xs text-muted-foreground" dir="ltr">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium" title={row.title}>{row.title}</p>
+                        <p className="truncate text-xs text-muted-foreground" dir="ltr" title={row.subtitle}>
                           {row.subtitle}
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => navigate(row.href)}>
+                      <Button size="sm" variant="outline" className="shrink-0" onClick={() => navigate(row.href)}>
                         {t('admin.commandCenter.open', 'Open')}
                       </Button>
                     </div>
