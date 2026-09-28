@@ -97,7 +97,12 @@
     "loadingOlder": "טוען…",
     "expired": "פג תוקף",
     "moreActions": "פעולות נוספות",
-    "state": "סטטוס"
+    "state": "סטטוס",
+    "notFound": "השיחה לא נמצאה",
+    "notFoundDesc": "ייתכן שהיא נמחקה או שהקישור שגוי.",
+    "backToInbox": "חזרה לתיבת הדואר",
+    "loadFailed": "לא ניתן לטעון את ההודעות.",
+    "loading": "טוען שיחה…"
   },
   "profile": {
     "title": "פרופיל הליד",
