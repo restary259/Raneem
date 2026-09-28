@@ -216,7 +216,7 @@ export default function ServiceCatalogPanel() {
               onChange={(e) => saveCourseWeeks(Number(e.target.value) || 1)}
             />
           </div>
-          <p className="text-xs text-muted-foreground flex-1 min-w-[200px]">
+          <p className="text-xs text-muted-foreground w-full sm:w-auto sm:flex-1 sm:min-w-[200px]">
             {t("admin.settings.catalog.courseWeeksHint")}
           </p>
         </div>
@@ -288,7 +288,7 @@ export default function ServiceCatalogPanel() {
           </DialogHeader>
 
           <div className="grid gap-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">{t("admin.settings.catalog.nameAr")}</Label>
                 <Input value={draft.name_ar ?? ""} onChange={(e) => set({ name_ar: e.target.value })} />
@@ -310,7 +310,7 @@ export default function ServiceCatalogPanel() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">{t("admin.settings.catalog.category")}</Label>
                 <Select
@@ -349,7 +349,7 @@ export default function ServiceCatalogPanel() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">{t("admin.settings.catalog.price")}</Label>
                 <Input
@@ -397,7 +397,7 @@ export default function ServiceCatalogPanel() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 ["is_active", t("admin.settings.catalog.active")],
                 ["in_full_service", t("admin.settings.catalog.inFullService")],

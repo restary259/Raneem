@@ -201,7 +201,7 @@ const SelectiveDeleteDialog = ({
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
           {t("admin.students.deleteMode")}
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
             onClick={() => setMode("soft")}
             className={`p-3 rounded-xl border text-sm text-left transition-all ${mode === "soft" ? "border-primary bg-primary/5 font-medium" : "border-border"}`}

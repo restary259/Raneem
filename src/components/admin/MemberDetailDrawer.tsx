@@ -235,7 +235,7 @@ function MemberDetailPanel({
             <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
               {t("admin.members.sectionPerformance", "Performance")}
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 [&>*]:min-w-0 [&>*]:break-words">
               {primaryStats.map((stat, i) => (
                 <div key={i} className="rounded-xl border border-border bg-card p-3">
                   <div className="flex items-center gap-2 mb-1">
@@ -255,7 +255,7 @@ function MemberDetailPanel({
             <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
               {t("admin.members.sectionCommission", "Commission")}
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 [&>*]:min-w-0 [&>*]:break-words">
               {commissionStats.map((stat, i) => (
                 <div key={i} className="rounded-xl border border-border bg-card p-3">
                   <div className="text-xs text-muted-foreground mb-1">{t(stat.label)}</div>
@@ -511,18 +511,18 @@ function MemberDetailPanel({
               {t("admin.members.sectionInfo", "Account Info")}
             </h3>
             <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
                 <span className="text-muted-foreground">{t("admin.members.joined", "Joined")}</span>
                 <span className="font-mono">{new Date(member.created_at).toLocaleDateString()}</span>
               </div>
               {member.referral_code && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
                   <span className="text-muted-foreground">{t("admin.members.referralCode", "Referral Code")}</span>
                   <span className="font-mono bg-muted px-2 py-0.5 rounded">{member.referral_code}</span>
                 </div>
               )}
               {member.agent_id && (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
                   <span className="text-muted-foreground">{t("admin.members.agentId", "Agent ID")}</span>
                   <span className="font-mono text-xs">{member.agent_id.slice(0, 8)}…</span>
                 </div>

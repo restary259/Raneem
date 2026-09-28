@@ -542,7 +542,7 @@ const AdminSettingsPage = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-foreground">{t("admin.settings.title", "Settings")}</h1>
         <Button variant="outline" size="sm" onClick={fetchData}>
           <RefreshCw className="h-4 w-4" />
@@ -751,7 +751,7 @@ const AdminSettingsPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label>{isRtl ? "العنوان (عربي)" : "Address (Arabic)"}</Label>
                     <Input value={contactForm.address_ar} onChange={(e) => setContactForm((f) => ({ ...f, address_ar: e.target.value }))} />
@@ -782,7 +782,7 @@ const AdminSettingsPage = () => {
           </Dialog>
 
           {/* ── Filters: country, school, category, status ── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 [&>*]:min-w-0 [&>*]:break-words">
             <Select value={contactFilter.country} onValueChange={(v) => setContactFilter((f) => ({ ...f, country: v }))}>
               <SelectTrigger><SelectValue placeholder={t('contacts.filterCountry', 'Country')} /></SelectTrigger>
               <SelectContent>
@@ -876,7 +876,7 @@ const AdminSettingsPage = () => {
 
         {/* ── Visa Fields Manager ── */}
         <TabsContent value="visa" className="space-y-4 mt-4" onAnimationStart={fetchVisaFields}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">{isRtl ? "إدارة حقول التأشيرة" : "Visa Fields Manager"}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
