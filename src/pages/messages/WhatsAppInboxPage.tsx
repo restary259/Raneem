@@ -192,7 +192,7 @@ export default function WhatsAppInboxPage({
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queueRefreshThreads = useCallback(() => {
     if (refreshTimer.current) clearTimeout(refreshTimer.current);
-    refreshTimer.current = setTimeout(() => { void refreshThreads(); }, 300);
+    refreshTimer.current = setTimeout(() => { void refreshThreads(); }, 1000);
   }, [refreshThreads]);
 
   useEffect(() => {
@@ -207,7 +207,7 @@ export default function WhatsAppInboxPage({
     const channel = supabase.channel(`whatsapp-workspace:${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_conversations" }, queueRefreshThreads)
       .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_leads" }, queueRefreshThreads)
-      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_messages" }, queueRefreshThreads)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "whatsapp_messages" }, queueRefreshThreads)
       .subscribe();
     return () => {
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
