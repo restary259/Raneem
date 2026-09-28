@@ -1094,7 +1094,7 @@ export default function WhatsAppInboxPage({
           </div>
         </div>
         <Tabs defaultValue="inbox" className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-          <TabsList className="flex w-full max-w-[420px] shrink-0 justify-start gap-1 overflow-x-auto">
+          <TabsList className="mx-auto flex w-fit max-w-full shrink-0 justify-center gap-1 overflow-x-auto">
             <TabsTrigger value="inbox" className="shrink-0">{t("tabs.inbox")}</TabsTrigger>
             <TabsTrigger value="health" className="shrink-0">{t("tabs.health", "Delivery health")}</TabsTrigger>
           </TabsList>
@@ -1115,7 +1115,6 @@ export default function WhatsAppInboxPage({
           <span className={cn("h-2 w-2 shrink-0 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} title={statusLabel} aria-label={statusLabel} />
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {view !== "inbox" && <Button size="sm" variant="ghost" onClick={() => setView("inbox")}><MessageCircle className="me-1.5 h-4 w-4" />{t("tabs.inbox")}</Button>}
           <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setStartOpen(true)} aria-label={t("start.action")}><Plus className="h-5 w-5" /></Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1124,9 +1123,6 @@ export default function WhatsAppInboxPage({
             <DropdownMenuContent align={rtl ? "start" : "end"} className="w-60">
               <div className="px-2 py-1.5 text-xs text-muted-foreground"><p dir="ltr" className="text-start">{t("number")}</p><p>{statusLabel} · {businessHoursOpen ? t("status.businessHoursOpen") : t("status.businessHoursClosed")}</p></div>
               <DropdownMenuItem onSelect={() => void load()}><RefreshCw className="me-2 h-4 w-4" />{t("actions.refresh")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setView("dashboard")}><LayoutGrid className="me-2 h-4 w-4" />{t("tabs.dashboard")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setView("health")}><ShieldCheck className="me-2 h-4 w-4" />{t("tabs.health", "Delivery health")}</DropdownMenuItem>
-              {canManageTemplates && <DropdownMenuItem onSelect={() => setView("templates")}><FileText className="me-2 h-4 w-4" />{t("tabs.templates")}</DropdownMenuItem>}
             
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1134,6 +1130,14 @@ export default function WhatsAppInboxPage({
       </div>
       {isAdmin && <div className="shrink-0 border-b border-border/60 px-3 py-2">{adminTeamToggle}</div>}
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)} className="flex min-h-0 min-w-0 flex-1 flex-col gap-0">
+        <div className={cn("shrink-0 justify-center border-b border-border/60 px-3 py-2", active && view === "inbox" ? "hidden lg:flex" : "flex")}>
+          <TabsList className="mx-auto flex w-fit max-w-full justify-center gap-1 overflow-x-auto">
+            <TabsTrigger value="inbox" className="shrink-0">{t("tabs.inbox")}</TabsTrigger>
+            <TabsTrigger value="dashboard" className="shrink-0">{t("tabs.dashboard")}</TabsTrigger>
+            <TabsTrigger value="health" className="shrink-0">{t("tabs.health", "Delivery health")}</TabsTrigger>
+            {canManageTemplates && <TabsTrigger value="templates" className="shrink-0">{t("tabs.templates")}</TabsTrigger>}
+          </TabsList>
+        </div>
         <TabsContent value="inbox" className="m-0 flex min-h-0 min-w-0 flex-1 flex-col">{inboxWorkspace(false)}</TabsContent>
         <TabsContent value="dashboard" className="m-0 min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
