@@ -2,7 +2,7 @@ import { WhatsAppPurposeCatalog } from "@/components/messages/WhatsAppPurposeCat
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "@/lib/router-compat";
-import { AlarmClock, LayoutGrid, PanelRight, Wrench, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Tag, UserRound, UsersRound, X } from "lucide-react";
+import { AlarmClock, LayoutGrid, PanelRight, Wrench, ArrowLeft, ArrowRight, Bot, CalendarClock, CheckCircle2, Clock3, FileText, Inbox, MessageCircle, Paperclip, Pencil, Plus, RefreshCw, Search, ShieldCheck, Sparkles, UserRound, UsersRound, X } from "lucide-react";
 import PageHeader from "@/components/shell/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/shell/States";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +57,10 @@ import {
 } from "@/components/messages/whatsapp/constants";
 import { deliveryMark, fmt, fmtDay, initials } from "@/components/messages/whatsapp/format";
 import { ConversationRow } from "@/components/messages/whatsapp/ConversationRow";
+import { WhatsAppActions } from "@/components/messages/whatsapp/WhatsAppActions";
+import { TagEditor } from "@/components/messages/whatsapp/TagEditor";
+import { Metric } from "@/components/messages/whatsapp/Metric";
+import { MediaBubble } from "@/components/messages/whatsapp/MediaBubble";
 
 export { ConversationRow };
 
@@ -1250,32 +1254,4 @@ export default function WhatsAppInboxPage({
       {startDialog}
     </div>
   );
-}
-
-function WhatsAppActions({ receiving, connectedLabel, statusLabel, refreshLabel, startLabel, onRefresh, onStart }: { receiving: boolean; connectedLabel: string; statusLabel: string; refreshLabel: string; startLabel: string; onRefresh: () => void; onStart: () => void }) {
-  return <div className="flex flex-wrap items-center gap-2"><span className="flex items-center gap-1.5 text-xs font-medium" title={statusLabel}><span className={cn("h-2 w-2 rounded-full", receiving ? "bg-emerald-500" : "bg-amber-500")} />{receiving ? connectedLabel : statusLabel}</span><Button size="sm" variant="outline" onClick={onStart}><Plus className="me-2 h-4 w-4" />{startLabel}</Button><Button size="icon" variant="outline" onClick={onRefresh} aria-label={refreshLabel}><RefreshCw className="h-4 w-4" /></Button></div>;
-}
-
-function TagEditor({ label, tags, onChange, addLabel }: { label: string; tags: string[]; onChange: (tags: string[]) => void; addLabel: string }) {
-  const [draft, setDraft] = useState("");
-  const add = () => { const tag = draft.trim(); if (!tag || tags.includes(tag)) return; onChange([...tags, tag]); setDraft(""); };
-  return <div><Label className="text-xs">{label}</Label><div className="mt-1 flex gap-2"><Input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); add(); } }} placeholder={addLabel} /><Button type="button" size="icon" variant="outline" onClick={add} aria-label={addLabel}><Tag className="h-4 w-4" /></Button></div>{tags.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{tags.map((tag) => <Badge key={tag} variant="secondary" className="gap-1">{tag}<button type="button" onClick={() => onChange(tags.filter((item) => item !== tag))} aria-label={`${addLabel}: ${tag}`}><X className="h-3 w-3" /></button></Badge>)}</div>}</div>;
-}
-function Metric({ icon: Icon, label, value }: { icon: typeof Inbox; label: string; value: string | number }) {
-  return <Card className="rounded-lg p-3.5 shadow-none"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p><p className="mt-1.5 text-2xl font-semibold">{value}</p></div><div className="rounded-md bg-brand/10 p-2 text-brand"><Icon className="h-4.5 w-4.5" /></div></div></Card>;
-}
-
-/** Attachments live in a private bucket, so each bubble asks for its own signed link. */
-function MediaBubble({ path, mime, filename, openLabel }: { path: string; mime: string | null; filename: string | null; openLabel: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void whatsAppMediaUrl(path).then((signed) => { if (!cancelled) setUrl(signed); }).catch(() => undefined);
-    return () => { cancelled = true; };
-  }, [path]);
-  if (!url) return <div className="mb-1 h-24 w-40 animate-pulse rounded-md bg-muted" />;
-  if (mime?.startsWith("image/")) return <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={filename ?? ""} className="mb-1 max-h-56 rounded-md object-cover" /></a>;
-  if (mime?.startsWith("video/")) return <video src={url} controls className="mb-1 max-h-56 rounded-md" />;
-  if (mime?.startsWith("audio/")) return <audio src={url} controls className="mb-1 w-56" />;
-    return <a href={url} target="_blank" rel="noreferrer" className="mb-1 flex items-center gap-2 rounded-md border p-2 text-xs underline"><FileText className="h-4 w-4" />{filename ?? openLabel}</a>;
 }
