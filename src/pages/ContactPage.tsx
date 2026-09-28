@@ -1,4 +1,3 @@
-
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Contact from "@/components/landing/Contact";
@@ -11,8 +10,14 @@ const ContactPage = () => {
   const { dir } = useDirection();
   const { t } = useTranslation();
   return (
-    <div dir={dir} className="flex flex-col min-h-screen bg-background text-foreground">
-      <SEOHead title={t('seo.contactTitle')} description={t('seo.contactDesc')} />
+    <div
+      dir={dir}
+      className="flex flex-col min-h-screen bg-background text-foreground"
+    >
+      <SEOHead
+        title={t("seo.contactTitle")}
+        description={t("seo.contactDesc")}
+      />
       <Header />
       <main className="flex-grow">
         <ContactHero />

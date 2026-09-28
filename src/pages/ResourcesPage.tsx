@@ -1,32 +1,55 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import darbLogoAsset from '@/assets/darb-logo.png.asset.json';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Header from '@/components/landing/Header';
-import Footer from '@/components/landing/Footer';
-import GuidesReferences from '@/components/resources/GuidesReferences';
-import SEOHead from '@/components/common/SEOHead';
-import DarbPageHero from '@/components/common/DarbPageHero';
-import { DARB_PUBLIC_HERO_IMAGES } from '@/config/publicHeroImages';
-import { DollarSign, GraduationCap, FileText, ArrowLeft } from 'lucide-react';
-import { Link } from '@/lib/router-compat';
-import { useInView } from 'react-intersection-observer';
+import React from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
+import GuidesReferences from "@/components/resources/GuidesReferences";
+import SEOHead from "@/components/common/SEOHead";
+import DarbPageHero from "@/components/common/DarbPageHero";
+import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
+import { DollarSign, GraduationCap, FileText, ArrowLeft } from "lucide-react";
+import { Link } from "@/lib/router-compat";
+import { useInView } from "react-intersection-observer";
 
-const ToolsSection = ({ tools }: { tools: { id: string; title: string; description: string; icon: React.ElementType; path: string }[] }) => {
+const ToolsSection = ({
+  tools,
+}: {
+  tools: {
+    id: string;
+    title: string;
+    description: string;
+    icon: React.ElementType;
+    path: string;
+  }[];
+}) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.1 });
-  const { t } = useTranslation('resources');
+  const { t } = useTranslation("resources");
 
   return (
     <section className="py-12 md:py-20 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-10">{t('tabs.tools')}</h2>
-        <div ref={ref} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <h2 className="text-3xl font-bold text-center mb-10">
+          {t("tabs.tools")}
+        </h2>
+        <div
+          ref={ref}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto"
+        >
           {tools.map((tool, index) => (
             <Card
               key={tool.id}
-              className={`shadow-md hover:shadow-2xl border-t-2 border-t-accent/20 hover:-translate-y-1 hover:border-accent/20 group ${inView ? 'opacity-0 animate-fade-in-up' : 'opacity-0'}`}
-              style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
+              className={`shadow-md hover:shadow-2xl border-t-2 border-t-accent/20 hover:-translate-y-1 hover:border-accent/20 group ${inView ? "opacity-0 animate-fade-in-up" : "opacity-0"}`}
+              style={{
+                animationDelay: `${index * 100}ms`,
+                animationFillMode: "forwards",
+              }}
             >
               <CardHeader className="text-center">
                 <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
@@ -38,7 +61,7 @@ const ToolsSection = ({ tools }: { tools: { id: string; title: string; descripti
               <CardContent className="text-center">
                 <Button asChild>
                   <Link to={tool.path} className="flex items-center gap-2">
-                    {t('educational.openTool', { ns: 'common' })}
+                    {t("educational.openTool", { ns: "common" })}
                     <ArrowLeft className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -57,7 +80,7 @@ const GuidesSection = () => {
   return (
     <section className="py-12 md:py-20 bg-gradient-to-b from-muted/40 to-muted/20">
       <div className="container mx-auto px-4">
-        <div ref={ref} className={inView ? 'animate-fade-in' : 'opacity-0'}>
+        <div ref={ref} className={inView ? "animate-fade-in" : "opacity-0"}>
           <GuidesReferences />
         </div>
       </div>
@@ -66,50 +89,50 @@ const GuidesSection = () => {
 };
 
 const ResourcesPage = () => {
-  const { t } = useTranslation(['resources', 'common']);
+  const { t } = useTranslation(["resources", "common"]);
 
   const tools = [
-    { id: 'bagrut-calculator', title: t('gpaCalculator.title'), description: t('gpaCalculator.description'), icon: GraduationCap, path: '/resources/bagrut-calculator' },
-    { id: 'currency-converter', title: t('currencyComparator.title'), description: t('currencyComparator.description'), icon: DollarSign, path: '/resources/currency-converter' },
-    { id: 'lebenslauf-builder', title: t('lebenslaufBuilder.title'), description: t('lebenslaufBuilder.description'), icon: FileText, path: '/resources/lebenslauf-builder' },
+    {
+      id: "bagrut-calculator",
+      title: t("gpaCalculator.title"),
+      description: t("gpaCalculator.description"),
+      icon: GraduationCap,
+      path: "/resources/bagrut-calculator",
+    },
+    {
+      id: "currency-converter",
+      title: t("currencyComparator.title"),
+      description: t("currencyComparator.description"),
+      icon: DollarSign,
+      path: "/resources/currency-converter",
+    },
+    {
+      id: "lebenslauf-builder",
+      title: t("lebenslaufBuilder.title"),
+      description: t("lebenslaufBuilder.description"),
+      icon: FileText,
+      path: "/resources/lebenslauf-builder",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-primary/[0.02] to-background">
       <SEOHead
-        title={t('seo.resourcesTitle', { ns: 'common' })}
-        description={t('seo.resourcesDesc', { ns: 'common' })}
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@type': 'Article',
-          headline: t('seo.resourcesTitle', { ns: 'common' }),
-          description: t('seo.resourcesDesc', { ns: 'common' }),
-          mainEntityOfPage: 'https://darb.agency/resources',
-          datePublished: '2026-02-18',
-          author: {
-            '@type': 'Organization',
-            name: 'Darb Study Pathways',
-            url: 'https://darb.agency',
-          },
-          publisher: {
-            '@type': 'EducationalOrganization',
-            name: 'Darb Study Pathways',
-            logo: {
-              '@type': 'ImageObject',
-              url: `https://darb.agency${darbLogoAsset.url}`,
-            },
-          },
-        }}
+        title={t("seo.resourcesTitle", { ns: "common" })}
+        description={t("seo.resourcesDesc", { ns: "common" })}
       />
       <Header />
-      
+
       {/* Hero Section */}
       <DarbPageHero
-        eyebrow={t('resourcesPage.badge', 'DARB RESOURCES')}
+        eyebrow={t("resourcesPage.badge", "DARB RESOURCES")}
         imageUrl={DARB_PUBLIC_HERO_IMAGES.resources}
-        imageAlt={t('resourcesPage.imageAlt', 'Student using digital study resources')}
-        title={t('resourcesPage.title')}
-        subtitle={t('resourcesPage.subtitle')}
+        imageAlt={t(
+          "resourcesPage.imageAlt",
+          "Student using digital study resources",
+        )}
+        title={t("resourcesPage.title")}
+        subtitle={t("resourcesPage.subtitle")}
       />
 
       <ToolsSection tools={tools} />
@@ -119,29 +142,38 @@ const ResourcesPage = () => {
       <section className="py-12 md:py-20 bg-gradient-to-b from-background to-primary/[0.03]">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">{t('faq.title')}</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">
+              {t("faq.title")}
+            </h2>
             <div className="grid gap-6">
               <Card className="shadow-md hover:shadow-lg border-l-4 border-l-accent/60 transition-shadow duration-300">
                 <CardHeader>
-                  <CardTitle className="text-lg">{t('faq.questions.exchangeRates.question')}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {t("faq.questions.exchangeRates.question")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{t('faq.questions.exchangeRates.answer')}</p>
+                  <p className="text-muted-foreground">
+                    {t("faq.questions.exchangeRates.answer")}
+                  </p>
                 </CardContent>
               </Card>
               <Card className="shadow-md hover:shadow-lg border-l-4 border-l-accent/60 transition-shadow duration-300">
                 <CardHeader>
-                  <CardTitle className="text-lg">{t('faq.questions.accuracy.question')}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {t("faq.questions.accuracy.question")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{t('faq.questions.accuracy.answer')}</p>
+                  <p className="text-muted-foreground">
+                    {t("faq.questions.accuracy.answer")}
+                  </p>
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
       </section>
-
 
       <Footer />
     </div>

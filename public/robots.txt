@@ -7,9 +7,15 @@ Disallow: /student/
 Disallow: /admin
 Disallow: /team
 Disallow: /partner
+Disallow: /agent
 Disallow: /reset-password
 Disallow: /activate
 Disallow: /student-auth
+Disallow: /invoice
+Disallow: /apply
+Disallow: /join
+Disallow: /office-visit
+Disallow: /book-appointment
 Disallow: /unsubscribe
 
 Sitemap: https://darb.agency/sitemap.xml

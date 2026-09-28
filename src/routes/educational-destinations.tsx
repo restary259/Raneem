@@ -1,16 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
 import EducationalDestinationsPage from "@/pages/EducationalDestinationsPage";
+import { jsonLdScript, routeText } from "@/lib/routeMeta";
+import { buildBreadcrumbList } from "@/lib/breadcrumbs";
 
 export const Route = createFileRoute("/educational-destinations")({
-  head: () => ({
-    meta: [
-      { title: "وجهات الدراسة في ألمانيا | Educational Destinations | DARB" },
-      { name: "description", content: "استكشف وجهات درب المدعومة في ألمانيا. Explore supported German destinations, language environments, study research, and next steps." },
-      { property: "og:title", content: "نفس الحلم، وجهة مختلفة | Same Dream, Different Destination | DARB" },
-      { property: "og:description", content: "اكتشف المدن التي يمكن أن يبدأ منها طريقك إلى ألمانيا. Explore the cities where your path to Germany can begin." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => {
+    const title = routeText("seo.edDestTitle");
+    const description = routeText("seo.edDestDesc");
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      scripts: [
+        jsonLdScript(
+          buildBreadcrumbList([
+            { name: routeText("nav.home"), path: "/" },
+            {
+              name: routeText("nav.educationalDestinations"),
+              path: "/educational-destinations",
+            },
+          ]),
+        ),
+      ],
+    };
+  },
   component: EducationalDestinationsPage,
 });
