@@ -34,7 +34,7 @@ export function MessageList({
   const lang = i18n.language;
   return (
     <Conversation className="min-h-0 min-w-0 flex-1">
-      <ConversationContent className="min-w-0 gap-3">
+      <ConversationContent className="min-w-0 gap-1.5 px-3 py-3">
         {hasOlder && (
           <div className="flex justify-center">
             <Button
