@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Check, MoreHorizontal } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -611,7 +612,7 @@ export default function WhatsAppInboxPage({
 
   const conversationOnlyView = (
     <div className={cn("flex min-h-0 h-full max-h-full w-full flex-col overflow-hidden bg-background", mobile && "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh]")}>
-      <div className="flex h-full min-h-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {!active ? (
           <EmptyState title={t("empty.select")} description={t("empty.description")} icon={MessageCircle} className="flex-1" />
         ) : (
@@ -645,27 +646,26 @@ export default function WhatsAppInboxPage({
                 )}
                 <p dir="ltr" className="text-start text-xs text-muted-foreground">{active.lead.whatsapp_number}</p>
               </div>
-              {!teamMode && (
-                  <Badge variant={active.lead.marketing_consent_status === "withdrawn" ? "destructive" : active.lead.marketing_consent_status === "granted" ? "secondary" : "outline"} className="hidden shrink-0 text-[10px] md:inline-flex">
-                    {t(`consent.${active.lead.marketing_consent_status ?? "unknown"}`, active.lead.marketing_consent_status ?? "unknown")}
-                  </Badge>
-                )}
-                {!teamMode && (
-                  <div className="hidden items-center gap-1.5 sm:flex">
-                    <Badge variant={active.priority === "urgent" ? "destructive" : "outline"} className="text-[10px] uppercase">{t(`priority.${active.priority ?? "normal"}`, active.priority ?? "normal")}</Badge>
-                    {activeState === "snoozed" && isWhatsAppSnoozed(active.state, active.snoozed_until, now) && <Badge variant="outline" className="gap-1 text-[10px]"><AlarmClock className="h-3 w-3" />{formatDuration(new Date(active.snoozed_until!).getTime() - now)}</Badge>}
-                    {activeSlaOverdue && <Badge variant="destructive" className="gap-1 text-[10px]"><Clock3 className="h-3 w-3" />{t("sla.overdue")}</Badge>}
-                  </div>
-                )}
+              {!teamMode && activeState === "snoozed" && isWhatsAppSnoozed(active.state, active.snoozed_until, now) && <Badge variant="outline" className="hidden shrink-0 gap-1 text-[10px] sm:inline-flex"><AlarmClock className="h-3 w-3" />{formatDuration(new Date(active.snoozed_until!).getTime() - now)}</Badge>}
+              {!teamMode && activeSlaOverdue && <Badge variant="destructive" className="shrink-0 gap-1 text-[10px]"><Clock3 className="h-3 w-3" />{t("sla.overdue")}</Badge>}
               <span className={cn("hidden shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium sm:inline-flex", whatsappStageClass(active.lead.lead_stage))}>{whatsappStageLabel(active.lead.lead_stage, i18n.language)}</span>
-              {!conversationOnly && <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setDetailsOpen(true)} aria-label={t("profile.title")}><PanelRight className="h-4 w-4" /></Button>}
-              <Select value={activeState ?? "open"} onValueChange={(v) => saveConversation({ state: v })}>
-                <SelectTrigger className="h-9 w-[130px] text-xs sm:w-[150px]"><SelectValue /></SelectTrigger>
-                <SelectContent>{DISPLAY_STATES.map((s) => <SelectItem key={s} value={s}>{t(`state.${s}`, s)}</SelectItem>)}</SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="icon" variant="ghost" className="shrink-0" aria-label={t("conversation.moreActions", "More actions")}><MoreHorizontal className="h-4 w-4" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={rtl ? "start" : "end"} className="w-56">
+                  {!conversationOnly && (
+                    <DropdownMenuItem className="lg:hidden" onSelect={() => setDetailsOpen(true)}><PanelRight className="me-2 h-4 w-4" />{t("profile.title")}</DropdownMenuItem>
+                  )}
+                  <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">{t("conversation.state", "Status")}</DropdownMenuLabel>
+                  {DISPLAY_STATES.map((s) => (
+                    <DropdownMenuItem key={s} onSelect={() => saveConversation({ state: s })}>
+                      <Check className={cn("me-2 h-4 w-4", (activeState ?? "open") === s ? "opacity-100" : "opacity-0")} />{t(`state.${s}`, s)}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <WhatsAppIdentityPanel lead={active.lead} onChanged={() => void load()} />
-            <div className="lg:hidden"><WhatsAppCrmContextPanel lead={active.lead} compact /></div>
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <MessageList
                 messages={messages}
@@ -675,13 +675,15 @@ export default function WhatsAppInboxPage({
               />
             </div>
             <div className="shrink-0 space-y-2 border-t border-border/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className="flex items-center gap-1.5 px-1 text-[11px]" title={windowClosed ? t("conversation.templateRequired") : t("conversation.windowOpen")}>
-                <span className={cn("h-1.5 w-1.5 rounded-full", windowClosed ? "bg-red-500" : "bg-emerald-500")} />
-                <span className="font-medium">{windowClosed ? t("conversation.expired", "Expired") : "24h"}</span>
-                {!windowClosed && <span className="text-muted-foreground">· {formatDuration(windowRemaining)}</span>}
-              </div>
-              {composerActionsOpen && (
-              <div className="flex flex-wrap items-center gap-2">
+              {windowClosed && (
+                <div className="flex items-center gap-1.5 px-1 text-[11px] text-destructive" title={t("conversation.templateRequired")}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                  <span className="font-medium">{t("conversation.expired", "Expired")}</span>
+                  <span className="truncate text-muted-foreground">· {t("conversation.templateRequired")}</span>
+                </div>
+              )}
+              {composerActionsOpen && !windowClosed && (
+              <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-muted/40 p-1.5">
                 {!teamMode && (
                   <>
                     <Select value={active.assigned_to ?? "unassigned"} onValueChange={(value) => void assignConversation(value === "unassigned" ? null : value)}>
@@ -716,20 +718,21 @@ export default function WhatsAppInboxPage({
               )}
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
                   service window it is locked and the template picker takes over. */}
+              {!windowClosed && (
               <PromptInput onSubmit={({ text }) => void sendReply(text)} className="rounded-xl border-border/60 shadow-none">
                 <PromptInputTextarea
                   value={composer}
                   onChange={(event) => setComposer(event.target.value)}
-                  disabled={windowClosed || sending}
-                  placeholder={windowClosed ? t("conversation.composerLocked", "Replies are locked until the contact writes again — send an approved template below.") : t("conversation.composer")}
+                  disabled={sending}
+                  placeholder={t("conversation.composer")}
                 />
                 <PromptInputFooter>
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-1">
                     <Button type="button" size="icon" variant={composerActionsOpen ? "secondary" : "ghost"} className="h-8 w-8" onClick={() => setComposerActionsOpen((open) => !open)} aria-label={t("conversation.moreActions", "More actions")} aria-expanded={composerActionsOpen}>
                       <Plus className={cn("h-4 w-4 transition-transform", composerActionsOpen && "rotate-45")} />
                     </Button>
                     <input ref={fileRef} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" onChange={(event) => { setAttachment(event.target.files?.[0] ?? null); event.target.value = ""; }} />
-                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8" disabled={windowClosed || sending} onClick={() => fileRef.current?.click()} aria-label={t("conversation.attach", "Attach a photo or file")}>
+                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8" disabled={sending} onClick={() => fileRef.current?.click()} aria-label={t("conversation.attach", "Attach a photo or file")}>
                       <Paperclip className="h-4 w-4" />
                     </Button>
                     {attachment ? (
@@ -738,12 +741,13 @@ export default function WhatsAppInboxPage({
                         <button type="button" onClick={() => setAttachment(null)} aria-label={t("actions.remove", "Remove")}><X className="h-3 w-3" /></button>
                       </span>
                     ) : (
-                      <span />
+                      <span className="ms-1 truncate text-[11px] text-muted-foreground" title={t("conversation.windowOpen")}>24h · {formatDuration(windowRemaining)}</span>
                     )}
                   </div>
-                  <PromptInputSubmit status={sending ? "submitted" : undefined} disabled={windowClosed || sending || (!composer.trim() && !attachment)} aria-label={t("conversation.send")} />
+                  <PromptInputSubmit status={sending ? "submitted" : undefined} disabled={sending || (!composer.trim() && !attachment)} aria-label={t("conversation.send")} />
                 </PromptInputFooter>
               </PromptInput>
+              )}
               {windowClosed && (
                 <div className="space-y-2">
                   {sendableTemplates.length ? (
