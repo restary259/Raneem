@@ -49,14 +49,9 @@ const PRIORITIES = ["normal", "high", "urgent"] as const;
 const INTENTS = ["medicine", "engineering", "computer_science", "language_course", "visa", "accommodation", "cost", "appointment", "documents", "application_status", "existing_student", "other"] as const;
 const LANGUAGES = ["ar", "he", "en", "unknown"] as const;
 
-const QUICK_REPLIES_AR = [
-  { id: "hello", label: "ترحيب", text: "أهلاً وسهلاً! شكراً لتواصلك مع درب 🙌 شو حابب تعرف عن الدراسة بألمانيا؟" },
-  { id: "major", label: "السؤال عن التخصص", text: "أكيد! شو التخصص أو مجال الدراسة اللي عم تفكّر تدرسه بألمانيا؟" },
-  { id: "appointment", label: "اقتراح موعد", text: "أكيد، فينا نرتّبلك استشارة مع فريق درب. أي يوم ووقت بناسبك؟" },
-  { id: "apply", label: "إرسال رابط التقديم", text: "بتقدر تعبّي طلبك مع درب من هون: https://darb.agency/apply" },
-  { id: "documents", label: "رفع المستندات بشكل آمن", text: "للحفاظ على خصوصية معلوماتك، ارفع المستندات من خلال بوابة درب الآمنة، مش عبر واتساب." },
-  { id: "payment", label: "متابعة الدفع", text: "أكيد، بساعدك بخطوات الدفع. شو النقطة اللي بدك توضيح عنها؟" },
-];
+/** Quick replies are localized under `quickReplies.*` (en/ar/he), not hardcoded
+ *  Arabic — an English or Hebrew staff member must not insert Arabic text. */
+const QUICK_REPLY_IDS = ["hello", "major", "appointment", "apply", "documents", "payment"] as const;
 
 const APPOINTMENT_TEMPLATE_PRESETS_AR: Record<string, string> = {
   appointment_confirmation: "أهلاً وسهلاً! تم تأكيد موعدك مع فريق درب بخصوص الدراسة بألمانيا. الموعد مثبت عنا، وإذا احتجت أي تعديل، ابعتلنا.",
@@ -734,6 +729,7 @@ export default function WhatsAppInboxPage({
                       <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
+                        {user?.id && active.assigned_to !== user.id && <SelectItem value={user.id}>{t("owner.assignToMe", "Assign to me")}</SelectItem>}
                         {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -757,7 +753,7 @@ export default function WhatsAppInboxPage({
                     {t("owner.takenBy", "With {{name}}", { name: staff.find((member) => member.id === active.assigned_to)?.full_name ?? t("filters.unassigned") })}
                   </Badge>
                 ))}
-                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLIES_AR.map((item) => <DropdownMenuItem key={item.id} onSelect={() => setComposer(item.text)}>{item.label}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
+                <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost"><MessageCircle className="me-1.5 h-3.5 w-3.5" />{t("quickActions.title")}</Button></DropdownMenuTrigger><DropdownMenuContent align={rtl ? "start" : "end"} className="w-64">{QUICK_REPLY_IDS.map((id) => <DropdownMenuItem key={id} onSelect={() => setComposer(t(`quickReplies.${id}.text`))}>{t(`quickReplies.${id}.label`)}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>
               </div>
               )}
               {/* The typing area is always visible. Outside WhatsApp's 24-hour
@@ -970,6 +966,7 @@ export default function WhatsAppInboxPage({
                           <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="unassigned">{t("filters.unassigned")}</SelectItem>
+                            {user?.id && active.assigned_to !== user.id && <SelectItem value={user.id}>{t("owner.assignToMe", "Assign to me")}</SelectItem>}
                             {staff.filter((member) => role === "admin" || member.id === user?.id).map((member) => <SelectItem key={member.id} value={member.id}>{member.id === user?.id ? t("filters.mine") : member.full_name}</SelectItem>)}
                           </SelectContent>
                         </Select>

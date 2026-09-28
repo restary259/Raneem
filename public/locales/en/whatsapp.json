@@ -10,7 +10,7 @@
     "admin": "Admin",
     "team": "Team view",
     "viewToggle": "View",
-    "health": "Delivery health",
+    "health": "WhatsApp Health",
     "tools": "Tools"
   },
   "quick": {
@@ -337,6 +337,32 @@
   "quickActions": {
     "title": "Quick replies"
   },
+  "quickReplies": {
+    "hello": {
+      "label": "Greeting",
+      "text": "Hello and welcome! Thanks for reaching out to DARB 🙌 What would you like to know about studying in Germany?"
+    },
+    "major": {
+      "label": "Ask about the major",
+      "text": "Sure! Which major or field of study are you thinking about studying in Germany?"
+    },
+    "appointment": {
+      "label": "Suggest an appointment",
+      "text": "Sure, we can arrange a consultation with the DARB team. Which day and time works for you?"
+    },
+    "apply": {
+      "label": "Send the application link",
+      "text": "You can submit your application with DARB here: https://darb.agency/apply"
+    },
+    "documents": {
+      "label": "Upload documents securely",
+      "text": "To keep your information private, please upload your documents through the secure DARB portal, not over WhatsApp."
+    },
+    "payment": {
+      "label": "Payment follow-up",
+      "text": "Sure, I can help you with the payment steps. Which part would you like clarified?"
+    }
+  },
   "campaigns": {
     "title": "WhatsApp campaigns",
     "subtitle": "Send marketing campaigns only to contacts who have granted marketing consent.",
@@ -396,13 +422,14 @@
     "claim": "Take this chat",
     "release": "Hand back",
     "takenBy": "With {{name}}",
+    "assignToMe": "Assign to me",
     "unownedNudge": "Nobody has taken these yet"
   },
   "consentAudit": {
     "recorded": "Recorded {{time}}"
   },
   "health": {
-    "title": "Delivery health",
+    "title": "WhatsApp Health",
     "today": "Today at a glance",
     "in": "Messages in",
     "out": "Messages out",
