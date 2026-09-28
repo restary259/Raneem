@@ -103,6 +103,10 @@ self.addEventListener('push', event => {
   const data = parsePushData(event);
   const title = data.title || 'درب';
   const isCall = data.category === 'calls';
+  // 15-minute "starting soon" appointment alert stays on screen until tapped.
+  // Appointment reminders never change the app-icon unread badge.
+  const isAppointment = data.category === 'appointments';
+  const isAppointmentSoon = isAppointment && data.type === 'appointment_15m';
 
   event.waitUntil((async () => {
     await self.registration.showNotification(title, {
