@@ -5449,5 +5449,18 @@
     },
     "incomingTitle": "مكالمة واردة",
     "incomingSub": "درب · مكالمة صوتية واردة"
+  },
+  "appointmentActions": {
+    "manage": "إدارة الموعد",
+    "confirm": "تأكيد",
+    "reschedule": "تغيير الموعد",
+    "cancel": "إلغاء الموعد",
+    "cancelConfirm": "إلغاء هذا الموعد؟",
+    "newTime": "التاريخ والوقت الجديد",
+    "back": "رجوع",
+    "save": "حفظ",
+    "confirmed": "تم تأكيد الموعد",
+    "cancelled": "تم إلغاء الموعد",
+    "rescheduled": "تم تغيير الموعد"
   }
 }

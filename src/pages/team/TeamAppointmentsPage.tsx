@@ -747,7 +747,7 @@ export default function TeamAppointmentsPage() {
   <p className="text-muted-foreground">{format(parseISO(request.scheduled_at), "EEE, MMM d · h:mm a")}</p>
   {request.office_id && officeNames[request.office_id] ? <p className="text-xs font-medium text-primary">{officeNames[request.office_id]}</p> : null}
 </div>
-            <AppointmentActionMenu appointmentId={request.id} onDone={() => { void fetchAppointments(); }} />
+            <AppointmentActionMenu appointmentId={request.id} onDone={() => { void fetchAppts(); }} />
           </div>)}
         </div>
       </section>}

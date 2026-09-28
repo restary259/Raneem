@@ -5433,5 +5433,18 @@
       "issue": "הנפקת חשבונית",
       "issueDisabledHint": "החשבונית מונפקת אוטומטית כשהתיק מוגש למנהל."
     }
+  },
+  "appointmentActions": {
+    "manage": "ניהול פגישה",
+    "confirm": "אישור",
+    "reschedule": "שינוי מועד",
+    "cancel": "ביטול פגישה",
+    "cancelConfirm": "לבטל את הפגישה?",
+    "newTime": "תאריך ושעה חדשים",
+    "back": "חזרה",
+    "save": "שמירה",
+    "confirmed": "הפגישה אושרה",
+    "cancelled": "הפגישה בוטלה",
+    "rescheduled": "מועד הפגישה שונה"
   }
 }

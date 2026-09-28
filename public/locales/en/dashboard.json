@@ -5431,5 +5431,18 @@
     },
     "incomingTitle": "Incoming call",
     "incomingSub": "DARB · Incoming voice call"
+  },
+  "appointmentActions": {
+    "manage": "Manage appointment",
+    "confirm": "Confirm",
+    "reschedule": "Reschedule",
+    "cancel": "Cancel appointment",
+    "cancelConfirm": "Cancel this appointment?",
+    "newTime": "New date and time",
+    "back": "Back",
+    "save": "Save",
+    "confirmed": "Appointment confirmed",
+    "cancelled": "Appointment cancelled",
+    "rescheduled": "Appointment rescheduled"
   }
 }
