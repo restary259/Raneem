@@ -1,19 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Index from "@/pages/Index";
 import germanyHero from "@/assets/germany-home-hero.jpg";
+import { routeText } from "@/lib/routeMeta";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "درب | الدراسة في ألمانيا بدعم عربي" },
-      { name: "description", content: "ابدأ طريقك للدراسة في ألمانيا مع إرشاد عربي من درب للقبول واللغة والتأشيرة والسكن." },
-      { property: "og:title", content: "درب | الدراسة في ألمانيا بدعم عربي" },
-      { property: "og:description", content: "ابدأ طريقك للدراسة في ألمانيا مع إرشاد عربي من درب." },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://darb.agency/" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: "https://darb.agency/" }, { rel: "preload", href: germanyHero, as: "image", fetchPriority: "high" }],
-  }),
+  head: () => {
+    const title = routeText("seo.indexTitle");
+    const description = routeText("seo.indexDesc");
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: "https://darb.agency/" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [
+        { rel: "canonical", href: "https://darb.agency/" },
+        {
+          rel: "preload",
+          href: germanyHero,
+          as: "image",
+          fetchPriority: "high",
+        },
+      ],
+    };
+  },
   component: Index,
 });

@@ -12,8 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { blogArticles, getArticle, localeContent } from '@/content/blog';
 
-const SITE = 'https://darb.agency';
-
 /** Labels for the internal links a post points at. */
 const RELATED_LABEL_KEYS: Record<string, string> = {
   '/services': 'related.services',
@@ -35,35 +33,6 @@ const BlogArticlePage: React.FC = () => {
     [slug],
   );
 
-  const jsonLd = useMemo(() => {
-    if (!article) return undefined;
-    const content = localeContent(article, lang);
-    return [
-      {
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: content.title,
-        description: content.description,
-        datePublished: article.publishedAt,
-        dateModified: article.updatedAt,
-        inLanguage: lang.startsWith('en') ? 'en' : 'ar',
-        mainEntityOfPage: `${SITE}/blog/${article.slug}`,
-        author: { '@type': 'Organization', name: 'Darb Agency' },
-        publisher: { '@type': 'Organization', name: 'Darb Agency', url: SITE },
-        citation: article.sources.map((source) => source.url),
-      },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Darb', item: `${SITE}/` },
-          { '@type': 'ListItem', position: 2, name: t('index.title'), item: `${SITE}/blog` },
-          { '@type': 'ListItem', position: 3, name: content.title, item: `${SITE}/blog/${article.slug}` },
-        ],
-      },
-    ];
-  }, [article, lang, t]);
-
   if (!article) return <Navigate to="/blog" replace />;
 
   const content = localeContent(article, lang);
@@ -74,7 +43,7 @@ const BlogArticlePage: React.FC = () => {
         title={`${content.title} | ${t('brand')}`}
         description={content.description}
         url={`/blog/${article.slug}`}
-        jsonLd={jsonLd}
+        ogType="article"
       />
       <Header />
       <main className="flex-1">

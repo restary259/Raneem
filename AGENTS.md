@@ -2277,3 +2277,102 @@ catalog school `alpha-aktiv`.
   (`APPOINTMENT_TEMPLATE_PRESETS_AR`). Audience is Arabic-only for now, so the
   presets were left as-is, but any future Hebrew/English staff rollout must
   localize them too.
+## Arabic/Israel SEO hardening (2026-09-28)
+
+Audience is Arabic-speaking Israeli Arabs, mobile-first; Hebrew/English
+indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
+
+- **All structured data is server-rendered through route `head()` scripts**,
+  never a client effect. The root entity graph (`Organization` + `WebSite` +
+  `EducationalOrganization` + `LocalBusiness`) lives in `src/routes/__root.tsx`
+  `head()` as `scripts: [{ type: "application/ld+json", children }]`; TanStack
+  Router serializes `head()` scripts into the SSR HTML (see
+  `buildTagsFromMatches` in `@tanstack/react-router`). It used to be injected
+  by a `useEffect` mutating `document.head`, so non-JS crawlers saw **zero**
+  JSON-LD. **Never move it back to a client effect.**
+- **Page schema also goes through `head()`.** `SEOHead`'s `jsonLd` prop is
+  client-only (crawlers miss it) and was therefore REMOVED from every public
+  page, which also prevents the same schema being emitted twice after
+  hydration. Emitted per route: `FAQPage` (`/faq`), `Service` + `OfferCatalog`
+  (`/services`), `CollectionPage`/`ItemList` of `Course`s
+  (`/educational-programs`, from `src/data/majorsData.ts`), `Blog` +
+  `BlogPosting`s (`/blog`), `Article` (`/blog/$slug`), and `BreadcrumbList` on
+  every public page.
+- **`head()` runs on every SSR request, before lazy route modules load.** A
+  route file therefore cannot read a non-eagerly-bundled namespace (blog, faq,
+  services, …) through `routeText()` at SSR time — those load via HttpBackend
+  at render. The fix is to **import the locale JSON directly** in the route
+  module (`import arFaq from "../../public/locales/ar/faq.json"`, plus en/he)
+  and pick with `pickLang({ ar, en, he })`. This keeps ONE source per page and
+  is SSR-safe; it is the pattern used by `/faq`, `/services`, `/blog`,
+  `/blog/$slug`. Keys in `common` and the other eagerly-bundled namespaces
+  (`landing`, `contact`, `legal`, `broadcast`) are read through `routeText()`.
+- **`src/lib/routeMeta.ts`** — `routeText(key, ns = "common")` reads the i18n
+  instance's bundled resources (falls back to Arabic, then the key) so route
+  metadata and `SEOHead` share one source; `pickLang({ ar, en, he })` picks the
+  active language from directly-imported dictionaries; `jsonLdScript(payload)`
+  builds the `head()` script object (escapes `<` so a locale string can't close
+  the tag). Do not re-hardcode Arabic metas in route files for `common` keys.
+- **Page structured data is emitted through route `head()` scripts, not
+  `SEOHead`'s `jsonLd` prop** (which is client-only, so crawlers miss it). The
+  `jsonLd` prop was removed from every public page to avoid emitting the same
+  schema twice after hydration: FAQ (`FAQPage` from the faq locale JSON),
+  `/services` (`Service` + `OfferCatalog` from the services locale JSON),
+  `/educational-programs` (`CollectionPage`/`ItemList` of `Course`s from
+  `src/data/majorsData.ts`), `/blog` (`Blog` + `BlogPosting`s from
+  `src/content/blog`), `/blog/$slug` (`Article` + `BreadcrumbList`), plus
+  `BreadcrumbList` on every public page.
+- `SEOHead` gained an `ogType` prop (default `"website"`) so the article route
+  passes `"article"`; without it the client effect would flip the SSR
+  `og:type` back to `website` on hydration.
+- **`src/config/localBusiness.ts`** — `DARB_OFFICE` is the single on-site
+  description of the Tamra office (address, `addressCountry: "IL"`, phone from
+  `SUPPORT_PHONE`, Sun–Thu hours). The JSON-LD imports it, so local-entity data
+  cannot drift from the contact UI.
+- **`src/lib/breadcrumbs.ts`** — `buildBreadcrumbList(crumbs)` is the one
+  `BreadcrumbList` builder (`@context` + canonical-origin absolute `item`s),
+  used by every public page; guarded by `src/lib/breadcrumbs.test.ts`.
+- **`src/lib/seoStructuredData.test.ts`** is the schema fence: it fails if any
+  page reintroduces `jsonLd={`, if a public route loses its `head()` scripts, if
+  a localized route regresses to hardcoded Arabic meta literals, or if
+  `jsonLdScript` stops escaping `<`.
+- **`src/lib/seoHygiene.test.ts`** is the regression fence: sitemap has no
+  `/who-we-are` and every entry has `<lastmod>`, robots disallows `/agent` +
+  the private families, `DARB_OFFICE` publishes an Israeli address, and the
+  root route emits JSON-LD via `head()` **scripts** (and does not contain
+  `rootJsonld`, the removed client-effect marker).
+- Crawl hygiene: `robots.txt` gained `/agent`, `/invoice`, `/apply`, `/join`,
+  `/office-visit`, `/book-appointment`; `noindex, nofollow` added to
+  `/invoice/$token` and `/student-auth` via route `head()`. Verified on the
+  **live domain** that `/sitemap.xml` (200, `application/xml`) and `/robots.txt`
+  (200, `text/plain`) are served, not rewritten to the shell, and
+  `/who-we-are` is a real 404 — so no `vercel.json` change was needed.
+- **robots exclusion is prefix-based, so a bare `Disallow: /partner` also hides
+  the public `/partnership` page** (and `/partners`, the redirect) that the
+  sitemap advertises. `robots.txt` therefore pairs the prefix rule with explicit
+  `Allow: /partnership` / `Allow: /partners`; per RFC 9309 the longest match
+  wins, so `/partner/earnings` stays disallowed while the public pages resolve to
+  Allow. Guarded (with a real longest-match resolver) by `seoHygiene.test.ts`.
+  When adding a private prefix, always check whether a public sibling shares it.
+- **Every public route declares its own canonical + `og:url`.** A route `head()`
+  that omits `links` inherits the root's `og:url` (the homepage) and ships **no
+  canonical**, so a crawler is told every page is a duplicate of `/`. `about`,
+  `contact`, `locations`, `partnership`, `educational-destinations` were missing
+  both (and `services`/`resources`/`educational-programs` were missing
+  `og:url`); all now declare `links: [{ rel: "canonical", … }]` + `og:url`,
+  matching the routes that already did. Guarded per-route by
+  `seoStructuredData.test.ts`.
+- **`/educational-programs` `ItemList.numberOfItems` must equal the emitted
+  `itemListElement` length.** It previously announced 73 but sliced to 30 (a
+  leftover client-side cap while the page renders all 73), which both failed
+  validators and dropped 43 courses from the structured data. The slice is
+  removed; the count and the list come from the same array (73 = 73).
+- Build clean; `npx vitest run` 1628 passed | 1 skipped (96 files); eslint 0
+  errors on all touched files. Dev-server SSR spot-check confirmed
+  `addressCountry: "IL"`, `areaServed` Israel, and the entity graph + page
+  schema + a `BreadcrumbList` in the initial HTML for `/`, `/about`,
+  `/services`, `/faq`, `/blog`, `/educational-programs` (with `FAQPage`
+  appearing exactly once — no double emission), self-referential
+  canonical/`og:url` on every public route, and a matching ItemList count.
+
+

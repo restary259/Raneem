@@ -1,4 +1,3 @@
-
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import Locations from "@/components/landing/Locations";
@@ -12,18 +11,26 @@ const LocationsPage = () => {
   const { dir } = useDirection();
   const { t } = useTranslation();
   return (
-    <div dir={dir} className="flex flex-col min-h-screen bg-background text-foreground">
-      <SEOHead title={t('seo.locationsTitle')} description={t('seo.locationsDesc')} />
+    <div
+      dir={dir}
+      className="flex flex-col min-h-screen bg-background text-foreground"
+    >
+      <SEOHead
+        title={t("seo.locationsTitle")}
+        description={t("seo.locationsDesc")}
+      />
       <Header />
       <main className="flex-grow">
         <DarbPageHero
           imageUrl={DARB_PUBLIC_HERO_IMAGES.city}
-          imageAlt={t('locations.imageAlt', 'Bright German city representing DARB destinations')}
-          title={t('locations.title')}
-          subtitle={t('seo.locationsDesc')}
+          imageAlt={t(
+            "locations.imageAlt",
+            "Bright German city representing DARB destinations",
+          )}
+          title={t("locations.title")}
+          subtitle={t("seo.locationsDesc")}
         />
         <Locations />
-
       </main>
       <Footer />
     </div>

@@ -1,4 +1,3 @@
-
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
 import ServicesHero from "@/components/services/ServicesHero";
@@ -12,10 +11,20 @@ import { useTranslation } from "react-i18next";
 
 const ServicesPage = () => {
   const { dir } = useDirection();
-  const { t } = useTranslation();
+  const { t: tc } = useTranslation("common");
+
+  // Service + BreadcrumbList structured data is emitted server-side by the
+  // /services route head() so crawlers that do not run JavaScript see it.
+
   return (
-    <div dir={dir} className="flex flex-col min-h-screen bg-background text-foreground">
-      <SEOHead title={t('seo.servicesTitle')} description={t('seo.servicesDesc')} />
+    <div
+      dir={dir}
+      className="flex flex-col min-h-screen bg-background text-foreground"
+    >
+      <SEOHead
+        title={tc("seo.servicesTitle")}
+        description={tc("seo.servicesDesc")}
+      />
       <Header />
       <main className="flex-grow">
         <ServicesHero />

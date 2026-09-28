@@ -7,8 +7,10 @@ interface SEOHeadProps {
   url?: string;
   /** Absolute URL of the social preview image. */
   image?: string;
-  /** Optional JSON-LD structured data for this page. */
+  /** Optional JSON-LD structured data. Prefer the route head() for public pages. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Open Graph type. Defaults to "website"; article pages pass "article". */
+  ogType?: 'website' | 'article';
   /** Keep this route out of search indexes (utility/private pages). */
   noindex?: boolean;
 }
@@ -55,7 +57,7 @@ const setLink = (rel: string, href: string) => {
   el.setAttribute('href', href);
 };
 
-const SEOHead = ({ title, description, url, image, jsonLd, noindex }: SEOHeadProps) => {
+const SEOHead = ({ title, description, url, image, jsonLd, ogType = 'website', noindex }: SEOHeadProps) => {
   useEffect(() => {
     const source =
       url ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
@@ -67,7 +69,7 @@ const SEOHead = ({ title, description, url, image, jsonLd, noindex }: SEOHeadPro
     setMeta('property', 'og:title', title);
     setMeta('property', 'og:description', description);
     setMeta('property', 'og:url', pageUrl);
-    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:type', ogType);
     setMeta('property', 'og:site_name', SITE_NAME);
     setMeta('property', 'og:locale', document.documentElement.lang === 'ar' ? 'ar_AR' : 'en_US');
 
@@ -102,7 +104,7 @@ const SEOHead = ({ title, description, url, image, jsonLd, noindex }: SEOHeadPro
       document.title = DEFAULT_TITLE;
       script?.remove();
     };
-  }, [title, description, url, image, jsonLd, noindex]);
+  }, [title, description, url, image, jsonLd, ogType, noindex]);
 
   return null;
 };
