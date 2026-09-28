@@ -36,10 +36,13 @@ describe("public robots.txt", () => {
     "/agent",
     "/invoice",
     "/student-auth",
-    "/apply",
     "/join",
   ])("disallows the private route family %s", (route) => {
     expect(robots).toContain(`Disallow: ${route}`);
+  });
+
+  it("keeps the public /apply page crawlable", () => {
+    expect(robots).not.toContain("Disallow: /apply");
   });
 
   it("points at the canonical sitemap", () => {

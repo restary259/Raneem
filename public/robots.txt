@@ -16,7 +16,6 @@ Disallow: /reset-password
 Disallow: /activate
 Disallow: /student-auth
 Disallow: /invoice
-Disallow: /apply
 Disallow: /join
 Disallow: /office-visit
 Disallow: /book-appointment
