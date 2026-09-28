@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { getPushStatus, subscribeToPush, type PushStatus } from "@/lib/webPush";
+import { getPushStatus, sendTestPush, subscribeToPush, type PushStatus } from "@/lib/webPush";
 
 /**
  * First-login prompt that explains why notifications matter and enables them
@@ -67,11 +67,16 @@ export default function NotificationOnboardingDialog() {
   const handleEnable = async () => {
     if (!user?.id) return;
     setBusy(true);
+    // Permission + subscribe run directly inside this tap (required on iOS).
     const result = await subscribeToPush(user.id);
     setBusy(false);
     if (result.ok) {
       await saveState("enabled");
-      toast({ description: t("pushOnboarding.enabled") });
+      // Prove delivery instead of only claiming it's enabled.
+      const test = await sendTestPush();
+      toast({
+        description: test.ok ? t("pushOnboarding.testSent") : t("pushOnboarding.enabled"),
+      });
       setOpen(false);
     } else {
       await saveState(result.reason === "denied" ? "blocked" : "failed");
@@ -81,6 +86,10 @@ export default function NotificationOnboardingDialog() {
       });
       setOpen(false);
     }
+  };
+
+  const handleRecheck = async () => {
+    setStatus(await getPushStatus());
   };
 
   const handleLater = async () => {
@@ -109,20 +118,34 @@ export default function NotificationOnboardingDialog() {
         </DialogHeader>
 
         {needsInstall && (
-          <p className="flex items-start gap-2 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-            <Smartphone className="mt-0.5 h-4 w-4 shrink-0" />
-            {t("pushOnboarding.installHint")}
-          </p>
+          <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+            <p className="mb-2 flex items-center gap-2 font-medium text-foreground">
+              <Smartphone className="h-4 w-4 shrink-0" />
+              {t("pushOnboarding.iosTitle")}
+            </p>
+            <ol className="list-decimal space-y-1 ps-5">
+              <li>{t("pushOnboarding.iosStep1")}</li>
+              <li>{t("pushOnboarding.iosStep2")}</li>
+              <li>{t("pushOnboarding.iosStep3")}</li>
+              <li>{t("pushOnboarding.iosStep4")}</li>
+            </ol>
+          </div>
         )}
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="ghost" onClick={handleLater} disabled={busy}>
             {t("pushOnboarding.later")}
           </Button>
-          <Button onClick={handleEnable} disabled={busy || needsInstall}>
-            {busy && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-            {t("pushOnboarding.enable")}
-          </Button>
+          {needsInstall ? (
+            <Button variant="outline" onClick={handleRecheck}>
+              {t("pushOnboarding.installed")}
+            </Button>
+          ) : (
+            <Button onClick={handleEnable} disabled={busy}>
+              {busy && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+              {t("pushOnboarding.enable")}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
