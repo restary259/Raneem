@@ -2527,3 +2527,52 @@ only the frontend reachability was broken.
 - Build/test after fixes: `npx tsc --noEmit` clean; `npx vitest run`
   1664 passed | 1 skipped (104 files, +5 new); `npm run build` clean. The
   pre-existing `npm run lint` debt is unchanged and `continue-on-error: true`.
+
+## Tabbed submission case card — Admin Submissions queue (2026-09-29)
+- The Admin Submissions dialog used to render Basic Info → Payment Details →
+  Program/Accommodation → Student Profile Data → `CaseFinance` →
+  `CaseInvoiceBlock` → Documents as ONE long vertical scroll. It is now a
+  six-tab strip: **Overview** (default) / Profile / Program / Finance / Invoice /
+  Documents. Pure presentation regrouping — **no query, RPC, RLS or migration
+  changed**.
+- `src/components/admin/SubmissionCaseTabs.tsx` is the new presentational body
+  (no fetching, no page state). `AdminSubmissionsPage` keeps the dialog shell:
+  header, the persistent status strip, the action footer, and the
+  Return-for-changes / Payment-Split / password-gate dialogs.
+- **`SubmittedCase` is exported from the component and re-imported by the page.**
+  One definition — do not reintroduce a second copy in the page.
+- **Every panel is `forceMount`ed + `data-[state=inactive]:hidden`. This is
+  load-bearing, not cosmetic.** `CaseFinance` pushes its Germany-payment
+  readiness up via `onReadinessChange`, and the page gates **Mark as Enrolled**
+  on that snapshot (`germanyConfirmedRequired < germanyRequiredTotal`). Radix
+  unmounts inactive `TabsContent` by default, so without `forceMount` the Finance
+  panel never mounts while the admin sits on Overview → readiness never arrives →
+  **Mark as Enrolled is permanently disabled** until the admin opens Finance.
+  Mirror the nested-tabs pattern already in `CaseFinance.tsx`. The 5th test case
+  (`reports Finance readiness while the Overview tab is active`) is the guard —
+  verified non-vacuous by removing `forceMount` and watching it fail.
+- **Program** and **Documents** triggers derive from the SAME boolean as their
+  content, so a tab can never appear without content. Six triggers do not fit a
+  phone width as a grid → the `TabsList` scrolls horizontally.
+- Status / payment-method / enrolled badges moved ABOVE the strip so they are
+  visible from every tab (previously only at the bottom of the scroll).
+- Removed the hardcoded, untranslated `"DARB service total: Calculated in the
+  Finance section above."` row — with tabs there is no "above", and the Total row
+  below it already renders the authoritative `totalFee()`. No new key was added
+  for it.
+- Dialog widened `sm:max-w-2xl` → `sm:max-w-4xl` for the Finance KPI grid.
+- i18n: `admin.submissions.tabs.*` added to **en + ar + he** with real
+  translations (he must not copy en — the value-level guard in
+  `hebrewLocaleCoverage.test.ts`). Terminology reused from the existing
+  dictionaries (`نظرة عامة` / `סקירה כללית`, `admin.students.tabs.*`).
+- Tests: `src/components/admin/__tests__/SubmissionCaseTabs.test.tsx` (5 cases).
+  It resolves `t()` against the real `public/locales/en/dashboard.json`, so the
+  asserted labels are the shipped ones and the keys are proven to exist. Role
+  queries are scoped to the OUTER tablist — `CaseFinance` renders its own nested
+  Summary/Invoice tablist and a bare `getByRole("tab")` matches those too.
+- Build/test: `tsc` clean; `npx vitest run` 1669 passed | 1 skipped (105 files);
+  `npm run build` clean. New files are eslint-clean; the page went 174 → 171
+  pre-existing prettier errors (net improvement — do NOT `eslint --fix` the whole
+  page in an unrelated PR).
+- Not verified in a browser: RTL tab order and phone-width horizontal scroll are
+  reasoned from `TabsList` styles, not observed.
