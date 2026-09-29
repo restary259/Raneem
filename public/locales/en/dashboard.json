@@ -4108,6 +4108,22 @@
     "referral": {
       "applied": "Referral discount applied",
       "appliedDesc": "This student receives a referral discount. It is already reflected in the final total above."
+    },
+    "memo": {
+      "label": "Payment reference (transfer memo)"
+    },
+    "receipt": {
+      "reference": "Transfer reference",
+      "upload": "Receipt (PDF or image)",
+      "hint": "Add the transfer reference or upload the receipt — at least one is required.",
+      "required": "For a bank transfer, add the transfer reference or upload the receipt.",
+      "tooLong": "The transfer reference is too long.",
+      "view": "View receipt",
+      "openFailed": "Unable to open the receipt."
+    },
+    "step2": {
+      "title": "Germany costs & payments",
+      "badge": "Step 2 · After admission"
     }
   },
   "messagesInbox": {
@@ -4940,7 +4956,9 @@
     },
     "originalTotal": "Original total",
     "referralDiscount": "Referral discount",
-    "netTotal": "Net total"
+    "netTotal": "Net total",
+    "memoTitle": "Bank transfer memo",
+    "memoHint": "Write this reference in the memo of your bank transfer so we can match your payment."
   },
   "studentOverview": {
     "nextAction": "Next action",
