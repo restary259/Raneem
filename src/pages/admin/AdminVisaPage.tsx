@@ -122,7 +122,7 @@ export default function AdminVisaPage() {
         />
       ) : (
         <div className="space-y-4">
-          <KpiRow items={kpis} columns={4} />
+          <KpiRow items={kpis} columns={2} />
 
           {loading && rows.length === 0 ? (
             <LoadingState variant="rows" rows={5} />
