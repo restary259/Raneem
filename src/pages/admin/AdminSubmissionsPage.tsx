@@ -538,8 +538,8 @@ const AdminSubmissionsPage = () => {
   const totalFee = (s: SubmittedCase) => (financialsMap[s.id]?.service_total ?? s.submission?.service_fee ?? 0).toLocaleString("en-US");
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 w-full max-w-[1600px] mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-6 space-y-4 sm:space-y-6 mx-auto">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
             {t("admin.submissions.title", "Submitted Applications")}
@@ -554,7 +554,7 @@ const AdminSubmissionsPage = () => {
       </div>
 
       {/* Subtabs */}
-      <div className="flex gap-2 border-b border-border pb-0">
+      <div className="min-w-0 max-w-full overflow-x-auto border-b border-border pb-0">
         <button
           onClick={() => setActiveTab("pending")}
           className={`px-4 py-2 text-sm font-medium rounded-t-md border border-b-0 transition-colors ${
@@ -587,7 +587,7 @@ const AdminSubmissionsPage = () => {
         </button>
       </div>
 
-      <Card>
+      <Card className="min-w-0 max-w-full overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
             <div className="p-8 text-center text-muted-foreground text-sm">{t("common.loading")}</div>
@@ -663,7 +663,7 @@ const AdminSubmissionsPage = () => {
 
       {/* Full Case Detail Dialog */}
       <Dialog open={!!selected && !showSplitPanel && !showPasswordGate} onOpenChange={() => setSelected(null)}>
-        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:w-auto sm:max-w-4xl max-h-[90vh] min-w-0 overflow-x-hidden overflow-y-auto p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5" /> {selected?.full_name}
