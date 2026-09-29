@@ -2403,5 +2403,6 @@ indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
 
 
 
-## DARB payment proof + wire memo (2026-09-29)
-- DARB fee stays one full payment. `confirm_agency_service_payment(case, method, p_reference, p_receipt_path)`: bank transfer requires reference or receipt under `cases/<caseId>/receipts/` (server-enforced). Wire memo reference = `cases.case_reference`, shown on Finance tab, student Fees, invoice page/PDF/email. Germany block is a collapsible "Step 2".
+## DARB payment proof + wire memo (2026-09-29, updated 2026-09-29)
+- DARB fee stays one full payment. `confirm_agency_service_payment(case, method, p_reference, p_receipt_path)`: the server no longer requires proof — when no bank reference is supplied it stamps the auto-generated `cases.case_reference` as the payment reference. Wire memo reference = `cases.case_reference`, shown on Finance tab, student Fees, invoice page/PDF/email. Germany block is a collapsible "Step 2".
+- **The Finance tab (pipeline) collects NO proof.** The optional "Transfer reference" input and the "Receipt (file)" input were REMOVED from `CaseFinance.tsx`; staff pick the payment method and confirm — the reference is auto-generated server-side. The call passes only `p_case_id` / `p_payment_method`. `src/lib/agencyPaymentProof.ts` (+ its test) was deleted; the `finance.receipt.{optional,upload,hintAuto,required,tooLong,hint}` locale keys were pruned from en/ar/he (kept: `reference`, `view`, `openFailed`, still used by `CasePayments` history). Guarded by `src/lib/agencyPaymentNoProofGuard.test.ts`.

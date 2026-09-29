@@ -5,7 +5,6 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -24,8 +23,6 @@ import { formatDateTime } from "@/utils/dateUtils";
 import { toneClasses } from "@/lib/statusTokens";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CopyButton } from "@/components/common/CopyButton";
-import { agencyPaymentProofError, receiptStoragePath } from "@/lib/agencyPaymentProof";
-import { validateUploadFile } from "@/lib/uploadRules";
 
 interface Props {
   caseId: string;
@@ -149,8 +146,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   /** Payment method selected by the team before confirming the DARB agency payment. */
   const [paymentMethod, setPaymentMethod] = useState<string>("bank_transfer");
-  const [transferReference, setTransferReference] = useState("");
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   /** Live (unsaved) service selection from CaseServices, used to show the
    *  pending total in the summary before "Confirm & Save" persists it. */
@@ -432,32 +427,13 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
       if (!saved) return;
 
       // 2. Confirm the DARB agency payment (also advances the case stage).
+      //    No proof is collected: the server stamps the case code as the
+      //    payment reference automatically.
       if (!agencyConfirmed && canManage && serviceTotal > 0) {
         const method = paymentMethod || "bank_transfer";
-        const proofError = agencyPaymentProofError(method, transferReference, !!receiptFile);
-        if (proofError) {
-          toast({
-            variant: "destructive",
-            description: t("finance.receipt.tooLong", "The transfer reference is too long."),
-          });
-          return;
-        }
-        let receiptPath: string | null = null;
-        if (method === "bank_transfer" && receiptFile) {
-          const fileError = validateUploadFile(receiptFile);
-          if (fileError) {
-            toast({ variant: "destructive", description: fileError });
-            return;
-          }
-          receiptPath = receiptStoragePath(caseId, receiptFile.name);
-          const { error: upErr } = await supabase.storage.from("student-documents").upload(receiptPath, receiptFile);
-          if (upErr) throw upErr;
-        }
-        const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
+        const { error } = await supabase.rpc("confirm_agency_service_payment", {
           p_case_id: caseId,
           p_payment_method: method,
-          p_reference: method === "bank_transfer" ? transferReference.trim() || null : null,
-          p_receipt_path: receiptPath,
         });
         if (error) throw error;
         toast({
@@ -630,26 +606,6 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                       <span className="text-muted-foreground">{t("finance.memo.label", "Payment reference (transfer memo)")}:</span>
                       <span className="font-mono font-semibold" dir="ltr">{financials.case_reference}</span>
                       <CopyButton value={financials.case_reference} />
-                    </div>
-                  )}
-                  {paymentMethod === "bank_transfer" && (
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="pm-ref" className="text-xs">{t("finance.receipt.reference", "Transfer reference")} · {t("finance.receipt.optional", "optional")}</Label>
-                        <Input
-                          id="pm-ref"
-                          dir="ltr"
-                          maxLength={100}
-                          value={transferReference}
-                          placeholder={financials?.case_reference ?? ""}
-                          onChange={(e) => setTransferReference(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="pm-receipt" className="text-xs">{t("finance.receipt.upload", "Receipt (PDF or image)")} · {t("finance.receipt.optional", "optional")}</Label>
-                        <Input id="pm-receipt" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic" onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)} />
-                      </div>
-                      <p className="text-xs text-muted-foreground sm:col-span-2">{t("finance.receipt.hintAuto", "Both are optional. If you leave the reference empty, the case code is saved as the payment reference.")}</p>
                     </div>
                   )}
                 </div>
