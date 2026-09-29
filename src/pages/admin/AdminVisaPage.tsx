@@ -9,12 +9,8 @@ import {
 } from "@/components/shell";
 import {
   RefreshCw,
-  Plane,
   Clock,
-  ThumbsUp,
-  CheckCircle2,
-  CalendarOff,
-  XCircle,
+  FileCheck2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useVisaQueue } from "@/hooks/useVisaQueue";
@@ -43,7 +39,7 @@ export default function AdminVisaPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { rows, loading, error, refresh } = useVisaQueue();
-  const [section, setSection] = useState<VisaQueueSection>("ready");
+  const [section, setSection] = useState<VisaQueueSection>("pending");
   const [selected, setSelected] = useState<VisaQueueRow | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [markingCaseId, setMarkingCaseId] = useState<string | null>(null);
@@ -52,32 +48,18 @@ export default function AdminVisaPage() {
 
   const kpis: KpiItem[] = [
     {
-      key: "ready",
-      label: t("admin.visa.ready", "Ready"),
-      value: counts.ready,
-      icon: Plane,
-      onClick: () => setSection("ready"),
-    },
-    {
-      key: "inProgress",
-      label: t("admin.visa.inProgress", "In Progress"),
-      value: counts.inProgress,
+      key: "pending",
+      label: t("admin.visa.pending", "Pending"),
+      value: counts.pending,
       icon: Clock,
-      onClick: () => setSection("inProgress"),
+      onClick: () => setSection("pending"),
     },
     {
-      key: "approved",
-      label: t("admin.visa.approved", "Approved"),
-      value: counts.approved,
-      icon: ThumbsUp,
-      onClick: () => setSection("approved"),
-    },
-    {
-      key: "received",
-      label: t("admin.visa.received", "Received"),
-      value: counts.received,
-      icon: CheckCircle2,
-      onClick: () => setSection("received"),
+      key: "applied",
+      label: t("admin.visa.applied", "Visa Applied"),
+      value: counts.applied,
+      icon: FileCheck2,
+      onClick: () => setSection("applied"),
     },
   ];
 
@@ -141,40 +123,6 @@ export default function AdminVisaPage() {
       ) : (
         <div className="space-y-4">
           <KpiRow items={kpis} columns={4} />
-
-          {counts.missingArrival > 0 && (
-            <button
-              type="button"
-              onClick={() => setSection("missingArrival")}
-              className="flex w-full items-center gap-2 rounded-lg border border-[hsl(var(--status-appointment)/0.35)] bg-[hsl(var(--status-appointment)/0.08)] px-3 py-2 text-start text-xs text-foreground"
-            >
-              <CalendarOff className="h-3.5 w-3.5 text-[hsl(var(--status-appointment))]" />
-              {t(
-                "admin.visa.missingArrivalBanner",
-                "{{count}} enrolled student(s) waiting for arrival confirmation",
-                {
-                  count: counts.missingArrival,
-                },
-              )}
-            </button>
-          )}
-
-          {counts.rejected > 0 && (
-            <button
-              type="button"
-              onClick={() => setSection("rejected")}
-              className="flex w-full items-center gap-2 rounded-lg border border-[hsl(var(--status-danger)/0.35)] bg-[hsl(var(--status-danger)/0.08)] px-3 py-2 text-start text-xs text-foreground"
-            >
-              <XCircle className="h-3.5 w-3.5 text-[hsl(var(--status-danger))]" />
-              {t(
-                "admin.visa.rejectedBanner",
-                "{{count}} rejected visa application(s)",
-                {
-                  count: counts.rejected,
-                },
-              )}
-            </button>
-          )}
 
           {loading && rows.length === 0 ? (
             <LoadingState variant="rows" rows={5} />

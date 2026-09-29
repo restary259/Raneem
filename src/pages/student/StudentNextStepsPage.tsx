@@ -144,7 +144,7 @@ export default function StudentNextStepsPage() {
         });
       }
 
-      if (ownCase?.status === CaseStatus.SUBMITTED || ownCase?.status === CaseStatus.ENROLLMENT_PAID) {
+      if (ownCase?.status === CaseStatus.ENROLLMENT_PAID) {
         next.push({
           id: 'visa',
           icon: Globe,
@@ -164,6 +164,7 @@ export default function StudentNextStepsPage() {
 
   useRealtimeSubscription('documents', () => { if (userId) load(userId); }, !!userId);
   useRealtimeSubscription('appointments', () => { if (userId) load(userId); }, !!userId);
+  useRealtimeSubscription('cases', () => { if (userId) load(userId); }, !!userId);
 
   if (!userId || loading) return <DashboardLoading />;
 

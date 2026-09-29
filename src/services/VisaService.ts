@@ -507,6 +507,49 @@ export async function saveVisaNotes(
   if (error) throw error;
 }
 
+/* ───────────────── Student-owned workflow mutations ──────────────── */
+
+/**
+ * Secure student-side mutations. The database RPCs enforce case ownership,
+ * enrollment state, and the Admin-controlled status boundary.
+ */
+export async function ensureStudentVisaApplication(caseId: string): Promise<string> {
+  const { data, error } = await (supabase as any).rpc(
+    "ensure_student_visa_application",
+    { p_case_id: caseId },
+  );
+  if (error) throw error;
+  return String(data);
+}
+
+export async function markOwnVisaArrived(caseId: string): Promise<string> {
+  const { data, error } = await (supabase as any).rpc(
+    "mark_student_visa_arrived",
+    { p_case_id: caseId },
+  );
+  if (error) throw error;
+  return String(data);
+}
+
+export interface StudentVisaSubmissionResult {
+  ok: boolean;
+  status: string;
+  submitted_at: string | null;
+  already_submitted?: boolean;
+  selected_document_count?: number;
+}
+
+export async function submitStudentVisaApplication(
+  caseId: string,
+): Promise<StudentVisaSubmissionResult> {
+  const { data, error } = await (supabase as any).rpc(
+    "submit_student_visa_application",
+    { p_case_id: caseId },
+  );
+  if (error) throw error;
+  return data as StudentVisaSubmissionResult;
+}
+
 /* ──────────────────────── Signed URLs ───────────────────────── */
 
 /**

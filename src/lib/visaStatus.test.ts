@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeVisaReadiness,
   groupVisaQueue,
+  missingRequiredVisaFields,
   normalizeVisaStatus,
   visaQueueCounts,
   visaQueueSection,
@@ -30,47 +31,26 @@ describe("normalizeVisaStatus", () => {
 });
 
 describe("visaQueueSection", () => {
-  it("places an arrived, not-applied student in Ready (scenario 1)", () => {
-    expect(visaQueueSection(row({}))).toBe("ready");
+  it("keeps an enrolled student pending before Visa submission", () => {
+    expect(visaQueueSection(row({}))).toBe("pending");
+    expect(visaQueueSection(row({ actual_arrival: null }))).toBe("pending");
   });
 
-  it("places an enrolled student with no arrival in Missing Arrival (scenario 2)", () => {
-    expect(visaQueueSection(row({ actual_arrival: null }))).toBe(
-      "missingArrival",
-    );
+  it("moves submitted applications to Visa Applied", () => {
+    expect(visaQueueSection(row({ visa_status: "applied" }))).toBe("applied");
+    expect(
+      visaQueueSection(row({ visa_status: "not_applied", visa_applied_at: "2026-09-29T12:00:00.000Z" })),
+    ).toBe("applied");
   });
 
-  it("places a student with no account in Missing Arrival", () => {
-    expect(visaQueueSection(row({ student_user_id: null }))).toBe(
-      "missingArrival",
-    );
+  it("does not use arrival as a queue gate", () => {
+    expect(visaQueueSection(row({ actual_arrival: null, visa_status: "not_applied" }))).toBe("pending");
   });
 
-  it("routes application progress out of the arrival buckets", () => {
-    expect(
-      visaQueueSection(row({ visa_status: "applied", actual_arrival: null })),
-    ).toBe("inProgress");
-    expect(
-      visaQueueSection(row({ visa_status: "approved", actual_arrival: null })),
-    ).toBe("approved");
-    expect(
-      visaQueueSection(row({ visa_status: "rejected", actual_arrival: null })),
-    ).toBe("rejected");
-    expect(
-      visaQueueSection(row({ visa_status: "received", actual_arrival: null })),
-    ).toBe("received");
-  });
-
-  it("completion never depends on a case status change", () => {
-    // The row shape has no `status` field at all — the queue is enrollment_paid
-    // by construction, and received is a purely visa-side terminal state.
-    expect(
-      visaQueueSection({
-        student_user_id: "s",
-        actual_arrival: null,
-        visa_status: "received",
-      }),
-    ).toBe("received");
+  it("keeps all downstream Visa statuses in the Applied queue", () => {
+    expect(visaQueueSection(row({ visa_status: "approved" }))).toBe("applied");
+    expect(visaQueueSection(row({ visa_status: "rejected" }))).toBe("applied");
+    expect(visaQueueSection(row({ visa_status: "received" }))).toBe("applied");
   });
 });
 
@@ -84,24 +64,13 @@ describe("groupVisaQueue / visaQueueCounts", () => {
 
   it("groups without losing rows", () => {
     const grouped = groupVisaQueue(rows);
-    expect(grouped.ready).toHaveLength(1);
-    expect(grouped.missingArrival).toHaveLength(1);
-    expect(grouped.inProgress).toHaveLength(1);
-    expect(grouped.received).toHaveLength(1);
-    expect(grouped.approved).toHaveLength(0);
+    expect(grouped.pending).toHaveLength(2);
+    expect(grouped.applied).toHaveLength(2);
     expect(Object.values(grouped).flat()).toHaveLength(rows.length);
   });
 
   it("counts mirror the grouping", () => {
-    const counts = visaQueueCounts(rows);
-    expect(counts).toEqual({
-      ready: 1,
-      inProgress: 1,
-      approved: 0,
-      rejected: 0,
-      received: 1,
-      missingArrival: 1,
-    });
+    expect(visaQueueCounts(rows)).toEqual({ pending: 2, applied: 2 });
   });
 });
 
@@ -149,6 +118,16 @@ describe("computeVisaReadiness", () => {
       "health_insurance",
     ]);
     expect(r.missingDocuments).toBe(2);
+  });
+
+  it("finds only active required, non-status fields that are missing", () => {
+    const fields: ReadinessFieldLike[] = [
+      { id: "r1", field_key: "address_abroad", field_type: "text", is_required: true },
+      { id: "r2", field_key: "passport_number", field_type: "text", is_required: true },
+      { id: "r3", field_key: "visa_status", field_type: "select", is_required: true },
+      { id: "r4", field_key: "optional_note", field_type: "text", is_required: false },
+    ];
+    expect(missingRequiredVisaFields(fields, { r1: "Wilhelmshaven" })).toEqual(["passport_number"]);
   });
 
   it("ignores inactive fields", () => {
