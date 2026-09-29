@@ -2662,3 +2662,40 @@ only the frontend reachability was broken.
   names the utility (this bit the first version of the guard). Verified
   non-vacuous by reintroducing each defect.
 
+## Admin Overview: no Recent Activity (2026-09-29)
+- The Admin Overview is the **Command Center** (`/admin` →
+  `src/pages/admin/AdminCommandCenter.tsx`). Its "Recent Activity" card was
+  removed there only (commit `a54badca`): the card, its `ActivityEntry`
+  interface, its `activity_log` select (`.limit(10)`), its `activityError`
+  flag, its `activity` state, its `formatTime` use site and its
+  `useRealtimeSubscription('activity_log', …)` are all gone. The remaining
+  sections are KPI tiles → Cash Collection → Action queues; nothing was left
+  behind (no empty container, gap, or placeholder).
+- **The feature was NOT deleted globally.** The Live Activity Feed is its own
+  page, `src/pages/admin/AdminActivityPage.tsx` (`/admin/activity`,
+  `src/routes/admin.activity.tsx`), still linked from the admin sidebar
+  (`nav.activity` in `DashboardLayout.tsx`) and the mobile "More" sheet
+  (`MobileBottomNav.tsx`). It still does `.from('activity_log')` +
+  `useRealtimeSubscription('activity_log', …)` with its own pagination
+  (PAGE_SIZE 50, load-more), search filter and entity colour map — unchanged.
+- **There is no shared Overview/Settings activity component** and Admin Settings
+  never had a Recent Activity section. The Settings page only touches
+  `activity_log` as a *data-reset category* (`RESET_CATEGORIES`, id
+  `activity`, tables `["activity_log"]`) — that is deliberate and must stay.
+  The orphaned `admin.commandCenter.{recentActivity,noActivity,activityLoadError}`
+  locale keys remain in en/ar/he (the `i18nKeys.test.ts` parity guard only
+  flags MISSING keys, not orphans) — leaving them is non-breaking; the
+  `admin.activity.*` keys (`title`/`search`/`noActivity`) are still live.
+- **Guarded** by `src/lib/adminOverviewActivityGuard.test.ts` (5 source-scan
+  cases) and a render assertion in
+  `src/pages/admin/__tests__/AdminCommandCenterCash.test.tsx` (the page never
+  queries or subscribes to `activity_log`, and shows no leftover placeholder).
+  Both verified non-vacuous by reintroducing the card (fails 2 of 5 source
+  checks + the render check).
+- Verification (this repo, with `bun install --frozen-lockfile`): `npx tsc
+  --noEmit` clean; `npx vitest run` 1685 passed | 1 skipped (107 files);
+  `npm run build` clean. `npx eslint .` remains red with ~35k **pre-existing**
+  repo-wide errors (`continue-on-error: true` in CI); the removal actually
+  *reduced* `AdminCommandCenter.tsx` from 184 → 167 errors (the remaining ones
+  are pre-existing prettier formatting + `no-explicit-any`). Never run
+  `eslint --fix` on that file in an unrelated PR.
