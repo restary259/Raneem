@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeVisaReadiness,
   groupVisaQueue,
+  missingRequiredVisaDocuments,
   missingRequiredVisaFields,
   normalizeVisaStatus,
   visaQueueCounts,
@@ -118,6 +119,25 @@ describe("computeVisaReadiness", () => {
       "health_insurance",
     ]);
     expect(r.missingDocuments).toBe(2);
+  });
+
+  it("finds missing required proof documents from configured fields", () => {
+    const fields: ReadinessFieldLike[] = [
+      { id: "bank", field_key: "bank_statement", field_type: "boolean", is_required: true },
+      { id: "ins", field_key: "health_insurance", field_type: "boolean", is_required: true },
+      { id: "optional", field_key: "accommodation_proof", field_type: "boolean", is_required: false },
+    ];
+    expect(
+      missingRequiredVisaDocuments(
+        fields,
+        { bank: "false", ins: "false" },
+        [
+          { id: "d1", category: "financial" },
+          { id: "d2", category: "other" },
+        ],
+        new Set(["d1"]),
+      ),
+    ).toEqual(["health_insurance"]);
   });
 
   it("finds only active required, non-status fields that are missing", () => {
