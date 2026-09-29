@@ -87,6 +87,47 @@ describe("DialogContent export contract", () => {
   });
 });
 
+describe("Dialog displayName contract", () => {
+  /**
+   * `f03c73d` also wrote `DialogDescription.displayName =
+   * DialogDescription.displayName` — an assignment of a binding to itself.
+   * Being a live binding, the reference read happens BEFORE the write, so it
+   * throws a TypeError at module evaluation. Neither `tsc` (the type is
+   * non-undefined) nor the test suite catches it, because the suite mocks every
+   * dialog-consuming module. `eslint` DOES flag it (`no-self-assign`), but the
+   * repo's lint step is `continue-on-error: true`, so nothing blocks it.
+   *
+   * Asserting `displayName` is wired to the RADIX primitive (not to itself) is
+   * the cheap structural fence for this whole error class.
+   */
+  it("never assigns a displayName to itself", () => {
+    const selfAssigns = [
+      ...source.matchAll(/^(\w+)\.displayName = \1\.displayName;$/gm),
+    ].map((m) => m[1]);
+    expect(selfAssigns).toEqual([]);
+  });
+
+  it("syncs DialogDescription.displayName from the Radix primitive", () => {
+    expect(source).toContain(
+      "DialogDescription.displayName = DialogPrimitive.Description.displayName;",
+    );
+  });
+
+  it("syncs each forwarded component's displayName from its primitive", () => {
+    for (const name of [
+      "DialogOverlay",
+      "DialogContent",
+      "DialogTitle",
+      "DialogDescription",
+    ]) {
+      expect(source).toContain(`${name}.displayName = DialogPrimitive.`);
+    }
+    for (const name of ["DialogHeader", "DialogFooter"]) {
+      expect(source).toContain(`${name}.displayName = "${name}";`);
+    }
+  });
+});
+
 describe("DialogContent mobile width contract", () => {
   it("keeps the mobile viewport clamp on max-width", () => {
     expect(baseClasses()).toContain("max-w-[calc(100vw-1rem)]");

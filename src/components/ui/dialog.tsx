@@ -104,7 +104,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description ref={ref} className={cn("min-w-0 max-w-full break-words text-sm text-muted-foreground", className)} {...props} />
 ));
-DialogDescription.displayName = DialogDescription.displayName;
+DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
 export {
   Dialog,

@@ -2580,11 +2580,33 @@ only the frontend reachability was broken.
 ## Dialog primitive: mobile width + export-completeness guards (2026-09-29)
 - **`DialogContent` must stay in `dialog.tsx`'s export block.** Commit `f03c73d`
   (#128) removed it while leaving the component defined above, so the file read
-  correctly but every importer got `undefined`: the production build failed with
-  **34 `MISSING_EXPORT` errors** and **20 unit tests** failed, and `main`'s
-  `quality` workflow went red. `vite` transforms that module, so `tsc` does NOT
-  catch a missing export here — only the build/tests do. Guarded by
-  `src/components/ui/__tests__/dialogContent.contract.test.ts`.
+  correctly but every importer got `undefined`. Measured on `origin/main`:
+  `vite build` fails with **34 `MISSING_EXPORT` errors** (rolldown prints the
+  total in its header and details only the first 5), **24 unit tests** fail
+  across 5 files, and `main`'s `quality` workflow is red.
+- **Correction to a claim this note previously made:** `tsc` DOES catch it.
+  `npx tsc --noEmit` (the root `tsconfig.json`, which actually covers `src/**`)
+  reports `TS2459: Module '…/dialog' declares 'DialogContent' locally, but it is
+  not exported` across ~34 files. The earlier "tsc does not catch it" was wrong;
+  the real reason CI missed it is that **`package.json`'s `build` script is only
+  `vite build` — there is no `tsc` in the build or in the `quality` job**, so
+  typechecking never runs. Do not rely on `--noEmit` being wired up; it is a gate
+  you have to run by hand.
+- **`f03c73d` also introduced `DialogDescription.displayName =
+  DialogDescription.displayName`** — a self-assignment. As a live binding the
+  read precedes the write, so it throws `TypeError` at module evaluation. It
+  survives `tsc` (the binding's type is non-`undefined`) and the whole vitest
+  suite, because every dialog-consuming test file mocks the dialog module.
+  `eslint` flags it (`no-self-assign`) but the `quality` job runs lint with
+  `continue-on-error: true`, so it blocks nothing. Fixed; guarded.
+- Guarded by `src/components/ui/__tests__/dialogContent.contract.test.ts`, which
+  asserts (a) every declared `forwardRef` component is exported, (b) no
+  `displayName` is assigned to itself and each is wired to its Radix primitive,
+  and (c) the mobile grid-item rule is present, `max-sm`-scoped, and read from
+  the base class literal. Assert on **the class literal**, not the whole file — a
+  naive `source.toContain(...)` is vacuous because the explanatory comment also
+  names the utility (this bit the first version of the guard). Verified
+  non-vacuous by reintroducing each defect.
 - **A dialog's single implicit `grid` track sizes to the largest MIN-CONTENT
   contribution of its children.** With a wide child (the Admin Submissions
   `w-max` six-trigger tab strip) the track inflated to ~524px inside a 359px
