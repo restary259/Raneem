@@ -781,7 +781,15 @@
       "splitCustomRate": "Custom rate for this account",
       "splitGlobalRate": "Global default rate",
       "splitAgentRecruit": "Recruitment share — paid on top of the partner commission",
-      "splitMarginWarning": "Payouts exceed the net service fee for this case — platform revenue will be ₪0."
+      "splitMarginWarning": "Payouts exceed the net service fee for this case — platform revenue will be ₪0.",
+      "tabs": {
+        "overview": "Overview",
+        "profile": "Profile",
+        "program": "Program & Accommodation",
+        "finance": "Finance",
+        "invoice": "Invoice",
+        "documents": "Documents"
+      }
     },
     "financials": {
       "title": "Financial Dashboard",
