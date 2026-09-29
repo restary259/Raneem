@@ -329,6 +329,38 @@ BEGIN
    AND vfv.student_user_id = v_student
   WHERE vf.is_active = true;
 
+  -- Required proof documents are driven only by active, required boolean
+  -- Visa fields whose existing field_key maps to a proof category. A true
+  -- field value also satisfies the proof, matching computeVisaReadiness().
+  IF EXISTS (
+    SELECT 1
+    FROM public.visa_fields vf
+    LEFT JOIN public.visa_field_values vfv
+      ON vfv.field_id = vf.id
+     AND vfv.student_user_id = v_student
+    WHERE vf.is_active = true
+      AND vf.is_required = true
+      AND vf.field_type = 'boolean'
+      AND vf.field_key IN ('bank_statement', 'health_insurance', 'accommodation_proof')
+      AND COALESCE(vfv.value, '') <> 'true'
+      AND NOT EXISTS (
+        SELECT 1
+        FROM public.visa_application_documents vad
+        JOIN public.documents d ON d.id = vad.document_id
+        WHERE vad.visa_application_id = v_application.id
+          AND d.student_id = v_student
+          AND d.deleted_at IS NULL
+          AND d.category =
+            CASE vf.field_key
+              WHEN 'bank_statement' THEN 'financial'
+              WHEN 'health_insurance' THEN 'insurance'
+              WHEN 'accommodation_proof' THEN 'housing'
+            END
+      )
+  ) THEN
+    RAISE EXCEPTION 'Missing required Visa documents';
+  END IF;
+
   SELECT COALESCE(
     jsonb_agg(vad.document_id ORDER BY vad.created_at),
     '[]'::jsonb
