@@ -438,9 +438,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
         if (proofError) {
           toast({
             variant: "destructive",
-            description: proofError === "tooLong"
-              ? t("finance.receipt.tooLong", "The transfer reference is too long.")
-              : t("finance.receipt.required", "For a bank transfer, add the transfer reference or upload the receipt."),
+            description: t("finance.receipt.tooLong", "The transfer reference is too long."),
           });
           return;
         }
