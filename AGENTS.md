@@ -2402,3 +2402,6 @@ indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
   canonical/`og:url` on every public route, and a matching ItemList count.
 
 
+
+## DARB payment proof + wire memo (2026-09-29)
+- DARB fee stays one full payment. `confirm_agency_service_payment(case, method, p_reference, p_receipt_path)`: bank transfer requires reference or receipt under `cases/<caseId>/receipts/` (server-enforced). Wire memo reference = `cases.case_reference`, shown on Finance tab, student Fees, invoice page/PDF/email. Germany block is a collapsible "Step 2".

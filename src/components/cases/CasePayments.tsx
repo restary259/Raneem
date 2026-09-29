@@ -54,6 +54,15 @@ const CasePayments: React.FC<Props> = ({
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
 
+  const openReceipt = async (path: string) => {
+    const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) {
+      toast({ variant: "destructive", description: t("finance.receipt.openFailed", "Unable to open the receipt.") });
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
   const [busyId, setBusyId] = useState<string | null>(null);
 
   /**
@@ -304,6 +313,22 @@ const CasePayments: React.FC<Props> = ({
                         ? ` · ${payment.note}`
                         : ""}
                     </p>
+
+                    {(payment.reference || payment.receipt_path) && (
+                      <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        {payment.reference && (
+                          <span>
+                            {t("finance.receipt.reference", "Transfer reference")}:{" "}
+                            <span className="font-mono" dir="ltr">{payment.reference}</span>
+                          </span>
+                        )}
+                        {payment.receipt_path && (
+                          <button type="button" className="text-primary underline" onClick={() => void openReceipt(payment.receipt_path!)}>
+                            {t("finance.receipt.view", "View receipt")}
+                          </button>
+                        )}
+                      </p>
+                    )}
 
                     {/* Confirmed */}
                                           {payment.status ===

@@ -22,6 +22,10 @@ import CaseServices, { type CaseServicesHandle } from "./CaseServices";
 import CasePayments from "./CasePayments";
 import { formatDateTime } from "@/utils/dateUtils";
 import { toneClasses } from "@/lib/statusTokens";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { CopyButton } from "@/components/common/CopyButton";
+import { agencyPaymentProofError, receiptStoragePath } from "@/lib/agencyPaymentProof";
+import { validateUploadFile } from "@/lib/uploadRules";
 
 interface Props {
   caseId: string;
@@ -145,6 +149,8 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
   /** Payment method selected by the team before confirming the DARB agency payment. */
   const [paymentMethod, setPaymentMethod] = useState<string>("bank_transfer");
+  const [transferReference, setTransferReference] = useState("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   /** Live (unsaved) service selection from CaseServices, used to show the
    *  pending total in the summary before "Confirm & Save" persists it. */
@@ -427,9 +433,33 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
 
       // 2. Confirm the DARB agency payment (also advances the case stage).
       if (!agencyConfirmed && canManage && serviceTotal > 0) {
+        const method = paymentMethod || "bank_transfer";
+        const proofError = agencyPaymentProofError(method, transferReference, !!receiptFile);
+        if (proofError) {
+          toast({
+            variant: "destructive",
+            description: proofError === "tooLong"
+              ? t("finance.receipt.tooLong", "The transfer reference is too long.")
+              : t("finance.receipt.required", "For a bank transfer, add the transfer reference or upload the receipt."),
+          });
+          return;
+        }
+        let receiptPath: string | null = null;
+        if (method === "bank_transfer" && receiptFile) {
+          const fileError = validateUploadFile(receiptFile);
+          if (fileError) {
+            toast({ variant: "destructive", description: fileError });
+            return;
+          }
+          receiptPath = receiptStoragePath(caseId, receiptFile.name);
+          const { error: upErr } = await supabase.storage.from("student-documents").upload(receiptPath, receiptFile);
+          if (upErr) throw upErr;
+        }
         const { error } = await (supabase as any).rpc("confirm_agency_service_payment", {
           p_case_id: caseId,
-          p_payment_method: paymentMethod || "bank_transfer",
+          p_payment_method: method,
+          p_reference: method === "bank_transfer" ? transferReference.trim() || null : null,
+          p_receipt_path: receiptPath,
         });
         if (error) throw error;
         toast({
@@ -597,6 +627,26 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                       </label>
                     </div>
                   </RadioGroup>
+                  {financials?.case_reference && (
+                    <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-xs">
+                      <span className="text-muted-foreground">{t("finance.memo.label", "Payment reference (transfer memo)")}:</span>
+                      <span className="font-mono font-semibold" dir="ltr">{financials.case_reference}</span>
+                      <CopyButton value={financials.case_reference} />
+                    </div>
+                  )}
+                  {paymentMethod === "bank_transfer" && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="pm-ref" className="text-xs">{t("finance.receipt.reference", "Transfer reference")}</Label>
+                        <Input id="pm-ref" dir="ltr" maxLength={100} value={transferReference} onChange={(e) => setTransferReference(e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="pm-receipt" className="text-xs">{t("finance.receipt.upload", "Receipt (PDF or image)")}</Label>
+                        <Input id="pm-receipt" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic" onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)} />
+                      </div>
+                      <p className="text-xs text-muted-foreground sm:col-span-2">{t("finance.receipt.hint", "Add the transfer reference or upload the receipt — at least one is required.")}</p>
+                    </div>
+                  )}
                 </div>
               )
             )}
@@ -814,6 +864,13 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
               </div>
             </div>
 
+            {schoolCosts.length > 0 && (
+            <Collapsible defaultOpen={["submitted", "enrollment_paid", "enrolled"].includes(caseStatus ?? "")} className="rounded-md border">
+              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 p-3 text-sm font-semibold">
+                <span>{t("finance.step2.title", "Germany costs & payments")}</span>
+                <Badge variant="secondary">{t("finance.step2.badge", "Step 2 · After admission")}</Badge>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 p-3 pt-0">
             {/* Germany / School costs (EUR) — estimates, never mixed with ILS. */}
             {schoolCosts.length > 0 && (
               <div className="space-y-3 rounded-md border p-4">
@@ -975,6 +1032,10 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   );
                 })}
               </div>
+            )}
+
+              </CollapsibleContent>
+            </Collapsible>
             )}
 
             {/* Payment history — the single place payment records live. */}

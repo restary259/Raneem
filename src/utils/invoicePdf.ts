@@ -157,7 +157,7 @@ export async function downloadInvoicePdf(
     y += 17;
   }
 
-  const noteText = setText(L.separationNote, 8, false, MUTED);
+  const noteText = setText((meta.caseReference ? `${L.memoNote} ${meta.caseReference} — ` : "") + L.separationNote, 8, false, MUTED);
   const noteLines = doc.splitTextToSize(noteText, contentWidth - 10);
   const noteHeight = Math.max(16, noteLines.length * 4.5 + 8);
   if (y + noteHeight + 16 > 278) {
