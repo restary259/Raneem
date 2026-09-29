@@ -437,6 +437,20 @@ serve(async (req) => {
     }
 
     if (action === "send") {
+      // Master switch: while WhatsApp sending is off, nothing leaves the
+      // platform - manual staff sends, follow-ups and campaigns alike.
+      {
+        const { data: sendSettings } = await admin
+          .from("platform_settings")
+          .select("whatsapp_sending_enabled")
+          .limit(1)
+          .maybeSingle();
+        const sendingOn = (sendSettings as { whatsapp_sending_enabled?: boolean } | null)?.whatsapp_sending_enabled === true;
+        if (!sendingOn) {
+          return json({ error: "WhatsApp sending is switched off" }, 409, corsHeaders);
+        }
+      }
+
       const conversationId = String(input?.conversation_id ?? "");
       if (!conversationId) return json({ error: "Conversation is required" }, 400, corsHeaders);
       const campaignRecipientId = input?.campaign_recipient_id ? String(input.campaign_recipient_id) : null;
