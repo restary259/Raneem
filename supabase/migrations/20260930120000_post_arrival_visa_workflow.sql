@@ -175,7 +175,15 @@ BEGIN
     cs.enrollment_paid_at,
     p.arrival_date,
     va.arrived_in_germany_at,
-    COALESCE(vfv.value, 'not_applied')          AS visa_status,
+    COALESCE((
+      SELECT vfv.value
+      FROM public.visa_fields vf
+      JOIN public.visa_field_values vfv ON vfv.field_id = vf.id
+      WHERE vf.field_key = 'visa_status'
+        AND vfv.student_user_id = c.student_user_id
+      ORDER BY vf.display_order, vf.created_at
+      LIMIT 1
+    ), 'not_applied')                        AS visa_status,
     COALESCE(va.visa_applied_at, cs.enrollment_paid_at) AS visa_applied_at,
     va.id,
     COALESCE(dc.document_count, 0)::integer,
@@ -187,9 +195,6 @@ BEGIN
   LEFT JOIN public.profiles ap           ON ap.id = c.assigned_to
   LEFT JOIN public.case_submissions cs   ON cs.case_id = c.id
   LEFT JOIN public.visa_applications va  ON va.case_id = c.id
-  LEFT JOIN public.visa_fields vf        ON vf.field_key = 'visa_status'
-  LEFT JOIN public.visa_field_values vfv ON vfv.field_id = vf.id
-                                        AND vfv.student_user_id = c.student_user_id
   LEFT JOIN LATERAL (
     SELECT count(*) AS document_count
     FROM public.documents d
