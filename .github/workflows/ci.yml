@@ -43,7 +43,16 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Typecheck and build
+      # Its own step, and deliberately NON-optional. `npm run build` is only
+      # `vite build` — it type-strips without checking types, so a file may
+      # declare something and fail to export it (or assign a binding to itself)
+      # and still produce a bundle. `main` shipped exactly that in f03c73d:
+      # `DialogContent` was dropped from dialog.tsx's export list, which broke
+      # the build for every importer. Keep this step, and keep it blocking.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
         run: npm run build
 
       - name: Verify Lovable Cloud build binding
