@@ -737,7 +737,7 @@ export default function CaseDetailPage() {
           </div>
 
           {/* Panels stay mounted (hidden via CSS) so in-progress state — a draft
-              profile or a ticked receipt checkbox — survives tab switching. */}
+              profile or a pending payment selection — survives tab switching. */}
           <div className={cn("space-y-3", activeView !== "overview" && "hidden")}>
             <CaseOverviewPanel caseData={caseData} />
           </div>
