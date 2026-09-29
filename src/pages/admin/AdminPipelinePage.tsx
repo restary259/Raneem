@@ -530,7 +530,7 @@ const AdminPipelinePage = () => {
 
   /* ════════════════════════ render ════════════════════════ */
   return (
-    <div className="p-6 space-y-4 max-w-full">
+    <div className="w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-6 space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <h1 className="text-2xl font-bold text-foreground">{t("admin.pipeline.title", "Application Pipeline")}</h1>
@@ -541,8 +541,8 @@ const AdminPipelinePage = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[200px]">
+      <div className="w-full min-w-0 flex flex-wrap gap-2.5 sm:gap-3">
+        <div className="relative w-full min-w-0 sm:flex-1 sm:min-w-0">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t("admin.pipeline.searchPlaceholder", "Search by name or phone...")}
@@ -552,7 +552,7 @@ const AdminPipelinePage = () => {
           />
         </div>
         <Select value={filterTeam} onValueChange={setFilterTeam}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full sm:w-[220px] max-w-full">
             <SelectValue placeholder="Filter by team member" />
           </SelectTrigger>
           <SelectContent>
@@ -568,8 +568,8 @@ const AdminPipelinePage = () => {
       </div>
 
       {/* ── Kanban ── */}
-      <div className="overflow-x-auto pb-4">
-        <div className="flex gap-4 min-w-max">
+      <div className="w-full min-w-0 overflow-x-auto overscroll-x-contain pb-4">
+        <div className="flex w-max min-w-max gap-3 sm:gap-4">
           {boardStatuses.map(({ key: status }) => {
             const allStatusCases = getCasesForStatus(status);
             const shown = colLimits[status] ?? COLUMN_PAGE_SIZE;
