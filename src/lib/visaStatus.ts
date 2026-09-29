@@ -97,6 +97,22 @@ export interface ReadinessDocumentLike {
   category: string;
 }
 
+/** Return configured, active required Visa fields that are still unanswered. */
+export function missingRequiredVisaFields(
+  fields: ReadinessFieldLike[],
+  values: Record<string, string>,
+): string[] {
+  return fields
+    .filter(
+      (f) =>
+        f.is_active !== false &&
+        f.is_required === true &&
+        f.field_key !== "visa_status" &&
+        (values[f.id] ?? "").trim() === "",
+    )
+    .map((f) => f.field_key);
+}
+
 export interface VisaReadiness {
   /** Non-empty answers / total active visa fields. */
   fieldsFilled: number;
