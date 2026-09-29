@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, Activity, RefreshCw, Clock, Banknote, Landmark } from 'lucide-react';
+import { AlertTriangle, Users, ClipboardCheck, CheckCircle2, RefreshCw, Clock, Banknote, Landmark } from 'lucide-react';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useNavigate } from '@/lib/router-compat';
 import { isActiveStatus } from '@/lib/caseStatus';
@@ -18,14 +18,6 @@ interface CaseCounts {
   enrollment_paid: number;
   forgotten: number;
   sla_breaches: number;
-}
-
-interface ActivityEntry {
-  id: string;
-  actor_name: string | null;
-  action: string;
-  entity_type: string;
-  created_at: string;
 }
 
 interface QueueRow {
@@ -66,18 +58,13 @@ const AdminCommandCenter = () => {
   // summary queries, so they all fire together instead of in two waves.
   const fetchAll = useCallback(async () => {
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
-    const [casesResult, activityResult, forgottenResult, reviewRes, unassignedRes, failRes, attributionRes] =
+    const [casesResult, forgottenResult, reviewRes, unassignedRes, failRes, attributionRes] =
       await Promise.allSettled([
         supabase
           .from('cases')
           .select('status, last_activity_at, created_at')
           .is('deleted_at', null)
           .eq('archived', false),
-        supabase
-          .from('activity_log')
-          .select('id, actor_name, action, entity_type, created_at')
-          .order('created_at', { ascending: false })
-          .limit(10),
         supabase.rpc('get_forgotten_cases'),
         supabase
           .from('cases')
@@ -112,7 +99,6 @@ const AdminCommandCenter = () => {
       r.status === 'rejected' ? true : Boolean(r.value.error);
 
     const cases = val<any>(casesResult as PromiseSettledResult<{ data: any[] | null; error: unknown }>);
-    const activityData = val<ActivityEntry>(activityResult as PromiseSettledResult<{ data: ActivityEntry[] | null; error: unknown }>);
     const forgottenData = val<any>(forgottenResult as PromiseSettledResult<{ data: any[] | null; error: unknown }>);
 
     // SLA breach detection — central policy, not page-local thresholds
@@ -129,11 +115,9 @@ const AdminCommandCenter = () => {
         forgotten: forgottenData.length || 0,
         sla_breaches: slaBreaches.length || 0,
       } as CaseCounts,
-      activity: activityData,
       // Distinguish "failed to load" from "genuinely empty" so a DB error never
       // renders as an empty queue or a zeroed KPI.
       countsError: failed(casesResult as PromiseSettledResult<{ error: unknown }>) || failed(forgottenResult as PromiseSettledResult<{ error: unknown }>),
-      activityError: failed(activityResult as PromiseSettledResult<{ error: unknown }>),
       queueErrors: {
         review: failed(reviewRes as PromiseSettledResult<{ error: unknown }>),
         unassigned: failed(unassignedRes as PromiseSettledResult<{ error: unknown }>),
@@ -197,13 +181,11 @@ const AdminCommandCenter = () => {
   });
 
   const counts: CaseCounts = data?.counts ?? { total: 0, submitted: 0, enrollment_paid: 0, forgotten: 0, sla_breaches: 0 };
-  const activity: ActivityEntry[] = data?.activity ?? [];
   const awaitingReview = data?.awaitingReview ?? [];
   const unassigned = data?.unassigned ?? [];
   const authFailures = data?.authFailures ?? [];
   const attributionIssues = data?.attributionIssues ?? [];
   const countsError = data?.countsError ?? false;
-  const activityError = data?.activityError ?? false;
   const queueErrors = data?.queueErrors ?? {};
   const loading = isPending;
 
@@ -211,7 +193,6 @@ const AdminCommandCenter = () => {
   const fetchCash = useCallback(() => { void refetchCash(); }, [refetchCash]);
 
   useRealtimeSubscription('cases', fetchData, true);
-  useRealtimeSubscription('activity_log', fetchData, true);
   useRealtimeSubscription('case_payments', fetchCash, true);
 
   const cashTotal = cashCollections.reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
@@ -445,44 +426,6 @@ const AdminCommandCenter = () => {
                       {t('admin.commandCenter.open', 'Open')}
                     </Button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" />
-            {t('admin.commandCenter.recentActivity', 'Recent Activity')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {activityError ? (
-            <p className="text-sm text-destructive text-center py-8">
-              {t('admin.commandCenter.activityLoadError', 'Unable to load recent activity')}
-            </p>
-          ) : activity.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              {t('admin.commandCenter.noActivity', 'No recent activity')}
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {activity.map((entry) => (
-                <div key={entry.id} className="flex items-start gap-3 py-2 border-b border-border/50 last:border-0">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground break-words">
-                      <span className="font-medium">{entry.actor_name || t('admin.commandCenter.system', 'System')}</span>
-                      {' — '}
-                      <span className="text-muted-foreground">{entry.action}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{formatTime(entry.created_at)}</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs shrink-0 max-w-[40%] truncate" title={entry.entity_type}>{entry.entity_type}</Badge>
                 </div>
               ))}
             </div>
