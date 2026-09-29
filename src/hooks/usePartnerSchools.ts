@@ -9,6 +9,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 const db = supabase as any;
 
+/** A partner school is hidden when its linked admin Programs school is paused. */
+export function visiblePartnerSchools<T extends { catalog_school_id: string | null }>(
+  rows: T[],
+  pausedIds: Set<string>,
+): T[] {
+  return rows.filter((r) => !r.catalog_school_id || !pausedIds.has(r.catalog_school_id));
+}
+
+async function pausedCatalogIds(ids: (string | null)[]): Promise<Set<string>> {
+  const list = ids.filter((id): id is string => !!id);
+  if (list.length === 0) return new Set();
+  const { data, error } = await db.from("schools").select("id").in("id", list).eq("is_active", false);
+  if (error) throw error;
+  return new Set((data ?? []).map((r: { id: string }) => r.id));
+}
+
 export interface PartnerCountry {
   id: string;
   slug: string;
@@ -85,7 +101,9 @@ export function usePartnerCountries(): State<{ countries: PartnerCountry[]; scho
         if (cancelled) return;
         if (c.error) throw c.error;
         if (s.error) throw s.error;
-        setData({ countries: c.data ?? [], schools: s.data ?? [] });
+        const paused = await pausedCatalogIds((s.data ?? []).map((r: PartnerSchoolRow) => r.catalog_school_id));
+        if (cancelled) return;
+        setData({ countries: c.data ?? [], schools: visiblePartnerSchools(s.data ?? [], paused) });
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Failed to load partner schools");
@@ -120,6 +138,8 @@ export function usePartnerSchoolDetail(slug: string | undefined, year?: number):
         if (schoolRes.error) throw schoolRes.error;
         const school = schoolRes.data as PartnerSchoolRow | null;
         if (!school) throw new Error("School not found");
+        const paused = await pausedCatalogIds([school.catalog_school_id]);
+        if (visiblePartnerSchools([school], paused).length === 0) throw new Error("School not found");
 
         let versionQuery = db.from("school_price_versions").select("*").eq("school_id", school.id);
         versionQuery = year ? versionQuery.eq("year", year) : versionQuery.eq("is_current", true);
