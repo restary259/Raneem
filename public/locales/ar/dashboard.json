@@ -1671,7 +1671,11 @@
         "accommodation_proof": "إثبات سكن",
         "passport_number": "جواز السفر",
         "passport_expiry": "انتهاء صلاحية الجواز"
-      }
+      },
+      "pending": "قيد الانتظار",
+      "applied": "التأشيرة مقدَّمة",
+      "emptyPending": "لا يوجد طلاب مسجّلون بانتظار ملف التأشيرة.",
+      "emptyApplied": "لم يتم تقديم أي ملف تأشيرة للإدارة."
     }
   },
   "influencer": {
@@ -3491,7 +3495,19 @@
     "eyeColor": "لون العينين",
     "accommodationProof": "إثبات سكن",
     "bankStatement": "كشف حساب بنكي",
-    "healthInsurance": "تأمين صحي"
+    "healthInsurance": "تأمين صحي",
+    "submitTitle": "تقديم للإدارة",
+    "submitHint": "املأ بياناتك وارفع مستنداتك ثم قدّم الملف حتى يكمل فريقنا إجراءات التأشيرة.",
+    "submitAction": "تقديم للإدارة",
+    "submitted": "تم التقديم",
+    "submittedOn": "تم التقديم في",
+    "submittedToast": "تم تقديم ملف التأشيرة إلى الإدارة.",
+    "alreadySubmitted": "تم تقديم ملف التأشيرة مسبقًا.",
+    "arrivalTitle": "الوصول إلى ألمانيا",
+    "arrivalHint": "أكّد بعد وصولك إلى ألمانيا.",
+    "arrivedOn": "تم التأكيد في",
+    "confirmArrival": "تأكيد الوصول",
+    "arrivedToast": "تم تأكيد الوصول."
   },
   "contacts": {
     "title": "جهات اتصال مهمة",

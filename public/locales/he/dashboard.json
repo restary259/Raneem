@@ -1444,7 +1444,19 @@
     "eyeColor": "צבע עיניים",
     "accommodationProof": "הוכחת דיור",
     "bankStatement": "דף חשבון בנק",
-    "healthInsurance": "ביטוח בריאות"
+    "healthInsurance": "ביטוח בריאות",
+    "submitTitle": "הגשה למנהל",
+    "submitHint": "מלאו את הפרטים והעלו מסמכים, ואז הגישו כדי שהצוות שלנו יוכל להשלים את בקשת הוויזה.",
+    "submitAction": "הגשה למנהל",
+    "submitted": "הוגש",
+    "submittedOn": "הוגש בתאריך",
+    "submittedToast": "קובץ הוויזה הוגש למנהל.",
+    "alreadySubmitted": "קובץ הוויזה כבר הוגש.",
+    "arrivalTitle": "הגעה לגרמניה",
+    "arrivalHint": "אשרו לאחר שהגעתם לגרמניה.",
+    "arrivedOn": "אושר בתאריך",
+    "confirmArrival": "אישור הגעה",
+    "arrivedToast": "ההגעה אושרה."
   },
   "documents": {
     "title": "המסמכים שלי",
@@ -5533,7 +5545,11 @@
         "accommodation_proof": "הוכחת דיור",
         "passport_number": "דרכון",
         "passport_expiry": "תוקף דרכון"
-      }
+      },
+      "pending": "ממתין",
+      "applied": "ויזה הוגשה",
+      "emptyPending": "אין תלמידים רשומים הממתינים לקובץ הוויזה.",
+      "emptyApplied": "לא הוגשו קבצי ויזה למנהל."
     }
   },
   "appointmentActions": {

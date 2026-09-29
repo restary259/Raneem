@@ -2473,3 +2473,57 @@ indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
 - Tests: `src/lib/visaStatus.test.ts` (13 cases - sectioning incl. scenarios
   1/2, counts, readiness, status normalization). Build clean; `npx vitest run`
   1657 passed | 1 skipped.
+
+## Post-arrival Visa workflow — audit fixes (2026-09-29)
+
+Full-repo QA audit of `Enrollment → Student Account → Payments → Enrolled →
+Post-Arrival Visa` on `origin/main` (`3641432`, PR #122). Four real defects
+found; the backend (migrations `20260930120000`, `20260930130000`) was sound —
+only the frontend reachability was broken.
+
+- **`tsc` was RED on `main`.** `src/components/admin/visa/VisaQueue.tsx` used
+  `FileCheck2` in `SECTION_META.applied` without importing it (the other 6 lucide
+  imports were dead leftovers). Fixed by importing `FileCheck2` and dropping the
+  unused imports. `.github/workflows/ci.yml` installs with **bun**
+  (`bun install --frozen-lockfile`) and runs `npm run build` = `tsc && vite build`,
+  so `main` was shipping a type error that local `vitest` alone did not catch.
+  When verifying this repo, run `npx tsc --noEmit` — `vitest` passing is not
+  sufficient.
+- **i18n guard RED on `main`.** `VisaQueue.tsx` calls `admin.visa.pending` and
+  `admin.visa.applied`; neither key existed in en/ar/he (the block had
+  `emptyPending`/`emptyApplied` but not the section labels). Added to all three.
+- **Student Visa saves were silently impossible (functional blocker).**
+  `StudentVisaPage.saveDynamic` upserted the ENTIRE field set (every row of
+  `visa_fields`, including `visa_status`) into `visa_field_values`.
+  `20260930130000` added "Students insert/update own non-status visa values"
+  policies whose `WITH CHECK` requires `vf.field_key <> 'visa_status'`, so the
+  multi-row upsert failed the whole statement with an RLS violation — the student
+  could not save ANY visa field. Fixed by filtering to
+  `f.field_key !== "visa_status"` before the upsert (and bailing out when no
+  editable fields remain). **Rule: a client upsert that spans student-writable
+  and admin-only rows will fail as a unit — never send the mixed set.**
+- **The student submit flow had no UI.** PR #122 added
+  `ensure_student_visa_application`, `mark_student_visa_arrived` and
+  `submit_student_visa_application` (security-definer, ownership + enrollment +
+  arrival + required-field validated, idempotent, writes a `submission_snapshot`,
+  logs `visa_application_submitted`, dedupe-keyed notifications to admins) plus
+  `VisaService` wrappers — but `grep` showed the wrappers were called by
+  **nobody**, and `StudentVisaPage.tsx` did not import `VisaService` at all. The
+  intended flow ("student fills visa fields in their dashboard, confirms, then
+  admin copies the info into the Heidelberg portal") was therefore unreachable,
+  and the admin Ready queue could never fill besides via the admin's own Mark
+  Arrived. Wired into `StudentVisaPage.tsx`: a "Submit for Administration" card
+  gated on `caseStatus === "enrollment_paid"` (+ an arrival-confirmation control,
+  since the RPC requires `arrived_in_germany_at`), resolving the case through the
+  `get_my_case` RPC and excluding archived cases. Both actions stay UI-gated only
+  for UX — the RPC is the trust boundary.
+- **New guard** `src/lib/visaStudentFlowGuard.test.ts` (5 cases, verified
+  non-vacuous): the save path must filter `visa_status`, the submit must go
+  through the RPC and never a direct `visa_applications` write, arrival
+  confirmation must exist, the actions must be enrollment-gated, and `visa` must
+  never appear in `CaseStatus`.
+- Locale edits are **insertion-only** (do not re-sort the whole `visa` block —
+  it produces a ~94-line churn diff of pure reordering).
+- Build/test after fixes: `npx tsc --noEmit` clean; `npx vitest run`
+  1664 passed | 1 skipped (104 files, +5 new); `npm run build` clean. The
+  pre-existing `npm run lint` debt is unchanged and `continue-on-error: true`.
