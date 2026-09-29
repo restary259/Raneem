@@ -2767,13 +2767,37 @@ only the frontend reachability was broken.
   now surfaces as a failed read and preserves the last good data, so the user
   never sees a false zero and never has to relaunch. If it recurs, capture the
   actual error object from the network tab / `unwrap()` throw site.
-- Tests: `src/pages/admin/__tests__/AdminCommandCenterResilience.test.tsx` (7
+- Tests: `src/pages/admin/__tests__/AdminCommandCenterResilience.test.tsx` (9
   cases) drives the REAL `QueryClient` against a mocked Supabase boundary —
   background KPI failure keeps the previous values + shows the banner, retry
   recovers fresh values, first-load failure shows ErrorState (not zeros) and
-  recovers via Retry, a failed queue reuses its last good rows, and a genuine
-  empty queue still renders empty. Both guards were verified non-vacuous by
-  reintroducing the defect.
+  recovers via Retry, a failed queue reuses its last good rows, retained rows
+  survive a later unrelated re-render, retained rows are labelled stale, and a
+  genuine empty queue still renders empty. Every guard was verified
+  non-vacuous by reintroducing the defect.
+- **Review catch — the whole-snapshot ref was not enough (P1).** Keeping the
+  last good rows in ONE `useRef<CommandCenterSnapshot>` only survived the
+  single render right after the failure: the FAILED snapshot is itself what
+  React Query caches, so the ref got overwritten with `null` for that queue and
+  the rows vanished on the next unrelated render. The fix stores rows
+  **per queue** (`useRef<Record<string, QueueRow[]>>`, written only when the
+  value is truthy so a successful `[]` clears the queue).
+  `queueErrors` is now derived from the snapshot (`data?.[key] === null`)
+  rather than from the rendered rows, because after carry-forward the rendered
+  rows are non-empty and `rows.length === 0` is false.
+- **Review catch — retained rows looked current (P2).** With carry-forward the
+  queue-level error was unreachable (`rows.length === 0` is false) and the
+  global banner only covers a whole-query failure, so stale action/auth rows
+  rendered with no notice. Retained rows now render an inline
+  `admin.commandCenter.queueStale` alert above the list.
+- **Vacuous-test trap (worth remembering).** The first version of the
+  re-render guard used a realtime callback and PASSED against the buggy code.
+  React Query's **structural sharing** keeps the same reference when refetched
+  data is deeply equal, so refetching the same `[]` produced NO re-render to
+  lose the rows. The test now forces a genuine re-render via a real
+  cash-query data change (and asserts the cash row appears, proving the render
+  happened). Re-run against the reverted logic it fails — so the guard is
+  real. A test that "passes" without a render is not testing the render path.
 - **Test-mock gotcha (this broke an existing test and is worth remembering)**:
   `supabase.rpc()` returns a thenable **PostgrestFilterBuilder**, not a Promise.
   `AdminCommandCenterCash.test.tsx` stubbed it with `Promise.resolve(...)`, so
@@ -2783,7 +2807,7 @@ only the frontend reachability was broken.
   stub surfaced as a genuine "Unable to load" and failed 3 tests. **Any test
   mocking `supabase.rpc` must return a chainable-thenable stub, not a bare
   Promise** (see the `rpcChain` helper in both admin test files).
-- Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1686 passed | 1 skipped;
+- Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1697 passed | 1 skipped;
   `npm run build` clean. Lint: the component carries pre-existing
   `prettier/prettier` debt (169 errors at HEAD — the whole file is single-quoted
   while the repo config wants double quotes); a full `prettier --write` would

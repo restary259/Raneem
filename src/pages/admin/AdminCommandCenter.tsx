@@ -236,24 +236,35 @@ const AdminCommandCenter = () => {
   // never presented as "the numbers really are 0".
   const loadFailed = isError && data === undefined;
 
-  // A queue whose own query failed is `null` in the snapshot. Reuse the last
-  // known-good rows for that queue so a transient failure cannot make a
-  // populated queue look empty; a genuine `[]` is still rendered as empty.
+  // A queue whose own query failed is `null` in the snapshot. Keep the last
+  // known-good rows for EACH queue separately so a transient failure cannot make
+  // a populated queue look empty; a genuine `[]` is still rendered as empty.
   //
-  // `carried` is read BEFORE the ref is advanced: the ref must hold the previous
-  // successful snapshot, not the one currently being rendered, otherwise the
-  // fallback would resolve to the very snapshot whose queue is `null`.
-  const lastGood = useRef<CommandCenterSnapshot | undefined>(undefined);
-  const carried = lastGood.current;
-  if (data) lastGood.current = data;
-  const queueRowsFor = (key: keyof CommandCenterSnapshot) =>
-    (data?.[key] as QueueRow[] | null) ?? (carried?.[key] as QueueRow[] | null) ?? [];
+  // Per-queue (not a single whole-snapshot ref) is load-bearing: the failed
+  // snapshot is itself cached by React Query, so a whole-snapshot ref would be
+  // overwritten with `null` for the failed queue and the rows would vanish on
+  // the next unrelated render. Only a successful `[]` clears a queue.
+  const lastGoodQueues = useRef<Record<string, QueueRow[]>>({});
+  const queueRowsFor = (key: keyof CommandCenterSnapshot) => {
+    const rows = data?.[key] as QueueRow[] | null | undefined;
+    if (rows) lastGoodQueues.current[key as string] = rows;
+    return rows ?? lastGoodQueues.current[key as string] ?? [];
+  };
 
   const awaitingReview = queueRowsFor('awaitingReview');
   const unassigned = queueRowsFor('unassigned');
   const authFailures = queueRowsFor('authFailures');
   const attributionIssues = queueRowsFor('attributionIssues');
-  const queueErrors = data?.queueErrors ?? {};
+  // `null` in the snapshot means the queue could not be read — distinct from an
+  // empty `[]`. Derive from the snapshot rather than from the rendered rows, so
+  // retained rows are still reported as stale below.
+  const queueFailed = (key: keyof CommandCenterSnapshot) => data?.[key] === null;
+  const queueErrors: Record<string, boolean> = {
+    review: queueFailed('awaitingReview'),
+    unassigned: queueFailed('unassigned'),
+    auth: queueFailed('authFailures'),
+    attribution: queueFailed('attributionIssues'),
+  };
   const loading = isPending;
 
   // A background refetch that failed while the real numbers are still on screen:
@@ -580,6 +591,16 @@ const AdminCommandCenter = () => {
                 )
               ) : (
                 <div className="divide-y">
+                  {/* Rows are retained from the last successful read. Say so —
+                      otherwise outdated action/auth rows look current. */}
+                  {queueErrors[q.key] && (
+                    <p className="flex items-center gap-2 py-2 text-xs text-destructive" role="alert">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0">
+                        {t('admin.commandCenter.queueStale', 'Could not refresh — showing the last loaded list.')}
+                      </span>
+                    </p>
+                  )}
                   {q.rows.map((row) => (
                     <div key={row.id} className="flex items-center justify-between gap-3 py-2.5">
                       <div className="min-w-0 flex-1">

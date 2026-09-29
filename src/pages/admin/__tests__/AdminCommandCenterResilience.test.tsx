@@ -342,6 +342,98 @@ describe("AdminCommandCenter — failed refetches must not erase real data", () 
     ).not.toBeInTheDocument();
   });
 
+  it("keeps retained queue rows across a later unrelated re-render", async () => {
+    // The failed snapshot is itself cached, so the retained rows must survive
+    // re-renders that are NOT the one immediately following the failure. React
+    // Query's structural sharing keeps the same reference when data is deeply
+    // equal, so the re-render is forced with a real cash-query change.
+    casesReviewHandler = ok([
+      {
+        id: "c-1",
+        full_name: "Real Student",
+        case_reference: "DRB-1",
+        last_activity_at: new Date().toISOString(),
+      },
+    ]);
+    const { client } = renderPage();
+    await waitFor(() => {
+      expect(screen.getByText("Real Student")).toBeInTheDocument();
+    });
+
+    casesReviewHandler = fail();
+    await client.refetchQueries({ queryKey: ["admin", "command-center"] });
+    await waitFor(() => {
+      expect(screen.getByText("Real Student")).toBeInTheDocument();
+    });
+
+    // An unrelated query change re-renders the page without touching the main
+    // query. The queue must not fall back to empty.
+    mockRpc.mockImplementation((name: string) => {
+      if (name === "get_forgotten_cases")
+        return rpcChain(() => forgottenHandler());
+      if (name === "list_attribution_integrity_issues")
+        return rpcChain(() => ok([])());
+      if (name === "get_admin_cash_collections")
+        return rpcChain(() => ({
+          data: [
+            {
+              payment_id: "p-1",
+              case_id: "case-1",
+              case_reference: "DRB-9",
+              student_name: "Cash Student",
+              team_member_id: "tm-1",
+              team_member_name: "Team Member",
+              amount: 250,
+              collected_at: new Date().toISOString(),
+            },
+          ],
+          error: null,
+        }));
+      return rpcChain(() => ({ data: [], error: null }));
+    });
+    await client.refetchQueries({ queryKey: ["admin", "cash-collections"] });
+
+    // The cash row proves the re-render happened, and the queue survived it.
+    await waitFor(() => {
+      expect(screen.getByText("Cash Student")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Real Student")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Nothing waiting for review"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says the retained queue rows are stale instead of presenting them as current", async () => {
+    casesReviewHandler = ok([
+      {
+        id: "c-1",
+        full_name: "Real Student",
+        case_reference: "DRB-1",
+        last_activity_at: new Date().toISOString(),
+      },
+    ]);
+    const { client } = renderPage();
+    await waitFor(() => {
+      expect(screen.getByText("Real Student")).toBeInTheDocument();
+    });
+    // Nothing stale before the failure.
+    expect(
+      screen.queryByText("Could not refresh — showing the last loaded list."),
+    ).not.toBeInTheDocument();
+
+    casesReviewHandler = fail();
+    await client.refetchQueries({ queryKey: ["admin", "command-center"] });
+
+    // The rows are kept AND labelled as stale — never silently presented as
+    // current, and never replaced by an empty state.
+    await waitFor(() => {
+      expect(
+        screen.getByText("Could not refresh — showing the last loaded list."),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByText("Real Student")).toBeInTheDocument();
+  });
+
   it("still renders a genuine empty queue as empty", async () => {
     casesReviewHandler = ok([]);
     renderPage();
