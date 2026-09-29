@@ -272,9 +272,18 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   the RPC dropped while the trigger stays strict.
 
 ## Build / test
-- `npm run build` ŌåÆ `tsc && vite build` (this is the real gate; eslint is not part of build).
-- `npm test` ŌåÆ vitest (unit tests).
-- `npm run test:e2e` ŌåÆ Playwright.
+- `npm run build` → `vite build` ONLY. **It does not typecheck.** `vite` type-strips,
+  so a file may declare a symbol and fail to export it and still produce a bundle.
+  Earlier revisions of these notes claimed `npm run build` was `tsc && vite build`
+  and that this was "the real gate" — that was never true, and the belief has now
+  caused the same class of bug to reach `main` twice (see the `f03c73d` entries).
+- `npm run typecheck` → `tsc --noEmit` (root `tsconfig.json`, covers `src/**`).
+  **Run this by hand — `vitest` passing is NOT sufficient.** It is also a
+  blocking step in `.github/workflows/ci.yml`'s `quality` job as of 2026-09-29.
+- `npm test` → vitest (unit tests).
+- `npm run test:e2e` → Playwright.
+- eslint is not part of the build and its CI step is `continue-on-error: true`,
+  so a lint-only failure (e.g. `no-self-assign`) ships.
 
 ## i18n
 - Namespaced under `dashboard` in `public/locales/{en,ar}/dashboard.json`. The Finance
@@ -2484,11 +2493,12 @@ only the frontend reachability was broken.
 - **`tsc` was RED on `main`.** `src/components/admin/visa/VisaQueue.tsx` used
   `FileCheck2` in `SECTION_META.applied` without importing it (the other 6 lucide
   imports were dead leftovers). Fixed by importing `FileCheck2` and dropping the
-  unused imports. `.github/workflows/ci.yml` installs with **bun**
-  (`bun install --frozen-lockfile`) and runs `npm run build` = `tsc && vite build`,
-  so `main` was shipping a type error that local `vitest` alone did not catch.
-  When verifying this repo, run `npx tsc --noEmit` — `vitest` passing is not
-  sufficient.
+  unused imports. This note originally claimed `.github/workflows/ci.yml` runs
+  `npm run build` = `tsc && vite build` — **that was wrong**: build is `vite build`
+  only, which is why `main` could ship a type error that local `vitest` did not
+  catch. Corrected on 2026-09-29, when a blocking `npm run typecheck` step was
+  added to the `quality` job. When verifying this repo, run `npx tsc --noEmit` —
+  `vitest` passing is not sufficient.
 - **i18n guard RED on `main`.** `VisaQueue.tsx` calls `admin.visa.pending` and
   `admin.visa.applied`; neither key existed in en/ar/he (the block had
   `emptyPending`/`emptyApplied` but not the section labels). Added to all three.
