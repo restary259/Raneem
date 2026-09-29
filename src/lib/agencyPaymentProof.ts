@@ -1,20 +1,22 @@
 /**
- * Client mirror of the server rule in `confirm_agency_service_payment`:
- * a bank transfer needs a transfer reference OR a receipt file; cash needs
- * neither. The server re-validates — this only gives instant feedback.
+ * Client mirror of the server rule in `confirm_agency_service_payment`.
+ *
+ * No proof is required to confirm a DARB payment: when staff leave the bank
+ * reference empty, the server stores the case code as the payment reference
+ * (it is the same memo the student is asked to wire with). The only client
+ * rule left is the length cap, which the server also enforces.
  */
 export type AgencyPaymentMethod = "bank_transfer" | "cash";
 
 export const MAX_TRANSFER_REFERENCE_LENGTH = 100;
 
 export function agencyPaymentProofError(
-  method: string,
+  _method: string,
   reference: string | null | undefined,
-  hasReceipt: boolean,
-): "required" | "tooLong" | null {
+  _hasReceipt: boolean,
+): "tooLong" | null {
   const ref = (reference ?? "").trim();
   if (ref.length > MAX_TRANSFER_REFERENCE_LENGTH) return "tooLong";
-  if (method === "bank_transfer" && ref.length === 0 && !hasReceipt) return "required";
   return null;
 }
 

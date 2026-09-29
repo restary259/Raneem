@@ -438,9 +438,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
         if (proofError) {
           toast({
             variant: "destructive",
-            description: proofError === "tooLong"
-              ? t("finance.receipt.tooLong", "The transfer reference is too long.")
-              : t("finance.receipt.required", "For a bank transfer, add the transfer reference or upload the receipt."),
+            description: t("finance.receipt.tooLong", "The transfer reference is too long."),
           });
           return;
         }
@@ -637,14 +635,21 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   {paymentMethod === "bank_transfer" && (
                     <div className="grid gap-2 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <Label htmlFor="pm-ref" className="text-xs">{t("finance.receipt.reference", "Transfer reference")}</Label>
-                        <Input id="pm-ref" dir="ltr" maxLength={100} value={transferReference} onChange={(e) => setTransferReference(e.target.value)} />
+                        <Label htmlFor="pm-ref" className="text-xs">{t("finance.receipt.reference", "Transfer reference")} · {t("finance.receipt.optional", "optional")}</Label>
+                        <Input
+                          id="pm-ref"
+                          dir="ltr"
+                          maxLength={100}
+                          value={transferReference}
+                          placeholder={financials?.case_reference ?? ""}
+                          onChange={(e) => setTransferReference(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="pm-receipt" className="text-xs">{t("finance.receipt.upload", "Receipt (PDF or image)")}</Label>
+                        <Label htmlFor="pm-receipt" className="text-xs">{t("finance.receipt.upload", "Receipt (PDF or image)")} · {t("finance.receipt.optional", "optional")}</Label>
                         <Input id="pm-receipt" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic" onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)} />
                       </div>
-                      <p className="text-xs text-muted-foreground sm:col-span-2">{t("finance.receipt.hint", "Add the transfer reference or upload the receipt — at least one is required.")}</p>
+                      <p className="text-xs text-muted-foreground sm:col-span-2">{t("finance.receipt.hintAuto", "Both are optional. If you leave the reference empty, the case code is saved as the payment reference.")}</p>
                     </div>
                   )}
                 </div>

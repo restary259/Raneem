@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { agencyPaymentProofError, receiptStoragePath } from "./agencyPaymentProof";
 
 describe("agencyPaymentProofError", () => {
-  it("requires a reference or receipt for bank transfer", () => {
-    expect(agencyPaymentProofError("bank_transfer", "", false)).toBe("required");
-    expect(agencyPaymentProofError("bank_transfer", "   ", false)).toBe("required");
+  it("does not require a reference or receipt for bank transfer", () => {
+    expect(agencyPaymentProofError("bank_transfer", "", false)).toBeNull();
+    expect(agencyPaymentProofError("bank_transfer", "   ", false)).toBeNull();
   });
   it("accepts bank transfer with a reference or a receipt", () => {
     expect(agencyPaymentProofError("bank_transfer", "TX-123", false)).toBeNull();

@@ -4116,6 +4116,8 @@
       "reference": "Transfer reference",
       "upload": "Receipt (PDF or image)",
       "hint": "Add the transfer reference or upload the receipt — at least one is required.",
+      "hintAuto": "Both are optional. If you leave the reference empty, the case code is saved as the payment reference.",
+      "optional": "optional",
       "required": "For a bank transfer, add the transfer reference or upload the receipt.",
       "tooLong": "The transfer reference is too long.",
       "view": "View receipt",
