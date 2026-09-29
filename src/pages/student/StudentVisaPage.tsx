@@ -38,7 +38,7 @@ import {
   submitStudentVisaApplication,
   visaErrMsg,
 } from "@/services/VisaService";
-import { missingRequiredVisaFields } from "@/lib/visaStatus";
+import { missingRequiredVisaDocuments, missingRequiredVisaFields } from "@/lib/visaStatus";
 import { toneClasses } from "@/lib/statusTokens";
 
 interface VisaField {
@@ -356,6 +356,17 @@ export default function StudentVisaPage() {
       return;
     }
 
+    if (missingRequiredDocuments.length > 0) {
+      toast({
+        variant: "destructive",
+        description: t(
+          "visa.documentsRequired",
+          "Select the configured required proof documents before submitting.",
+        ),
+      });
+      return;
+    }
+
     if (!application.arrived_in_germany_at) {
       toast({
         variant: "destructive",
@@ -392,7 +403,14 @@ export default function StudentVisaPage() {
   const submitted = !!application?.visa_applied_at;
 
   const editableFields = fields.filter((field) => field.field_key !== "visa_status");
+  const selectedDocumentSet = new Set(selectedDocumentIds);
   const missingRequired = missingRequiredVisaFields(fields, values);
+  const missingRequiredDocuments = missingRequiredVisaDocuments(
+    fields,
+    values,
+    documents,
+    selectedDocumentSet,
+  );
 
   const renderInput = (
     field: VisaField,
@@ -916,13 +934,19 @@ export default function StudentVisaPage() {
                 <p className="text-sm font-semibold">{t("visa.readyToSubmit", "Review your Visa file")}</p>
                 <p className="text-xs text-muted-foreground">
                   {missingRequired.length === 0
-                    ? t("visa.readyToSubmitBody", "Your configured required information is complete. Make sure your selected documents are ready.")
                     : t("visa.completeInformation", "Complete the required configured Visa information before submitting.")}
+                {missingRequiredDocuments.length > 0 &&
+                  t("visa.documentsRequired", "Select the configured required proof documents before submitting.")}
                 </p>
               </div>
               <Button
                 onClick={() => void submit()}
-                disabled={busy || !application?.arrived_in_germany_at || missingRequired.length > 0}
+                disabled={
+                  busy ||
+                  !application?.arrived_in_germany_at ||
+                  missingRequired.length > 0 ||
+                  missingRequiredDocuments.length > 0
+                }
                 className="shrink-0"
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileCheck2 className="h-4 w-4 me-1" />}
