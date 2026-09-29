@@ -1653,7 +1653,11 @@
         "accommodation_proof": "Accommodation proof",
         "passport_number": "Passport",
         "passport_expiry": "Passport expiry"
-      }
+      },
+      "pending": "Pending",
+      "applied": "Visa Applied",
+      "emptyPending": "No enrolled students are waiting for their Visa file.",
+      "emptyApplied": "No Visa files have been submitted for administration."
     }
   },
   "influencer": {
@@ -3473,7 +3477,19 @@
     "eyeColor": "Eye color",
     "accommodationProof": "Accommodation proof",
     "bankStatement": "Bank statement",
-    "healthInsurance": "Health insurance"
+    "healthInsurance": "Health insurance",
+    "submitTitle": "Submit for Administration",
+    "submitHint": "Fill in your information and upload your documents, then submit so our team can complete your visa application.",
+    "submitAction": "Submit for Administration",
+    "submitted": "Submitted",
+    "submittedOn": "Submitted on",
+    "submittedToast": "Your Visa file was submitted to Administration.",
+    "alreadySubmitted": "Your Visa file was already submitted.",
+    "arrivalTitle": "Arrival in Germany",
+    "arrivalHint": "Confirm once you have arrived in Germany.",
+    "arrivedOn": "Confirmed on",
+    "confirmArrival": "Confirm arrival",
+    "arrivedToast": "Arrival confirmed."
   },
   "contacts": {
     "title": "Important Contacts",

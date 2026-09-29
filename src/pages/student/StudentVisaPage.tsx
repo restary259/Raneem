@@ -14,6 +14,7 @@ import { Globe, Edit, Save, X, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { toneClasses } from "@/lib/statusTokens";
+import { submitStudentVisaApplication, markOwnVisaArrived } from "@/services/VisaService";
 
 
 interface VisaField {
@@ -53,13 +54,20 @@ export default function StudentVisaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Submission state (post-enrollment "Submit for Administration" workflow).
+  const [caseId, setCaseId] = useState<string | null>(null);
+  const [caseStatus, setCaseStatus] = useState<string | null>(null);
+  const [submittedAt, setSubmittedAt] = useState<string | null>(null);
+  const [arrivedAt, setArrivedAt] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
   const isAr = i18n.language === "ar";
 
   const load = useCallback(async (uid: string) => {
     try {
-      const [fieldsRes, valuesRes, profileRes] = await Promise.all([
+      const [fieldsRes, valuesRes, profileRes, caseRes] = await Promise.all([
         (supabase as any)
           .from("visa_fields")
           .select("id, field_key, label_en, label_ar, field_type, options_json, display_order")
@@ -73,10 +81,33 @@ export default function StudentVisaPage() {
           )
           .eq("id", uid)
           .maybeSingle(),
-
+        (supabase as any).rpc("get_my_case"),
       ]);
 
       if (fieldsRes.data) setFields(fieldsRes.data);
+
+      // Resolve the student's own case. The Visa submission workflow is only
+      // meaningful for an ENROLLED case (Visa is post-enrollment and must never
+      // surface as an active stage before that).
+      const myCase = ((caseRes?.data as any[]) ?? [])[0] ?? null;
+      // An archived case can never enter the Visa workflow (the RPCs reject it),
+      // so don't offer the actions for it.
+      const usableCase = myCase && !myCase.archived ? myCase : null;
+      setCaseId(usableCase?.id ?? null);
+      setCaseStatus(usableCase?.status ?? null);
+
+      if (usableCase?.id) {
+        const { data: appRow } = await (supabase as any)
+          .from("visa_applications")
+          .select("visa_applied_at, arrived_in_germany_at")
+          .eq("case_id", usableCase.id)
+          .maybeSingle();
+        setSubmittedAt(appRow?.visa_applied_at ?? null);
+        setArrivedAt(appRow?.arrived_in_germany_at ?? null);
+      } else {
+        setSubmittedAt(null);
+        setArrivedAt(null);
+      }
 
       const valMap: Record<string, string> = {};
       const idMap: Record<string, string> = {};
@@ -101,18 +132,70 @@ export default function StudentVisaPage() {
 
   const userId = useAuthedUserId(load);
 
+  const isEnrolled = caseStatus === "enrollment_paid";
+
+  // ── Confirm arrival in Germany ──
+  // The submission RPC requires the post-arrival marker, so this must be
+  // reachable from the student's own page (the RPC is idempotent — it keeps the
+  // first timestamp).
+  const confirmArrival = async () => {
+    if (!caseId) return;
+    setSubmitting(true);
+    try {
+      await markOwnVisaArrived(caseId);
+      toast({ description: t("visa.arrivedToast", "Arrival confirmed.") });
+      if (userId) await load(userId);
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── Submit the completed Visa file to Administration ──
+  // The RPC is the trust boundary (validates ownership + enrollment + arrival +
+  // required fields, snapshots the file, sets the canonical status, notifies
+  // admins). It is idempotent: a repeat submit returns already_submitted.
+  const submitForAdmin = async () => {
+    if (!caseId) return;
+    setSubmitting(true);
+    try {
+      const res = await submitStudentVisaApplication(caseId);
+      if (res?.already_submitted) {
+        toast({ description: t("visa.alreadySubmitted", "Your Visa file was already submitted.") });
+      } else {
+        toast({ description: t("visa.submittedToast", "Your Visa file was submitted to Administration.") });
+      }
+      if (userId) await load(userId);
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // ── Save dynamic visa fields ──
   const saveDynamic = async () => {
     if (!userId) return;
     setSaving(true);
     try {
-      const upserts = fields.map((f) => ({
-        id: valueIds[f.id] ?? undefined,
-        field_id: f.id,
-        student_user_id: userId,
-        value: draftValues[f.id] ?? null,
-        updated_at: new Date().toISOString(),
-      }));
+      // `visa_status` is Admin-controlled: the student RLS policies reject any
+      // write to it, and upserting the whole field set (as this used to) made
+      // the entire save fail with an RLS violation. Send only the fields the
+      // student is actually allowed to edit.
+      const upserts = fields
+        .filter((f) => f.field_key !== "visa_status")
+        .map((f) => ({
+          id: valueIds[f.id] ?? undefined,
+          field_id: f.id,
+          student_user_id: userId,
+          value: draftValues[f.id] ?? null,
+          updated_at: new Date().toISOString(),
+        }));
+      if (upserts.length === 0) {
+        setEditingDynamic(false);
+        return;
+      }
       const { error } = await (supabase as any)
         .from("visa_field_values")
         .upsert(upserts, { onConflict: "field_id,student_user_id" });
@@ -246,6 +329,68 @@ export default function StudentVisaPage() {
           </p>
         </CardContent>
       </Card>
+
+      {/* ── Submit to Administration (post-enrollment only) ── */}
+      {isEnrolled && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
+              {t("visa.submitTitle", "Submit for Administration")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Arrival must be confirmed before the file can be submitted. */}
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/40 p-3">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-foreground">
+                  {t("visa.arrivalTitle", "Arrival in Germany")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {arrivedAt
+                    ? `${t("visa.arrivedOn", "Confirmed on")} ${new Date(arrivedAt).toLocaleDateString(isAr ? "ar-SA" : "en-US")}`
+                    : t("visa.arrivalHint", "Confirm once you have arrived in Germany.")}
+                </p>
+              </div>
+              {!arrivedAt && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={confirmArrival}
+                  disabled={submitting}
+                >
+                  {t("visa.confirmArrival", "Confirm arrival")}
+                </Button>
+              )}
+            </div>
+
+            {submittedAt ? (
+              <p className="text-sm text-muted-foreground">
+                {t("visa.submittedOn", "Submitted on")}:{" "}
+                {new Date(submittedAt).toLocaleDateString(isAr ? "ar-SA" : "en-US")}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "visa.submitHint",
+                  "Fill in your information and upload your documents, then submit so our team can complete your visa application.",
+                )}
+              </p>
+            )}
+            <Button
+              onClick={submitForAdmin}
+              disabled={submitting || !!submittedAt}
+              className="w-full sm:w-auto"
+            >
+              {submitting
+                ? t("common.saving", "Saving…")
+                : submittedAt
+                  ? t("visa.submitted", "Submitted")
+                  : t("visa.submitAction", "Submit for Administration")}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Dynamic visa fields (editable by student) ── */}
       {editableFields.length > 0 && (
