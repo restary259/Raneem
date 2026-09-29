@@ -113,6 +113,33 @@ export function missingRequiredVisaFields(
     .map((f) => f.field_key);
 }
 
+export function missingRequiredVisaDocuments(
+  fields: ReadinessFieldLike[],
+  values: Record<string, string>,
+  documents: ReadinessDocumentLike[],
+  selectedDocumentIds: Set<string>,
+): string[] {
+  const selectedCategories = new Set(
+    documents.filter((d) => selectedDocumentIds.has(d.id)).map((d) => d.category),
+  );
+  const categoryForField: Record<string, string> = {
+    bank_statement: "financial",
+    health_insurance: "insurance",
+    accommodation_proof: "housing",
+  };
+  return fields
+    .filter(
+      (f) =>
+        f.is_active !== false &&
+        f.is_required === true &&
+        f.field_type === "boolean" &&
+        f.field_key in categoryForField &&
+        (values[f.id] ?? "") !== "true" &&
+        !selectedCategories.has(categoryForField[f.field_key]),
+    )
+    .map((f) => f.field_key);
+}
+
 export interface VisaReadiness {
   /** Non-empty answers / total active visa fields. */
   fieldsFilled: number;
