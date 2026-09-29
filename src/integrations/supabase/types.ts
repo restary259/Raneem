@@ -5648,11 +5648,51 @@ export type Database = {
         }
         Relationships: []
       }
+      visa_application_documents: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          document_id: string
+          id: string
+          visa_application_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          document_id: string
+          id?: string
+          visa_application_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          visa_application_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visa_application_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visa_application_documents_visa_application_id_fkey"
+            columns: ["visa_application_id"]
+            isOneToOne: false
+            referencedRelation: "visa_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visa_applications: {
         Row: {
           accommodation_proof_url: string | null
           additional_notes: string | null
           address_abroad: string | null
+          arrived_in_germany_at: string | null
           bank_statement_url: string | null
           case_id: string
           contact_abroad: string | null
@@ -5660,6 +5700,7 @@ export type Database = {
           health_insurance_url: string | null
           id: string
           student_user_id: string | null
+          submission_snapshot: Json | null
           updated_at: string
           visa_applied_at: string | null
           visa_notes: string | null
@@ -5669,6 +5710,7 @@ export type Database = {
           accommodation_proof_url?: string | null
           additional_notes?: string | null
           address_abroad?: string | null
+          arrived_in_germany_at?: string | null
           bank_statement_url?: string | null
           case_id: string
           contact_abroad?: string | null
@@ -5676,6 +5718,7 @@ export type Database = {
           health_insurance_url?: string | null
           id?: string
           student_user_id?: string | null
+          submission_snapshot?: Json | null
           updated_at?: string
           visa_applied_at?: string | null
           visa_notes?: string | null
@@ -5685,6 +5728,7 @@ export type Database = {
           accommodation_proof_url?: string | null
           additional_notes?: string | null
           address_abroad?: string | null
+          arrived_in_germany_at?: string | null
           bank_statement_url?: string | null
           case_id?: string
           contact_abroad?: string | null
@@ -5692,6 +5736,7 @@ export type Database = {
           health_insurance_url?: string | null
           id?: string
           student_user_id?: string | null
+          submission_snapshot?: Json | null
           updated_at?: string
           visa_applied_at?: string | null
           visa_notes?: string | null
@@ -7307,6 +7352,29 @@ export type Database = {
           extra_data: Json
           student_email: string
           student_phone: string
+        }[]
+      }
+      get_admin_visa_queue: {
+        Args: never
+        Returns: {
+          actual_arrival: string | null
+          assigned_name: string | null
+          assigned_to: string | null
+          case_id: string
+          case_reference: string | null
+          created_at: string
+          document_count: number
+          email: string | null
+          enrolled_at: string | null
+          full_name: string | null
+          phone: string | null
+          planned_arrival: string | null
+          selected_document_count: number
+          student_user_id: string | null
+          updated_at: string
+          visa_applied_at: string | null
+          visa_application_id: string | null
+          visa_status: string
         }[]
       }
       get_my_cash_debts: {

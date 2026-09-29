@@ -91,6 +91,22 @@ const hasKey = (dict: any, key: string) => {
   return true;
 };
 
+/**
+ * Returns the resolved value or `undefined`. `hasKey` alone cannot catch a key
+ * that exists but resolves to an OBJECT (a namespace used as a leaf): i18next
+ * then returns the diagnostic string "key '…' returned an object instead of
+ * string", which is truthy — so the inline English fallback never applies and
+ * the error text renders in the UI.
+ */
+const resolveKey = (dict: any, key: string): unknown => {
+  let cursor = dict;
+  for (const part of key.split(".")) {
+    if (!cursor || typeof cursor !== "object" || !(part in cursor)) return undefined;
+    cursor = cursor[part];
+  }
+  return cursor;
+};
+
 describe("i18n coverage", () => {
   it("has every used translation key in both Arabic and English", () => {
     const dicts = Object.fromEntries(LOCALES.map((l) => [l, loadDicts(l)]));
@@ -118,6 +134,41 @@ describe("i18n coverage", () => {
     }
 
     expect(missing).toEqual([]);
+  });
+
+  it("never resolves a t() key to an object (namespace used as a leaf)", () => {
+    const dicts = Object.fromEntries(LOCALES.map((l) => [l, loadDicts(l)]));
+    const collisions: string[] = [];
+
+    for (const file of walk(path.join(ROOT, "src"))) {
+      const src = fs.readFileSync(file, "utf8");
+      if (!/useTranslation\(/.test(src)) continue;
+      const namespaces = new Set<string>(["common"]);
+      for (const nsCall of src.matchAll(/useTranslation\(\s*(\[[^\]]*\]|'[^']*'|"[^"]*")/g)) {
+        for (const n of nsCall[1].matchAll(/['"]([^'"]+)['"]/g)) namespaces.add(n[1]);
+      }
+
+      const callRe = /\bt\(\s*['"]([a-zA-Z0-9_.]+)['"]\s*(?:,\s*\{[^}]*ns:\s*['"]([a-zA-Z0-9_]+)['"])?/g;
+      for (const m of src.matchAll(callRe)) {
+        const key = m[1];
+        if (!key.includes(".")) continue;
+        // `t("key", { returnObjects: true })` intentionally resolves to the
+        // object (arrays of items are rendered from it) — not a collision.
+        const tail = src.slice(m.index + m[0].length, m.index + m[0].length + 160);
+        if (/^\s*,\s*\{[^}]*returnObjects\s*:\s*true/.test(tail)) continue;
+        const candidates = m[2] ? [m[2]] : [...namespaces];
+        for (const lang of LOCALES) {
+          for (const ns of candidates) {
+            const resolved = resolveKey(dicts[lang][ns] ?? {}, key);
+            if (resolved !== undefined && typeof resolved === "object" && resolved !== null) {
+              collisions.push(`${lang}: ${key} (${path.relative(ROOT, file)})`);
+            }
+          }
+        }
+      }
+    }
+
+    expect(collisions).toEqual([]);
   });
 
   it("has all Team Majors card copy in Hebrew", () => {
