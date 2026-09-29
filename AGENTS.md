@@ -2576,3 +2576,79 @@ only the frontend reachability was broken.
   page in an unrelated PR).
 - Not verified in a browser: RTL tab order and phone-width horizontal scroll are
   reasoned from `TabsList` styles, not observed.
+
+## Dialog primitive: mobile width + export-completeness guards (2026-09-29)
+- **`DialogContent` must stay in `dialog.tsx`'s export block.** Commit `f03c73d`
+  (#128) removed it while leaving the component defined above, so the file read
+  correctly but every importer got `undefined`. Measured on `origin/main`:
+  `vite build` fails with **34 `MISSING_EXPORT` errors** (rolldown prints the
+  total in its header and details only the first 5), **24 unit tests** fail
+  across 5 files, and `main`'s `quality` workflow is red.
+- **Correction to a claim this note previously made:** `tsc` DOES catch it.
+  `npx tsc --noEmit` (the root `tsconfig.json`, which actually covers `src/**`)
+  reports `TS2459: Module '…/dialog' declares 'DialogContent' locally, but it is
+  not exported` across ~34 files. The earlier "tsc does not catch it" was wrong;
+  the real reason CI missed it is that **`package.json`'s `build` script is only
+  `vite build` — there is no `tsc` in the build or in the `quality` job**, so
+  typechecking never runs. Do not rely on `--noEmit` being wired up; it is a gate
+  you have to run by hand.
+- **`f03c73d` also introduced `DialogDescription.displayName =
+  DialogDescription.displayName`** — a self-assignment. As a live binding the
+  read precedes the write, so it throws `TypeError` at module evaluation. It
+  survives `tsc` (the binding's type is non-`undefined`) and the whole vitest
+  suite, because every dialog-consuming test file mocks the dialog module.
+  `eslint` flags it (`no-self-assign`) but the `quality` job runs lint with
+  `continue-on-error: true`, so it blocks nothing. Fixed; guarded.
+- Guarded by `src/components/ui/__tests__/dialogContent.contract.test.ts`, which
+  asserts (a) every declared `forwardRef` component is exported, (b) no
+  `displayName` is assigned to itself and each is wired to its Radix primitive,
+  and (c) the mobile grid-item rule is present, `max-sm`-scoped, and read from
+  the base class literal. Assert on **the class literal**, not the whole file — a
+  naive `source.toContain(...)` is vacuous because the explanatory comment also
+  names the utility (this bit the first version of the guard). Verified
+  non-vacuous by reintroducing each defect.
+- **A dialog's single implicit `grid` track sizes to the largest MIN-CONTENT
+  contribution of its children.** With a wide child (the Admin Submissions
+  `w-max` six-trigger tab strip) the track inflated to ~524px inside a 359px
+  dialog and the dialog's own `overflow-x-hidden` then **CLIPPED** the strip
+  instead of letting it scroll — the strip was unreachable on a phone. The
+  earlier note that phone-width scrolling was "reasoned, not observed" was wrong:
+  measured in headless Chromium, it did not scroll.
+- **Fix: `[&>*]:max-sm:min-w-0` on `DialogContent`.** It zeroes each grid item's
+  min-width on mobile, so the track stays at the dialog width and children scroll
+  inside their own overflow container.
+- **The `max-sm:` scope is load-bearing, not tidiness.** An unscoped `min-w-0` on
+  the children fixes phones but silently SHRINKS content-driven dialogs at
+  tablet/desktop, because the dialog is `sm:w-auto` (shrink-to-fit) and the grid
+  item's min-width currently props that width up. Measured with identical
+  content: a `max-w-2xl` dialog goes 574 → 320px at 640px, 574 → 384 at 768,
+  574 → 512 at 1024. Scoped to `max-sm`, `sm+` widths are byte-identical to
+  before (574/574/574/720). Same trap applies to putting `grid-cols-1` on the
+  dialog's content element.
+- **`max-w-[calc(100vw-1rem)]` is not the mobile guard it appears to be.** A
+  caller-supplied `max-w-sm`/`max-w-md`/`max-w-lg` is emitted LATER in the
+  Tailwind 4 stylesheet, so at equal specificity it overrides the clamp (verified:
+  base 359px, with `max-w-sm` 384px → element width reaches 375 vs a 375
+  viewport). `max-w-2xl`/`max-w-3xl` are emitted earlier and do not override.
+  When adding a dialog that must clamp on mobile, re-measure rather than trusting
+  the base class.
+- Admin Submissions **Completed** rows lacked the responsive pattern the
+  **Pending** rows already had: at 375px a completed row overflowed itself
+  (`scrollWidth 362 > clientWidth 349`) and pushed its actions outside the row.
+  Both now share `flex min-w-0 … gap-3 p-3 sm:p-4` + `min-w-0 flex-1` +
+  `truncate` + `flex shrink-0`.
+- **Verification method that found these** (worth reusing): build once, then load
+  the real emitted stylesheet in headless Chromium with class strings EXTRACTED
+  from source (not hand-copied, so they cannot drift), and measure
+  `getBoundingClientRect` of the dialog / tab strip / rows across 360–1440px.
+  `PW_EXECUTABLE_PATH=/usr/bin/chromium` works with the repo's Playwright; there
+  is no `.env` or injected session in this environment, so this static-DOM
+  approach is the only way to observe layout (the authenticated admin page cannot
+  be loaded, so the existing session-injection e2e specs all skip).
+- Guards: `dialogContent.contract.test.ts` asserts (a) every declared
+  `forwardRef` component is exported and (b) the mobile grid-item rule is present
+  and `max-sm`-scoped. Assert on **the base class literal**, not the whole file —
+  a naive `source.toContain(...)` is vacuous because the explanatory comment also
+  names the utility (this bit the first version of the guard). Verified
+  non-vacuous by reintroducing each defect.
+
