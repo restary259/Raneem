@@ -56,7 +56,7 @@ export interface VisaQueueRowLike {
 /** Pending until the student submits the Visa file; arrival does not gate this queue. */
 export function visaQueueSection(row: VisaQueueRowLike): VisaQueueSection {
   const status = normalizeVisaStatus(row.visa_status);
-  return row.visa_applied_at || status !== "not_applied" ? "applied" : "pending";
+  return row.visa_applied_at ? "applied" : "pending";
 }
 
 export function groupVisaQueue<T extends VisaQueueRowLike>(
