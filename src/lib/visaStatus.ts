@@ -41,77 +41,39 @@ export function visaStatusClasses(raw: string | null | undefined): string {
 }
 
 /** Queue buckets, in display order. */
-export const VISA_QUEUE_SECTIONS = [
-  "ready",
-  "inProgress",
-  "approved",
-  "rejected",
-  "received",
-  "missingArrival",
-] as const;
+export const VISA_QUEUE_SECTIONS = ["pending", "applied"] as const;
 
 export type VisaQueueSection = (typeof VISA_QUEUE_SECTIONS)[number];
 
-/** The minimal shape the queue grouping needs — keeps this pure + testable. */
 export interface VisaQueueRowLike {
-  /** Optional: the queue is, by construction, always `enrollment_paid`. */
   status?: string;
   student_user_id: string | null;
   actual_arrival: string | null;
   visa_status: string | null;
+  visa_applied_at?: string | null;
 }
 
-/**
- * Which bucket a queue row belongs to.
- *
- * A student enters the working "Ready" queue only once they are enrolled, have
- * a student account AND have been confirmed as arrived. Enrolled students with
- * no arrival confirmation are surfaced under "Missing arrival" instead of being
- * silently hidden — they must never disappear from operations.
- *
- * Once a visa application exists (status != not_applied) the arrival bucket no
- * longer applies: progress on the application itself takes precedence.
- */
+/** Pending until the student submits the Visa file; arrival does not gate this queue. */
 export function visaQueueSection(row: VisaQueueRowLike): VisaQueueSection {
   const status = normalizeVisaStatus(row.visa_status);
-  if (status === "received") return "received";
-  if (status === "rejected") return "rejected";
-  if (status === "approved") return "approved";
-  if (status === "applied") return "inProgress";
-  // status === "not_applied"
-  if (!row.student_user_id) return "missingArrival";
-  if (!row.actual_arrival) return "missingArrival";
-  return "ready";
+  return row.visa_applied_at || status !== "not_applied" ? "applied" : "pending";
 }
 
-/** Group rows into the six queue buckets, preserving input order within each. */
 export function groupVisaQueue<T extends VisaQueueRowLike>(
   rows: T[],
 ): Record<VisaQueueSection, T[]> {
-  const out = {
-    ready: [],
-    inProgress: [],
-    approved: [],
-    rejected: [],
-    received: [],
-    missingArrival: [],
-  } as Record<VisaQueueSection, T[]>;
+  const out = { pending: [], applied: [] } as Record<VisaQueueSection, T[]>;
   for (const row of rows) out[visaQueueSection(row)].push(row);
   return out;
 }
 
-/** Compact KPI counts derived from the grouped queue. */
 export function visaQueueCounts<T extends VisaQueueRowLike>(
   rows: T[],
 ): Record<VisaQueueSection, number> {
   const grouped = groupVisaQueue(rows);
   return {
-    ready: grouped.ready.length,
-    inProgress: grouped.inProgress.length,
-    approved: grouped.approved.length,
-    rejected: grouped.rejected.length,
-    received: grouped.received.length,
-    missingArrival: grouped.missingArrival.length,
+    pending: grouped.pending.length,
+    applied: grouped.applied.length,
   };
 }
 
