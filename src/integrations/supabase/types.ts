@@ -982,7 +982,9 @@ export type Database = {
           paid_status: string
           payment_method: string | null
           payment_type: string
+          receipt_path: string | null
           recorded_by: string | null
+          reference: string | null
           rejected_reason: string | null
           status: string
           submitted_at: string | null
@@ -1003,7 +1005,9 @@ export type Database = {
           paid_status?: string
           payment_method?: string | null
           payment_type?: string
+          receipt_path?: string | null
           recorded_by?: string | null
+          reference?: string | null
           rejected_reason?: string | null
           status?: string
           submitted_at?: string | null
@@ -1024,7 +1028,9 @@ export type Database = {
           paid_status?: string
           payment_method?: string | null
           payment_type?: string
+          receipt_path?: string | null
           recorded_by?: string | null
+          reference?: string | null
           rejected_reason?: string | null
           status?: string
           submitted_at?: string | null
@@ -6905,7 +6911,12 @@ export type Database = {
       clear_must_change_password: { Args: never; Returns: undefined }
       confirm_agency_service_fee: { Args: { p_case_id: string }; Returns: Json }
       confirm_agency_service_payment: {
-        Args: { p_case_id: string; p_payment_method?: string }
+        Args: {
+          p_case_id: string
+          p_payment_method?: string
+          p_receipt_path?: string
+          p_reference?: string
+        }
         Returns: Json
       }
       confirm_case_payment: {
