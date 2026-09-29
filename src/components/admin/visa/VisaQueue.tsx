@@ -4,15 +4,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shell";
 import TablePagination from "@/components/common/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
-import {
-  CheckCircle2,
-  Clock,
-  Plane,
-  ThumbsUp,
-  XCircle,
-  CalendarOff,
-  Inbox,
-} from "lucide-react";
+import { Clock, FileCheck2, Inbox } from "lucide-react";
 import VisaQueueCard from "./VisaQueueCard";
 import {
   VISA_QUEUE_SECTIONS,
