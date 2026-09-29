@@ -1,5 +1,6 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,15 +30,17 @@ const SearchAndFilter = ({
   const { dir, isRtl } = useDirection();
   const lang = i18n.language;
 
-  // Prevent background scroll when filter modal is open on mobile
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Lock background scroll + Escape to close while open
   useEffect(() => {
-    if (showFilters) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [showFilters]);
+    if (!showFilters) return;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowFilters(false); };
+    window.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey); };
+  }, [showFilters, setShowFilters]);
 
   return (
     <section className="educational-sticky-section sticky z-40 border-b border-border bg-background/95 shadow-xs backdrop-blur-md">
@@ -77,57 +80,50 @@ const SearchAndFilter = ({
         </div>
       </div>
 
-      {/* Filter Modal - Bottom Sheet on mobile, centered modal on desktop */}
-      {showFilters && (
-        <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-xs" onClick={() => setShowFilters(false)} />
-          
-          {/* Bottom Sheet (mobile) / Centered Modal (desktop) */}
-          <div className="fixed inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center z-[61]">
-            <div 
-              className="flex max-h-[80vh] w-full flex-col rounded-t-2xl bg-background shadow-surface-lg animate-in slide-in-from-bottom-4 md:max-h-[70vh] md:max-w-md md:rounded-2xl md:slide-in-from-bottom-0 md:zoom-in-95"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Handle bar (mobile) */}
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto md:hidden absolute left-1/2 -translate-x-1/2 top-2" />
-                <h3 className="text-base font-bold text-foreground">{t('educational.filterByCategory')}</h3>
-                <Button variant="ghost" size="icon" onClick={() => setShowFilters(false)} className="h-8 w-8" aria-label={t('common.close', 'Close')}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              {/* Filter options */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                <Button
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  onClick={() => { setSelectedCategory(null); setShowFilters(false); }}
-                   className="w-full justify-between text-sm"
-                >
-                  <span className="truncate">{t('educational.allMajors')}</span>
-                  <Badge variant="secondary" className="ms-2 flex-shrink-0">
-                    {Object.values(categoryMajorCounts).reduce((sum, count) => sum + count, 0)}
-                  </Badge>
-                </Button>
-                {majorsData.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory === category.id ? "default" : "outline"}
-                    onClick={() => { setSelectedCategory(category.id); setShowFilters(false); }}
-                     className="w-full justify-between text-sm"
-                  >
-                    <span className="truncate">{getLocalizedCategoryTitle(category.title, category.titleEN, lang)}</span>
-                    <Badge variant="secondary" className="ms-2 flex-shrink-0">{categoryMajorCounts[category.id] || 0}</Badge>
-                  </Button>
-                ))}
-              </div>
-
-              {/* Safe area padding */}
-              <div className="pb-safe" />
+      {/* Portaled to body: the sticky bar's backdrop-blur would otherwise trap position:fixed. */}
+      {showFilters && mounted && createPortal(
+        <div dir={dir}>
+          <div className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-xs" onClick={() => setShowFilters(false)} data-testid="filter-backdrop" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('educational.filterByCategory')}
+            className="fixed inset-x-0 bottom-0 z-[1001] flex max-h-[80dvh] w-full flex-col rounded-t-2xl bg-background shadow-surface-lg animate-in slide-in-from-bottom-4 md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[70vh] md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl"
+          >
+            <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-muted-foreground/30 md:hidden" />
+            <div className="flex items-center justify-between border-b border-border p-4">
+              <h3 className="text-base font-bold text-foreground">{t('educational.filterByCategory')}</h3>
+              <Button variant="ghost" size="icon" onClick={() => setShowFilters(false)} className="h-8 w-8" aria-label={t('common.close', 'Close')}>
+                <X className="h-4 w-4" />
+              </Button>
             </div>
+            <div className="flex-1 space-y-2 overflow-y-auto overscroll-contain p-4">
+              <Button
+                variant={selectedCategory === null ? "default" : "outline"}
+                onClick={() => { setSelectedCategory(null); setShowFilters(false); }}
+                className="w-full justify-between text-sm"
+              >
+                <span className="truncate">{t('educational.allMajors')}</span>
+                <Badge variant="secondary" className="ms-2 flex-shrink-0">
+                  {Object.values(categoryMajorCounts).reduce((sum, count) => sum + count, 0)}
+                </Badge>
+              </Button>
+              {majorsData.map((category) => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  onClick={() => { setSelectedCategory(category.id); setShowFilters(false); }}
+                  className="w-full justify-between text-sm"
+                >
+                  <span className="truncate">{getLocalizedCategoryTitle(category.title, category.titleEN, lang)}</span>
+                  <Badge variant="secondary" className="ms-2 flex-shrink-0">{categoryMajorCounts[category.id] || 0}</Badge>
+                </Button>
+              ))}
+            </div>
+            <div className="pb-[max(env(safe-area-inset-bottom),0.75rem)]" />
           </div>
-        </>
+        </div>,
+        document.body,
       )}
     </section>
   );
