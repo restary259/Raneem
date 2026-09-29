@@ -26,6 +26,7 @@ export interface InvoiceLabels {
   remaining: string;
   fullyPaid: string;
   separationNote: string;
+  memoNote: string;
   support: string;
   download: string;
   notFound: string;
@@ -58,6 +59,7 @@ const LABELS: Record<"ar" | "en", InvoiceLabels> = {
     paid: "المدفوع المؤكد",
     remaining: "الرصيد المتبقي",
     fullyPaid: "هذه الفاتورة مدفوعة بالكامل",
+    memoNote: "عند التحويل البنكي، اكتب رقم الملف في خانة الملاحظات (Memo) حتى نتمكن من مطابقة الدفعة:",
     separationNote: "تكاليف المدرسة ومزوّدي الخدمات في ألمانيا منفصلة عن هذه الفاتورة، وتُدفع مباشرة إلى الجهة المعنية بعد التحقق منها.",
     support: "لأي استفسار بخصوص فاتورتك، يسعدنا تواصلك مع فريق درب",
     download: "تنزيل PDF",
@@ -81,6 +83,7 @@ const LABELS: Record<"ar" | "en", InvoiceLabels> = {
     paid: "Confirmed payment",
     remaining: "Remaining balance",
     fullyPaid: "This invoice is paid in full",
+    memoNote: "When paying by bank transfer, write this case reference in the transfer memo so we can match your payment:",
     separationNote: "German school and provider costs are separate from this invoice and are paid directly to the relevant provider after verification.",
     support: "For questions about this invoice, please contact the DARB team",
     download: "Download PDF",

@@ -124,6 +124,7 @@ export default function InvoicePage() {
           </section>
 
           {view.fullyPaid && <p className="border border-trust/25 bg-trust/10 px-4 py-3 text-sm font-bold text-trust">✓ {L.fullyPaid}</p>}
+          {invoice.case_reference && <p className="border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium">{L.memoNote} <span dir="ltr" className="font-mono">{invoice.case_reference}</span></p>}
           <p className="border border-dashed border-border px-4 py-3 text-xs leading-6 text-muted-foreground">{L.separationNote}</p>
         </div>
 

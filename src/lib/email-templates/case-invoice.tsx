@@ -145,6 +145,13 @@ const Email = ({
                 </td>
               </tr>
             ) : null}
+            {caseReference ? (
+              <tr>
+                <td colSpan={2} style={metaLabel} dir="rtl">
+                  عند التحويل البنكي، اكتب رقم الملف في خانة الملاحظات (Memo)
+                </td>
+              </tr>
+            ) : null}
             {studentName ? (
               <tr>
                 <td style={metaLabel} dir="rtl">
