@@ -2662,3 +2662,86 @@ only the frontend reachability was broken.
   names the utility (this bit the first version of the guard). Verified
   non-vacuous by reintroducing each defect.
 
+## Admin Command Center: failed background refetches must never erase real data (2026-09-29)
+
+- **Symptom**: after any case action (confirm payment, mark as enrolled, update a
+  case) the realtime `cases` subscription fires `fetchAll()`. If that refetch's
+  `cases` read failed, the dashboard showed `Active Cases: 0 / Submitted: 0 /
+  Enrolled: 0 / SLA Breaches: 0` while Forgotten Cases (an RLS-bypassing RPC)
+  still showed the correct value — and only a full app relaunch restored the
+  numbers.
+- **Root cause (frontend)**: `fetchAll()` used a `val()` helper that mapped a
+  failed query to `[]`:
+  `r.status === 'fulfilled' && !r.value.error ? (r.value.data ?? []) : []`.
+  A PostgREST failure resolves (it does not reject) with `{ data: null, error }`,
+  so the failure was converted into a *successful read of an empty table*.
+  `fetchAll()` therefore returned `counts: { total: 0, ... }`, and React Query
+  **replaced its last known-good cache** with those fabricated zeros — the query
+  itself never entered an error state, so nothing signalled a problem.
+  **Rule: never launder a query error into an empty array. An empty result and a
+  failed read are different states and must stay distinguishable.**
+- **Fix** (`src/pages/admin/AdminCommandCenter.tsx`): `unwrap()` THROWS on
+  `rejected` / `value.error` instead of returning `[]`. The KPI pair (`cases` +
+  `get_forgotten_cases`) is **all-or-nothing** — `fetchAll()` aborts so React
+  Query keeps the previous `data` and sets `status: 'error'`. Verified against
+  `@tanstack/react-query` v5.103.1: on a failed refetch `data` is retained,
+  `isError` becomes true, and the configured retry runs.
+- **The four action queues** (`awaitingReview` / `unassigned` / `authFailures` /
+  `attributionIssues`) are per-queue instead: a failing queue yields `rows: null`
+  (not `[]`) plus `queueErrors[key] = true`, and the component carries forward the
+  last known-good rows from a ref. `null` = "could not read"; `[]` = "read
+  successfully, genuinely empty". **Read `lastGood.current` BEFORE assigning
+  `lastGood.current = data`** — advancing the ref first makes the fallback
+  resolve to the very snapshot whose queue is `null` (a real bug caught by the
+  test, not by review).
+- **UI**: a first-load failure (`isError && data === undefined`) renders
+  `ErrorState` + Retry INSTEAD of the KPI wall, so fabricated zeros are never
+  presented as real numbers. A background failure (`isError && data !== undefined`)
+  keeps the real numbers and adds a dismissable-by-retry banner
+  (`admin.commandCenter.refreshFailed`). The Refresh button disables and spins
+  while `isFetching`.
+- **Do NOT** "fix" this by removing the realtime subscription, raising
+  `staleTime`, adding delays, auto-reloading the app, hardcoding defaults, or
+  catching the error and returning empty arrays. The subscription is correct —
+  it is the refetch that had to become resilient. No query/retry config was added
+  locally; `src/router.tsx`'s global default (3 attempts, permanent errors never
+  retried) already covers transient Supabase failures.
+- **Root cause of the underlying transient `cases` failure: NOT conclusively
+  proven, and deliberately not guessed at.** What was checked and ruled out as
+  *not* the laundering mechanism: the query is a single-table `SELECT` with no
+  joins/subqueries, so RLS evaluation does not recurse; the migration files are
+  all committed and the live DB must already match HEAD (Forgotten Cases works
+  through an RPC that queries `cases`, and a missing column would break every
+  read, not intermittently); `cases` has `status`/`created_at`/`office_id`/
+  `archived` indexes, so the unbounded KPI read is not obviously a timeout; and
+  the realtime path does not cancel in-flight HTTP requests. The remaining
+  plausible causes are the ordinary ones — a transient network/PostgREST error,
+  a short-lived connection-pool or auth-token-refresh hiccup during a background
+  refetch, or a statement timeout on the unbounded `cases` read as the table
+  grows. **The fix is deliberately agnostic to which one it is**: a failed read
+  now surfaces as a failed read and preserves the last good data, so the user
+  never sees a false zero and never has to relaunch. If it recurs, capture the
+  actual error object from the network tab / `unwrap()` throw site.
+- Tests: `src/pages/admin/__tests__/AdminCommandCenterResilience.test.tsx` (7
+  cases) drives the REAL `QueryClient` against a mocked Supabase boundary —
+  background KPI failure keeps the previous values + shows the banner, retry
+  recovers fresh values, first-load failure shows ErrorState (not zeros) and
+  recovers via Retry, a failed queue reuses its last good rows, and a genuine
+  empty queue still renders empty. Both guards were verified non-vacuous by
+  reintroducing the defect.
+- **Test-mock gotcha (this broke an existing test and is worth remembering)**:
+  `supabase.rpc()` returns a thenable **PostgrestFilterBuilder**, not a Promise.
+  `AdminCommandCenterCash.test.tsx` stubbed it with `Promise.resolve(...)`, so
+  `supabase.rpc(...).limit(6)` threw a synchronous `TypeError` and EVERY query
+  failed — invisible before, because the old `val()` swallowed it into zeros and
+  the cash card still rendered. With the throw-instead-of-swallow fix the same
+  stub surfaced as a genuine "Unable to load" and failed 3 tests. **Any test
+  mocking `supabase.rpc` must return a chainable-thenable stub, not a bare
+  Promise** (see the `rpcChain` helper in both admin test files).
+- Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1686 passed | 1 skipped;
+  `npm run build` clean. Lint: the component carries pre-existing
+  `prettier/prettier` debt (169 errors at HEAD — the whole file is single-quoted
+  while the repo config wants double quotes); a full `prettier --write` would
+  churn 607 insertions/301 deletions, so the change deliberately MATCHES the
+  file's local style rather than reformatting it. The new test file is
+  eslint-clean.

@@ -74,6 +74,21 @@ const cashRows = [
 
 const mockRpc = vi.fn();
 
+// `supabase.rpc()` returns a PostgrestFilterBuilder: thenable AND chainable
+// (`.limit()`, `.eq()`, ...). A bare Promise would make `.limit(6)` throw and
+// make every query fail for the wrong reason, so the stub must be a real chain.
+const rpcChain = (result: unknown) => {
+  const handler: ProxyHandler<object> = {
+    get: (_target, prop) => {
+      if (prop === "then") {
+        return (resolve: (v: unknown) => void) => resolve(result);
+      }
+      return () => new Proxy({}, handler);
+    },
+  };
+  return new Proxy({}, handler);
+};
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: (...args: unknown[]) => mockRpc(...args),
@@ -99,15 +114,15 @@ describe("AdminCommandCenter — Cash Collection", () => {
     vi.clearAllMocks();
     mockRpc.mockImplementation((name: string) => {
       if (name === "get_admin_cash_collections") {
-        return Promise.resolve({ data: cashRows, error: null });
+        return rpcChain({ data: cashRows, error: null });
       }
       if (name === "settle_cash_collection") {
-        return Promise.resolve({
+        return rpcChain({
           data: { case_id: "case-1", settled: true, already_settled: false },
           error: null,
         });
       }
-      return Promise.resolve({ data: null, error: null });
+      return rpcChain({ data: [], error: null });
     });
   });
 
@@ -153,9 +168,9 @@ describe("AdminCommandCenter — Cash Collection", () => {
   it("shows the empty state when every cash payment is settled", async () => {
     mockRpc.mockImplementation((name: string) => {
       if (name === "get_admin_cash_collections") {
-        return Promise.resolve({ data: [], error: null });
+        return rpcChain({ data: [], error: null });
       }
-      return Promise.resolve({ data: null, error: null });
+      return rpcChain({ data: [], error: null });
     });
 
     renderPage();
