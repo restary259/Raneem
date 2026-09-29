@@ -305,6 +305,22 @@ const CasePayments: React.FC<Props> = ({
                         : ""}
                     </p>
 
+                    {(payment.reference || payment.receipt_path) && (
+                      <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        {payment.reference && (
+                          <span>
+                            {t("finance.receipt.reference", "Transfer reference")}:{" "}
+                            <span className="font-mono" dir="ltr">{payment.reference}</span>
+                          </span>
+                        )}
+                        {payment.receipt_path && (
+                          <button type="button" className="text-primary underline" onClick={() => void openReceipt(payment.receipt_path!)}>
+                            {t("finance.receipt.view", "View receipt")}
+                          </button>
+                        )}
+                      </p>
+                    )}
+
                     {/* Confirmed */}
                                           {payment.status ===
                       "confirmed" &&

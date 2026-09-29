@@ -49,6 +49,9 @@ export interface FinancialPayment {
   confirmed_at: string | null;
   rejected_reason: string | null;
   created_at: string;
+  payment_method?: string | null;
+  reference?: string | null;
+  receipt_path?: string | null;
 }
 
 export interface CaseFinancials {
