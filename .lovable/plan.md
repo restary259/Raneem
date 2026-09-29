@@ -1,4 +1,4 @@
-# Partner Schools follow the admin Programs pause switch
+# Pausing a school in admin Programs hides it from both the Team Partner Schools page and the Team Catalog page
 
 ## What changes
 Every Partner School is already linked to a school in the admin Programs page. The Team Partner Schools pages will now also check that linked school:
