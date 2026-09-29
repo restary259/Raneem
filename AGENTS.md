@@ -2687,11 +2687,18 @@ only the frontend reachability was broken.
   flags MISSING keys, not orphans) — leaving them is non-breaking; the
   `admin.activity.*` keys (`title`/`search`/`noActivity`) are still live.
 - **Guarded** by `src/lib/adminOverviewActivityGuard.test.ts` (5 source-scan
-  cases) and a render assertion in
-  `src/pages/admin/__tests__/AdminCommandCenterCash.test.tsx` (the page never
-  queries or subscribes to `activity_log`, and shows no leftover placeholder).
-  Both verified non-vacuous by reintroducing the card (fails 2 of 5 source
-  checks + the render check).
+  cases, quote-agnostic so a formatting-only change can't fail the suite) plus
+  render coverage on both sides:
+  `src/pages/admin/__tests__/AdminCommandCenterCash.test.tsx` (the Overview
+  never queries or subscribes to `activity_log`, and shows no leftover
+  placeholder) and `src/pages/admin/__tests__/AdminActivityPage.test.tsx`
+  (the Activity page actually reads `activity_log`, renders the returned
+  entries, subscribes to it, and shows its empty state). The render test is
+  the behavioural half the string scan alone cannot prove — a page can keep
+  the strings and stop fetching. All three verified non-vacuous: reintroducing
+  the Overview card fails 3 assertions, and pointing the Activity page at the
+  wrong table or dropping its `activity_log` subscription fails the render /
+  source checks respectively.
 - Verification (this repo, with `bun install --frozen-lockfile`): `npx tsc
   --noEmit` clean; `npx vitest run` 1685 passed | 1 skipped (107 files);
   `npm run build` clean. `npx eslint .` remains red with ~35k **pre-existing**

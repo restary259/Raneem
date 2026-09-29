@@ -64,24 +64,31 @@ describe("Admin Overview has no Recent Activity, the Activity Feed keeps it", ()
 
   it("Admin Overview keeps its remaining queries and subscriptions", () => {
     // Removing the card must not have taken the rest of the Overview with it.
-    expect(commandCenter).toContain("useRealtimeSubscription('cases'");
-    expect(commandCenter).toContain("useRealtimeSubscription('case_payments'");
+    // Quote-agnostic: a formatting-only change must not fail the suite.
+    expect(commandCenter).toMatch(/useRealtimeSubscription\(\s*["']cases["']/);
+    expect(commandCenter).toMatch(
+      /useRealtimeSubscription\(\s*["']case_payments["']/,
+    );
     expect(commandCenter).toContain("admin.commandCenter.cashCollection");
     expect(commandCenter).toContain("admin.commandCenter.queueReview");
   });
 
   it("the Live Activity Feed still reads and subscribes to activity_log", () => {
-    expect(activityPage).toContain(".from('activity_log')");
+    expect(activityPage).toMatch(/\.from\(\s*["']activity_log["']\s*\)/);
     expect(activityPage).toMatch(
-      /useRealtimeSubscription\(\s*['"]activity_log['"]/,
+      /useRealtimeSubscription\(\s*["']activity_log["']/,
     );
   });
 
   it("the Live Activity Feed is still routed and reachable from the nav", () => {
-    expect(fs.readFileSync(ACTIVITY_ROUTE, "utf8")).toContain(
-      '"/admin/activity"',
+    expect(fs.readFileSync(ACTIVITY_ROUTE, "utf8")).toMatch(
+      /["']\/admin\/activity["']/,
     );
-    expect(fs.readFileSync(LAYOUT, "utf8")).toContain('"/admin/activity"');
-    expect(fs.readFileSync(MOBILE_NAV, "utf8")).toContain("'/admin/activity'");
+    expect(fs.readFileSync(LAYOUT, "utf8")).toMatch(
+      /["']\/admin\/activity["']/,
+    );
+    expect(fs.readFileSync(MOBILE_NAV, "utf8")).toMatch(
+      /["']\/admin\/activity["']/,
+    );
   });
 });
