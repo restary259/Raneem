@@ -320,7 +320,11 @@
       "viewAll": "View all",
       "open": "Open",
       "activityLoadError": "Unable to load recent activity",
-      "queueLoadError": "Unable to load"
+      "queueLoadError": "Unable to load",
+      "queueStale": "Could not refresh — showing the last loaded list.",
+      "refreshFailed": "Could not refresh — showing the last data that loaded successfully.",
+      "loadFailed": "Unable to load the Command Center",
+      "loadFailedBody": "The overview could not be read. Your data is safe — retry to load it."
     },
     "pipeline": {
       "title": "Application Pipeline",
