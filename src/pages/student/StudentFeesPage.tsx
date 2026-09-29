@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { CopyButton } from "@/components/common/CopyButton";
 import { useTranslation } from "react-i18next";
 import { FileText, Receipt, Upload, CheckCircle2, Clock3, XCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -208,6 +209,16 @@ const StudentFeesPage = () => {
             {stat(t("studentFees.pending", "Pending"), fin.total_pending_review)}
             {stat(t("studentFees.remaining", "Remaining"), fin.remaining)}
           </div>
+          {fin.case_reference && Number(fin.remaining) > 0 && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+              <p className="font-medium">{t("studentFees.memoTitle", "Bank transfer memo")}</p>
+              <p className="text-muted-foreground">{t("studentFees.memoHint", "Write this reference in the memo of your bank transfer so we can match your payment.")}</p>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="font-mono font-semibold" dir="ltr">{fin.case_reference}</span>
+                <CopyButton value={fin.case_reference} />
+              </div>
+            </div>
+          )}
           {Number(fin.referral_discount ?? 0) > 0 && (
             <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
               <div className="flex items-center justify-between text-sm">
