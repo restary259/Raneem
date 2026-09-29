@@ -641,7 +641,7 @@ export default function CaseDetailPage() {
         <>
           {/* Sticky action bar: view switcher + the single context-aware action. */}
           <div className="sticky top-0 z-20 flex flex-col gap-3 rounded-xl border bg-card px-4 py-3 shadow-xs">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="hidden sm:block">
                 <Tabs value={activeView} onValueChange={(v) => setActiveView(v as WorkflowView)}>
                   <TabsList className="grid h-auto w-full grid-cols-3">
@@ -653,7 +653,7 @@ export default function CaseDetailPage() {
               </div>
 
               <Select value={activeView} onValueChange={(v) => setActiveView(v as WorkflowView)}>
-                <SelectTrigger className="sm:hidden flex-1">
+                <SelectTrigger className="sm:hidden flex-1 shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -675,14 +675,21 @@ export default function CaseDetailPage() {
                   }
                   if (!savedComplete) {
                     return (
-                      <Button className="gap-1.5" onClick={() => setActiveView("profile")}>
+                      <Button
+                        className="h-auto min-w-0 shrink gap-1.5 whitespace-normal py-2 text-center leading-snug sm:whitespace-nowrap"
+                        onClick={() => setActiveView("profile")}
+                      >
                         {t("case.action.completeProfile", { defaultValue: "Complete student profile" })}
                       </Button>
                     );
                   }
                   if (caseData.status === "payment_confirmed") {
                     return (
-                      <Button className="gap-1.5" disabled={submitting} onClick={() => void handleSubmitToAdmin()}>
+                      <Button
+                        className="h-auto min-w-0 shrink gap-1.5 whitespace-normal py-2 text-center leading-snug sm:whitespace-nowrap"
+                        disabled={submitting}
+                        onClick={() => void handleSubmitToAdmin()}
+                      >
                         {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                         {t("finance.invite.action")}
                       </Button>
@@ -690,7 +697,7 @@ export default function CaseDetailPage() {
                   }
                   return (
                     <Button
-                      className="gap-1.5"
+                      className="h-auto min-w-0 shrink gap-1.5 whitespace-normal py-2 text-center leading-snug sm:whitespace-nowrap"
                       disabled={!financeReadyToConfirm}
                       onClick={() => void handleConfirmAndSave()}
                     >

@@ -756,7 +756,7 @@ const CaseFinance = forwardRef<CaseFinanceHandle, Props>(function CaseFinance(
                   </div>
                   <Button
                     type="button"
-                    className="w-full sm:w-auto gap-1.5"
+                    className="h-auto w-full min-w-0 gap-1.5 whitespace-normal px-4 py-2.5 text-center leading-snug sm:w-auto sm:whitespace-nowrap"
                     disabled={submitting}
                     onClick={onSubmitToAdmin}
                   >
