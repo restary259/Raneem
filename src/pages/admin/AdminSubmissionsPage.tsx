@@ -8,13 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
   RefreshCw,
   ChevronRight,
-  Download,
-  FileText,
   User,
   Lock,
   ExternalLink,
@@ -32,48 +29,13 @@ import { useNavigate } from "@/lib/router-compat";
 import { CopyButton } from "@/components/common/CopyButton";
 import { usePagination } from "@/hooks/usePagination";
 import TablePagination from "@/components/common/TablePagination";
-import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
-import CaseFinance, { type CaseFinanceReadiness } from "@/components/cases/CaseFinance";
+import SubmissionCaseTabs, { type SubmittedCase } from "@/components/admin/SubmissionCaseTabs";
+import { type CaseFinanceReadiness } from "@/components/cases/CaseFinance";
 import { useCaseFinancials } from "@/hooks/useCaseFinancials";
 import { identityConflictMessage } from "@/lib/identityConflict";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 import { sendCaseMessage } from "@/services/CaseMessageService";
 
-
-interface SubmittedCase {
-  id: string;
-  full_name: string;
-  phone_number: string;
-  status: string;
-  source: string;
-  created_at: string;
-  education_level: string | null;
-  city: string | null;
-  passport_type: string | null;
-  student_user_id: string | null;
-  partner_id: string | null;
-  referred_by: string | null;
-  assigned_to: string | null;
-  submission?: {
-    id: string;
-    service_fee: number;
-    submitted_at: string | null;
-    enrollment_paid_at: string | null;
-    program_id: string | null;
-    accommodation_id: string | null;
-    program_start_date: string | null;
-    program_end_date: string | null;
-    payment_confirmed: boolean;
-    program_price: number | null;
-    program_weeks: number | null;
-    program_weekly_price: number | null;
-    accommodation_price: number | null;
-    accommodation_weeks: number | null;
-    accommodation_weekly_price: number | null;
-    extra_data: Record<string, unknown> | null;
-  } | null;
-  documents?: Array<{ id: string; file_name: string; file_url: string; category: string; created_at: string }>;
-}
 
 /** Referrer roles the server preview can return, mirroring record_case_commission. */
 type ReferrerRole = "partner" | "ambassador" | "agent_self" | "student";
@@ -701,7 +663,7 @@ const AdminSubmissionsPage = () => {
 
       {/* Full Case Detail Dialog */}
       <Dialog open={!!selected && !showSplitPanel && !showPasswordGate} onOpenChange={() => setSelected(null)}>
-        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent dir={isRtl ? "rtl" : "ltr"} className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="h-5 w-5" /> {selected?.full_name}
@@ -709,262 +671,54 @@ const AdminSubmissionsPage = () => {
           </DialogHeader>
           {selected && (
             <div className="space-y-5">
-              {/* Basic Info */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">{t("admin.submissions.basicInfo")}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.phone")}:</span>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium">{selected.phone_number}</p>
-                      <CopyButton value={selected.phone_number} />
-                    </div>
-                  </div>
-                  {(() => {
-                    // Manual / submit-new-student cases never collect these
-                    // intake fields; fall back to extra_data, then say so
-                    // explicitly instead of rendering a blank dash.
-                    const extra = (selected.submission?.extra_data ?? {}) as Record<string, unknown>;
-                    const na = t("admin.submissions.notCollected");
-                    const cityVal = selected.city || (extra.city as string) || "";
-                    const eduVal = selected.education_level || (extra.education_level as string) || "";
-                    const passVal = (selected.passport_type || (extra.passport_type as string) || "").replace(
-                      /_/g,
-                      " ",
-                    );
-                    return (
-                      <>
-                        <div>
-                          <span className="text-muted-foreground">{t("admin.submissions.city")}:</span>
-                          <div className="flex items-center gap-1">
-                            <p className={cityVal ? "font-medium" : "text-muted-foreground italic"}>{cityVal || na}</p>
-                            {cityVal && <CopyButton value={cityVal} />}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">{t("admin.submissions.education")}:</span>
-                          <div className="flex items-center gap-1">
-                            <p className={eduVal ? "font-medium" : "text-muted-foreground italic"}>{eduVal || na}</p>
-                            {eduVal && <CopyButton value={eduVal} />}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">{t("admin.submissions.passport")}:</span>
-                          <div className="flex items-center gap-1">
-                            <p className={passVal ? "font-medium" : "text-muted-foreground italic"}>{passVal || na}</p>
-                            {passVal && <CopyButton value={passVal} />}
-                          </div>
-                        </div>
-                      </>
-                    );
-                  })()}
-                  <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.submittedDate")}:</span>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium">{fmt(selected.submission?.submitted_at || null)}</p>
-                      {selected.submission?.submitted_at && (
-                        <CopyButton value={fmt(selected.submission.submitted_at)} />
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">{t("admin.submissions.payment")}:</span>
-                    <Badge
-                      className={
-                        selected.submission?.payment_confirmed
-                          ? "bg-primary/10 text-primary"
-                          : toneClasses("payment").chip
-                      }
-                    >
-                      {selected.submission?.payment_confirmed
-                        ? t("admin.submissions.paymentConfirmed")
-                        : t("admin.submissions.paymentPending")}
-                    </Badge>
-                  </div>
-                  {paymentMethodMap[selected.id] && (
-                    <div>
-                      <span className="text-muted-foreground">{t("finance.paymentMethod.label", "Payment method")}:</span>
-                      <div className="flex items-center gap-1">
-                        {paymentMethodMap[selected.id] === "cash" ? <Banknote className="h-3.5 w-3.5" /> : <Landmark className="h-3.5 w-3.5" />}
-                        <p className="font-medium">
-                          {t(`finance.paymentMethod.${paymentMethodMap[selected.id]}`, paymentMethodMap[selected.id] === "cash" ? "Cash" : "Bank Transfer")}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {/* Persistent status — visible on every tab. */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  className={
+                    selected.submission?.payment_confirmed
+                      ? "bg-primary/10 text-primary"
+                      : toneClasses("payment").chip
+                  }
+                >
+                  {selected.submission?.payment_confirmed
+                    ? t("admin.submissions.paymentConfirmed")
+                    : t("admin.submissions.paymentPending")}
+                </Badge>
+                {paymentMethodMap[selected.id] && (
+                  <Badge variant="outline" className="gap-1">
+                    {paymentMethodMap[selected.id] === "cash" ? (
+                      <Banknote className="h-3.5 w-3.5" />
+                    ) : (
+                      <Landmark className="h-3.5 w-3.5" />
+                    )}
+                    {t(
+                      `finance.paymentMethod.${paymentMethodMap[selected.id]}`,
+                      paymentMethodMap[selected.id] === "cash" ? "Cash" : "Bank Transfer",
+                    )}
+                  </Badge>
+                )}
+                {selected.status === "enrollment_paid" && (
+                  <Badge className={`gap-1 ${toneClasses("enrolled").chip}`}>
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    {t("admin.submissions.tabCompleted")}
+                    {selected.submission?.enrollment_paid_at &&
+                      ` · ${fmt(selected.submission.enrollment_paid_at)}`}
+                  </Badge>
+                )}
               </div>
 
-              <Separator />
-
-              {/* Payment Details */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">{t("admin.submissions.paymentDetails")}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">DARB service total:</span>
-                    <p className="font-medium">Calculated in the Finance section above.</p>
-                  </div>
-                  {selected.submission?.program_start_date && (
-                    <div>
-                      <span className="text-muted-foreground">{t("admin.submissions.startDate")}:</span>
-                      <div className="flex items-center gap-1">
-                        <p className="font-medium">{fmt(selected.submission.program_start_date)}</p>
-                        <CopyButton value={fmt(selected.submission.program_start_date)} />
-                      </div>
-                    </div>
-                  )}
-                  {selected.submission?.program_end_date && (
-                    <div>
-                      <span className="text-muted-foreground">{t("admin.submissions.endDate")}:</span>
-                      <div className="flex items-center gap-1">
-                        <p className="font-medium">{fmt(selected.submission.program_end_date)}</p>
-                        <CopyButton value={fmt(selected.submission.program_end_date)} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-3 p-3 rounded-lg bg-muted text-sm">
-                  <span className="text-muted-foreground">{t("admin.submissions.total")}:</span>
-                  <span className="font-bold ms-2 text-foreground">{totalFee(selected)} ILS</span>
-                </div>
-              </div>
-
-              {/* Program / Accommodation resolved names */}
-              {(selected.submission?.program_id || selected.submission?.accommodation_id) && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-2">
-                      {t("admin.submissions.programAccom")}
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                      {selected.submission?.program_id && (
-                        <div>
-                          <span className="text-muted-foreground">{t("admin.submissions.program")}:</span>
-                          <p className="font-medium">
-                            {programNames[selected.submission.program_id] || selected.submission.program_id}
-                          </p>
-                          {selected.submission?.program_price ? (
-                            <p className="text-xs text-muted-foreground">
-                              {selected.submission?.program_weeks && selected.submission?.program_weekly_price
-                                ? `${selected.submission.program_weeks} × €${Number(selected.submission.program_weekly_price).toLocaleString("en-US")} = `
-                                : ""}
-                              €{Number(selected.submission.program_price).toLocaleString("en-US")}
-                            </p>
-                          ) : null}
-                        </div>
-                      )}
-                      {selected.submission?.accommodation_id && (
-                        <div>
-                          <span className="text-muted-foreground">{t("admin.submissions.accommodation")}:</span>
-                          <p className="font-medium">
-                            {accommodationNames?.[selected.submission.accommodation_id] ||
-                              selected.submission.accommodation_id}
-                          </p>
-                          {selected.submission?.accommodation_price ? (
-                            <p className="text-xs text-muted-foreground">
-                              {selected.submission?.accommodation_weeks &&
-                              selected.submission?.accommodation_weekly_price
-                                ? `${selected.submission.accommodation_weeks} × €${Number(selected.submission.accommodation_weekly_price).toLocaleString("en-US")} = `
-                                : ""}
-                              €{Number(selected.submission.accommodation_price).toLocaleString("en-US")}
-                            </p>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Extra Profile Data */}
-              {selected.submission?.extra_data && Object.keys(selected.submission.extra_data).length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-2">
-                      {t("admin.submissions.studentProfileData")}
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                      {Object.entries(selected.submission.extra_data).map(([key, val]) => {
-                        if (!val || val === "") return null;
-                        if (key === "program_id" || key === "accommodation_id") return null;
-                        const fieldLabel = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-                        return (
-                          <div key={key}>
-                            <span className="text-muted-foreground">{fieldLabel}:</span>
-                            <div className="flex items-center gap-1">
-                              <p className="font-medium">{String(val)}</p>
-                              <CopyButton value={String(val)} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <CaseFinance
-                caseId={selected.id}
-                canManage={false}
-                canConfirm={true}
-                onReadinessChange={setFinanceReadiness}
+              <SubmissionCaseTabs
+                caseData={selected}
+                programNames={programNames}
+                accommodationNames={accommodationNames}
+                paymentMethod={paymentMethodMap[selected.id]}
+                serviceTotalLabel={totalFee(selected)}
+                fmt={fmt}
+                onOpenDocument={openDocument}
+                onFinanceReadinessChange={setFinanceReadiness}
               />
 
-              <CaseInvoiceBlock caseId={selected.id} caseStatus={selected.status} />
-
-              {/* Documents */}
-              {selected.documents && selected.documents.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                      <FileText className="h-4 w-4" /> {t("admin.submissions.documents")} ({selected.documents.length})
-                    </h3>
-                    <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-                      {selected.documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 gap-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {doc.category} · {fmt(doc.created_at)}
-                            </p>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 gap-1 shrink-0"
-                            onClick={() => openDocument(doc.file_url)}
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <Separator />
-
-              {/* Enrolled badge for completed cases */}
-              {selected.status === "enrollment_paid" && (
-                <div className={`flex items-center gap-2 p-3 rounded-lg ${toneClasses("enrolled").tint} border border-[hsl(var(--status-enrolled)/0.28)]`}>
-                  <CheckCircle2 className={`h-5 w-5 ${toneClasses("enrolled").text} shrink-0`} />
-                  <div className="text-sm">
-                    <p className={`font-semibold ${toneClasses("enrolled").text}`}>{t("admin.submissions.tabCompleted")}</p>
-                    {selected.submission?.enrollment_paid_at && (
-                      <p className={`${toneClasses("enrolled").text} text-xs`}>
-                        {t("admin.submissions.enrolledOn")}: {fmt(selected.submission.enrollment_paid_at)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
+              {/* Actions stay outside the tabs so they are always reachable. */}
               <div className="flex flex-col gap-2">
                 <Button
                   variant="outline"
@@ -986,14 +740,16 @@ const AdminSubmissionsPage = () => {
                       disabled={
                         marking ||
                         !financeReadiness ||
-                        financeReadiness.germanyConfirmedRequired < financeReadiness.germanyRequiredTotal
+                        financeReadiness.germanyConfirmedRequired <
+                          financeReadiness.germanyRequiredTotal
                       }
                     >
                       <SplitSquareHorizontal className="h-4 w-4" />
                       {t("admin.submissions.markEnrolled", "Mark as Enrolled")}
                     </Button>
                     {financeReadiness &&
-                      financeReadiness.germanyConfirmedRequired < financeReadiness.germanyRequiredTotal && (
+                      financeReadiness.germanyConfirmedRequired <
+                        financeReadiness.germanyRequiredTotal && (
                         <p className="text-xs text-muted-foreground">
                           {t(
                             "admin.submissions.confirmGermanPaymentsFirst",
