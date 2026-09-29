@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState, LoadingState } from "@/components/shell/States";
 import { useToast } from "@/hooks/use-toast";
 import WhatsAppDirectSendToggle from "@/components/messages/WhatsAppDirectSendToggle";
+import WhatsAppSendingToggle from "@/components/messages/WhatsAppSendingToggle";
 import {
   getWhatsAppHealth,
   listWhatsAppFailedJobs,
@@ -87,6 +88,7 @@ export default function WhatsAppHealthPanel({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="space-y-4">
+      {isAdmin && <WhatsAppSendingToggle />}
       {isAdmin && <WhatsAppDirectSendToggle />}
       <div>
         <h3 className="text-sm font-semibold">{t("health.today", "Today at a glance")}</h3>
