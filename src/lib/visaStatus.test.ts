@@ -48,10 +48,14 @@ describe("visaQueueSection", () => {
     expect(visaQueueSection(row({ actual_arrival: null, visa_status: "not_applied" }))).toBe("pending");
   });
 
-  it("keeps all downstream Visa statuses in the Applied queue", () => {
-    expect(visaQueueSection(row({ visa_status: "approved" }))).toBe("applied");
-    expect(visaQueueSection(row({ visa_status: "rejected" }))).toBe("applied");
-    expect(visaQueueSection(row({ visa_status: "received" }))).toBe("applied");
+  it("requires the submission timestamp for the Applied queue", () => {
+    expect(visaQueueSection(row({ visa_status: "approved" }))).toBe("pending");
+    expect(
+      visaQueueSection({
+        ...row({ visa_status: "approved" }),
+        visa_applied_at: "2026-09-29T12:00:00.000Z",
+      }),
+    ).toBe("applied");
   });
 });
 
