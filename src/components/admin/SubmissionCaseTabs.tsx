@@ -104,9 +104,9 @@ export default function SubmissionCaseTabs({
   );
 
   return (
-    <Tabs defaultValue="overview" className="w-full">
+    <Tabs defaultValue="overview" className="w-full min-w-0">
       {/* Six triggers do not fit a phone width as a grid — scroll instead. */}
-      <TabsList className="w-full justify-start overflow-x-auto">
+      <div className="w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-1 scrollbar-thin"><TabsList className="w-max min-w-full justify-start gap-1 flex-nowrap">
         <TabsTrigger value="overview">
           {t("admin.submissions.tabs.overview")}
         </TabsTrigger>
@@ -130,11 +130,12 @@ export default function SubmissionCaseTabs({
           </TabsTrigger>
         )}
       </TabsList>
+      </div>
 
       {/* ── Overview: basic info + payment details ── */}
       <TabsContent
         value="overview"
-        className="space-y-5 data-[state=inactive]:hidden"
+        className="min-w-0 w-full max-w-full overflow-x-hidden space-y-5 data-[state=inactive]:hidden"
         forceMount
       >
         <div>
@@ -321,7 +322,7 @@ export default function SubmissionCaseTabs({
       {/* ── Profile: the submission's extra_data key/value grid ── */}
       <TabsContent
         value="profile"
-        className="space-y-5 data-[state=inactive]:hidden"
+        className="min-w-0 w-full max-w-full overflow-x-hidden space-y-5 data-[state=inactive]:hidden"
         forceMount
       >
         <div>
@@ -423,7 +424,7 @@ export default function SubmissionCaseTabs({
       {/* ── Finance: keeps its own Summary/Invoice sub-tabs ── */}
       <TabsContent
         value="finance"
-        className="space-y-5 data-[state=inactive]:hidden"
+        className="min-w-0 w-full max-w-full overflow-x-hidden space-y-5 data-[state=inactive]:hidden"
         forceMount
       >
         <CaseFinance
@@ -437,7 +438,7 @@ export default function SubmissionCaseTabs({
       {/* ── Invoice ── */}
       <TabsContent
         value="invoice"
-        className="space-y-5 data-[state=inactive]:hidden"
+        className="min-w-0 w-full max-w-full overflow-x-hidden space-y-5 data-[state=inactive]:hidden"
         forceMount
       >
         <CaseInvoiceBlock caseId={caseData.id} caseStatus={caseData.status} />
