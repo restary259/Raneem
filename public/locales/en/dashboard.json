@@ -1657,7 +1657,8 @@
       "pending": "Pending",
       "applied": "Visa Applied",
       "emptyPending": "No enrolled students are waiting for their Visa file.",
-      "emptyApplied": "No Visa files have been submitted for administration."
+      "emptyApplied": "No Visa files have been submitted for administration.",
+      "waitingStudentSubmission": "Waiting for the student to submit this Visa file. Administration cannot mark it applied from here."
     }
   },
   "influencer": {
@@ -3507,7 +3508,8 @@
     "readyToSubmitBody": "Your configured required information is complete. Make sure your selected documents are ready.",
     "submitForAdministration": "Submit for Administration",
     "arrivalSaved": "Arrival recorded.",
-    "submittedSuccess": "Your Visa file was submitted to Administration."
+    "submittedSuccess": "Your Visa file was submitted to Administration.",
+    "documentsRequired": "Select the configured required proof documents before submitting."
   },
   "contacts": {
     "title": "Important Contacts",
