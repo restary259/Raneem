@@ -37,8 +37,7 @@ export default function VisaQueueCard({
   onMarkArrived?: () => void;
   marking?: boolean;
 }) {
-  const { t, i18n } = useTranslation("dashboard");
-  const isAr = i18n.language === "ar";
+  const { t } = useTranslation("dashboard");
   const needsArrival = !row.actual_arrival;
 
   return (
@@ -61,15 +60,16 @@ export default function VisaQueueCard({
               )}
               <span className="flex items-center gap-1">
                 <CalendarClock className="h-3 w-3" />
-                {isAr ? "الوصول" : "Arrival"}: {fmt(row.actual_arrival)}
+                {t("admin.visa.arrival", "Arrival")}: {fmt(row.actual_arrival)}
               </span>
               <span className="flex items-center gap-1">
                 <FolderOpen className="h-3 w-3" />
-                {row.document_count} {isAr ? "ملفات" : "files"}
+                {row.document_count} {t("admin.visa.filesCount", "files")}
               </span>
               <span className="flex items-center gap-1">
                 <FileCheck2 className="h-3 w-3" />
-                {row.selected_document_count} {isAr ? "مختارة" : "selected"}
+                {row.selected_document_count}{" "}
+                {t("admin.visa.selectedShort", "selected")}
               </span>
               {row.assigned_name && (
                 <span className="flex items-center gap-1">

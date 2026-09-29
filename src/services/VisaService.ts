@@ -284,35 +284,6 @@ export async function markStudentArrived(
   });
 }
 
-/** Explicitly start the visa file for a case (idempotent — one row per case). */
-export async function startVisaFile(
-  caseId: string,
-  studentUserId: string,
-  actorId: string | null,
-  arrivedAt: string | null,
-): Promise<void> {
-  const { data: existing, error: readErr } = await supabase
-    .from("visa_applications")
-    .select("id")
-    .eq("case_id", caseId)
-    .maybeSingle();
-  if (readErr && readErr.code !== "PGRST116") throw readErr;
-  if (existing?.id) return;
-
-  const { error } = await supabase.from("visa_applications").insert({
-    case_id: caseId,
-    student_user_id: studentUserId,
-    arrived_in_germany_at: arrivedAt,
-    visa_outcome: "pending",
-  });
-  if (error) throw error;
-
-  await logEvent(caseId, "visa_file_started", {
-    actor_id: actorId,
-    student_user_id: studentUserId,
-  });
-}
-
 /**
  * Returns the application id, creating the row lazily on first use. This is the
  * single lazy-creation path — an application is never pre-created just to

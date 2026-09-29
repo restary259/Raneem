@@ -2460,7 +2460,16 @@ indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
   data flow through `visa_field_values` + `documents`.
 - i18n: `admin.visa.*` + `common.yes/no/saved` added to en + ar + he
   `dashboard.json` (parity-guarded by `i18nKeys.test.ts` +
-  `hebrewLocaleCoverage.test.ts`). No hardcoded UI strings.
+  `hebrewLocaleCoverage.test.ts`). No hardcoded UI strings: the queue row and
+  every section title go through `t()` — never an inline `isAr ? ... : ...`.
+  **A `t()` key must never resolve to an object.** `admin.visa.status` is the
+  status NAMESPACE (`status.not_applied` …), so the section title uses the
+  separate leaf `admin.visa.statusLabel`; i18next returns the diagnostic string
+  `key '...' returned an object instead of string` (truthy, so the English
+  fallback never applies) when a namespace is used as a leaf.
+  `i18nKeys.test.ts` now has a `never resolves a t() key to an object` guard —
+  it skips `t(key, { returnObjects: true })` call sites, which resolve to
+  objects by design.
 - Tests: `src/lib/visaStatus.test.ts` (13 cases - sectioning incl. scenarios
   1/2, counts, readiness, status normalization). Build clean; `npx vitest run`
-  1656 passed | 1 skipped.
+  1657 passed | 1 skipped.

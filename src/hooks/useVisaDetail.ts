@@ -18,6 +18,12 @@ export function useVisaDetail(
   const [error, setError] = useState<unknown>(null);
   const cancelled = useRef(false);
   const onDocumentChange = options?.onDocumentChange;
+  // Held in a ref so a caller passing an inline callback (the common case)
+  // does not resubscribe the realtime channel on every parent render.
+  const onDocumentChangeRef = useRef(onDocumentChange);
+  useEffect(() => {
+    onDocumentChangeRef.current = onDocumentChange;
+  }, [onDocumentChange]);
 
   const refresh = useCallback(async () => {
     if (!caseId || !studentUserId) {
@@ -59,14 +65,14 @@ export function useVisaDetail(
         },
         () => {
           void refresh();
-          onDocumentChange?.();
+          onDocumentChangeRef.current?.();
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [studentUserId, refresh, onDocumentChange]);
+  }, [studentUserId, refresh]);
 
   return { detail, loading, error, refresh };
 }

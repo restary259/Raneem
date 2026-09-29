@@ -224,6 +224,17 @@ export default function VisaDetailSheet({
                   detail?.values[f.id] ?? "",
                 ]),
               ),
+              profile: {
+                eye_color: profile?.eye_color ?? null,
+                passport_expiry: profile?.passport_expiry ?? null,
+                nationality: profile?.nationality ?? null,
+                has_changed_legal_name: profile?.has_changed_legal_name ?? null,
+                previous_legal_name: profile?.previous_legal_name ?? null,
+                has_criminal_record: profile?.has_criminal_record ?? null,
+                criminal_record_details: profile?.criminal_record_details ?? null,
+                has_dual_citizenship: profile?.has_dual_citizenship ?? null,
+                second_passport_country: profile?.second_passport_country ?? null,
+              },
               documents: detail?.selectedDocumentIds ?? [],
             }
           : undefined;
@@ -490,7 +501,7 @@ export default function VisaDetailSheet({
               </SectionCard>
 
               <SectionCard
-                title={t("admin.visa.status", "Visa status")}
+                title={t("admin.visa.statusLabel", "Visa status")}
                 icon={CheckCircle2}
               >
                 <div className="space-y-3">
