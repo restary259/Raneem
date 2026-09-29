@@ -31,55 +31,27 @@ const SECTION_META: Record<
     emptyFallback: string;
   }
 > = {
-  ready: {
-    icon: Plane,
-    i18nKey: "admin.visa.ready",
-    fallback: "Ready",
-    emptyKey: "admin.visa.emptyReady",
-    emptyFallback: "No students are ready for the post-arrival Visa workflow.",
-  },
-  inProgress: {
+  pending: {
     icon: Clock,
-    i18nKey: "admin.visa.inProgress",
-    fallback: "In Progress",
-    emptyKey: "admin.visa.emptyInProgress",
-    emptyFallback: "No visa applications in progress.",
+    i18nKey: "admin.visa.pending",
+    fallback: "Pending",
+    emptyKey: "admin.visa.emptyPending",
+    emptyFallback: "No enrolled students are waiting for their Visa file.",
   },
-  approved: {
-    icon: ThumbsUp,
-    i18nKey: "admin.visa.approved",
-    fallback: "Approved",
-    emptyKey: "admin.visa.emptyApproved",
-    emptyFallback: "No approved visas yet.",
-  },
-  rejected: {
-    icon: XCircle,
-    i18nKey: "admin.visa.rejected",
-    fallback: "Rejected",
-    emptyKey: "admin.visa.emptyRejected",
-    emptyFallback: "No rejected visas.",
-  },
-  received: {
-    icon: CheckCircle2,
-    i18nKey: "admin.visa.received",
-    fallback: "Received",
-    emptyKey: "admin.visa.emptyReceived",
-    emptyFallback: "No completed visa files yet.",
-  },
-  missingArrival: {
-    icon: CalendarOff,
-    i18nKey: "admin.visa.missingArrival",
-    fallback: "Missing Arrival Date",
-    emptyKey: "admin.visa.emptyMissingArrival",
-    emptyFallback: "Every enrolled student has a confirmed arrival date.",
+  applied: {
+    icon: FileCheck2,
+    i18nKey: "admin.visa.applied",
+    fallback: "Visa Applied",
+    emptyKey: "admin.visa.emptyApplied",
+    emptyFallback: "No Visa files have been submitted for administration.",
   },
 };
 
 /**
  * The Visa queue. Sections are derived from the pure `groupVisaQueue` helper so
  * the bucketing rules are unit-tested independently of this markup. The
- * "Missing Arrival Date" section is intentionally last and always rendered when
- * non-empty, so enrolled students are never silently hidden.
+ * Pending intentionally includes students without arrival confirmation because
+ * enrollment and Visa preparation are separate stages and may be months apart.
  */
 export default function VisaQueue({
   rows,
@@ -149,7 +121,7 @@ export default function VisaQueue({
                 row={row}
                 onOpen={() => onOpen(row)}
                 onMarkArrived={
-                  activeSection === "missingArrival"
+                  activeSection === "pending" && !row.actual_arrival
                     ? () => onMarkArrived(row)
                     : undefined
                 }
