@@ -3472,13 +3472,13 @@
     "active": "Active",
     "saveSuccess": "Visa info saved",
     "immigrationHint": "These details are requested by the immigration office. Fill them in once you have them — your team can see them right away.",
-    "status": "Visa status",
+    "status": "Status",
     "passportExpiry": "Passport expiry",
     "eyeColor": "Eye color",
     "accommodationProof": "Accommodation proof",
     "bankStatement": "Bank statement",
     "healthInsurance": "Health insurance",
-    "availableAfterEnrollment": "Your enrollment is complete. Complete the Visa file after you have arrived in Germany.",
+    "availableAfterEnrollment": "Available after enrollment",
     "enrollmentRequired": "Your Visa workflow becomes available after your enrollment is confirmed.",
     "loadError": "Could not load your Visa file",
     "prepare": "Preparation",
@@ -3506,7 +3506,8 @@
     "readyToSubmit": "Review your Visa file",
     "readyToSubmitBody": "Your configured required information is complete. Make sure your selected documents are ready.",
     "submitForAdministration": "Submit for Administration",
-    "arrivalSaved": "Arrival recorded."
+    "arrivalSaved": "Arrival recorded.",
+    "submittedSuccess": "Your Visa file was submitted to Administration."
   },
   "contacts": {
     "title": "Important Contacts",
