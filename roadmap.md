@@ -8,3 +8,4 @@
 - [x] Add optional case-linked Tamra office visit requests with secure changes/cancellation and staff confirmation
 - [ ] Run a real application-to-staff confirmation test with a controlled test account and case (blocked: would create a live case, messages, and reminders; no authorized test identity provided)
 - [ ] Fix voice-note tap recording, MIME handling, cancellation safety, and verify direct/case sending end to end
+- [x] Add an admin master switch for all outgoing WhatsApp sending (off by default; blocks manual sends, follow-ups and campaigns)
