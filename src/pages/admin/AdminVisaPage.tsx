@@ -1,0 +1,202 @@
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import {
+  KpiRow,
+  LoadingState,
+  ErrorState,
+  PageHeader,
+  type KpiItem,
+} from "@/components/shell";
+import {
+  RefreshCw,
+  Plane,
+  Clock,
+  ThumbsUp,
+  CheckCircle2,
+  CalendarOff,
+  XCircle,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useVisaQueue } from "@/hooks/useVisaQueue";
+import { visaQueueCounts, type VisaQueueSection } from "@/lib/visaStatus";
+import {
+  markStudentArrived,
+  visaErrMsg,
+  type VisaQueueRow,
+} from "@/services/VisaService";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import VisaQueue from "@/components/admin/visa/VisaQueue";
+import VisaDetailSheet from "@/components/admin/visa/VisaDetailSheet";
+
+/**
+ * Admin Visa — the post-enrollment visa work queue.
+ *
+ * It reads ENROLLED cases (`enrollment_paid`) with a student account. Visa is
+ * never a `cases.status`; the case stays enrolled while the visa workflow
+ * advances independently. This page adds no new status store and no new
+ * document storage — it operates on the canonical `visa_field_values` and the
+ * shared `documents` records.
+ */
+export default function AdminVisaPage() {
+  const { t } = useTranslation("dashboard");
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { rows, loading, error, refresh } = useVisaQueue();
+  const [section, setSection] = useState<VisaQueueSection>("ready");
+  const [selected, setSelected] = useState<VisaQueueRow | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [markingCaseId, setMarkingCaseId] = useState<string | null>(null);
+
+  const counts = visaQueueCounts(rows);
+
+  const kpis: KpiItem[] = [
+    {
+      key: "ready",
+      label: t("admin.visa.ready", "Ready"),
+      value: counts.ready,
+      icon: Plane,
+      onClick: () => setSection("ready"),
+    },
+    {
+      key: "inProgress",
+      label: t("admin.visa.inProgress", "In Progress"),
+      value: counts.inProgress,
+      icon: Clock,
+      onClick: () => setSection("inProgress"),
+    },
+    {
+      key: "approved",
+      label: t("admin.visa.approved", "Approved"),
+      value: counts.approved,
+      icon: ThumbsUp,
+      onClick: () => setSection("approved"),
+    },
+    {
+      key: "received",
+      label: t("admin.visa.received", "Received"),
+      value: counts.received,
+      icon: CheckCircle2,
+      onClick: () => setSection("received"),
+    },
+  ];
+
+  const openRow = (row: VisaQueueRow) => {
+    setSelected(row);
+    setSheetOpen(true);
+  };
+
+  const markArrived = async (row: VisaQueueRow) => {
+    if (!row.student_user_id) return;
+    setMarkingCaseId(row.case_id);
+    try {
+      await markStudentArrived(
+        row.case_id,
+        row.student_user_id,
+        user?.id ?? null,
+      );
+      toast({ description: t("admin.visa.arrivedToast", "Arrival recorded.") });
+      await refresh();
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        description: `${t("admin.visa.errArrival", "Failed to record arrival")}: ${visaErrMsg(e)}`,
+      });
+    } finally {
+      setMarkingCaseId(null);
+    }
+  };
+
+  // Keep the open detail in sync with the refreshed queue row.
+  const selectedRow = selected
+    ? (rows.find((r) => r.case_id === selected.case_id) ?? selected)
+    : null;
+
+  return (
+    <div>
+      <PageHeader
+        title={t("admin.visa.title", "Visa")}
+        subtitle={t("admin.visa.subtitle", "Post-arrival visa applications")}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => void refresh()}
+            disabled={loading}
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+            />
+            {t("common.refresh", "Refresh")}
+          </Button>
+        }
+      />
+
+      {error && rows.length === 0 ? (
+        <ErrorState
+          title={t("common.error", "Something went wrong")}
+          onRetry={() => void refresh()}
+        />
+      ) : (
+        <div className="space-y-4">
+          <KpiRow items={kpis} columns={4} />
+
+          {counts.missingArrival > 0 && (
+            <button
+              type="button"
+              onClick={() => setSection("missingArrival")}
+              className="flex w-full items-center gap-2 rounded-lg border border-[hsl(var(--status-appointment)/0.35)] bg-[hsl(var(--status-appointment)/0.08)] px-3 py-2 text-start text-xs text-foreground"
+            >
+              <CalendarOff className="h-3.5 w-3.5 text-[hsl(var(--status-appointment))]" />
+              {t(
+                "admin.visa.missingArrivalBanner",
+                "{{count}} enrolled student(s) waiting for arrival confirmation",
+                {
+                  count: counts.missingArrival,
+                },
+              )}
+            </button>
+          )}
+
+          {counts.rejected > 0 && (
+            <button
+              type="button"
+              onClick={() => setSection("rejected")}
+              className="flex w-full items-center gap-2 rounded-lg border border-[hsl(var(--status-danger)/0.35)] bg-[hsl(var(--status-danger)/0.08)] px-3 py-2 text-start text-xs text-foreground"
+            >
+              <XCircle className="h-3.5 w-3.5 text-[hsl(var(--status-danger))]" />
+              {t(
+                "admin.visa.rejectedBanner",
+                "{{count}} rejected visa application(s)",
+                {
+                  count: counts.rejected,
+                },
+              )}
+            </button>
+          )}
+
+          {loading && rows.length === 0 ? (
+            <LoadingState variant="rows" rows={5} />
+          ) : (
+            <VisaQueue
+              rows={rows}
+              activeSection={section}
+              onSectionChange={setSection}
+              onOpen={openRow}
+              onMarkArrived={markArrived}
+              markingCaseId={markingCaseId}
+            />
+          )}
+        </div>
+      )}
+
+      <VisaDetailSheet
+        row={selectedRow}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        onChanged={() => void refresh()}
+      />
+    </div>
+  );
+}

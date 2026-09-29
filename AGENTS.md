@@ -2406,3 +2406,61 @@ indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
 ## DARB payment proof + wire memo (2026-09-29, updated 2026-09-29)
 - DARB fee stays one full payment. `confirm_agency_service_payment(case, method, p_reference, p_receipt_path)`: the server no longer requires proof — when no bank reference is supplied it stamps the auto-generated `cases.case_reference` as the payment reference. Wire memo reference = `cases.case_reference`, shown on Finance tab, student Fees, invoice page/PDF/email. Germany block is a collapsible "Step 2".
 - **The Finance tab (pipeline) collects NO proof.** The optional "Transfer reference" input and the "Receipt (file)" input were REMOVED from `CaseFinance.tsx`; staff pick the payment method and confirm — the reference is auto-generated server-side. The call passes only `p_case_id` / `p_payment_method`. `src/lib/agencyPaymentProof.ts` (+ its test) was deleted; the `finance.receipt.{optional,upload,hintAuto,required,tooLong,hint}` locale keys were pruned from en/ar/he (kept: `reference`, `view`, `openFailed`, still used by `CasePayments` history). Guarded by `src/lib/agencyPaymentNoProofGuard.test.ts`.
+
+## Post-arrival Visa workflow — Admin Pipeline third tab (2026-09-29)
+- **Visa is NOT a `cases.status`.** `enrollment_paid` stays the terminal
+  success state; `caseStatus.ts` / `caseTransitions` / `TERMINAL_STATUSES` /
+  `CaseStageService` / `caseTasks.ts` / commission logic are all UNCHANGED.
+  Visa is a post-enrollment operational queue layered on enrolled cases. Do
+  not add `visa` to `CaseStatus` or an `enrollment_paid -> visa` transition.
+- Route: `/admin/pipeline?tab=visa` (third tab in `AdminPipelineHubPage.tsx`,
+  `Globe` icon, `nav.visa`). A thin `src/routes/admin.visa.tsx` redirects
+  `/admin/visa` -> `?tab=visa`, mirroring `admin.submissions.tsx`. `TabHub`
+  still handles URL state + lazy mounting (only the active tab mounts), so the
+  Visa page never loads unless requested.
+- **Arrival is its own marker.** `visa_applications.arrived_in_germany_at`
+  (nullable) is the operational source of truth for the queue;
+  `profiles.arrival_date` stays the PLANNED date and is never overwritten
+  (only prefilled). A student enters the working queue only when arrived.
+- **Queue**: admin-gated SECURITY DEFINER RPC `get_admin_visa_queue()`
+  (enrolled + `student_user_id IS NOT NULL` + active/not-archived) - returns
+  only the columns the queue renders, never a wildcard, and reads
+  `visa_status` from the canonical `visa_field_values` (no new status store).
+  `src/lib/visaStatus.ts` owns sectioning (`groupVisaQueue`,
+  `visaQueueSection`, `visaQueueCounts`, `normalizeVisaStatus`) + the readiness
+  calculator; `useVisaQueue` fetches it whole (small), `useVisaDetail` loads
+  the heavy per-student data only when a case is opened (the queue query is
+  NOT fanned out - no N+1, no per-student document preloading). Queue lists
+  paginate client-side via `usePagination`/`TablePagination`.
+- **Documents are never copied.** `visa_application_documents` is a relational
+  join (UNIQUE per pair) that records WHICH existing `documents` rows were
+  selected. Removing a selection deletes ONLY the link row; the file stays in
+  the private `student-documents` bucket and is read through short-lived signed
+  URLs (`createVisaDocumentUrl`) - never `window.open(publicUrl)`. Legacy
+  `visa_applications.*_url` columns are kept and surfaced as fallback links.
+- **Status**: the canonical dynamic `visa_fields`/`visa_field_values`
+  (`field_key = 'visa_status'`) is the one status store; values are
+  `not_applied | applied | approved | rejected | received`. Never add a second
+  store. `visa_field_values` stays the single writer via `writeFieldValue`.
+  Legacy `profiles.visa_status` is NOT synchronized - it would create drift.
+- **RLS** (migration `20260930120000_post_arrival_visa_workflow.sql`, MANUAL
+  DEPLOY): the new table follows the existing read-only-team posture - Admin
+  `FOR ALL`, Team `SELECT` scoped to assigned cases, Student `SELECT` own;
+  students get NO write (document selection is an Admin responsibility). This
+  matches `20260814000000` exactly; no existing policy is weakened.
+- **Audit** reuses `case_events` (`is_internal = true`):
+  `student_arrived_in_germany`, `visa_file_started`,
+  `visa_document_attached`/`_removed`, `visa_application_submitted`
+  (status->applied, sets `visa_applied_at` + optional `submission_snapshot`),
+  `visa_approved`/`visa_rejected`/`visa_received`. Icons registered in
+  `caseEventMeta.ts`.
+- `visa_applications` rows are created LAZILY (Mark as Arrived / Start Visa
+  File / first status change), never pre-created to fill a queue; `case_id`
+  uniqueness is preserved. Students keep using `/student/visa` - one shared
+  data flow through `visa_field_values` + `documents`.
+- i18n: `admin.visa.*` + `common.yes/no/saved` added to en + ar + he
+  `dashboard.json` (parity-guarded by `i18nKeys.test.ts` +
+  `hebrewLocaleCoverage.test.ts`). No hardcoded UI strings.
+- Tests: `src/lib/visaStatus.test.ts` (13 cases - sectioning incl. scenarios
+  1/2, counts, readiness, status normalization). Build clean; `npx vitest run`
+  1656 passed | 1 skipped.
