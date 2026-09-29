@@ -601,17 +601,17 @@ const AdminSubmissionsPage = () => {
                 {pendingPagination.items.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="flex min-w-0 items-center justify-between gap-3 p-3 sm:p-4 hover:bg-muted/50 cursor-pointer transition-colors"
                     onClick={() => setSelected(c)}
                   >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{c.full_name}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{c.full_name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
                         {c.phone_number} · {t("admin.submissions.submittedDate")}:{" "}
                         {fmt(c.submission?.submitted_at || null)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                       <div className="text-end">
                         <p className="text-sm font-semibold text-foreground">{totalFee(c)} ILS</p>
                         <p className="text-xs text-muted-foreground">{t("admin.submissions.totalFees")}</p>
@@ -637,7 +637,7 @@ const AdminSubmissionsPage = () => {
                 >
                   <div>
                     <p className="text-sm font-medium text-foreground">{c.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-xs text-muted-foreground">
                       {c.phone_number} · {t("admin.submissions.enrolledOn")}:{" "}
                       {fmt(c.submission?.enrollment_paid_at || null)}
                     </p>
