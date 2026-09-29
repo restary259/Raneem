@@ -135,6 +135,8 @@ export default function VisaDetailSheet({
     (statusField && detail?.values[statusField.id]) || row?.visa_status,
   );
 
+  const applicationSubmitted = !!detail?.application?.visa_applied_at;
+
   const fail = (e: unknown, fallback: string) =>
     toast({
       variant: "destructive",
@@ -513,37 +515,33 @@ export default function VisaDetailSheet({
                       )}
                     </p>
                   )}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Select
-                      value={currentStatus}
-                      onValueChange={(v) => void changeStatus(v as VisaStatus)}
-                      disabled={busy}
-                    >
-                      <SelectTrigger className="h-9 w-[200px] text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {VISA_STATUSES.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {t(`admin.visa.status.${s}`, s.replace(/_/g, " "))}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      className="h-9 gap-1 text-xs"
-                      disabled={busy || currentStatus === "applied"}
-                      onClick={() => void changeStatus("applied")}
-                    >
-                      {busy ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+                  {applicationSubmitted ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Select
+                        value={currentStatus}
+                        onValueChange={(v) => void changeStatus(v as VisaStatus)}
+                        disabled={busy}
+                      >
+                        <SelectTrigger className="h-9 w-[200px] text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {VISA_STATUSES.filter((s) => s !== "not_applied").map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {t(`admin.visa.status.${s}`, s.replace(/_/g, " "))}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "admin.visa.waitingStudentSubmission",
+                        "Waiting for the student to submit this Visa file. Administration cannot mark it applied from here.",
                       )}
-                      {t("admin.visa.markApplied", "Mark as Applied")}
-                    </Button>
-                  </div>
+                    </p>
+                  )}
                   {detail?.application?.visa_applied_at && (
                     <p className="text-xs text-muted-foreground">
                       {t("admin.visa.appliedAt", "Applied")}:{" "}
