@@ -7078,6 +7078,29 @@ export type Database = {
           team_member_name: string
         }[]
       }
+      get_admin_visa_queue: {
+        Args: never
+        Returns: {
+          actual_arrival: string
+          assigned_name: string
+          assigned_to: string
+          case_id: string
+          case_reference: string
+          created_at: string
+          document_count: number
+          email: string
+          enrolled_at: string
+          full_name: string
+          phone: string
+          planned_arrival: string
+          selected_document_count: number
+          student_user_id: string
+          updated_at: string
+          visa_application_id: string
+          visa_applied_at: string
+          visa_status: string
+        }[]
+      }
       get_agent_commission_rate: {
         Args: { p_agent_id: string }
         Returns: number
@@ -7352,29 +7375,6 @@ export type Database = {
           extra_data: Json
           student_email: string
           student_phone: string
-        }[]
-      }
-      get_admin_visa_queue: {
-        Args: never
-        Returns: {
-          actual_arrival: string | null
-          assigned_name: string | null
-          assigned_to: string | null
-          case_id: string
-          case_reference: string | null
-          created_at: string
-          document_count: number
-          email: string | null
-          enrolled_at: string | null
-          full_name: string | null
-          phone: string | null
-          planned_arrival: string | null
-          selected_document_count: number
-          student_user_id: string | null
-          updated_at: string
-          visa_applied_at: string | null
-          visa_application_id: string | null
-          visa_status: string
         }[]
       }
       get_my_cash_debts: {
