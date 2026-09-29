@@ -52,7 +52,16 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid min-w-0 w-full max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        // `[&>*]:max-sm:min-w-0` is load-bearing, not cosmetic. A bare `grid`
+        // has one implicit `auto` track whose base size is the largest
+        // MIN-CONTENT contribution of its children, so a wide child (e.g. a
+        // `w-max` tab strip) grows the track past the dialog's content box and
+        // is then CLIPPED by `overflow-x-hidden`. Zeroing each grid item's
+        // min-width lets the track stay at the dialog width, so children scroll
+        // inside their own overflow container instead of being cut off.
+        // Scoped to `max-sm` on purpose: from `sm` up the content-driven width
+        // (e.g. a `max-w-2xl` dialog) must stay exactly as it is today.
+        "fixed left-[50%] top-[50%] z-50 grid [&>*]:max-sm:min-w-0 min-w-0 w-full max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-2rem)] overflow-x-hidden overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
         className,
       )}
       {...props}
@@ -103,6 +112,7 @@ export {
   DialogOverlay,
   DialogClose,
   DialogTrigger,
+  DialogContent,
   DialogHeader,
   DialogFooter,
   DialogTitle,
