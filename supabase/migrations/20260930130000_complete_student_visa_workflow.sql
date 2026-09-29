@@ -2,6 +2,11 @@
 -- Keeps Visa outside cases.status, preserves admin-controlled Visa outcomes,
 -- and gives students only the narrowly-scoped mutations they need to prepare
 -- and submit their own file.
+--
+-- MANUAL DEPLOY — DDL is not applied by the Vercel build or ci.yml. Run via
+-- `supabase db push` or the dashboard SQL editor (admin/service-role only).
+-- Idempotent: safe to re-run (every CREATE POLICY is preceded by a DROP of the
+-- same name).
 
 BEGIN;
 
@@ -23,6 +28,12 @@ USING (student_user_id = auth.uid());
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Students insert own visa values" ON public.visa_field_values;
 DROP POLICY IF EXISTS "Students update own visa values" ON public.visa_field_values;
+-- The replacement policies are dropped by their own (new) names too, so this
+-- file stays safely re-runnable: applying it twice, or re-applying it after a
+-- partially-applied paste in the SQL editor, must not fail and must not leave
+-- the student without a write policy.
+DROP POLICY IF EXISTS "Students insert own non-status visa values" ON public.visa_field_values;
+DROP POLICY IF EXISTS "Students update own non-status visa values" ON public.visa_field_values;
 
 CREATE POLICY "Students insert own non-status visa values"
 ON public.visa_field_values
