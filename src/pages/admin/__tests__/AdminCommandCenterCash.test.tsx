@@ -73,6 +73,7 @@ const cashRows = [
 ];
 
 const mockRpc = vi.fn();
+const mockFrom = vi.fn();
 
 // `supabase.rpc()` returns a PostgrestFilterBuilder: thenable AND chainable
 // (`.limit()`, `.eq()`, ...). A bare Promise would make `.limit(6)` throw and
@@ -92,11 +93,15 @@ const rpcChain = (result: unknown) => {
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: (...args: unknown[]) => mockRpc(...args),
-    from: () => chainResult({ data: [], error: null, count: 0 }),
+    from: (...args: unknown[]) => {
+      mockFrom(...args);
+      return chainResult({ data: [], error: null, count: 0 });
+    },
   },
 }));
 
 import AdminCommandCenter from "@/pages/admin/AdminCommandCenter";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 const renderPage = () => {
   const client = new QueryClient({
@@ -178,5 +183,27 @@ describe("AdminCommandCenter — Cash Collection", () => {
     await waitFor(() => {
       expect(screen.getByText("No unsettled cash")).toBeInTheDocument();
     });
+  });
+
+  it("does not fetch or subscribe to activity_log (Recent Activity lives on /admin/activity)", async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Cash Collection")).toBeInTheDocument();
+    });
+
+    // No activity query for the removed card, and no placeholder left behind.
+    const queriedTables = mockFrom.mock.calls.map(([table]) => table);
+    expect(queriedTables).not.toContain("activity_log");
+    expect(screen.queryByText("Recent Activity")).not.toBeInTheDocument();
+    expect(screen.queryByText("No recent activity")).not.toBeInTheDocument();
+
+    // No realtime subscription solely for the removed card; the rest remain.
+    const channels = vi
+      .mocked(useRealtimeSubscription)
+      .mock.calls.map(([table]) => table);
+    expect(channels).not.toContain("activity_log");
+    expect(channels).toContain("cases");
+    expect(channels).toContain("case_payments");
   });
 });
