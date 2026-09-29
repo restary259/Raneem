@@ -589,7 +589,7 @@ const AdminPipelinePage = () => {
                 <div className="space-y-2">
                   {loading ? (
                     Array.from({ length: 2 }).map((_, i) => (
-                      <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />
+                      <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
                     ))
                   ) : statusCases.length === 0 ? (
                     <div className="h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
@@ -619,9 +619,9 @@ const AdminPipelinePage = () => {
                           className={`cursor-pointer hover:shadow-md hover:border-primary/40 transition-all duration-150 ${borderClass}`}
                           onClick={() => openCase(c)}
                         >
-                          <CardContent className="p-3 space-y-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="text-sm font-semibold text-foreground truncate">{c.full_name}</p>
+                          <CardContent className="p-2.5 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="min-w-0 text-sm font-semibold text-foreground truncate">{c.full_name}</p>
                               <div className="flex items-center gap-1 shrink-0">
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${src.cls}`}>
                                   {src.label}
@@ -631,89 +631,65 @@ const AdminPipelinePage = () => {
                                     className={`h-3.5 w-3.5 ${isRedStale ? "text-destructive" : toneClasses("payment").text}`}
                                   />
                                 )}
+                                <span className="text-[11px] tabular-nums text-muted-foreground">{days}d</span>
                               </div>
                             </div>
 
-                            <p className="text-xs text-muted-foreground">{c.phone_number}</p>
-
-                            {/* Attribution badge — partner / agent referral */}
-                            <AttributionBadge partnerId={c.partner_id} attribution={attribution} t={t} />
-
-                            {/* Duplicate phone warning */}
-                            {hasDuplicatePhone(c) && (
-                              <div
-                                className={`flex items-center gap-1 px-1.5 py-0.5 rounded border w-fit ${toneClasses("payment").chip}`}
-                              >
-                                <AlertTriangle className="h-3 w-3 shrink-0" />
-                                <span className="text-[10px] font-semibold">Duplicate Phone</span>
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <p className="shrink-0 text-xs text-muted-foreground tabular-nums">{c.phone_number}</p>
+                              <div className="min-w-0 truncate">
+                                <AttributionBadge partnerId={c.partner_id} attribution={attribution} t={t} />
                               </div>
-                            )}
+                            </div>
 
-                            {/* Units badges — shown directly on card */}
-                            {(c.english_units != null || c.math_units != null) && (
-                              <div className="flex items-center gap-1.5">
-                                {c.english_units != null && (
-                                  <span
-                                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("new").chip}`}
-                                  >
-                                    EN {c.english_units}
-                                  </span>
-                                )}
-                                {c.math_units != null && (
-                                  <span
-                                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${toneClasses("appointment").chip}`}
-                                  >
-                                    MA {c.math_units}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-
-                            {c.assignee_name ? (
-                              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                <User className="h-3 w-3" />
-                                {c.assignee_name}
-                              </p>
-                            ) : (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
-                                {t("admin.pipeline.unassigned")}
-                              </span>
-                            )}
-
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {days}d
-                              </span>
+                            <div className="flex flex-wrap items-center gap-1">
+                              {c.english_units != null && (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${toneClasses("new").chip}`}>
+                                  EN {c.english_units}
+                                </span>
+                              )}
+                              {c.math_units != null && (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${toneClasses("appointment").chip}`}>
+                                  MA {c.math_units}
+                                </span>
+                              )}
                               {hasApplyInfo(c) && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                                   {t("admin.pipeline.hasInfo")}
                                 </span>
                               )}
-                            </div>
-
-                            {/* Assignment dropdown — stop propagation so click doesn't open sheet */}
-                            <div onClick={(e) => e.stopPropagation()}>
-                              <Select
-                                value={c.assigned_to || "unassigned"}
-                                onValueChange={(val) => assignCase(c.id, val === "unassigned" ? null : val)}
-                                disabled={assigning === c.id}
-                              >
-                                <SelectTrigger className="h-7 text-xs">
-                                  <div className="flex items-center gap-1">
-                                    <User className="h-3 w-3" />
-                                    <SelectValue placeholder={t("admin.pipeline.assignPlaceholder")} />
-                                  </div>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="unassigned">{t("admin.pipeline.unassigned")}</SelectItem>
-                                  {teamMembers.map((tm) => (
-                                    <SelectItem key={tm.id} value={tm.id}>
-                                      {tm.full_name} — {tm.email}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              {hasDuplicatePhone(c) && (
+                                <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded border ${toneClasses("payment").chip}`}>
+                                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                                  <span className="text-[10px] font-semibold">Duplicate</span>
+                                </span>
+                              )}
+                              <div className="ms-auto max-w-[50%] min-w-0" onClick={(e) => e.stopPropagation()}>
+                                <Select
+                                  value={c.assigned_to || "unassigned"}
+                                  onValueChange={(val) => assignCase(c.id, val === "unassigned" ? null : val)}
+                                  disabled={assigning === c.id}
+                                >
+                                  <SelectTrigger
+                                    className={`h-6 w-auto max-w-full gap-1 rounded-full px-2 text-[11px] ${
+                                      c.assigned_to ? "" : "border-destructive/30 bg-destructive/10 text-destructive"
+                                    }`}
+                                  >
+                                    <User className="h-3 w-3 shrink-0" />
+                                    <span className="truncate">
+                                      {c.assignee_name ? c.assignee_name.split(" ")[0] : t("admin.pipeline.unassigned")}
+                                    </span>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="unassigned">{t("admin.pipeline.unassigned")}</SelectItem>
+                                    {teamMembers.map((tm) => (
+                                      <SelectItem key={tm.id} value={tm.id}>
+                                        {tm.full_name} — {tm.email}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
