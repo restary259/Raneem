@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import React from "react";
 
 // ── i18n: fallbacks, plus the few keys the page uses WITHOUT a fallback ───
@@ -16,9 +16,13 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// ── Toasts: no-op ─────────────────────────────────────────────────────────
+// ── Toasts: stable identity, no-op ────────────────────────────────────────
+// Must be hoisted + stable: the page memoizes fetchData on [toast, page], so a
+// fresh function per render would recreate fetchData and loop the fetch effect.
+const mockToast = vi.fn();
+
 vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
+  useToast: () => ({ toast: mockToast }),
 }));
 
 // ── Realtime: capture the subscribed table, no live channel ───────────────
@@ -109,15 +113,23 @@ describe("AdminActivityPage — Live Activity Feed still works", () => {
     ).toBeInTheDocument();
   });
 
-  it("subscribes to activity_log realtime updates", async () => {
+  it("subscribes to activity_log and refetches when it fires", async () => {
     render(<AdminActivityPage />);
 
+    const call = vi
+      .mocked(useRealtimeSubscription)
+      .mock.calls.find(([table]) => table === "activity_log");
+    expect(call).toBeDefined();
+    expect(call![2]).toBe(true);
+
+    // Invoking the realtime callback must trigger a fresh read — asserting only
+    // that the hook received a function would pass even if the callback went dead.
+    const onUpdate = call![1] as () => void;
+    mockFrom.mockClear();
+    act(() => onUpdate());
+
     await waitFor(() => {
-      expect(useRealtimeSubscription).toHaveBeenCalledWith(
-        "activity_log",
-        expect.any(Function),
-        true,
-      );
+      expect(mockFrom).toHaveBeenCalledWith("activity_log");
     });
   });
 
