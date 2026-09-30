@@ -2310,6 +2310,7 @@ interface StudentRouteChildren {
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentChecklistRoute: StudentChecklistRoute,
+  StudentCityGuideRoute: StudentCityGuideRoute,
   StudentContactsRoute: StudentContactsRoute,
   StudentDocumentsRoute: StudentDocumentsRoute,
   StudentFeesRoute: StudentFeesRoute,
