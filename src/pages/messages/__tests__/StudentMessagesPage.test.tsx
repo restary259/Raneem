@@ -78,6 +78,10 @@ const TABLE_ROWS: Record<string, unknown[]> = {
   profiles: [],
 };
 
+const BASE_TABLE_ROWS = Object.fromEntries(
+  Object.entries(TABLE_ROWS).map(([key, rows]) => [key, rows.slice()]),
+);
+
 vi.mock("@/integrations/supabase/client", () => {
   const chain = (rows: unknown[]) => {
     const result = Promise.resolve({ data: rows, error: null });
@@ -110,6 +114,9 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
   beforeEach(() => {
     mockRpc.mockClear();
     document.documentElement.dir = "ltr";
+    for (const [key, rows] of Object.entries(BASE_TABLE_ROWS)) {
+      TABLE_ROWS[key] = rows.slice();
+    }
   });
 
   it("opens on the conversation list, not a chat", async () => {
@@ -189,12 +196,17 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
   it("renders the requested advisor and emergency contacts in order", async () => {
     render(<StudentMessagesPage />);
 
-    await waitFor(() =>
-      expect(screen.getByText("Team Member")).toBeInTheDocument(),
+    const advisor = await waitFor(() =>
+      screen.getByText("Your direct line to your advisor").closest("li"),
     );
-    expect(screen.getByText("Police")).toBeInTheDocument();
-    expect(screen.getByText("Ambulance")).toBeInTheDocument();
-    expect(screen.getByText("Fire Fighter")).toBeInTheDocument();
+    const police = screen.getByText("Police");
+    const ambulance = screen.getByText("Ambulance");
+    const fire = screen.getByText("Fire Fighter");
+
+    expect(advisor).toBeTruthy();
+    expect(advisor!.compareDocumentPosition(police) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(police.compareDocumentPosition(ambulance) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(ambulance.compareDocumentPosition(fire) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     const emergencyLinks = screen
       .getAllByRole("link")
