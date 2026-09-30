@@ -117,6 +117,10 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
     <div className="space-y-6">
       <Card className="overflow-hidden">
         <CardContent className="p-6">
+          {/* `min-w-0` on the text column: the progress line is a single
+              translated sentence, and without it this flex child refuses to
+              shrink below its min-content width, pushing the row (and the
+              card) past the viewport in the longer locales. */}
           <div className="flex items-center gap-6">
             <div className="relative w-24 h-24 shrink-0">
               <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
@@ -134,10 +138,10 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
                 <span className="text-xl font-bold">{progress}%</span>
               </div>
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="text-lg font-bold flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5 text-primary" />
-                {t('checklist.title')}
+                <ClipboardCheck className="h-5 w-5 shrink-0 text-primary" />
+                <span className="min-w-0 break-words">{t('checklist.title')}</span>
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
                 {t('checklist.progress', { completed: completedCount, total: items.length })}

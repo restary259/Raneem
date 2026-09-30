@@ -90,7 +90,31 @@ describe("Student Overview quick actions are full-width on phones", () => {
     const overview = classListWith("gap-4", "lg:grid-cols-2");
 
     expect(overview).toContain("grid");
-    expect(gridTracks(overview).base).toBeUndefined();
+    expect(gridTracks(overview).lg).toEqual(["2"]);
+  });
+
+  it("gives the overview an explicit single mobile column", () => {
+    // Without an unprefixed `grid-cols-*` the implicit track is `auto`, which
+    // sizes to the widest item's min-content. A `truncate` (nowrap) label then
+    // props the page open on phones — the language-dependent overflow where
+    // English/Hebrew labels are long enough and Arabic is not.
+    const overview = classListWith("gap-4", "lg:grid-cols-2");
+
+    expect(gridTracks(overview).base).toEqual(["1"]);
+  });
+
+  it("lets each overview column shrink to its track", () => {
+    // Both overview columns wrap a `truncate` label (important-contact names),
+    // so both need `min-w-0` or their min-content re-inflates the auto track.
+    const columns = classLists.filter((l) => l.includes("min-w-0") && l.includes("space-y-4"));
+
+    expect(columns.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("lets a truncating contact row shrink inside its column", () => {
+    const row = classListWith("items-center", "gap-3", "px-4", "py-2.5");
+
+    expect(row).toContain("min-w-0");
   });
 
   it("keeps the WhatsApp CTA row wrapping rather than scrolling", () => {
