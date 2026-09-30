@@ -68,25 +68,6 @@ function getInitials(name: string) {
 
 function StudentQuickActions() {
   const { t } = useTranslation("dashboard");
-  const location = useLocation();
-  const pageTitle =
-    location.pathname === "/student"
-      ? t("nav.home", "Home")
-      : ([
-          ["/student/city-guide", "nav.cityGuide"],
-          ["/student/checklist", "nav.checklist"],
-          ["/student/documents", "nav.documents"],
-          ["/student/visa", "nav.visa"],
-          ["/student/fees", "nav.fees"],
-          ["/student/messages", "nav.messages"],
-          ["/student/contacts", "nav.contacts"],
-          ["/student/profile", "nav.profile"],
-          ["/student/my-data", "nav.myData"],
-          ["/student/tools/bagrut", "nav.bagrut"],
-          ["/student/tools/cv", "nav.cvBuilder"],
-          ["/student/refer", "nav.refer"],
-        ] as const).find(([path]) => location.pathname.startsWith(path))?.[1] ?? "nav.home";
-  const resolvedPageTitle = t(pageTitle, "Home");
 
   return (
     <DropdownMenu>
@@ -224,6 +205,25 @@ export default function StudentDashboardHeader({
   onSignOut,
 }: StudentDashboardHeaderProps) {
   const { t } = useTranslation("dashboard");
+  const location = useLocation();
+  const pageTitleKey =
+    location.pathname === "/student"
+      ? "nav.home"
+      : ([
+          ["/student/city-guide", "nav.cityGuide"],
+          ["/student/checklist", "nav.checklist"],
+          ["/student/documents", "nav.documents"],
+          ["/student/visa", "nav.visa"],
+          ["/student/fees", "nav.fees"],
+          ["/student/messages", "nav.messages"],
+          ["/student/contacts", "nav.contacts"],
+          ["/student/profile", "nav.profile"],
+          ["/student/my-data", "nav.myData"],
+          ["/student/tools/bagrut", "nav.bagrut"],
+          ["/student/tools/cv", "nav.cvBuilder"],
+          ["/student/refer", "nav.refer"],
+        ] as const).find(([path]) => location.pathname.startsWith(path))?.[1] ?? "nav.home";
+  const pageTitle = t(pageTitleKey, "Home");
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/50 bg-background/95 px-2 backdrop-blur sm:px-4">
@@ -231,7 +231,7 @@ export default function StudentDashboardHeader({
         <SidebarTrigger className="h-11 w-11 shrink-0" />
         <div className="hidden min-w-0 sm:block">
           <p className="truncate text-sm font-semibold text-foreground">
-            {resolvedPageTitle}
+            {pageTitle}
           </p>
         </div>
       </div>
