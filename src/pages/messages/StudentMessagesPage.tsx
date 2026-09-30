@@ -24,11 +24,28 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import { chatDisplayName } from "@/lib/chatIdentity";
 import {
+  formatThreadTime,
+  isVoiceAttachment,
+  type ChatAttachment,
+} from "@/lib/chatFormat";
+import {
   listMyDirectThreads,
   type DirectThread,
 } from "@/services/DirectMessageService";
 
 type Tab = "case" | "payout" | "team";
+
+/** One-line preview of a conversation's last message (voice notes included). */
+function previewFor(
+  message: { body?: string | null; attachments?: ChatAttachment[] | null } | null,
+  fallback: string,
+  voiceLabel: string,
+): string {
+  if (!message) return fallback;
+  if (message.body) return message.body;
+  if ((message.attachments ?? []).some(isVoiceAttachment)) return voiceLabel;
+  return fallback;
+}
 
 interface OpenChat {
   tab: Tab;
@@ -57,6 +74,7 @@ export default function StudentMessagesPage() {
   const [open, setOpen] = useState<OpenChat | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamThreadName, setTeamThreadName] = useState<string | null>(null);
+  const [directThreads, setDirectThreads] = useState<DirectThread[]>([]);
   const isMobile = useIsMobile();
   useChatFullscreen(!!isMobile && !!open);
 
@@ -65,28 +83,32 @@ export default function StudentMessagesPage() {
 
   const adminLabel = t("chat.adminLabel");
 
-  /** Resolves the team-member thread's counterpart name (admins stay anonymous). */
-  const loadTeamThreadName = useCallback(async () => {
+  /** Loads the student's direct threads: resolves the existing team thread,
+   *  the advisor's display name, and each thread's last message + unread count. */
+  const loadDirectThreads = useCallback(async () => {
     if (!user?.id) return;
     try {
       const threads = await listMyDirectThreads(user.id);
-      const team = threads.find(
-        (thread: DirectThread) => thread.threadId === teamThreadId,
+      setDirectThreads(threads);
+
+      const existingTeam = threads.find(
+        (thread: DirectThread) => thread.otherUserRole === "team_member",
       );
-      if (team) {
+      if (existingTeam) {
+        setTeamThreadId(existingTeam.threadId);
         setTeamThreadName(
           chatDisplayName(
-            team.otherUserName,
-            team.otherUserRole,
+            existingTeam.otherUserName,
+            existingTeam.otherUserRole,
             "student",
             adminLabel,
           ),
         );
       }
     } catch {
-      /* name resolution is cosmetic — the header falls back to a generic label */
+      /* activity + names are cosmetic — the list still renders the known threads */
     }
-  }, [user?.id, teamThreadId, adminLabel]);
+  }, [user?.id, adminLabel]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -103,13 +125,18 @@ export default function StudentMessagesPage() {
         .limit(1);
       setPayoutThreadId(payouts?.[0]?.thread_id ?? null);
 
+      // Resolve direct threads (activity, unread counts, existing team thread)
+      // before revealing the list, so a returning student never sees an empty
+      // inbox with no unread indicator.
+      await loadDirectThreads();
+
       setLoading(false);
     })();
-  }, [user?.id, toast]);
+  }, [user?.id, toast, loadDirectThreads]);
 
   useEffect(() => {
-    if (teamThreadId) void loadTeamThreadName();
-  }, [teamThreadId, loadTeamThreadName]);
+    if (teamThreadId) void loadDirectThreads();
+  }, [teamThreadId, loadDirectThreads]);
 
   /** Opens (or reuses) the student↔team-member thread and shows its chat box. */
   const openTeamThread = async () => {
@@ -117,7 +144,7 @@ export default function StudentMessagesPage() {
       setOpen({
         tab: "team",
         id: teamThreadId,
-        title: t("messagesInbox.teamMemberTab", "Team Member"),
+        title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
       });
       return;
     }
@@ -132,7 +159,7 @@ export default function StudentMessagesPage() {
       setOpen({
         tab: "team",
         id,
-        title: t("messagesInbox.teamMemberTab", "Team Member"),
+        title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
       });
     } catch (err: any) {
       const noMember = /No team member assigned|No completed case/i.test(
@@ -152,7 +179,8 @@ export default function StudentMessagesPage() {
     }
   };
 
-  /** Every conversation the student can open. */
+  /** Every conversation the student can open, with its real activity. */
+  const directById = new Map(directThreads.map((thread) => [thread.threadId, thread]));
   const conversations: ThreadListItem[] = [];
   if (caseId) {
     conversations.push({
@@ -163,12 +191,13 @@ export default function StudentMessagesPage() {
         "messagesInbox.caseConversationHint",
         "Your case conversation with the Darb team",
       ),
-      preview: "",
+      preview: t("messagesInbox.openConversation", "Open the conversation"),
       timestamp: null,
       unread: 0,
     });
   }
   if (payoutThreadId) {
+    const thread = directById.get(payoutThreadId);
     conversations.push({
       id: `payout:${payoutThreadId}`,
       type: "direct",
@@ -177,12 +206,17 @@ export default function StudentMessagesPage() {
         "messagesInbox.payoutConversationHint",
         "Your payout conversation",
       ),
-      preview: "",
-      timestamp: null,
-      unread: 0,
+      preview: previewFor(
+        thread?.lastMessage ?? null,
+        t("messagesInbox.noMessagesYet"),
+        t("chat.voice.message"),
+      ),
+      timestamp: thread ? formatThreadTime(thread.lastMessageAt) : null,
+      unread: thread?.unread ?? 0,
     });
   }
   if (teamThreadId) {
+    const thread = directById.get(teamThreadId);
     conversations.push({
       id: `team:${teamThreadId}`,
       type: "direct",
@@ -191,9 +225,13 @@ export default function StudentMessagesPage() {
         "messagesInbox.teamConversationHint",
         "Your direct line to your advisor",
       ),
-      preview: "",
-      timestamp: null,
-      unread: 0,
+      preview: previewFor(
+        thread?.lastMessage ?? null,
+        t("messagesInbox.noMessagesYet"),
+        t("chat.voice.message"),
+      ),
+      timestamp: thread ? formatThreadTime(thread.lastMessageAt) : null,
+      unread: thread?.unread ?? 0,
     });
   }
 
@@ -228,7 +266,11 @@ export default function StudentMessagesPage() {
             >
               <BackIcon className="h-4 w-4" />
             </Button>
-            <p className="min-w-0 flex-1 truncate font-medium">{open.title}</p>
+            <p className="min-w-0 flex-1 truncate font-medium">
+              {open.tab === "team" && teamThreadName
+                ? teamThreadName
+                : open.title}
+            </p>
             <EmergencyNumberButtons />
           </div>
           {open.tab === "case" ? (

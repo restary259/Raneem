@@ -4300,6 +4300,7 @@
     "tabDirect": "Direct chats",
     "emptyDirect": "No direct chats yet",
     "noMessagesYet": "No messages yet",
+    "openConversation": "Open the conversation",
     "directBlocked": "Direct chats must include an admin.",
     "noCaseYet": "Your conversation opens once your case is created.",
     "partnerSubtitle": "Your direct chats with the Darb team.",

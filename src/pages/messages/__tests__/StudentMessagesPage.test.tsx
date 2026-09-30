@@ -39,34 +39,70 @@ const mockRpc = vi.fn((name: string, _args?: unknown) => {
   if (name === "get_my_case") {
     return Promise.resolve({ data: [{ id: "case-42" }], error: null });
   }
+  if (name === "start_student_team_member_thread") {
+    return Promise.resolve({ data: "team-77", error: null });
+  }
+  // listMyDirectThreads resolves the counterpart's role/name from the staff
+  // directory; without it the team thread cannot be identified.
+  if (name === "get_staff_directory") {
+    return Promise.resolve({
+      data: [{ id: "staff-1", full_name: "Raneem", role: "team_member" }],
+      error: null,
+    });
+  }
   return Promise.resolve({ data: null, error: null });
 });
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    rpc: (name: string, args?: unknown) => mockRpc(name, args),
-    // DirectMessageService subscribes at module scope — the mock must expose
-    // every client surface the imported modules touch, or the file fails to load.
-    auth: {
-      onAuthStateChange: () => ({
-        data: { subscription: { unsubscribe: () => {} } },
-      }),
-    },
-    from: () => ({
-      select: () => ({
-        not: () => ({
-          order: () => ({
-            limit: () =>
-              Promise.resolve({
-                data: [{ thread_id: "payout-9" }],
-                error: null,
-              }),
-          }),
+// One row per table the page reads: `payout_requests` supplies the payout
+// thread id, and `listMyDirectThreads` reads direct_thread_participants /
+// direct_messages / direct_threads to derive activity and the team thread.
+const TEAM_LAST_MESSAGE = {
+  id: "m-team",
+  thread_id: "team-77",
+  author_id: "staff-1",
+  author_name: "Raneem",
+  author_role: "team_member",
+  body: "Your appointment is confirmed",
+  created_at: new Date().toISOString(),
+  attachments: null,
+};
+
+const TABLE_ROWS: Record<string, unknown[]> = {
+  payout_requests: [{ thread_id: "payout-9" }],
+  direct_thread_participants: [
+    { thread_id: "team-77", user_id: "student-1", last_read_at: "2020-01-01T00:00:00Z" },
+    { thread_id: "team-77", user_id: "staff-1", last_read_at: null },
+  ],
+  direct_messages: [TEAM_LAST_MESSAGE],
+  direct_threads: [{ id: "team-77", last_message_at: TEAM_LAST_MESSAGE.created_at }],
+  profiles: [],
+};
+
+vi.mock("@/integrations/supabase/client", () => {
+  const chain = (rows: unknown[]) => {
+    const result = Promise.resolve({ data: rows, error: null });
+    const api: Record<string, unknown> = {};
+    for (const method of ["select", "eq", "in", "not", "order", "limit"]) {
+      api[method] = () => api;
+    }
+    api.then = (...args: unknown[]) =>
+      (result.then as (...a: unknown[]) => unknown)(...args);
+    return api;
+  };
+  return {
+    supabase: {
+      rpc: (name: string, args?: unknown) => mockRpc(name, args),
+      // DirectMessageService subscribes at module scope — the mock must expose
+      // every client surface the imported modules touch, or the file fails to load.
+      auth: {
+        onAuthStateChange: () => ({
+          data: { subscription: { unsubscribe: () => {} } },
         }),
-      }),
-    }),
-  },
-}));
+      },
+      from: (table: string) => chain(TABLE_ROWS[table] ?? []),
+    },
+  };
+});
 
 import StudentMessagesPage from "../StudentMessagesPage";
 
@@ -135,5 +171,47 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
       expect(screen.queryByText(/case-chat:/)).not.toBeInTheDocument(),
     );
     expect(screen.getByText("Payout")).toBeInTheDocument();
+  });
+
+  it("lists an EXISTING team conversation on a fresh visit", async () => {
+    render(<StudentMessagesPage />);
+
+    // The team thread is discovered from the direct threads, so it must appear
+    // in the list without the student pressing "Message my team member" first.
+    await waitFor(() =>
+      expect(screen.getByText("Your direct line to your advisor")).toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByRole("button", { name: /Message my team member/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows real activity and unread counts instead of blank rows", async () => {
+    render(<StudentMessagesPage />);
+
+    // Last message preview + timestamp come from the thread's message data.
+    await waitFor(() =>
+      expect(
+        screen.getByText("Your appointment is confirmed"),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("No messages yet")).not.toBeInTheDocument();
+    // The staff-authored, unread message marks the conversation title bold.
+    expect(screen.getByText("Raneem")).toHaveClass("font-bold");
+  });
+
+  it("uses the resolved advisor name in the OPEN chat header", async () => {
+    const user = userEvent.setup();
+    render(<StudentMessagesPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Your direct line to your advisor")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByText("Your direct line to your advisor"));
+
+    expect(await screen.findByText("direct-chat:team-77")).toBeInTheDocument();
+    // Header and list agree on the resolved name — never the generic fallback.
+    expect(screen.getByText("Raneem")).toBeInTheDocument();
+    expect(screen.queryByText("Team Member")).not.toBeInTheDocument();
   });
 });
