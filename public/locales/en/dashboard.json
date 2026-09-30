@@ -5816,7 +5816,8 @@
       "meals": "Meals",
       "distance": "Distance",
       "tiers": "Weekly price tiers",
-      "tiersDesc": "The selected number of weeks determines the applicable weekly tier."
+      "tiersDesc": "The selected number of weeks determines the applicable weekly tier.",
+      "months": "months"
     },
     "review": {
       "title": "Review the registration",
@@ -5878,7 +5879,21 @@
       "invoice": "Invoice",
       "total": "Registration total",
       "services": "Selected registration"
-    }
+    },
+    "education": {
+      "bagrut": "Bagrut",
+      "bachelor": "Bachelor",
+      "master": "Master",
+      "other": "Other"
+    },
+    "english": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "eyebrow": "DARB",
+    "pageIntro": "Register a friend or family member directly through DARB. No office appointment is required.",
+    "backToDashboard": "Back to dashboard"
   },
   "invoice": {
     "registration": {
