@@ -908,7 +908,9 @@
     "partnerSchools": "בתי ספר שותפים",
     "whatsapp": "תיבת וואטסאפ",
     "whatsappCampaigns": "קמפיינים בוואטסאפ",
-    "offices": "משרדים"
+    "offices": "משרדים",
+    "cityGuide": "מדריך עיר",
+    "cityGuideMobile": "מפה"
   },
   "common": {
     "loadMore": "טעינת עוד",
@@ -1342,6 +1344,37 @@
       "whatsappCta": "שיחה בוואטסאפ",
       "directLine": "הקו הישיר שלכם לצוות",
       "directLineDesc": "שאלות על התיק שלכם? הגיעו אלינו באופן מיידי."
+    },
+    "cityGuide": {
+      "title": "מדריך עיר",
+      "subtitle": "המקומות והשירותים השימושיים סביב הלימודים והחיים שלך ב־{{city}}.",
+      "yourCity": "העיר שלך",
+      "heroDescription": "גלו את המקומות שבאמת תשתמשו בהם — קניות, בית ספר, תחבורה, חדר כושר ועוד.",
+      "viewMap": "פתיחת מפה",
+      "viewAll": "הכול",
+      "searchPlaceholder": "חיפוש מקום (סופרמרקט, חדר כושר, בית חולים…)",
+      "filter": "סינון מקומות",
+      "categoriesLabel": "קטגוריות מקומות",
+      "popular": "מקומות חשובים לידך",
+      "noResults": "לא נמצאו מקומות מתאימים. נסו חיפוש או קטגוריה אחרת.",
+      "openMap": "פתיחה ב-Google Maps",
+      "mapsNote": "שמות המקומות וההוראות נפתחים ב-Google Maps. מקומות כלליים צריכים להישמר עדכניים דרך חיפוש במפות, בעוד שמגורי F+U מנוהלים כחלק ממידע DARB על בית הספר.",
+      "unavailableTitle": "מדריך עיר",
+      "unavailableDescription": "מדריך העיר יופיע אחרי שעיר המגורים שלך בגרמניה נשמרת בפרופיל.",
+      "categories": {
+        "all": "הכול",
+        "supermarkets": "סופרמרקטים",
+        "accommodation": "מגורים",
+        "school": "בית ספר",
+        "gyms": "חדרי כושר",
+        "transport": "תחבורה",
+        "healthcare": "בריאות",
+        "football": "כדורגל",
+        "cinema": "קולנוע",
+        "studentLife": "חיי סטודנטים",
+        "pharmacy": "בית מרקחת"
+      },
+      "unsupportedCityDescription": "מדריך עיר עבור העיר הזו עדיין לא זמין."
     }
   },
   "studentFees": {
