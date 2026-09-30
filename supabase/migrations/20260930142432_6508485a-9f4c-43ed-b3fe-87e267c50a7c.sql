@@ -1,0 +1,1 @@
+ALTER TABLE public.city_guide_place_cache ADD COLUMN IF NOT EXISTS photo_uri text;

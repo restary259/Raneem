@@ -1565,6 +1565,7 @@ export type Database = {
           open_now: boolean | null
           photo_attribution: string | null
           photo_name: string | null
+          photo_uri: string | null
           place_id: string | null
           rating: number | null
           rating_count: number | null
@@ -1577,6 +1578,7 @@ export type Database = {
           open_now?: boolean | null
           photo_attribution?: string | null
           photo_name?: string | null
+          photo_uri?: string | null
           place_id?: string | null
           rating?: number | null
           rating_count?: number | null
@@ -1589,6 +1591,7 @@ export type Database = {
           open_now?: boolean | null
           photo_attribution?: string | null
           photo_name?: string | null
+          photo_uri?: string | null
           place_id?: string | null
           rating?: number | null
           rating_count?: number | null
