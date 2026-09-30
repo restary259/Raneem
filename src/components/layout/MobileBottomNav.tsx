@@ -190,7 +190,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
 
   const label = (key: string) => shortLabel[key] ?? t(key, key);
 
-  // Student grouped parents stay active while any of their child routes is open.
+  // Grouped desktop-only parents stay active while any of their child routes is open.
   const groupChildHrefs: Record<string, string[]> = {
     'nav.group.studyFile': ['/student/checklist', '/student/documents', '/student/visa', '/student/fees'],
     'nav.group.communication': ['/student/messages', '/student/contacts'],
