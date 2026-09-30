@@ -8,6 +8,7 @@ import { template as teamInvite } from './team-invite.tsx'
 import { template as ambassadorInvite } from './ambassador-invite.tsx'
 import { template as appointmentReminder } from './appointment-reminder.tsx'
 import { template as caseInvoice } from './case-invoice.tsx'
+import { template as studentRegistrationInvoice } from './student-registration-invoice.tsx'
 import { template as accountInvite } from './account-invite.tsx'
 import { template as agentInvite } from './agent-invite.tsx'
 
@@ -35,6 +36,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ambassador-invite': ambassadorInvite,
   'appointment-reminder': appointmentReminder,
   'case-invoice': caseInvoice,
+  'student-registration-invoice': studentRegistrationInvoice,
   'account-invite': accountInvite,
   'agent-invite': agentInvite,
 }
