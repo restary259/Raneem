@@ -151,9 +151,9 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   const userId = useAuthedUserId();
 
   useEffect(() => {
-    if (residentialCity !== undefined) {
-      setStoredCity(residentialCity ?? null);
-      setCitySource(residentialCity ? "residential" : null);
+    if (typeof residentialCity === "string" && residentialCity.trim()) {
+      setStoredCity(residentialCity.trim());
+      setCitySource("residential");
       setProfileLoading(false);
     } else if (userId) {
       void loadProfileCity(userId);
