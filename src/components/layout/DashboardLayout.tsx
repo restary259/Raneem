@@ -61,8 +61,6 @@ import {
   Home,
   Table,
   Calculator,
-  Sparkles,
-  ShieldCheck,
   Receipt,
   Wrench,
   ClipboardEdit,
