@@ -40,7 +40,7 @@ interface StudentDashboardHeaderProps {
   onSignOut: () => Promise<void>;
 }
 
-const QUICK_ACTIONS = [
+export const QUICK_ACTIONS = [
   { key: "nav.checklist", icon: ListChecks, href: "/student/checklist" },
   { key: "nav.documents", icon: FileText, href: "/student/documents" },
   { key: "nav.visa", icon: Globe, href: "/student/visa" },
