@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, within } from "@testing-library/react";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string, f?: string) => f ?? k, i18n: { language: "en" } }),
@@ -50,9 +50,15 @@ function enterEditMode() {
   fireEvent.click(screen.getByRole("button", { name: /edit/i }));
 }
 
-/** The first "+972..." input is the Phone Number field in the Personal Information card. */
+/**
+ * Phone Number is reached by its label, not its placeholder: the Emergency
+ * Contact Phone input shares the "+972..." placeholder, so a placeholder query
+ * would silently switch targets if the field order changed.
+ */
 function phoneInput() {
-  return screen.getAllByPlaceholderText("+972...")[0] as HTMLInputElement;
+  const label = screen.getByText("Phone Number");
+  const field = label.closest("div") as HTMLElement;
+  return within(field).getByPlaceholderText("+972...") as HTMLInputElement;
 }
 
 describe("StudentProfile personal information card", () => {
