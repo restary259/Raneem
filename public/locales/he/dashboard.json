@@ -910,7 +910,12 @@
     "whatsappCampaigns": "קמפיינים בוואטסאפ",
     "offices": "משרדים",
     "cityGuide": "מדריך עיר",
-    "cityGuideMobile": "מפה"
+    "cityGuideMobile": "מפה",
+    "home": "ראשי",
+    "quickActions": "פעולות מהירות",
+    "accountMenu": "תפריט חשבון",
+    "language": "שפה",
+    "student": "סטודנט"
   },
   "common": {
     "loadMore": "טעינת עוד",
