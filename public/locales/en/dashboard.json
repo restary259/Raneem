@@ -2721,6 +2721,7 @@
     "ok": "OK"
   },
   "nav": {
+    "home": "Home",
     "overview": "Overview",
     "pipeline": "Pipeline",
     "team": "Team",
