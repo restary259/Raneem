@@ -64,7 +64,11 @@ Deno.serve(async (req) => {
     const paymentId = String(metadata.payment_id ?? "");
     if (!paymentId) return new Response(JSON.stringify({ received: true, ignored: true }), { headers: { "Content-Type": "application/json" } });
 
-    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
+    const completedPaid =
+      event.type === "checkout.session.completed" && object.payment_status === "paid";
+    const asyncPaid = event.type === "checkout.session.async_payment_succeeded";
+
+    if (completedPaid || asyncPaid) {
       const providerId = String(object.payment_intent ?? object.id ?? "");
       const { error } = await admin.rpc("confirm_registration_card_payment_internal", {
         p_payment_id: paymentId,
