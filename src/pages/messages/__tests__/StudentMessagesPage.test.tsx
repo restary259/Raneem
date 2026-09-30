@@ -233,7 +233,17 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     );
 
     await user.click(screen.getByText("Tap to start your conversation"));
-    expect(mockRpc).toHaveBeenCalledWith("start_student_team_member_thread");
+    // The page calls `.rpc(name)` with one argument, but this suite's
+    // integration mock forwards a second `args` parameter, so the recorded
+    // call is ("start_student_team_member_thread", undefined). Vitest compares
+    // arity strictly, so assert on the first argument rather than the call tuple.
+    await waitFor(() =>
+      expect(
+        mockRpc.mock.calls.some(
+          ([name]) => name === "start_student_team_member_thread",
+        ),
+      ).toBe(true),
+    );
   });
 
   it("shows real activity and unread counts instead of blank rows", async () => {
