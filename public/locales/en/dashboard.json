@@ -140,7 +140,16 @@
     "uncheckTitle": "Uncheck item?",
     "uncheckDesc": "Are you sure you want to uncheck \"{{name}}\"?",
     "confirmBtn": "Confirm",
-    "cancelBtn": "Cancel"
+    "cancelBtn": "Cancel",
+    "uploadDesc": "Upload the requested document, then confirm to mark this step as done.",
+    "uploadDoneDesc": "You already marked this as complete. You can uncheck it if it was a mistake.",
+    "uploadFileRequired": "Please choose the requested document first.",
+    "uploadConfirmBtn": "Confirm & mark as done",
+    "uncheckConfirmBtn": "Uncheck item",
+    "uploadSuccess": "Document uploaded",
+    "uploadSuccessDesc": "It is now saved on your Documents page.",
+    "uploadOnDocuments": "Saved on your Documents page",
+    "uploadNoFile": "No document is attached to this item."
   },
   "profile": {
     "title": "Account",
@@ -2793,8 +2802,7 @@
     "quickActions": "Quick actions",
     "accountMenu": "Account menu",
     "language": "Language",
-    "student": "Student",
-    "home": "Home"
+    "student": "Student"
   },
   "case": {
     "status": {
@@ -4288,7 +4296,14 @@
     }
   },
   "messagesInbox": {
-    "emergency": {"title":"Emergency services","police":"Police","ambulance":"Ambulance","fire":"Fire Fighter","call":"Call {{number}}","action":"Call"},
+    "emergency": {
+      "title": "Emergency services",
+      "police": "Police",
+      "ambulance": "Ambulance",
+      "fire": "Fire Fighter",
+      "call": "Call {{number}}",
+      "action": "Call"
+    },
     "title": "Case messages",
     "subtitle": "All conversations across your cases, newest first.",
     "staffTab": "Messages",

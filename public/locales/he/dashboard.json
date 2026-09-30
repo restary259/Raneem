@@ -844,7 +844,7 @@
     }
   },
   "nav": {
-    "home": "ראשי",
+    "home": "בית",
     "overview": "סקירה כללית",
     "pipeline": "צינור",
     "team": "צוות",
@@ -916,8 +916,7 @@
     "quickActions": "פעולות מהירות",
     "accountMenu": "תפריט החשבון",
     "language": "שפה",
-    "student": "סטודנט",
-    "home": "בית"
+    "student": "סטודנט"
   },
   "common": {
     "loadMore": "טעינת עוד",
@@ -1170,7 +1169,16 @@
     "uncheckTitle": "לבטל סימון הפריט?",
     "uncheckDesc": "האם אתם בטוחים שברצונכם לבטל את הסימון של \"{{name}}\"?",
     "confirmBtn": "אישור",
-    "cancelBtn": "ביטול"
+    "cancelBtn": "ביטול",
+    "uploadDesc": "העלה את המסמך המבוקש, ואז אשר כדי לסמן שלב זה כהושלם.",
+    "uploadDoneDesc": "כבר סימנת זאת כהושלם. אפשר לבטל את הסימון אם זו הייתה טעות.",
+    "uploadFileRequired": "יש לבחור תחילה את המסמך המבוקש.",
+    "uploadConfirmBtn": "אישור וסימון כהושלם",
+    "uncheckConfirmBtn": "ביטול סימון הפריט",
+    "uploadSuccess": "המסמך הועלה",
+    "uploadSuccessDesc": "הוא נשמר כעת בעמוד המסמכים שלך.",
+    "uploadOnDocuments": "נשמר בעמוד המסמכים שלך",
+    "uploadNoFile": "לא צורף מסמך לפריט זה."
   },
   "profile": {
     "title": "חשבון",
@@ -1747,7 +1755,14 @@
     "type_family": "בן משפחה"
   },
   "messagesInbox": {
-    "emergency": {"title":"שירותי חירום","police":"משטרה","ambulance":"אמבולנס","fire":"כבאות","call":"חייגו {{number}}","action":"חיוג"},
+    "emergency": {
+      "title": "שירותי חירום",
+      "police": "משטרה",
+      "ambulance": "אמבולנס",
+      "fire": "כבאות",
+      "call": "חייגו {{number}}",
+      "action": "חיוג"
+    },
     "title": "הודעות תיק",
     "subtitle": "כל השיחות בכל התיקים שלכם, החדשות תחילה.",
     "staffTab": "הודעות",
