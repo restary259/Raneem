@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import MobileBottomNav from "../MobileBottomNav";
@@ -21,7 +22,7 @@ vi.mock("@/lib/router-compat", () => ({
     ...props
   }: {
     to: string;
-    children?: React.ReactNode;
+    children?: ReactNode;
     [key: string]: unknown;
   }) => (
     <a href={to} {...props}>
