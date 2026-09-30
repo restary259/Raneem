@@ -59,12 +59,11 @@ serve(async (req) => {
       .eq("success", false)
       .gte("created_at", fifteenMinAgo);
 
+    // Per-email lockout: respond exactly like invalid credentials so callers
+    // cannot probe whether an arbitrary email is currently locked out.
     if ((emailCount ?? 0) >= 5) {
-      return new Response(JSON.stringify({
-        error: "تم تجاوز عدد المحاولات المسموحة. يرجى المحاولة بعد 15 دقيقة.",
-        locked: true,
-      }), {
-        status: 429,
+      return new Response(JSON.stringify({ error: "بيانات تسجيل الدخول غير صحيحة" }), {
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

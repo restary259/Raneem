@@ -7051,6 +7051,10 @@ export type Database = {
         Args: { p_case_id: string }
         Returns: undefined
       }
+      ensure_student_visa_application: {
+        Args: { p_case_id: string }
+        Returns: string
+      }
       finish_voice_call: {
         Args: { p_actor: string; p_call_id: string; p_end_reason: string }
         Returns: undefined
@@ -7844,6 +7848,10 @@ export type Database = {
         Args: { p_error?: string; p_invoice_id: string; p_status: string }
         Returns: undefined
       }
+      mark_student_visa_arrived: {
+        Args: { p_case_id: string }
+        Returns: string
+      }
       notification_category_for_source: {
         Args: { _source: string }
         Returns: string
@@ -8112,6 +8120,10 @@ export type Database = {
           p_target_role?: string
         }
         Returns: string
+      }
+      submit_student_visa_application: {
+        Args: { p_case_id: string }
+        Returns: Json
       }
       swap_accommodation_photo_order: {
         Args: { p_photo_id_a: string; p_photo_id_b: string }
