@@ -86,6 +86,9 @@ project_id = "mzbadxfvxioedzdjxamc"
 [functions.create-student-referral-registration]
   verify_jwt = false
 
+[functions.send-student-registration-invoice]
+  verify_jwt = false
+
 [functions.stripe-student-referral-checkout]
   verify_jwt = false
 
