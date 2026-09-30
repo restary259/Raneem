@@ -51,6 +51,13 @@ Deno.serve(async (req) => {
     const inv = invoice as Record<string, any>;
     if (inv.status === "cancelled") return json({ error: "This invoice is cancelled" }, 409, corsHeaders);
     if (inv.payment_status === "paid") return json({ paid: true, invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}` }, 200, corsHeaders);
+    if (inv.payment_status === "submitted") {
+      return json(
+        { error: "A bank transfer has already been submitted for this invoice. Please wait for DARB to confirm it." },
+        409,
+        corsHeaders,
+      );
+    }
     if (String(inv.currency).toUpperCase() !== "EUR") {
       return json({ error: "Card checkout is currently available only for EUR registration invoices" }, 409, corsHeaders);
     }
@@ -94,7 +101,17 @@ Deno.serve(async (req) => {
     params.set("line_items[0][price_data][product_data][description]", `Case ${inv.case_reference ?? inv.case_id}`);
     params.set("line_items[0][quantity]", "1");
 
-    const session = await stripePost("checkout/sessions", params, stripeSecret);
+    let session: any;
+    try {
+      session = await stripePost("checkout/sessions", params, stripeSecret);
+    } catch (error) {
+      await admin.from("case_registration_payments").update({
+        status: "failed",
+        failure_reason: error instanceof Error ? error.message : "Stripe checkout creation failed",
+        updated_at: new Date().toISOString(),
+      }).eq("id", payment.id).eq("status", "pending");
+      throw error;
+    }
 
     const { error: updateError } = await admin
       .from("case_registration_payments")
