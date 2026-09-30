@@ -12,7 +12,7 @@ import {
   CalendarDays, ClipboardList, UserPlus, GraduationCap,
   TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
-  Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
+  ShieldCheck, Receipt, Globe, ListChecks,
   Hotel, Megaphone, Building2, MapPinned, Home,
 } from 'lucide-react';
 
