@@ -318,7 +318,6 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                   </Button>
                 </div>
               )}
-              </div>
             </div>
           </div>
         </div>
