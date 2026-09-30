@@ -45,7 +45,15 @@ describe("student mobile primary navigation", () => {
     const nav = screen.getByRole("navigation", { name: "Main navigation" });
     const actions = screen.getAllByRole("link");
 
+    expect(nav).toContainElement(screen.getByRole("link", { name: "DARB" }));
     expect(actions).toHaveLength(5);
+    expect(actions.map((action) => action.getAttribute("href"))).toEqual([
+      "/student",
+      "/student/city-guide",
+      "/student/messages",
+      "/student/profile",
+      "/",
+    ]);
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/student");
     expect(screen.getByRole("link", { name: "Map" })).toHaveAttribute(
       "href",
@@ -61,6 +69,5 @@ describe("student mobile primary navigation", () => {
     );
     expect(screen.getByRole("link", { name: "DARB" })).toHaveAttribute("href", "/");
     expect(screen.queryByRole("button", { name: "More" })).not.toBeInTheDocument();
-    expect(nav).toContainElement(screen.getByRole("link", { name: "DARB" }));
   });
 });
