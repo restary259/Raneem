@@ -895,7 +895,7 @@ BEGIN
    WHERE id = v_payment.invoice_id
    FOR UPDATE;
 
-  SELECT id, assigned_to, status INTO v_case
+  SELECT id, assigned_to, status, case_reference INTO v_case
     FROM public.cases WHERE id = v_payment.case_id;
 
   IF NOT (public.has_role(v_uid,'admin') OR v_case.assigned_to = v_uid) THEN
@@ -980,7 +980,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'Payment not found'; END IF;
 
   SELECT * INTO v_invoice FROM public.case_registration_invoices WHERE id=v_payment.invoice_id FOR UPDATE;
-  SELECT id,status INTO v_case FROM public.cases WHERE id=v_payment.case_id;
+  SELECT id,status,case_reference INTO v_case FROM public.cases WHERE id=v_payment.case_id;
 
   IF v_payment.payment_method <> 'card' THEN
     RAISE EXCEPTION 'This payment record is not a card payment';
