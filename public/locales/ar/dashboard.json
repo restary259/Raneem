@@ -2804,7 +2804,9 @@
     "partnerSchools": "مدارس الشركاء",
     "whatsapp": "صندوق واتساب",
     "whatsappCampaigns": "حملات واتساب",
-    "offices": "المكاتب"
+    "offices": "المكاتب",
+    "cityGuide": "دليل المدينة",
+    "cityGuideMobile": "الخريطة"
   },
   "case": {
     "status": {
@@ -3645,6 +3647,37 @@
       "whatsappCta": "محادثة عبر واتساب",
       "directLine": "خطك المباشر مع الفريق",
       "directLineDesc": "عندك سؤال عن ملفك؟ تواصل معنا فوراً."
+    },
+    "cityGuide": {
+      "title": "دليل المدينة",
+      "subtitle": "الأماكن والخدمات المفيدة حول دراستك وحياتك اليومية في {{city}}.",
+      "yourCity": "مدينتك",
+      "heroDescription": "اكتشف الأماكن اللي رح تحتاجها فعليًا — التسوق، المدرسة، المواصلات، الجيم وغيرهم.",
+      "viewMap": "افتح الخريطة",
+      "viewAll": "شوف الكل",
+      "searchPlaceholder": "دوّر على مكان (سوبرماركت، جيم، مستشفى…)",
+      "filter": "فلترة الأماكن",
+      "categoriesLabel": "فئات الأماكن",
+      "popular": "أماكن مهمة حواليك",
+      "noResults": "ما لقينا أماكن مطابقة. جرّب بحث أو فئة ثانية.",
+      "openMap": "افتح في Google Maps",
+      "mapsNote": "أسماء الأماكن والاتجاهات بتفتح في Google Maps. الأماكن العامة لازم تضل محدثة من خلال البحث في الخرائط، بينما سكن F+U مُدار ضمن معلومات درب عن المدرسة.",
+      "unavailableTitle": "دليل المدينة",
+      "unavailableDescription": "دليل مدينتك بيظهر بعد ما تحفظ مدينة سكنك بألمانيا في حسابك.",
+      "categories": {
+        "all": "الكل",
+        "supermarkets": "سوبرماركت",
+        "accommodation": "السكن",
+        "school": "المدرسة",
+        "gyms": "جيم",
+        "transport": "مواصلات",
+        "healthcare": "صحة",
+        "football": "كرة قدم",
+        "cinema": "سينما",
+        "studentLife": "حياة طلابية",
+        "pharmacy": "صيدلية"
+      },
+      "unsupportedCityDescription": "لسا دليل المدينة لهاي المدينة مش متوفر."
     }
   },
   "settings": {
