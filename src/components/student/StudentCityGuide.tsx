@@ -92,17 +92,59 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   const language = i18n.language;
   const [storedCity, setStoredCity] = useState<string | null>(residentialCity ?? null);
   const [profileLoading, setProfileLoading] = useState(!residentialCity);
+  const [citySource, setCitySource] = useState<"residential" | "school" | null>(
+    residentialCity ? "residential" : null,
+  );
   const [selectedCategory, setSelectedCategory] = useState<StudentCityGuideCategory>("all");
   const [search, setSearch] = useState("");
 
   const loadProfileCity = useCallback(async (uid: string) => {
     setProfileLoading(true);
-    const { data } = await (supabase as any)
+
+    const { data: profile } = await (supabase as any)
       .from("profiles")
-      .select("residential_city")
+      .select("residential_city, language_school_id")
       .eq("id", uid)
       .maybeSingle();
-    setStoredCity(data?.residential_city ?? null);
+
+    const directCity =
+      typeof profile?.residential_city === "string" && profile.residential_city.trim()
+        ? profile.residential_city.trim()
+        : null;
+
+    if (directCity) {
+      setStoredCity(directCity);
+      setCitySource("residential");
+      setProfileLoading(false);
+      return;
+    }
+
+    // Backward compatibility for already-onboarded students whose structured
+    // residential_city field is still empty: resolve the selected school city
+    // from the student's own language_school_id. This is one scoped lookup, not
+    // a city-wide database scan.
+    if (profile?.language_school_id) {
+      const { data: school } = await (supabase as any)
+        .from("schools")
+        .select("city")
+        .eq("id", profile.language_school_id)
+        .maybeSingle();
+
+      const schoolCity =
+        typeof school?.city === "string" && school.city.trim()
+          ? school.city.trim()
+          : null;
+
+      if (schoolCity) {
+        setStoredCity(schoolCity);
+        setCitySource("school");
+        setProfileLoading(false);
+        return;
+      }
+    }
+
+    setStoredCity(null);
+    setCitySource(null);
     setProfileLoading(false);
   }, []);
 
@@ -111,6 +153,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   useEffect(() => {
     if (residentialCity !== undefined) {
       setStoredCity(residentialCity ?? null);
+      setCitySource(residentialCity ? "residential" : null);
       setProfileLoading(false);
     } else if (userId) {
       void loadProfileCity(userId);
@@ -186,7 +229,15 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                 {language === "ar" ? city.nameAr : language === "he" ? city.nameHe : city.nameEn}, Germany
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {t("student.cityGuide.heroDescription", "Discover the places you will actually use — shopping, school, transport, fitness and more.")}
+                {citySource === "school"
+                  ? t(
+                      "student.cityGuide.schoolCityDescription",
+                      "Showing useful places around your language school city. You can change your German residential city in your profile later.",
+                    )
+                  : t(
+                      "student.cityGuide.heroDescription",
+                      "Discover the places you will actually use — shopping, school, transport, fitness and more.",
+                    )}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button asChild size="sm" className="gap-2">
