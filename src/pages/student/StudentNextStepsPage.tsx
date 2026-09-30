@@ -34,6 +34,7 @@ export default function StudentNextStepsPage() {
 
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState('');
+  const [residentialCity, setResidentialCity] = useState<string | null>(null);
   const [caseStatus, setCaseStatus] = useState<string | null>(null);
   const [steps, setSteps] = useState<StepRow[]>([]);
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function StudentNextStepsPage() {
 
     const { data: profile, error: profileError } = await (supabase as any)
       .from('profiles')
-      .select('full_name, date_of_birth, emergency_contact_phone, case_id, linked_case_id')
+      .select('full_name, date_of_birth, emergency_contact_phone, residential_city, case_id, linked_case_id')
       .eq('id', uid)
       .maybeSingle();
     if (profileError) {
@@ -56,6 +57,7 @@ export default function StudentNextStepsPage() {
     }
 
     setFullName(profile?.full_name ?? '');
+    setResidentialCity(profile?.residential_city ?? null);
     // Students read their case through a restricted accessor that excludes
     // internal commission/revenue columns.
     const { data: ownCases, error: caseLookupError } = await (supabase as any).rpc('get_my_case');
@@ -188,6 +190,8 @@ export default function StudentNextStepsPage() {
           {t('student.next.subtitle', 'Everything that needs your attention right now.')}
         </p>
       </div>
+
+      <StudentCityGuide residentialCity={residentialCity} variant="preview" />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
