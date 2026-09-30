@@ -3,30 +3,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { ClipboardCheck, CheckCircle2 } from 'lucide-react';
+import { ClipboardCheck, CheckCircle2, Paperclip } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LoadingState, EmptyState, ErrorState, TablePagination, usePagination } from '@/components/shell';
 import { toneClasses } from '@/lib/statusTokens';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import ChecklistItemUploadDialog, {
+  type ChecklistUploadTarget,
+} from '@/components/dashboard/ChecklistItemUploadDialog';
 
 interface ChecklistTrackerProps {
   userId: string;
 }
 
+interface UploadedDocument {
+  id: string;
+  file_name: string;
+  checklist_item_id: string;
+}
+
 const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
   const [items, setItems] = useState<any[]>([]);
   const [completions, setCompletions] = useState<any[]>([]);
+  const [uploads, setUploads] = useState<UploadedDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [confirmItem, setConfirmItem] = useState<{ id: string; name: string; completed: boolean } | null>(null);
+  const [target, setTarget] = useState<ChecklistUploadTarget | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
   const { t, i18n } = useTranslation('dashboard');
@@ -41,9 +41,22 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
   }, [userId]);
 
   const fetchData = async (ignore = false) => {
-    const [itemsRes, completionsRes] = await Promise.all([
+    const [itemsRes, completionsRes, uploadsRes] = await Promise.all([
       (supabase as any).from('checklist_items').select('*').order('sort_order', { ascending: true }),
       (supabase as any).from('student_checklist').select('*').eq('student_id', userId),
+      // Documents the student uploaded from a checklist popup, so each row can
+      // show that its file is already attached. Ad-hoc uploads have a NULL
+      // checklist_item_id and are filtered out by the `.not` below.
+      // `.is('deleted_at', null)` matters: staff delete marks the row rather
+      // than removing it, so without this a removed file would still render as
+      // attached. Newest first, so a replacement upload wins over the original.
+      (supabase as any)
+        .from('documents')
+        .select('id, file_name, checklist_item_id')
+        .eq('student_id', userId)
+        .not('checklist_item_id', 'is', null)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
     ]);
     if (ignore) return;
     if (itemsRes.error || completionsRes.error) {
@@ -53,46 +66,39 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
     }
     if (itemsRes.data) setItems(itemsRes.data);
     if (completionsRes.data) setCompletions(completionsRes.data);
+    if (uploadsRes.data) setUploads(uploadsRes.data as UploadedDocument[]);
     setIsLoading(false);
   };
 
   const handleItemClick = (itemId: string, itemName: string, currentlyCompleted: boolean) => {
-    setConfirmItem({ id: itemId, name: itemName, completed: currentlyCompleted });
+    const existing = uploads.find((u) => u.checklist_item_id === itemId);
+    setTarget({
+      id: itemId,
+      name: itemName,
+      completed: currentlyCompleted,
+      existingDocument: existing ? { id: existing.id, file_name: existing.file_name } : null,
+    });
   };
 
-  const handleConfirm = async () => {
-    if (!confirmItem) return;
-    const { id: itemId, completed: currentlyCompleted } = confirmItem;
-    setConfirmItem(null);
-
-    const prevCompletions = completions;
+  /**
+   * Uncheck path: clears completion only. The uploaded file is never deleted.
+   * Returns `false` on failure so the popup stays open for a retry.
+   */
+  const handleUncheck = async (itemId: string): Promise<boolean> => {
     const existing = completions.find(c => c.checklist_item_id === itemId);
-
-    let dbError: any = null;
-
-    if (existing) {
-      const { error } = await (supabase as any).from('student_checklist').update({
-        is_completed: !currentlyCompleted,
-        completed_at: !currentlyCompleted ? new Date().toISOString() : null,
-      }).eq('id', existing.id);
-      dbError = error;
-    } else {
-      const { error } = await (supabase as any).from('student_checklist').insert({
-        student_id: userId,
-        checklist_item_id: itemId,
-        is_completed: true,
-        completed_at: new Date().toISOString(),
-      });
-      dbError = error;
-    }
-
-    if (dbError) {
-      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: dbError.message });
+    if (!existing) return true;
+    const prevCompletions = completions;
+    const { error } = await (supabase as any)
+      .from('student_checklist')
+      .update({ is_completed: false, completed_at: null })
+      .eq('id', existing.id);
+    if (error) {
+      toast({ variant: 'destructive', title: t('common.error', 'Error'), description: error.message });
       setCompletions(prevCompletions);
-      return;
+      return false;
     }
-
     await fetchData();
+    return true;
   };
 
   if (isLoading) {
@@ -160,6 +166,7 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
         {items.map((item) => {
           const completion = completions.find(c => c.checklist_item_id === item.id);
           const isCompleted = completion?.is_completed || false;
+          const upload = uploads.find(u => u.checklist_item_id === item.id);
 
           return (
             <Card
@@ -171,12 +178,18 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
             >
               <CardContent className="p-4 flex items-center gap-4">
                 <Checkbox checked={isCompleted} className="h-5 w-5" />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className={`font-medium text-sm ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
                     {item.item_name}
                   </p>
                   {item.description && (
                     <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                  )}
+                  {upload && (
+                    <p className="text-xs text-primary mt-1 flex items-center gap-1 min-w-0">
+                      <Paperclip className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{upload.file_name}</span>
+                    </p>
                   )}
                 </div>
                 {isCompleted && completion?.completed_at && (
@@ -192,26 +205,13 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
 
       {items.length === 0 && <EmptyState title={t('checklist.noItems')} />}
 
-      {/* Confirmation Dialog */}
-      <AlertDialog open={!!confirmItem} onOpenChange={(open) => !open && setConfirmItem(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmItem?.completed ? t('checklist.uncheckTitle', 'Uncheck Item?') : t('checklist.checkTitle', 'Mark as Complete?')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmItem?.completed
-                ? t('checklist.uncheckDesc', 'Are you sure you want to uncheck "{{name}}"?', { name: confirmItem?.name })
-                : t('checklist.checkDesc', 'Confirm that you have completed "{{name}}"?', { name: confirmItem?.name })
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('checklist.cancelBtn', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>{t('checklist.confirmBtn', 'Confirm')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ChecklistItemUploadDialog
+        studentId={userId}
+        target={target}
+        onClose={() => setTarget(null)}
+        onChanged={() => fetchData()}
+        onUncheck={handleUncheck}
+      />
     </div>
   );
 };

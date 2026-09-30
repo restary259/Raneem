@@ -2039,6 +2039,7 @@ export type Database = {
       documents: {
         Row: {
           case_id: string | null
+          checklist_item_id: string | null
           category: string
           created_at: string
           deleted_at: string | null
@@ -2057,6 +2058,7 @@ export type Database = {
         }
         Insert: {
           case_id?: string | null
+          checklist_item_id?: string | null
           category?: string
           created_at?: string
           deleted_at?: string | null
@@ -2075,6 +2077,7 @@ export type Database = {
         }
         Update: {
           case_id?: string | null
+          checklist_item_id?: string | null
           category?: string
           created_at?: string
           deleted_at?: string | null

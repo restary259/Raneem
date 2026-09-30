@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { logDocumentAccess } from "@/lib/documentAccessLog";
 import { validateUploadFile } from "@/lib/uploadRules";
+import { uploadStudentDocument } from "@/lib/studentDocuments";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Upload, File, Download, Trash2, Plus, Search, AlertTriangle } from "lucide-react";
@@ -131,22 +132,17 @@ const DocumentsManager: React.FC<DocumentsManagerProps> = ({ userId }) => {
 
     setIsUploading(true);
     try {
-      const fileExt = selectedFile.name.split(".").pop();
-      const filePath = `${userId}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("student-documents").upload(filePath, selectedFile);
-      if (uploadError) throw uploadError;
       const displayName = category === "other" && customDocName.trim() ? customDocName.trim() : selectedFile.name;
-      const { error: dbError } = await (supabase as any).from("documents").insert({
-        student_id: userId,
-        file_name: displayName,
-        file_url: filePath,
-        file_size: selectedFile.size,
-        file_type: selectedFile.type,
+      // Same upload path the checklist popup uses, so a file uploaded from
+      // either screen is stored and shaped identically.
+      await uploadStudentDocument({
+        studentId: userId,
+        file: selectedFile,
         category,
-        expiry_date: expiryDate || null,
+        fileName: displayName,
         notes: notes || null,
+        expiryDate: expiryDate || null,
       });
-      if (dbError) throw dbError;
       toast({ title: t("documents.uploadSuccess"), description: t("documents.uploadSuccessDesc") });
       setShowUploadModal(false);
       setSelectedFile(null);

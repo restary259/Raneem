@@ -140,7 +140,16 @@
     "uncheckTitle": "إلغاء التحديد؟",
     "uncheckDesc": "هل تريد إلغاء تحديد \"{{name}}\"؟",
     "confirmBtn": "تأكيد",
-    "cancelBtn": "إلغاء"
+    "cancelBtn": "إلغاء",
+    "uploadDesc": "ارفع المستند المطلوب ثم اضغط تأكيد لتحديد هذه الخطوة كمنجزة.",
+    "uploadDoneDesc": "لقد حددت هذا البند كمنجز مسبقاً. يمكنك إلغاء التحديد إذا كان ذلك بالخطأ.",
+    "uploadFileRequired": "الرجاء اختيار المستند المطلوب أولاً.",
+    "uploadConfirmBtn": "تأكيد وتحديد كمنجز",
+    "uncheckConfirmBtn": "إلغاء تحديد البند",
+    "uploadSuccess": "تم رفع المستند",
+    "uploadSuccessDesc": "تم حفظه الآن في صفحة المستندات الخاصة بك.",
+    "uploadOnDocuments": "محفوظ في صفحة المستندات",
+    "uploadNoFile": "لا يوجد مستند مرتبط بهذا البند."
   },
   "profile": {
     "title": "الحساب",
@@ -2812,7 +2821,7 @@
     "accountMenu": "قائمة الحساب",
     "language": "اللغة",
     "student": "الطالب",
-    "darb": "DARB"
+    "darb": "درب"
   },
   "case": {
     "status": {
