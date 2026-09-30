@@ -4324,7 +4324,9 @@
     "startTeamChat": "Message my team member",
     "caseConversationHint": "Your case conversation with the Darb team",
     "payoutConversationHint": "Your payout conversation",
-    "teamConversationHint": "Your direct line to your advisor"
+    "teamConversationHint": "Your direct line to your advisor",
+    "startTeamPreview": "Tap to start your conversation",
+    "startingTeamChat": "Opening your team chat…"
   },
   "chat": {
     "day": {
