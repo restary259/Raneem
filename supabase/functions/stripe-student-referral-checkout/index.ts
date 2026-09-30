@@ -65,104 +65,39 @@ Deno.serve(async (req) => {
       return json({ error: "Card checkout is currently available only for EUR registration invoices" }, 409, corsHeaders);
     }
 
-    const existingConfirmed = Array.isArray(inv.payments)
-      ? inv.payments.find((p: any) => p?.status === "confirmed")
-      : null;
-    if (existingConfirmed) {
+    const { data: paymentData, error: paymentError } = await admin.rpc(
+      "create_registration_card_payment_internal",
+      { p_invoice_id: inv.id },
+    );
+    if (paymentError) {
+      const message = paymentError.message || "Could not create card payment";
+      if (/another payment is already in progress/i.test(message)) {
+        return json({ error: message }, 409, corsHeaders);
+      }
+      throw paymentError;
+    }
+
+    const paymentResult = paymentData as Record<string, any>;
+    if (paymentResult?.paid) {
       return json({
         paid: true,
         invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
       }, 200, corsHeaders);
     }
 
-    const existingCard = Array.isArray(inv.payments)
-      ? inv.payments.find((p: any) => p?.payment_method === "card" && p?.status === "pending")
-      : null;
-    const existingActive = Array.isArray(inv.payments)
-      ? inv.payments.find((p: any) => ["pending", "submitted", "confirmed"].includes(p?.status))
-      : null;
-
-    if (existingActive && existingActive.payment_method !== "card") {
-      return json(
-        { error: "Another payment is already in progress for this invoice. Please use the payment method already selected." },
-        409,
-        corsHeaders,
-      );
-    }
-
-    if (existingCard?.checkout_url) {
+    const payment = {
+      id: paymentResult?.payment_id,
+      status: paymentResult?.status,
+      checkout_url: paymentResult?.checkout_url ?? null,
+    };
+    if (!payment.id) throw new Error("Could not create or reuse card payment");
+    if (payment.checkout_url) {
       return json({
-        checkout_url: existingCard.checkout_url,
-        payment_id: existingCard.id,
+        checkout_url: payment.checkout_url,
+        payment_id: payment.id,
         invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
       }, 200, corsHeaders);
     }
-
-    let payment = existingCard;
-    let paymentError: { code?: string; message?: string } | null = null;
-
-    if (!payment) {
-      const inserted = await admin
-        .from("case_registration_payments")
-        .insert({
-          invoice_id: inv.id,
-          case_id: inv.case_id,
-          payment_method: "card",
-          amount: Number(inv.total_amount),
-          currency: "EUR",
-          status: "pending",
-          reference: inv.case_reference,
-        })
-        .select("id,status,checkout_url,provider_payment_id")
-        .single();
-
-      payment = inserted.data;
-      paymentError = inserted.error as { code?: string; message?: string } | null;
-
-      if (paymentError?.code === "23505") {
-        const { data: refreshedInvoice, error: refreshError } = await admin.rpc(
-          "get_registration_invoice_by_token",
-          { p_token: token },
-        );
-        if (refreshError || !refreshedInvoice) throw refreshError ?? new Error("Registration invoice not found");
-
-        const refreshed = refreshedInvoice as Record<string, any>;
-        if (refreshed.payment_status === "paid") {
-          return json({
-            paid: true,
-            invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
-          }, 200, corsHeaders);
-        }
-
-        const refreshedPayments = Array.isArray(refreshed.payments) ? refreshed.payments : [];
-        const refreshedConfirmed = refreshedPayments.find((p: any) => p?.status === "confirmed");
-        if (refreshedConfirmed) {
-          return json({
-            paid: true,
-            invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
-          }, 200, corsHeaders);
-        }
-        const refreshedActive = refreshedPayments.find((p: any) =>
-          ["pending", "submitted", "confirmed"].includes(p?.status)
-        );
-
-        if (!refreshedActive) throw paymentError;
-
-        if (refreshedActive.payment_method !== "card") {
-          return json(
-            { error: "Another payment is already in progress for this invoice. Please use the payment method already selected." },
-            409,
-            corsHeaders,
-          );
-        }
-
-        payment = refreshedActive;
-        paymentError = null;
-      }
-    }
-
-    if (paymentError) throw paymentError;
-    if (!payment) throw new Error("Could not create or reuse card payment");
 
     const params = new URLSearchParams();
     params.set("mode", "payment");
