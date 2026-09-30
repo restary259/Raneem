@@ -89,9 +89,16 @@ export default function StudentOverviewSection() {
   const Chevron = isAr ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    // The base track count must be explicit. Without `grid-cols-1` the single
+    // implicit track is `auto`, which sizes to the widest item's min-content —
+    // and a `truncate` (nowrap) label such as "KAPITO Sprachschule
+    // International Office" then props the track open past the viewport. That
+    // overflow is language-dependent: English/Hebrew labels are long enough to
+    // trigger it, the equivalent Arabic labels are not. `min-w-0` on each item
+    // lets them shrink to the track instead of contributing their min-content.
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {/* ── Left column: quick actions + tools ─────────────────────────── */}
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         {/* Quick actions */}
         <Card>
           <CardHeader className="pb-3">
@@ -141,7 +148,7 @@ export default function StudentOverviewSection() {
       </div>
 
       {/* ── Right column: WhatsApp + contacts ──────────────────────────── */}
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         {/* WhatsApp direct line */}
         <Card>
           <CardHeader className="pb-3">
@@ -201,7 +208,7 @@ export default function StudentOverviewSection() {
             ) : (
               <div className="divide-y">
                 {topContacts.map((contact) => (
-                  <div key={contact.id} className="flex items-center gap-3 px-4 py-2.5">
+                  <div key={contact.id} className="flex min-w-0 items-center gap-3 px-4 py-2.5">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
                         {isAr ? contact.name_ar : contact.name_en}

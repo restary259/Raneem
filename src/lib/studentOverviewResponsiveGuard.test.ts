@@ -33,9 +33,26 @@ const classLists: string[][] = [...src.matchAll(/className="([^"]*)"/g)].map(
 
 /** The first class list containing every given token. */
 function classListWith(...tokens: string[]): string[] {
-  const found = classLists.find((list) => tokens.every((t) => list.includes(t)));
-  expect(found, `no className contains all of: ${tokens.join(", ")}`).toBeTruthy();
+  const found = classLists.find((list) =>
+    tokens.every((t) => list.includes(t)),
+  );
+  expect(
+    found,
+    `no className contains all of: ${tokens.join(", ")}`,
+  ).toBeTruthy();
   return found!;
+}
+
+/** The first class list AFTER `from` that contains every given token. */
+function nextClassListAfter(from: number, ...tokens: string[]): string[] {
+  const found = classLists.findIndex(
+    (list, idx) => idx > from && tokens.every((t) => list.includes(t)),
+  );
+  expect(
+    found,
+    `no className after index ${from} contains: ${tokens.join(", ")}`,
+  ).toBeGreaterThan(from);
+  return classLists[found];
 }
 
 const GRID_COLS = /^(?:(sm|md|lg|xl|2xl):)?grid-cols-(\d+)$/;
@@ -90,7 +107,39 @@ describe("Student Overview quick actions are full-width on phones", () => {
     const overview = classListWith("gap-4", "lg:grid-cols-2");
 
     expect(overview).toContain("grid");
-    expect(gridTracks(overview).base).toBeUndefined();
+    expect(gridTracks(overview).lg).toEqual(["2"]);
+  });
+
+  it("gives the overview an explicit single mobile column", () => {
+    // Without an unprefixed `grid-cols-*` the implicit track is `auto`, which
+    // sizes to the widest item's min-content. A `truncate` (nowrap) label then
+    // props the page open on phones — the language-dependent overflow where
+    // English/Hebrew labels are long enough and Arabic is not.
+    const overview = classListWith("gap-4", "lg:grid-cols-2");
+
+    expect(gridTracks(overview).base).toEqual(["1"]);
+  });
+
+  it("lets each overview column shrink to its track", () => {
+    // Both overview columns wrap a `truncate` label (important-contact names),
+    // so both need `min-w-0` or their min-content re-inflates the auto track.
+    // Anchor on the grid itself and require the shrink allowance on the NEXT
+    // element (the first column) — not merely somewhere in the file.
+    const grid = classLists.indexOf(classListWith("gap-4", "lg:grid-cols-2"));
+
+    expect(nextClassListAfter(grid, "min-w-0", "space-y-4")).toContain(
+      "min-w-0",
+    );
+  });
+
+  it("lets a truncating contact row shrink inside its column", () => {
+    // The row must carry the shrink allowance AND wrap the truncating name.
+    const row = classListWith("items-center", "gap-3", "px-4", "py-2.5");
+
+    expect(row).toContain("min-w-0");
+    expect(
+      nextClassListAfter(classLists.indexOf(row), "truncate"),
+    ).toBeTruthy();
   });
 
   it("keeps the WhatsApp CTA row wrapping rather than scrolling", () => {

@@ -2818,7 +2818,53 @@ only the frontend reachability was broken.
 ## Student Dashboard mobile card width / overflow (2026-09-30)
 - The Student Overview quick actions live in `src/components/student/StudentOverviewSection.tsx`, rendered by `StudentNextStepsPage` at the `/student/` route (`src/routes/student.index.tsx`). `/student-dashboard` is a SEPARATE route that only redirects to `/student/checklist` (`ChecklistTracker`), so it is not this surface.
 - The Quick Actions grid was `grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3`, so below `sm` (< 640px) three narrow cards were forced across the phone. Fixed to `grid grid-cols-1 gap-2 sm:grid-cols-5 lg:grid-cols-3`: 1 column on phones, 5 at `sm`, 3 at `lg` (unchanged desktop). Each action button gained `w-full min-w-0` and each label `min-w-0 max-w-full break-words` so a translated label cannot establish an intrinsic width wider than its grid track.
-- `grid gap-4 lg:grid-cols-2` on the overview is correct and was NOT changed. The WhatsApp `flex flex-wrap gap-2` row already wraps safely inside the card and was left unchanged (no `overflow-x-auto`, no fixed widths, no global CSS hacks).
+- The overview's `lg:grid-cols-2` two-column desktop split was correct and was NOT changed. **Update (see the follow-up section below):** the overview later gained an explicit `grid-cols-1` base plus `min-w-0` on its columns, because a base-less grid creates an implicit `auto` track that a `truncate` label can inflate past the viewport. Do not remove that base `grid-cols-1`. The WhatsApp `flex flex-wrap gap-2` row already wraps safely inside the card and was left unchanged (no `overflow-x-auto`, no fixed widths, no global CSS hacks).
 - Guarded by `src/lib/studentOverviewResponsiveGuard.test.ts` (6 source-scan cases; verified non-vacuous — reintroducing the buggy classes fails 4 of them).
 - Verified with the real built stylesheet in headless Chromium at 320/360/375/390/430/768/1024/1280 in en + ar (RTL): quick-action track counts 1/1/1/1/1/5/3/3, every card inside its grid track, and no horizontal overflow on `documentElement` or `<main>`.
 - Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1703 passed | 1 skipped; `npm run build` clean.
+
+## Student Dashboard language-dependent overflow — implicit `auto` grid track (2026-09-30)
+- Follow-up report after the quick-actions fix: switching to **English or Hebrew**
+  also overflowed the Student Dashboard, while Arabic did not. Reproduced on the
+  real page (built stylesheet + mocked Supabase REST/auth in headless Chromium).
+- **Root cause is the implicit grid track, not the quick actions.** The overview
+  was `grid gap-4 lg:grid-cols-2` with NO unprefixed `grid-cols-*`. A grid with no
+  explicit column count creates a single implicit track of `auto`, which sizes to
+  the widest item's **min-content**. The important-contacts card renders contact
+  names with `truncate` (= `white-space: nowrap`), so its min-content is the full
+  unwrapped name. `"KAPITO Sprachschule International Office"` propped the track
+  to **387px inside a 288px box — a 99px overflow at 320px** (59 at 360, 44 at
+  375, 29 at 390). The Arabic name is shorter, so it fit and the bug looked
+  language-dependent. A grid item's default `min-width: auto` means the item
+  cannot shrink below that min-content, so `overflow-x-hidden` on the shell
+  silently CLIPPED the cards instead of scrolling.
+- Fix (both in `StudentOverviewSection.tsx`): explicit `grid grid-cols-1 gap-4
+  lg:grid-cols-2` so the mobile track is `1fr` (not `auto`), plus `min-w-0` on
+  each overview column and on the truncating contact row so they shrink to the
+  track instead of contributing their min-content. `min-w-0` alone also fixes it;
+  both are applied for defense-in-depth.
+- `ChecklistTracker.tsx` (the `/student-dashboard` → `/student/checklist` target)
+  had the same class of bug: `flex items-center gap-6` with a fixed `w-24` ring,
+  where the text column had no `min-w-0`, so the single translated progress
+  sentence clipped 32px at 320px in en/he and 0 in ar. Fixed with `min-w-0` on the
+  text column, `shrink-0` on the ring, and a wrapping `min-w-0 break-words` title.
+- **Do NOT "fix" this by relying on the shell's `overflow-x-hidden`** — it hides
+  the symptom by clipping content. The track/item shrink allowance is the fix.
+  Same trap applies to any new grid written without a base `grid-cols-*` that
+  contains `truncate` text. (`StudentContactsPage` and `StudentDataPage` use
+  `grid gap-3` / `grid gap-4 sm:grid-cols-2` with no truncate text — measured
+  clean, left unchanged.)
+- Guarded by `src/lib/checklistTrackerResponsiveGuard.test.ts` (4 cases) and
+  extended `src/lib/studentOverviewResponsiveGuard.test.ts` (the old assertion
+  that the overview had NO base `grid-cols-*` encoded the bug and was replaced).
+  Both verified non-vacuous: reverting the classes fails 5 of the 13 cases.
+- Verified on the real page at 320/360/375/390/430/768/1024/1280 in en/ar/he:
+  mobile quick actions 1 column at full width, `sm` 5 columns / 1 row, `lg`
+  2-column overview + 3-column quick actions, no page or `<main>` horizontal
+  overflow in any locale.
+- Known remaining (NOT language-dependent, left unchanged): the `DashboardLayout`
+  header's language-switcher row clips ~25px at 320px **equally in en/ar/he**
+  (it scrolls horizontally by design). `DashboardLayout` is out of scope for this
+  fix; it is not the reported regression.
+- Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1710 passed | 1 skipped;
+  `npm run build` clean. Changed files carry identical eslint counts to baseline.
