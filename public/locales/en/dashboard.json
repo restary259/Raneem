@@ -2788,7 +2788,12 @@
     "whatsappCampaigns": "WhatsApp campaigns",
     "offices": "Offices",
     "cityGuide": "City Guide",
-    "cityGuideMobile": "Map"
+    "cityGuideMobile": "Map",
+    "home": "Home",
+    "quickActions": "Quick actions",
+    "accountMenu": "Account menu",
+    "language": "Language",
+    "student": "Student"
   },
   "case": {
     "status": {
