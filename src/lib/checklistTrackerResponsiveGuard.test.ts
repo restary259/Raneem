@@ -22,47 +22,68 @@ const TRACKER = path.resolve(
  */
 const src = fs.readFileSync(TRACKER, "utf8");
 
-/** Every `className="..."` literal in the file, split into utility tokens. */
+/**
+ * Every `className="..."` literal in the file, in source order, so a guard can
+ * anchor on the element's POSITION rather than merely proving the token exists
+ * somewhere in the file. Accepting a bare `min-w-0` anywhere would pass even if
+ * it sat on an unrelated element and the progress column lost it.
+ */
 const classLists: string[][] = [...src.matchAll(/className="([^"]*)"/g)].map(
   (m) => m[1].split(/\s+/).filter(Boolean),
 );
 
-/** The first class list containing every given token. */
-function classListWith(...tokens: string[]): string[] {
-  const found = classLists.find((list) =>
+/** Index of the first class list containing every given token. */
+function indexWith(...tokens: string[]): number {
+  const i = classLists.findIndex((list) =>
     tokens.every((t) => list.includes(t)),
   );
   expect(
-    found,
+    i,
     `no className contains all of: ${tokens.join(", ")}`,
-  ).toBeTruthy();
-  return found!;
+  ).toBeGreaterThanOrEqual(0);
+  return i;
+}
+
+/** The first class list AFTER `from` that contains every given token. */
+function nextClassListAfter(
+  from: number,
+  ...tokens: string[]
+): { index: number; list: string[] } {
+  const index = classLists.findIndex(
+    (list, idx) => idx > from && tokens.every((t) => list.includes(t)),
+  );
+  expect(
+    index,
+    `no className after index ${from} contains: ${tokens.join(", ")}`,
+  ).toBeGreaterThan(from);
+  return { index, list: classLists[index] };
 }
 
 describe("Checklist progress card fits phone widths in every locale", () => {
   it("lets the text column shrink inside the fixed-ring progress row", () => {
-    // the column wrapping `${title}` + progress line
-    const column = classLists.find((l) => l.length === 1 && l[0] === "min-w-0");
+    // The shrink allowance must be on the column that wraps the title — the
+    // element IMMEDIATELY before the heading. A bare `min-w-0` anywhere in the
+    // file is not enough: it could sit on an unrelated element while this
+    // column loses it and the translated progress sentence clips again.
+    const heading = indexWith("text-lg", "font-bold", "flex", "items-center");
 
-    expect(
-      column,
-      "expected a `min-w-0`-only wrapper for the progress text",
-    ).toBeTruthy();
+    expect(classLists[heading - 1]).toEqual(["min-w-0"]);
   });
 
   it("keeps the progress ring from being squeezed by the text", () => {
-    const ring = classListWith("relative", "w-24", "h-24");
+    const ring = classLists[indexWith("relative", "w-24", "h-24")];
 
     expect(ring).toContain("shrink-0");
   });
 
   it("wraps the card title instead of forcing the row wider", () => {
-    const title = classListWith("min-w-0", "break-words");
+    // The title span must carry the wrap allowance AND live inside the heading
+    // (so it is inside the shrunk column), not elsewhere in the file.
+    const heading = indexWith("text-lg", "font-bold", "flex", "items-center");
+    const title = nextClassListAfter(heading, "break-words");
 
-    expect(title).toBeTruthy();
-    // the leading icon must not be allowed to shrink to nothing
-    const heading = classListWith("text-lg", "font-bold");
-    expect(heading).toContain("gap-2");
+    expect(title.list).toContain("min-w-0");
+    expect(title.index).toBeLessThanOrEqual(heading + 3);
   });
 
   it("never introduces horizontal scrolling", () => {
