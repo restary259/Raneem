@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -349,6 +349,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
             return p?.lat != null && p?.lng != null ? [{ id: l.id, name: displayName(l, language), lat: p.lat, lng: p.lng }] : [];
           })}
         />
+        </div>
       )}
 
       <div className="flex min-w-0 items-center gap-2">
