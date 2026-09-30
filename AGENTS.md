@@ -3053,3 +3053,76 @@ merged and the fixes were small and isolated.
   `npm run build` clean; main CI `quality` success at `65f23091`.
 - PRs #142/#143: MERGED, 0 unresolved threads. No open PRs.
 
+
+## PR #148 CI repair — Refer & Register (`feat/student-refer-register-master-flow`, 2026-09-30)
+
+PR #148 ("rebuild Refer into direct registration workflow") was pushed with a
+`quality` job that failed on all three gates at once. The branch had never been
+typechecked locally, so these defects were invisible until CI ran. Fixed at
+`b54aa07`.
+
+### Module-level parse errors masquerade as many type errors
+- `ReferralRegistrationFlow.tsx:555` had a concise arrow body containing TWO
+  statements: `onClick={() => update(...); update(...)}`. The `;` after the
+  first call makes the arrow body end, so `update(...)` became a second
+  top-level expression — **a parse error for the whole module**, not one bad
+  line. `tsc` reported 14 diagnostics (TS1005/TS1128/TS1381/TS1382) spread over
+  the file plus phantom TS2304 "Cannot find name" for symbols that WERE
+  imported, because a failed parse discards the module's scope.
+- **Rule: when a single file yields a cluster of unrelated syntax + "Cannot find
+  name" errors, look for ONE parse error near the first diagnostic.** A dozen
+  errors in a file you barely touched is a parse failure, not a dozen bugs. The
+  fix is a block body: `() => { a(); b(); }`.
+- Same class bit `useLang` narrowing: `lang === "ar" || lang === "he"` was
+  TS2367 (no overlap) because `useLang(): "en" | "ar"`. Widening `useLang` to
+  include `"he"` was the WRONG fix — it cascaded ~40 TS2345 errors across
+  `src/components/catalog/**` and `src/components/team/catalog/**`, which pass
+  `useLang()` into helpers typed `"ar" | "en"`. The right fix was local: derive
+  `isRtl` from `i18n.language` inside the component. **Check the blast radius of
+  a signature change before widening a shared hook.**
+
+### Missing imports are three distinct symptoms
+- `AdminCommandCenter.tsx` used `useEffect` without importing it → CI `Unit
+  tests` failed with a `ReferenceError` at render (vitest), not a type error.
+- `StudentReferPage.tsx` never imported `useTranslation` → `tsc` TS2304.
+- `AdminReferralOperationsPage.tsx` referenced `lang`, which was never declared
+  → TS2304. Replaced with `i18n.language.startsWith("ar")`, matching the pattern
+  used elsewhere on that page.
+
+### i18n guards: key existence AND value translation AND correct nesting
+- `i18nKeys.test.ts` failed on `referralRegistration.insurance.none` (4 entries:
+  ar+en x 2 call sites). Adding it initially nested it under
+  `referralRegistration.history.insurance.none` — **the guard resolves the
+  literal key path, so a key added one level too deep still reads as missing.**
+  Confirm the exact dotted path the `t()` call uses before inserting.
+- `hebrewLocaleCoverage.test.ts` failed because the new Hebrew block copied
+  English: `referralRegistration.eyebrow` was `"DARB"` in `he`. Per the
+  value-level guard (English != Arabic AND Arabic contains Arabic script ⇒ must
+  be translated), the brand must be transliterated: `דארב`, matching the
+  existing `he` convention (`nav.darb`, `pushSettings.darb`). **The brand IS
+  translatable — do not add `eyebrow`/`brand` to `IDENTICAL_BY_DESIGN`.**
+- Locale edits stayed insertion-only (3–5 line diffs per file) — no re-sorting
+  of the surrounding block.
+
+### Verification (this repo)
+- `npx tsc --noEmit` clean; `npx vitest run` 1767 passed | 1 skipped (119 files);
+  `npm run build` clean (nitro `.output/` build, 3.80s).
+- CI `quality` on `b54aa07`: Lint / Unit tests / Typecheck / Build / Lovable
+  binding all **success**. CodeQL, OpenCodeReview `code-review`, Aikido (both
+  checks) pass. `mergeStateStatus: CLEAN`, `mergeable: MERGEABLE`, 0 unresolved
+  review threads.
+- **Greptile is out of trial credits** and posts only
+  "has reached the 50-credit limit" bodies — that is not actionable review
+  feedback; do not chase it.
+- Aikido's three inline findings (High: repeated card checkout; Medium x2:
+  public bank-transfer reopen / submitted-mark blocks card) were already
+  resolved in the PR, and were verified present in CODE, not just marked
+  resolved: `create_registration_card_payment_internal` is `FOR UPDATE` +
+  idempotent (reuses a `pending` card payment; returns `paid:true` early when
+  `payment_status='paid'` or a confirmed payment exists), the edge function
+  sends a stable Stripe `Idempotency-Key`
+  (`darb-registration-checkout-<payment.id>`), and
+  `submit_registration_bank_transfer` refuses once `payment_status='paid'`.
+- The migration `20261001090000_student_referral_registration.sql` is MANUAL
+  DEPLOY (not applied by the Vercel build or `ci.yml`).
+
