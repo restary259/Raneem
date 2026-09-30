@@ -2812,7 +2812,7 @@
     "accountMenu": "قائمة الحساب",
     "language": "اللغة",
     "student": "الطالب",
-    "home": "الرئيسية"
+    "darb": "DARB"
   },
   "case": {
     "status": {
@@ -4306,7 +4306,14 @@
     }
   },
   "messagesInbox": {
-    "emergency": {"title":"جهات الطوارئ","police":"الشرطة","ambulance":"الإسعاف","fire":"الإطفاء","call":"اتصل بـ {{number}}","action":"اتصال"},
+    "emergency": {
+      "title": "جهات الطوارئ",
+      "police": "الشرطة",
+      "ambulance": "الإسعاف",
+      "fire": "الإطفاء",
+      "call": "اتصل بـ {{number}}",
+      "action": "اتصال"
+    },
     "title": "مراسلات الملفات",
     "subtitle": "كل المحادثات على ملفاتك، الأحدث أولاً.",
     "staffTab": "المراسلات",
