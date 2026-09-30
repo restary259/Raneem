@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { LogOut, ShieldCheck, User } from "lucide-react";
 import { SidebarFooter, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { AppRole } from "@/contexts/AuthContext";
 
 interface UserLike {
   email?: string | null;
