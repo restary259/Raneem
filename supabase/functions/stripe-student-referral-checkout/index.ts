@@ -6,13 +6,16 @@ const SITE_URL = "https://darb.agency";
 const json = (body: unknown, status = 200, headers: Record<string,string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { ...headers, "Content-Type": "application/json" } });
 
-async function stripePost(path: string, params: URLSearchParams, secret: string) {
+async function stripePost(path: string, params: URLSearchParams, secret: string, idempotencyKey?: string) {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${secret}`,
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+
   const response = await fetch(`https://api.stripe.com/v1/${path}`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${secret}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers,
     body: params.toString(),
   });
   const payload = await response.json();
@@ -62,29 +65,87 @@ Deno.serve(async (req) => {
       return json({ error: "Card checkout is currently available only for EUR registration invoices" }, 409, corsHeaders);
     }
 
-    const existing = Array.isArray(inv.payments)
-      ? inv.payments.find((p: any) => p?.payment_method === "card" && p?.status === "pending" && p?.checkout_url)
+    const existingCard = Array.isArray(inv.payments)
+      ? inv.payments.find((p: any) => p?.payment_method === "card" && p?.status === "pending")
+      : null;
+    const existingActive = Array.isArray(inv.payments)
+      ? inv.payments.find((p: any) => ["pending", "submitted", "confirmed"].includes(p?.status))
       : null;
 
-    if (existing?.checkout_url) {
-      return json({ checkout_url: existing.checkout_url, payment_id: existing.id, invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}` }, 200, corsHeaders);
+    if (existingActive && existingActive.payment_method !== "card") {
+      return json(
+        { error: "Another payment is already in progress for this invoice. Please use the payment method already selected." },
+        409,
+        corsHeaders,
+      );
     }
 
-    const { data: payment, error: paymentError } = await admin
-      .from("case_registration_payments")
-      .insert({
-        invoice_id: inv.id,
-        case_id: inv.case_id,
-        payment_method: "card",
-        amount: Number(inv.total_amount),
-        currency: "EUR",
-        status: "pending",
-        reference: inv.case_reference,
-      })
-      .select("id")
-      .single();
+    if (existingCard?.checkout_url) {
+      return json({
+        checkout_url: existingCard.checkout_url,
+        payment_id: existingCard.id,
+        invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
+      }, 200, corsHeaders);
+    }
+
+    let payment = existingCard;
+    let paymentError: { code?: string; message?: string } | null = null;
+
+    if (!payment) {
+      const inserted = await admin
+        .from("case_registration_payments")
+        .insert({
+          invoice_id: inv.id,
+          case_id: inv.case_id,
+          payment_method: "card",
+          amount: Number(inv.total_amount),
+          currency: "EUR",
+          status: "pending",
+          reference: inv.case_reference,
+        })
+        .select("id,status,checkout_url,provider_payment_id")
+        .single();
+
+      payment = inserted.data;
+      paymentError = inserted.error as { code?: string; message?: string } | null;
+
+      if (paymentError?.code === "23505") {
+        const { data: refreshedInvoice, error: refreshError } = await admin.rpc(
+          "get_registration_invoice_by_token",
+          { p_token: token },
+        );
+        if (refreshError || !refreshedInvoice) throw refreshError ?? new Error("Registration invoice not found");
+
+        const refreshed = refreshedInvoice as Record<string, any>;
+        if (refreshed.payment_status === "paid") {
+          return json({
+            paid: true,
+            invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
+          }, 200, corsHeaders);
+        }
+
+        const refreshedPayments = Array.isArray(refreshed.payments) ? refreshed.payments : [];
+        const refreshedActive = refreshedPayments.find((p: any) =>
+          ["pending", "submitted", "confirmed"].includes(p?.status)
+        );
+
+        if (!refreshedActive) throw paymentError;
+
+        if (refreshedActive.payment_method !== "card") {
+          return json(
+            { error: "Another payment is already in progress for this invoice. Please use the payment method already selected." },
+            409,
+            corsHeaders,
+          );
+        }
+
+        payment = refreshedActive;
+        paymentError = null;
+      }
+    }
 
     if (paymentError) throw paymentError;
+    if (!payment) throw new Error("Could not create or reuse card payment");
 
     const params = new URLSearchParams();
     params.set("mode", "payment");
@@ -103,7 +164,12 @@ Deno.serve(async (req) => {
 
     let session: any;
     try {
-      session = await stripePost("checkout/sessions", params, stripeSecret);
+      session = await stripePost(
+        "checkout/sessions",
+        params,
+        stripeSecret,
+        `darb-registration-checkout-${payment.id}`,
+      );
     } catch (error) {
       await admin.from("case_registration_payments").update({
         status: "failed",
