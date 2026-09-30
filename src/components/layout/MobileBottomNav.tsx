@@ -13,7 +13,7 @@ import {
   TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
   Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
-  Hotel, Megaphone, Building2,
+  Hotel, Megaphone, Building2, MapPinned,
 } from 'lucide-react';
 
 interface NavItem {
@@ -58,7 +58,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   // Grouped parents link to their first child route (the most common entry).
   student: [
     { key: 'nav.nextSteps', icon: Sparkles, href: '/student' },
-    { key: 'nav.group.studyFile', icon: BookOpen, href: '/student/checklist' },
+    { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
     { key: 'nav.group.communication', icon: MessageSquare, href: '/student/messages' },
     { key: 'nav.group.account', icon: User, href: '/student/profile' },
   ],
@@ -180,6 +180,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.group.communication': t('nav.group.communication', 'Comms'),
     'nav.group.account': t('nav.group.account', 'Account'),
     'nav.nextSteps': t('nav.nextSteps', 'Next'),
+    'nav.cityGuide': t('nav.cityGuideMobile', 'Map'),
   };
 
   const label = (key: string) => shortLabel[key] ?? t(key, key);
