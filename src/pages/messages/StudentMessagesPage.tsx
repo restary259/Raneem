@@ -58,8 +58,9 @@ interface OpenChat {
 /**
  * Student messaging: a conversation LIST that opens into a chat BOX. The list
  * holds the student's case thread, their payout thread (when one exists) and
- * the team-member thread. Opening a conversation swaps the list for the chat
- * box, whose header carries a back arrow (RTL-aware) that returns to the list.
+ * the team-member thread plus emergency call contacts. Opening a conversation
+ * swaps the list for the chat box, whose header carries a back arrow (RTL-aware)
+ * that returns to the list.
  *
  * The student talks to "Administration" / their advisor, never to a named
  * internal account, so names go through chatDisplayName().
@@ -334,8 +335,7 @@ export default function StudentMessagesPage() {
               </div>
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="min-h-0 flex-1 overflow-y-auto">
-                  <ThreadList
+                <ThreadList
                     items={[teamThread]}
                     selectedId={null}
                     onSelect={openFromItem}
@@ -401,7 +401,6 @@ export default function StudentMessagesPage() {
                       {t("messagesInbox.startingTeamChat", "Opening your team chat…")}
                     </div>
                   )}
-                </div>
               </div>
             )}
           </Card>
