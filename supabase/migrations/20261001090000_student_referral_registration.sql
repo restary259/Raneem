@@ -734,7 +734,22 @@ BEGIN
 
   IF NOT FOUND THEN RETURN NULL; END IF;
 
-  SELECT COALESCE(jsonb_agg(to_jsonb(p) ORDER BY p.created_at DESC), '[]'::jsonb)
+  SELECT COALESCE(
+    jsonb_agg(
+      jsonb_build_object(
+        'id',p.id,
+        'payment_method',p.payment_method,
+        'amount',p.amount,
+        'currency',p.currency,
+        'status',p.status,
+        'reference',p.reference,
+        'submitted_at',p.submitted_at,
+        'confirmed_at',p.confirmed_at
+      )
+      ORDER BY p.created_at DESC
+    ),
+    '[]'::jsonb
+  )
     INTO v_payment
     FROM public.case_registration_payments p
    WHERE p.invoice_id = v_invoice.id;
@@ -803,6 +818,13 @@ BEGIN
 
   IF NOT FOUND THEN RAISE EXCEPTION 'Registration invoice not found'; END IF;
   IF v_invoice.status = 'cancelled' THEN RAISE EXCEPTION 'This invoice is cancelled'; END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.case_registration_payments
+    WHERE invoice_id = v_invoice.id AND status = 'pending'
+  ) THEN
+    RAISE EXCEPTION 'A card payment is already in progress';
+  END IF;
 
   SELECT * INTO v_payment
     FROM public.case_registration_payments
@@ -880,6 +902,10 @@ BEGIN
     RAISE EXCEPTION 'Not allowed to confirm this registration payment';
   END IF;
 
+  IF v_payment.payment_method = 'card' THEN
+    RAISE EXCEPTION 'Card payments are confirmed automatically';
+  END IF;
+
   IF v_payment.status = 'confirmed' THEN
     RETURN jsonb_build_object(
       'payment_id',v_payment.id,
@@ -955,6 +981,10 @@ BEGIN
 
   SELECT * INTO v_invoice FROM public.case_registration_invoices WHERE id=v_payment.invoice_id FOR UPDATE;
   SELECT id,status INTO v_case FROM public.cases WHERE id=v_payment.case_id;
+
+  IF v_payment.payment_method <> 'card' THEN
+    RAISE EXCEPTION 'This payment record is not a card payment';
+  END IF;
 
   IF v_payment.amount <> v_invoice.total_amount OR v_payment.currency <> v_invoice.currency THEN
     RAISE EXCEPTION 'Payment amount does not match the invoice';
