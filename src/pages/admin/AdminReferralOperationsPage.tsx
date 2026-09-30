@@ -303,7 +303,7 @@ export default function AdminReferralOperationsPage() {
                       <div className="grid gap-2 text-xs">
                         <Info label={t("admin.referralOperations.fields.referrer")} value={record.invoice.referrer_name} />
                         <Info label={t("admin.referralOperations.fields.type")} value={record.invoice.referral_type === "family" ? t("referralRegistration.family") : t("referralRegistration.friend")} />
-                        <Info label={t("admin.referralOperations.fields.school")} value={schoolNames[record.invoice.school_id] ? (lang === "ar" ? schoolNames[record.invoice.school_id].name_ar : schoolNames[record.invoice.school_id].name_en) : "—"} />
+                        <Info label={t("admin.referralOperations.fields.school")} value={schoolNames[record.invoice.school_id] ? (i18n.language.startsWith("ar") ? schoolNames[record.invoice.school_id].name_ar : schoolNames[record.invoice.school_id].name_en) : "—"} />
                         <Info label={t("admin.referralOperations.fields.invoice")} value={record.invoice.invoice_number} />
                         <Info label={t("admin.referralOperations.fields.amount")} value={money(record.invoice.total_amount, record.invoice.currency)} dir="ltr" />
                         <Info label={t("admin.referralOperations.fields.status")} value={statusLabel[record.case?.status] ?? record.case?.status} />

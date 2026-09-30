@@ -85,8 +85,8 @@ const emptyForm: RegistrationFormData = {
   locale: "en",
 };
 
-function money(value: number | null | undefined, currency = "EUR") {
-  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value ?? 0)) + " " + currency;
+function money(value: number | null | undefined, currency: string | null | undefined = "EUR") {
+  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value ?? 0)) + " " + (currency ?? "EUR");
 }
 
 function localizedName(row: { name_en: string; name_ar: string }, lang: string) {
@@ -102,6 +102,7 @@ function localizedDescription(row: { description_en?: string | null; description
 export default function ReferralRegistrationFlow({ userId }: ReferralRegistrationFlowProps) {
   const { t, i18n } = useTranslation("dashboard");
   const lang = useLang();
+  const isRtl = i18n.language === "ar" || i18n.language === "he";
   const { toast } = useToast();
   const [form, setForm] = useState<RegistrationFormData>({ ...emptyForm, locale: (i18n.language.startsWith("ar") ? "ar" : i18n.language.startsWith("he") ? "he" : "en") });
   const [step, setStep] = useState<Step>("person");
@@ -298,7 +299,7 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
       });
       if (error) throw error;
       if (data?.paid) {
-        window.location.href = result.invoice_url;
+        window.location.href = result.invoice_url ?? `https://darb.agency/invoice/${encodeURIComponent(result.public_token)}`;
         return;
       }
       if (!data?.checkout_url) throw new Error(t("referralRegistration.payment.cardUnavailable"));
@@ -313,7 +314,7 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
   if (result) {
     const invoiceUrl = `https://darb.agency/invoice/${encodeURIComponent(result.public_token)}`;
     return (
-      <div className="space-y-6" dir={lang === "ar" ? "rtl" : "ltr"}>
+      <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
         <Card className="overflow-hidden border-primary/20">
           <CardContent className="p-6 sm:p-8">
             <div className="flex flex-col items-center text-center">
@@ -392,7 +393,7 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
   const NextIcon = lang === "ar" ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="space-y-6" dir={lang === "ar" || lang === "he" ? "rtl" : "ltr"}>
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       <div className="rounded-3xl border bg-card p-5 sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -552,7 +553,7 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
                                 {accommodation.deposit ? <span>{t("referralRegistration.pricing.deposit")}: {money(accommodation.deposit, accommodation.currency || "EUR")}</span> : null}
                               </div>
                               <div className="flex gap-2">
-                                <Button type="button" className="flex-1" onClick={() => update("accommodation_id", accommodation.id); update("accommodation_weeks", form.program_weeks || "4")}>{form.accommodation_id === accommodation.id ? <><Check className="me-2 size-4" />{t("referralRegistration.accommodation.selected")}</> : t("referralRegistration.accommodation.select")}</Button>
+                                <Button type="button" className="flex-1" onClick={() => { update("accommodation_id", accommodation.id); update("accommodation_weeks", form.program_weeks || "4"); }}>{form.accommodation_id === accommodation.id ? <><Check className="me-2 size-4" />{t("referralRegistration.accommodation.selected")}</> : t("referralRegistration.accommodation.select")}</Button>
                                 <Button type="button" variant="outline" onClick={() => setSelectedAccommodation(accommodation)}>{t("referralRegistration.accommodation.details")}</Button>
                               </div>
                             </div>

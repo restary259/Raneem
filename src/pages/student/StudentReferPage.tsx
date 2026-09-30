@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import ReferralLinkCard from "@/components/dashboard/ReferralLinkCard";

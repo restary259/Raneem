@@ -5869,6 +5869,9 @@
       "title": "My referred registrations",
       "empty": "You have not created any referral registrations yet."
     },
+    "insurance": {
+      "none": "No insurance"
+    },
     "caseSummary": {
       "eyebrow": "Refer & Register",
       "title": "Referral registration",
