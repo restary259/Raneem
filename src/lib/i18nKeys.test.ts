@@ -199,4 +199,34 @@ describe("i18n coverage", () => {
     }
     expect(invalid).toEqual([]);
   });
+
+  /**
+   * `nav.*` labels are read by components bound to the `dashboard` namespace.
+   * The coverage test above accepts a key found in ANY namespace the file
+   * touches, which hid a real gap: `nav.home` existed only in `common`, and
+   * `MobileBottomNav` passes `'dashboard'` to `useTranslation` with no
+   * `fallbackNS`, so i18next never left that namespace and Arabic/Hebrew users
+   * saw the inline English "Home" fallback while the suite stayed green.
+   *
+   * This pins `nav.*` to `dashboard`, which is where the nav dictionary lives.
+   */
+  it("has every nav.* key in the dashboard dictionaries", () => {
+    const dicts = Object.fromEntries(LOCALES.map((l) => [l, loadDicts(l)]));
+    const missing: string[] = [];
+
+    for (const file of walk(path.join(ROOT, "src"))) {
+      const src = fs.readFileSync(file, "utf8");
+      if (!/useTranslation\(\s*['"]dashboard['"]/.test(src)) continue;
+
+      for (const m of src.matchAll(/\bt\(\s*['"](nav\.[a-zA-Z0-9_.]+)['"]/g)) {
+        for (const lang of LOCALES) {
+          if (!hasKey(dicts[lang].dashboard ?? {}, m[1])) {
+            missing.push(`${lang}: ${m[1]} (${path.relative(ROOT, file)})`);
+          }
+        }
+      }
+    }
+
+    expect(missing).toEqual([]);
+  });
 });
