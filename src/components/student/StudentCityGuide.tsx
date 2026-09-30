@@ -50,6 +50,9 @@ const CATEGORY_ICONS: Record<StudentCityGuideCategory, ComponentType<{ className
 
 const FALLBACK_IMAGE = HEIDELBERG_CITY_GUIDE.heroImage;
 
+// Mirrors the app-level direction rule in src/i18n.ts (Arabic + Hebrew are RTL).
+const isRtlLanguage = (language: string) => language === "ar" || language === "he";
+
 function displayName(location: StudentCityGuideLocation, language: string) {
   if (language === "ar") return location.nameAr;
   if (language === "he") return location.nameHe;
@@ -79,10 +82,12 @@ function categoryLabel(category: StudentCityGuideCategory, t: TFunction<"dashboa
   return t(`student.cityGuide.categories.${category}`, fallback[category]);
 }
 
-function matchesSearch(location: StudentCityGuideLocation, search: string) {
+function matchesSearch(location: StudentCityGuideLocation, search: string, t: TFunction<"dashboard">) {
   const q = search.trim().toLocaleLowerCase();
   if (!q) return true;
-  return [location.nameEn, location.nameAr, location.nameHe, location.address]
+  // Include the localized category label so the suggested queries ("supermarket",
+  // "gym") match places listed under their business names.
+  return [location.nameEn, location.nameAr, location.nameHe, location.address, categoryLabel(location.category, t)]
     .filter(Boolean)
     .some((value) => value!.toLocaleLowerCase().includes(q));
 }
@@ -98,15 +103,23 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   );
   const [selectedCategory, setSelectedCategory] = useState<StudentCityGuideCategory>("all");
   const [search, setSearch] = useState("");
+  const [loadError, setLoadError] = useState(false);
 
   const loadProfileCity = useCallback(async (uid: string) => {
     setProfileLoading(true);
+    setLoadError(false);
 
-    const { data: profile } = await (supabase as any)
+    const { data: profile, error: profileError } = await (supabase as any)
       .from("profiles")
       .select("residential_city, language_school_id")
       .eq("id", uid)
       .maybeSingle();
+
+    if (profileError) {
+      setLoadError(true);
+      setProfileLoading(false);
+      return;
+    }
 
     const directCity =
       typeof profile?.residential_city === "string" && profile.residential_city.trim()
@@ -125,11 +138,17 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     // from the student's own language_school_id. This is one scoped lookup, not
     // a city-wide database scan.
     if (profile?.language_school_id) {
-      const { data: school } = await (supabase as any)
+      const { data: school, error: schoolError } = await (supabase as any)
         .from("schools")
         .select("city")
         .eq("id", profile.language_school_id)
         .maybeSingle();
+
+      if (schoolError) {
+        setLoadError(true);
+        setProfileLoading(false);
+        return;
+      }
 
       const schoolCity =
         typeof school?.city === "string" && school.city.trim()
@@ -168,14 +187,34 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     const categoryFiltered = selectedCategory === "all"
       ? city.locations
       : city.locations.filter((location) => location.category === selectedCategory);
-    const searchFiltered = categoryFiltered.filter((location) => matchesSearch(location, search));
+    const searchFiltered = categoryFiltered.filter((location) => matchesSearch(location, search, t));
     return variant === "preview" ? searchFiltered.slice(0, 12) : searchFiltered;
-  }, [city, search, selectedCategory, variant]);
+  }, [city, search, selectedCategory, variant, t]);
 
   if (!residentialCity && (!userId || profileLoading)) return <DashboardLoading />;
   if (!city) {
+    // A failed profile/school read is not an unsupported city: surface a retry
+    // instead of the "no guide for this city" empty state.
+    if (loadError && userId) {
+      return variant === "full" ? (
+        <div className="mx-auto max-w-5xl p-4 sm:p-6" dir={isRtlLanguage(language) ? "rtl" : "ltr"}>
+          <Card>
+            <CardContent className="py-12 text-center">
+              <MapPinned className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+              <h1 className="text-xl font-semibold">{t("student.cityGuide.unavailableTitle", "City guide")}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("student.cityGuide.loadFailed", "We couldn't load your city just now.")}
+              </p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => void loadProfileCity(userId)}>
+                {t("common.retry", "Retry")}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null;
+    }
     return variant === "full" ? (
-      <div className="p-4 sm:p-6 max-w-5xl mx-auto" dir={language === "ar" ? "rtl" : "ltr"}>
+      <div className="p-4 sm:p-6 max-w-5xl mx-auto" dir={isRtlLanguage(language) ? "rtl" : "ltr"}>
         <Card>
           <CardContent className="py-12 text-center">
             <MapPinned className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
@@ -250,7 +289,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                 {variant === "preview" && (
                   <Button variant="outline" size="sm" className="bg-background/90" onClick={() => navigate("/student/city-guide")}>
                     {t("student.cityGuide.viewAll", "View all")}
-                    {language === "ar" ? <ChevronLeft className="ms-1 h-4 w-4" /> : <ChevronRight className="ms-1 h-4 w-4" />}
+                    {isRtlLanguage(language) ? <ChevronLeft className="ms-1 h-4 w-4" /> : <ChevronRight className="ms-1 h-4 w-4" />}
                   </Button>
                 )}
               </div>
@@ -274,8 +313,13 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
           variant="outline"
           size="icon"
           className="shrink-0"
-          aria-label={t("student.cityGuide.filter", "Filter places")}
-          title={t("student.cityGuide.filter", "Filter places")}
+          onClick={() => {
+            setSearch("");
+            setSelectedCategory("all");
+          }}
+          disabled={!search && selectedCategory === "all"}
+          aria-label={t("student.cityGuide.clearFilters", "Clear filters")}
+          title={t("student.cityGuide.clearFilters", "Clear filters")}
         >
           <SlidersHorizontal className="h-4 w-4" />
         </Button>
@@ -315,7 +359,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
         {variant === "preview" && (
           <Button variant="ghost" size="sm" className="gap-1 px-2" onClick={() => navigate("/student/city-guide")}>
             {t("student.cityGuide.viewAll", "View all")}
-            {language === "ar" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            {isRtlLanguage(language) ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         )}
       </div>
@@ -349,7 +393,10 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                     loading="lazy"
                     onError={(event) => {
                       const image = event.currentTarget;
-                      if (image.src !== FALLBACK_IMAGE) image.src = FALLBACK_IMAGE;
+                      // Compare the authored attribute, not `image.src` (the browser
+                      // resolves it to an absolute URL, so the guard would never match
+                      // and the failed fallback would be re-assigned on every error).
+                      if (image.getAttribute("src") !== FALLBACK_IMAGE) image.src = FALLBACK_IMAGE;
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-transparent to-transparent" />
@@ -361,7 +408,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">{name}</p>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                      {location.distance ?? displayDescription(location, language) ?? categoryLabel(location.category, t)}
+                      {displayDescription(location, language) ?? categoryLabel(location.category, t)}
                     </p>
                   </div>
                   <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />

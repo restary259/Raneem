@@ -3647,6 +3647,8 @@
       "mapsNote": "Place names and directions open in Google Maps. General places should be kept current through Maps search; F+U accommodation is curated from DARB's school information.",
       "unavailableTitle": "City Guide",
       "unavailableDescription": "Your city guide will appear once your German residential city is saved in your profile.",
+      "loadFailed": "We couldn't load your city just now.",
+      "clearFilters": "Clear filters",
       "categories": {
         "all": "All",
         "supermarkets": "Supermarkets",
