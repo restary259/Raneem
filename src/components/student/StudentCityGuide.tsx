@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -103,6 +103,7 @@ function matchesSearch(location: StudentCityGuideLocation, search: string, t: TF
 
 export default function StudentCityGuide({ residentialCity, variant = "preview" }: StudentCityGuideProps) {
   const navigate = useNavigate();
+  const mapRef = useRef<HTMLDivElement>(null);
   const { t, i18n } = useTranslation("dashboard");
   const language = i18n.language;
   const [storedCity, setStoredCity] = useState<string | null>(residentialCity ?? null);
@@ -310,11 +311,20 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                     )}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button asChild size="sm" className="gap-2">
-                  <a href={mapsSearchUrl(city.mapQuery)} target="_blank" rel="noopener noreferrer">
-                    <MapPinned className="h-4 w-4" />
-                    {t("student.cityGuide.viewMap", "View full map")}
-                  </a>
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    if (variant !== "full") {
+                      navigate("/student/city-guide");
+                      return;
+                    }
+                    setSelectedId(null);
+                    mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  <MapPinned className="h-4 w-4" />
+                  {t("student.cityGuide.viewMap", "View full map")}
                 </Button>
                 {variant === "preview" && (
                   <Button variant="outline" size="sm" className="bg-background/90" onClick={() => navigate("/student/city-guide")}>
@@ -329,6 +339,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
       </Card>
 
       {variant === "full" && (
+        <div ref={mapRef} className="scroll-mt-20">
         <CityGuideMap
           center={{ lat: 49.4093, lng: 8.6937 }}
           selectedId={selectedId}
@@ -338,6 +349,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
             return p?.lat != null && p?.lng != null ? [{ id: l.id, name: displayName(l, language), lat: p.lat, lng: p.lng }] : [];
           })}
         />
+        </div>
       )}
 
       <div className="flex min-w-0 items-center gap-2">
@@ -499,11 +511,6 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
         </div>
       )}
 
-      {variant === "full" && (
-        <p className="pt-1 text-xs text-muted-foreground">
-          {t("student.cityGuide.mapsNote", "Place names and directions open in Google Maps. General places should be kept current through Maps search; F+U accommodation is curated from DARB's school information.")}
-        </p>
-      )}
     </section>
   );
 

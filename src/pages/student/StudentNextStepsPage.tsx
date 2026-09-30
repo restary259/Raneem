@@ -10,7 +10,6 @@ import { CalendarDays, CheckCircle2, CreditCard, FileText, Globe, ListChecks, Us
 import DashboardLoading from '@/components/dashboard/DashboardLoading';
 import PaymentDisclosureCard from '@/components/student/PaymentDisclosureCard';
 import StudentOverviewSection from '@/components/student/StudentOverviewSection';
-import StudentCityGuide from '@/components/student/StudentCityGuide';
 import { useDirection } from '@/hooks/useDirection';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { formatDateTime } from '@/utils/dateUtils';
@@ -192,7 +191,6 @@ export default function StudentNextStepsPage() {
         </p>
       </div>
 
-      <StudentCityGuide residentialCity={residentialCity} variant="preview" />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
