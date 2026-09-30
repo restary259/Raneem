@@ -4034,7 +4034,6 @@ export type Database = {
           full_name?: string
           gender?: string | null
           german_address?: string | null
-          german_address?: string | null
           has_changed_legal_name?: boolean
           has_criminal_record?: boolean
           has_dual_citizenship?: boolean
@@ -4108,6 +4107,7 @@ export type Database = {
           eye_color?: string | null
           full_name?: string
           gender?: string | null
+          german_address?: string | null
           has_changed_legal_name?: boolean
           has_criminal_record?: boolean
           has_dual_citizenship?: boolean
