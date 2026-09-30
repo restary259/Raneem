@@ -68,6 +68,8 @@ const AdminCommandCenter = () => {
   const isRtl = i18n.language === 'ar';
   const queryClient = useQueryClient();
   const [settlingCaseId, setSettlingCaseId] = useState<string | null>(null);
+  const [referralQueue, setReferralQueue] = useState<Array<{ id: string; student_name: string; case_reference: string | null; payment_status: string; referrer_name: string | null }>>([]);
+  const [referralQueueLoading, setReferralQueueLoading] = useState(true);
 
   // One parallel batch. The four queue queries do not depend on the three
   // summary queries, so they all fire together instead of in two waves.
@@ -272,10 +274,33 @@ const AdminCommandCenter = () => {
   const staleError = isError && data !== undefined;
 
   const fetchData = useCallback(() => { void refetch(); }, [refetch]);
+
+  const fetchReferralQueue = useCallback(async () => {
+    setReferralQueueLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('case_registration_invoices')
+        .select('id,case_id,student_name,case_reference,payment_status,referrer_name,issued_at')
+        .neq('payment_status', 'paid')
+        .order('issued_at', { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      setReferralQueue((data ?? []) as Array<{ id: string; student_name: string; case_reference: string | null; payment_status: string; referrer_name: string | null }>);
+    } catch (error) {
+      console.error('[CommandCenter] referral registration queue failed:', error);
+      setReferralQueue([]);
+    } finally {
+      setReferralQueueLoading(false);
+    }
+  }, []);
+
+
   const fetchCash = useCallback(() => { void refetchCash(); }, [refetchCash]);
 
   useRealtimeSubscription('cases', fetchData, true);
   useRealtimeSubscription('case_payments', fetchCash, true);
+  useRealtimeSubscription('case_registration_invoices', fetchReferralQueue, true);
+  useEffect(() => { void fetchReferralQueue(); }, [fetchReferralQueue]);
 
   const cashTotal = cashCollections.reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
 
@@ -560,6 +585,55 @@ const AdminCommandCenter = () => {
                     </Button>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Referral registrations — operational queue, while the case remains the master record. */}
+      <Card className="min-w-0 overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
+          <CardTitle className="text-base flex min-w-0 items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <span>{t('admin.commandCenter.referralRegistrations', 'Referral registrations')}</span>
+            <Badge variant="secondary">{referralQueue.length}</Badge>
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/admin/referrals')}>
+            {t('admin.commandCenter.viewAll', 'View all')}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {referralQueueLoading ? (
+            <div className="space-y-2">
+              <div className="h-10 rounded bg-muted animate-pulse" />
+              <div className="h-10 rounded bg-muted animate-pulse" />
+            </div>
+          ) : referralQueue.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              {t('admin.commandCenter.referralRegistrationsEmpty', 'No unpaid referral registrations')}
+            </p>
+          ) : (
+            <div className="divide-y">
+              {referralQueue.map((row) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  className="flex w-full items-center justify-between gap-3 py-3 text-start hover:bg-muted/30"
+                  onClick={() => navigate(`/admin/cases/${row.case_id}`)}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{row.student_name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {row.case_reference ?? '—'}{row.referrer_name ? ` · ${t('admin.commandCenter.referredBy', 'Referred by')} ${row.referrer_name}` : ''}
+                    </p>
+                  </div>
+                  <Badge variant={row.payment_status === 'submitted' ? 'secondary' : 'outline'}>
+                    {row.payment_status === 'submitted'
+                      ? t('admin.commandCenter.transferSubmitted', 'Transfer submitted')
+                      : t('admin.commandCenter.awaitingPayment', 'Awaiting payment')}
+                  </Badge>
+                </button>
               ))}
             </div>
           )}
