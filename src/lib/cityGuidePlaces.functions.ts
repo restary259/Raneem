@@ -28,8 +28,10 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 export const getCityGuidePlaces = createServerFn({ method: "POST" })
   .middleware([attachBearer, requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ cityId: z.literal("heidelberg") }).parse(input))
-  .handler(async ({ context }): Promise<CityGuidePlace[]> => {
-    const { data: cached, error } = await context.supabase
+  .handler(async (): Promise<CityGuidePlace[]> => {
+    // Cache is server-only (no client RLS read); caller already authenticated by middleware.
+    const { supabaseAdmin: cacheReader } = await import("@/integrations/supabase/client.server");
+    const { data: cached, error } = await cacheReader
       .from("city_guide_place_cache" as never)
       .select("*");
     if (error) throw error;
