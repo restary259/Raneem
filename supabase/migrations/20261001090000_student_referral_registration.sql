@@ -743,6 +743,7 @@ BEGIN
         'currency',p.currency,
         'status',p.status,
         'reference',p.reference,
+        'checkout_url',p.checkout_url,
         'submitted_at',p.submitted_at,
         'confirmed_at',p.confirmed_at
       )
