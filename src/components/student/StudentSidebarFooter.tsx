@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import { LogOut, ShieldCheck, User } from "lucide-react";
