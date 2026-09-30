@@ -19,7 +19,6 @@ export interface StudentCityGuideLocation {
   nameEn: string;
   nameAr: string;
   nameHe: string;
-  distance?: string;
   address?: string;
   mapQuery: string;
   imageUrl?: string;
@@ -83,7 +82,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "F+U Academy of Languages",
       nameAr: "أكاديمية F+U للغات",
       nameHe: "F+U Academy of Languages",
-      distance: "0 km",
       address: "Hauptstraße 1, 69117 Heidelberg",
       mapQuery: "F+U Academy of Languages, Hauptstraße 1, 69117 Heidelberg, Germany",
       imageUrl: "/lovable-uploads/schools/fu-academy/school/campus.jpg",
@@ -98,7 +96,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "F+U Campus Residence",
       nameAr: "سكن F+U Campus",
       nameHe: "מעונות F+U Campus",
-      distance: "1 km",
       address: "Kurfürsten-Anlage 64–68, 69115 Heidelberg",
       mapQuery: "F+U Campus Heidelberg, Kurfürsten-Anlage 64-68, 69115 Heidelberg, Germany",
       imageUrl: "/lovable-uploads/schools/fu-academy/accommodations/category-e-bergheim-3.jpg",
@@ -113,7 +110,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "F+U Residence — Märzgasse",
       nameAr: "سكن F+U — ميرغاسه",
       nameHe: "מעונות F+U — Märzgasse",
-      distance: "500 m",
       address: "Heidelberg Old Town",
       mapQuery: "Märzgasse Heidelberg F+U residence",
       imageUrl: "/lovable-uploads/schools/fu-academy/accommodations/category-e-maerzgasse-1.jpg",
@@ -128,7 +124,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "F+U Residence — Concordia",
       nameAr: "سكن F+U — كونكورديا",
       nameHe: "מעונות F+U — Concordia",
-      distance: "1.5 km",
       address: "Rohrbacher Straße 126, 69126 Heidelberg",
       mapQuery: "Concordia F+U, Rohrbacher Straße 126, 69126 Heidelberg, Germany",
       imageUrl: "/lovable-uploads/schools/fu-academy/accommodations/category-a-concordia-3.jpg",
@@ -142,7 +137,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "Kaufland Heidelberg-Weststadt",
       nameAr: "Kaufland هايدلبرغ - Weststadt",
       nameHe: "Kaufland Heidelberg-Weststadt",
-      distance: "1.1 km",
       address: "Kurfürsten-Anlage 61, 69115 Heidelberg",
       mapQuery: "Kaufland Heidelberg-Weststadt, Kurfürsten-Anlage 61, 69115 Heidelberg, Germany",
     },
@@ -177,7 +171,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "VeniceBeach Heidelberg Bahnstadt",
       nameAr: "VeniceBeach Heidelberg Bahnstadt",
       nameHe: "VeniceBeach Heidelberg Bahnstadt",
-      distance: "1.7 km",
       address: "Speyerer Straße 4+6, 69115 Heidelberg",
       mapQuery: "VeniceBeach Heidelberg Bahnstadt, Speyerer Straße 4+6, 69115 Heidelberg, Germany",
     },
@@ -190,7 +183,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "FitBase Heidelberg",
       nameAr: "FitBase Heidelberg",
       nameHe: "FitBase Heidelberg",
-      distance: "4.0 km",
       address: "Kurpfalzring 120, 69123 Heidelberg",
       mapQuery: "FitBase Heidelberg, Kurpfalzring 120, 69123 Heidelberg, Germany",
     },
@@ -203,7 +195,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "Heidelberg Hauptbahnhof",
       nameAr: "محطة هايدلبرغ الرئيسية",
       nameHe: "התחנה המרכזית היידלברג",
-      distance: "1 km",
       mapQuery: "Heidelberg Hauptbahnhof, Germany",
       primary: true,
     },
@@ -276,7 +267,6 @@ export const HEIDELBERG_CITY_GUIDE: StudentCityGuideConfig = {
       nameEn: "Heidelberg Old Town",
       nameAr: "المدينة القديمة",
       nameHe: "העיר העתיקה של היידלברג",
-      distance: "500 m",
       mapQuery: "Heidelberg Old Town, Germany",
       primary: true,
     },
