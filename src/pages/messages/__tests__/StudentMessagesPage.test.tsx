@@ -186,6 +186,44 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("renders the requested advisor and emergency contacts in order", async () => {
+    render(<StudentMessagesPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Team Member")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("Police")).toBeInTheDocument();
+    expect(screen.getByText("Ambulance")).toBeInTheDocument();
+    expect(screen.getByText("Fire Fighter")).toBeInTheDocument();
+
+    const emergencyLinks = screen
+      .getAllByRole("link")
+      .filter((a) => (a.getAttribute("href") ?? "").startsWith("tel:"));
+
+    expect(emergencyLinks.map((a) => a.getAttribute("href"))).toEqual([
+      "tel:110",
+      "tel:112",
+      "tel:112",
+    ]);
+  });
+
+  it("starts the existing team-member thread when the team row has no thread yet", async () => {
+    const user = userEvent.setup();
+
+    TABLE_ROWS.direct_thread_participants = [];
+    TABLE_ROWS.direct_messages = [];
+    TABLE_ROWS.direct_threads = [];
+
+    render(<StudentMessagesPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Team Member")).toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByText("Tap to start your conversation"));
+    expect(mockRpc).toHaveBeenCalledWith("start_student_team_member_thread");
+  });
+
   it("shows real activity and unread counts instead of blank rows", async () => {
     render(<StudentMessagesPage />);
 
