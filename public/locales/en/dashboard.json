@@ -2794,7 +2794,7 @@
     "accountMenu": "Account menu",
     "language": "Language",
     "student": "Student",
-    "home": "Home"
+    "darb": "DARB"
   },
   "case": {
     "status": {
@@ -4288,7 +4288,14 @@
     }
   },
   "messagesInbox": {
-    "emergency": {"title":"Emergency services","police":"Police","ambulance":"Ambulance","fire":"Fire Fighter","call":"Call {{number}}","action":"Call"},
+    "emergency": {
+      "title": "Emergency services",
+      "police": "Police",
+      "ambulance": "Ambulance",
+      "fire": "Fire Fighter",
+      "call": "Call {{number}}",
+      "action": "Call"
+    },
     "title": "Case messages",
     "subtitle": "All conversations across your cases, newest first.",
     "staffTab": "Messages",
