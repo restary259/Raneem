@@ -4342,7 +4342,9 @@
     "startTeamChat": "مراسلة عضو الفريق",
     "caseConversationHint": "محادثة ملفك مع فريق درب",
     "payoutConversationHint": "محادثة الدفعة الخاصة بك",
-    "teamConversationHint": "خطك المباشر مع مستشارك"
+    "teamConversationHint": "خطك المباشر مع مستشارك",
+    "startTeamPreview": "اضغط لبدء محادثتك",
+    "startingTeamChat": "جارٍ فتح محادثة الفريق…"
   },
   "chat": {
     "day": {
