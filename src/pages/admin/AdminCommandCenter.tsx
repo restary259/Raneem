@@ -68,7 +68,7 @@ const AdminCommandCenter = () => {
   const isRtl = i18n.language === 'ar';
   const queryClient = useQueryClient();
   const [settlingCaseId, setSettlingCaseId] = useState<string | null>(null);
-  const [referralQueue, setReferralQueue] = useState<Array<{ id: string; student_name: string; case_reference: string | null; payment_status: string; referrer_name: string | null }>>([]);
+  const [referralQueue, setReferralQueue] = useState<Array<{ id: string; case_id: string; student_name: string; case_reference: string | null; payment_status: string; referrer_name: string | null }>>([]);
   const [referralQueueLoading, setReferralQueueLoading] = useState(true);
 
   // One parallel batch. The four queue queries do not depend on the three
@@ -278,14 +278,14 @@ const AdminCommandCenter = () => {
   const fetchReferralQueue = useCallback(async () => {
     setReferralQueueLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('case_registration_invoices')
         .select('id,case_id,student_name,case_reference,payment_status,referrer_name,issued_at')
         .neq('payment_status', 'paid')
         .order('issued_at', { ascending: false })
         .limit(6);
       if (error) throw error;
-      setReferralQueue((data ?? []) as Array<{ id: string; student_name: string; case_reference: string | null; payment_status: string; referrer_name: string | null }>);
+      setReferralQueue((data ?? []) as Array<{ id: string; case_id: string; student_name: string; case_reference: string | null; payment_status: string; referrer_name: string | null }>);
     } catch (error) {
       console.error('[CommandCenter] referral registration queue failed:', error);
       setReferralQueue([]);
