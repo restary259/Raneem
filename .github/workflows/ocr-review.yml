@@ -1,0 +1,138 @@
+# OpenCodeReview — AI review on every pull request.
+#
+# Required repository configuration (Settings -> Secrets and variables -> Actions):
+#   secret    OCR_LLM_AUTH_TOKEN     LLM API key
+#   variable  OCR_LLM_URL            LLM API endpoint
+#   variable  OCR_LLM_MODEL          model name
+#   variable  OCR_LLM_USE_ANTHROPIC  'true' for Anthropic, 'false' for OpenAI-compatible
+#
+# The endpoint/model live in variables rather than secrets so they can be swapped
+# (e.g. from a free tier to a paid frontier model) without editing this file or
+# touching the credential.
+#
+# `pull_request_target` (not `pull_request`) is deliberate: secrets are withheld
+# from `pull_request` runs triggered by forks, so fork PRs would silently get no
+# review. It is safe here because the action only reads the diff and rule files —
+# it never executes code from the pull request.
+
+name: OpenCodeReview PR Review
+
+# GitHub evaluates `concurrency` BEFORE job-level `if:` conditions, so a flat
+# per-PR group would let any stray comment cancel a running review. Matching
+# events share a per-PR group (a new review cancels the stale one); everything
+# else lands in a unique noop group that can never collide with a real review.
+concurrency:
+  group: >-
+    ${{
+      (
+        github.event_name == 'pull_request_target'
+        || (
+          github.event_name == 'issue_comment'
+          && github.event.issue.pull_request
+          && github.event.comment.user.type != 'Bot'
+          && (
+            github.event.comment.author_association == 'MEMBER'
+            || github.event.comment.author_association == 'OWNER'
+            || github.event.comment.author_association == 'COLLABORATOR'
+          )
+          && (
+            startsWith(github.event.comment.body, '/open-code-review')
+            || startsWith(github.event.comment.body, '@open-code-review')
+          )
+        )
+      )
+      && format('ocr-{0}', github.event.pull_request.number || github.event.issue.number)
+      || format('noop-{0}', github.run_id)
+    }}
+  cancel-in-progress: true
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # PR events, or a human comment starting with the trigger keyword.
+    #
+    # This repository is public, so `pull_request_target` would otherwise run
+    # for ANY stranger's fork PR and spend LLM quota on it. Both paths are
+    # therefore gated on author_association. To also review outside
+    # contributors, drop the first association block (and accept that any fork
+    # PR can consume the configured LLM quota).
+    if: |
+      (
+        github.event_name == 'pull_request_target'
+        && (
+          github.event.pull_request.author_association == 'MEMBER'
+          || github.event.pull_request.author_association == 'OWNER'
+          || github.event.pull_request.author_association == 'COLLABORATOR'
+        )
+      )
+      || (
+        github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && github.event.comment.user.type != 'Bot'
+        && (
+          github.event.comment.author_association == 'MEMBER'
+          || github.event.comment.author_association == 'OWNER'
+          || github.event.comment.author_association == 'COLLABORATOR'
+        )
+        && (
+          startsWith(github.event.comment.body, '/open-code-review')
+          || startsWith(github.event.comment.body, '@open-code-review')
+        )
+      )
+    steps:
+      - name: Get PR context
+        id: pr-context
+        if: github.event_name == 'issue_comment'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // issue_comment payloads carry no top-level pull_request fields, so
+            // resolve base/head explicitly for the on-demand re-review path.
+            const prNumber = context.issue.number;
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            core.setOutput('base_ref', pullRequest.base.ref);
+            core.setOutput('head_sha', pullRequest.head.sha);
+
+      - name: Run OpenCodeReview
+        # Pinned to the v1.12.9 commit rather than a moving tag, and the CLI is
+        # pinned to the matching version: the action installs OCR from npm at run
+        # time, so pinning the action alone would not freeze review behaviour.
+        uses: alibaba/open-code-review@bccbc15f785269400735d5255540c231e6c02b6d # v1.12.9
+        with:
+          ocr_version: '1.12.9'
+          llm_url: ${{ vars.OCR_LLM_URL }}
+          llm_auth_token: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          llm_model: ${{ vars.OCR_LLM_MODEL }}
+          llm_use_anthropic: ${{ vars.OCR_LLM_USE_ANTHROPIC }}
+          # For issue_comment triggers pass the resolved refs; pull_request_target
+          # resolves them from the event payload itself.
+          base_ref: ${{ steps.pr-context.outputs.base_ref }}
+          head_sha: ${{ steps.pr-context.outputs.head_sha }}
+          # Keep inline threads on real defects. Style/documentation notes and
+          # low-severity findings are routed to the summary instead of opening a
+          # thread, matching this repository's review policy that naming and
+          # formatting preferences must not create review comments.
+          route_severity_below: 'low'
+          route_categories: 'style,documentation'
+          # Non-destructive posting: update the summary in place and never
+          # duplicate an inline comment on a later push.
+          sticky_summary: 'true'
+          incremental: 'true'
+          # Re-review only the commits added since the last run. Fail-closed:
+          # anything ambiguous falls back to a full merge-base review.
+          checkpoint_range: 'true'
