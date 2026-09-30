@@ -152,6 +152,8 @@ function RegistrationInvoiceEmail(props: Props) {
 
   return (
     <EmailLayout
+      dir={dir as "ltr" | "rtl"}
+      lang={locale}
       preview={L.title + (props.invoiceNumber ? " " + props.invoiceNumber : "")}
       title={L.title}
     >
