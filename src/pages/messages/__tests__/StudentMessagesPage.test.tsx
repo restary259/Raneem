@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("react-i18next", () => ({
@@ -243,6 +243,44 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
           ([name]) => name === "start_student_team_member_thread",
         ),
       ).toBe(true),
+    );
+  });
+
+  it("calls the team-thread RPC only once when the row is tapped repeatedly", async () => {
+    TABLE_ROWS.direct_thread_participants = [];
+    TABLE_ROWS.direct_messages = [];
+    TABLE_ROWS.direct_threads = [];
+
+    render(<StudentMessagesPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Team Member")).toBeInTheDocument(),
+    );
+
+    // Hold the RPC open so the row stays in its pending state between taps —
+    // this is the window in which a second tap used to fire a second call.
+    // `any` keeps the deferred promise assignable to the mock's union return.
+    let release: (value: unknown) => void = () => {};
+    mockRpc.mockImplementationOnce(
+      () =>
+        new Promise<any>((resolve) => {
+          release = resolve;
+        }),
+    );
+
+    const row = screen.getByText("Tap to start your conversation");
+    fireEvent.click(row);
+    fireEvent.click(row);
+    fireEvent.click(row);
+
+    release({ data: "team-77", error: null });
+
+    await waitFor(() =>
+      expect(
+        mockRpc.mock.calls.filter(
+          ([name]) => name === "start_student_team_member_thread",
+        ).length,
+      ).toBe(1),
     );
   });
 

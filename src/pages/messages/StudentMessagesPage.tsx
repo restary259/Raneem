@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
@@ -73,6 +73,9 @@ export default function StudentMessagesPage() {
   const [payoutThreadId, setPayoutThreadId] = useState<string | null>(null);
   const [teamThreadId, setTeamThreadId] = useState<string | null>(null);
   const [teamThreadLoading, setTeamThreadLoading] = useState(false);
+  // Synchronous companion to `teamThreadLoading`, used only to drop a second
+  // tap that arrives before React has re-rendered with the loading state.
+  const startingTeamThreadRef = useRef(false);
   const [open, setOpen] = useState<OpenChat | null>(null);
   const [loading, setLoading] = useState(true);
   const [teamThreadName, setTeamThreadName] = useState<string | null>(null);
@@ -150,6 +153,11 @@ export default function StudentMessagesPage() {
       });
       return;
     }
+    // Re-entrancy guard: `teamThreadLoading` state is async, so two taps in the
+    // same tick both read `false` and would each call the RPC. The ref flips
+    // synchronously, so the second tap is dropped before it can fire.
+    if (startingTeamThreadRef.current) return;
+    startingTeamThreadRef.current = true;
     setTeamThreadLoading(true);
     try {
       const { data, error } = await (supabase as any).rpc(
@@ -177,6 +185,7 @@ export default function StudentMessagesPage() {
           : err.message,
       });
     } finally {
+      startingTeamThreadRef.current = false;
       setTeamThreadLoading(false);
     }
   };
