@@ -13,7 +13,7 @@ import {
   TrendingUp, User, FileText, Inbox, Calculator,
   Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
   Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
-  Hotel, Megaphone, Building2, MapPinned,
+  Hotel, Megaphone, Building2, MapPinned, Home,
 } from 'lucide-react';
 
 interface NavItem {
@@ -57,10 +57,10 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   // Student: 4 top-level destinations mirroring the grouped sidebar.
   // Grouped parents link to their first child route (the most common entry).
   student: [
-    { key: 'nav.nextSteps', icon: Sparkles, href: '/student' },
+    { key: 'nav.home', icon: Home, href: '/student' },
     { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
-    { key: 'nav.group.communication', icon: MessageSquare, href: '/student/messages' },
-    { key: 'nav.group.account', icon: User, href: '/student/profile' },
+    { key: 'nav.messages', icon: MessageSquare, href: '/student/messages' },
+    { key: 'nav.profile', icon: User, href: '/student/profile' },
   ],
 
 };
@@ -179,6 +179,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.group.studyFile': t('nav.group.studyFile', 'Study'),
     'nav.group.communication': t('nav.group.communication', 'Comms'),
     'nav.group.account': t('nav.group.account', 'Account'),
+    'nav.home': t('nav.home', 'Home'),
     'nav.nextSteps': t('nav.nextSteps', 'Next'),
     'nav.cityGuide': t('nav.cityGuideMobile', 'Map'),
   };
