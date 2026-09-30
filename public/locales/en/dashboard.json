@@ -3658,7 +3658,8 @@
         "cinema": "Cinema",
         "studentLife": "Student life",
         "pharmacy": "Pharmacy"
-      }
+      },
+      "unsupportedCityDescription": "A city guide for this city is not available yet."
     }
   },
   "settings": {
