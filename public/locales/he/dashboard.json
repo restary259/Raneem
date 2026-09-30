@@ -1783,7 +1783,9 @@
     "startTeamChat": "שליחת הודעה לאיש הצוות שלי",
     "caseConversationHint": "שיחת התיק שלכם עם צוות Darb",
     "payoutConversationHint": "שיחת התשלום שלכם",
-    "teamConversationHint": "הקו הישיר שלכם עם היועץ"
+    "teamConversationHint": "הקו הישיר שלכם עם היועץ",
+    "startTeamPreview": "לחצו כדי להתחיל את השיחה",
+    "startingTeamChat": "פותח את הצ׳אט עם הצוות…"
   },
   "voiceCall": {
     "call": "שיחה",
