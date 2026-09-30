@@ -32,7 +32,7 @@ const PARTNER_MOBILE_NAV: NavItem[] = [
   { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
 ];
 
-// Max 4 primary items per role; the rest are reachable from "More".
+// Primary mobile items per role. Student uses five fixed destinations.
 const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/admin' },
@@ -61,6 +61,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
     { key: 'nav.messages', icon: MessageSquare, href: '/student/messages' },
     { key: 'nav.account', icon: User, href: '/student/profile' },
+    { key: 'nav.darb', icon: Sparkles, href: '/' },
   ],
 
 };
@@ -132,7 +133,10 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   // toggle is off (partner/ambassador/agent).
   const applyGatedRole = role === 'social_media_partner' || role === 'ambassador' || role === 'agent';
   const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
-  const moreItems = filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], applyGatedRole, applyFormEnabled);
+  const moreItems =
+    role === 'student'
+      ? []
+      : filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], applyGatedRole, applyFormEnabled);
 
   // Shorten keys for label display
   const shortLabel: Record<string, string> = {
@@ -182,6 +186,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.home': t('nav.home', 'Home'),
     'nav.nextSteps': t('nav.nextSteps', 'Next'),
     'nav.cityGuide': t('nav.cityGuideMobile', 'Map'),
+    'nav.darb': t('nav.darb', 'DARB'),
   };
 
   const label = (key: string) => shortLabel[key] ?? t(key, key);
@@ -202,6 +207,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
         item.href !== '/team' &&
         item.href !== '/partner' &&
         item.href !== '/agent' &&
+        item.href !== '/' &&
         item.href !== '/student/checklist' &&
         location.pathname.startsWith(item.href))
     );
