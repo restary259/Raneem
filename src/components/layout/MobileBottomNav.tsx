@@ -106,7 +106,6 @@ const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.account', icon: User, href: '/agent/profile' },
   ],
   student: [
-    { key: 'nav.group.studyFile', icon: BookOpen, href: '/student/checklist' },
     { key: 'nav.checklist', icon: ListChecks, href: '/student/checklist' },
     { key: 'nav.documents', icon: FileText, href: '/student/documents' },
     { key: 'nav.visa', icon: Globe, href: '/student/visa' },
