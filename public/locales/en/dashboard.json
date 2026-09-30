@@ -3628,13 +3628,19 @@
       "journeyStart": "Home",
       "whatsappCta": "Chat on WhatsApp",
       "directLine": "Your direct line to the team",
-      "directLineDesc": "Questions about your case? Reach us instantly."
+      "directLineDesc": "Questions about your case? Reach us instantly.",
+      "emergency": "Emergency numbers",
+      "emergencyHint": "Tap a number to call directly from your phone.",
+      "emergency_police": "Police",
+      "emergency_ambulance": "Ambulance",
+      "emergency_fire": "Fire brigade"
     },
     "cityGuide": {
       "title": "City Guide",
       "subtitle": "Useful places and services around your study and home life in {{city}}.",
       "yourCity": "Your city",
       "heroDescription": "Discover the places you will actually use — shopping, school, transport, fitness and more.",
+      "schoolCityDescription": "Showing useful places around your language school city. You can change your German residential city in your profile later.",
       "viewMap": "View full map",
       "viewAll": "View all",
       "searchPlaceholder": "Search places (e.g. supermarket, gym, hospital…)",
@@ -4304,7 +4310,11 @@
     "teamThreadNoMember": "A team member hasn't been assigned to you yet — you'll be able to message them once one is.",
     "teamMemberTab": "Team Member",
     "noConversationYet": "No conversation yet",
-    "contactTeamMember": "Contact My Team Member"
+    "contactTeamMember": "Contact My Team Member",
+    "startTeamChat": "Message my team member",
+    "caseConversationHint": "Your case conversation with the Darb team",
+    "payoutConversationHint": "Your payout conversation",
+    "teamConversationHint": "Your direct line to your advisor"
   },
   "chat": {
     "day": {
@@ -4507,7 +4517,8 @@
       "confirm": "Delete all messages in this case thread?",
       "done": "{{count}} messages deleted"
     },
-    "jumpToLatest": "Jump to latest"
+    "jumpToLatest": "Jump to latest",
+    "backToChats": "Back to conversations"
   },
   "master": {
     "networkTitle": "My network",

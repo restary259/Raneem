@@ -3646,13 +3646,19 @@
       "journeyStart": "الوطن",
       "whatsappCta": "محادثة عبر واتساب",
       "directLine": "خطك المباشر مع الفريق",
-      "directLineDesc": "عندك سؤال عن ملفك؟ تواصل معنا فوراً."
+      "directLineDesc": "عندك سؤال عن ملفك؟ تواصل معنا فوراً.",
+      "emergency": "أرقام الطوارئ",
+      "emergencyHint": "اضغط على الرقم للاتصال مباشرة من هاتفك.",
+      "emergency_police": "الشرطة",
+      "emergency_ambulance": "الإسعاف",
+      "emergency_fire": "الإطفاء"
     },
     "cityGuide": {
       "title": "دليل المدينة",
       "subtitle": "الأماكن والخدمات المفيدة حول دراستك وحياتك اليومية في {{city}}.",
       "yourCity": "مدينتك",
       "heroDescription": "اكتشف الأماكن اللي رح تحتاجها فعليًا — التسوق، المدرسة، المواصلات، الجيم وغيرهم.",
+      "schoolCityDescription": "نعرض لك أماكن مفيدة حول مدينة مدرسة اللغة. يمكنك تغيير مدينة إقامتك في ألمانيا من ملفك الشخصي لاحقاً.",
       "viewMap": "افتح الخريطة",
       "viewAll": "شوف الكل",
       "searchPlaceholder": "دوّر على مكان (سوبرماركت، جيم، مستشفى…)",
@@ -4322,7 +4328,11 @@
     "teamThreadNoMember": "لم يتم تعيين عضو فريق لك بعد — ستتمكن من مراسلته فور تعيينه.",
     "teamMemberTab": "عضو الفريق",
     "noConversationYet": "لا توجد محادثة بعد",
-    "contactTeamMember": "تواصل مع عضو الفريق"
+    "contactTeamMember": "تواصل مع عضو الفريق",
+    "startTeamChat": "مراسلة عضو الفريق",
+    "caseConversationHint": "محادثة ملفك مع فريق درب",
+    "payoutConversationHint": "محادثة الدفعة الخاصة بك",
+    "teamConversationHint": "خطك المباشر مع مستشارك"
   },
   "chat": {
     "day": {
@@ -4525,7 +4535,8 @@
       "confirm": "حذف جميع الرسائل في محادثة هذه الحالة؟",
       "done": "تم حذف {{count}} رسالة"
     },
-    "jumpToLatest": "أحدث الرسائل"
+    "jumpToLatest": "أحدث الرسائل",
+    "backToChats": "رجوع إلى المحادثات"
   },
   "master": {
     "networkTitle": "شبكتي",

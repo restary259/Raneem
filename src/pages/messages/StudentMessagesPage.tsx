@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, Loader2, MessageSquare, UserCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Loader2,
+  MessageSquare,
+  UserCheck,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,12 +15,37 @@ import { supabase } from "@/integrations/supabase/client";
 import CaseMessages from "@/components/cases/CaseMessages";
 import DirectMessages from "@/components/messages/DirectMessages";
 import VoiceCallButton from "@/components/messages/VoiceCallButton";
+import { EmergencyNumberButtons } from "@/components/student/EmergencyCallCard";
+import ThreadList, {
+  type ThreadListItem,
+} from "@/components/messages/ThreadList";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
+import { chatDisplayName } from "@/lib/chatIdentity";
+import {
+  listMyDirectThreads,
+  type DirectThread,
+} from "@/services/DirectMessageService";
 
 type Tab = "case" | "payout" | "team";
 
+interface OpenChat {
+  tab: Tab;
+  /** Case id (case tab) or direct thread id (payout/team tabs). */
+  id: string;
+  title: string;
+}
+
+/**
+ * Student messaging: a conversation LIST that opens into a chat BOX. The list
+ * holds the student's case thread, their payout thread (when one exists) and
+ * the team-member thread. Opening a conversation swaps the list for the chat
+ * box, whose header carries a back arrow (RTL-aware) that returns to the list.
+ *
+ * The student talks to "Administration" / their advisor, never to a named
+ * internal account, so names go through chatDisplayName().
+ */
 export default function StudentMessagesPage() {
   const { t } = useTranslation("dashboard");
   const { user } = useAuth();
@@ -23,13 +54,39 @@ export default function StudentMessagesPage() {
   const [payoutThreadId, setPayoutThreadId] = useState<string | null>(null);
   const [teamThreadId, setTeamThreadId] = useState<string | null>(null);
   const [teamThreadLoading, setTeamThreadLoading] = useState(false);
-  const [active, setActive] = useState<Tab>("case");
+  const [open, setOpen] = useState<OpenChat | null>(null);
   const [loading, setLoading] = useState(true);
+  const [teamThreadName, setTeamThreadName] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  useChatFullscreen(!!isMobile && (!!caseId || !!payoutThreadId || !!teamThreadId));
+  useChatFullscreen(!!isMobile && !!open);
 
   const isRtl = document.documentElement.dir === "rtl";
   const BackIcon = isRtl ? ArrowRight : ArrowLeft;
+
+  const adminLabel = t("chat.adminLabel");
+
+  /** Resolves the team-member thread's counterpart name (admins stay anonymous). */
+  const loadTeamThreadName = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const threads = await listMyDirectThreads(user.id);
+      const team = threads.find(
+        (thread: DirectThread) => thread.threadId === teamThreadId,
+      );
+      if (team) {
+        setTeamThreadName(
+          chatDisplayName(
+            team.otherUserName,
+            team.otherUserRole,
+            "student",
+            adminLabel,
+          ),
+        );
+      }
+    } catch {
+      /* name resolution is cosmetic — the header falls back to a generic label */
+    }
+  }, [user?.id, teamThreadId, adminLabel]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -50,20 +107,37 @@ export default function StudentMessagesPage() {
     })();
   }, [user?.id, toast]);
 
-  /** Opens (or reuses) the student↔team-member thread. */
+  useEffect(() => {
+    if (teamThreadId) void loadTeamThreadName();
+  }, [teamThreadId, loadTeamThreadName]);
+
+  /** Opens (or reuses) the student↔team-member thread and shows its chat box. */
   const openTeamThread = async () => {
     if (teamThreadId) {
-      setActive("team");
+      setOpen({
+        tab: "team",
+        id: teamThreadId,
+        title: t("messagesInbox.teamMemberTab", "Team Member"),
+      });
       return;
     }
     setTeamThreadLoading(true);
     try {
-      const { data, error } = await (supabase as any).rpc("start_student_team_member_thread");
+      const { data, error } = await (supabase as any).rpc(
+        "start_student_team_member_thread",
+      );
       if (error) throw error;
-      setTeamThreadId(data as string);
-      setActive("team");
+      const id = data as string;
+      setTeamThreadId(id);
+      setOpen({
+        tab: "team",
+        id,
+        title: t("messagesInbox.teamMemberTab", "Team Member"),
+      });
     } catch (err: any) {
-      const noMember = /No team member assigned|No completed case/i.test(err.message ?? "");
+      const noMember = /No team member assigned|No completed case/i.test(
+        err.message ?? "",
+      );
       toast({
         variant: "destructive",
         description: noMember
@@ -78,111 +152,166 @@ export default function StudentMessagesPage() {
     }
   };
 
-  const hasTabs = !loading;
-  const showCase = active === "case" && !!caseId;
-  const showPayout = active === "payout" && !!payoutThreadId;
-  const showTeam = active === "team" && !!teamThreadId;
-  const fallbackPayout = !caseId && !!payoutThreadId;
+  /** Every conversation the student can open. */
+  const conversations: ThreadListItem[] = [];
+  if (caseId) {
+    conversations.push({
+      id: `case:${caseId}`,
+      type: "case",
+      title: t("messagesInbox.caseTab", "Case"),
+      subtitle: t(
+        "messagesInbox.caseConversationHint",
+        "Your case conversation with the Darb team",
+      ),
+      preview: "",
+      timestamp: null,
+      unread: 0,
+    });
+  }
+  if (payoutThreadId) {
+    conversations.push({
+      id: `payout:${payoutThreadId}`,
+      type: "direct",
+      title: t("messagesInbox.payoutTab", "Payout"),
+      subtitle: t(
+        "messagesInbox.payoutConversationHint",
+        "Your payout conversation",
+      ),
+      preview: "",
+      timestamp: null,
+      unread: 0,
+    });
+  }
+  if (teamThreadId) {
+    conversations.push({
+      id: `team:${teamThreadId}`,
+      type: "direct",
+      title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
+      subtitle: t(
+        "messagesInbox.teamConversationHint",
+        "Your direct line to your advisor",
+      ),
+      preview: "",
+      timestamp: null,
+      unread: 0,
+    });
+  }
+
+  const openFromItem = (item: ThreadListItem) => {
+    const [tab, id] = item.id.split(":") as [Tab, string];
+    setOpen({ tab, id, title: item.title });
+  };
+
+  /** Back arrow: leave the chat box and return to the conversation list. */
+  const backToList = () => setOpen(null);
 
   return (
     <div
       className={cn(
         "flex min-h-0 flex-col gap-2 p-2 md:static md:h-[calc(100vh-8rem)] md:min-h-[520px] md:gap-4 md:p-6",
-        caseId || payoutThreadId || teamThreadId
+        open
           ? "max-md:fixed max-md:inset-0 max-md:z-50 max-md:h-[100dvh] max-md:bg-background"
           : "h-[calc(100dvh-7.5rem)]",
       )}
     >
-      <div>
-        <h1 className="text-xl font-semibold">{t("messagesInbox.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("messagesInbox.studentSubtitle")}</p>
-      </div>
+      {open ? (
+        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {/* Chat box header — the back arrow returns to the conversation list,
+              and the fixed emergency numbers stay one tap away mid-chat. */}
+          <div className="flex shrink-0 items-center gap-2 border-b p-2 sm:p-3">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="shrink-0"
+              aria-label={t("chat.backToChats", "Back to conversations")}
+              onClick={backToList}
+            >
+              <BackIcon className="h-4 w-4" />
+            </Button>
+            <p className="min-w-0 flex-1 truncate font-medium">{open.title}</p>
+            <EmergencyNumberButtons />
+          </div>
+          {open.tab === "case" ? (
+            <CaseMessages caseId={open.id} className="flex-1 overflow-hidden" />
+          ) : open.tab === "team" ? (
+            <>
+              <DirectMessages
+                threadId={open.id}
+                className="flex-1 overflow-hidden"
+              />
+              <div className="flex items-center justify-end border-t p-2">
+                <VoiceCallButton threadId={open.id} />
+              </div>
+            </>
+          ) : (
+            <DirectMessages
+              threadId={open.id}
+              className="flex-1 overflow-hidden"
+            />
+          )}
+        </Card>
+      ) : (
+        <>
+          <div>
+            <h1 className="text-xl font-semibold">
+              {t("messagesInbox.title")}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {t("messagesInbox.studentSubtitle")}
+            </p>
+          </div>
 
-      {hasTabs && (
-        <div className="flex flex-wrap items-center gap-1" role="tablist">
-          {caseId && (
-            <Button
-              variant={active === "case" ? "secondary" : "ghost"}
-              size="sm"
-              className="rounded-full"
-              role="tab"
-              aria-selected={active === "case"}
-              onClick={() => setActive("case")}
-            >
-              {t("messagesInbox.caseTab")}
-            </Button>
-          )}
-          {payoutThreadId && (
-            <Button
-              variant={active === "payout" ? "secondary" : "ghost"}
-              size="sm"
-              className="rounded-full"
-              role="tab"
-              aria-selected={active === "payout"}
-              onClick={() => setActive("payout")}
-            >
-              {t("messagesInbox.payoutTab")}
-            </Button>
-          )}
-          {/* Team member tab — shows once opened, or as a button to initiate */}
-          <Button
-            variant={active === "team" ? "secondary" : "ghost"}
-            size="sm"
-            className="rounded-full gap-1.5"
-            role="tab"
-            aria-selected={active === "team"}
-            onClick={openTeamThread}
-            disabled={teamThreadLoading}
-          >
-            {teamThreadLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            {loading ? (
+              <div className="flex flex-1 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
             ) : (
-              <UserCheck className="h-3.5 w-3.5" />
-            )}
-            {t("messagesInbox.teamMemberTab", "Team Member")}
-          </Button>
-        </div>
-      )}
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {conversations.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                    <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">
+                      {t("messagesInbox.noConversationYet")}
+                    </p>
+                  </div>
+                ) : (
+                  <ThreadList
+                    items={conversations}
+                    selectedId={null}
+                    onSelect={openFromItem}
+                    emptyLabel={t("messagesInbox.empty")}
+                  />
+                )}
 
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {loading ? (
-          <div className="flex flex-1 items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : showCase ? (
-          <CaseMessages caseId={caseId!} className="flex-1 overflow-hidden" />
-        ) : showPayout ? (
-          <DirectMessages threadId={payoutThreadId!} className="flex-1 overflow-hidden" />
-        ) : showTeam ? (
-          <>
-            <div className="flex items-center justify-end border-b p-2">
-              <VoiceCallButton threadId={teamThreadId!} />
-            </div>
-            <DirectMessages threadId={teamThreadId!} className="flex-1 overflow-hidden" />
-          </>
-        ) : fallbackPayout ? (
-          <DirectMessages threadId={payoutThreadId!} className="flex-1 overflow-hidden" />
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center p-6">
-            <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">{t("messagesInbox.noConversationYet")}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={openTeamThread}
-              disabled={teamThreadLoading}
-            >
-              {teamThreadLoading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <UserCheck className="h-3.5 w-3.5" />
-              )}
-              {t("messagesInbox.contactTeamMember", "Contact My Team Member")}
-            </Button>
-          </div>
-        )}
-      </Card>
+                {/* Start the team-member conversation — available even before
+                    one exists, so the student can always reach their advisor. */}
+                {!teamThreadId && (
+                  <div className="border-t p-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-1.5"
+                      onClick={openTeamThread}
+                      disabled={teamThreadLoading}
+                    >
+                      {teamThreadLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <UserCheck className="h-3.5 w-3.5" />
+                      )}
+                      {t(
+                        "messagesInbox.startTeamChat",
+                        "Message my team member",
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        </>
+      )}
     </div>
   );
 }
