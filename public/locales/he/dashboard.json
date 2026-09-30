@@ -200,7 +200,8 @@
       "confirm": "למחוק את כל ההודעות בשיחת התיק הזו?",
       "done": "{{count}} הודעות נמחקו"
     },
-    "jumpToLatest": "קפיצה לאחרונה"
+    "jumpToLatest": "קפיצה לאחרונה",
+    "backToChats": "חזרה לשיחות"
   },
   "intel": {
     "card": {
@@ -910,7 +911,11 @@
     "whatsappCampaigns": "קמפיינים בוואטסאפ",
     "offices": "משרדים",
     "cityGuide": "מדריך עיר",
-    "cityGuideMobile": "מפה"
+    "cityGuideMobile": "מפה",
+    "quickActions": "פעולות מהירות",
+    "accountMenu": "תפריט החשבון",
+    "language": "שפה",
+    "student": "סטודנט"
   },
   "common": {
     "loadMore": "טעינת עוד",
@@ -1343,14 +1348,19 @@
       "journeyStart": "בית",
       "whatsappCta": "שיחה בוואטסאפ",
       "directLine": "הקו הישיר שלכם לצוות",
-      "directLineDesc": "שאלות על התיק שלכם? הגיעו אלינו באופן מיידי."
+      "directLineDesc": "שאלות על התיק שלכם? הגיעו אלינו באופן מיידי.",
+      "emergency": "מספרי חירום",
+      "emergencyHint": "הקישו על מספר כדי להתקשר ישירות מהטלפון.",
+      "emergency_police": "משטרה",
+      "emergency_ambulance": "אמבולנס",
+      "emergency_fire": "כיבוי אש"
     },
     "cityGuide": {
       "title": "מדריך עיר",
       "subtitle": "המקומות והשירותים השימושיים סביב הלימודים והחיים שלך ב־{{city}}.",
       "yourCity": "העיר שלך",
       "heroDescription": "גלו את המקומות שבאמת תשתמשו בהם — קניות, בית ספר, תחבורה, חדר כושר ועוד.",
-      "schoolCityDescription": "מציגים מקומות שימושיים סביב עיר בית הספר לשפות. תוכלו לשנות את עיר המגורים בגרמניה בפרופיל שלכם מאוחר יותר.",
+      "schoolCityDescription": "מציגים מקומות שימושיים סביב עיר בית הספר לשפות.",
       "viewMap": "פתיחת מפה",
       "viewAll": "הכול",
       "searchPlaceholder": "חיפוש מקום (סופרמרקט, חדר כושר, בית חולים…)",
@@ -1757,6 +1767,7 @@
     "tabDirect": "צ׳אטים ישירים",
     "emptyDirect": "אין צ׳אטים ישירים עדיין",
     "noMessagesYet": "אין הודעות עדיין",
+    "openConversation": "פתחו את השיחה",
     "directBlocked": "צ׳אטים ישירים חייבים לכלול מנהל.",
     "noCaseYet": "השיחה שלכם נפתחת לאחר יצירת התיק.",
     "partnerSubtitle": "הצ׳אטים הישירים שלכם עם צוות Darb.",
@@ -1767,7 +1778,11 @@
     "teamThreadNoMember": "עדיין לא שויך לכם איש צוות — תוכלו לשלוח לו הודעה ברגע שיהיה.",
     "teamMemberTab": "איש צוות",
     "noConversationYet": "אין שיחה עדיין",
-    "contactTeamMember": "יצירת קשר עם איש הצוות שלי"
+    "contactTeamMember": "יצירת קשר עם איש הצוות שלי",
+    "startTeamChat": "שליחת הודעה לאיש הצוות שלי",
+    "caseConversationHint": "שיחת התיק שלכם עם צוות Darb",
+    "payoutConversationHint": "שיחת התשלום שלכם",
+    "teamConversationHint": "הקו הישיר שלכם עם היועץ"
   },
   "voiceCall": {
     "call": "שיחה",

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -103,7 +103,6 @@ function matchesSearch(location: StudentCityGuideLocation, search: string, t: TF
 
 export default function StudentCityGuide({ residentialCity, variant = "preview" }: StudentCityGuideProps) {
   const navigate = useNavigate();
-  const mapRef = useRef<HTMLDivElement>(null);
   const { t, i18n } = useTranslation("dashboard");
   const language = i18n.language;
   const [storedCity, setStoredCity] = useState<string | null>(residentialCity ?? null);
@@ -280,7 +279,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
       )}
 
       <Card className="overflow-hidden border-border">
-        <div className="relative min-h-[210px] overflow-hidden">
+        <div className="relative min-h-[170px] overflow-hidden">
           <img
             src={city.heroImage}
             alt=""
@@ -288,7 +287,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
             className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-foreground/50" />
-          <div className="relative flex min-h-[210px] items-end p-5 sm:p-7">
+          <div className="relative flex min-h-[170px] items-end p-5 sm:p-7">
             <div className="min-w-0 max-w-xl rounded-lg bg-background/90 p-4 shadow-sm backdrop-blur-sm">
               <div className="flex items-center gap-2 text-primary">
                 <MapPinned className="h-4 w-4 shrink-0" />
@@ -310,47 +309,34 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                       "Discover the places you will actually use — shopping, school, transport, fitness and more.",
                     )}
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => {
-                    if (variant !== "full") {
-                      navigate("/student/city-guide");
-                      return;
-                    }
-                    setSelectedId(null);
-                    mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                >
-                  <MapPinned className="h-4 w-4" />
-                  {t("student.cityGuide.viewMap", "View full map")}
-                </Button>
-                {variant === "preview" && (
-                  <Button variant="outline" size="sm" className="bg-background/90" onClick={() => navigate("/student/city-guide")}>
+              {variant === "preview" && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button size="sm" className="gap-2" onClick={() => navigate("/student/city-guide")}>
+                    <MapPinned className="h-4 w-4" />
                     {t("student.cityGuide.viewAll", "View all")}
                     {isRtlLanguage(language) ? <ChevronLeft className="ms-1 h-4 w-4" /> : <ChevronRight className="ms-1 h-4 w-4" />}
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+        {variant === "full" && (
+          <div className="border-t border-border">
+          <CityGuideMap
+            className="rounded-none border-0"
+            center={{ lat: 49.4093, lng: 8.6937 }}
+            selectedId={selectedId}
+            onSelect={handleSelectPin}
+            pins={filteredLocations.flatMap((l): CityGuideMapPin[] => {
+              const p = places[l.id];
+              return p?.lat != null && p?.lng != null ? [{ id: l.id, name: displayName(l, language), lat: p.lat, lng: p.lng }] : [];
+            })}
+          />
+          </div>
+        )}
       </Card>
 
-      {variant === "full" && (
-        <div ref={mapRef} className="scroll-mt-20">
-        <CityGuideMap
-          center={{ lat: 49.4093, lng: 8.6937 }}
-          selectedId={selectedId}
-          onSelect={handleSelectPin}
-          pins={filteredLocations.flatMap((l): CityGuideMapPin[] => {
-            const p = places[l.id];
-            return p?.lat != null && p?.lng != null ? [{ id: l.id, name: displayName(l, language), lat: p.lat, lng: p.lng }] : [];
-          })}
-        />
-        </div>
-      )}
 
       <div className="flex min-w-0 items-center gap-2">
         <div className="relative min-w-0 flex-1">

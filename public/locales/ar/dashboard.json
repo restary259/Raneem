@@ -2806,7 +2806,11 @@
     "whatsappCampaigns": "حملات واتساب",
     "offices": "المكاتب",
     "cityGuide": "دليل المدينة",
-    "cityGuideMobile": "الخريطة"
+    "cityGuideMobile": "الخريطة",
+    "quickActions": "إجراءات سريعة",
+    "accountMenu": "قائمة الحساب",
+    "language": "اللغة",
+    "student": "الطالب"
   },
   "case": {
     "status": {
@@ -3646,14 +3650,19 @@
       "journeyStart": "الوطن",
       "whatsappCta": "محادثة عبر واتساب",
       "directLine": "خطك المباشر مع الفريق",
-      "directLineDesc": "عندك سؤال عن ملفك؟ تواصل معنا فوراً."
+      "directLineDesc": "عندك سؤال عن ملفك؟ تواصل معنا فوراً.",
+      "emergency": "أرقام الطوارئ",
+      "emergencyHint": "اضغط على الرقم للاتصال مباشرة من هاتفك.",
+      "emergency_police": "الشرطة",
+      "emergency_ambulance": "الإسعاف",
+      "emergency_fire": "الإطفاء"
     },
     "cityGuide": {
       "title": "دليل المدينة",
       "subtitle": "الأماكن والخدمات المفيدة حول دراستك وحياتك اليومية في {{city}}.",
       "yourCity": "مدينتك",
       "heroDescription": "اكتشف الأماكن اللي رح تحتاجها فعليًا — التسوق، المدرسة، المواصلات، الجيم وغيرهم.",
-      "schoolCityDescription": "بنعرضلك أماكن مفيدة حوالين مدينة مدرسة اللغة. بتقدر تغيّر مدينة سكنك بألمانيا من حسابك لاحقًا.",
+      "schoolCityDescription": "بنعرضلك أماكن مفيدة حوالين مدينة مدرسة اللغة.",
       "viewMap": "افتح الخريطة",
       "viewAll": "شوف الكل",
       "searchPlaceholder": "دوّر على مكان (سوبرماركت، جيم، مستشفى…)",
@@ -4317,6 +4326,7 @@
     "tabDirect": "محادثات مباشرة",
     "emptyDirect": "لا توجد محادثات مباشرة بعد",
     "noMessagesYet": "لا توجد رسائل بعد",
+    "openConversation": "افتح المحادثة",
     "directBlocked": "المحادثات المباشرة يجب أن تشمل الإدارة.",
     "noCaseYet": "تبدأ محادثتك فور إنشاء ملفك.",
     "partnerSubtitle": "محادثاتك المباشرة مع فريق درب.",
@@ -4327,7 +4337,11 @@
     "teamThreadNoMember": "لم يتم تعيين عضو فريق لك بعد — ستتمكن من مراسلته فور تعيينه.",
     "teamMemberTab": "عضو الفريق",
     "noConversationYet": "لا توجد محادثة بعد",
-    "contactTeamMember": "تواصل مع عضو الفريق"
+    "contactTeamMember": "تواصل مع عضو الفريق",
+    "startTeamChat": "مراسلة عضو الفريق",
+    "caseConversationHint": "محادثة ملفك مع فريق درب",
+    "payoutConversationHint": "محادثة الدفعة الخاصة بك",
+    "teamConversationHint": "خطك المباشر مع مستشارك"
   },
   "chat": {
     "day": {
@@ -4530,7 +4544,8 @@
       "confirm": "حذف جميع الرسائل في محادثة هذه الحالة؟",
       "done": "تم حذف {{count}} رسالة"
     },
-    "jumpToLatest": "أحدث الرسائل"
+    "jumpToLatest": "أحدث الرسائل",
+    "backToChats": "رجوع إلى المحادثات"
   },
   "master": {
     "networkTitle": "شبكتي",

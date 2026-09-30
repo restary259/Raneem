@@ -2868,3 +2868,120 @@ only the frontend reachability was broken.
   fix; it is not the reported regression.
 - Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1710 passed | 1 skipped;
   `npm run build` clean. Changed files carry identical eslint counts to baseline.
+
+## Student dashboard: emergency call card + chat box back arrow (2026-09-30)
+
+Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
+
+### Emergency numbers are `tel:` links, never chat buttons
+- `src/components/student/EmergencyCallCard.tsx` is the ONE source of the three
+  fixed numbers (`EMERGENCY_NUMBERS`: police **110**, ambulance **112**, fire
+  **112**) — deliberately NOT sourced from `important_contacts` or
+  `contactConfig` (those are DARB staff/partner contacts, not emergency
+  services). Each entry renders an `<a href="tel:...">`, so a tap opens the
+  native dialer. Do not turn these into `onClick`/chat handlers.
+- Rendered **full width** in `StudentOverviewSection.tsx` between the Quick
+  Actions card and the Tools card — NOT as a 1/3-width Quick Action tile, so the
+  numbers stay readable in a crisis.
+- The same component exports `EmergencyNumberButtons` (compact, label-less,
+  `aria-label` + `title`) for the chat box header, where horizontal room is
+  scarce. Same `tel:` handoff. One number list, two presentations.
+- Grid: `grid grid-cols-1 gap-2 sm:grid-cols-3`, each link `w-full min-w-0` with
+  a `truncate` label, so a long translated label cannot widen its grid track.
+- i18n: `student.overview.emergency`, `.emergencyHint`, `.emergency_police`,
+  `.emergency_ambulance`, `.emergency_fire` in en + ar + he. The component keeps
+  a `FALLBACK_LABEL` map (Police/Ambulance/Fire brigade) so a missing dictionary
+  never renders a raw key like `fire`.
+
+### Student messages: conversation list ↔ chat box with a back arrow
+- `src/pages/messages/StudentMessagesPage.tsx` is a list-first inbox: the
+  conversation list (`ThreadList`) is the default view, and opening a thread
+  swaps in the chat box. The chat-box header owns the back arrow
+  (`aria-label` `chat.backToChats`, `backToList` → `setOpen(null)`), which
+  restores the list — this is what lets a student return to all conversations
+  instead of being stuck in one thread.
+- The back icon flips for RTL (`const BackIcon = isRtl ? ArrowRight : ArrowLeft`)
+  rather than hardcoding a physical side.
+- The chat-box header also renders `EmergencyNumberButtons`, so the emergency
+  numbers stay one tap away mid-conversation.
+- The Quick Actions "Messages" tile points at `/student/messages`
+  (`nav.messages`, `MessageSquare`) — it used to duplicate Contacts.
+- i18n: `chat.backToChats` + `messagesInbox.startTeamChat` /
+  `.caseConversationHint` / `.payoutConversationHint` / `.teamConversationHint`
+  in en + ar + he.
+- `backToList` is UI-only; every thread still goes through the existing
+  `CaseMessageService` / `DirectMessageService` RPCs. No backend change.
+
+### Guards + verification
+- `src/lib/studentEmergencyAndChatNavGuard.test.ts` (source scan): emergency
+  numbers use `tel:` and are NOT chat handlers, the emergency card renders
+  full-width in the overview, the chat box has a working back arrow, the icon
+  flips in RTL, and `EmergencyNumberButtons` is wired into the chat header.
+  Verified non-vacuous (reverting `tel:` → `#`, the back handler, or the tile
+  href fails 6 tests).
+- Render tests: `src/components/student/__tests__/EmergencyCallCard.test.tsx`
+  (both presentations, tel: hrefs, aria labels) and
+  `src/pages/messages/__tests__/StudentMessagesPage.test.tsx` (list → chat box →
+  back, emergency links present in-chat, RTL back arrow).
+
+### Student inbox: real activity, existing team thread, resolved header name
+- The conversation list is built from `listMyDirectThreads()` (the same service
+  the staff inbox uses), not from hardcoded placeholders. `loadDirectThreads()`
+  resolves, in one call: the **existing** team thread (matched by
+  `otherUserRole === "team_member"` — this is why `get_staff_directory` must be
+  mocked in tests, otherwise the role is null and the thread is invisible), the
+  advisor's display name, and each thread's `lastMessage` / `lastMessageAt` /
+  `unread`.
+- Previously every row had `preview: ""`, `timestamp: null`, `unread: 0`, and the
+  team row only existed after pressing "Message my team member" — so an existing
+  advisor conversation was hidden and a returning student saw no unread badge.
+- `timestamp` is passed **raw** (`thread.lastMessageAt`); `ThreadList` formats it
+  itself via `formatThreadTime`. Passing an already-formatted value caused a
+  double-format that rendered empty.
+- `previewFor()` handles text, voice notes (`chat.voice.message`) and other
+  attachments (`chat.attach.only`) — an attachment-only message no longer reads
+  "No messages yet".
+- The back arrow refreshes the threads (`backToList` → `setOpen(null)` +
+  `loadDirectThreads()`), so badges/previews are not stale after reading a chat.
+- The open chat header renders the resolved name for the team tab, so it cannot
+  disagree with the list row.
+- New locale key `messagesInbox.openConversation` (en/ar/he) is the case row's
+  preview; `t()` calls here keep inline English fallbacks like the rest of the
+  file.
+- **Mock gotcha (recurring)**: `StudentMessagesPage.test.tsx` must mock
+  `@/integrations/supabase/client` with an `auth.onAuthStateChange` surface —
+  `DirectMessageService` subscribes at module scope, so a bare `{ supabase: {} }`
+  mock fails the whole file at import before any test runs.
+- Responsive verification is static (no session): the harness loads the REAL
+  emitted `styles-*.css` with class strings EXTRACTED from source, at
+  320/360/375/390/430/768/1024/1280 in LTR **and** RTL. Confirmed
+  `scrollWidth <= clientWidth` for the document, `<main>`, and the chat header;
+  Quick Actions are 1/row <640px, 5/row 640–1023, 3/row ≥1024. Before/after on
+  the old `grid-cols-3`: 3 cards/row at 74–97px wide → now 1 card/row at
+  238–308px.
+
+### Pre-existing main-branch breakage (fixed here so CI can pass)
+- `origin/main` failed `npx tsc --noEmit` in `src/components/student/StudentCityGuide.tsx`
+  (4 errors) and `src/routes/student.city-guide.tsx` (1 error), and the i18n
+  guard was red because `student.cityGuide.schoolCityDescription` was used in
+  source but missing from en/ar/he. Both were pre-existing and unrelated to the
+  student messaging work; the locale key and the City Guide type errors are now
+  fixed.
+- **The `src/routeTree.gen.ts` "revert build churn" advice is WRONG for this
+  repo — do not follow it.** The CI `quality` job runs **Typecheck BEFORE
+  Build**, and `npm run build` is `vite build` only (it never typechecks). On
+  `origin/main` the committed route tree was stale: it carried
+  `/student/city-guide` in the route unions but **not** in `FileRoutesByPath`,
+  because the generator only rewrites a route when it is missing from
+  `routeTree`. With that stale file, `createFileRoute("/student/city-guide")`
+  fails TS2345 and the quality job can never pass. Regenerating the tree from
+  scratch (`rm src/routeTree.gen.ts && npm run build`) fixes it; the regenerated
+  file **must be committed**. Verified both ways: stale tree → TS2345, committed
+  regenerated tree → clean `tsc`, and `tsc` stays clean after a subsequent build.
+- `StudentCityGuide.tsx` type fixes (no behaviour change): `visibleCategories`
+  is annotated `StudentCityGuideCategory[]` (the `variant === "preview" ? A : B`
+  ternary widened to `string[]`, which broke indexing `CATEGORY_ICONS`,
+  `setSelectedCategory` and `categoryLabel`), and `categoryLabel` takes
+  `TFunction<"dashboard">` instead of a hand-written
+  `(key: string, fallback?: string) => string` signature.
+
