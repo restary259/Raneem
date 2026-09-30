@@ -333,7 +333,12 @@
       "queueStale": "Could not refresh — showing the last loaded list.",
       "refreshFailed": "Could not refresh — showing the last data that loaded successfully.",
       "loadFailed": "Unable to load the Command Center",
-      "loadFailedBody": "The overview could not be read. Your data is safe — retry to load it."
+      "loadFailedBody": "The overview could not be read. Your data is safe — retry to load it.",
+      "referralRegistrations": "Referral registrations",
+      "referralRegistrationsEmpty": "No unpaid referral registrations",
+      "referredBy": "Referred by",
+      "transferSubmitted": "Transfer submitted",
+      "awaitingPayment": "Awaiting payment"
     },
     "pipeline": {
       "title": "Application Pipeline",
@@ -5862,6 +5867,17 @@
     "history": {
       "title": "My referred registrations",
       "empty": "You have not created any referral registrations yet."
+    },
+    "caseSummary": {
+      "eyebrow": "Refer & Register",
+      "title": "Referral registration",
+      "paid": "Paid",
+      "pending": "Payment pending",
+      "referrer": "Referred by",
+      "type": "Type",
+      "invoice": "Invoice",
+      "total": "Registration total",
+      "services": "Selected registration"
     }
   },
   "invoice": {
