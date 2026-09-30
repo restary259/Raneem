@@ -137,7 +137,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
             <MapPinned className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
             <h1 className="text-xl font-semibold">{t("student.cityGuide.unavailableTitle", "City guide")}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {t("student.cityGuide.unavailableDescription", "Your city guide will appear once your German residential city is saved in your profile.")}
+              {t("student.cityGuide.unsupportedCityDescription", "A city guide for this city is not available yet.")}
             </p>
           </CardContent>
         </Card>
@@ -149,7 +149,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     ? CATEGORY_ORDER
     : [...CATEGORY_ORDER, "pharmacy", "studentLife"];
 
-  return (
+  const content = (
     <section id="city-guide" className="space-y-4 min-w-0">
       {variant === "full" && (
         <div>
@@ -327,4 +327,10 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
       )}
     </section>
   );
+
+  if (variant === "full") {
+    return <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">{content}</div>;
+  }
+
+  return content;
 }
