@@ -9,6 +9,8 @@ import {
   Plus,
   Receipt,
   User,
+  Users,
+  Calculator,
   Home,
   ShieldCheck,
   LogOut,
@@ -38,12 +40,17 @@ interface StudentDashboardHeaderProps {
   onSignOut: () => Promise<void>;
 }
 
-const QUICK_ACTIONS = [
+export const QUICK_ACTIONS = [
   { key: "nav.checklist", icon: ListChecks, href: "/student/checklist" },
   { key: "nav.documents", icon: FileText, href: "/student/documents" },
+  { key: "nav.visa", icon: Globe, href: "/student/visa" },
+  { key: "nav.fees", icon: Receipt, href: "/student/fees" },
   { key: "nav.messages", icon: MessageSquare, href: "/student/messages" },
   { key: "nav.cityGuide", icon: MapPinned, href: "/student/city-guide" },
-  { key: "nav.fees", icon: Receipt, href: "/student/fees" },
+  { key: "nav.contacts", icon: Users, href: "/student/contacts" },
+  { key: "nav.myData", icon: ShieldCheck, href: "/student/my-data" },
+  { key: "nav.bagrut", icon: Calculator, href: "/student/tools/bagrut" },
+  { key: "nav.cvBuilder", icon: FileText, href: "/student/tools/cv" },
   { key: "nav.refer", icon: Heart, href: "/student/refer" },
 ] as const;
 
