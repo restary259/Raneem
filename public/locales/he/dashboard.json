@@ -844,6 +844,7 @@
     }
   },
   "nav": {
+    "home": "ראשי",
     "overview": "סקירה כללית",
     "pipeline": "צינור",
     "team": "צוות",
@@ -1746,6 +1747,7 @@
     "type_family": "בן משפחה"
   },
   "messagesInbox": {
+    "emergency": {"title":"שירותי חירום","police":"משטרה","ambulance":"אמבולנס","fire":"כבאות","call":"חייגו {{number}}","action":"חיוג"},
     "title": "הודעות תיק",
     "subtitle": "כל השיחות בכל התיקים שלכם, החדשות תחילה.",
     "staffTab": "הודעות",
@@ -1783,7 +1785,9 @@
     "startTeamChat": "שליחת הודעה לאיש הצוות שלי",
     "caseConversationHint": "שיחת התיק שלכם עם צוות Darb",
     "payoutConversationHint": "שיחת התשלום שלכם",
-    "teamConversationHint": "הקו הישיר שלכם עם היועץ"
+    "teamConversationHint": "הקו הישיר שלכם עם היועץ",
+    "startTeamPreview": "לחצו כדי להתחיל את השיחה",
+    "startingTeamChat": "פותח את הצ׳אט עם הצוות…"
   },
   "voiceCall": {
     "call": "שיחה",

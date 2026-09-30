@@ -2721,6 +2721,7 @@
     "ok": "OK"
   },
   "nav": {
+    "home": "Home",
     "overview": "Overview",
     "pipeline": "Pipeline",
     "team": "Team",
@@ -4287,6 +4288,7 @@
     }
   },
   "messagesInbox": {
+    "emergency": {"title":"Emergency services","police":"Police","ambulance":"Ambulance","fire":"Fire Fighter","call":"Call {{number}}","action":"Call"},
     "title": "Case messages",
     "subtitle": "All conversations across your cases, newest first.",
     "staffTab": "Messages",
@@ -4324,7 +4326,9 @@
     "startTeamChat": "Message my team member",
     "caseConversationHint": "Your case conversation with the Darb team",
     "payoutConversationHint": "Your payout conversation",
-    "teamConversationHint": "Your direct line to your advisor"
+    "teamConversationHint": "Your direct line to your advisor",
+    "startTeamPreview": "Tap to start your conversation",
+    "startingTeamChat": "Opening your team chat…"
   },
   "chat": {
     "day": {

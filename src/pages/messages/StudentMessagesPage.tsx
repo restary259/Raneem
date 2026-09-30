@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Loader2,
   MessageSquare,
-  UserCheck,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 import CaseMessages from "@/components/cases/CaseMessages";
 import DirectMessages from "@/components/messages/DirectMessages";
 import VoiceCallButton from "@/components/messages/VoiceCallButton";
-import { EmergencyNumberButtons } from "@/components/student/EmergencyCallCard";
+import {
+  EMERGENCY_NUMBERS,
+  EmergencyNumberButtons,
+} from "@/components/student/EmergencyCallCard";
 import ThreadList, {
   type ThreadListItem,
 } from "@/components/messages/ThreadList";
@@ -56,8 +58,9 @@ interface OpenChat {
 /**
  * Student messaging: a conversation LIST that opens into a chat BOX. The list
  * holds the student's case thread, their payout thread (when one exists) and
- * the team-member thread. Opening a conversation swaps the list for the chat
- * box, whose header carries a back arrow (RTL-aware) that returns to the list.
+ * the team-member thread plus emergency call contacts. Opening a conversation
+ * swaps the list for the chat box, whose header carries a back arrow (RTL-aware)
+ * that returns to the list.
  *
  * The student talks to "Administration" / their advisor, never to a named
  * internal account, so names go through chatDisplayName().
@@ -178,11 +181,43 @@ export default function StudentMessagesPage() {
     }
   };
 
-  /** Every conversation the student can open, with its real activity. */
+  /** Every conversation/contact the student can open, with the requested order.
+   *  The Team Member row is always present; when the thread does not exist yet,
+   *  selecting it starts the existing team-member thread RPC. Emergency services
+   *  are rendered separately below as call-only contacts using the existing
+   *  German emergency numbers (110 / 112), never as fake chat threads. */
   const directById = new Map(directThreads.map((thread) => [thread.threadId, thread]));
-  const conversations: ThreadListItem[] = [];
+  const teamThread: ThreadListItem = {
+    id: teamThreadId ? `team:${teamThreadId}` : "team:pending",
+    type: "direct",
+    title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
+    subtitle: t(
+      "messagesInbox.teamConversationHint",
+      "Your direct line to your advisor",
+    ),
+    preview: teamThreadId
+      ? previewFor(
+          directById.get(teamThreadId)?.lastMessage ?? null,
+          t("messagesInbox.noMessagesYet", "No messages yet"),
+          t("chat.attach.only", "Attachment"),
+          t("chat.voice.message", "Voice message"),
+        )
+      : t(
+          "messagesInbox.startTeamPreview",
+          "Tap to start your conversation",
+        ),
+    timestamp: teamThreadId
+      ? directById.get(teamThreadId)?.lastMessageAt ?? null
+      : null,
+    unread: teamThreadId ? directById.get(teamThreadId)?.unread ?? 0 : 0,
+    otherUserId: teamThreadId
+      ? directById.get(teamThreadId)?.otherUserId ?? null
+      : null,
+  };
+
+  const secondaryConversations: ThreadListItem[] = [];
   if (caseId) {
-    conversations.push({
+    secondaryConversations.push({
       id: `case:${caseId}`,
       type: "case",
       title: t("messagesInbox.caseTab", "Case"),
@@ -197,7 +232,7 @@ export default function StudentMessagesPage() {
   }
   if (payoutThreadId) {
     const thread = directById.get(payoutThreadId);
-    conversations.push({
+    secondaryConversations.push({
       id: `payout:${payoutThreadId}`,
       type: "direct",
       title: t("messagesInbox.payoutTab", "Payout"),
@@ -211,28 +246,6 @@ export default function StudentMessagesPage() {
         t("chat.attach.only", "Attachment"),
         t("chat.voice.message", "Voice message"),
       ),
-      // ThreadList formats this itself — pass the raw ISO timestamp.
-      timestamp: thread?.lastMessageAt ?? null,
-      unread: thread?.unread ?? 0,
-    });
-  }
-  if (teamThreadId) {
-    const thread = directById.get(teamThreadId);
-    conversations.push({
-      id: `team:${teamThreadId}`,
-      type: "direct",
-      title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
-      subtitle: t(
-        "messagesInbox.teamConversationHint",
-        "Your direct line to your advisor",
-      ),
-      preview: previewFor(
-        thread?.lastMessage ?? null,
-        t("messagesInbox.noMessagesYet", "No messages yet"),
-        t("chat.attach.only", "Attachment"),
-        t("chat.voice.message", "Voice message"),
-      ),
-      // ThreadList formats this itself — pass the raw ISO timestamp.
       timestamp: thread?.lastMessageAt ?? null,
       unread: thread?.unread ?? 0,
     });
@@ -240,6 +253,10 @@ export default function StudentMessagesPage() {
 
   const openFromItem = (item: ThreadListItem) => {
     const [tab, id] = item.id.split(":") as [Tab, string];
+    if (tab === "team" && id === "pending") {
+      void openTeamThread();
+      return;
+    }
     setOpen({ tab, id, title: item.title });
   };
 
@@ -318,45 +335,72 @@ export default function StudentMessagesPage() {
               </div>
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">
-                {conversations.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-                    <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
-                    <p className="text-sm text-muted-foreground">
-                      {t("messagesInbox.noConversationYet")}
-                    </p>
-                  </div>
-                ) : (
-                  <ThreadList
-                    items={conversations}
+                <ThreadList
+                    items={[teamThread]}
                     selectedId={null}
                     onSelect={openFromItem}
                     emptyLabel={t("messagesInbox.empty")}
                   />
-                )}
 
-                {/* Start the team-member conversation — available even before
-                    one exists, so the student can always reach their advisor. */}
-                {!teamThreadId && (
-                  <div className="border-t p-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full gap-1.5"
-                      onClick={openTeamThread}
-                      disabled={teamThreadLoading}
-                    >
-                      {teamThreadLoading ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <UserCheck className="h-3.5 w-3.5" />
-                      )}
-                      {t(
-                        "messagesInbox.startTeamChat",
-                        "Message my team member",
-                      )}
-                    </Button>
-                  </div>
-                )}
+                  <section className="border-t border-border/70">
+                    <div className="flex items-center gap-2 border-b bg-muted/50 px-3 py-2">
+                      <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
+                      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("messagesInbox.emergency.title", "Emergency services")}
+                      </h2>
+                    </div>
+                    <div className="divide-y">
+                      {EMERGENCY_NUMBERS.map(({ key, number, icon: Icon }) => (
+                        <a
+                          key={key}
+                          href={`tel:${number}`}
+                          className="flex w-full items-center gap-3 px-3 py-3 text-start transition-colors hover:bg-muted/60"
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600 dark:text-red-400">
+                            <Icon className="h-4 w-4" aria-hidden="true" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {t(
+                                `messagesInbox.emergency.${key}`,
+                                key === "police"
+                                  ? "Police"
+                                  : key === "ambulance"
+                                    ? "Ambulance"
+                                    : "Fire Fighter",
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {t(
+                                "messagesInbox.emergency.call",
+                                "Call {{number}}",
+                                { number },
+                              )}
+                            </p>
+                          </div>
+                          <span className="shrink-0 text-xs font-medium text-primary">
+                            {t("messagesInbox.emergency.action", "Call")}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </section>
+
+                  {secondaryConversations.length > 0 && (
+                    <ThreadList
+                      items={secondaryConversations}
+                      selectedId={null}
+                      onSelect={openFromItem}
+                      emptyLabel={t("messagesInbox.empty")}
+                    />
+                  )}
+
+                  {teamThreadLoading && (
+                    <div className="flex items-center justify-center border-t p-3 text-xs text-muted-foreground">
+                      <Loader2 className="me-2 h-3.5 w-3.5 animate-spin" />
+                      {t("messagesInbox.startingTeamChat", "Opening your team chat…")}
+                    </div>
+                  )}
               </div>
             )}
           </Card>

@@ -2739,6 +2739,7 @@
     "ok": "حسناً"
   },
   "nav": {
+    "home": "الرئيسية",
     "inbox": "صندوق الوارد",
     "messages": "المراسلات",
     "staffInbox": "صندوق الوارد",
@@ -4305,6 +4306,7 @@
     }
   },
   "messagesInbox": {
+    "emergency": {"title":"جهات الطوارئ","police":"الشرطة","ambulance":"الإسعاف","fire":"الإطفاء","call":"اتصل بـ {{number}}","action":"اتصال"},
     "title": "مراسلات الملفات",
     "subtitle": "كل المحادثات على ملفاتك، الأحدث أولاً.",
     "staffTab": "المراسلات",
@@ -4342,7 +4344,9 @@
     "startTeamChat": "مراسلة عضو الفريق",
     "caseConversationHint": "محادثة ملفك مع فريق درب",
     "payoutConversationHint": "محادثة الدفعة الخاصة بك",
-    "teamConversationHint": "خطك المباشر مع مستشارك"
+    "teamConversationHint": "خطك المباشر مع مستشارك",
+    "startTeamPreview": "اضغط لبدء محادثتك",
+    "startingTeamChat": "جارٍ فتح محادثة الفريق…"
   },
   "chat": {
     "day": {

@@ -155,6 +155,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.checklist': t('nav.checklist', 'Checklist'),
     'nav.profile': t('nav.profile', 'Profile'),
     'nav.account': t('nav.account', 'Account'),
+    'nav.account': t('nav.account', 'Account'),
     'nav.documents': t('nav.documents', 'Docs'),
     'nav.visa': t('nav.visa', 'Visa'),
     'nav.fees': t('nav.fees', 'Fees'),
