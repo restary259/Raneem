@@ -137,11 +137,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS case_registration_card_provider_uq
   ON public.case_registration_payments(provider_payment_id)
   WHERE provider_payment_id IS NOT NULL;
 
--- One collectible payment path per registration invoice. Failed/refunded attempts remain
--- historical, while pending/submitted/confirmed attempts are mutually exclusive.
+-- One collectible payment path per registration invoice. A submitted bank-transfer
+-- acknowledgement is intentionally not collectible yet, so the student can switch
+-- back to card without being permanently blocked by an unverified declaration.
 CREATE UNIQUE INDEX IF NOT EXISTS case_registration_one_active_payment_uq
   ON public.case_registration_payments(invoice_id)
-  WHERE status IN ('pending','submitted','confirmed');
+  WHERE status IN ('pending','confirmed');
 
 ALTER TABLE public.case_registration_payments ENABLE ROW LEVEL SECURITY;
 
@@ -718,6 +719,104 @@ $$;
 
 REVOKE ALL ON FUNCTION public.create_student_referral_registration_internal(uuid,jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.create_student_referral_registration_internal(uuid,jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_registration_card_payment_internal(
+  p_invoice_id uuid
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO public
+AS $
+DECLARE
+  v_invoice RECORD;
+  v_payment RECORD;
+  v_submitted_bank RECORD;
+BEGIN
+  IF p_invoice_id IS NULL THEN RAISE EXCEPTION 'Invoice id is required'; END IF;
+
+  SELECT * INTO v_invoice
+    FROM public.case_registration_invoices
+   WHERE id=p_invoice_id
+   FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Registration invoice not found'; END IF;
+  IF v_invoice.status='cancelled' THEN RAISE EXCEPTION 'This invoice is cancelled'; END IF;
+
+  IF v_invoice.payment_status='paid'
+     OR EXISTS (
+       SELECT 1 FROM public.case_registration_payments
+       WHERE invoice_id=v_invoice.id AND status='confirmed'
+     ) THEN
+    RETURN jsonb_build_object(
+      'paid',true,
+      'invoice_id',v_invoice.id,
+      'payment_id',NULL
+    );
+  END IF;
+
+  SELECT * INTO v_payment
+    FROM public.case_registration_payments
+   WHERE invoice_id=v_invoice.id
+     AND status='pending'
+   ORDER BY created_at DESC
+   LIMIT 1;
+
+  IF FOUND THEN
+    IF v_payment.payment_method <> 'card' THEN
+      RAISE EXCEPTION 'Another payment is already in progress for this invoice';
+    END IF;
+
+    RETURN jsonb_build_object(
+      'paid',false,
+      'invoice_id',v_invoice.id,
+      'payment_id',v_payment.id,
+      'status',v_payment.status,
+      'checkout_url',v_payment.checkout_url
+    );
+  END IF;
+
+  SELECT * INTO v_submitted_bank
+    FROM public.case_registration_payments
+   WHERE invoice_id=v_invoice.id
+     AND payment_method='bank_transfer'
+     AND status='submitted'
+   ORDER BY created_at DESC
+   LIMIT 1
+   FOR UPDATE;
+
+  IF FOUND THEN
+    UPDATE public.case_registration_payments
+       SET status='failed',
+           failure_reason='replaced_by_card_checkout',
+           updated_at=now()
+     WHERE id=v_submitted_bank.id;
+  END IF;
+
+  INSERT INTO public.case_registration_payments (
+    invoice_id, case_id, payment_method, amount, currency, status, reference
+  )
+  VALUES (
+    v_invoice.id, v_invoice.case_id, 'card', v_invoice.total_amount,
+    v_invoice.currency, 'pending', v_invoice.case_reference
+  )
+  RETURNING * INTO v_payment;
+
+  UPDATE public.case_registration_invoices
+     SET payment_status='pending', updated_at=now()
+   WHERE id=v_invoice.id;
+
+  RETURN jsonb_build_object(
+    'paid',false,
+    'invoice_id',v_invoice.id,
+    'payment_id',v_payment.id,
+    'status',v_payment.status,
+    'checkout_url',v_payment.checkout_url
+  );
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.create_registration_card_payment_internal(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_registration_card_payment_internal(uuid) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.get_registration_invoice_by_token(p_token text)
 RETURNS jsonb
