@@ -11,10 +11,11 @@ const OVERVIEW = path.resolve(
 );
 
 /**
- * The Student Dashboard home (routed via /student-dashboard -> /student/checklist
- * -> StudentNextStepsPage -> StudentOverviewSection) used to lay its Quick
- * Actions out with `grid-cols-3` at every width below `sm`. On a phone that
- * forced three narrow cards across the viewport instead of one full-width card.
+ * The Student Overview (`StudentOverviewSection`, rendered by
+ * `StudentNextStepsPage` at the `/student/` route; `/student-dashboard` is a
+ * separate redirect to `/student/checklist`) used to lay its Quick Actions out
+ * with `grid-cols-3` at every width below `sm`. On a phone that forced three
+ * narrow cards across the viewport instead of one full-width card.
  *
  * These assertions lock in the responsive fix so the base (mobile) track count
  * cannot silently regress to a multi-column grid, and so each card is allowed
