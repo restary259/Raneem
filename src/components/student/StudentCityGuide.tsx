@@ -95,26 +95,27 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   const [selectedCategory, setSelectedCategory] = useState<StudentCityGuideCategory>("all");
   const [search, setSearch] = useState("");
 
-  const loadProfileCity = async () => {
+  const loadProfileCity = async (uid: string) => {
     setProfileLoading(true);
     const { data } = await (supabase as any)
       .from("profiles")
       .select("residential_city")
+      .eq("id", uid)
       .maybeSingle();
     setStoredCity(data?.residential_city ?? null);
     setProfileLoading(false);
   };
 
-  const userId = useAuthedUserId(() => {
-    if (!residentialCity) loadProfileCity();
-  });
+  const userId = useAuthedUserId();
 
   useEffect(() => {
     if (residentialCity !== undefined) {
       setStoredCity(residentialCity ?? null);
       setProfileLoading(false);
+    } else if (userId) {
+      void loadProfileCity(userId);
     }
-  }, [residentialCity]);
+  }, [residentialCity, userId]);
 
   const city = getCityGuide(storedCity);
 
