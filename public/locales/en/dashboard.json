@@ -3662,7 +3662,10 @@
         "studentLife": "Student life",
         "pharmacy": "Pharmacy"
       },
-      "unsupportedCityDescription": "A city guide for this city is not available yet."
+      "unsupportedCityDescription": "A city guide for this city is not available yet.",
+      "darbTip": "DARB tip",
+      "openNow": "Open now",
+      "closed": "Closed"
     }
   },
   "settings": {

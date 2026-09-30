@@ -1377,7 +1377,10 @@
         "studentLife": "חיי סטודנטים",
         "pharmacy": "בית מרקחת"
       },
-      "unsupportedCityDescription": "מדריך עיר עבור העיר הזו עדיין לא זמין."
+      "unsupportedCityDescription": "מדריך עיר עבור העיר הזו עדיין לא זמין.",
+      "darbTip": "טיפ מדארב",
+      "openNow": "פתוח עכשיו",
+      "closed": "סגור"
     }
   },
   "studentFees": {
