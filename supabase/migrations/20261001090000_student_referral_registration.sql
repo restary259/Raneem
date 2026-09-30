@@ -137,6 +137,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS case_registration_card_provider_uq
   ON public.case_registration_payments(provider_payment_id)
   WHERE provider_payment_id IS NOT NULL;
 
+-- One collectible payment path per registration invoice. Failed/refunded attempts remain
+-- historical, while pending/submitted/confirmed attempts are mutually exclusive.
+CREATE UNIQUE INDEX IF NOT EXISTS case_registration_one_active_payment_uq
+  ON public.case_registration_payments(invoice_id)
+  WHERE status IN ('pending','submitted','confirmed');
+
 ALTER TABLE public.case_registration_payments ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admins manage registration payments" ON public.case_registration_payments;
@@ -815,17 +821,10 @@ BEGIN
   SELECT * INTO v_invoice
     FROM public.case_registration_invoices
    WHERE public_token = trim(p_token)
-   LIMIT 1;
+   FOR UPDATE;
 
   IF NOT FOUND THEN RAISE EXCEPTION 'Registration invoice not found'; END IF;
   IF v_invoice.status = 'cancelled' THEN RAISE EXCEPTION 'This invoice is cancelled'; END IF;
-
-  IF EXISTS (
-    SELECT 1 FROM public.case_registration_payments
-    WHERE invoice_id = v_invoice.id AND status = 'pending'
-  ) THEN
-    RAISE EXCEPTION 'A card payment is already in progress';
-  END IF;
 
   SELECT * INTO v_payment
     FROM public.case_registration_payments
@@ -917,6 +916,21 @@ BEGIN
     );
   END IF;
 
+  IF v_invoice.payment_status = 'paid'
+     OR EXISTS (
+       SELECT 1
+       FROM public.case_registration_payments p
+       WHERE p.invoice_id = v_invoice.id
+         AND p.id <> v_payment.id
+         AND p.status = 'confirmed'
+     ) THEN
+    RAISE EXCEPTION 'This registration has already been paid';
+  END IF;
+
+  IF v_payment.status <> 'submitted' THEN
+    RAISE EXCEPTION 'Only submitted payments can be confirmed';
+  END IF;
+
   IF v_payment.amount <> v_invoice.total_amount OR v_payment.currency <> v_invoice.currency THEN
     RAISE EXCEPTION 'Payment amount does not match the invoice';
   END IF;
@@ -985,6 +999,29 @@ BEGIN
 
   IF v_payment.payment_method <> 'card' THEN
     RAISE EXCEPTION 'This payment record is not a card payment';
+  END IF;
+
+  IF v_payment.status = 'confirmed' THEN
+    RETURN jsonb_build_object(
+      'payment_id',v_payment.id,'invoice_id',v_invoice.id,'case_id',v_case.id,
+      'status','confirmed',
+      'case_status',CASE WHEN v_case.status='new' THEN 'profile_completion' ELSE v_case.status END
+    );
+  END IF;
+
+  IF v_invoice.payment_status = 'paid'
+     OR EXISTS (
+       SELECT 1
+       FROM public.case_registration_payments p
+       WHERE p.invoice_id = v_invoice.id
+         AND p.id <> v_payment.id
+         AND p.status = 'confirmed'
+     ) THEN
+    RAISE EXCEPTION 'This registration has already been paid';
+  END IF;
+
+  IF v_payment.status <> 'pending' THEN
+    RAISE EXCEPTION 'Only pending card payments can be confirmed';
   END IF;
 
   IF v_payment.amount <> v_invoice.total_amount OR v_payment.currency <> v_invoice.currency THEN
