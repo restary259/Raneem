@@ -67,6 +67,7 @@ import {
   Building2,
   Hotel,
   School,
+  MapPinned,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
@@ -185,6 +186,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
 
   student: [
     { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
+    { key: "nav.cityGuide", icon: MapPinned, href: "/student/city-guide" },
     {
       key: "nav.group.studyFile",
       icon: BookOpen,
