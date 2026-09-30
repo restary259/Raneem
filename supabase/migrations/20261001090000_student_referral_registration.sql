@@ -196,7 +196,7 @@ AS $$
   SELECT COALESCE(
     (
       SELECT CASE
-        WHEN (t->>'price') ~ '^[0-9]+(\\.[0-9]+)?$' THEN (t->>'price')::numeric
+        WHEN (t->>'price') ~ '^[0-9]+(\.[0-9]+)?$' THEN (t->>'price')::numeric
         ELSE NULL
       END
       FROM jsonb_array_elements(
@@ -204,7 +204,7 @@ AS $$
              THEN COALESCE(p_tiers, '[]'::jsonb)
              ELSE '[]'::jsonb END
       ) AS t
-      WHERE (t->>'price') ~ '^[0-9]+(\\.[0-9]+)?$'
+      WHERE (t->>'price') ~ '^[0-9]+(\.[0-9]+)?$'
         AND COALESCE(NULLIF(t->>'from_weeks','')::integer, 1) <= p_weeks
         AND (
           NULLIF(t->>'to_weeks','') IS NULL
@@ -229,7 +229,7 @@ AS $$
   SELECT COALESCE(
     (
       SELECT CASE
-        WHEN (t->>'price') ~ '^[0-9]+(\\.[0-9]+)?$' THEN (t->>'price')::numeric
+        WHEN (t->>'price') ~ '^[0-9]+(\.[0-9]+)?$' THEN (t->>'price')::numeric
         ELSE NULL
       END
       FROM jsonb_array_elements(
@@ -237,7 +237,7 @@ AS $$
              THEN COALESCE(p_tiers, '[]'::jsonb)
              ELSE '[]'::jsonb END
       ) AS t
-      WHERE (t->>'price') ~ '^[0-9]+(\\.[0-9]+)?$'
+      WHERE (t->>'price') ~ '^[0-9]+(\.[0-9]+)?$'
         AND COALESCE(NULLIF(t->>'from_age','')::integer, 0) <= p_age
         AND (
           NULLIF(t->>'to_age','') IS NULL
@@ -249,6 +249,52 @@ AS $$
     NULLIF(p_base, 0)
   );
 $$;
+
+CREATE OR REPLACE FUNCTION public.get_registration_catalog(p_school_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path TO public
+AS $$
+DECLARE
+  v_programs jsonb;
+  v_accommodations jsonb;
+BEGIN
+  IF p_school_id IS NULL THEN
+    RETURN jsonb_build_object('programs','[]'::jsonb,'accommodations','[]'::jsonb);
+  END IF;
+
+  -- `programs` / `accommodations` SELECT policies only cover team_member and
+  -- admin, so a student cannot read the catalog directly. This function exposes
+  -- exactly the columns the registration form needs for one school, never a
+  -- wildcard, and only active rows.
+  SELECT COALESCE(jsonb_agg(to_jsonb(p) - 'created_at' - 'updated_at' ORDER BY p.name_en), '[]'::jsonb)
+    INTO v_programs
+    FROM (
+      SELECT id,name_en,name_ar,description_en,description_ar,cefr_range,
+             lessons_per_week,hours_per_week,price,currency,price_tiers,
+             registration_fee,school_id
+        FROM public.programs
+       WHERE is_active = true AND school_id = p_school_id
+    ) p;
+
+  SELECT COALESCE(jsonb_agg(to_jsonb(a) - 'created_at' - 'updated_at' ORDER BY a.name_en), '[]'::jsonb)
+    INTO v_accommodations
+    FROM (
+      SELECT id,name_en,name_ar,description_en,description_ar,description,photos,
+             room_type,meals,distance_note,deposit,placement_fee,price,currency,
+             price_tiers,school_id
+        FROM public.accommodations
+       WHERE is_active = true AND school_id = p_school_id
+    ) a;
+
+  RETURN jsonb_build_object('programs',v_programs,'accommodations',v_accommodations);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_registration_catalog(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_registration_catalog(uuid) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.create_student_referral_registration_internal(
   p_referrer_user_id uuid,
@@ -290,6 +336,7 @@ DECLARE
   v_accommodation_rate numeric;
   v_insurance_rate numeric;
   v_insurance_months integer;
+  v_insurance_billing text;
   v_program_total numeric;
   v_accommodation_total numeric;
   v_insurance_total numeric;
@@ -347,11 +394,11 @@ BEGIN
     RAISE EXCEPTION 'Registration field too long';
   END IF;
 
-  IF v_email !~* '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$' THEN
+  IF v_email !~* '^[^\s@]+@[^\s@]+\.[^\s@]+$' THEN
     RAISE EXCEPTION 'Invalid email format';
   END IF;
 
-  IF NOT (regexp_replace(v_phone, '\\D', '', 'g') ~ '^[0-9]{7,15}$') THEN
+  IF NOT (regexp_replace(v_phone, '\D', '', 'g') ~ '^[0-9]{7,15}$') THEN
     RAISE EXCEPTION 'Invalid phone format';
   END IF;
 
@@ -359,8 +406,8 @@ BEGIN
     SELECT 1
       FROM public.referrals r
      WHERE r.referrer_user_id = p_referrer_user_id
-       AND regexp_replace(COALESCE(r.referred_phone,''), '\\D', '', 'g')
-           = regexp_replace(v_phone, '\\D', '', 'g')
+       AND regexp_replace(COALESCE(r.referred_phone,''), '\D', '', 'g')
+           = regexp_replace(v_phone, '\D', '', 'g')
   ) THEN
     RAISE EXCEPTION 'This phone number has already been referred by you';
   END IF;
@@ -371,8 +418,8 @@ BEGIN
    WHERE c.deleted_at IS NULL
      AND (
        lower(COALESCE(c.email,'')) = v_email
-       OR regexp_replace(c.phone_number, '\\D', '', 'g') =
-          regexp_replace(v_phone, '\\D', '', 'g')
+       OR regexp_replace(c.phone_number, '\D', '', 'g') =
+          regexp_replace(v_phone, '\D', '', 'g')
      )
    LIMIT 1;
 
@@ -383,7 +430,9 @@ BEGIN
   v_school_id := NULLIF(p_data->>'school_id','')::uuid;
   v_program_id := NULLIF(p_data->>'program_id','')::uuid;
   v_accommodation_id := NULLIF(p_data->>'accommodation_id','')::uuid;
-  v_insurance_id := NULLIF(p_data->>'insurance_id','')::uuid;
+  -- The form uses the literal 'none' for an explicit "no insurance" choice;
+  -- treat it (like empty) as no insurance instead of casting it to a uuid.
+  v_insurance_id := NULLIF(NULLIF(p_data->>'insurance_id',''),'none')::uuid;
   v_program_weeks := NULLIF(p_data->>'program_weeks','')::integer;
   v_accommodation_weeks := NULLIF(p_data->>'accommodation_weeks','')::integer;
   v_start_month := NULLIF(trim(p_data->>'start_month'),'');
@@ -405,7 +454,7 @@ BEGIN
     RAISE EXCEPTION 'Invalid accommodation duration';
   END IF;
 
-  IF v_start_month IS NULL OR v_start_month !~ '^\\d{4}-\\d{2}$' THEN
+  IF v_start_month IS NULL OR v_start_month !~ '^\d{4}-\d{2}$' THEN
     RAISE EXCEPTION 'A valid start month is required';
   END IF;
   v_start_date := (v_start_month || '-01')::date;
@@ -560,7 +609,16 @@ BEGIN
     IF v_insurance_rate IS NULL OR v_insurance_rate <= 0 THEN
       RAISE EXCEPTION 'Selected insurance has no valid price';
     END IF;
-    v_insurance_total := round(v_insurance_rate * v_insurance_months, 2);
+    -- Only a monthly-billed product is charged per month; a one_time premium is
+    -- a single payment regardless of course length (mirrors insurancePricing.ts
+    -- and the canonical case_submissions calculation).
+    v_insurance_billing := COALESCE(NULLIF(v_insurance.billing_period,''),'monthly');
+    IF v_insurance_billing = 'monthly' THEN
+      v_insurance_total := round(v_insurance_rate * v_insurance_months, 2);
+    ELSE
+      v_insurance_months := 1;
+      v_insurance_total := round(v_insurance_rate, 2);
+    END IF;
     v_items := v_items || jsonb_build_array(
       jsonb_build_object(
         'kind','insurance',
@@ -735,7 +793,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO public
-AS $
+AS $$
 DECLARE
   v_invoice RECORD;
   v_payment RECORD;
@@ -743,10 +801,11 @@ DECLARE
 BEGIN
   IF p_invoice_id IS NULL THEN RAISE EXCEPTION 'Invoice id is required'; END IF;
 
-  SELECT * INTO v_invoice
-    FROM public.case_registration_invoices
-   WHERE id=p_invoice_id
-   FOR UPDATE;
+  SELECT i.*, c.case_reference INTO v_invoice
+    FROM public.case_registration_invoices i
+    JOIN public.cases c ON c.id = i.case_id
+   WHERE i.id=p_invoice_id
+   FOR UPDATE OF i;
   IF NOT FOUND THEN RAISE EXCEPTION 'Registration invoice not found'; END IF;
   IF v_invoice.status='cancelled' THEN RAISE EXCEPTION 'This invoice is cancelled'; END IF;
 
@@ -821,7 +880,7 @@ BEGIN
     'checkout_url',v_payment.checkout_url
   );
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.create_registration_card_payment_internal(uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.create_registration_card_payment_internal(uuid) TO service_role;
@@ -925,10 +984,11 @@ DECLARE
   v_invoice RECORD;
   v_payment RECORD;
 BEGIN
-  SELECT * INTO v_invoice
-    FROM public.case_registration_invoices
-   WHERE public_token = trim(p_token)
-   FOR UPDATE;
+  SELECT i.*, c.case_reference INTO v_invoice
+    FROM public.case_registration_invoices i
+    JOIN public.cases c ON c.id = i.case_id
+   WHERE i.public_token = trim(p_token)
+   FOR UPDATE OF i;
 
   IF NOT FOUND THEN RAISE EXCEPTION 'Registration invoice not found'; END IF;
   IF v_invoice.status = 'cancelled' THEN RAISE EXCEPTION 'This invoice is cancelled'; END IF;
@@ -1201,7 +1261,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path TO public
-AS $
+AS $$
 DECLARE
   v_payment RECORD;
   v_invoice RECORD;
@@ -1267,7 +1327,7 @@ BEGIN
     )
   );
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.fail_registration_card_payment_internal(uuid,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.fail_registration_card_payment_internal(uuid,text) TO service_role;
@@ -1382,3 +1442,115 @@ GRANT ALL ON public.case_registration_invoices TO service_role;
 GRANT ALL ON public.case_registration_payments TO service_role;
 GRANT SELECT ON public.case_registration_invoices TO authenticated;
 GRANT SELECT ON public.case_registration_payments TO authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Stage transition: direct student registration enters at profile_completion.
+--
+-- The registration invoice was already paid when the case is created, so
+-- confirm_registration_payment() / confirm_registration_card_payment() move
+-- `new` straight to `profile_completion`. enforce_case_stage_transition()
+-- (last redefined in 20260818090000) only allowed new -> contacted, so that
+-- UPDATE raised STAGE_BLOCKED and rolled the whole confirmation back.
+--
+-- Redefined here verbatim from 20260818090000 with the single added edge.
+-- This timestamp must stay newer than 20260818090000: re-running that older
+-- file would drop the new edge again.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.enforce_case_stage_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_appts int;
+  v_pending int;
+  v_profile_done timestamptz;
+  v_paid boolean;
+  v_review text;
+BEGIN
+  IF NEW.status IS NOT DISTINCT FROM OLD.status THEN
+    RETURN NEW;
+  END IF;
+
+  -- Service role (edge functions) and cancellation are always allowed.
+  IF auth.role() = 'service_role' OR NEW.status = 'cancelled' THEN
+    RETURN NEW;
+  END IF;
+
+  IF OLD.status IN ('new', 'forgotten', 'cancelled') AND NEW.status = 'contacted' THEN
+    RETURN NEW;
+  END IF;
+
+  -- A paid direct registration starts the file directly; there is no intake
+  -- call or appointment to record for it.
+  IF OLD.status = 'new' AND NEW.status = 'profile_completion' THEN
+    IF public.has_role(auth.uid(), 'admin')
+       OR EXISTS (
+         SELECT 1 FROM public.cases c
+          WHERE c.id = NEW.id AND c.assigned_to = auth.uid()
+       ) THEN
+      RETURN NEW;
+    END IF;
+    RAISE EXCEPTION 'STAGE_BLOCKED: only an administrator or the assigned team member can start a registration case';
+  END IF;
+
+  IF OLD.status = 'contacted' AND NEW.status = 'appointment_scheduled' THEN
+    SELECT count(*) INTO v_appts FROM public.appointments WHERE case_id = NEW.id;
+    IF v_appts = 0 THEN
+      RAISE EXCEPTION 'STAGE_BLOCKED: an appointment must be scheduled first';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  IF OLD.status = 'appointment_scheduled' AND NEW.status IN ('contacted', 'forgotten') THEN
+    RETURN NEW;
+  END IF;
+
+  IF OLD.status = 'appointment_scheduled' AND NEW.status = 'profile_completion' THEN
+    SELECT count(*) INTO v_appts FROM public.appointments WHERE case_id = NEW.id;
+    SELECT count(*) INTO v_pending FROM public.appointments WHERE case_id = NEW.id AND outcome IS NULL;
+    IF v_appts = 0 OR v_pending > 0 THEN
+      RAISE EXCEPTION 'STAGE_BLOCKED: record every appointment outcome first';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  IF OLD.status = 'profile_completion' AND NEW.status = 'payment_confirmed' THEN
+    SELECT profile_completed_at INTO v_profile_done
+      FROM public.case_submissions WHERE case_id = NEW.id;
+    IF v_profile_done IS NULL THEN
+      RAISE EXCEPTION 'STAGE_BLOCKED: the student file must be complete first';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  IF OLD.status = 'payment_confirmed' AND NEW.status = 'submitted' THEN
+    SELECT payment_confirmed INTO v_paid FROM public.case_submissions WHERE case_id = NEW.id;
+    IF COALESCE(v_paid, false) = false THEN
+      RAISE EXCEPTION 'STAGE_BLOCKED: confirm the payment first';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  -- Admin sent the file back for corrections: reopen the profile step so the
+  -- assigned team member can fix it and resubmit.
+  IF OLD.status = 'submitted' AND NEW.status = 'profile_completion' THEN
+    SELECT review_status INTO v_review FROM public.case_submissions WHERE case_id = NEW.id;
+    IF v_review = 'changes_requested' OR public.has_role(auth.uid(), 'admin') THEN
+      RETURN NEW;
+    END IF;
+    RAISE EXCEPTION 'STAGE_BLOCKED: only an administrator can reopen a submitted file';
+  END IF;
+
+  IF OLD.status = 'submitted' AND NEW.status = 'enrollment_paid' THEN
+    IF public.has_role(auth.uid(), 'admin') THEN
+      RETURN NEW;
+    END IF;
+    RAISE EXCEPTION 'STAGE_BLOCKED: only an administrator can complete enrollment';
+  END IF;
+
+  RAISE EXCEPTION 'STAGE_BLOCKED: % -> % is not an allowed transition', OLD.status, NEW.status;
+END;
+$$;
+

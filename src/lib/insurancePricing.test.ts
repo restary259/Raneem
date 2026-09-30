@@ -114,6 +114,15 @@ describe("computeInsuranceCost", () => {
     expect(cost.total).toBe(98 * 10);
   });
 
+  it("does not multiply a one_time premium by the program months", () => {
+    // The registration review and the issued invoice must agree: a one-off
+    // premium is charged once no matter how long the course is. (`months` stays
+    // informational for a one-off product; only the SQL normalises it to 1.)
+    const insurance = { price: 500, billing_period: "one_time", age_price_tiers: [] };
+    const cost = computeInsuranceCost(insurance, 35, null, null, 8);
+    expect(cost.total).toBe(500);
+  });
+
   it("treats overrideMonths of 0 as 0 months, not null", () => {
     const cost = computeInsuranceCost(
       { price: 0, billing_period: "monthly", age_price_tiers: tiers },

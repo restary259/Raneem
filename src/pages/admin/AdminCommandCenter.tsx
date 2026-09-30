@@ -278,14 +278,23 @@ const AdminCommandCenter = () => {
   const fetchReferralQueue = useCallback(async () => {
     setReferralQueueLoading(true);
     try {
+      // case_reference lives on `cases`, not on the invoice row — join it in,
+      // otherwise the query errors and the queue silently renders empty.
       const { data, error } = await (supabase as any)
         .from('case_registration_invoices')
-        .select('id,case_id,student_name,case_reference,payment_status,referrer_name,issued_at')
+        .select('id,case_id,student_name,payment_status,referrer_name,issued_at,cases(case_reference)')
         .neq('payment_status', 'paid')
         .order('issued_at', { ascending: false })
         .limit(6);
       if (error) throw error;
-      setReferralQueue((data ?? []) as Array<{ id: string; case_id: string; student_name: string; case_reference: string | null; payment_status: string; referrer_name: string | null }>);
+      setReferralQueue(((data ?? []) as Array<any>).map((row) => ({
+        id: row.id,
+        case_id: row.case_id,
+        student_name: row.student_name,
+        payment_status: row.payment_status,
+        referrer_name: row.referrer_name,
+        case_reference: row.cases?.case_reference ?? null,
+      })));
     } catch (error) {
       console.error('[CommandCenter] referral registration queue failed:', error);
       setReferralQueue([]);

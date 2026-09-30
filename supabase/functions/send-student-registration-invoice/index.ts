@@ -54,7 +54,10 @@ Deno.serve(async (req) => {
       "student-registration-invoice",
       invoice.student_email,
       {
-        idempotencyKey: "student-registration-invoice-" + invoice.invoice_number,
+        // The idempotency key must be unique per send, otherwise a resend reuses
+        // the first send's key and the mail service deduplicates it (the admin
+        // sees "sent" but no new message is delivered).
+        idempotencyKey: `student-registration-invoice-${invoice.invoice_number}-${Date.now()}`,
         templateData: {
           locale: invoice.locale,
           studentName: invoice.student_name,

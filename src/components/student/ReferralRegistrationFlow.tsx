@@ -165,19 +165,21 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
     }
     let cancelled = false;
     setSchoolCatalogLoading(true);
-    Promise.all([
-      (supabase as any).from("programs").select("id,name_en,name_ar,description_en,description_ar,cefr_range,lessons_per_week,hours_per_week,price,currency,price_tiers,registration_fee,school_id").eq("is_active", true).eq("school_id", form.school_id).order("name_en"),
-      (supabase as any).from("accommodations").select("id,name_en,name_ar,description_en,description_ar,description,photos,room_type,meals,distance_note,deposit,placement_fee,price,currency,price_tiers,school_id").eq("is_active", true).eq("school_id", form.school_id).order("name_en"),
-    ]).then(([programRes, accommodationRes]) => {
-      if (cancelled) return;
-      if (programRes.error || accommodationRes.error) {
-        toast({ variant: "destructive", title: t("referralRegistration.errors.catalog") });
-      }
-      setPrograms((programRes.data ?? []) as RegistrationProgram[]);
-      setAccommodations((accommodationRes.data ?? []) as RegistrationAccommodation[]);
-    }).finally(() => {
-      if (!cancelled) setSchoolCatalogLoading(false);
-    });
+    // `programs` / `accommodations` are team/admin-readable only, so the catalog
+    // is fetched through the SECURITY DEFINER get_registration_catalog RPC
+    // (scoped to one school, active rows only) instead of a direct table read.
+    (supabase as any).rpc("get_registration_catalog", { p_school_id: form.school_id })
+      .then(({ data, error }: { data: any; error: any }) => {
+        if (cancelled) return;
+        if (error) {
+          toast({ variant: "destructive", title: t("referralRegistration.errors.catalog") });
+        }
+        setPrograms((data?.programs ?? []) as RegistrationProgram[]);
+        setAccommodations((data?.accommodations ?? []) as RegistrationAccommodation[]);
+      })
+      .finally(() => {
+        if (!cancelled) setSchoolCatalogLoading(false);
+      });
     return () => { cancelled = true; };
   }, [form.school_id, t, toast]);
 
@@ -196,7 +198,7 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
     setHistoryLoading(true);
     Promise.all([
       (supabase as any).from("referrals").select("id,referred_name,referred_phone,referral_type,status,referred_case_id,created_at").eq("referrer_user_id", userId).order("created_at", { ascending: false }).limit(30),
-      (supabase as any).from("case_registration_invoices").select("id,case_id,invoice_number,student_name,school_id,program_id,accommodation_id,program_weeks,accommodation_weeks,total_amount,currency,payment_status,status,issued_at,referrer_name,referral_type").eq("referrer_user_id", userId).order("created_at", { ascending: false }).limit(30),
+      (supabase as any).from("case_registration_invoices").select("id,case_id,invoice_number,public_token,student_name,school_id,program_id,accommodation_id,program_weeks,accommodation_weeks,total_amount,currency,payment_status,status,issued_at,referrer_name,referral_type").eq("referrer_user_id", userId).order("created_at", { ascending: false }).limit(30),
     ]).then(([referralsRes, invoicesRes]) => {
       if (cancelled) return;
       const invoices = invoicesRes.data ?? [];
@@ -217,6 +219,10 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
   const selectedInsurance = insurances.find((insurance) => insurance.id === form.insurance_id) ?? null;
   const selectedAccom = accommodations.find((accommodation) => accommodation.id === form.accommodation_id) ?? null;
 
+  // Preview only. The invoice total is recomputed server-side by
+  // create_student_referral_registration_internal from the catalog snapshot, so
+  // this estimate can never become the charged amount. It reuses the canonical
+  // programPricing / insurancePricing helpers to stay in step with the server.
   const quote = useMemo(() => calculateRegistrationQuote(
     selectedProgram,
     Number(form.program_weeks) || 0,

@@ -179,6 +179,8 @@ export default function InvoicePage() {
             {t.discount_total > 0 && <div className="flex justify-between gap-4 text-trust"><span>{L.discount}</span><span dir="ltr">−{formatInvoiceMoney(t.discount_total)}</span></div>}
             {t.referral_discount > 0 && <div className="flex justify-between gap-4 text-trust"><span>{L.referralDiscount}</span><span dir="ltr">−{formatInvoiceMoney(t.referral_discount)}</span></div>}
             <div className="flex justify-between gap-4 border-t border-border pt-3 text-base font-bold"><span>{L.total}</span><span dir="ltr">{formatInvoiceMoney(t.service_total)}</span></div>
+            {t.total_confirmed > 0 && <div className="flex justify-between gap-4 text-trust"><span>{L.paid}</span><span dir="ltr">{formatInvoiceMoney(t.total_confirmed)}</span></div>}
+            {t.total_confirmed > 0 && t.remaining > 0 && <div className="flex justify-between gap-4 font-bold text-primary"><span>{L.remaining}</span><span dir="ltr">{formatInvoiceMoney(t.remaining)}</span></div>}
           </section>
           {view.fullyPaid && <p className="border border-trust/25 bg-trust/10 px-4 py-3 text-sm font-bold text-trust">✓ {L.fullyPaid}</p>}
           {invoice.case_reference && <p className="border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium">{L.memoNote} <span dir="ltr" className="font-mono">{invoice.case_reference}</span></p>}

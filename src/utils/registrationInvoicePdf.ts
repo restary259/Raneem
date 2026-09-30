@@ -116,6 +116,18 @@ export async function downloadRegistrationInvoicePdf(meta: RegistrationInvoiceMe
   const labelX = isArabic ? pageWidth - margin - 4 : margin + 4;
   const valueX = isArabic ? margin + 4 : pageWidth - margin - 4;
 
+  // Page break BEFORE the payment details, not part-way through them: the
+  // totals, memo and bank block are read together, so they must stay on one
+  // page rather than crossing the fixed footer (which is drawn at y=282).
+  const detailsHeight =
+    16 +
+    (meta.caseReference ? 34 : 0) +
+    (meta.bankDetails?.iban ? 31 : 0);
+  if (y + detailsHeight > 272) {
+    doc.addPage();
+    y = 20;
+  }
+
   for (const [label, value, bold] of [
     [isArabic ? "المجموع الفرعي" : "Subtotal", money(meta.subtotal, meta.currency), false],
     [isArabic ? "الإجمالي المطلوب" : "Total due", money(meta.totalAmount, meta.currency), true],
