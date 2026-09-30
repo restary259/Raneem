@@ -842,6 +842,25 @@ BEGIN
     );
   END IF;
 
+  IF v_invoice.payment_status = 'paid'
+     OR EXISTS (
+       SELECT 1
+       FROM public.case_registration_payments
+       WHERE invoice_id = v_invoice.id
+         AND status = 'confirmed'
+     ) THEN
+    RAISE EXCEPTION 'This registration has already been paid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.case_registration_payments
+    WHERE invoice_id = v_invoice.id
+      AND status IN ('pending','submitted','confirmed')
+  ) THEN
+    RAISE EXCEPTION 'Another payment is already in progress for this invoice';
+  END IF;
+
   INSERT INTO public.case_registration_payments (
     invoice_id, case_id, payment_method, amount, currency, status, reference, submitted_at
   )
