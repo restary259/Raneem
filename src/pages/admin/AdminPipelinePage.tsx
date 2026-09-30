@@ -514,6 +514,7 @@ const AdminPipelinePage = () => {
     manual: { label: "Manual", cls: "bg-secondary text-secondary-foreground" },
     submit_new_student: { label: "Enroll", cls: toneClasses("appointment").chip },
     referral: { label: "Referral", cls: toneClasses("enrolled").chip },
+    student_referral_registration: { label: "Refer & Register", cls: toneClasses("enrolled").chip },
   };
 
   const hasApplyInfo = (c: Case) =>
@@ -755,7 +756,7 @@ const AdminPipelinePage = () => {
                         })()}
                     </div>
                     {/* Referral info row */}
-                    {selectedCase.source === "referral" && (
+                    {(selectedCase.source === "referral" || selectedCase.source === "student_referral_registration") && (
                       <div className="flex items-center gap-2 flex-wrap mt-1">
                         {(() => {
                           const referralDiscount = selectedCase.referral_discount ?? 0;
