@@ -23,8 +23,8 @@ interface NavItem {
 }
 
 // Shared partner/ambassador bottom-nav destinations. Mirrors PARTNER_BASE_NAV
-// in DashboardLayout — kept here separately because mobile caps at 4 primary
-// tabs; everything else lives in the "More" sheet.
+// in DashboardLayout — kept here separately because those roles cap at 4 primary
+// tabs; remaining destinations live in the "More" sheet.
 const PARTNER_MOBILE_NAV: NavItem[] = [
   { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
   { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
@@ -54,8 +54,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.earnings', icon: TrendingUp, href: '/agent/earnings' },
     { key: 'nav.messages', icon: MessageSquare, href: '/agent/messages' },
   ],
-  // Student: 4 top-level destinations mirroring the grouped sidebar.
-  // Grouped parents link to their first child route (the most common entry).
+  // Student: 5 fixed destinations, with DARB replacing the former More action.
   student: [
     { key: 'nav.home', icon: Home, href: '/student' },
     { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
