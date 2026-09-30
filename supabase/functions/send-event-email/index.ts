@@ -122,6 +122,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Admins/service role may notify anyone; team members only students on
+    // cases assigned to them.
+    const isAdmin = auth.isServiceRole || auth.roles.includes("admin");
+    if (!isAdmin) {
+      const { data: ownedCase } = await serviceClient
+        .from("cases")
+        .select("id")
+        .eq("student_user_id", String(user_id))
+        .eq("assigned_to", auth.userId ?? "")
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      if (!ownedCase) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+
+
     let notifTitle = "";
     let notifBody = "";
 

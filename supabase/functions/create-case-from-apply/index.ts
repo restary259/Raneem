@@ -301,24 +301,29 @@ Deno.serve(async (req) => {
     // who happens to share the same phone number, so we let the new submission through.
     const { data: existingCase } = await supabaseAdmin
       .from("cases")
-      .select("id, full_name, status, source, referral_discount, partner_id, referred_by, source_attribution_method")
+      .select("id, source, referral_discount, city, education_level, english_units, math_units, english_level, passport_type, degree_interest, bagrut_score")
       .eq("phone_number", cleanPhone)
       .in("source", ["contact_form", "apply_page"])
       .maybeSingle();
 
     if (existingCase) {
-      // Update the existing case with the new education data (don't discard it)
+      // A phone number is not proof of ownership. Staff may update the case;
+      // anyone else may only FILL fields that are still empty — never
+      // overwrite what is already on another applicant's case.
+      const fill = <T,>(current: unknown, next: T | undefined): T | undefined =>
+        next === undefined || next === null ? undefined
+          : caller.isStaff || current === null || current === undefined || current === "" ? next : undefined;
       await supabaseAdmin
         .from("cases")
         .update({
-          city: city ? stripHtml(String(city)).slice(0, 100) : undefined,
-          education_level: education_level ? String(education_level) : undefined,
-          english_units: cleanEnglishUnits ?? undefined,
-          math_units: cleanMathUnits ?? undefined,
-          english_level: english_level ? String(english_level) : undefined,
-          passport_type: passport_type ? String(passport_type) : undefined,
-          degree_interest: degree_interest ? String(degree_interest) : undefined,
-          bagrut_score: cleanBagrutScore ?? undefined,
+          city: fill(existingCase.city, city ? stripHtml(String(city)).slice(0, 100) : undefined),
+          education_level: fill(existingCase.education_level, education_level ? String(education_level) : undefined),
+          english_units: fill(existingCase.english_units, cleanEnglishUnits ?? undefined),
+          math_units: fill(existingCase.math_units, cleanMathUnits ?? undefined),
+          english_level: fill(existingCase.english_level, english_level ? String(english_level) : undefined),
+          passport_type: fill(existingCase.passport_type, passport_type ? String(passport_type) : undefined),
+          degree_interest: fill(existingCase.degree_interest, degree_interest ? String(degree_interest) : undefined),
+          bagrut_score: fill(existingCase.bagrut_score, cleanBagrutScore ?? undefined),
         })
         .eq("id", existingCase.id);
 
@@ -375,11 +380,8 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           duplicate: true,
-          case_id: existingCase.id,
-          existing_name: existingCase.full_name,
-          existing_status: existingCase.status,
           referral_linked: !!(validatedReferrerId && referral_id && typeof referral_id === "string" && UUID.test(referral_id)),
-          message: "A case with this phone number already exists — education data updated",
+          message: "Application received",
         }),
         {
           status: 200,
