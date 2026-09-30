@@ -844,7 +844,7 @@
     }
   },
   "nav": {
-    "home": "ראשי",
+    "home": "בית",
     "overview": "סקירה כללית",
     "pipeline": "צינור",
     "team": "צוות",
@@ -917,7 +917,7 @@
     "accountMenu": "תפריט החשבון",
     "language": "שפה",
     "student": "סטודנט",
-    "home": "בית"
+    "darb": "DARB"
   },
   "common": {
     "loadMore": "טעינת עוד",
@@ -1747,7 +1747,14 @@
     "type_family": "בן משפחה"
   },
   "messagesInbox": {
-    "emergency": {"title":"שירותי חירום","police":"משטרה","ambulance":"אמבולנס","fire":"כבאות","call":"חייגו {{number}}","action":"חיוג"},
+    "emergency": {
+      "title": "שירותי חירום",
+      "police": "משטרה",
+      "ambulance": "אמבולנס",
+      "fire": "כבאות",
+      "call": "חייגו {{number}}",
+      "action": "חיוג"
+    },
     "title": "הודעות תיק",
     "subtitle": "כל השיחות בכל התיקים שלכם, החדשות תחילה.",
     "staffTab": "הודעות",
