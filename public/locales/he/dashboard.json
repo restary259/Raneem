@@ -4968,14 +4968,19 @@
       "queueAuthEmpty": "אין כשלי הרשאה",
       "queueAttribution": "שלמות השיוך",
       "queueAttributionEmpty": "לא זוהו בעיות שיוך",
-      "viewAll": "הצגת הכול",
+      "viewAll": "הצג הכול",
       "open": "פתיחה",
       "activityLoadError": "לא ניתן לטעון פעילות אחרונה",
       "queueLoadError": "לא ניתן לטעון",
       "queueStale": "הרענון נכשל — מוצגת הרשימה האחרונה שנטענה.",
       "refreshFailed": "הרענון נכשל — מוצג המידע האחרון שנטען בהצלחה.",
       "loadFailed": "לא ניתן לטעון את מרכז הפיקוד",
-      "loadFailedBody": "לא ניתן היה לקרוא את הסקירה. הנתונים שלך שמורים — נסו שוב כדי לטעון אותם."
+      "loadFailedBody": "לא ניתן היה לקרוא את הסקירה. הנתונים שלך שמורים — נסו שוב כדי לטעון אותם.",
+      "referralRegistrations": "רישומי הפניה",
+      "referralRegistrationsEmpty": "אין רישומי הפניה ממתינים לתשלום",
+      "referredBy": "הופנה על ידי",
+      "transferSubmitted": "העברה נשלחה",
+      "awaitingPayment": "ממתין לתשלום"
     },
     "financials": {
       "title": "לוח בקרה כספי",
@@ -5864,6 +5869,17 @@
     "history": {
       "title": "הרישומים שהפניתי",
       "empty": "עדיין לא יצרת רישום הפניה."
+    },
+    "caseSummary": {
+      "eyebrow": "הפניה ורישום",
+      "title": "רישום הפניה",
+      "paid": "שולם",
+      "pending": "ממתינים לתשלום",
+      "referrer": "הופנה על ידי",
+      "type": "סוג",
+      "invoice": "חשבונית",
+      "total": "סה״כ רישום",
+      "services": "הרישום שנבחר"
     }
   },
   "invoice": {
