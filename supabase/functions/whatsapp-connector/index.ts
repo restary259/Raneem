@@ -644,6 +644,19 @@ serve(async (req) => {
         // WhatsApp a short-lived signed URL instead of making the file public.
         if (!insideWindow) return json({ error: "An approved template is required outside the 24-hour service window" }, 409, corsHeaders);
         if (!MEDIA_TYPES.includes(mediaType)) return json({ error: "Unsupported attachment type" }, 400, corsHeaders);
+        // The file must live in THIS conversation's folder (uploads are stored as
+        // "<conversation_id>/<file>"), so a caller can only forward files that
+        // belong to the conversation they are already authorized to act on.
+        const expectedPrefix = `${conversation.id}/`;
+        if (
+          !mediaPath.startsWith(expectedPrefix) ||
+          mediaPath.length <= expectedPrefix.length ||
+          mediaPath.length > 300 ||
+          mediaPath.includes("..") ||
+          mediaPath.slice(expectedPrefix.length).includes("/")
+        ) {
+          return json({ error: "This attachment does not belong to this conversation" }, 403, corsHeaders);
+        }
         const { data: signed, error: signedError } = await admin.storage.from("whatsapp-media").createSignedUrl(mediaPath, 60 * 30);
         if (signedError || !signed?.signedUrl) return json({ error: "The attachment could not be prepared for sending" }, 400, corsHeaders);
         mediaUrl = signed.signedUrl;
