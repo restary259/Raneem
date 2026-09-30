@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "@/lib/router-compat";
 import {
@@ -28,8 +27,6 @@ import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemePicker from "@/components/common/ThemePicker";
 import NotificationBell from "@/components/common/NotificationBell";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import type { AppRole } from "@/contexts/AuthContext";
-import { cn } from "@/lib/utils";
 
 interface UserLike {
   email?: string | null;
@@ -224,7 +221,7 @@ export default function StudentDashboardHeader({
 
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <StudentQuickActions />
-        {user && <NotificationBell role={"student" as AppRole} />}
+        {user && <NotificationBell role="student" />}
         <ThemePicker />
         {user && <StudentAccountMenu user={user} onSignOut={onSignOut} />}
       </div>
