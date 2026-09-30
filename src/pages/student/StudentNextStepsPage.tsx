@@ -192,7 +192,6 @@ export default function StudentNextStepsPage() {
         </p>
       </div>
 
-      <StudentCityGuide residentialCity={residentialCity} variant="preview" />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
