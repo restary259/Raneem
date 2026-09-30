@@ -68,6 +68,18 @@ const fromProfile = (profile: any): ExtendedProfile => ({
   ...seedEmergency(profile),
 } as ExtendedProfile);
 
+/**
+ * Must live at module scope. Defined inside the component, React sees a new
+ * component type on every render and remounts the subtree, which drops focus
+ * mid-keystroke and loses every character after the first.
+ */
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="space-y-1">
+    <Label className="text-xs text-muted-foreground">{label}</Label>
+    {children}
+  </div>
+);
+
 const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdate, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<ExtendedProfile>(() => fromProfile(profile));
@@ -155,13 +167,6 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ profile, onProfileUpdat
       setShowDeleteDialog(false);
     }
   };
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="space-y-1">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      {children}
-    </div>
-  );
 
   return (
     <div className="space-y-6">
