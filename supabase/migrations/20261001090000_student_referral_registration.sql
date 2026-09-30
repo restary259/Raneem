@@ -282,6 +282,7 @@ DECLARE
   v_program_weeks integer;
   v_accommodation_weeks integer;
   v_age integer;
+  v_date_of_birth date;
   v_start_month text;
   v_start_date date;
   v_program_end_date date;
@@ -409,6 +410,20 @@ BEGIN
   END IF;
   v_start_date := (v_start_month || '-01')::date;
 
+  IF NULLIF(trim(p_data->>'date_of_birth'),'') IS NULL THEN
+    RAISE EXCEPTION 'Date of birth is required';
+  END IF;
+
+  BEGIN
+    v_date_of_birth := (p_data->>'date_of_birth')::date;
+  EXCEPTION WHEN others THEN
+    RAISE EXCEPTION 'Invalid date of birth';
+  END;
+
+  IF v_date_of_birth > current_date THEN
+    RAISE EXCEPTION 'Date of birth cannot be in the future';
+  END IF;
+
   IF v_start_date < date_trunc('month', current_date)::date THEN
     RAISE EXCEPTION 'Start month is in the past';
   END IF;
@@ -533,14 +548,7 @@ BEGIN
     END IF;
   END IF;
 
-  v_age := NULL;
-  IF NULLIF(p_data->>'date_of_birth','') IS NOT NULL THEN
-    BEGIN
-      v_age := extract(year from age(current_date, (p_data->>'date_of_birth')::date))::integer;
-    EXCEPTION WHEN others THEN
-      RAISE EXCEPTION 'Invalid date of birth';
-    END;
-  END IF;
+  v_age := extract(year from age(current_date, v_date_of_birth))::integer;
 
   v_insurance_total := 0;
   IF v_insurance_id IS NOT NULL THEN
