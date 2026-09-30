@@ -61,8 +61,6 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
     { key: 'nav.group.communication', icon: MessageSquare, href: '/student/messages' },
     { key: 'nav.group.account', icon: User, href: '/student/profile' },
-    { key: 'nav.group.communication', icon: MessageSquare, href: '/student/messages' },
-    { key: 'nav.group.account', icon: User, href: '/student/profile' },
   ],
 
 };
