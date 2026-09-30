@@ -33,7 +33,7 @@ const PARTNER_MOBILE_NAV: NavItem[] = [
 ];
 
 // Max 4 primary items per role; the rest are reachable from "More".
-const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
+export const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/admin' },
     { key: 'nav.pipeline', icon: GitBranch, href: '/admin/pipeline' },
