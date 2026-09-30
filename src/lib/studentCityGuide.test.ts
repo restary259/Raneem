@@ -40,3 +40,21 @@ describe("student city guide", () => {
     ]));
   });
 });
+
+import { isCacheFresh } from "@/lib/cityGuideCache";
+
+describe("city guide tips + cache", () => {
+  it("every location has a DARB tip in en/ar/he", () => {
+    for (const l of HEIDELBERG_CITY_GUIDE.locations) {
+      expect(l.tipEn?.trim(), l.id).toBeTruthy();
+      expect(l.tipAr?.trim(), l.id).toBeTruthy();
+      expect(l.tipHe?.trim(), l.id).toBeTruthy();
+    }
+  });
+  it("cache freshness is 7 days", () => {
+    const now = Date.parse("2026-09-30T00:00:00Z");
+    expect(isCacheFresh(null, now)).toBe(false);
+    expect(isCacheFresh("2026-09-25T00:00:00Z", now)).toBe(true);
+    expect(isCacheFresh("2026-09-20T00:00:00Z", now)).toBe(false);
+  });
+});

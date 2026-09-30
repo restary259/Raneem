@@ -3680,7 +3680,10 @@
         "studentLife": "حياة طلابية",
         "pharmacy": "صيدلية"
       },
-      "unsupportedCityDescription": "لسا دليل المدينة لهاي المدينة مش متوفر."
+      "unsupportedCityDescription": "لسا دليل المدينة لهاي المدينة مش متوفر.",
+      "darbTip": "نصيحة درب",
+      "openNow": "مفتوح الآن",
+      "closed": "مغلق"
     }
   },
   "settings": {
