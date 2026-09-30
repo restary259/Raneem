@@ -75,19 +75,14 @@ Deno.serve(async (req) => {
         return new Response("Payment confirmation failed", { status: 500 });
       }
     } else if (event.type === "checkout.session.async_payment_failed" || event.type === "checkout.session.expired") {
-      await admin
-        .from("case_registration_payments")
-        .update({
-          status: "failed",
-          failure_reason: event.type,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", paymentId)
-        .eq("status", "pending");
-      await admin
-        .from("case_registration_invoices")
-        .update({ payment_status: "failed", updated_at: new Date().toISOString() })
-        .eq("id", metadata.invoice_id ?? "");
+      const { error } = await admin.rpc("fail_registration_card_payment_internal", {
+        p_payment_id: paymentId,
+        p_failure_reason: event.type,
+      });
+      if (error) {
+        console.error("[stripe-student-referral-webhook] failure update failed", error.message);
+        return new Response("Payment failure update failed", { status: 500 });
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
