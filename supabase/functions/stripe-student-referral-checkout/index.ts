@@ -54,13 +54,6 @@ Deno.serve(async (req) => {
     const inv = invoice as Record<string, any>;
     if (inv.status === "cancelled") return json({ error: "This invoice is cancelled" }, 409, corsHeaders);
     if (inv.payment_status === "paid") return json({ paid: true, invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}` }, 200, corsHeaders);
-    if (inv.payment_status === "submitted") {
-      return json(
-        { error: "A bank transfer has already been submitted for this invoice. Please wait for DARB to confirm it." },
-        409,
-        corsHeaders,
-      );
-    }
     if (String(inv.currency).toUpperCase() !== "EUR") {
       return json({ error: "Card checkout is currently available only for EUR registration invoices" }, 409, corsHeaders);
     }
