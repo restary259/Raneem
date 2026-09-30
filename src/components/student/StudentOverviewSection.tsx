@@ -100,15 +100,17 @@ export default function StudentOverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-5 lg:grid-cols-3">
               {quickActions.map((a) => (
                 <button
                   key={a.href}
                   onClick={() => navigate(a.href)}
-                  className="flex flex-col items-center gap-1.5 rounded-lg border border-border p-2.5 text-center transition-colors hover:bg-accent"
+                  className="flex w-full min-w-0 flex-col items-center gap-1.5 rounded-lg border border-border p-2.5 text-center transition-colors hover:bg-accent"
                 >
                   <a.icon className="h-4 w-4 text-primary" />
-                  <span className="text-[11px] font-medium text-foreground leading-tight">{a.label}</span>
+                  <span className="min-w-0 max-w-full break-words text-[11px] font-medium leading-tight text-foreground">
+                    {a.label}
+                  </span>
                 </button>
               ))}
             </div>
