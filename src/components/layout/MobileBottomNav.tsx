@@ -23,8 +23,8 @@ interface NavItem {
 }
 
 // Shared partner/ambassador bottom-nav destinations. Mirrors PARTNER_BASE_NAV
-// in DashboardLayout — kept here separately because mobile caps at 4 primary
-// tabs; everything else lives in the "More" sheet.
+// in DashboardLayout — kept here separately because those roles cap at 4 primary
+// tabs; remaining destinations live in the "More" sheet.
 const PARTNER_MOBILE_NAV: NavItem[] = [
   { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
   { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
@@ -32,7 +32,7 @@ const PARTNER_MOBILE_NAV: NavItem[] = [
   { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
 ];
 
-// Max 4 primary items per role; the rest are reachable from "More".
+// Primary mobile items per role. Student uses five fixed destinations.
 const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
   admin: [
     { key: 'nav.overview', icon: LayoutDashboard, href: '/admin' },
@@ -54,13 +54,13 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.earnings', icon: TrendingUp, href: '/agent/earnings' },
     { key: 'nav.messages', icon: MessageSquare, href: '/agent/messages' },
   ],
-  // Student: 4 top-level destinations mirroring the grouped sidebar.
-  // Grouped parents link to their first child route (the most common entry).
+  // Student: 5 fixed destinations, with DARB replacing the former More action.
   student: [
     { key: 'nav.home', icon: Home, href: '/student' },
     { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
     { key: 'nav.messages', icon: MessageSquare, href: '/student/messages' },
     { key: 'nav.account', icon: User, href: '/student/profile' },
+    { key: 'nav.darb', icon: Sparkles, href: '/' },
   ],
 
 };
@@ -132,7 +132,10 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   // toggle is off (partner/ambassador/agent).
   const applyGatedRole = role === 'social_media_partner' || role === 'ambassador' || role === 'agent';
   const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
-  const moreItems = filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], applyGatedRole, applyFormEnabled);
+  const moreItems =
+    role === 'student'
+      ? []
+      : filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], applyGatedRole, applyFormEnabled);
 
   // Shorten keys for label display
   const shortLabel: Record<string, string> = {
@@ -182,11 +185,12 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.home': t('nav.home', 'Home'),
     'nav.nextSteps': t('nav.nextSteps', 'Next'),
     'nav.cityGuide': t('nav.cityGuideMobile', 'Map'),
+    'nav.darb': t('nav.darb', 'DARB'),
   };
 
   const label = (key: string) => shortLabel[key] ?? t(key, key);
 
-  // Student grouped parents stay active while any of their child routes is open.
+  // Grouped desktop-only parents stay active while any of their child routes is open.
   const groupChildHrefs: Record<string, string[]> = {
     'nav.group.studyFile': ['/student/checklist', '/student/documents', '/student/visa', '/student/fees'],
     'nav.group.communication': ['/student/messages', '/student/contacts'],
@@ -202,6 +206,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
         item.href !== '/team' &&
         item.href !== '/partner' &&
         item.href !== '/agent' &&
+        item.href !== '/' &&
         item.href !== '/student/checklist' &&
         location.pathname.startsWith(item.href))
     );
