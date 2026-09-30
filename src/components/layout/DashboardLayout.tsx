@@ -246,7 +246,9 @@ function SidebarNav({ role }: { role: AppRole }) {
         : i18n.language.startsWith("he")
           ? "משרדים"
           : "Offices"
-      : t(key, key);
+      : key === "nav.home"
+        ? t("nav.home", i18n.language.startsWith("ar") ? "الرئيسية" : i18n.language.startsWith("he") ? "ראשי" : "Home")
+        : t(key, key);
 
   const isItemActive = (item: NavItem): boolean => {
     if (!item.href) return false;
