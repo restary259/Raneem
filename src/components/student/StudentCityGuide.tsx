@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { MapPinned, Search, SlidersHorizontal, ShoppingCart, Dumbbell, GraduationCap, Home, TrainFront, HeartPulse, Clapperboard, CircleDot, Landmark, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,7 @@ function displayDescription(location: StudentCityGuideLocation, language: string
   return location.descriptionEn;
 }
 
-function categoryLabel(category: StudentCityGuideCategory, t: (key: string, fallback?: string) => string) {
+function categoryLabel(category: StudentCityGuideCategory, t: TFunction<"dashboard">) {
   const fallback: Record<StudentCityGuideCategory, string> = {
     all: "All",
     supermarkets: "Supermarkets",
@@ -188,7 +189,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     ) : null;
   }
 
-  const visibleCategories = variant === "preview"
+  const visibleCategories: StudentCityGuideCategory[] = variant === "preview"
     ? CATEGORY_ORDER
     : [...CATEGORY_ORDER, "pharmacy", "studentLife"];
 

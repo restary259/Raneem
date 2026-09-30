@@ -85,8 +85,8 @@ import { Route as ResourcesCurrencyConverterRouteImport } from './routes/resourc
 import { Route as ResourcesLebenslaufBuilderRouteImport } from './routes/resources.lebenslauf-builder'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as StudentChecklistRouteImport } from './routes/student.checklist'
-import { Route as StudentContactsRouteImport } from './routes/student.contacts'
 import { Route as StudentCityGuideRouteImport } from './routes/student.city-guide'
+import { Route as StudentContactsRouteImport } from './routes/student.contacts'
 import { Route as StudentDocumentsRouteImport } from './routes/student.documents'
 import { Route as StudentFeesRouteImport } from './routes/student.fees'
 import { Route as StudentMessagesRouteImport } from './routes/student.messages'
@@ -505,14 +505,14 @@ const StudentChecklistRoute = StudentChecklistRouteImport.update({
   path: '/checklist',
   getParentRoute: () => StudentRoute,
 } as any)
-const StudentContactsRoute = StudentContactsRouteImport.update({
-  id: '/contacts',
-  path: '/contacts',
-  getParentRoute: () => StudentRoute,
-} as any)
 const StudentCityGuideRoute = StudentCityGuideRouteImport.update({
   id: '/city-guide',
   path: '/city-guide',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentContactsRoute = StudentContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
   getParentRoute: () => StudentRoute,
 } as any)
 const StudentDocumentsRoute = StudentDocumentsRouteImport.update({
@@ -761,8 +761,8 @@ export interface FileRoutesByFullPath {
   '/resources/currency-converter': typeof ResourcesCurrencyConverterRoute
   '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
   '/student/checklist': typeof StudentChecklistRoute
-  '/student/contacts': typeof StudentContactsRoute
   '/student/city-guide': typeof StudentCityGuideRoute
+  '/student/contacts': typeof StudentContactsRoute
   '/student/documents': typeof StudentDocumentsRoute
   '/student/fees': typeof StudentFeesRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -870,8 +870,8 @@ export interface FileRoutesByTo {
   '/resources/currency-converter': typeof ResourcesCurrencyConverterRoute
   '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
   '/student/checklist': typeof StudentChecklistRoute
-  '/student/contacts': typeof StudentContactsRoute
   '/student/city-guide': typeof StudentCityGuideRoute
+  '/student/contacts': typeof StudentContactsRoute
   '/student/documents': typeof StudentDocumentsRoute
   '/student/fees': typeof StudentFeesRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -985,8 +985,8 @@ export interface FileRoutesById {
   '/resources/currency-converter': typeof ResourcesCurrencyConverterRoute
   '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
   '/student/checklist': typeof StudentChecklistRoute
-  '/student/contacts': typeof StudentContactsRoute
   '/student/city-guide': typeof StudentCityGuideRoute
+  '/student/contacts': typeof StudentContactsRoute
   '/student/documents': typeof StudentDocumentsRoute
   '/student/fees': typeof StudentFeesRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -1101,8 +1101,8 @@ export interface FileRouteTypes {
     | '/resources/currency-converter'
     | '/resources/lebenslauf-builder'
     | '/student/checklist'
-    | '/student/contacts'
     | '/student/city-guide'
+    | '/student/contacts'
     | '/student/documents'
     | '/student/fees'
     | '/student/messages'
@@ -1210,6 +1210,7 @@ export interface FileRouteTypes {
     | '/resources/currency-converter'
     | '/resources/lebenslauf-builder'
     | '/student/checklist'
+    | '/student/city-guide'
     | '/student/contacts'
     | '/student/documents'
     | '/student/fees'
@@ -1323,6 +1324,7 @@ export interface FileRouteTypes {
     | '/resources/currency-converter'
     | '/resources/lebenslauf-builder'
     | '/student/checklist'
+    | '/student/city-guide'
     | '/student/contacts'
     | '/student/documents'
     | '/student/fees'
@@ -1943,6 +1945,13 @@ declare module '@tanstack/react-router' {
       path: '/checklist'
       fullPath: '/student/checklist'
       preLoaderRoute: typeof StudentChecklistRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/city-guide': {
+      id: '/student/city-guide'
+      path: '/city-guide'
+      fullPath: '/student/city-guide'
+      preLoaderRoute: typeof StudentCityGuideRouteImport
       parentRoute: typeof StudentRoute
     }
     '/student/contacts': {
