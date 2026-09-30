@@ -1373,7 +1373,8 @@
         "cinema": "קולנוע",
         "studentLife": "חיי סטודנטים",
         "pharmacy": "בית מרקחת"
-      }
+      },
+      "unsupportedCityDescription": "מדריך עיר עבור העיר הזו עדיין לא זמין."
     }
   },
   "studentFees": {
