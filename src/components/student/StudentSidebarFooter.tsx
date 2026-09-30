@@ -41,8 +41,8 @@ export default function StudentSidebarFooter({ user, onSignOut }: StudentSidebar
   const initials = getInitials(displayName);
 
   return (
-    <SidebarFooter className="border-t border-sidebar-border/60">
-      <SidebarMenu className="gap-1">
+    <SidebarFooter className="border-t border-sidebar-border/60 px-3 pb-4 pt-4">
+      <SidebarMenu className="gap-1.5">
         <SidebarMenuItem>
           <SidebarMenuButton asChild tooltip={displayName}>
             <Link to="/student/profile" className="flex min-w-0 items-center gap-3">
@@ -66,7 +66,7 @@ export default function StudentSidebarFooter({ user, onSignOut }: StudentSidebar
           </SidebarMenuButton>
         </SidebarMenuItem>
 
-        <SidebarMenuItem>
+        <SidebarMenuItem className="mt-2 border-t border-sidebar-border/60 pt-2">
           <SidebarMenuButton
             type="button"
             tooltip={t("header.signOut", "Sign out")}
