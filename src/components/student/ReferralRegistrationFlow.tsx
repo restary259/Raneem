@@ -40,6 +40,7 @@ interface RegistrationResult {
   total_amount: number;
   currency: string;
   email_status: string;
+  invoice_url?: string;
 }
 
 interface ReferralRegistrationFlowProps {
@@ -551,7 +552,7 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
                                 {accommodation.deposit ? <span>{t("referralRegistration.pricing.deposit")}: {money(accommodation.deposit, accommodation.currency || "EUR")}</span> : null}
                               </div>
                               <div className="flex gap-2">
-                                <Button type="button" className="flex-1" onClick={() => update("accommodation_id", accommodation.id)}>{form.accommodation_id === accommodation.id ? <><Check className="me-2 size-4" />{t("referralRegistration.accommodation.selected")}</> : t("referralRegistration.accommodation.select")}</Button>
+                                <Button type="button" className="flex-1" onClick={() => update("accommodation_id", accommodation.id); update("accommodation_weeks", form.program_weeks || "4")}>{form.accommodation_id === accommodation.id ? <><Check className="me-2 size-4" />{t("referralRegistration.accommodation.selected")}</> : t("referralRegistration.accommodation.select")}</Button>
                                 <Button type="button" variant="outline" onClick={() => setSelectedAccommodation(accommodation)}>{t("referralRegistration.accommodation.details")}</Button>
                               </div>
                             </div>
@@ -729,7 +730,7 @@ function ReferralHistory({ history, loading, lang, t }: { history: any[]; loadin
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   {item.invoice ? <Badge variant="secondary">{item.invoice.payment_status}</Badge> : <Badge variant="outline">{item.status || "pending"}</Badge>}
-                  {item.invoice ? <a href={`https://darb.agency/invoice/${encodeURIComponent(item.invoice.id)}`} className="inline-flex items-center gap-1 text-primary hover:underline"><ExternalLink className="size-3" />{item.invoice.invoice_number}</a> : null}
+                  {item.invoice ? <a href={`https://darb.agency/invoice/${encodeURIComponent(item.invoice.public_token)}`} className="inline-flex items-center gap-1 text-primary hover:underline"><ExternalLink className="size-3" />{item.invoice.invoice_number}</a> : null}
                 </div>
               </div>
             ))}
