@@ -65,6 +65,16 @@ Deno.serve(async (req) => {
       return json({ error: "Card checkout is currently available only for EUR registration invoices" }, 409, corsHeaders);
     }
 
+    const existingConfirmed = Array.isArray(inv.payments)
+      ? inv.payments.find((p: any) => p?.status === "confirmed")
+      : null;
+    if (existingConfirmed) {
+      return json({
+        paid: true,
+        invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
+      }, 200, corsHeaders);
+    }
+
     const existingCard = Array.isArray(inv.payments)
       ? inv.payments.find((p: any) => p?.payment_method === "card" && p?.status === "pending")
       : null;
@@ -125,6 +135,13 @@ Deno.serve(async (req) => {
         }
 
         const refreshedPayments = Array.isArray(refreshed.payments) ? refreshed.payments : [];
+        const refreshedConfirmed = refreshedPayments.find((p: any) => p?.status === "confirmed");
+        if (refreshedConfirmed) {
+          return json({
+            paid: true,
+            invoice_url: `${SITE_URL}/invoice/${encodeURIComponent(token)}`
+          }, 200, corsHeaders);
+        }
         const refreshedActive = refreshedPayments.find((p: any) =>
           ["pending", "submitted", "confirmed"].includes(p?.status)
         );
@@ -149,6 +166,7 @@ Deno.serve(async (req) => {
 
     const params = new URLSearchParams();
     params.set("mode", "payment");
+    params.set("payment_method_types[]", "card");
     params.set("success_url", `${SITE_URL}/invoice/${encodeURIComponent(token)}?payment=success`);
     params.set("cancel_url", `${SITE_URL}/invoice/${encodeURIComponent(token)}?payment=cancelled`);
     params.set("customer_email", String(inv.student_email));
