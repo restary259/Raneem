@@ -62,6 +62,15 @@ interface CaseRow {
 /** Active view inside the tabbed profile-completion layout. */
 type WorkflowView = "overview" | "profile" | "finance";
 
+function CaseSummaryCell({ label, value, dir }: { label: string; value: string | null | undefined; dir?: "ltr" | "rtl" }) {
+  return (
+    <div className="min-w-0 rounded-lg border bg-background/70 p-3">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p dir={dir} className="mt-1 break-words text-sm font-semibold">{value || "—"}</p>
+    </div>
+  );
+}
+
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
@@ -81,6 +90,7 @@ export default function CaseDetailPage() {
   const [forgottenDays, setForgottenDays] = useState(7);
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [registrationInvoice, setRegistrationInvoice] = useState<any | null>(null);
 
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
@@ -144,12 +154,13 @@ export default function CaseDetailPage() {
     let ignore = false;
     setLoading(true);
     try {
-      const [caseRes, apptRes, subRes, docsRes, settingsRes] = await Promise.all([
+      const [caseRes, apptRes, subRes, docsRes, settingsRes, registrationRes] = await Promise.all([
         supabase.from("cases").select("*").eq("id", id).single(),
         supabase.from("appointments").select("*").eq("case_id", id).order("scheduled_at", { ascending: false }),
         supabase.from("case_submissions").select("*").eq("case_id", id).maybeSingle(),
         supabase.from("documents").select("category").eq("case_id", id),
         supabase.from("platform_settings").select("forgotten_contacted_days").maybeSingle(),
+        (supabase as any).from("case_registration_invoices").select("invoice_number,public_token,referrer_name,referral_type,currency,total_amount,payment_status,items").eq("case_id", id).maybeSingle(),
       ]);
 
       if (caseRes.error) throw caseRes.error;
@@ -159,6 +170,7 @@ export default function CaseDetailPage() {
       setAppointments((apptRes.data as AppointmentRow[]) ?? []);
       setSubmission(subRes.data ?? null);
       setDocuments((docsRes.data as { category: string }[]) ?? []);
+      setRegistrationInvoice(registrationRes.data ?? null);
       if (settingsRes.data?.forgotten_contacted_days) {
         setForgottenDays(settingsRes.data.forgotten_contacted_days);
       }
@@ -570,6 +582,63 @@ export default function CaseDetailPage() {
           </div>
         </div>
       </div>
+
+      {registrationInvoice && (
+        <section className="rounded-xl border border-primary/20 bg-primary/[0.03] p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-primary">
+                {t("referralRegistration.caseSummary.eyebrow", "Refer & Register")}
+              </p>
+              <h2 className="mt-1 text-sm font-semibold">
+                {t("referralRegistration.caseSummary.title", "Referral registration")}
+              </h2>
+            </div>
+            <Badge variant={registrationInvoice.payment_status === "paid" ? "success" : "secondary"}>
+              {registrationInvoice.payment_status === "paid"
+                ? t("referralRegistration.caseSummary.paid", "Paid")
+                : t("referralRegistration.caseSummary.pending", "Payment pending")}
+            </Badge>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <CaseSummaryCell
+              label={t("referralRegistration.caseSummary.referrer", "Referred by")}
+              value={registrationInvoice.referrer_name}
+            />
+            <CaseSummaryCell
+              label={t("referralRegistration.caseSummary.type", "Type")}
+              value={registrationInvoice.referral_type === "family"
+                ? t("referralRegistration.family", "Family member")
+                : t("referralRegistration.friend", "Friend")}
+            />
+            <CaseSummaryCell
+              label={t("referralRegistration.caseSummary.invoice", "Invoice")}
+              value={registrationInvoice.invoice_number}
+              dir="ltr"
+            />
+            <CaseSummaryCell
+              label={t("referralRegistration.caseSummary.total", "Registration total")}
+              value={new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(registrationInvoice.total_amount ?? 0)) + " " + (registrationInvoice.currency || "EUR")}
+              dir="ltr"
+            />
+          </div>
+          <div className="mt-4 rounded-lg border bg-background/70 p-3">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {t("referralRegistration.caseSummary.services", "Selected registration")}
+            </p>
+            <div className="space-y-1">
+              {(registrationInvoice.items ?? []).map((item: any, index: number) => (
+                <div key={index} className="flex items-start justify-between gap-3 text-sm">
+                  <span className="min-w-0 break-words">{i18n.language.startsWith("ar") ? item.name_ar || item.name_en : item.name_en || item.name_ar}</span>
+                  <span dir="ltr" className="shrink-0 font-medium">
+                    {new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(item.total ?? 0))} {registrationInvoice.currency || "EUR"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {canManage && submission?.review_status === "changes_requested" && (
         <div className="space-y-3 rounded-xl border border-amber-500/50 bg-amber-500/5 p-4">
