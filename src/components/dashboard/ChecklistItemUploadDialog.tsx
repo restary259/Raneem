@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadStudentDocument } from "@/lib/studentDocuments";
+import { uploadStudentDocument, discardStudentDocument } from "@/lib/studentDocuments";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploadRules";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -33,8 +33,12 @@ interface ChecklistItemUploadDialogProps {
   onClose: () => void;
   /** Re-fetch after a successful upload/confirm so the tracker reflects the change. */
   onChanged: () => void | Promise<void>;
-  /** Clears completion for an already-completed item (the uncheck path). */
-  onUncheck: (itemId: string) => void | Promise<void>;
+  /**
+   * Clears completion for an already-completed item.
+   * Returns `false` when the write failed, so the popup can stay open and the
+   * student can retry instead of being dropped back to a still-checked row.
+   */
+  onUncheck: (itemId: string) => Promise<boolean> | boolean;
 }
 
 const MAX_MB = Math.round(MAX_UPLOAD_BYTES / (1024 * 1024));
@@ -98,8 +102,9 @@ const ChecklistItemUploadDialog: React.FC<ChecklistItemUploadDialogProps> = ({
     setIsSaving(true);
     setFormError(null);
 
+    let uploaded: { id: string; filePath: string } | null = null;
     try {
-      await uploadStudentDocument({
+      uploaded = await uploadStudentDocument({
         studentId,
         file,
         // The checklist is a fixed document taxonomy; these items are the
@@ -123,7 +128,15 @@ const ChecklistItemUploadDialog: React.FC<ChecklistItemUploadDialogProps> = ({
           },
           { onConflict: "student_id,checklist_item_id" },
         );
-      if (completionError) throw completionError;
+
+      if (completionError) {
+        // Roll the upload back: leaving it would show the file on the Documents
+        // page while the item still reads incomplete, and a retry would add a
+        // second copy.
+        await discardStudentDocument(uploaded.id, uploaded.filePath);
+        uploaded = null;
+        throw completionError;
+      }
 
       toast({
         title: t("checklist.uploadSuccess", "Document uploaded"),
@@ -149,8 +162,8 @@ const ChecklistItemUploadDialog: React.FC<ChecklistItemUploadDialogProps> = ({
     savingRef.current = true;
     setIsSaving(true);
     try {
-      await onUncheck(target.id);
-      onClose();
+      const ok = await onUncheck(target.id);
+      if (ok) onClose();
     } finally {
       savingRef.current = false;
       setIsSaving(false);

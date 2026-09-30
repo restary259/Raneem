@@ -47,11 +47,16 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
       // Documents the student uploaded from a checklist popup, so each row can
       // show that its file is already attached. Ad-hoc uploads have a NULL
       // checklist_item_id and are filtered out by the `.not` below.
+      // `.is('deleted_at', null)` matters: staff delete marks the row rather
+      // than removing it, so without this a removed file would still render as
+      // attached. Newest first, so a replacement upload wins over the original.
       (supabase as any)
         .from('documents')
         .select('id, file_name, checklist_item_id')
         .eq('student_id', userId)
-        .not('checklist_item_id', 'is', null),
+        .not('checklist_item_id', 'is', null)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
     ]);
     if (ignore) return;
     if (itemsRes.error || completionsRes.error) {
@@ -75,10 +80,13 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
     });
   };
 
-  /** Uncheck path: clears completion only. The uploaded file is never deleted. */
-  const handleUncheck = async (itemId: string) => {
+  /**
+   * Uncheck path: clears completion only. The uploaded file is never deleted.
+   * Returns `false` on failure so the popup stays open for a retry.
+   */
+  const handleUncheck = async (itemId: string): Promise<boolean> => {
     const existing = completions.find(c => c.checklist_item_id === itemId);
-    if (!existing) return;
+    if (!existing) return true;
     const prevCompletions = completions;
     const { error } = await (supabase as any)
       .from('student_checklist')
@@ -87,9 +95,10 @@ const ChecklistTracker: React.FC<ChecklistTrackerProps> = ({ userId }) => {
     if (error) {
       toast({ variant: 'destructive', title: t('common.error', 'Error'), description: error.message });
       setCompletions(prevCompletions);
-      return;
+      return false;
     }
     await fetchData();
+    return true;
   };
 
   if (isLoading) {

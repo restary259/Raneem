@@ -78,3 +78,29 @@ export async function uploadStudentDocument(
 
   return { id: data.id, filePath };
 }
+
+/**
+ * Removes a document that was just created (row + stored object).
+ *
+ * Used to roll back a partial multi-step flow: if the step *after* the upload
+ * fails, the file must not be left behind, because it would render on the
+ * Documents page while the action the student asked for still shows as
+ * incomplete — and retrying would upload a second copy.
+ *
+ * Never throws: a failed rollback must not mask the original error.
+ */
+export async function discardStudentDocument(
+  documentId: string,
+  filePath: string,
+): Promise<void> {
+  const { error: storageError } = await supabase.storage
+    .from(STUDENT_DOCUMENTS_BUCKET)
+    .remove([filePath]);
+  if (storageError) {
+    console.warn("[discardStudentDocument] storage remove failed:", storageError);
+  }
+  const { error: rowError } = await supabase.from("documents").delete().eq("id", documentId);
+  if (rowError) {
+    console.warn("[discardStudentDocument] row delete failed:", rowError);
+  }
+}
