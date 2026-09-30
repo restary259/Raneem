@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
+import EmergencyCallCard from "@/components/student/EmergencyCallCard";
 import {
   FileText,
   CreditCard,
@@ -14,6 +15,7 @@ import {
   Phone,
   Mail,
   MessageCircle,
+  MessageSquare,
   Calculator,
   ChevronRight,
   ChevronLeft,
@@ -76,7 +78,7 @@ export default function StudentOverviewSection() {
     { icon: FileText, label: t("nav.documents", "Documents"), href: "/student/documents" },
     { icon: CreditCard, label: t("nav.fees", "Fees"), href: "/student/fees" },
     { icon: Globe, label: t("nav.visa", "Visa"), href: "/student/visa" },
-    { icon: Users, label: t("nav.contacts", "Contacts"), href: "/student/contacts" },
+    { icon: MessageSquare, label: t("nav.messages", "Messages"), href: "/student/messages" },
     { icon: Heart, label: t("nav.refer", "Refer a friend"), href: "/student/refer" },
   ];
 
@@ -123,6 +125,10 @@ export default function StudentOverviewSection() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Emergency call line — full width under the quick actions, so the
+            numbers that matter in a crisis are never a 1/3-width tile. */}
+        <EmergencyCallCard />
 
         {/* Tools */}
         <Card>
