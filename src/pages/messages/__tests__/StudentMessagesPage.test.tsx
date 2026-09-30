@@ -189,15 +189,33 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
   it("shows real activity and unread counts instead of blank rows", async () => {
     render(<StudentMessagesPage />);
 
-    // Last message preview + timestamp come from the thread's message data.
+    // Last message preview comes from the thread's message data. Scoped to the
+    // team row: the payout row legitimately has no messages yet.
     await waitFor(() =>
-      expect(
-        screen.getByText("Your appointment is confirmed"),
-      ).toBeInTheDocument(),
+      expect(screen.getByText("Raneem").closest("li")).toHaveTextContent(
+        "Your appointment is confirmed",
+      ),
     );
-    expect(screen.queryByText("No messages yet")).not.toBeInTheDocument();
     // The staff-authored, unread message marks the conversation title bold.
     expect(screen.getByText("Raneem")).toHaveClass("font-bold");
+  });
+
+  it("labels an attachment-only message instead of reporting no messages", async () => {
+    // The last message carries no body — only a document attachment.
+    TEAM_LAST_MESSAGE.body = "";
+    (TEAM_LAST_MESSAGE as { attachments: unknown }).attachments = [
+      { kind: "document", mime: "application/pdf", name: "passport.pdf", url: "u" },
+    ];
+    render(<StudentMessagesPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Raneem").closest("li")).toHaveTextContent(
+        "Attachment",
+      ),
+    );
+
+    TEAM_LAST_MESSAGE.body = "Your appointment is confirmed";
+    (TEAM_LAST_MESSAGE as { attachments: unknown }).attachments = null;
   });
 
   it("uses the resolved advisor name in the OPEN chat header", async () => {

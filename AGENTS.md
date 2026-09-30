@@ -2923,6 +2923,31 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   (both presentations, tel: hrefs, aria labels) and
   `src/pages/messages/__tests__/StudentMessagesPage.test.tsx` (list → chat box →
   back, emergency links present in-chat, RTL back arrow).
+
+### Student inbox: real activity, existing team thread, resolved header name
+- The conversation list is built from `listMyDirectThreads()` (the same service
+  the staff inbox uses), not from hardcoded placeholders. `loadDirectThreads()`
+  resolves, in one call: the **existing** team thread (matched by
+  `otherUserRole === "team_member"` — this is why `get_staff_directory` must be
+  mocked in tests, otherwise the role is null and the thread is invisible), the
+  advisor's display name, and each thread's `lastMessage` / `lastMessageAt` /
+  `unread`.
+- Previously every row had `preview: ""`, `timestamp: null`, `unread: 0`, and the
+  team row only existed after pressing "Message my team member" — so an existing
+  advisor conversation was hidden and a returning student saw no unread badge.
+- `timestamp` is passed **raw** (`thread.lastMessageAt`); `ThreadList` formats it
+  itself via `formatThreadTime`. Passing an already-formatted value caused a
+  double-format that rendered empty.
+- `previewFor()` handles text, voice notes (`chat.voice.message`) and other
+  attachments (`chat.attach.only`) — an attachment-only message no longer reads
+  "No messages yet".
+- The back arrow refreshes the threads (`backToList` → `setOpen(null)` +
+  `loadDirectThreads()`), so badges/previews are not stale after reading a chat.
+- The open chat header renders the resolved name for the team tab, so it cannot
+  disagree with the list row.
+- New locale key `messagesInbox.openConversation` (en/ar/he) is the case row's
+  preview; `t()` calls here keep inline English fallbacks like the rest of the
+  file.
 - **Mock gotcha (recurring)**: `StudentMessagesPage.test.tsx` must mock
   `@/integrations/supabase/client` with an `auth.onAuthStateChange` surface —
   `DirectMessageService` subscribes at module scope, so a bare `{ supabase: {} }`
@@ -2935,14 +2960,28 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   the old `grid-cols-3`: 3 cards/row at 74–97px wide → now 1 card/row at
   238–308px.
 
-### Pre-existing main-branch breakage (NOT from this work)
-- `origin/main` fails `npx tsc --noEmit` in `src/components/student/StudentCityGuide.tsx`
+### Pre-existing main-branch breakage (fixed here so CI can pass)
+- `origin/main` failed `npx tsc --noEmit` in `src/components/student/StudentCityGuide.tsx`
   (4 errors) and `src/routes/student.city-guide.tsx` (1 error), and the i18n
-  guard is red because `student.cityGuide.schoolCityDescription` was used in
-  source but missing from en/ar/he. `src/routeTree.gen.ts` on main also does not
-  include the `/student/city-guide` route. `npm run build` passes anyway (build
-  is `vite build` only; it regenerates the route tree, which must then be
-  reverted or it pollutes the diff). The missing locale key was added here
-  (en/ar/he) so the suite is green; the `StudentCityGuide` type errors are left
-  untouched (out of scope) — **do not cite a clean `tsc` until main is fixed.**
+  guard was red because `student.cityGuide.schoolCityDescription` was used in
+  source but missing from en/ar/he. Both were pre-existing and unrelated to the
+  student messaging work; the locale key and the City Guide type errors are now
+  fixed.
+- **The `src/routeTree.gen.ts` "revert build churn" advice is WRONG for this
+  repo — do not follow it.** The CI `quality` job runs **Typecheck BEFORE
+  Build**, and `npm run build` is `vite build` only (it never typechecks). On
+  `origin/main` the committed route tree was stale: it carried
+  `/student/city-guide` in the route unions but **not** in `FileRoutesByPath`,
+  because the generator only rewrites a route when it is missing from
+  `routeTree`. With that stale file, `createFileRoute("/student/city-guide")`
+  fails TS2345 and the quality job can never pass. Regenerating the tree from
+  scratch (`rm src/routeTree.gen.ts && npm run build`) fixes it; the regenerated
+  file **must be committed**. Verified both ways: stale tree → TS2345, committed
+  regenerated tree → clean `tsc`, and `tsc` stays clean after a subsequent build.
+- `StudentCityGuide.tsx` type fixes (no behaviour change): `visibleCategories`
+  is annotated `StudentCityGuideCategory[]` (the `variant === "preview" ? A : B`
+  ternary widened to `string[]`, which broke indexing `CATEGORY_ICONS`,
+  `setSelectedCategory` and `categoryLabel`), and `categoryLabel` takes
+  `TFunction<"dashboard">` instead of a hand-written
+  `(key: string, fallback?: string) => string` signature.
 

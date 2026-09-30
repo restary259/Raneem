@@ -23,11 +23,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import { chatDisplayName } from "@/lib/chatIdentity";
-import {
-  formatThreadTime,
-  isVoiceAttachment,
-  type ChatAttachment,
-} from "@/lib/chatFormat";
+import { isVoiceAttachment, type ChatAttachment } from "@/lib/chatFormat";
 import {
   listMyDirectThreads,
   type DirectThread,
@@ -39,11 +35,14 @@ type Tab = "case" | "payout" | "team";
 function previewFor(
   message: { body?: string | null; attachments?: ChatAttachment[] | null } | null,
   fallback: string,
+  attachmentLabel: string,
   voiceLabel: string,
 ): string {
   if (!message) return fallback;
   if (message.body) return message.body;
-  if ((message.attachments ?? []).some(isVoiceAttachment)) return voiceLabel;
+  const attachments = message.attachments ?? [];
+  if (attachments.some(isVoiceAttachment)) return voiceLabel;
+  if (attachments.length > 0) return attachmentLabel;
   return fallback;
 }
 
@@ -208,10 +207,12 @@ export default function StudentMessagesPage() {
       ),
       preview: previewFor(
         thread?.lastMessage ?? null,
-        t("messagesInbox.noMessagesYet"),
-        t("chat.voice.message"),
+        t("messagesInbox.noMessagesYet", "No messages yet"),
+        t("chat.attach.only", "Attachment"),
+        t("chat.voice.message", "Voice message"),
       ),
-      timestamp: thread ? formatThreadTime(thread.lastMessageAt) : null,
+      // ThreadList formats this itself — pass the raw ISO timestamp.
+      timestamp: thread?.lastMessageAt ?? null,
       unread: thread?.unread ?? 0,
     });
   }
@@ -227,10 +228,12 @@ export default function StudentMessagesPage() {
       ),
       preview: previewFor(
         thread?.lastMessage ?? null,
-        t("messagesInbox.noMessagesYet"),
-        t("chat.voice.message"),
+        t("messagesInbox.noMessagesYet", "No messages yet"),
+        t("chat.attach.only", "Attachment"),
+        t("chat.voice.message", "Voice message"),
       ),
-      timestamp: thread ? formatThreadTime(thread.lastMessageAt) : null,
+      // ThreadList formats this itself — pass the raw ISO timestamp.
+      timestamp: thread?.lastMessageAt ?? null,
       unread: thread?.unread ?? 0,
     });
   }
@@ -240,8 +243,13 @@ export default function StudentMessagesPage() {
     setOpen({ tab, id, title: item.title });
   };
 
-  /** Back arrow: leave the chat box and return to the conversation list. */
-  const backToList = () => setOpen(null);
+  /** Back arrow: leave the chat box and return to the conversation list.
+   *  Re-reads the threads so unread badges and previews reflect what was just
+   *  read (or received) while the chat was open. */
+  const backToList = () => {
+    setOpen(null);
+    void loadDirectThreads();
+  };
 
   return (
     <div

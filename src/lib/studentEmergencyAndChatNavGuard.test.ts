@@ -59,7 +59,13 @@ describe("Student chat box has a back arrow to the conversation list", () => {
   it("renders a back button whose handler leaves the open chat", () => {
     expect(MESSAGES).toContain('aria-label={t("chat.backToChats"');
     expect(MESSAGES).toContain("onClick={backToList}");
-    expect(MESSAGES).toMatch(/const backToList = \(\) => setOpen\(null\)/);
+    // The handler must leave the chat (setOpen(null)); its body may also refresh
+    // the list, so assert the intent rather than an exact one-liner.
+    const handlerStart = MESSAGES.indexOf("const backToList");
+    expect(handlerStart).toBeGreaterThan(-1);
+    expect(MESSAGES.slice(handlerStart, handlerStart + 220)).toContain(
+      "setOpen(null)",
+    );
   });
 
   it("keeps the emergency dial buttons reachable inside the chat box", () => {
