@@ -1556,6 +1556,45 @@ export type Database = {
         }
         Relationships: []
       }
+      city_guide_place_cache: {
+        Row: {
+          fetched_at: string
+          lat: number | null
+          lng: number | null
+          location_id: string
+          open_now: boolean | null
+          photo_attribution: string | null
+          photo_name: string | null
+          place_id: string | null
+          rating: number | null
+          rating_count: number | null
+        }
+        Insert: {
+          fetched_at?: string
+          lat?: number | null
+          lng?: number | null
+          location_id: string
+          open_now?: boolean | null
+          photo_attribution?: string | null
+          photo_name?: string | null
+          place_id?: string | null
+          rating?: number | null
+          rating_count?: number | null
+        }
+        Update: {
+          fetched_at?: string
+          lat?: number | null
+          lng?: number | null
+          location_id?: string
+          open_now?: boolean | null
+          photo_attribution?: string | null
+          photo_name?: string | null
+          place_id?: string | null
+          rating?: number | null
+          rating_count?: number | null
+        }
+        Relationships: []
+      }
       commission_rate_history: {
         Row: {
           changed_at: string
