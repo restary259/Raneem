@@ -91,9 +91,27 @@ jobs:
         )
       )
     steps:
+      # The action fails hard when the LLM credential is missing, which would
+      # mark every PR red until the repository is configured. Skip with a notice
+      # instead, so the workflow can be merged before the secret is added.
+      # `secrets` is not available in a step-level `if`, hence the env probe.
+      - name: Check LLM configuration
+        id: config
+        env:
+          TOKEN: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          ENDPOINT: ${{ vars.OCR_LLM_URL }}
+          MODEL: ${{ vars.OCR_LLM_MODEL }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$ENDPOINT" ] || [ -z "$MODEL" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=OpenCodeReview skipped::Set the OCR_LLM_AUTH_TOKEN secret and the OCR_LLM_URL / OCR_LLM_MODEL variables to enable AI review."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Get PR context
         id: pr-context
-        if: github.event_name == 'issue_comment'
+        if: steps.config.outputs.configured == 'true' && github.event_name == 'issue_comment'
         uses: actions/github-script@v7
         with:
           script: |
@@ -109,6 +127,7 @@ jobs:
             core.setOutput('head_sha', pullRequest.head.sha);
 
       - name: Run OpenCodeReview
+        if: steps.config.outputs.configured == 'true'
         # Pinned to the v1.12.9 commit rather than a moving tag, and the CLI is
         # pinned to the matching version: the action installs OCR from npm at run
         # time, so pinning the action alone would not freeze review behaviour.
