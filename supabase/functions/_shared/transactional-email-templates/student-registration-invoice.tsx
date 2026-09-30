@@ -1,5 +1,6 @@
 import * as React from "npm:react@18.3.1";
-import { EmailButton, EmailFallbackLink, EmailLayout, EmailText, Section, Text } from "../email-ui/components.tsx";
+import { Section, Text } from "npm:@react-email/components@0.0.22";
+import { EmailButton, EmailFallbackLink, EmailLayout, EmailText } from "../email-ui/components.tsx";
 import { color, font, radius } from "../email-ui/theme.ts";
 import type { TemplateEntry } from "./registry.ts";
 
