@@ -2948,10 +2948,29 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
 - New locale key `messagesInbox.openConversation` (en/ar/he) is the case row's
   preview; `t()` calls here keep inline English fallbacks like the rest of the
   file.
+- **A student is denied `get_staff_directory`** (it is admin/team-only, see the
+  RLS in `20260808081623`), so `DirectThread.otherUserRole` is ALWAYS `null` for
+  a student and the counterpart name is never resolvable client-side. The
+  advisor thread is therefore identified by elimination — a student's only
+  direct threads are the payout conversation and the advisor thread, because
+  `start_direct_thread` rejects students — and the name falls back to the
+  neutral `chat.adminLabel`. Do **not** "restore" role matching as the sole
+  lookup: it hides the thread a student already has. `loadDirectThreads(payoutId)`
+  takes the payout id as an argument because `payoutThreadId` state is not
+  committed yet on first load.
 - **Mock gotcha (recurring)**: `StudentMessagesPage.test.tsx` must mock
   `@/integrations/supabase/client` with an `auth.onAuthStateChange` surface —
   `DirectMessageService` subscribes at module scope, so a bare `{ supabase: {} }`
-  mock fails the whole file at import before any test runs.
+  mock fails the whole file at import before any test runs. The listener registry
+  must be created with `vi.hoisted` (the mock factory is hoisted above plain
+  `const`s), and calling the registered listeners in `beforeEach` clears
+  `listStaffDirectory`'s **5-minute module-level cache** — without it, one test's
+  directory rows leak into the next and the denial test passes/fails randomly.
+- **Emergency numbers are Germany-only.** `110` is a national short code and
+  `112` is EU-wide but only routed as such from within the EU, so the card
+  carries `student.overview.emergencyLocationHint` ("These are Germany's
+  emergency numbers — they work while you are in Germany."). The app does not
+  geolocate; do not imply the numbers work from anywhere.
 - Responsive verification is static (no session): the harness loads the REAL
   emitted `styles-*.css` with class strings EXTRACTED from source, at
   320/360/375/390/430/768/1024/1280 in LTR **and** RTL. Confirmed
@@ -2960,28 +2979,21 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   the old `grid-cols-3`: 3 cards/row at 74–97px wide → now 1 card/row at
   238–308px.
 
-### Pre-existing main-branch breakage (fixed here so CI can pass)
-- `origin/main` failed `npx tsc --noEmit` in `src/components/student/StudentCityGuide.tsx`
-  (4 errors) and `src/routes/student.city-guide.tsx` (1 error), and the i18n
-  guard was red because `student.cityGuide.schoolCityDescription` was used in
-  source but missing from en/ar/he. Both were pre-existing and unrelated to the
-  student messaging work; the locale key and the City Guide type errors are now
-  fixed.
-- **The `src/routeTree.gen.ts` "revert build churn" advice is WRONG for this
-  repo — do not follow it.** The CI `quality` job runs **Typecheck BEFORE
-  Build**, and `npm run build` is `vite build` only (it never typechecks). On
-  `origin/main` the committed route tree was stale: it carried
-  `/student/city-guide` in the route unions but **not** in `FileRoutesByPath`,
-  because the generator only rewrites a route when it is missing from
-  `routeTree`. With that stale file, `createFileRoute("/student/city-guide")`
-  fails TS2345 and the quality job can never pass. Regenerating the tree from
-  scratch (`rm src/routeTree.gen.ts && npm run build`) fixes it; the regenerated
-  file **must be committed**. Verified both ways: stale tree → TS2345, committed
-  regenerated tree → clean `tsc`, and `tsc` stays clean after a subsequent build.
-- `StudentCityGuide.tsx` type fixes (no behaviour change): `visibleCategories`
-  is annotated `StudentCityGuideCategory[]` (the `variant === "preview" ? A : B`
-  ternary widened to `string[]`, which broke indexing `CATEGORY_ICONS`,
-  `setSelectedCategory` and `categoryLabel`), and `categoryLabel` takes
-  `TFunction<"dashboard">` instead of a hand-written
-  `(key: string, fallback?: string) => string` signature.
+### Pre-existing main-branch breakage (resolved by main; this PR carries no change)
+- On the **old** `origin/main` the CI `quality` job could not pass:
+  `src/components/student/StudentCityGuide.tsx` had 4 type errors and
+  `src/routes/student.city-guide.tsx` had 1 (TS2345), the i18n guard was red for
+  `student.cityGuide.schoolCityDescription`, and `src/routeTree.gen.ts` was
+  stale. Main's City Guide work (`79cfb67`) rewrote `StudentCityGuide.tsx` and
+  regenerated the route tree, so **all of it is resolved on main** and this PR
+  touches neither file. Do not re-apply the fixes described in earlier revisions
+  of this note — they are no longer needed.
+- **Do not blindly "revert build churn" in `src/routeTree.gen.ts`.** The CI
+  `quality` job runs **Typecheck BEFORE Build**, and `npm run build` is
+  `vite build` only (it never typechecks). While main's tree was stale it carried
+  `/student/city-guide` in the route unions but **not** in `FileRoutesByPath`
+  (the generator only rewrites a route that is missing from `routeTree`), so
+  `createFileRoute("/student/city-guide")` failed TS2345 and the job could never
+  pass. If a build regenerates the tree, commit the regenerated file — reverting
+  it can reintroduce that failure.
 

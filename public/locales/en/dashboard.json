@@ -3631,6 +3631,7 @@
       "directLineDesc": "Questions about your case? Reach us instantly.",
       "emergency": "Emergency numbers",
       "emergencyHint": "Tap a number to call directly from your phone.",
+      "emergencyLocationHint": "These are Germany's emergency numbers — they work while you are in Germany.",
       "emergency_police": "Police",
       "emergency_ambulance": "Ambulance",
       "emergency_fire": "Fire brigade"

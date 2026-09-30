@@ -35,6 +35,13 @@ vi.mock("@/components/messages/VoiceCallButton", () => ({
   default: () => <div>voice-call</div>,
 }));
 
+const DEFAULT_STAFF_DIRECTORY = [
+  { id: "staff-1", full_name: "Raneem", role: "team_member" },
+];
+// Mutable so a test can simulate a real student, who is DENIED the staff
+// directory (it is admin/team-only) and therefore gets no counterpart role.
+let staffDirectoryRows: unknown[] = DEFAULT_STAFF_DIRECTORY;
+
 const mockRpc = vi.fn((name: string, _args?: unknown) => {
   if (name === "get_my_case") {
     return Promise.resolve({ data: [{ id: "case-42" }], error: null });
@@ -45,10 +52,7 @@ const mockRpc = vi.fn((name: string, _args?: unknown) => {
   // listMyDirectThreads resolves the counterpart's role/name from the staff
   // directory; without it the team thread cannot be identified.
   if (name === "get_staff_directory") {
-    return Promise.resolve({
-      data: [{ id: "staff-1", full_name: "Raneem", role: "team_member" }],
-      error: null,
-    });
+    return Promise.resolve({ data: staffDirectoryRows, error: null });
   }
   return Promise.resolve({ data: null, error: null });
 });
@@ -78,6 +82,12 @@ const TABLE_ROWS: Record<string, unknown[]> = {
   profiles: [],
 };
 
+// vi.mock is hoisted above the const declarations, so the listener registry must
+// be created with vi.hoisted to exist before DirectMessageService subscribes.
+const { authListeners } = vi.hoisted(() => ({
+  authListeners: [] as Array<() => void>,
+}));
+
 vi.mock("@/integrations/supabase/client", () => {
   const chain = (rows: unknown[]) => {
     const result = Promise.resolve({ data: rows, error: null });
@@ -94,10 +104,13 @@ vi.mock("@/integrations/supabase/client", () => {
       rpc: (name: string, args?: unknown) => mockRpc(name, args),
       // DirectMessageService subscribes at module scope — the mock must expose
       // every client surface the imported modules touch, or the file fails to load.
+      // The listener is also how a test clears the module-level staff-directory
+      // cache (it is keyed to auth changes and otherwise lives for 5 minutes).
       auth: {
-        onAuthStateChange: () => ({
-          data: { subscription: { unsubscribe: () => {} } },
-        }),
+        onAuthStateChange: (cb: () => void) => {
+          authListeners.push(cb);
+          return { data: { subscription: { unsubscribe: () => {} } } };
+        },
       },
       from: (table: string) => chain(TABLE_ROWS[table] ?? []),
     },
@@ -109,6 +122,9 @@ import StudentMessagesPage from "../StudentMessagesPage";
 describe("StudentMessagesPage — chat list ↔ chat box", () => {
   beforeEach(() => {
     mockRpc.mockClear();
+    staffDirectoryRows = DEFAULT_STAFF_DIRECTORY;
+    // Drop the module-level staff-directory cache so each test sees its own rows.
+    authListeners.forEach((cb) => cb());
     document.documentElement.dir = "ltr";
   });
 
@@ -184,6 +200,21 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     expect(
       screen.queryByRole("button", { name: /Message my team member/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("lists the existing team conversation even when the staff directory is denied", async () => {
+    // The real student condition: get_staff_directory is admin/team-only, so a
+    // student gets NO rows and the counterpart role resolves to null. The thread
+    // must still be found — only the payout thread is excluded, not by role.
+    staffDirectoryRows = [];
+    render(<StudentMessagesPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Your direct line to your advisor")).toBeInTheDocument(),
+    );
+    // The name falls back to the neutral staff label — a student never sees a
+    // real admin/team name.
+    expect(screen.queryByText("Raneem")).not.toBeInTheDocument();
   });
 
   it("shows real activity and unread counts instead of blank rows", async () => {

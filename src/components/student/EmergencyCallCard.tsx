@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils";
  * hold Darb's own contact details. Dialling them hands off to the phone's
  * native dialer via a `tel:` link, so the student calls emergency services
  * directly instead of opening a chat.
+ *
+ * They are Germany-only: `110`/`112` are only guaranteed to reach the German
+ * service when dialled from within Germany (112 is the EU-wide number, but 110
+ * is national). The card says so, because the student may travel — the app does
+ * not geolocate and must not imply the number works everywhere.
  */
 export const EMERGENCY_NUMBERS = [
   { key: "police", number: "110", icon: ShieldAlert, tone: "blue" },
@@ -64,6 +69,12 @@ export default function EmergencyCallCard({
           {t(
             "student.overview.emergencyHint",
             "Tap a number to call directly from your phone.",
+          )}
+        </p>
+        <p className="text-[11px] text-muted-foreground/80">
+          {t(
+            "student.overview.emergencyLocationHint",
+            "These are Germany's emergency numbers — they work while you are in Germany.",
           )}
         </p>
       </CardHeader>

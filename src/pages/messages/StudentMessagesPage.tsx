@@ -83,31 +83,44 @@ export default function StudentMessagesPage() {
   const adminLabel = t("chat.adminLabel");
 
   /** Loads the student's direct threads: resolves the existing team thread,
-   *  the advisor's display name, and each thread's last message + unread count. */
-  const loadDirectThreads = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      const threads = await listMyDirectThreads(user.id);
-      setDirectThreads(threads);
+   *  the advisor's display name, and each thread's last message + unread count.
+   *  `payoutId` is passed in because the state is not committed yet on first load. */
+  const loadDirectThreads = useCallback(
+    async (payoutId: string | null) => {
+      if (!user?.id) return;
+      try {
+        const threads = await listMyDirectThreads(user.id);
+        setDirectThreads(threads);
 
-      const existingTeam = threads.find(
-        (thread: DirectThread) => thread.otherUserRole === "team_member",
-      );
-      if (existingTeam) {
-        setTeamThreadId(existingTeam.threadId);
-        setTeamThreadName(
-          chatDisplayName(
-            existingTeam.otherUserName,
-            existingTeam.otherUserRole,
-            "student",
-            adminLabel,
-          ),
-        );
+        // A student's only direct threads are the payout conversation and the
+        // one-to-one advisor thread — `start_direct_thread` rejects students, so
+        // there is no third kind. Identify the advisor thread WITHOUT the staff
+        // directory: `get_staff_directory` is admin/team-only, so a student gets
+        // an empty list and `otherUserRole` is always null for them. Matching on
+        // the role alone would hide a thread the student already has.
+        const existingTeam =
+          threads.find(
+            (thread: DirectThread) => thread.otherUserRole === "team_member",
+          ) ?? threads.find((thread: DirectThread) => thread.threadId !== payoutId);
+        if (existingTeam) {
+          setTeamThreadId(existingTeam.threadId);
+          setTeamThreadName(
+            existingTeam.otherUserRole === "team_member"
+              ? chatDisplayName(
+                  existingTeam.otherUserName,
+                  existingTeam.otherUserRole,
+                  "student",
+                  adminLabel,
+                )
+              : adminLabel,
+          );
+        }
+      } catch {
+        /* activity + names are cosmetic — the list still renders the known threads */
       }
-    } catch {
-      /* activity + names are cosmetic — the list still renders the known threads */
-    }
-  }, [user?.id, adminLabel]);
+    },
+    [user?.id, adminLabel],
+  );
 
   useEffect(() => {
     if (!user?.id) return;
@@ -122,20 +135,21 @@ export default function StudentMessagesPage() {
         .not("thread_id", "is", null)
         .order("created_at", { ascending: false })
         .limit(1);
-      setPayoutThreadId(payouts?.[0]?.thread_id ?? null);
+      const payoutId: string | null = payouts?.[0]?.thread_id ?? null;
+      setPayoutThreadId(payoutId);
 
       // Resolve direct threads (activity, unread counts, existing team thread)
       // before revealing the list, so a returning student never sees an empty
       // inbox with no unread indicator.
-      await loadDirectThreads();
+      await loadDirectThreads(payoutId);
 
       setLoading(false);
     })();
   }, [user?.id, toast, loadDirectThreads]);
 
   useEffect(() => {
-    if (teamThreadId) void loadDirectThreads();
-  }, [teamThreadId, loadDirectThreads]);
+    if (teamThreadId) void loadDirectThreads(payoutThreadId);
+  }, [teamThreadId, payoutThreadId, loadDirectThreads]);
 
   /** Opens (or reuses) the student↔team-member thread and shows its chat box. */
   const openTeamThread = async () => {
@@ -248,7 +262,7 @@ export default function StudentMessagesPage() {
    *  read (or received) while the chat was open. */
   const backToList = () => {
     setOpen(null);
-    void loadDirectThreads();
+    void loadDirectThreads(payoutThreadId);
   };
 
   return (

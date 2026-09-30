@@ -55,6 +55,16 @@ describe("EmergencyCallCard", () => {
     expect(screen.getByText("Ambulance")).toBeInTheDocument();
     expect(screen.getByText("Fire brigade")).toBeInTheDocument();
   });
+
+  it("states that the numbers apply in Germany", () => {
+    // 110 is a national short code; the student may travel, so the card must not
+    // imply the number reaches emergency services from anywhere.
+    render(<EmergencyCallCard />);
+
+    expect(
+      screen.getByText(/Germany's emergency numbers/i),
+    ).toBeInTheDocument();
+  });
 });
 
 describe("EmergencyNumberButtons (chat-box variant)", () => {
