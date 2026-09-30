@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
 export interface CityGuideMapPin {
@@ -8,6 +9,7 @@ export interface CityGuideMapPin {
 }
 
 interface Props {
+  className?: string;
   pins: CityGuideMapPin[];
   selectedId: string | null;
   onSelect: (id: string) => void;
@@ -36,7 +38,7 @@ function loadMaps(): Promise<void> {
   return loader;
 }
 
-export default function CityGuideMap({ pins, selectedId, onSelect, center }: Props) {
+export default function CityGuideMap({ pins, selectedId, onSelect, center, className }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<any>(null);
   const markers = useRef<Map<string, any>>(new Map());
@@ -98,5 +100,5 @@ export default function CityGuideMap({ pins, selectedId, onSelect, center }: Pro
   }, [ready, selectedId]);
 
   if (failed) return null;
-  return <div ref={el} className="h-[260px] w-full overflow-hidden rounded-lg border border-border bg-muted sm:h-[340px]" />;
+  return <div ref={el} className={cn("h-[260px] w-full overflow-hidden rounded-lg border border-border bg-muted sm:h-[340px]", className)} />;
 }
