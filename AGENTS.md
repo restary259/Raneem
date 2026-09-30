@@ -2985,3 +2985,71 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   `TFunction<"dashboard">` instead of a hand-written
   `(key: string, fallback?: string) => string` signature.
 
+## Main CI repair + #143 review follow-ups (2026-09-30)
+
+Two consecutive merges (#142, #143) each left `main` red. Both were repaired by
+fast-forward pushes to `main` (no force-push), because the PRs were already
+merged and the fixes were small and isolated.
+
+### `npm run typecheck` exit code — capture it correctly
+- `npx tsc --noEmit 2>&1 | head -5; echo $?` reports the exit status of `head`,
+  **not** `tsc`. That silently produced a "typecheck=0" on a tree that was
+  actually failing. Write to a file and check separately:
+  `npx tsc --noEmit > /tmp/tsc.out 2>&1; echo "tsc exit=$?"`.
+  `vitest` passing and a misread `$?` are both non-gates.
+
+### Vitest `toHaveBeenCalledWith` compares arity strictly
+- A mock declared `vi.fn((name: string, args?: unknown) => …)` **records two
+  arguments** when the integration wrapper forwards `mockRpc(name, args)` and
+  the caller passes only one. The recorded call is `(name, undefined)`, so
+  `expect(mockRpc).toHaveBeenCalledWith("name")` **fails** — a trailing
+  `undefined` is not tolerated.
+- Assert on the first argument instead:
+  `mockRpc.mock.calls.some(([name]) => name === "…")`. This bit the new
+  team-thread test in #143, which could never pass and was merged red.
+
+### Duplicate object keys are a real failure (TS1117), and CI step order hides them
+- `MobileBottomNav.tsx` `shortLabel` had `'nav.account'` twice → `TS1117`.
+- `.github/workflows/ci.yml` `quality` runs **Lint → Unit tests → Typecheck →
+  Build**. A failing unit-test step aborts the job, so the typecheck never ran
+  and the duplicate key was invisible. When a PR's quality job fails, fix the
+  FIRST failing step and re-run — later steps may hold additional errors that
+  were never reached.
+- When touching a large keyed literal, check for duplicates:
+  `sed -n '/const shortLabel/,/^  };/p' FILE | grep -oE "'[^']+':" | sort | uniq -d`
+
+### `nav.*` is pinned to the `dashboard` namespace
+- Components read nav labels via `useTranslation("dashboard")` with **no
+  `fallbackNS`**, so a key that exists only in `common` resolves to the inline
+  English fallback. `nav.home` was missing from the `dashboard` dictionaries for
+  exactly this reason (added to en/ar/he).
+- `i18nKeys.test.ts` accepts a key found in ANY namespace the file touches, so
+  it stayed green. It now has a `has every nav.* key in the dashboard
+  dictionaries` case pinning `nav.*` to `dashboard` (verified non-vacuous).
+
+### Guard irreversible actions at the RPC, not just the UI
+- `start_student_team_member_thread` does check-then-insert on
+  `direct_threads`/`direct_thread_participants` with **no lock and no unique
+  constraint**, so concurrent callers each create their own thread.
+  `teamThreadLoading` state is async, so two taps in the same tick both read
+  `false` → measured **3 taps = 3 RPC calls**.
+- Fixed in both layers: a **synchronous ref guard** on the client (drops the
+  second tap before it fires) plus a **transaction-scoped advisory lock** on the
+  (student, advisor) pair in migration `20260930150000` (MANUAL DEPLOY), so the
+  function is idempotent for ANY caller. Mirrors the `pg_advisory_xact_lock`
+  pattern in `20260928120000_voice_call_rpcs.sql`. Also REVOKEs the RPC from anon.
+- Regression test added; with the guard removed it observes 3 calls from 3 taps.
+
+### Merged-red PRs leave unresolved review threads
+- Both #142 and #143 merged with `resolved=false` review threads (Greptile P1/P2,
+  Aikido Medium). After repairing `main`, reply to each thread with the fixing
+  SHA and resolve it — a merged PR keeps its threads open forever otherwise.
+- `gh pr checks <n>` on a merged PR still reports the failing `quality` job, and
+  the run for its head SHA shows the same failure — useful for proving a defect
+  was pre-existing rather than introduced by your push.
+
+### Verification
+- `npx tsc --noEmit` clean; `npx vitest run` 1748 passed | 1 skipped;
+  `npm run build` clean; main CI `quality` success at `65f23091`.
+- PRs #142/#143: MERGED, 0 unresolved threads. No open PRs.
+
