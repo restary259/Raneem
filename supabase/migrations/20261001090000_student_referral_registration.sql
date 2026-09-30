@@ -1086,6 +1086,85 @@ $$;
 REVOKE ALL ON FUNCTION public.confirm_registration_card_payment_internal(uuid,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.confirm_registration_card_payment_internal(uuid,text) TO service_role;
 
+CREATE OR REPLACE FUNCTION public.fail_registration_card_payment_internal(
+  p_payment_id uuid,
+  p_failure_reason text DEFAULT 'card_payment_failed'
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO public
+AS $
+DECLARE
+  v_payment RECORD;
+  v_invoice RECORD;
+BEGIN
+  SELECT * INTO v_payment
+    FROM public.case_registration_payments
+   WHERE id=p_payment_id
+   FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Payment not found'; END IF;
+
+  SELECT * INTO v_invoice
+    FROM public.case_registration_invoices
+   WHERE id=v_payment.invoice_id
+   FOR UPDATE;
+
+  IF v_payment.payment_method <> 'card' THEN
+    RAISE EXCEPTION 'This payment record is not a card payment';
+  END IF;
+
+  IF v_payment.status = 'confirmed' THEN
+    RETURN jsonb_build_object(
+      'payment_id',v_payment.id,
+      'invoice_id',v_invoice.id,
+      'status','confirmed',
+      'invoice_payment_status',v_invoice.payment_status
+    );
+  END IF;
+
+  IF v_payment.status <> 'pending' THEN
+    RETURN jsonb_build_object(
+      'payment_id',v_payment.id,
+      'invoice_id',v_invoice.id,
+      'status',v_payment.status,
+      'invoice_payment_status',v_invoice.payment_status
+    );
+  END IF;
+
+  UPDATE public.case_registration_payments
+     SET status='failed',
+         failure_reason=left(COALESCE(NULLIF(trim(p_failure_reason),''),'card_payment_failed'),500),
+         updated_at=now()
+   WHERE id=v_payment.id;
+
+  IF v_invoice.payment_status <> 'paid'
+     AND NOT EXISTS (
+       SELECT 1
+       FROM public.case_registration_payments p
+       WHERE p.invoice_id=v_invoice.id
+         AND p.id<>v_payment.id
+         AND p.status IN ('pending','submitted','confirmed')
+     ) THEN
+    UPDATE public.case_registration_invoices
+       SET payment_status='failed', updated_at=now()
+     WHERE id=v_invoice.id;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'payment_id',v_payment.id,
+    'invoice_id',v_invoice.id,
+    'status','failed',
+    'invoice_payment_status',(
+      SELECT payment_status FROM public.case_registration_invoices WHERE id=v_invoice.id
+    )
+  );
+END;
+$;
+
+REVOKE ALL ON FUNCTION public.fail_registration_card_payment_internal(uuid,text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.fail_registration_card_payment_internal(uuid,text) TO service_role;
+
 CREATE OR REPLACE FUNCTION public.mark_registration_invoice_email(
   p_invoice_id uuid,
   p_status text,
