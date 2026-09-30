@@ -2814,3 +2814,11 @@ only the frontend reachability was broken.
   churn 607 insertions/301 deletions, so the change deliberately MATCHES the
   file's local style rather than reformatting it. The new test file is
   eslint-clean.
+
+## Student Dashboard mobile card width / overflow (2026-09-30)
+- The visible Student Dashboard home is `/student` (route `src/routes/student.index.tsx` -> `StudentNextStepsPage`) — `/student-dashboard` is a pure redirect to `/student/checklist`. `StudentOverviewSection` (rendered by `StudentNextStepsPage`) is the only quick-action surface.
+- The Quick Actions grid was `grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3`, so below `sm` (< 640px) three narrow cards were forced across the phone. Fixed to `grid grid-cols-1 gap-2 sm:grid-cols-5 lg:grid-cols-3`: 1 column on phones, 5 at `sm`, 3 at `lg` (unchanged desktop). Each action button gained `w-full min-w-0` and each label `min-w-0 max-w-full break-words` so a translated label cannot establish an intrinsic width wider than its grid track.
+- `grid gap-4 lg:grid-cols-2` on the overview is correct and was NOT changed. The WhatsApp `flex flex-wrap gap-2` row already wraps safely inside the card and was left unchanged (no `overflow-x-auto`, no fixed widths, no global CSS hacks).
+- Guarded by `src/lib/studentOverviewResponsiveGuard.test.ts` (6 source-scan cases; verified non-vacuous — reintroducing the buggy classes fails 4 of them).
+- Verified with the real built stylesheet in headless Chromium at 320/360/375/390/430/768/1024/1280 in en + ar (RTL): quick-action track counts 1/1/1/1/1/5/3/3, every card inside its grid track, and no horizontal overflow on `documentElement` or `<main>`.
+- Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1703 passed | 1 skipped; `npm run build` clean.
