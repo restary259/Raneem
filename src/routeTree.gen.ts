@@ -86,6 +86,7 @@ import { Route as ResourcesLebenslaufBuilderRouteImport } from './routes/resourc
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as StudentChecklistRouteImport } from './routes/student.checklist'
 import { Route as StudentContactsRouteImport } from './routes/student.contacts'
+import { Route as StudentCityGuideRouteImport } from './routes/student.city-guide'
 import { Route as StudentDocumentsRouteImport } from './routes/student.documents'
 import { Route as StudentFeesRouteImport } from './routes/student.fees'
 import { Route as StudentMessagesRouteImport } from './routes/student.messages'
@@ -509,6 +510,11 @@ const StudentContactsRoute = StudentContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => StudentRoute,
 } as any)
+const StudentCityGuideRoute = StudentCityGuideRouteImport.update({
+  id: '/city-guide',
+  path: '/city-guide',
+  getParentRoute: () => StudentRoute,
+} as any)
 const StudentDocumentsRoute = StudentDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -756,6 +762,7 @@ export interface FileRoutesByFullPath {
   '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
   '/student/checklist': typeof StudentChecklistRoute
   '/student/contacts': typeof StudentContactsRoute
+  '/student/city-guide': typeof StudentCityGuideRoute
   '/student/documents': typeof StudentDocumentsRoute
   '/student/fees': typeof StudentFeesRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -864,6 +871,7 @@ export interface FileRoutesByTo {
   '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
   '/student/checklist': typeof StudentChecklistRoute
   '/student/contacts': typeof StudentContactsRoute
+  '/student/city-guide': typeof StudentCityGuideRoute
   '/student/documents': typeof StudentDocumentsRoute
   '/student/fees': typeof StudentFeesRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -978,6 +986,7 @@ export interface FileRoutesById {
   '/resources/lebenslauf-builder': typeof ResourcesLebenslaufBuilderRoute
   '/student/checklist': typeof StudentChecklistRoute
   '/student/contacts': typeof StudentContactsRoute
+  '/student/city-guide': typeof StudentCityGuideRoute
   '/student/documents': typeof StudentDocumentsRoute
   '/student/fees': typeof StudentFeesRoute
   '/student/messages': typeof StudentMessagesRoute
@@ -1093,6 +1102,7 @@ export interface FileRouteTypes {
     | '/resources/lebenslauf-builder'
     | '/student/checklist'
     | '/student/contacts'
+    | '/student/city-guide'
     | '/student/documents'
     | '/student/fees'
     | '/student/messages'
@@ -2284,6 +2294,7 @@ const PartnerRouteWithChildren =
 
 interface StudentRouteChildren {
   StudentChecklistRoute: typeof StudentChecklistRoute
+  StudentCityGuideRoute: typeof StudentCityGuideRoute
   StudentContactsRoute: typeof StudentContactsRoute
   StudentDocumentsRoute: typeof StudentDocumentsRoute
   StudentFeesRoute: typeof StudentFeesRoute
