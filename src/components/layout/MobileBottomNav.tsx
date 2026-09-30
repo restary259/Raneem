@@ -60,7 +60,7 @@ const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
     { key: 'nav.home', icon: Home, href: '/student' },
     { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
     { key: 'nav.messages', icon: MessageSquare, href: '/student/messages' },
-    { key: 'nav.profile', icon: User, href: '/student/profile' },
+    { key: 'nav.account', icon: User, href: '/student/profile' },
   ],
 
 };
@@ -154,6 +154,7 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
     'nav.earnings': t('nav.earnings', 'Earnings'),
     'nav.checklist': t('nav.checklist', 'Checklist'),
     'nav.profile': t('nav.profile', 'Profile'),
+    'nav.account': t('nav.account', 'Account'),
     'nav.account': t('nav.account', 'Account'),
     'nav.documents': t('nav.documents', 'Docs'),
     'nav.visa': t('nav.visa', 'Visa'),
