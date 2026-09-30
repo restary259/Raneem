@@ -911,7 +911,11 @@
     "whatsappCampaigns": "קמפיינים בוואטסאפ",
     "offices": "משרדים",
     "cityGuide": "מדריך עיר",
-    "cityGuideMobile": "מפה"
+    "cityGuideMobile": "מפה",
+    "quickActions": "פעולות מהירות",
+    "accountMenu": "תפריט החשבון",
+    "language": "שפה",
+    "student": "סטודנט"
   },
   "common": {
     "loadMore": "טעינת עוד",

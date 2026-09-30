@@ -2806,7 +2806,11 @@
     "whatsappCampaigns": "حملات واتساب",
     "offices": "المكاتب",
     "cityGuide": "دليل المدينة",
-    "cityGuideMobile": "الخريطة"
+    "cityGuideMobile": "الخريطة",
+    "quickActions": "إجراءات سريعة",
+    "accountMenu": "قائمة الحساب",
+    "language": "اللغة",
+    "student": "الطالب"
   },
   "case": {
     "status": {
