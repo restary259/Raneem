@@ -22,6 +22,8 @@ import NotificationOnboardingDialog from "@/components/notifications/Notificatio
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import ThemePicker from "@/components/common/ThemePicker";
+import StudentDashboardHeader from "@/components/student/StudentDashboardHeader";
+import StudentSidebarFooter from "@/components/student/StudentSidebarFooter";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useAppBadge } from "@/hooks/useAppBadge";
@@ -185,7 +187,7 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
   ],
 
   student: [
-    { key: "nav.nextSteps", icon: Sparkles, href: "/student" },
+    { key: "nav.home", icon: Home, href: "/student" },
     { key: "nav.cityGuide", icon: MapPinned, href: "/student/city-guide" },
     {
       key: "nav.group.studyFile",
@@ -205,15 +207,6 @@ const NAV_CONFIG: Record<AppRole, NavItem[]> = {
       children: [
         { key: "nav.messages", icon: MessageSquare, href: "/student/messages" },
         { key: "nav.contacts", icon: Users, href: "/student/contacts" },
-      ],
-    },
-    {
-      key: "nav.group.account",
-      icon: User,
-      href: "",
-      children: [
-        { key: "nav.profile", icon: User, href: "/student/profile" },
-        { key: "nav.myData", icon: ShieldCheck, href: "/student/my-data" },
       ],
     },
     {
@@ -490,68 +483,75 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
       <div className={cn("fixed inset-0 flex h-[100dvh] w-full overflow-hidden overscroll-none bg-background", isRtl && "dir-rtl")}>
         <Sidebar side={isRtl ? "right" : "left"} collapsible="icon">
           <SidebarNav role={role} />
+          {role === "student" && <StudentSidebarFooter user={user} onSignOut={handleSignOut} />}
         </Sidebar>
 
         <div className="flex min-h-0 flex-1 min-w-0 flex-col overflow-hidden">
           {/* Top header */}
-          <header className={cn("flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur z-10 touch-none sm:px-4", chatFullscreen && "hidden")}>
-            <SidebarTrigger className="h-11 w-11 shrink-0" />
-            <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
-              <LanguageSwitcher />
-              <ThemePicker />
+          <div className={cn(chatFullscreen && "hidden")}>
+            {role === "student" ? (
+              <StudentDashboardHeader user={user} onSignOut={handleSignOut} />
+            ) : (
+              <header className="flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur z-10 touch-none sm:px-4">
+                <SidebarTrigger className="h-11 w-11 shrink-0" />
+                <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
+                  <LanguageSwitcher />
+                  <ThemePicker />
 
-              {canMessage && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={location.pathname.startsWith(messagesHref) ? "secondary" : "ghost"}
-                        size="sm"
-                        onClick={() => navigate(messagesHref)}
-                        aria-label={t("nav.messages")}
-                        className="relative h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:p-2"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="hidden sm:inline text-xs">{t("nav.messages")}</span>
-                        {headerUnread > 0 && (
-                          <span className="absolute -top-1 -end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
-                            {headerUnread}
-                          </span>
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t("nav.messages")}</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {user && <NotificationBell role={role} />}
+                  {canMessage && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={location.pathname.startsWith(messagesHref) ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => navigate(messagesHref)}
+                            aria-label={t("nav.messages")}
+                            className="relative h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:p-2"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="hidden sm:inline text-xs">{t("nav.messages")}</span>
+                            {headerUnread > 0 && (
+                              <span className="absolute -top-1 -end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
+                                {headerUnread}
+                              </span>
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{t("nav.messages")}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                  {user && <NotificationBell role={role} />}
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate("/")}
-                      className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2"
-                    >
-                      <Home className="h-4 w-4" />
-                      <span className="hidden sm:inline text-xs">{t("nav.mainSite")}</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t("nav.backToMainSite")}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          </header>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate("/")}
+                          className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2"
+                        >
+                          <Home className="h-4 w-4" />
+                          <span className="hidden sm:inline text-xs">{t("nav.mainSite")}</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{t("nav.backToMainSite")}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSignOut}
+                    className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </header>
+            )}
+          </div>
 
           {/* Page content.
               Mobile bottom padding must match the bar's real height — min-h-16
