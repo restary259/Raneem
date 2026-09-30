@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import { MapPinned, Search, SlidersHorizontal, ShoppingCart, Dumbbell, GraduationCap, Home, TrainFront, HeartPulse, Clapperboard, CircleDot, Landmark, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
@@ -95,7 +95,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   const [selectedCategory, setSelectedCategory] = useState<StudentCityGuideCategory>("all");
   const [search, setSearch] = useState("");
 
-  const loadProfileCity = async (uid: string) => {
+  const loadProfileCity = useCallback(async (uid: string) => {
     setProfileLoading(true);
     const { data } = await (supabase as any)
       .from("profiles")
@@ -104,7 +104,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
       .maybeSingle();
     setStoredCity(data?.residential_city ?? null);
     setProfileLoading(false);
-  };
+  }, []);
 
   const userId = useAuthedUserId();
 
@@ -115,7 +115,7 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     } else if (userId) {
       void loadProfileCity(userId);
     }
-  }, [residentialCity, userId]);
+  }, [residentialCity, userId, loadProfileCity]);
 
   const city = getCityGuide(storedCity);
 
