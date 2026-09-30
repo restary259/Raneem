@@ -51,6 +51,7 @@ export default function AdminReferralOperationsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState<RegistrationRecord | null>(null);
   const [acting, setActing] = useState<string | null>(null);
+  const [schoolNames, setSchoolNames] = useState<Record<string, { name_en: string; name_ar: string }>>({});
   const [bank, setBank] = useState({ bank_name: "", account_holder: "", iban: "", bic: "" });
   const [savingBank, setSavingBank] = useState(false);
 
@@ -67,8 +68,9 @@ export default function AdminReferralOperationsPage() {
       const invoiceRows = invoices ?? [];
       const caseIds = invoiceRows.map((invoice: any) => invoice.case_id).filter(Boolean);
       const invoiceIds = invoiceRows.map((invoice: any) => invoice.id).filter(Boolean);
+      const schoolIds = Array.from(new Set(invoiceRows.map((invoice: any) => invoice.school_id).filter(Boolean)));
 
-      const [casesRes, paymentsRes, referralsRes, settingsRes] = await Promise.all([
+      const [casesRes, paymentsRes, referralsRes, settingsRes, schoolRes] = await Promise.all([
         caseIds.length
           ? (supabase as any).from("cases").select("id,full_name,phone_number,email,case_reference,status,assigned_to,referred_by,source,created_at").in("id", caseIds)
           : Promise.resolve({ data: [], error: null }),
@@ -79,6 +81,9 @@ export default function AdminReferralOperationsPage() {
           ? (supabase as any).from("referrals").select("id,referred_case_id,referrer_user_id,referred_name,referral_type,status,created_at").in("referred_case_id", caseIds)
           : Promise.resolve({ data: [], error: null }),
         (supabase as any).from("platform_settings").select("registration_payment_bank_name,registration_payment_account_holder,registration_payment_iban,registration_payment_bic").limit(1).maybeSingle(),
+        schoolIds.length
+          ? (supabase as any).from("schools").select("id,name_en,name_ar").in("id", schoolIds)
+          : Promise.resolve({ data: [], error: null }),
       ]);
 
       if (casesRes.error) throw casesRes.error;
@@ -98,6 +103,13 @@ export default function AdminReferralOperationsPage() {
         payment: paymentsByInvoice.get(invoice.id) ?? null,
         referral: referralByCase.get(invoice.case_id) ?? null,
       })));
+
+      setSchoolNames(Object.fromEntries(
+        ((schoolRes as any).data ?? []).map((school: any) => [
+          school.id,
+          { name_en: school.name_en, name_ar: school.name_ar },
+        ]),
+      ));
 
       const settings = settingsRes.data;
       if (settings) {
@@ -291,7 +303,7 @@ export default function AdminReferralOperationsPage() {
                       <div className="grid gap-2 text-xs">
                         <Info label={t("admin.referralOperations.fields.referrer")} value={record.invoice.referrer_name} />
                         <Info label={t("admin.referralOperations.fields.type")} value={record.invoice.referral_type === "family" ? t("referralRegistration.family") : t("referralRegistration.friend")} />
-                        <Info label={t("admin.referralOperations.fields.school")} value={findItemName(record.invoice.items, "school", lang)} />
+                        <Info label={t("admin.referralOperations.fields.school")} value={schoolNames[record.invoice.school_id] ? (lang === "ar" ? schoolNames[record.invoice.school_id].name_ar : schoolNames[record.invoice.school_id].name_en) : "—"} />
                         <Info label={t("admin.referralOperations.fields.invoice")} value={record.invoice.invoice_number} />
                         <Info label={t("admin.referralOperations.fields.amount")} value={money(record.invoice.total_amount, record.invoice.currency)} dir="ltr" />
                         <Info label={t("admin.referralOperations.fields.status")} value={statusLabel[record.case?.status] ?? record.case?.status} />
