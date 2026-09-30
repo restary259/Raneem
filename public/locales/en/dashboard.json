@@ -2786,7 +2786,9 @@
     "partnerSchools": "Partner Schools",
     "whatsapp": "WhatsApp Inbox",
     "whatsappCampaigns": "WhatsApp campaigns",
-    "offices": "Offices"
+    "offices": "Offices",
+    "cityGuide": "City Guide",
+    "cityGuideMobile": "Map"
   },
   "case": {
     "status": {
@@ -3627,6 +3629,37 @@
       "whatsappCta": "Chat on WhatsApp",
       "directLine": "Your direct line to the team",
       "directLineDesc": "Questions about your case? Reach us instantly."
+    },
+    "cityGuide": {
+      "title": "City Guide",
+      "subtitle": "Useful places and services around your study and home life in {{city}}.",
+      "yourCity": "Your city",
+      "heroDescription": "Discover the places you will actually use — shopping, school, transport, fitness and more.",
+      "viewMap": "View full map",
+      "viewAll": "View all",
+      "searchPlaceholder": "Search places (e.g. supermarket, gym, hospital…)",
+      "filter": "Filter places",
+      "categoriesLabel": "Place categories",
+      "popular": "Popular near you",
+      "noResults": "No matching places. Try another search or category.",
+      "openMap": "Open in Google Maps",
+      "mapsNote": "Place names and directions open in Google Maps. General places should be kept current through Maps search; F+U accommodation is curated from DARB's school information.",
+      "unavailableTitle": "City Guide",
+      "unavailableDescription": "Your city guide will appear once your German residential city is saved in your profile.",
+      "categories": {
+        "all": "All",
+        "supermarkets": "Supermarkets",
+        "accommodation": "Accommodation",
+        "school": "School",
+        "gyms": "Gyms",
+        "transport": "Transport",
+        "healthcare": "Healthcare",
+        "football": "Football",
+        "cinema": "Cinema",
+        "studentLife": "Student life",
+        "pharmacy": "Pharmacy"
+      },
+      "unsupportedCityDescription": "A city guide for this city is not available yet."
     }
   },
   "settings": {
