@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   KpiRow,
   LoadingState,
-  ErrorState,
-  PageHeader,
-  type KpiItem,
+  ErrorState,  type KpiItem,
 } from "@/components/shell";
 import {
   RefreshCw,
@@ -96,24 +94,21 @@ export default function AdminVisaPage() {
 
   return (
     <div>
-      <PageHeader
-        title={t("admin.visa.title", "Visa")}
-        subtitle={t("admin.visa.subtitle", "Post-arrival visa applications")}
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            onClick={() => void refresh()}
-            disabled={loading}
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-            />
-            {t("common.refresh", "Refresh")}
-          </Button>
-        }
-      />
+      <div className="flex justify-end">
+        <h1 className="sr-only">{t("admin.visa.title", "Visa")}</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          onClick={() => void refresh()}
+          disabled={loading}
+        >
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+          />
+          {t("common.refresh", "Refresh")}
+        </Button>
+      </div>
 
       {error && rows.length === 0 ? (
         <ErrorState
