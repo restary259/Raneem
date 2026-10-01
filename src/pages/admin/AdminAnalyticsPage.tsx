@@ -126,8 +126,7 @@ const AdminAnalyticsPage = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{t('admin.analytics.title')}</h1>
+      <div className="flex justify-end"><h1 className="sr-only">{t('admin.analytics.title')}</h1>
         <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
