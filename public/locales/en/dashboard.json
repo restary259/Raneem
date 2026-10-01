@@ -1698,7 +1698,8 @@
         "pending": "Awaiting payment",
         "transferSubmitted": "Transfers submitted",
         "paid": "Paid",
-        "failed": "Failed"
+        "failed": "Failed",
+        "rewardsPending": "Rewards pending"
       },
       "tabs": {
         "registrations": "Registrations",
