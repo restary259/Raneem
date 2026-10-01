@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import ExcelJS from 'exceljs';
 import { buildCsv } from '@/utils/csv';
 import { fontForText, hasRtl, shapeForPdf, ARABIC_FONT, HEBREW_FONT } from '@/utils/pdfFonts';
 import { buildCorporateWorkbook } from './corporateSheet';
@@ -60,6 +61,25 @@ describe('export reliability', () => {
     expect(amountColumn.values).toContain(0);
     expect(amountColumn.values).toContain(-1000);
     expect(sheet.getCell(7, 2).numFmt).toBe(currencyFormat('ILS'));
+  });
+
+  it('serializes ExcelJS exports with the security-patched uuid dependency', async () => {
+    const workbook = await buildCorporateWorkbook({
+      fileName: 'uuid-compatibility',
+      title: 'UUID compatibility',
+      sheets: [{
+        name: 'UUID compatibility',
+        columns: [{ header: 'Amount', type: 'number', dataBar: true }],
+        rows: [[42]],
+      }],
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    expect(buffer.byteLength).toBeGreaterThan(0);
+
+    const roundTrip = new ExcelJS.Workbook();
+    await roundTrip.xlsx.load(buffer);
+    expect(roundTrip.getWorksheet('UUID compatibility')?.getCell(7, 1).value).toBe(42);
   });
 
   it('escapes CSV headers, Arabic, quotes, commas and line breaks', () => {
