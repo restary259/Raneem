@@ -2878,6 +2878,15 @@
     "accountMenu": "Account menu",
     "language": "Language",
     "student": "Student",
+    "mobile": {
+      "finance": "Finance",
+      "appointments": "Appointments",
+      "inbox": "Inbox",
+      "earnings": "Earnings",
+      "network": "Network",
+      "apply": "Apply"
+    },
+    "languageSelector": "Language selector",
     "darb": "DARB"
   },
   "case": {
