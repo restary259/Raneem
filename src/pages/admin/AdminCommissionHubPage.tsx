@@ -18,7 +18,6 @@ import {
   UserCog,
   Network,
   GraduationCap,
-  DollarSign,
   Save,
   Heart,
   Users2,
