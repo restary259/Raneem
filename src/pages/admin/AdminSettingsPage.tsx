@@ -542,8 +542,8 @@ const AdminSettingsPage = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-foreground">{t("admin.settings.title", "Settings")}</h1>
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <h1 className="sr-only">{t("admin.settings.title", "Settings")}</h1>
         <Button variant="outline" size="sm" onClick={fetchData}>
           <RefreshCw className="h-4 w-4" />
         </Button>
