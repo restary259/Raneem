@@ -30,6 +30,7 @@ import {
 } from "@/components/layout/dashboardNavigation";
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
 import { cn } from "@/lib/utils";
 
 function SidebarNav({ role }: { role: AppRole }) {
