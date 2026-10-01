@@ -182,15 +182,7 @@ const AdminInboxPage = () => {
     <div className="p-4 sm:p-6 space-y-5 max-w-6xl mx-auto">
 
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <Inbox className="h-5 w-5 text-primary" />
-        </div>
-        <div className="min-w-0">
-          <h1 className="sr-only">{t("admin.inbox.title", "Applications Inbox")}</h1>
-        </div>
-        {newCount > 0 && <Badge variant="destructive" className="ms-auto">{newCount}</Badge>}
-      </div>
+      <h1 className="sr-only">{t("admin.inbox.title", "Applications Inbox")}</h1>
 
       <Tabs value={tab} onValueChange={changeTab} className="space-y-4">
         {/* Toolbar: search + export on top, tabs directly beneath */}
