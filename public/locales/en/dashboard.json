@@ -1808,6 +1808,29 @@
         "ADMIN_DISCONNECTED_GOOGLE": "Admin disconnected the Google account",
         "ADMIN_UPDATED_GOOGLE_CONNECTION": "Admin updated the Google connection"
       }
+    },
+    "googleConnection": {
+      "title": "Google Business connection",
+      "checkedAt": "Last checked {{time}}",
+      "refresh": "Refresh",
+      "loading": "Checking connection…",
+      "loadError": "Could not check the Google connection.",
+      "notLinked": "Google Business is not connected to DARB yet.",
+      "noAccounts": "Connected, but no Google business accounts are visible to this Google account.",
+      "status": {
+        "connected": "Connected",
+        "not_linked": "Not connected",
+        "error": "Error"
+      },
+      "errors": {
+        "unauthorized": "Google access expired. Reconnect the Google account.",
+        "forbidden": "Google refused access (API not approved or no access to this account).",
+        "rate_limited": "Google is rate limiting requests. Try again shortly.",
+        "upstream": "Google returned an error.",
+        "network": "Could not reach Google.",
+        "not_linked": "Google Business is not connected."
+      },
+      "locationCount": "Locations: {{count}}"
     }
   },
   "influencer": {

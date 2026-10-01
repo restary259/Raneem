@@ -28,3 +28,4 @@ Full history and per-feature rationale: `docs/agent-notes.md` (read the relevant
 - Grids containing `truncate` text need a base `grid-cols-1` and `min-w-0` items; `DialogContent` must stay exported.
 
 - Never put `script-src` in the root document meta CSP: TanStack hydrates from an inline `$_TSR` script and a nonce-less meta policy blanks the app.
+- Google Business Profile calls go only through the built-in connector gateway from admin-gated server functions (`googleBusinessConnection.functions.ts`); never store Google tokens ourselves.

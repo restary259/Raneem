@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import OfficeGoogleBusinessSection from "@/components/admin/OfficeGoogleBusinessSection";
+import GoogleBusinessConnectionPanel from "@/components/admin/GoogleBusinessConnectionPanel";
 
 type OfficeType = "darb" | "partner" | "franchise";
 type TeamMember = { id: string; full_name: string };
@@ -336,6 +337,8 @@ export default function AdminOfficesPage() {
       <div className="flex flex-wrap items-center justify-end gap-3"><h1 className="sr-only">{labels.title}</h1>
         <Button onClick={openCreate}><Plus className="me-2 size-4" />{labels.add}</Button>
       </div>
+
+      <GoogleBusinessConnectionPanel />
 
       <div className="grid gap-4 xl:grid-cols-2">
         {cards.map(function (item) {

@@ -5786,6 +5786,29 @@
         "ADMIN_DISCONNECTED_GOOGLE": "המנהל ניתק את חשבון Google",
         "ADMIN_UPDATED_GOOGLE_CONNECTION": "המנהל עדכן את חיבור Google"
       }
+    },
+    "googleConnection": {
+      "title": "חיבור Google Business",
+      "checkedAt": "נבדק לאחרונה {{time}}",
+      "refresh": "רענון",
+      "loading": "בודק חיבור…",
+      "loadError": "לא ניתן לבדוק את חיבור Google.",
+      "notLinked": "Google Business עדיין לא מחובר לדארב.",
+      "noAccounts": "מחובר, אך אין חשבונות עסק גלויים לחשבון Google זה.",
+      "status": {
+        "connected": "מחובר",
+        "not_linked": "לא מחובר",
+        "error": "שגיאה"
+      },
+      "errors": {
+        "unauthorized": "הגישה ל-Google פגה. חברו מחדש את החשבון.",
+        "forbidden": "Google סירבה לגישה (ה-API לא אושר או אין הרשאה לחשבון).",
+        "rate_limited": "Google מגבילה בקשות. נסו שוב בעוד רגע.",
+        "upstream": "Google החזירה שגיאה.",
+        "network": "לא ניתן להגיע ל-Google.",
+        "not_linked": "Google Business לא מחובר."
+      },
+      "locationCount": "מיקומים: {{count}}"
     }
   },
   "appointmentActions": {
