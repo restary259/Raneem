@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, BedDouble, Check, ChevronLeft, ChevronRight, CreditCard, ExternalLink, GraduationCap, Heart, Info, Loader2, Mail, Phone, ReceiptText, Send, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { readFunctionError } from "@/lib/functionError";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -281,7 +282,14 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-student-referral-registration", { body: nextData });
-      if (error) throw error;
+      if (error) {
+        const message = await readFunctionError(error);
+        throw new Error(
+          message.includes("already has a DARB case")
+            ? t("referralRegistration.errors.duplicate")
+            : message,
+        );
+      }
       if (!data || !data.public_token) throw new Error(t("referralRegistration.errors.submit"));
       setResult(data as RegistrationResult);
       toast({ title: t("referralRegistration.success.title") });
@@ -303,7 +311,7 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
       const { data, error } = await supabase.functions.invoke("stripe-student-referral-checkout", {
         body: { token: result.public_token },
       });
-      if (error) throw error;
+      if (error) throw new Error(await readFunctionError(error));
       if (data?.paid) {
         window.location.href = result.invoice_url ?? `https://darb.agency/invoice/${encodeURIComponent(result.public_token)}`;
         return;

@@ -5863,6 +5863,7 @@
       "required": "This field is required.",
       "catalog": "Could not load the DARB catalog.",
       "terms": "Please confirm the registration details before submitting.",
+      "duplicate": "This friend is already registered with DARB. Contact the team if you think this is a mistake.",
       "submit": "Could not create the registration."
     },
     "history": {
