@@ -861,7 +861,9 @@ export default function CaseDetailPage() {
                       });
                 }
                 return t("case.actionHint.submitReady", {
-                  defaultValue: "Submits to Admin: issues the DARB invoice and sends the student dashboard invite.",
+                  defaultValue: isDirectRegistration
+                    ? "Submits the paid Refer & Register file to Admin and sends the student dashboard invite."
+                    : "Submits to Admin: issues the DARB invoice and sends the student dashboard invite.",
                 });
               })()}
           </div>
