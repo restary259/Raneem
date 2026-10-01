@@ -335,7 +335,6 @@ export default function AdminOfficesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2"><Building2 className="size-6 text-primary" /><h1 className="text-2xl font-bold tracking-tight">{labels.title}</h1></div>
-          <p className="mt-1 text-sm text-muted-foreground">{labels.subtitle}</p>
         </div>
         <Button onClick={openCreate}><Plus className="me-2 size-4" />{labels.add}</Button>
       </div>
