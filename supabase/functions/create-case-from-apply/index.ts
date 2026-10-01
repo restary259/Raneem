@@ -313,7 +313,8 @@ Deno.serve(async (req) => {
       const fill = <T,>(current: unknown, next: T | undefined): T | undefined =>
         next === undefined || next === null ? undefined
           : caller.isStaff || current === null || current === undefined || current === "" ? next : undefined;
-      await supabaseAdmin
+      // Only staff may change an existing case; anonymous resubmissions never write to it.
+      if (caller.isStaff) await supabaseAdmin
         .from("cases")
         .update({
           city: fill(existingCase.city, city ? stripHtml(String(city)).slice(0, 100) : undefined),

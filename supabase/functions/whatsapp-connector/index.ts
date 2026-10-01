@@ -461,11 +461,16 @@ serve(async (req) => {
       }
       const { data: conversation, error } = await admin
         .from("whatsapp_conversations")
-        .select("id, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number, marketing_consent_status)")
+        .select("id, assigned_to, last_inbound_at, first_response_at, lead:whatsapp_leads!inner(whatsapp_number, marketing_consent_status)")
         .eq("id", conversationId)
         .maybeSingle();
       if (error) throw error;
       if (!conversation) return json({ error: "Conversation not found" }, 404, corsHeaders);
+      // Team members may only message contacts in conversations assigned to
+      // them. Admins and service-role workers are unaffected.
+      if (!isAdmin && (conversation as { assigned_to?: string | null }).assigned_to !== auth.userId) {
+        return json({ error: "This conversation is not assigned to you" }, 403, corsHeaders);
+      }
       const lead = Array.isArray(conversation.lead) ? conversation.lead[0] : conversation.lead;
       const to = digitsOnly((lead as { whatsapp_number?: string } | null)?.whatsapp_number);
       if (to.length < 8 || to.length > 15) return json({ error: "The WhatsApp number is invalid" }, 400, corsHeaders);
