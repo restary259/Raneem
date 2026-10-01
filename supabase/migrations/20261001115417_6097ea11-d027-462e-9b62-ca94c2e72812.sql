@@ -1,0 +1,2 @@
+ALTER FUNCTION public.resolve_registration_weekly_rate(numeric, jsonb, integer) SET search_path = public;
+ALTER FUNCTION public.resolve_registration_insurance_monthly_rate(numeric, jsonb, integer) SET search_path = public;
