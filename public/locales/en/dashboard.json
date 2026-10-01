@@ -1758,6 +1758,52 @@
         "confirmPayment": "Confirm payment",
         "fullTrace": "The case is the master record. Registration, referral, invoice and payment are linked to the same case and remain traceable from its timeline."
       }
+    },
+    "googleBusiness": {
+      "title": "Google Business",
+      "loading": "Loading…",
+      "loadError": "Could not load Google Business data",
+      "actionFailed": "Action failed",
+      "profile": "Google Profile",
+      "notConnectedTitle": "Not connected",
+      "notConnectedDesc": "This office is not connected to a Google Business Profile yet.",
+      "connect": "Connect Google",
+      "comingSoon": "Google connection arrives in Phase 2.",
+      "operators": "Google Operators",
+      "primaryOperator": "Primary Operator",
+      "sideManager": "Side Manager",
+      "notAssigned": "Not assigned",
+      "selectMember": "Select team member",
+      "change": "Save",
+      "addSideManager": "Add Side Manager",
+      "remove": "Remove",
+      "primarySaved": "Primary operator saved",
+      "sideManagerSaved": "Side manager saved",
+      "operatorRemoved": "Operator removed",
+      "status": {
+        "not_connected": "Not connected",
+        "pending": "Pending",
+        "connected": "Connected",
+        "error": "Error",
+        "revoked": "Revoked"
+      },
+      "audit": {
+        "title": "Recent activity",
+        "empty": "No Google activity recorded yet."
+      },
+      "auditAction": {
+        "ADMIN_CREATED_GOOGLE_PROFILE": "Admin created the Google profile placeholder",
+        "ADMIN_UPDATED_GOOGLE_PROFILE": "Admin updated the Google profile",
+        "ADMIN_ASSIGNED_PRIMARY": "Admin assigned a primary operator",
+        "ADMIN_CHANGED_PRIMARY": "Admin changed the primary operator",
+        "ADMIN_REMOVED_PRIMARY": "Admin removed the primary operator",
+        "SIDE_MANAGER_ASSIGNED": "Side manager assigned",
+        "SIDE_MANAGER_CHANGED": "Side manager changed",
+        "SIDE_MANAGER_REMOVED": "Side manager removed",
+        "ADMIN_CONNECTED_GOOGLE": "Admin connected the Google account",
+        "ADMIN_DISCONNECTED_GOOGLE": "Admin disconnected the Google account",
+        "ADMIN_UPDATED_GOOGLE_CONNECTION": "Admin updated the Google connection"
+      }
     }
   },
   "influencer": {

@@ -3219,3 +3219,35 @@ verified non-vacuous by reintroducing the defect).
 
 ## i18next runtime smoke test (2026-10-01)
 - i18next was upgraded 23 -> 26 (PR #149). `src/lib/i18nRuntime.test.ts` initializes the REAL `src/i18n.ts` (fetch stubbed to serve `public/locales`) and checks bundled `common` in ar/en/he, interpolation, `t(key, "default")`, he -> en fallback, the HTTP `dashboard` namespace, and `dir`/`lang` on language change, because the key-coverage tests only read JSON and cannot catch a library loading regression.
+
+## Office Google Business permission foundation (Phase 1, 2026-10-01)
+- Migration `20261001160000_office_google_permission_foundation.sql` adds the
+  DARB-side ownership layer *before* any Google API work: `office_google_profiles`
+  (one per office, placeholder location), `office_google_operators`
+  (PRIMARY/SIDE_MANAGER), `google_business_connections` (DARB-level, no tokens),
+  and the append-only `google_business_activity` audit. No OAuth, no Google
+  calls, no token storage.
+- **The admin gate is `public.is_admin_session()` (admin role AND AAL2), never
+  `has_role(...,'admin')`.** An AAL1 (password-only) admin session must not be
+  able to change a primary or read Google rows; a regression test logs the admin
+  in at AAL1 and asserts the write and the RLS read both fail.
+- Office isolation is enforced twice: RLS `SELECT` policies and every write RPC.
+  Tables are read-only to `authenticated` (no INSERT/UPDATE/DELETE grant) — all
+  writes go through `SECURITY DEFINER` RPCs, so the same-office/active-member
+  invariants and the append-only audit cannot be bypassed by a direct write.
+- `authorize_google_office_action(p_user_id, p_office_id, p_action)` is the one
+  permission source of truth. It refuses to answer for a `p_user_id` other than
+  `auth.uid()` (no membership oracle), grants `service_role` a system bypass,
+  and re-checks live membership so a stale operator row cannot grant access.
+  `src/lib/googlePermissions.ts` mirrors it for UI affordances only.
+- Invariants: at most one PRIMARY and one SIDE_MANAGER per office (partial unique
+  indexes), operators must be active same-office members (trigger), a member
+  cannot hold both roles at once (RPC rejects with a clear message), and a
+  PRIMARY cannot appoint themselves as side manager.
+- Verification: a plain-Postgres harness (`/tmp/phase1_harness.sql`,
+  `/tmp/phase1_verify.sql`) reproduces the Supabase auth shims and asserts office
+  isolation, the operator rules, direct-API/table attacks, RLS per role, the MFA
+  gate, the authorizer oracle guard, and the audit trail — 71/71 passing.
+- UI: `OfficeGoogleBusinessSection` is wired into `AdminOfficesPage`'s office
+  dialog; the Connect control is intentionally disabled until Phase 2. The
+  operator selector is fed only same-office active members.
