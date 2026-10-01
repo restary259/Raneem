@@ -252,7 +252,7 @@ export default function AdminReferralOperationsPage() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">DARB</p>
-          <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{t("admin.referralOperations.title")}</h1>
+          <h1 className="sr-only">{t("admin.referralOperations.title")}</h1>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t("admin.referralOperations.description")}</p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={refreshing} className="gap-2">
