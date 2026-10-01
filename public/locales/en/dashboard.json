@@ -1491,7 +1491,6 @@
     },
     "inbox": {
       "title": "Inbox",
-      "subtitle": "WhatsApp conversations, applications and staff requests",
       "source": {
         "whatsapp": "WhatsApp",
         "all": "All",
