@@ -5,14 +5,18 @@ import userEvent from "@testing-library/user-event";
 import OfficeGoogleBusinessSection from "../OfficeGoogleBusinessSection";
 
 /**
- * Phase 1 admin surface contract:
- *  - an office with no Google profile shows the "not connected" placeholder and
- *    a Connect control that is disabled (OAuth lands in Phase 2);
+ * Office Google Business surface contract (Phase 1 operators + Phase 3 mapping):
+ *  - an office with no mapping shows the "not connected" placeholder and a
+ *    Find-location control (admin only);
  *  - the operator selectors only ever offer the eligible same-office members
  *    passed by the parent — never the whole team;
  *  - assigning a primary calls the server RPC with the office + member ids;
- *  - a SIDE_MANAGER actor gets no delegation control (the server rejects it
- *    anyway; this asserts the UI does not even offer it);
+ *  - a SIDE_MANAGER actor gets no delegation control;
+ *  - discovery lists Google locations, never auto-maps, and a location already
+ *    mapped to another office cannot be selected;
+ *  - confirming a mapping calls the map server function with the selected
+ *    account + resource name (the server re-validates);
+ *  - a mapped office shows the location and offers change / disconnect;
  *  - the audit feed renders localized action labels.
  */
 
@@ -42,10 +46,75 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+const discoverFn = vi.fn();
+const mapFn = vi.fn();
+const unmapFn = vi.fn();
+
+vi.mock("@/lib/googleBusinessLocation.functions", () => ({
+  discoverGoogleBusinessLocations: (opts: unknown) => discoverFn(opts),
+  mapOfficeGoogleLocation: (opts: unknown) => mapFn(opts),
+  unmapOfficeGoogleLocation: (opts: unknown) => unmapFn(opts),
+}));
+
+vi.mock("@tanstack/react-start", () => ({
+  useServerFn: (fn: unknown) => fn,
+}));
+
 const eligible = [
   { id: "sarah", full_name: "Sarah Müller" },
   { id: "omar", full_name: "Omar Hassan" },
 ];
+
+const UNMAPPED_ROW = {
+  office_id: "berlin",
+  mapping_status: "UNMAPPED",
+  connection_status: "not_connected",
+  verification_status: "unverified",
+  google_account_id: null,
+  google_location_id: null,
+  google_location_resource_name: null,
+  google_location_name: null,
+  google_primary_category: null,
+  google_address_line_1: null,
+  google_address_line_2: null,
+  google_city: null,
+  google_postal_code: null,
+  google_country: null,
+  google_phone: null,
+  google_website: null,
+  google_place_id: null,
+  google_maps_url: null,
+  google_store_code: null,
+  google_status: null,
+  google_verification_state: null,
+  mapped_by: null,
+  mapped_at: null,
+  last_synced_at: null,
+  last_successful_sync_at: null,
+  last_error_at: null,
+  last_error_code: null,
+  last_error_message: null,
+  primary_operator_id: null,
+  primary_operator_name: null,
+  side_manager_id: null,
+  side_manager_name: null,
+  updated_at: "2026-10-01T00:00:00Z",
+};
+
+const MAPPED_ROW = {
+  ...UNMAPPED_ROW,
+  mapping_status: "MAPPED",
+  connection_status: "connected",
+  verification_status: "verified",
+  google_account_id: "accounts/1",
+  google_location_id: "loc-berlin",
+  google_location_resource_name: "accounts/1/locations/loc-berlin",
+  google_location_name: "DARB Berlin",
+  google_city: "Berlin",
+  google_maps_url: "https://maps.google.com/?cid=1",
+  google_verification_state: "VERIFIED",
+  mapped_at: "2026-10-01T12:00:00Z",
+};
 
 function renderSection(
   props: Partial<React.ComponentProps<typeof OfficeGoogleBusinessSection>> = {},
@@ -74,20 +143,31 @@ describe("OfficeGoogleBusinessSection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     rpcCalls.length = 0;
+    discoverFn.mockResolvedValue({
+      status: "connected",
+      syncedAt: "2026-10-01T00:00:00Z",
+      accounts: [{ name: "accounts/1", accountName: "DARB" }],
+      locations: [],
+      errorCode: null,
+      errorMessage: null,
+    });
+    mapFn.mockResolvedValue({ ok: true, error: null });
+    unmapFn.mockResolvedValue({ ok: true, error: null });
     rpcImpl = (fn) => {
-      if (fn === "list_office_google_profiles")
-        return { data: [], error: null };
+      if (fn === "get_office_google_mapping")
+        return { data: [UNMAPPED_ROW], error: null };
       if (fn === "admin_get_google_business_activity")
         return { data: [], error: null };
       return { data: null, error: null };
     };
   });
 
-  it("shows the not-connected placeholder with a disabled Connect control", async () => {
+  it("shows the not-connected placeholder with a Find-location control", async () => {
     renderSection();
     expect(await screen.findByText("notConnectedTitle")).toBeInTheDocument();
-    const connect = screen.getByRole("button", { name: /connect/i });
-    expect(connect).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /findLocation/i }),
+    ).toBeInTheDocument();
   });
 
   it("offers only the eligible same-office members in the selector", async () => {
@@ -144,10 +224,180 @@ describe("OfficeGoogleBusinessSection", () => {
     ).toBeInTheDocument();
   });
 
+  it("does not offer mapping to a non-admin team member", async () => {
+    renderSection({ isAdmin: false, operatorRole: "PRIMARY" });
+    await screen.findByText("notConnectedTitle");
+    expect(
+      screen.queryByRole("button", { name: /findLocation/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("adminOnlyNote")).toBeInTheDocument();
+  });
+
+  it("lists discovered locations and never auto-maps", async () => {
+    const user = userEvent.setup();
+    discoverFn.mockResolvedValue({
+      status: "connected",
+      syncedAt: "2026-10-01T00:00:00Z",
+      accounts: [{ name: "accounts/1", accountName: "DARB" }],
+      locations: [
+        {
+          resourceName: "accounts/1/locations/loc-berlin",
+          locationId: "loc-berlin",
+          accountId: "accounts/1",
+          title: "DARB Berlin",
+          address: "Example Strasse 10, 10115, Berlin, DE",
+          phone: "+49 30 1234",
+          website: "https://darb.agency",
+          category: "Education consultant",
+          placeId: "place-1",
+          mapsUrl: "https://maps.google.com/?cid=1",
+          verificationState: "VERIFIED",
+          locationState: "OPEN",
+          mappedOfficeId: null,
+          mappedOfficeName: null,
+        },
+      ],
+      errorCode: null,
+      errorMessage: null,
+    });
+
+    renderSection();
+    await screen.findByText("notConnectedTitle");
+    await user.click(screen.getByRole("button", { name: /findLocation/i }));
+
+    expect(await screen.findByText("DARB Berlin")).toBeInTheDocument();
+    expect(mapFn).not.toHaveBeenCalled();
+  });
+
+  it("disables a location already mapped to another office", async () => {
+    const user = userEvent.setup();
+    discoverFn.mockResolvedValue({
+      status: "connected",
+      syncedAt: "2026-10-01T00:00:00Z",
+      accounts: [],
+      locations: [
+        {
+          resourceName: "accounts/1/locations/loc-hamburg",
+          locationId: "loc-hamburg",
+          accountId: "accounts/1",
+          title: "DARB Hamburg",
+          address: "Hamburg",
+          phone: null,
+          website: null,
+          category: null,
+          placeId: null,
+          mapsUrl: null,
+          verificationState: null,
+          locationState: null,
+          mappedOfficeId: "hamburg",
+          mappedOfficeName: "Hamburg",
+        },
+      ],
+      errorCode: null,
+      errorMessage: null,
+    });
+
+    renderSection();
+    await screen.findByText("notConnectedTitle");
+    await user.click(screen.getByRole("button", { name: /findLocation/i }));
+
+    expect(await screen.findByText("DARB Hamburg")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "select" })).toBeDisabled();
+  });
+
+  it("maps the selected location through the server function", async () => {
+    const user = userEvent.setup();
+    discoverFn.mockResolvedValue({
+      status: "connected",
+      syncedAt: "2026-10-01T00:00:00Z",
+      accounts: [],
+      locations: [
+        {
+          resourceName: "accounts/1/locations/loc-berlin",
+          locationId: "loc-berlin",
+          accountId: "accounts/1",
+          title: "DARB Berlin",
+          address: "Example Strasse 10, 10115, Berlin, DE",
+          phone: "+49 30 1234",
+          website: "https://darb.agency",
+          category: "Education consultant",
+          placeId: "place-1",
+          mapsUrl: null,
+          verificationState: "VERIFIED",
+          locationState: "OPEN",
+          mappedOfficeId: null,
+          mappedOfficeName: null,
+        },
+      ],
+      errorCode: null,
+      errorMessage: null,
+    });
+
+    renderSection();
+    await screen.findByText("notConnectedTitle");
+    await user.click(screen.getByRole("button", { name: /findLocation/i }));
+    await user.click(await screen.findByRole("button", { name: "select" }));
+    await user.click(
+      await screen.findByRole("button", { name: "selectThisLocation" }),
+    );
+    await user.click(
+      await screen.findByRole("button", { name: "confirmConnection" }),
+    );
+
+    await waitFor(() => {
+      expect(mapFn).toHaveBeenCalledWith({
+        data: {
+          officeId: "berlin",
+          googleAccountId: "accounts/1",
+          googleLocationResourceName: "accounts/1/locations/loc-berlin",
+        },
+      });
+    });
+  });
+
+  it("shows a mapped office with change and disconnect controls", async () => {
+    rpcImpl = (fn) => {
+      if (fn === "get_office_google_mapping")
+        return { data: [MAPPED_ROW], error: null };
+      if (fn === "admin_get_google_business_activity")
+        return { data: [], error: null };
+      return { data: null, error: null };
+    };
+    renderSection();
+    expect(await screen.findByText("DARB Berlin")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /changeLocation/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /disconnect/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("unmaps through the server function after confirmation", async () => {
+    const user = userEvent.setup();
+    rpcImpl = (fn) => {
+      if (fn === "get_office_google_mapping")
+        return { data: [MAPPED_ROW], error: null };
+      if (fn === "admin_get_google_business_activity")
+        return { data: [], error: null };
+      return { data: null, error: null };
+    };
+    renderSection();
+    await screen.findByText("DARB Berlin");
+    await user.click(screen.getByRole("button", { name: /^disconnect$/i }));
+    await user.click(
+      await screen.findByRole("button", { name: "disconnectConfirm" }),
+    );
+
+    await waitFor(() => {
+      expect(unmapFn).toHaveBeenCalledWith({ data: { officeId: "berlin" } });
+    });
+  });
+
   it("renders localized audit action labels", async () => {
     rpcImpl = (fn) => {
-      if (fn === "list_office_google_profiles")
-        return { data: [], error: null };
+      if (fn === "get_office_google_mapping")
+        return { data: [UNMAPPED_ROW], error: null };
       if (fn === "admin_get_google_business_activity") {
         return {
           data: [
@@ -157,8 +407,8 @@ describe("OfficeGoogleBusinessSection", () => {
               google_location_id: null,
               actor_user_id: "admin",
               actor_role: "admin",
-              action: "ADMIN_ASSIGNED_PRIMARY",
-              resource_type: "office_google_operator",
+              action: "GOOGLE_LOCATION_MAPPED",
+              resource_type: "office_google_profile",
               resource_id: "op1",
               before_data: null,
               after_data: null,
@@ -172,7 +422,7 @@ describe("OfficeGoogleBusinessSection", () => {
     };
     renderSection();
     expect(
-      await screen.findByText("ADMIN_ASSIGNED_PRIMARY"),
+      await screen.findByText("GOOGLE_LOCATION_MAPPED"),
     ).toBeInTheDocument();
   });
 });

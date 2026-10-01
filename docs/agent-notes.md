@@ -3251,3 +3251,39 @@ verified non-vacuous by reintroducing the defect).
 - UI: `OfficeGoogleBusinessSection` is wired into `AdminOfficesPage`'s office
   dialog; the Connect control is intentionally disabled until Phase 2. The
   operator selector is fed only same-office active members.
+
+## Office Google Business location mapping (Phase 3, 2026-10-01)
+- Migration `20261001170000_office_google_location_mapping.sql` (newer timestamp
+  than Phase 1, so its redefined `authorize_google_office_action` wins on a fresh
+  deploy). Adds the admin-only `google_business_locations` cache, richer
+  `office_google_profiles` columns, a `mapping_status` lifecycle
+  (`UNMAPPED/PENDING_CONFIRMATION/MAPPED/DISCONNECTED/MAPPING_ERROR`), and the
+  Phase 3 actions (`GOOGLE_DISCOVER_LOCATIONS/VIEW_LOCATION/MAP_LOCATION/
+  REMAP_LOCATION/UNMAP_LOCATION`) — all admin-only in the authorizer.
+- **A mapping rejection rolls back its own audit insert.** The failure-path
+  `INSERT INTO google_business_activity` inside `admin_map_office_google_location`
+  would roll back with the raised exception (dead code). The rejection audit
+  therefore lives in its own RPC, `admin_record_google_mapping_attempt`, called
+  by the server function *after* the authoritative RPC fails. It is constrained
+  to the known rejection actions so it can never fabricate an arbitrary entry.
+- Mapping is never automatic. `admin_map_office_google_location` locks the office
+  row, then re-validates that the location exists in the cache, belongs to the
+  named account, and is not already mapped to a different office; a forged
+  `google_account_id` or `office_id` is rejected server-side. `UNIQUE
+  (google_location_id)` from Phase 1 is the concurrency backstop.
+- Discovery runs in admin-gated server code (`googleBusinessLocation.functions.ts`),
+  files each location under the account it was verified from (never a
+  client-supplied id), and upserts through `admin_sync_google_locations`. The
+  `google_business_locations` table has **no grant to any browser role** — reads
+  go through `admin_list_google_locations` / `get_office_google_mapping`, so
+  `raw_location_json` is never reachable from the client. `get_office_google_mapping`
+  is office-scoped for active members and admin-wide.
+- `googleLocationMatch.ts` produces a *suggestion* only (labeled heuristic, never
+  "verified"); the admin always confirms before the RPC runs.
+- Verification: `/tmp/phase3_verify.sql` (45/45) covers idempotent re-sync,
+  malformed-payload rejection, cross-office isolation on the read RPC, duplicate
+  location, forged account, and rejection auditing; Phase 1 stays 71/71.
+- Gotcha: `src/lib/arabicBrandSpelling.test.ts` rejects the Arabic misspelling
+  `دارب` and any Latin `DARB` in `ar` locale values — use `درب` (this also fixed
+  a Phase 2 `googleConnection.notLinked` leak).
+
