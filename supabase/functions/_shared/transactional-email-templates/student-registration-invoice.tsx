@@ -13,6 +13,7 @@ type Item = {
   months?: number | null;
   weekly_price?: number | null;
   monthly_price?: number | null;
+  billing_period?: string | null;
   total?: number | null;
   currency?: string | null;
 };
@@ -135,6 +136,36 @@ const money = (value: number | null | undefined, currency = "EUR") =>
 const pickName = (item: Item, locale: keyof typeof labels) =>
   locale === "ar" ? item.name_ar || item.name_en || "—" : item.name_en || item.name_ar || "—";
 
+/**
+ * Deliberate Deno mirror of `formatInvoiceItemBilling` in
+ * src/utils/invoicePresentation.ts — the edge function cannot import from src/.
+ * The wording is asserted identical by referralRegistrationGuards.test.ts.
+ *
+ * A one_time premium is charged once, so it must not be labelled "1 month ·
+ * €X/month"; the monthly_price field carries the flat premium in that case.
+ */
+const billingCopy: Record<string, { week: string; weeks: string; weekUnit: string; month: string; months: string; monthUnit: string; oneTime: string }> = {
+  en: { week: "week", weeks: "weeks", weekUnit: "/week", month: "month", months: "months", monthUnit: "/month", oneTime: "one-time" },
+  ar: { week: "أسبوع", weeks: "أسابيع", weekUnit: "/أسبوع", month: "شهر", months: "أشهر", monthUnit: "/شهر", oneTime: "دفعة واحدة" },
+  he: { week: "שבוע", weeks: "שבועות", weekUnit: "/שבוע", month: "חודש", months: "חודשים", monthUnit: "/חודש", oneTime: "תשלום חד-פעמי" },
+};
+
+const billingLine = (item: Item, currency: string, locale: string) => {
+  const c = billingCopy[locale] ?? billingCopy.en;
+  if (item.weeks) {
+    const unit = item.weeks === 1 ? c.week : c.weeks;
+    return `${item.weeks} ${unit}${item.weekly_price != null ? ` · ${money(item.weekly_price, currency)}${c.weekUnit}` : ""}`;
+  }
+  if (item.months) {
+    if (item.billing_period && item.billing_period !== "monthly") {
+      return item.monthly_price != null ? `${c.oneTime} · ${money(item.monthly_price, currency)}` : c.oneTime;
+    }
+    const unit = item.months === 1 ? c.month : c.months;
+    return `${item.months} ${unit}${item.monthly_price != null ? ` · ${money(item.monthly_price, currency)}${c.monthUnit}` : ""}`;
+  }
+  return "";
+};
+
 const MetaRow = ({ label, value, dir = "ltr" }: { label: string; value?: React.ReactNode; dir?: "ltr" | "rtl" }) => (
   <tr>
     <td style={{ ...metaLabel, textAlign: "right" }} dir="rtl">{label}</td>
@@ -190,8 +221,7 @@ function RegistrationInvoiceEmail(props: Props) {
               <td style={{ ...cell, textAlign: "right" }} dir={dir}>
                 <div style={{ fontWeight: 600 }}>{pickName(item, locale)}</div>
                 <div style={subLabel}>
-                  {item.weeks ? item.weeks + " " + (item.weeks === 1 ? "week" : "weeks") + (item.weekly_price != null ? " · " + money(item.weekly_price, currency) + "/week" : "") : ""}
-                  {item.months ? item.months + " " + (item.months === 1 ? "month" : "months") + (item.monthly_price != null ? " · " + money(item.monthly_price, currency) + "/month" : "") : ""}
+                  {billingLine(item, currency, locale)}
                 </div>
               </td>
               <td style={{ ...cell, textAlign: "left", whiteSpace: "nowrap" }} dir="ltr">{money(item.total, currency)}</td>

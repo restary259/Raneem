@@ -624,6 +624,7 @@ BEGIN
         'kind','insurance',
         'name_en',v_insurance.name,
         'name_ar',v_insurance.name,
+        'billing_period',v_insurance_billing,
         'months',v_insurance_months,
         'monthly_price',v_insurance_rate,
         'total',v_insurance_total,
@@ -1483,16 +1484,27 @@ BEGIN
   END IF;
 
   -- A paid direct registration starts the file directly; there is no intake
-  -- call or appointment to record for it.
+  -- call or appointment to record for it. Restricted to an admin or the case's
+  -- assigned team member AND to cases that actually arrived through this flow
+  -- with a paid registration invoice — an ordinary case must still pass through
+  -- contacted / appointment_scheduled and record its appointment outcomes.
   IF OLD.status = 'new' AND NEW.status = 'profile_completion' THEN
-    IF public.has_role(auth.uid(), 'admin')
-       OR EXISTS (
-         SELECT 1 FROM public.cases c
-          WHERE c.id = NEW.id AND c.assigned_to = auth.uid()
+    IF (public.has_role(auth.uid(), 'admin')
+        OR EXISTS (
+          SELECT 1 FROM public.cases c
+           WHERE c.id = NEW.id AND c.assigned_to = auth.uid()
+        ))
+       AND EXISTS (
+         SELECT 1
+           FROM public.cases c
+           JOIN public.case_registration_invoices i ON i.case_id = c.id
+          WHERE c.id = NEW.id
+            AND c.source = 'student_referral_registration'
+            AND i.status = 'paid'
        ) THEN
       RETURN NEW;
     END IF;
-    RAISE EXCEPTION 'STAGE_BLOCKED: only an administrator or the assigned team member can start a registration case';
+    RAISE EXCEPTION 'STAGE_BLOCKED: only a paid direct-registration case can start at profile_completion';
   END IF;
 
   IF OLD.status = 'contacted' AND NEW.status = 'appointment_scheduled' THEN

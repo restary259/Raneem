@@ -65,6 +65,23 @@ describe("student referral registration migration", () => {
     expect(sql).toContain("OLD.status = 'new' AND NEW.status = 'profile_completion'");
   });
 
+  it("does not let an ordinary case skip the intake stages", () => {
+    // The new -> profile_completion edge must be limited to cases that actually
+    // came through this flow with a paid registration invoice; otherwise any
+    // staff member could bypass contacted/appointment_scheduled on any case.
+    const start = sql.indexOf("OLD.status = 'new' AND NEW.status = 'profile_completion'");
+    const block = sql.slice(start, sql.indexOf("END IF;", start));
+    expect(block).toContain("c.source = 'student_referral_registration'");
+    expect(block).toContain("JOIN public.case_registration_invoices i ON i.case_id = c.id");
+    expect(block).toContain("i.status = 'paid'");
+    expect(block).toContain("public.has_role(auth.uid(), 'admin')");
+    expect(block).toContain("c.assigned_to = auth.uid()");
+  });
+
+  it("records the insurance billing period on the invoice item", () => {
+    expect(sql).toContain("'billing_period',v_insurance_billing");
+  });
+
   it("exposes a school-scoped catalog RPC for students", () => {
     // programs/accommodations SELECT policies cover team_member and admin only.
     expect(sql).toContain("FUNCTION public.get_registration_catalog(p_school_id uuid)");

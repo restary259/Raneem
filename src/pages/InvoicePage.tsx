@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import { downloadInvoicePdf } from "@/utils/invoicePdf";
 import { downloadRegistrationInvoicePdf } from "@/utils/registrationInvoicePdf";
-import { createInvoicePresentation, formatInvoiceMoney } from "@/utils/invoicePresentation";
+import { createInvoicePresentation, formatInvoiceItemBilling, formatInvoiceMoney } from "@/utils/invoicePresentation";
 
 interface PublicInvoice {
   invoice_number: string;
@@ -317,7 +317,7 @@ function RegistrationInvoiceView({
               <ul className="divide-y divide-border">
                 {(invoice.items ?? []).map((item, index) => (
                   <li key={index} className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 px-4 py-4 text-sm">
-                    <div className="min-w-0"><p className="font-medium">{isArabic ? item.name_ar || item.name_en : item.name_en || item.name_ar}</p><p className="mt-1 text-xs text-muted-foreground">{item.weeks ? item.weeks + " " + (item.weeks === 1 ? "week" : "weeks") + (item.weekly_price ? " · " + money(Number(item.weekly_price), currency) + "/week" : "") : item.months ? item.months + " " + (item.months === 1 ? "month" : "months") + (item.monthly_price ? " · " + money(Number(item.monthly_price), currency) + "/month" : "") : ""}</p></div>
+                    <div className="min-w-0"><p className="font-medium">{isArabic ? item.name_ar || item.name_en : item.name_en || item.name_ar}</p><p className="mt-1 text-xs text-muted-foreground">{formatInvoiceItemBilling(item, currency, isArabic)}</p></div>
                     <span dir="ltr" className="whitespace-nowrap font-medium">{money(Number(item.total), currency)}</span>
                   </li>
                 ))}

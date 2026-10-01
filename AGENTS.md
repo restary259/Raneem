@@ -3111,9 +3111,13 @@ typechecked locally, so these defects were invisible until CI ran. Fixed at
   binding all **success**. CodeQL, OpenCodeReview `code-review`, Aikido (both
   checks) pass. `mergeStateStatus: CLEAN`, `mergeable: MERGEABLE`, 0 unresolved
   review threads.
-- **Greptile is out of trial credits** and posts only
-  "has reached the 50-credit limit" bodies — that is not actionable review
-  feedback; do not chase it.
+- **Greptile was temporarily out of trial credits** and posted only
+  "has reached the 50-credit limit" bodies, so the first pass recorded that as
+  "not actionable — do not chase it". **That was wrong and it cost a round
+  trip**: the credits refreshed on the next push and Greptile then delivered 13
+  substantive findings, all of which were real (see the section below). A credit
+  notice is a *deferral*, not a clean review — re-poll the threads after the next
+  push instead of recording the PR as review-complete.
 - Aikido's three inline findings (High: repeated card checkout; Medium x2:
   public bank-transfer reopen / submitted-mark blocks card) were already
   resolved in the PR, and were verified present in CODE, not just marked
@@ -3125,4 +3129,90 @@ typechecked locally, so these defects were invisible until CI ran. Fixed at
   `submit_registration_bank_transfer` refuses once `payment_status='paid'`.
 - The migration `20261001090000_student_referral_registration.sql` is MANUAL
   DEPLOY (not applied by the Vercel build or `ci.yml`).
+
+## Direct student registration — Greptile re-run on PR #148 (2026-09-30)
+
+Greptile's credits refreshed after the docs push and it re-reviewed the PR with
+13 findings. All 13 were **real**; every one failed *silently* — which is why the
+original pass shipped them. Verified against the code, fixed in `9a079ef`, and
+each now has a guard in `src/lib/referralRegistrationGuards.test.ts` (10 cases,
+verified non-vacuous by reintroducing the defect).
+
+- **`AS $` / `$;` is not a dollar quote.** Two function bodies used it, so
+  Postgres rejected the whole migration file — no table and no function was ever
+  created. Restored to `AS $$` / `$$;`.
+- **Regex literals were double-escaped** (`'^\\d{4}-\\d{2}$'`). Under
+  `standard_conforming_strings=on` that is a literal backslash + `d`, so the
+  start-month, email and phone patterns matched nothing real and every
+  submission was rejected as invalid. The repo's convention is single-backslash
+  (`'^[^[:space:]@]+@[^[:space:]@]+$'`); match it.
+- **`case_reference` is on `cases`, not `case_registration_invoices`.** Both
+  payment RPCs selected `v_invoice.case_reference`, so starting a card payment or
+  marking a bank transfer raised immediately. Now
+  `SELECT i.*, c.case_reference ... JOIN public.cases c ON c.id = i.case_id
+  ... FOR UPDATE OF i` (row lock must name `i` once a join is present).
+- **The same column mistake in a JS select** (`AdminCommandCenter` referral
+  queue). PostgREST errors, the catch empties the queue, and an empty queue looks
+  exactly like "nothing to do". Join as `cases(case_reference)`.
+- **`insurances.billing_period` was ignored** in the server total, so a `one_time`
+  premium was multiplied by the program months — the invoice charged more than
+  the quote the student approved. Mirrors `insurancePricing.ts` and the canonical
+  `case_submissions` calculation: multiply only when `billing_period='monthly'`.
+- **The `'none'` insurance sentinel was cast to uuid** and blew up registration.
+  Resolve it as `NULLIF(NULLIF(p_data->>'insurance_id',''),'none')::uuid`.
+- **A trigger blocked the whole flow.** `enforce_case_stage_transition`
+  (20260818090000) allows `new -> contacted` only, so the confirm RPCs'
+  `new -> profile_completion` raised `STAGE_BLOCKED` and rolled the payment
+  confirmation back. The trigger is redefined in this migration with that one
+  added edge — and, per the follow-up review, gated on the case actually being a
+  `student_referral_registration` **with a paid invoice**, plus admin-or-assigned
+  staff. Without that second condition any staff member could push *any* case
+  past `contacted`/`appointment_scheduled` and skip its appointment outcomes.
+  The timestamp must stay newer than 20260818090000, or an out-of-order re-run of
+  the older file drops the exception again.
+- **`programs` / `accommodations` SELECT policies cover `team_member` and
+  `admin` only**, so a student could pick a school but never load its courses or
+  housing — the whole flow was unreachable. Rather than widening RLS, added the
+  `SECURITY DEFINER` `get_registration_catalog(p_school_id)` RPC (one school,
+  active rows, explicit column list, no wildcard) and the flow calls it. This is
+  the same RPC-first pattern as `get_student_important_contacts`.
+- **History query omitted `public_token`**, so invoice links resolved to
+  `/invoice/undefined`.
+- **`InvoicePage` had lost the confirmed-payment and remaining rows** (the PDF
+  kept them), so a partially paid invoice hid what was still owed.
+- **`registrationInvoicePdf` had no space check** before the totals/memo/bank
+  block: a few wrapping item names pushed them past the fixed footer at `y=282`.
+  It now computes the block height and starts a new page.
+- **Invoice resends reused one idempotency key** built from the invoice number
+  alone, so the mail service deduplicated every resend while reporting success.
+  Include a per-send value.
+- **One-time insurance rendered as "1 month · €X/month"** even after the total was
+  fixed — the *amount* was right but the label read as recurring. The item now
+  carries `billing_period`, and one shared `formatInvoiceItemBilling`
+  (`src/utils/invoicePresentation.ts`) renders it for the invoice page; the Deno
+  email template mirrors it in `billingLine()` (it cannot import from `src/`) and
+  `src/utils/invoiceItemBilling.test.ts` asserts the two copies' wording matches
+  per locale, so the duplication cannot drift silently.
+
+### Recurring lessons
+- **A PostgREST/JS select naming a column that does not exist is a silent
+  failure**, because the surrounding `catch` usually degrades to an empty state
+  that is indistinguishable from a legitimate empty result. Check the column
+  against the table, not against a sibling query.
+- **A `FOR UPDATE` row lock must name a single table once the query is a join**;
+  the bare form errors.
+- **SQL string escaping**: this repo writes regexes with a single backslash
+  inside standard single-quoted literals. Doubling them silently changes the
+  pattern.
+- **When a trigger is redefined to unblock a flow, scope the new edge to the
+  flow's own rows.** "Who may do it" (admin/assigned staff) is not the same
+  question as "which cases is it valid for".
+- **Widening RLS is not the only option for a read a role lacks** — a scoped
+  `SECURITY DEFINER` RPC keeps the policies untouched and returns only the rows
+  and columns the caller legitimately needs.
+- **Locale/format duplication across the `src` ↔ Deno boundary needs a drift
+  guard**, not a comment. Assert the two copies agree on the values that matter.
+- Verification: `npx tsc --noEmit` clean; `npx vitest run` 1790 passed | 1 skipped
+  (122 files); `npm run build` clean.
+
 
