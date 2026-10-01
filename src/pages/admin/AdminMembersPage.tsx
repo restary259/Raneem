@@ -239,7 +239,7 @@ const AdminMembersPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="sr-only">
             <Users className="h-6 w-6 text-primary" />
             {t("admin.members.title", "Team Members")}
           </h1>
