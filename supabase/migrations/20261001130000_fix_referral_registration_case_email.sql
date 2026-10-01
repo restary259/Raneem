@@ -1,5 +1,7 @@
 -- cases has no email column: duplicate check reads case_submissions.student_email
 -- and the case insert no longer writes cases.email. Email stays on case_submissions.
+-- Also: no-insurance registrations no longer hit an unassigned record, and the
+-- preferred major is stored as the slug cases.preferred_major_id expects.
 CREATE OR REPLACE FUNCTION public.create_student_referral_registration_internal(
   p_referrer_user_id uuid,
   p_data jsonb
@@ -62,7 +64,7 @@ DECLARE
   v_math_units integer;
   v_english_level text;
   v_major text;
-  v_major_id uuid;
+  v_major_id text; -- cases.preferred_major_id is a slug, not a uuid
 BEGIN
   IF p_referrer_user_id IS NULL OR p_data IS NULL THEN
     RAISE EXCEPTION 'Invalid registration payload';
@@ -218,9 +220,12 @@ BEGIN
      AND upper(COALESCE(v_accommodation.currency,'EUR')) <> upper(COALESCE(v_program.currency,'EUR')) THEN
     RAISE EXCEPTION 'Course and accommodation currencies must match';
   END IF;
-  IF v_insurance_id IS NOT NULL
-     AND upper(COALESCE(v_insurance.currency,'EUR')) <> upper(COALESCE(v_program.currency,'EUR')) THEN
-    RAISE EXCEPTION 'Course and insurance currencies must match';
+  -- Nested: plpgsql does not short-circuit AND, and v_insurance is unassigned
+  -- when no insurance was chosen.
+  IF v_insurance_id IS NOT NULL THEN
+    IF upper(COALESCE(v_insurance.currency,'EUR')) <> upper(COALESCE(v_program.currency,'EUR')) THEN
+      RAISE EXCEPTION 'Course and insurance currencies must match';
+    END IF;
   END IF;
 
   v_currency := upper(COALESCE(v_program.currency,'EUR'));
@@ -357,7 +362,7 @@ BEGIN
   v_math_units := NULLIF(p_data->>'math_units','')::integer;
   v_english_level := NULLIF(btrim(p_data->>'english_level'),'');
   v_major := NULLIF(btrim(p_data->>'degree_interest'),'');
-  v_major_id := NULLIF(p_data->>'preferred_major_id','')::uuid;
+  v_major_id := NULLIF(btrim(p_data->>'preferred_major_id'),'');
 
   IF v_english_units IS NOT NULL AND (v_english_units < 1 OR v_english_units > 5) THEN
     RAISE EXCEPTION 'Invalid English units';
