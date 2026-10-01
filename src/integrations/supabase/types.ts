@@ -1174,58 +1174,61 @@ export type Database = {
       case_registration_payments: {
         Row: {
           amount: number
-          bank_reference: string | null
           case_id: string
+          checkout_url: string | null
           confirmed_at: string | null
           confirmed_by: string | null
           created_at: string
           currency: string
+          failure_reason: string | null
           id: string
-          notes: string | null
+          invoice_id: string
+          metadata: Json
           payment_method: string
-          payment_reference: string | null
-          registration_invoice_id: string
+          provider_payment_id: string | null
+          receipt_path: string | null
+          reference: string | null
           status: string
-          stripe_payment_intent_id: string | null
-          stripe_session_id: string | null
           submitted_at: string | null
           updated_at: string
         }
         Insert: {
           amount: number
-          bank_reference?: string | null
           case_id: string
+          checkout_url?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
           currency?: string
+          failure_reason?: string | null
           id?: string
-          notes?: string | null
+          invoice_id: string
+          metadata?: Json
           payment_method: string
-          payment_reference?: string | null
-          registration_invoice_id: string
+          provider_payment_id?: string | null
+          receipt_path?: string | null
+          reference?: string | null
           status?: string
-          stripe_payment_intent_id?: string | null
-          stripe_session_id?: string | null
           submitted_at?: string | null
           updated_at?: string
         }
         Update: {
           amount?: number
-          bank_reference?: string | null
           case_id?: string
+          checkout_url?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
           currency?: string
+          failure_reason?: string | null
           id?: string
-          notes?: string | null
+          invoice_id?: string
+          metadata?: Json
           payment_method?: string
-          payment_reference?: string | null
-          registration_invoice_id?: string
+          provider_payment_id?: string | null
+          receipt_path?: string | null
+          reference?: string | null
           status?: string
-          stripe_payment_intent_id?: string | null
-          stripe_session_id?: string | null
           submitted_at?: string | null
           updated_at?: string
         }
@@ -1238,8 +1241,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "case_registration_payments_registration_invoice_id_fkey"
-            columns: ["registration_invoice_id"]
+            foreignKeyName: "case_registration_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "case_registration_invoices"
             referencedColumns: ["id"]
@@ -7258,15 +7261,11 @@ export type Database = {
         Returns: undefined
       }
       confirm_registration_card_payment_internal: {
-        Args: {
-          p_invoice_id: string
-          p_stripe_payment_intent_id?: string
-          p_stripe_session_id: string
-        }
+        Args: { p_payment_id: string; p_provider_payment_id: string }
         Returns: Json
       }
       confirm_registration_payment: {
-        Args: { p_notes?: string; p_payment_id: string }
+        Args: { p_payment_id: string; p_reference?: string }
         Returns: Json
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
@@ -7283,7 +7282,7 @@ export type Database = {
         Returns: Json
       }
       create_student_referral_registration_internal: {
-        Args: { p_payload: Json; p_referrer_user_id: string }
+        Args: { p_data: Json; p_referrer_user_id: string }
         Returns: Json
       }
       decline_voice_call: { Args: { p_call_id: string }; Returns: undefined }
@@ -7343,11 +7342,7 @@ export type Database = {
         Returns: string
       }
       fail_registration_card_payment_internal: {
-        Args: {
-          p_invoice_id: string
-          p_reason?: string
-          p_stripe_session_id: string
-        }
+        Args: { p_failure_reason?: string; p_payment_id: string }
         Returns: Json
       }
       finish_voice_call: {
@@ -7744,12 +7739,9 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Json
       }
-      get_registration_catalog: {
-        Args: { p_referrer_user_id?: string }
-        Returns: Json
-      }
+      get_registration_catalog: { Args: { p_school_id: string }; Returns: Json }
       get_registration_invoice_by_token: {
-        Args: { p_public_token: string }
+        Args: { p_token: string }
         Returns: Json
       }
       get_school_important_contacts: {
@@ -8153,7 +8145,7 @@ export type Database = {
       }
       mark_registration_invoice_email: {
         Args: { p_error?: string; p_invoice_id: string; p_status: string }
-        Returns: Json
+        Returns: undefined
       }
       mark_student_visa_arrived: {
         Args: { p_case_id: string }
@@ -8274,11 +8266,11 @@ export type Database = {
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
       resolve_registration_insurance_monthly_rate: {
-        Args: { p_price_tiers: Json; p_program_weeks: number }
+        Args: { p_age: number; p_base: number; p_tiers: Json }
         Returns: number
       }
       resolve_registration_weekly_rate: {
-        Args: { p_base_price: number; p_tiers: Json; p_weeks: number }
+        Args: { p_base: number; p_tiers: Json; p_weeks: number }
         Returns: number
       }
       resubmit_case_for_review: {
@@ -8437,7 +8429,7 @@ export type Database = {
         Returns: string
       }
       submit_registration_bank_transfer: {
-        Args: { p_public_token: string }
+        Args: { p_token: string }
         Returns: Json
       }
       submit_student_visa_application: {
@@ -8467,7 +8459,7 @@ export type Database = {
           p_bic: string
           p_iban: string
         }
-        Returns: Json
+        Returns: undefined
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
       whatsapp_apply_marketing_opt_out: {
