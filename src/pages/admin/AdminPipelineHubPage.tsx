@@ -8,13 +8,14 @@ const AdminSubmissionsPage = lazy(() => import("./AdminSubmissionsPage"));
 const AdminVisaPage = lazy(() => import("./AdminVisaPage"));
 
 /**
- * Case-state hub — the pipeline board and the submissions review queue are two
- * views of the same cases, so they live under one destination.
- * `/admin/submissions` redirects here with `?tab=submissions`.
+ * Unified case workspace: Pipeline, Submissions and Visa live in one
+ * URL-addressable tab group instead of separate destinations.
  *
- * The third tab is the post-enrollment Visa queue. Visa is deliberately NOT a
- * `cases.status`; it is an operational workflow layered on enrolled cases.
- * `/admin/visa` redirects here with `?tab=visa`.
+ * /admin/submissions and /admin/visa remain compatibility redirects into
+ * this hub so existing bookmarks and internal links keep working.
+ *
+ * Visa is deliberately NOT a cases.status; it is an operational workflow
+ * layered on enrolled cases.
  */
 export default function AdminPipelineHubPage() {
   const { t } = useTranslation("dashboard");
@@ -41,7 +42,7 @@ export default function AdminPipelineHubPage() {
   ];
 
   return (
-    <div className="px-4 pt-4 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6">
       <TabHub tabs={tabs} />
     </div>
   );
