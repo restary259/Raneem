@@ -82,7 +82,7 @@ export default function AdminOfficesPage() {
   const labels = useMemo(function () {
     if (language.startsWith("ar")) {
       return {
-        title: "مكاتب درب", subtitle: "إدارة المواقع، الفريق، ساعات العمل وتوجيه المواعيد", add: "إضافة مكتب", edit: "إدارة المكتب",
+        title: "مكاتب درب", add: "إضافة مكتب", edit: "إدارة المكتب",
         save: "حفظ", cancel: "إلغاء", general: "بيانات المكتب", team: "الفريق المسؤول", booking: "إعدادات الحجز", hours: "ساعات العمل",
         routing: "توجيه الخدمات", primary: "عضو الفريق الأساسي", backup: "عضو احتياط", noMember: "غير محدد", active: "نشط",
         inactive: "غير نشط", enabled: "مفعّل", disabled: "غير مفعّل", city: "المدينة", address: "العنوان", phone: "الهاتف",
@@ -95,7 +95,7 @@ export default function AdminOfficesPage() {
     }
     if (language.startsWith("he")) {
       return {
-        title: "משרדי DARB", subtitle: "ניהול מיקומים, צוות, שעות פעילות וניתוב פגישות", add: "הוספת משרד", edit: "ניהול משרד",
+        title: "משרדי DARB", add: "הוספת משרד", edit: "ניהול משרד",
         save: "שמירה", cancel: "ביטול", general: "פרטי המשרד", team: "הצוות האחראי", booking: "הגדרות הזמנה", hours: "שעות פעילות",
         routing: "ניתוב שירותים", primary: "חבר צוות ראשי", backup: "חבר גיבוי", noMember: "לא מוגדר", active: "פעיל",
         inactive: "לא פעיל", enabled: "מופעל", disabled: "מושבת", city: "עיר", address: "כתובת", phone: "טלפון",
@@ -107,7 +107,7 @@ export default function AdminOfficesPage() {
       };
     }
     return {
-      title: "DARB Offices", subtitle: "Manage locations, staff, hours and appointment routing", add: "Add office", edit: "Manage office",
+      title: "DARB Offices", add: "Add office", edit: "Manage office",
       save: "Save", cancel: "Cancel", general: "Office details", team: "Responsible team", booking: "Booking settings", hours: "Working hours",
       routing: "Service routing", primary: "Primary team member", backup: "Backup member", noMember: "Not assigned", active: "Active",
       inactive: "Inactive", enabled: "Enabled", disabled: "Disabled", city: "City", address: "Address", phone: "Phone",
