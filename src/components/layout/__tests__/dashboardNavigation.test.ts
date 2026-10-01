@@ -70,7 +70,8 @@ describe("dashboard navigation configuration", () => {
 
           for (const locale of LOCALES) {
             for (const key of keys) {
-              if (!hasKey(dashboards[locale], key)) {
+              const navKey = key.replace(/^nav\./, "");
+              if (!hasKey(dashboards[locale], navKey)) {
                 missing.push(`${locale}: ${key} (${role})`);
               }
             }
