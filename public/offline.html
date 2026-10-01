@@ -175,7 +175,7 @@
         <h1>غير متصل بالإنترنت</h1>
         <p class="subtitle">يبدو أنك غير متصل بالإنترنت حالياً. لا تقلق، يمكنك الاستمرار في تصفح المحتوى المحفوظ محلياً.</p>
         
-        <button class="retry-btn" onclick="window.location.reload()">
+        <button id="retry-button" class="retry-btn">
             إعادة المحاولة
         </button>
 
@@ -204,35 +204,6 @@
         </div>
     </div>
 
-    <script>
-        // Check if online and auto-retry
-        window.addEventListener('online', () => {
-            window.location.reload();
-        });
-        
-        // Show connection status
-        function updateConnectionStatus() {
-            if (navigator.onLine) {
-                window.location.reload();
-            }
-        }
-        
-        // Check connection every 3 seconds
-        setInterval(updateConnectionStatus, 3000);
-
-        // Update status indicator based on connection
-        function updateStatusIndicator() {
-            const indicator = document.querySelector('.status-indicator span:last-child');
-            if (navigator.onLine) {
-                indicator.textContent = 'متصل - جاري إعادة التحميل...';
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                indicator.textContent = 'يتم البحث عن الاتصال...';
-            }
-        }
-
-        // Check status every 2 seconds
-        setInterval(updateStatusIndicator, 2000);
-    </script>
+    <script src="/offline.js" defer></script>
 </body>
 </html>
