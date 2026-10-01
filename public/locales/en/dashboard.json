@@ -5267,7 +5267,6 @@
   },
   "commissionHub": {
     "title": "Commission Hub",
-    "subtitle": "Single source of truth for every commission relationship",
     "modelBanner": "Agent commissions are ADDITIVE: paid on top of the partner's full pool share, funded from Darb's margin. The partner always keeps their full ₪{{pool}}.",
     "tabOverview": "Overview",
     "tabRates": "Global rates",
