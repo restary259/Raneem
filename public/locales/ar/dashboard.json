@@ -1716,7 +1716,8 @@
         "pending": "بانتظار الدفع",
         "transferSubmitted": "تحويلات مُرسلة",
         "paid": "مدفوع",
-        "failed": "فشل"
+        "failed": "فشل",
+        "rewardsPending": "المكافآت المعلّقة"
       },
       "tabs": {
         "registrations": "التسجيلات",
