@@ -10,7 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
 import { useSheetLabels } from './sheetLabels';
-import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from '@/utils/export';
+import type { CorporateReport } from '@/utils/export';
+import { deliverReport, type ExportFormat } from './spreadsheetExport';
+import type { ExtraExportScope } from './SheetExportMenu';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { toExportColumns, toExportRows } from './exportMapping';
 import {
@@ -275,15 +277,8 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   const filtersActive = schoolFilter !== 'all' || monthFilter !== 'all';
 
 
-  type ExportFormat = 'xlsx' | 'pdf';
-
-  /**
-   * One report definition, two file formats — the PDF and the workbook always
-   * carry identical sheets, columns and rows.
-   */
   const deliver = async (format: ExportFormat, report: CorporateReport) => {
-    if (format === 'xlsx') return exportCorporateWorkbook(report);
-    const { empty, rtlFontMissing } = await exportCorporatePdf(report);
+    const { empty, rtlFontMissing } = await deliverReport(format, report);
     if (empty) toast({ description: t('sheets.empty') });
     else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
   };
@@ -409,8 +404,29 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
     }
   };
 
+  /** Workspace-level exports offered inside the Admin export menu. */
+  const adminScopes = (sheetKey: string): ExtraExportScope[] => [
+    {
+      value: 'full',
+      label: t('sheets.exportFullReport', 'Full report'),
+      help: t('sheets.exportFullReportHelp', 'All spreadsheet tabs using current filters'),
+      run: exportAll,
+    },
+    ...(sheetKey === 'students'
+      ? [{
+          value: 'schoolPacket',
+          label: t('sheets.exportSchoolPacket', 'School packet'),
+          help: t('sheets.exportSchoolPacketHelp', 'Student details and costs for schools'),
+          requiresRows: true,
+          run: exportSchoolPacket,
+        }]
+      : []),
+  ];
+
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-full">
+      {/* The page's single h1. Admin hides it visually: the sidebar already names the page. */}
+      {scope === 'admin' && <h1 className="sr-only">{t('sheets.title')}</h1>}
       {scope === 'team' && (
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
@@ -497,10 +513,9 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
               loading={!!loading[s.key]}
               onRefresh={() => loadSheet(s)}
               fileName={`DARB-${s.key}-${new Date().toISOString().slice(0, 10)}`}
-              showTitle={scope !== 'admin'}
-              onExportFullReport={scope === 'admin' ? exportAll : undefined}
-              onExportSchoolPacket={scope === 'admin' && active === 'students' ? exportSchoolPacket : undefined}
-              parentExporting={exporting}
+              variant={scope === 'admin' ? 'menu' : 'legacy'}
+              extraExportScopes={scope === 'admin' ? adminScopes(s.key) : undefined}
+              busy={exporting}
               externalFiltersActive={filtersActive}
               onClearExternalFilters={() => {
                 setSchoolFilter('all');
