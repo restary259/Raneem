@@ -60,17 +60,22 @@ describe("Static HTML inline script guards", () => {
 });
 
 describe("Application head scripts under strict CSP", () => {
-  it("keeps root head scripts non-executable JSON-LD only", () => {
-    const rootHead = RootRoute.options.head?.();
+  it("keeps root head scripts non-executable JSON-LD only", async () => {
+    const head = RootRoute.options.head;
+    const rootHead = head
+      ? await head({} as Parameters<NonNullable<typeof head>>[0])
+      : undefined;
     const scripts = rootHead?.scripts ?? [];
 
     expect(scripts.length).toBeGreaterThan(0);
 
-    for (const script of scripts) {
+    for (const script of scripts.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))) {
       expect(script.type).toBe("application/ld+json");
       expect(script.children).toBeTypeOf("string");
-      expect(script.children).not.toContain("<script");
-      expect(() => JSON.parse(script.children)).not.toThrow();
+      if (typeof script.children !== "string") continue;
+      const scriptBody = script.children as string;
+      expect(scriptBody).not.toContain("<script");
+      expect(() => JSON.parse(scriptBody)).not.toThrow();
     }
   });
 });
