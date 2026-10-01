@@ -184,8 +184,11 @@ const SheetTable: React.FC<SheetTableProps> = ({
     };
   };
 
-  const handleExport = async () => {
-    const hasColumns = exportKind !== 'current' || (exportColumnsMode === 'visible'
+  const handleExport = async (
+    requestedFormat: ExportFormat = exportFormat,
+    requestedKind: 'current' | 'full' | 'schoolPacket' = exportKind,
+  ) => {
+    const hasColumns = requestedKind !== 'current' || (exportColumnsMode === 'visible'
       ? activeColumns.length > 0
       : exportColumns.size > 0);
     if (!hasColumns) {
@@ -195,13 +198,13 @@ const SheetTable: React.FC<SheetTableProps> = ({
 
     setExporting(true);
     try {
-      if (exportKind === 'full' && onExportFullReport) {
-        await onExportFullReport(exportFormat);
+      if (requestedKind === 'full' && onExportFullReport) {
+        await onExportFullReport(requestedFormat);
         return;
       }
 
-      if (exportKind === 'schoolPacket' && onExportSchoolPacket) {
-        await onExportSchoolPacket(exportFormat);
+      if (requestedKind === 'schoolPacket' && onExportSchoolPacket) {
+        await onExportSchoolPacket(requestedFormat);
         return;
       }
 
@@ -213,7 +216,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
       report.sheets[0].columns = toExportColumns(selectedColumns);
       report.sheets[0].rows = toExportRows(filteredRows, selectedColumns, translate);
 
-      if (exportFormat === 'xlsx') {
+      if (requestedFormat === 'xlsx') {
         await exportCorporateWorkbook(report);
       } else {
         const { empty, rtlFontMissing } = await exportCorporatePdf(report);
@@ -260,11 +263,11 @@ const SheetTable: React.FC<SheetTableProps> = ({
                 </div>
               </PopoverContent>
             </Popover>
-            <Button size="sm" onClick={() => { setExportKind('current'); setExportFormat('xlsx'); void handleExport(); }} disabled={exporting || parentExporting}>
+            <Button size="sm" onClick={() => void handleExport('xlsx', 'current')} disabled={exporting || parentExporting}>
               <Download className="h-4 w-4 me-1" />
               {t('sheets.exportExcel')}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => { setExportKind('current'); setExportFormat('pdf'); void handleExport(); }} disabled={!filteredRows.length || exporting || parentExporting}>
+            <Button size="sm" variant="outline" onClick={() => void handleExport('pdf', 'current')} disabled={!filteredRows.length || exporting || parentExporting}>
               <FileText className="h-4 w-4 me-1" />
               {t('sheets.exportPdf')}
             </Button>
@@ -301,7 +304,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="sm" disabled={!filteredRows.length || exporting || parentExporting}>
+              <Button size="sm" disabled={exporting || parentExporting}>
                 <Download className="h-4 w-4 me-1" />
                 {exporting || parentExporting ? t('sheets.preparing') : t('sheets.export', 'Export')}
                 <ChevronDown className="h-4 w-4 ms-1" />
@@ -417,9 +420,30 @@ const SheetTable: React.FC<SheetTableProps> = ({
         {loading ? (
           <div className="p-12 text-center text-sm text-muted-foreground">{t('sheets.loading')}</div>
         ) : filteredRows.length === 0 ? (
-          <div className="p-12 text-center">
-            <FileText className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">{t('sheets.empty')}</p>
+          <div className="flex min-h-[160px] flex-col items-center justify-center p-8 text-center">
+            <FileText className="h-8 w-8 text-muted-foreground/30 mb-2" />
+            <p className="text-sm font-medium text-foreground">
+              {search.trim() || externalFiltersActive ? t('sheets.noMatches', 'No rows match your filters or search') : t('sheets.empty')}
+            </p>
+            {(search.trim() || externalFiltersActive) && (
+              <>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('sheets.noMatchesHelp', 'Try changing your filters or search.')}
+                </p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  {search.trim() && (
+                    <Button variant="ghost" size="sm" onClick={() => setSearch('')}>
+                      {t('sheets.clearSearch', 'Clear search')}
+                    </Button>
+                  )}
+                  {externalFiltersActive && onClearExternalFilters && (
+                    <Button variant="ghost" size="sm" onClick={onClearExternalFilters}>
+                      {t('sheets.clearFilters')}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <table className="w-full text-sm">
