@@ -926,7 +926,8 @@
       "apply": "הגשה"
     },
     "languageSelector": "בחירת שפה",
-    "darb": "דארב"
+    "darb": "דארב",
+    "user": "משתמש"
   },
   "common": {
     "loadMore": "טעינת עוד",
