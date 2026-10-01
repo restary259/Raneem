@@ -237,13 +237,7 @@ const AdminMembersPage: React.FC = () => {
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" />
-            {t("admin.members.title", "Team Members")}
-          </h1>
-        </div>
+      <div className="flex items-center justify-end flex-wrap gap-3"><h1 className="sr-only">{t("admin.members.title", "Team Members")}</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleRefreshAll} disabled={teamLoading || agentLoading || partnerLoading || ambassadorLoading}>
             <RefreshCw className="h-4 w-4 me-2" />
