@@ -1,4 +1,4 @@
-# Verify PR #149 (i18next 23 -> 26) is safe to merge
+# Upgrade i18next (23 -> 26) directly in Lovable (syncs to GitHub; PR #149 can then be closed)
 
 ## Current state (confirmed)
 - App uses `i18next ^23.11.5`, `react-i18next ^14.1.0`, `i18next-http-backend ^3.0.2`, React 19, TypeScript 5.8.
