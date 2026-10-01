@@ -72,7 +72,7 @@ export default function AdminReferralOperationsPage() {
 
       const [casesRes, paymentsRes, referralsRes, settingsRes, schoolRes] = await Promise.all([
         caseIds.length
-          ? (supabase as any).from("cases").select("id,full_name,phone_number,email,case_reference,status,assigned_to,referred_by,source,created_at").in("id", caseIds)
+          ? (supabase as any).from("cases").select("id,full_name,phone_number,case_reference,status,assigned_to,referred_by,source,created_at").in("id", caseIds)
           : Promise.resolve({ data: [], error: null }),
         invoiceIds.length
           ? (supabase as any).from("case_registration_payments").select("*").in("invoice_id", invoiceIds).order("created_at", { ascending: false })

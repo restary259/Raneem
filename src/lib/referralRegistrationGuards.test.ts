@@ -87,6 +87,53 @@ describe("student referral registration migration", () => {
     expect(sql).toContain("FUNCTION public.get_registration_catalog(p_school_id uuid)");
     expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.get_registration_catalog(uuid) TO authenticated");
   });
+
+  it("drops the legacy catalog RPC before replacing it", () => {
+    // A legacy out-of-band get_registration_catalog(uuid) exists with a different
+    // parameter NAME; CREATE OR REPLACE cannot rename an input parameter, so the
+    // migration aborts there and nothing after it runs. The DROP must precede the
+    // CREATE, and it must be signature-qualified (never a bare DROP FUNCTION).
+    const dropIdx = sql.indexOf("DROP FUNCTION IF EXISTS public.get_registration_catalog(uuid);");
+    const createIdx = sql.indexOf("FUNCTION public.get_registration_catalog(p_school_id uuid)");
+    expect(dropIdx).toBeGreaterThan(-1);
+    expect(createIdx).toBeGreaterThan(-1);
+    expect(dropIdx).toBeLessThan(createIdx);
+  });
+
+  it("never references a non-existent cases.email column", () => {
+    // `cases` has no email column (create-case-from-apply: "cases has no email
+    // column"). Naming it raised 42703 at statement execution, which the
+    // invalid_text_representation handler does not catch, so every
+    // registration aborted before the INSERT was reached.
+    expect(sql).not.toMatch(/\bc\.email\b/);
+
+    const insertStart = sql.indexOf("INSERT INTO public.cases (");
+    expect(insertStart).toBeGreaterThan(-1);
+    const insertList = sql.slice(insertStart, sql.indexOf(")", insertStart));
+    expect(insertList).not.toMatch(/\bemail\b/);
+
+    // The applicant email is still persisted, on the mirror the rest of the
+    // codebase reads, and the dedupe check matches on that mirror.
+    expect(sql).toContain("student_email");
+    expect(sql).toContain("LEFT JOIN public.case_submissions cs ON cs.case_id = c.id");
+    expect(sql).toContain("lower(COALESCE(cs.student_email,'')) = v_email");
+  });
+
+  it("bridges the legacy registration-payment column names", () => {
+    // CREATE TABLE IF NOT EXISTS is a no-op on the live table, which names the
+    // invoice FK and the Stripe session differently. Without the reconcile
+    // block every payment RPC raises 42703 at runtime.
+    expect(sql).toContain("RENAME COLUMN registration_invoice_id TO invoice_id");
+    expect(sql).toContain("RENAME COLUMN stripe_session_id TO provider_payment_id");
+    expect(sql).toContain("ADD COLUMN IF NOT EXISTS invoice_id uuid");
+    expect(sql).toContain("ADD COLUMN IF NOT EXISTS provider_payment_id text");
+
+    // Everything after the bridge must use the canonical names only — a legacy
+    // name leaking into a function body means that RPC still cannot run.
+    const afterReconcile = sql.slice(sql.indexOf("$reconcile$;") + "$reconcile$;".length);
+    expect(afterReconcile).not.toContain("registration_invoice_id");
+    expect(afterReconcile).not.toContain("stripe_session_id");
+  });
 });
 
 describe("registration flow frontend", () => {
@@ -110,5 +157,18 @@ describe("admin command center referral queue", () => {
     const block = src.match(/from\('case_registration_invoices'\)[\s\S]{0,300}?;/)?.[0] ?? "";
     expect(block).not.toMatch(/select\('id,case_id,student_name,case_reference/);
     expect(block).toContain("cases(case_reference)");
+  });
+});
+
+describe("admin referral operations", () => {
+  const PAGE = "src/pages/admin/AdminReferralOperationsPage.tsx";
+
+  it("does not select cases.email (the column does not exist)", () => {
+    const src = read(PAGE);
+    // The queue read joins cases; naming email there makes PostgREST return a
+    // 400 and the catch renders an empty Referral Operations page.
+    const casesSelect = src.match(/from\("cases"\)\.select\("([^"]*)"\)/)?.[1] ?? "";
+    expect(casesSelect.length).toBeGreaterThan(0);
+    expect(casesSelect.split(",")).not.toContain("email");
   });
 });

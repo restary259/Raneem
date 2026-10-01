@@ -127,6 +127,68 @@ CREATE TABLE IF NOT EXISTS public.case_registration_payments (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Reconciliation with the out-of-band registration generation that already
+-- exists on the live project. `CREATE TABLE IF NOT EXISTS` above is a NO-OP on
+-- an existing table, so without this block the whole migration would still be
+-- missing the columns and every payment RPC would raise 42703 at runtime (the
+-- exact `case_payment_proofs.payment_id` failure mode recorded in AGENTS.md).
+-- That pre-existing table names two of the same concepts differently:
+--   registration_invoice_id  == this feature's invoice_id
+--   stripe_session_id        == this feature's provider_payment_id
+-- and carries its own bank_reference / payment_reference / notes. Detect it and
+-- additively bridge the two so both the legacy and the new code paths work.
+DO $reconcile$
+DECLARE
+  v_legacy boolean;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'case_registration_payments'
+       AND column_name = 'registration_invoice_id'
+  ) INTO v_legacy;
+
+  IF v_legacy THEN
+    -- Name bridge: keep the existing NOT NULL column as the FK to the invoice
+    -- and mirror it into the new invoice_id, instead of creating a second
+    -- nullable column that nothing keeps in sync.
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'case_registration_payments'
+         AND column_name = 'invoice_id'
+    ) THEN
+      ALTER TABLE public.case_registration_payments
+        RENAME COLUMN registration_invoice_id TO invoice_id;
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'case_registration_payments'
+         AND column_name = 'provider_payment_id'
+    ) THEN
+      ALTER TABLE public.case_registration_payments
+        RENAME COLUMN stripe_session_id TO provider_payment_id;
+    END IF;
+  END IF;
+
+  -- Additive: the remaining feature columns plus the legacy extras. Written
+  -- without column-level NOT NULL constraints so this block is idempotent on
+  -- every project shape (the authoritative constraint lives on the freshly
+  -- created path above; the bridge only needs to be usable).
+  ALTER TABLE public.case_registration_payments
+    ADD COLUMN IF NOT EXISTS invoice_id uuid REFERENCES public.case_registration_invoices(id) ON DELETE CASCADE,
+    ADD COLUMN IF NOT EXISTS provider_payment_id text,
+    ADD COLUMN IF NOT EXISTS checkout_url text,
+    ADD COLUMN IF NOT EXISTS receipt_path text,
+    ADD COLUMN IF NOT EXISTS failure_reason text,
+    ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS bank_reference text,
+    ADD COLUMN IF NOT EXISTS payment_reference text,
+    ADD COLUMN IF NOT EXISTS notes text,
+    ADD COLUMN IF NOT EXISTS stripe_payment_intent_id text;
+END
+$reconcile$;
+
 CREATE INDEX IF NOT EXISTS case_registration_payments_invoice_idx
   ON public.case_registration_payments(invoice_id, created_at DESC);
 
@@ -249,6 +311,13 @@ AS $$
     NULLIF(p_base, 0)
   );
 $$;
+
+-- A legacy out-of-band `get_registration_catalog(uuid)` already exists on the
+-- live project with a different parameter NAME. `CREATE OR REPLACE FUNCTION`
+-- cannot rename an input parameter (Postgres: "cannot change name of input
+-- parameter"), so the migration would abort here and every statement after it
+-- would never run. Drop the signature first, then create.
+DROP FUNCTION IF EXISTS public.get_registration_catalog(uuid);
 
 CREATE OR REPLACE FUNCTION public.get_registration_catalog(p_school_id uuid)
 RETURNS jsonb
@@ -412,12 +481,18 @@ BEGIN
     RAISE EXCEPTION 'This phone number has already been referred by you';
   END IF;
 
+  -- `cases` has no email column (see create-case-from-apply: "cases has no
+  -- email column"). The applicant email lives on case_submissions.student_email,
+  -- so the duplicate check matches on that mirror instead of a column that does
+  -- not exist — naming cases.email here raised 42703 and aborted every
+  -- registration before the INSERT was ever reached.
   SELECT c.id
     INTO v_existing
     FROM public.cases c
+    LEFT JOIN public.case_submissions cs ON cs.case_id = c.id
    WHERE c.deleted_at IS NULL
      AND (
-       lower(COALESCE(c.email,'')) = v_email
+       lower(COALESCE(cs.student_email,'')) = v_email
        OR regexp_replace(c.phone_number, '\D', '', 'g') =
           regexp_replace(v_phone, '\D', '', 'g')
      )
@@ -659,11 +734,11 @@ BEGIN
   END IF;
 
   INSERT INTO public.cases (
-    full_name, phone_number, email, city, education_level, passport_type,
+    full_name, phone_number, city, education_level, passport_type,
     degree_interest, preferred_major_id, referred_by, source, status
   )
   VALUES (
-    v_name, v_phone, v_email, NULLIF(p_data->>'city',''),
+    v_name, v_phone, NULLIF(p_data->>'city',''),
     v_education_level, v_passport_type, v_major, v_major_id,
     p_referrer_user_id, 'student_referral_registration', 'new'
   )

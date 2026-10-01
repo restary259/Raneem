@@ -3219,3 +3219,47 @@ verified non-vacuous by reintroducing the defect).
 
 ## i18next runtime smoke test (2026-10-01)
 - i18next was upgraded 23 -> 26 (PR #149). `src/lib/i18nRuntime.test.ts` initializes the REAL `src/i18n.ts` (fetch stubbed to serve `public/locales`) and checks bundled `common` in ar/en/he, interpolation, `t(key, "default")`, he -> en fallback, the HTTP `dashboard` namespace, and `dir`/`lang` on language change, because the key-coverage tests only read JSON and cannot catch a library loading regression.
+
+## Referral registration migration — live-schema reconciliation (2026-10-01)
+- PR #148 shipped `20261001090000_student_referral_registration.sql` claiming
+  "apply before using the feature", but it was never applied to the live
+  project. Probed live (`mzbadxfvxioedzdjxamc`), it could not have applied:
+  three independent statements abort.
+- **`cases` has no `email` column.** The registration RPC's dedupe `SELECT`
+  (`lower(COALESCE(c.email,'')) = v_email`) and the `cases` `INSERT` column list
+  both named it. A missing column is `42703`, which the surrounding
+  `EXCEPTION WHEN invalid_text_representation` (22P02) does not catch, so every
+  registration aborted before the `INSERT`. The applicant email belongs on
+  `case_submissions.student_email` (already written later in the same function),
+  and the dedupe check now matches on that mirror.
+- **`case_registration_payments` already exists on the live project with a
+  DIFFERENT shape** — `registration_invoice_id` / `stripe_session_id` /
+  `stripe_payment_intent_id` / `bank_reference` / `payment_reference` / `notes`,
+  versus the migration's `invoice_id` / `provider_payment_id` / `checkout_url` /
+  `receipt_path` / `failure_reason` / `metadata`. `CREATE TABLE IF NOT EXISTS`
+  is a silent no-op there, so the migration must bridge the two additively:
+  rename `registration_invoice_id`→`invoice_id` and
+  `stripe_session_id`→`provider_payment_id`, then `ADD COLUMN IF NOT EXISTS`
+  the rest. This is the same failure mode already recorded for
+  `case_payment_proofs.payment_id`.
+- **`CREATE OR REPLACE FUNCTION` cannot rename an input parameter.** A legacy
+  out-of-band `get_registration_catalog(uuid)` exists with parameter
+  `p_referrer_user_id`; the migration declares `p_school_id`. Postgres raises
+  `cannot change name of input parameter` and aborts the file at that point,
+  so nothing after it (including every payment RPC) is created. A
+  signature-qualified `DROP FUNCTION IF EXISTS public.get_registration_catalog(uuid)`
+  must precede the `CREATE`.
+- **Empirical verification, not inspection.** A Postgres 16 container with a
+  stub harness (`auth.uid()`, `has_role`, `log_case_event`,
+  `update_updated_at_column`, `enforce_case_stage_transition`, the Supabase
+  roles, `pgcrypto`) applies the full migration: fresh project → exit 0, legacy
+  live-shaped project → exit 0, re-run → exit 0. The pre-fix file exits 3 with
+  `column "invoice_id" does not exist`. Guarded in
+  `src/lib/referralRegistrationGuards.test.ts` (3 new cases, verified
+  non-vacuous).
+- **Lesson:** a migration that mutates a table which may already exist must be
+  written against the LIVE schema, and the deployed database — not the repo
+  file — is the source of truth for what already exists. `IF NOT EXISTS`
+  silently preserves an older generation of the same table.
+- Verification: `npx tsc --noEmit` clean; `npx vitest run` 1800 passed | 1
+  skipped; `npm run build` clean.
