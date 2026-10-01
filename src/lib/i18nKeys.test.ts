@@ -9,7 +9,7 @@ import { PROFILE_FIELD_LABEL_KEYS } from "./studentProfileFields";
  */
 
 const ROOT = process.cwd();
-const LOCALES = ["ar", "en"] as const;
+const LOCALES = ["ar", "en"] as const;\nconst NAV_LOCALES = ["ar", "en", "he"] as const;
 
 const TEAM_MAJORS_HEBREW_KEYS = [
   "intel.card.empty",
@@ -219,7 +219,7 @@ describe("i18n coverage", () => {
       if (!/useTranslation\(\s*['"]dashboard['"]/.test(src)) continue;
 
       for (const m of src.matchAll(/\bt\(\s*['"](nav\.[a-zA-Z0-9_.]+)['"]/g)) {
-        for (const lang of LOCALES) {
+        for (const lang of NAV_LOCALES) {
           if (!hasKey(dicts[lang].dashboard ?? {}, m[1])) {
             missing.push(`${lang}: ${m[1]} (${path.relative(ROOT, file)})`);
           }
