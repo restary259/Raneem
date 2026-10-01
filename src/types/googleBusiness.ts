@@ -11,6 +11,18 @@ export type GoogleVerificationStatus =
 
 export type GoogleOperatorRole = "PRIMARY" | "SIDE_MANAGER";
 
+/** Phase 3 mapping lifecycle. */
+export type GoogleMappingStatus =
+  | "UNMAPPED"
+  | "PENDING_CONFIRMATION"
+  | "MAPPED"
+  | "DISCONNECTED"
+  | "MAPPING_ERROR";
+
+/** Phase 3 sync health, derived from the mapping + connection state. */
+export type GoogleSyncHealth =
+  "Healthy" | "Syncing" | "Stale" | "Error" | "Unavailable";
+
 export type GoogleOperatorActorRole = "admin" | GoogleOperatorRole | "system";
 
 export type OfficeGoogleProfileRow = {
@@ -67,3 +79,88 @@ export type GoogleOperatorCandidate = {
   id: string;
   full_name: string;
 };
+
+/** Phase 3: a discovered Google location (cache row + DARB mapping state). */
+export type GoogleBusinessLocationRow = {
+  google_location_id: string;
+  google_location_resource_name: string;
+  google_account_id: string;
+  location_name: string | null;
+  primary_category: string | null;
+  address_json: {
+    address_line_1?: string | null;
+    address_line_2?: string | null;
+    city?: string | null;
+    postal_code?: string | null;
+    country?: string | null;
+  } | null;
+  phone: string | null;
+  website_url: string | null;
+  place_id: string | null;
+  maps_url: string | null;
+  verification_state: string | null;
+  location_state: string | null;
+  last_seen_at: string | null;
+  mapped_office_id: string | null;
+  mapped_office_name: string | null;
+};
+
+/** Phase 3: full office mapping detail from get_office_google_mapping(). */
+export type OfficeGoogleMappingRow = {
+  office_id: string;
+  mapping_status: GoogleMappingStatus;
+  connection_status: GoogleConnectionStatus;
+  verification_status: GoogleVerificationStatus;
+  google_account_id: string | null;
+  google_location_id: string | null;
+  google_location_resource_name: string | null;
+  google_location_name: string | null;
+  google_primary_category: string | null;
+  google_address_line_1: string | null;
+  google_address_line_2: string | null;
+  google_city: string | null;
+  google_postal_code: string | null;
+  google_country: string | null;
+  google_phone: string | null;
+  google_website: string | null;
+  google_place_id: string | null;
+  google_maps_url: string | null;
+  google_store_code: string | null;
+  google_status: string | null;
+  google_verification_state: string | null;
+  mapped_by: string | null;
+  mapped_at: string | null;
+  last_synced_at: string | null;
+  last_successful_sync_at: string | null;
+  last_error_at: string | null;
+  last_error_code: string | null;
+  last_error_message: string | null;
+  primary_operator_id: string | null;
+  primary_operator_name: string | null;
+  side_manager_id: string | null;
+  side_manager_name: string | null;
+  updated_at: string;
+};
+
+/** Derives the sync-health badge from a mapping row. */
+export function googleSyncHealth(
+  row: Pick<
+    OfficeGoogleMappingRow,
+    "mapping_status" | "connection_status" | "last_error_at"
+  > | null,
+): GoogleSyncHealth {
+  if (!row) return "Unavailable";
+  if (row.mapping_status === "MAPPED" && row.connection_status === "connected")
+    return "Healthy";
+  if (
+    row.connection_status === "error" ||
+    row.mapping_status === "MAPPING_ERROR"
+  )
+    return "Error";
+  if (
+    row.mapping_status === "DISCONNECTED" ||
+    row.mapping_status === "UNMAPPED"
+  )
+    return "Unavailable";
+  return "Stale";
+}

@@ -73,3 +73,153 @@ export async function gbpGet<T>(
   }
   throw last ?? new GbpError("upstream", 0, "Unknown error");
 }
+// ---------------------------------------------------------------------------
+// Phase 3 — pure location normalization helpers
+//
+// Kept here (no secrets) so discovery + mapping are testable without network.
+// ---------------------------------------------------------------------------
+
+/** Read mask for discovery: the fields DARB maps and shows, nothing more. */
+export const GBP_LOCATION_READ_MASK =
+  "name,title,storeCode,phoneNumbers,websiteUri,categories,storefrontAddress,metadata,placeId";
+
+export type GbpRawLocation = {
+  name?: string;
+  title?: string;
+  storeCode?: string;
+  phoneNumbers?: { primaryPhone?: string };
+  websiteUri?: string;
+  categories?: { primaryCategory?: { displayName?: string } };
+  storefrontAddress?: {
+    addressLines?: string[];
+    locality?: string;
+    administrativeArea?: string;
+    postalCode?: string;
+    regionCode?: string;
+  };
+  metadata?: { placeId?: string; mapsUri?: string; newReviewUri?: string };
+  /** Google returns this on the Location resource; kept for the cache. */
+  locationState?: {
+    isVerified?: boolean;
+    isSuspended?: boolean;
+    canModify?: boolean;
+  };
+};
+
+/** A location as DARB stores it in the cache. `resourceName` is the key. */
+export type NormalizedGbpLocation = {
+  google_account_id: string;
+  google_location_id: string;
+  google_location_resource_name: string;
+  store_code: string | null;
+  location_name: string | null;
+  primary_category: string | null;
+  address_json: {
+    address_line_1: string | null;
+    address_line_2: string | null;
+    city: string | null;
+    postal_code: string | null;
+    country: string | null;
+  };
+  phone: string | null;
+  website_url: string | null;
+  place_id: string | null;
+  maps_url: string | null;
+  verification_state: string | null;
+  location_state: string | null;
+  raw_location_json: GbpRawLocation;
+};
+
+/** Last path segment of a Google resource name (accounts/x/locations/y -> y). */
+export function resourceId(resourceName: string): string {
+  const parts = resourceName.split("/").filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : resourceName;
+}
+
+function verificationStateOf(loc: GbpRawLocation): string | null {
+  const state = loc.locationState;
+  if (!state) return null;
+  if (state.isSuspended) return "SUSPENDED";
+  if (state.isVerified) return "VERIFIED";
+  return "PENDING";
+}
+
+/**
+ * Google location -> cache row. `accountId` is the caller-verified account, not
+ * a value taken from the payload, so a location can never be filed under an
+ * account the caller does not control.
+ */
+export function normalizeGbpLocation(
+  accountId: string,
+  loc: GbpRawLocation,
+): NormalizedGbpLocation | null {
+  const resourceName = loc.name?.trim();
+  if (!resourceName) return null;
+  const addr = loc.storefrontAddress ?? {};
+  const lines = addr.addressLines ?? [];
+  return {
+    google_account_id: accountId,
+    google_location_id: resourceId(resourceName),
+    google_location_resource_name: resourceName,
+    store_code: loc.storeCode?.trim() || null,
+    location_name: loc.title?.trim() || null,
+    primary_category:
+      loc.categories?.primaryCategory?.displayName?.trim() || null,
+    address_json: {
+      address_line_1: lines[0]?.trim() || null,
+      address_line_2: lines[1]?.trim() || null,
+      city: addr.locality?.trim() || null,
+      postal_code: addr.postalCode?.trim() || null,
+      country: addr.regionCode?.trim() || null,
+    },
+    phone: loc.phoneNumbers?.primaryPhone?.trim() || null,
+    website_url: loc.websiteUri?.trim() || null,
+    place_id: loc.metadata?.placeId?.trim() || null,
+    maps_url: loc.metadata?.mapsUri?.trim() || null,
+    verification_state: verificationStateOf(loc),
+    location_state: loc.locationState?.isSuspended
+      ? "SUSPENDED"
+      : loc.locationState
+        ? "OPEN"
+        : null,
+    raw_location_json: loc,
+  };
+}
+
+/** Human-readable one-line address for the selector. */
+export function formatGbpAddress(
+  address: NormalizedGbpLocation["address_json"] | null | undefined,
+): string | null {
+  if (!address) return null;
+  const parts = [
+    address.address_line_1,
+    address.postal_code,
+    address.city,
+    address.country,
+  ].filter(Boolean);
+  return parts.length ? parts.join(", ") : null;
+}
+
+/**
+ * Walks Google's `nextPageToken` until exhausted. Guards against a provider
+ * that keeps handing back the same token, and a hard page ceiling so a
+ * misbehaving API cannot loop forever.
+ */
+export async function collectAllPages<T>(
+  fetchPage: (
+    pageToken: string | undefined,
+  ) => Promise<{ items: T[]; nextPageToken?: string }>,
+  maxPages = 20,
+): Promise<T[]> {
+  const out: T[] = [];
+  const seen = new Set<string>();
+  let token: string | undefined;
+  for (let page = 0; page < maxPages; page++) {
+    const { items, nextPageToken } = await fetchPage(token);
+    out.push(...items);
+    if (!nextPageToken || seen.has(nextPageToken)) break;
+    seen.add(nextPageToken);
+    token = nextPageToken;
+  }
+  return out;
+}

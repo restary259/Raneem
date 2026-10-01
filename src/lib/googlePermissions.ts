@@ -19,6 +19,11 @@ export const GOOGLE_ACTIONS = [
   "GOOGLE_CONNECT",
   "GOOGLE_DISCONNECT",
   "GOOGLE_RECONNECT",
+  "GOOGLE_DISCOVER_LOCATIONS",
+  "GOOGLE_VIEW_LOCATION",
+  "GOOGLE_MAP_LOCATION",
+  "GOOGLE_REMAP_LOCATION",
+  "GOOGLE_UNMAP_LOCATION",
 ] as const;
 
 export type GoogleAction = (typeof GOOGLE_ACTIONS)[number];
@@ -67,7 +72,12 @@ export function canGoogleOfficeAction(
     action === "GOOGLE_CHANGE_PRIMARY" ||
     action === "GOOGLE_CONNECT" ||
     action === "GOOGLE_DISCONNECT" ||
-    action === "GOOGLE_RECONNECT"
+    action === "GOOGLE_RECONNECT" ||
+    action === "GOOGLE_DISCOVER_LOCATIONS" ||
+    action === "GOOGLE_VIEW_LOCATION" ||
+    action === "GOOGLE_MAP_LOCATION" ||
+    action === "GOOGLE_REMAP_LOCATION" ||
+    action === "GOOGLE_UNMAP_LOCATION"
   ) {
     return false;
   }

@@ -1,7 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type {
   GoogleBusinessActivityRow,
+  GoogleBusinessLocationRow,
   GoogleOperatorRole,
+  OfficeGoogleMappingRow,
   OfficeGoogleProfileRow,
 } from "@/types/googleBusiness";
 
@@ -57,4 +59,20 @@ export function removeGoogleOperator(
   role: GoogleOperatorRole,
 ) {
   return rpc("remove_google_operator", { p_office_id: officeId, p_role: role });
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — location discovery + office mapping
+// ---------------------------------------------------------------------------
+
+/** Full mapping detail for one office (admin or an active member of it). */
+export function getOfficeGoogleMapping(officeId: string) {
+  return rpc<OfficeGoogleMappingRow[]>("get_office_google_mapping", {
+    p_office_id: officeId,
+  });
+}
+
+/** Admin-only: the cached Google locations, with their DARB mapping state. */
+export function listGoogleBusinessLocations() {
+  return rpc<GoogleBusinessLocationRow[]>("admin_list_google_locations");
 }
