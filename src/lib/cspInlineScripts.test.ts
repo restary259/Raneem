@@ -59,6 +59,25 @@ describe("Static HTML inline script guards", () => {
   });
 });
 
+describe("Application CSP meta coverage", () => {
+  it("blocks inline JavaScript even when only the document meta CSP is applied", async () => {
+    const head = RootRoute.options.head;
+    const rootHead = head
+      ? await head({} as Parameters<NonNullable<typeof head>>[0])
+      : undefined;
+    const cspMeta = rootHead?.meta?.find(
+      (entry) => entry?.httpEquiv === "Content-Security-Policy",
+    )?.content;
+
+    expect(cspMeta).toBeTypeOf("string");
+    expect(cspMeta).toContain("script-src 'self'");
+    expect(cspMeta).not.toMatch(SCRIPT_SRC_UNSAFE_INLINE);
+    expect(cspMeta).toContain("https://www.googletagmanager.com");
+    expect(cspMeta).toContain("https://www.google-analytics.com");
+    expect(cspMeta).toContain("upgrade-insecure-requests");
+  });
+});
+
 describe("Application head scripts under strict CSP", () => {
   it("keeps root head scripts non-executable JSON-LD only", async () => {
     const head = RootRoute.options.head;
