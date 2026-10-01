@@ -8383,9 +8383,11 @@ export type Database = {
           mapped_by: string
           mapping_status: string
           office_id: string
+          primary_is_active: boolean
           primary_operator_id: string
           primary_operator_name: string
           side_manager_id: string
+          side_manager_is_active: boolean
           side_manager_name: string
           updated_at: string
           verification_status: string
@@ -8657,6 +8659,31 @@ export type Database = {
           source: string
           suggested_partner_id: string
           suggested_referred_by: string
+        }[]
+      }
+      list_my_google_offices: {
+        Args: never
+        Returns: {
+          connection_status: string
+          google_location_name: string
+          google_maps_url: string
+          mapping_status: string
+          office_id: string
+          office_name: string
+          operator_role: string
+          primary_operator_id: string
+          primary_operator_name: string
+          side_manager_id: string
+          side_manager_name: string
+          updated_at: string
+        }[]
+      }
+      list_office_google_operator_candidates: {
+        Args: { p_office_id: string }
+        Returns: {
+          full_name: string
+          operator_role: string
+          team_member_id: string
         }[]
       }
       list_office_google_profiles: {
