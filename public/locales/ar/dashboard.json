@@ -1833,7 +1833,7 @@
       "refresh": "تحديث",
       "loading": "جارٍ فحص الربط…",
       "loadError": "تعذّر فحص ربط Google.",
-      "notLinked": "لم يتم ربط Google Business بـ DARB بعد.",
+      "notLinked": "لم يتم ربط Google Business بـ درب بعد.",
       "noAccounts": "تم الربط، لكن لا توجد حسابات أعمال ظاهرة لهذا الحساب.",
       "status": {
         "connected": "متصل",
