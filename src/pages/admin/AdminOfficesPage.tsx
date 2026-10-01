@@ -334,7 +334,7 @@ export default function AdminOfficesPage() {
     <div className="space-y-6 p-4 md:p-6" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2"><Building2 className="size-6 text-primary" /><h1 className="text-2xl font-bold tracking-tight">{labels.title}</h1></div>
+          <div className="flex items-center gap-2"><Building2 className="size-6 text-primary" /><h1 className="sr-only">{labels.title}</h1></div>
         </div>
         <Button onClick={openCreate}><Plus className="me-2 size-4" />{labels.add}</Button>
       </div>
