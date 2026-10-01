@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import OfficeGoogleBusinessSection from "@/components/admin/OfficeGoogleBusinessSection";
 
 type OfficeType = "darb" | "partner" | "franchise";
 type TeamMember = { id: string; full_name: string };
@@ -434,6 +435,19 @@ export default function AdminOfficesPage() {
                 </div>;
               }) : <p className="text-sm text-muted-foreground">{labels.none}</p>}
             </section>
+
+            {form.id ? (
+              <section className="space-y-3">
+                <OfficeGoogleBusinessSection
+                  officeId={form.id}
+                  isAdmin
+                  eligibleMembers={members
+                    .filter(function (m) { return m.office_id === form.id && m.is_active; })
+                    .map(function (m) { return { id: m.user_id, full_name: memberName(m.user_id) }; })}
+                  onChanged={load}
+                />
+              </section>
+            ) : null}
           </div>
 
           <DialogFooter>

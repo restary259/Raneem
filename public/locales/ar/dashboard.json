@@ -1780,6 +1780,52 @@
         "confirmPayment": "تأكيد الدفع",
         "fullTrace": "الملف هو السجل الرئيسي. التسجيل والإحالة والفاتورة والدفع كلها مرتبطة بنفس الملف ويمكن تتبعها من السجل الزمني."
       }
+    },
+    "googleBusiness": {
+      "title": "نشاط جوجل التجاري",
+      "loading": "جاري التحميل…",
+      "loadError": "تعذّر تحميل بيانات نشاط جوجل",
+      "actionFailed": "فشلت العملية",
+      "profile": "ملف جوجل",
+      "notConnectedTitle": "غير متصل",
+      "notConnectedDesc": "لم يتم ربط هذا المكتب بملف نشاط تجاري على جوجل بعد.",
+      "connect": "ربط جوجل",
+      "comingSoon": "سيتم ربط جوجل في المرحلة الثانية.",
+      "operators": "مشغّلو جوجل",
+      "primaryOperator": "المشغّل الأساسي",
+      "sideManager": "المدير المساعد",
+      "notAssigned": "غير معيّن",
+      "selectMember": "اختر عضو الفريق",
+      "change": "حفظ",
+      "addSideManager": "إضافة مدير مساعد",
+      "remove": "إزالة",
+      "primarySaved": "تم حفظ المشغّل الأساسي",
+      "sideManagerSaved": "تم حفظ المدير المساعد",
+      "operatorRemoved": "تمت إزالة المشغّل",
+      "status": {
+        "not_connected": "غير متصل",
+        "pending": "قيد الانتظار",
+        "connected": "متصل",
+        "error": "خطأ",
+        "revoked": "ملغى"
+      },
+      "audit": {
+        "title": "النشاط الأخير",
+        "empty": "لا يوجد نشاط مسجّل على جوجل بعد."
+      },
+      "auditAction": {
+        "ADMIN_CREATED_GOOGLE_PROFILE": "أنشأ المسؤول ملف جوجل الأولي",
+        "ADMIN_UPDATED_GOOGLE_PROFILE": "حدّث المسؤول ملف جوجل",
+        "ADMIN_ASSIGNED_PRIMARY": "عيّن المسؤول مشغّلاً أساسياً",
+        "ADMIN_CHANGED_PRIMARY": "غيّر المسؤول المشغّل الأساسي",
+        "ADMIN_REMOVED_PRIMARY": "أزال المسؤول المشغّل الأساسي",
+        "SIDE_MANAGER_ASSIGNED": "تم تعيين المدير المساعد",
+        "SIDE_MANAGER_CHANGED": "تم تغيير المدير المساعد",
+        "SIDE_MANAGER_REMOVED": "تمت إزالة المدير المساعد",
+        "ADMIN_CONNECTED_GOOGLE": "ربط المسؤول حساب جوجل",
+        "ADMIN_DISCONNECTED_GOOGLE": "فصل المسؤول حساب جوجل",
+        "ADMIN_UPDATED_GOOGLE_CONNECTION": "حدّث المسؤول اتصال جوجل"
+      }
     }
   },
   "influencer": {

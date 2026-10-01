@@ -5740,6 +5740,52 @@
         "confirmPayment": "אישור תשלום",
         "fullTrace": "התיק הוא הרשומה הראשית. הרישום, ההפניה, החשבונית והתשלום קשורים לאותו תיק וניתנים למעקב בציר הזמן."
       }
+    },
+    "googleBusiness": {
+      "title": "פרופיל Google Business",
+      "loading": "טוען…",
+      "loadError": "לא ניתן לטעון את נתוני Google Business",
+      "actionFailed": "הפעולה נכשלה",
+      "profile": "פרופיל Google",
+      "notConnectedTitle": "לא מחובר",
+      "notConnectedDesc": "המשרד הזה עדיין לא מחובר לפרופיל Google Business.",
+      "connect": "חיבור Google",
+      "comingSoon": "חיבור Google יגיע בשלב 2.",
+      "operators": "מפעילי Google",
+      "primaryOperator": "מפעיל ראשי",
+      "sideManager": "מנהל משנה",
+      "notAssigned": "לא הוקצה",
+      "selectMember": "בחר חבר צוות",
+      "change": "שמירה",
+      "addSideManager": "הוספת מנהל משנה",
+      "remove": "הסרה",
+      "primarySaved": "המפעיל הראשי נשמר",
+      "sideManagerSaved": "המנהל המשנה נשמר",
+      "operatorRemoved": "המפעיל הוסר",
+      "status": {
+        "not_connected": "לא מחובר",
+        "pending": "ממתין",
+        "connected": "מחובר",
+        "error": "שגיאה",
+        "revoked": "בוטל"
+      },
+      "audit": {
+        "title": "פעילות אחרונה",
+        "empty": "לא נרשמה פעילות Google עדיין."
+      },
+      "auditAction": {
+        "ADMIN_CREATED_GOOGLE_PROFILE": "המנהל יצר את פרופיל Google",
+        "ADMIN_UPDATED_GOOGLE_PROFILE": "המנהל עדכן את פרופיל Google",
+        "ADMIN_ASSIGNED_PRIMARY": "המנהל הקצה מפעיל ראשי",
+        "ADMIN_CHANGED_PRIMARY": "המנהל שינה את המפעיל הראשי",
+        "ADMIN_REMOVED_PRIMARY": "המנהל הסיר את המפעיל הראשי",
+        "SIDE_MANAGER_ASSIGNED": "המנהל המשנה הוקצה",
+        "SIDE_MANAGER_CHANGED": "המנהל המשנה שונה",
+        "SIDE_MANAGER_REMOVED": "המנהל המשנה הוסר",
+        "ADMIN_CONNECTED_GOOGLE": "המנהל חיבר את חשבון Google",
+        "ADMIN_DISCONNECTED_GOOGLE": "המנהל ניתק את חשבון Google",
+        "ADMIN_UPDATED_GOOGLE_CONNECTION": "המנהל עדכן את חיבור Google"
+      }
     }
   },
   "appointmentActions": {
