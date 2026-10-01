@@ -27,6 +27,7 @@ import {
   Settings,
   ShieldCheck,
   Sparkles,
+  Star,
   TrendingUp,
   User,
   Users,
@@ -162,7 +163,24 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
       { key: "nav.partnerSchools", icon: School, href: "/team/partner-schools", group: "nav.group.work" },
       { key: "nav.majorIntel", icon: GraduationCap, href: "/team/majors", group: "nav.group.work" },
       { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
-      { key: "nav.googleBusiness", icon: Link2, href: "/team/google", group: "nav.group.setup" },
+      {
+        key: "nav.googleBusiness",
+        icon: Link2,
+        href: "",
+        group: "nav.group.setup",
+        children: [
+          {
+            key: "nav.googleBusinessOverview",
+            icon: Link2,
+            href: "/team/google",
+          },
+          {
+            key: "nav.googleReviews",
+            icon: Star,
+            href: "/team/google/reviews",
+          },
+        ],
+      },
       {
         key: "nav.group.tools",
         icon: Wrench,

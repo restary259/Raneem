@@ -111,6 +111,7 @@ import { Route as TeamAppointmentsIndexRouteImport } from './routes/team.appoint
 import { Route as TeamAppointmentsTodayRouteImport } from './routes/team.appointments.today'
 import { Route as TeamCasesIndexRouteImport } from './routes/team.cases.index'
 import { Route as TeamCasesIdRouteImport } from './routes/team.cases.$id'
+import { Route as TeamGoogleReviewsRouteImport } from './routes/team.google.reviews'
 import { Route as TeamPartnerSchoolsIndexRouteImport } from './routes/team.partner-schools.index'
 import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.index'
 import { Route as TeamStudentsIdRouteImport } from './routes/team.students.$id'
@@ -636,6 +637,11 @@ const TeamCasesIdRoute = TeamCasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => TeamRoute,
 } as any)
+const TeamGoogleReviewsRoute = TeamGoogleReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => TeamGoogleRoute,
+} as any)
 const TeamPartnerSchoolsIndexRoute = TeamPartnerSchoolsIndexRouteImport.update({
   id: '/partner-schools/',
   path: '/partner-schools/',
@@ -779,7 +785,7 @@ export interface FileRoutesByFullPath {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
-  '/team/google': typeof TeamGoogleRoute
+  '/team/google': typeof TeamGoogleRouteWithChildren
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -797,6 +803,7 @@ export interface FileRoutesByFullPath {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
   '/team/tools/cv': typeof TeamToolsCvRoute
@@ -889,7 +896,7 @@ export interface FileRoutesByTo {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
-  '/team/google': typeof TeamGoogleRoute
+  '/team/google': typeof TeamGoogleRouteWithChildren
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -907,6 +914,7 @@ export interface FileRoutesByTo {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
   '/team/tools/cv': typeof TeamToolsCvRoute
@@ -1005,7 +1013,7 @@ export interface FileRoutesById {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
-  '/team/google': typeof TeamGoogleRoute
+  '/team/google': typeof TeamGoogleRouteWithChildren
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -1023,6 +1031,7 @@ export interface FileRoutesById {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
   '/team/tools/cv': typeof TeamToolsCvRoute
@@ -1140,6 +1149,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/reviews'
     | '/team/students/$id'
     | '/team/tools/currency'
     | '/team/tools/cv'
@@ -1250,6 +1260,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/reviews'
     | '/team/students/$id'
     | '/team/tools/currency'
     | '/team/tools/cv'
@@ -1365,6 +1376,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/reviews'
     | '/team/students/$id'
     | '/team/tools/currency'
     | '/team/tools/cv'
@@ -2141,6 +2153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamCasesIdRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/team/google/reviews': {
+      id: '/team/google/reviews'
+      path: '/reviews'
+      fullPath: '/team/google/reviews'
+      preLoaderRoute: typeof TeamGoogleReviewsRouteImport
+      parentRoute: typeof TeamGoogleRoute
+    }
     '/team/partner-schools/': {
       id: '/team/partner-schools/'
       path: '/partner-schools'
@@ -2355,11 +2374,23 @@ const StudentRouteChildren: StudentRouteChildren = {
 const StudentRouteWithChildren =
   StudentRoute._addFileChildren(StudentRouteChildren)
 
+interface TeamGoogleRouteChildren {
+  TeamGoogleReviewsRoute: typeof TeamGoogleReviewsRoute
+}
+
+const TeamGoogleRouteChildren: TeamGoogleRouteChildren = {
+  TeamGoogleReviewsRoute: TeamGoogleReviewsRoute,
+}
+
+const TeamGoogleRouteWithChildren = TeamGoogleRoute._addFileChildren(
+  TeamGoogleRouteChildren,
+)
+
 interface TeamRouteChildren {
   TeamAnalyticsRoute: typeof TeamAnalyticsRoute
   TeamBagrutRoute: typeof TeamBagrutRoute
   TeamCatalogRoute: typeof TeamCatalogRoute
-  TeamGoogleRoute: typeof TeamGoogleRoute
+  TeamGoogleRoute: typeof TeamGoogleRouteWithChildren
   TeamMajorsRoute: typeof TeamMajorsRoute
   TeamMessagesRoute: typeof TeamMessagesRoute
   TeamSpreadsheetRoute: typeof TeamSpreadsheetRoute
@@ -2383,7 +2414,7 @@ const TeamRouteChildren: TeamRouteChildren = {
   TeamAnalyticsRoute: TeamAnalyticsRoute,
   TeamBagrutRoute: TeamBagrutRoute,
   TeamCatalogRoute: TeamCatalogRoute,
-  TeamGoogleRoute: TeamGoogleRoute,
+  TeamGoogleRoute: TeamGoogleRouteWithChildren,
   TeamMajorsRoute: TeamMajorsRoute,
   TeamMessagesRoute: TeamMessagesRoute,
   TeamSpreadsheetRoute: TeamSpreadsheetRoute,
