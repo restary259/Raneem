@@ -79,7 +79,7 @@ describe('export reliability', () => {
 
     const roundTrip = new ExcelJS.Workbook();
     await roundTrip.xlsx.load(buffer);
-    expect(roundTrip.getWorksheet('UUID compatibility')?.getCell(6, 1).value).toBe(42);
+    expect(roundTrip.getWorksheet('UUID compatibility')?.getCell(7, 1).value).toBe(42);
   });
 
   it('escapes CSV headers, Arabic, quotes, commas and line breaks', () => {
