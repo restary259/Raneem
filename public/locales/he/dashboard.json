@@ -917,6 +917,15 @@
     "accountMenu": "תפריט החשבון",
     "language": "שפה",
     "student": "סטודנט",
+    "mobile": {
+      "finance": "כספים",
+      "appointments": "פגישות",
+      "inbox": "תיבה",
+      "earnings": "הכנסות",
+      "network": "רשת",
+      "apply": "הגשה"
+    },
+    "languageSelector": "בחירת שפה",
     "darb": "דארב"
   },
   "common": {
