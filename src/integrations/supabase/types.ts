@@ -2611,6 +2611,83 @@ export type Database = {
         }
         Relationships: []
       }
+      google_business_locations: {
+        Row: {
+          address_json: Json | null
+          created_at: string
+          first_seen_at: string
+          google_account_id: string
+          google_connection_id: string | null
+          google_location_id: string
+          google_location_resource_name: string
+          id: string
+          last_seen_at: string
+          location_name: string | null
+          location_state: string | null
+          maps_url: string | null
+          phone: string | null
+          place_id: string | null
+          primary_category: string | null
+          raw_location_json: Json | null
+          store_code: string | null
+          updated_at: string
+          verification_state: string | null
+          website_url: string | null
+        }
+        Insert: {
+          address_json?: Json | null
+          created_at?: string
+          first_seen_at?: string
+          google_account_id: string
+          google_connection_id?: string | null
+          google_location_id: string
+          google_location_resource_name: string
+          id?: string
+          last_seen_at?: string
+          location_name?: string | null
+          location_state?: string | null
+          maps_url?: string | null
+          phone?: string | null
+          place_id?: string | null
+          primary_category?: string | null
+          raw_location_json?: Json | null
+          store_code?: string | null
+          updated_at?: string
+          verification_state?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          address_json?: Json | null
+          created_at?: string
+          first_seen_at?: string
+          google_account_id?: string
+          google_connection_id?: string | null
+          google_location_id?: string
+          google_location_resource_name?: string
+          id?: string
+          last_seen_at?: string
+          location_name?: string | null
+          location_state?: string | null
+          maps_url?: string | null
+          phone?: string | null
+          place_id?: string | null
+          primary_category?: string | null
+          raw_location_json?: Json | null
+          store_code?: string | null
+          updated_at?: string
+          verification_state?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_locations_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       important_contacts: {
         Row: {
           address_ar: string | null
@@ -3480,16 +3557,32 @@ export type Database = {
           connection_status: string
           created_at: string
           google_account_id: string | null
+          google_address_line_1: string | null
+          google_address_line_2: string | null
+          google_city: string | null
+          google_connection_id: string | null
+          google_country: string | null
           google_location_id: string | null
+          google_location_name: string | null
           google_location_resource_name: string | null
           google_maps_url: string | null
+          google_phone: string | null
           google_place_id: string | null
+          google_postal_code: string | null
+          google_primary_category: string | null
+          google_status: string | null
+          google_store_code: string | null
+          google_verification_state: string | null
+          google_website: string | null
           id: string
           last_error_at: string | null
           last_error_code: string | null
           last_error_message: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
+          mapped_at: string | null
+          mapped_by: string | null
+          mapping_status: string
           office_id: string
           updated_at: string
           verification_status: string
@@ -3498,16 +3591,32 @@ export type Database = {
           connection_status?: string
           created_at?: string
           google_account_id?: string | null
+          google_address_line_1?: string | null
+          google_address_line_2?: string | null
+          google_city?: string | null
+          google_connection_id?: string | null
+          google_country?: string | null
           google_location_id?: string | null
+          google_location_name?: string | null
           google_location_resource_name?: string | null
           google_maps_url?: string | null
+          google_phone?: string | null
           google_place_id?: string | null
+          google_postal_code?: string | null
+          google_primary_category?: string | null
+          google_status?: string | null
+          google_store_code?: string | null
+          google_verification_state?: string | null
+          google_website?: string | null
           id?: string
           last_error_at?: string | null
           last_error_code?: string | null
           last_error_message?: string | null
           last_successful_sync_at?: string | null
           last_synced_at?: string | null
+          mapped_at?: string | null
+          mapped_by?: string | null
+          mapping_status?: string
           office_id: string
           updated_at?: string
           verification_status?: string
@@ -3516,21 +3625,44 @@ export type Database = {
           connection_status?: string
           created_at?: string
           google_account_id?: string | null
+          google_address_line_1?: string | null
+          google_address_line_2?: string | null
+          google_city?: string | null
+          google_connection_id?: string | null
+          google_country?: string | null
           google_location_id?: string | null
+          google_location_name?: string | null
           google_location_resource_name?: string | null
           google_maps_url?: string | null
+          google_phone?: string | null
           google_place_id?: string | null
+          google_postal_code?: string | null
+          google_primary_category?: string | null
+          google_status?: string | null
+          google_store_code?: string | null
+          google_verification_state?: string | null
+          google_website?: string | null
           id?: string
           last_error_at?: string | null
           last_error_code?: string | null
           last_error_message?: string | null
           last_successful_sync_at?: string | null
           last_synced_at?: string | null
+          mapped_at?: string | null
+          mapped_by?: string | null
+          mapping_status?: string
           office_id?: string
           updated_at?: string
           verification_status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "office_google_profiles_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_connections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "office_google_profiles_office_id_fkey"
             columns: ["office_id"]
@@ -7377,12 +7509,135 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      admin_list_google_locations: {
+        Args: never
+        Returns: {
+          address_json: Json
+          google_account_id: string
+          google_location_id: string
+          google_location_resource_name: string
+          last_seen_at: string
+          location_name: string
+          location_state: string
+          mapped_office_id: string
+          mapped_office_name: string
+          maps_url: string
+          phone: string
+          place_id: string
+          primary_category: string
+          verification_state: string
+          website_url: string
+        }[]
+      }
+      admin_map_office_google_location: {
+        Args: {
+          p_google_account_id: string
+          p_google_location_resource_name: string
+          p_office_id: string
+        }
+        Returns: {
+          connection_status: string
+          created_at: string
+          google_account_id: string | null
+          google_address_line_1: string | null
+          google_address_line_2: string | null
+          google_city: string | null
+          google_connection_id: string | null
+          google_country: string | null
+          google_location_id: string | null
+          google_location_name: string | null
+          google_location_resource_name: string | null
+          google_maps_url: string | null
+          google_phone: string | null
+          google_place_id: string | null
+          google_postal_code: string | null
+          google_primary_category: string | null
+          google_status: string | null
+          google_store_code: string | null
+          google_verification_state: string | null
+          google_website: string | null
+          id: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_error_message: string | null
+          last_successful_sync_at: string | null
+          last_synced_at: string | null
+          mapped_at: string | null
+          mapped_by: string | null
+          mapping_status: string
+          office_id: string
+          updated_at: string
+          verification_status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "office_google_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_mark_google_mapping_error: {
+        Args: {
+          p_error_code: string
+          p_error_message: string
+          p_office_id: string
+        }
+        Returns: {
+          connection_status: string
+          created_at: string
+          google_account_id: string | null
+          google_address_line_1: string | null
+          google_address_line_2: string | null
+          google_city: string | null
+          google_connection_id: string | null
+          google_country: string | null
+          google_location_id: string | null
+          google_location_name: string | null
+          google_location_resource_name: string | null
+          google_maps_url: string | null
+          google_phone: string | null
+          google_place_id: string | null
+          google_postal_code: string | null
+          google_primary_category: string | null
+          google_status: string | null
+          google_store_code: string | null
+          google_verification_state: string | null
+          google_website: string | null
+          id: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_error_message: string | null
+          last_successful_sync_at: string | null
+          last_synced_at: string | null
+          mapped_at: string | null
+          mapped_by: string | null
+          mapping_status: string
+          office_id: string
+          updated_at: string
+          verification_status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "office_google_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_reactivate_account: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _target_id: string
         }
         Returns: Json
+      }
+      admin_record_google_mapping_attempt: {
+        Args: {
+          p_action: string
+          p_detail?: Json
+          p_google_location_resource_name: string
+          p_office_id: string
+        }
+        Returns: string
       }
       admin_respond_payout_request: {
         Args: {
@@ -7402,6 +7657,53 @@ export type Database = {
           p_reason?: string
         }
         Returns: Json
+      }
+      admin_sync_google_locations: {
+        Args: { p_connection_id: string; p_locations: Json }
+        Returns: number
+      }
+      admin_unmap_office_google_location: {
+        Args: { p_office_id: string }
+        Returns: {
+          connection_status: string
+          created_at: string
+          google_account_id: string | null
+          google_address_line_1: string | null
+          google_address_line_2: string | null
+          google_city: string | null
+          google_connection_id: string | null
+          google_country: string | null
+          google_location_id: string | null
+          google_location_name: string | null
+          google_location_resource_name: string | null
+          google_maps_url: string | null
+          google_phone: string | null
+          google_place_id: string | null
+          google_postal_code: string | null
+          google_primary_category: string | null
+          google_status: string | null
+          google_store_code: string | null
+          google_verification_state: string | null
+          google_website: string | null
+          id: string
+          last_error_at: string | null
+          last_error_code: string | null
+          last_error_message: string | null
+          last_successful_sync_at: string | null
+          last_synced_at: string | null
+          mapped_at: string | null
+          mapped_by: string | null
+          mapping_status: string
+          office_id: string
+          updated_at: string
+          verification_status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "office_google_profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_update_google_connection: {
         Args: { p_patch: Json }
@@ -7430,16 +7732,32 @@ export type Database = {
           connection_status: string
           created_at: string
           google_account_id: string | null
+          google_address_line_1: string | null
+          google_address_line_2: string | null
+          google_city: string | null
+          google_connection_id: string | null
+          google_country: string | null
           google_location_id: string | null
+          google_location_name: string | null
           google_location_resource_name: string | null
           google_maps_url: string | null
+          google_phone: string | null
           google_place_id: string | null
+          google_postal_code: string | null
+          google_primary_category: string | null
+          google_status: string | null
+          google_store_code: string | null
+          google_verification_state: string | null
+          google_website: string | null
           id: string
           last_error_at: string | null
           last_error_code: string | null
           last_error_message: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
+          mapped_at: string | null
+          mapped_by: string | null
+          mapping_status: string
           office_id: string
           updated_at: string
           verification_status: string
@@ -8035,6 +8353,44 @@ export type Database = {
       }
       get_my_permissions: { Args: never; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
+      get_office_google_mapping: {
+        Args: { p_office_id: string }
+        Returns: {
+          connection_status: string
+          google_account_id: string
+          google_address_line_1: string
+          google_address_line_2: string
+          google_city: string
+          google_country: string
+          google_location_id: string
+          google_location_name: string
+          google_location_resource_name: string
+          google_maps_url: string
+          google_phone: string
+          google_place_id: string
+          google_postal_code: string
+          google_primary_category: string
+          google_status: string
+          google_store_code: string
+          google_verification_state: string
+          google_website: string
+          last_error_at: string
+          last_error_code: string
+          last_error_message: string
+          last_successful_sync_at: string
+          last_synced_at: string
+          mapped_at: string
+          mapped_by: string
+          mapping_status: string
+          office_id: string
+          primary_operator_id: string
+          primary_operator_name: string
+          side_manager_id: string
+          side_manager_name: string
+          updated_at: string
+          verification_status: string
+        }[]
+      }
       get_partner_commission_rate: {
         Args: { p_user_id: string }
         Returns: number
