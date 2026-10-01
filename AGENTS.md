@@ -3216,3 +3216,6 @@ verified non-vacuous by reintroducing the defect).
   (122 files); `npm run build` clean.
 
 
+
+## i18next runtime smoke test (2026-10-01)
+- i18next was upgraded 23 -> 26 (PR #149). `src/lib/i18nRuntime.test.ts` initializes the REAL `src/i18n.ts` (fetch stubbed to serve `public/locales`) and checks bundled `common` in ar/en/he, interpolation, `t(key, "default")`, he -> en fallback, the HTTP `dashboard` namespace, and `dir`/`lang` on language change, because the key-coverage tests only read JSON and cannot catch a library loading regression.
