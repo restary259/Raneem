@@ -421,10 +421,7 @@ const AdminCommandCenter = () => {
   if (loadFailed) {
     return (
       <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-foreground">{t('admin.commandCenter.title', 'Command Center')}</h1>
-          </div>
+        <div className="flex justify-end"><h1 className="sr-only">{t('admin.commandCenter.title', 'Command Center')}</h1>
           <Button variant="outline" size="sm" onClick={fetchData} disabled={isFetching} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             {t('common.refresh', 'Refresh')}
@@ -447,10 +444,7 @@ const AdminCommandCenter = () => {
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-foreground">{t('admin.commandCenter.title', 'Command Center')}</h1>
-        </div>
+      <div className="flex justify-end"><h1 className="sr-only">{t('admin.commandCenter.title', 'Command Center')}</h1>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={isFetching} className="gap-2">
           <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
           {t('common.refresh', 'Refresh')}
