@@ -805,7 +805,11 @@
         "finance": "المالية",
         "invoice": "الفاتورة",
         "documents": "المستندات"
-      }
+      },
+      "directRegistration": "إحالة وتسجيل مباشر",
+      "directRegistrationDesc": "تم دفع هذا الملف مسبقاً عبر فاتورة التسجيل. أكّد التسجيل دون إنشاء فاتورة خدمات ثانية من درب أو تطبيق تقسيم العمولة المعتاد.",
+      "registrationInvoice": "فاتورة التسجيل",
+      "registrationTotal": "إجمالي التسجيل"
     },
     "financials": {
       "title": "لوحة المالية",
@@ -3818,7 +3822,7 @@
     "exportCurrentView": "العرض الحالي",
     "exportCurrentViewHelp": "الفلاتر والبحث والصفوف الظاهرة حالياً",
     "exportFullReport": "التقرير الكامل",
-    "exportFullReportHelp": "جميع جداول البيانات",
+    "exportFullReportHelp": "جميع جداول البيانات حسب عوامل التصفية الحالية",
     "exportSchoolPacket": "ملف المدرسة",
     "exportSchoolPacketHelp": "بيانات الطالب والتكاليف للمدارس",
     "exportColumns": "الأعمدة",
@@ -5941,7 +5945,8 @@
       "submittedSuccess": "تم إرسال التسجيل إلى الإدارة للمراجعة.",
       "invoiceMissing": "تعذر تحميل فاتورة التسجيل المباشر.",
       "transferSubmitted": "تم إرسال طلب التحويل",
-      "paymentFailed": "فشل الدفع"
+      "paymentFailed": "فشل الدفع",
+      "openInvoice": "فتح فاتورة التسجيل"
     },
     "education": {
       "bagrut": "بجروت",

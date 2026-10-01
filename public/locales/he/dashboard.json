@@ -2103,7 +2103,7 @@
     "exportCurrentView": "התצוגה הנוכחית",
     "exportCurrentViewHelp": "המסננים, החיפוש והשורות המוצגות כרגע",
     "exportFullReport": "דוח מלא",
-    "exportFullReportHelp": "כל לשוניות הגיליון",
+    "exportFullReportHelp": "כל לשוניות הגיליון לפי המסננים הנוכחיים",
     "exportSchoolPacket": "חבילת בית ספר",
     "exportSchoolPacketHelp": "פרטי סטודנט ועלויות עבור בתי הספר",
     "exportColumns": "עמודות",
@@ -4556,7 +4556,11 @@
         "finance": "כספים",
         "invoice": "חשבונית",
         "documents": "מסמכים"
-      }
+      },
+      "directRegistration": "הפניה והרשמה ישירה",
+      "directRegistrationDesc": "התיק כבר שולם באמצעות חשבונית ההרשמה. אשרו את הרישום בלי ליצור חשבונית שירות נוספת של דארב ובלי להחיל את חלוקת העמלה הרגילה.",
+      "registrationInvoice": "חשבונית הרשמה",
+      "registrationTotal": "סה״כ הרשמה"
     },
     "activity": {
       "title": "פיד פעילות חי",
@@ -5925,7 +5929,8 @@
       "submittedSuccess": "הרישום נשלח למנהל לבדיקה.",
       "invoiceMissing": "לא ניתן לטעון את חשבונית הרישום הישיר.",
       "transferSubmitted": "העברה נשלחה",
-      "paymentFailed": "התשלום נכשל"
+      "paymentFailed": "התשלום נכשל",
+      "openInvoice": "פתיחת חשבונית הרשמה"
     },
     "education": {
       "bagrut": "בגרות",

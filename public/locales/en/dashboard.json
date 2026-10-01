@@ -805,7 +805,11 @@
         "finance": "Finance",
         "invoice": "Invoice",
         "documents": "Documents"
-      }
+      },
+      "directRegistration": "Direct Refer & Register",
+      "directRegistrationDesc": "This case was already paid through its registration invoice. Confirm enrollment without creating a second DARB service invoice or applying the ordinary commission split.",
+      "registrationInvoice": "Registration invoice",
+      "registrationTotal": "Registration total"
     },
     "financials": {
       "title": "Financial Dashboard",
@@ -3800,7 +3804,7 @@
     "exportCurrentView": "Current view",
     "exportCurrentViewHelp": "Current filters, search and visible rows",
     "exportFullReport": "Full report",
-    "exportFullReportHelp": "All spreadsheet tabs",
+    "exportFullReportHelp": "All spreadsheet tabs using current filters",
     "exportSchoolPacket": "School packet",
     "exportSchoolPacketHelp": "Student details and costs for schools",
     "exportColumns": "Columns",
@@ -5923,7 +5927,8 @@
       "submittedSuccess": "Registration submitted for Admin review.",
       "invoiceMissing": "The direct registration invoice could not be loaded.",
       "transferSubmitted": "Transfer submitted",
-      "paymentFailed": "Payment failed"
+      "paymentFailed": "Payment failed",
+      "openInvoice": "Open registration invoice"
     },
     "education": {
       "bagrut": "Bagrut",
