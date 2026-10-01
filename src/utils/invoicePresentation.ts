@@ -30,6 +30,7 @@ export interface InvoiceLabels {
   support: string;
   download: string;
   notFound: string;
+  loadError: string;
 }
 
 export interface InvoicePresentation {
@@ -64,6 +65,7 @@ const LABELS: Record<"ar" | "en", InvoiceLabels> = {
     support: "لأي استفسار بخصوص فاتورتك، يسعدنا تواصلك مع فريق درب",
     download: "تنزيل PDF",
     notFound: "لم يتم العثور على الفاتورة أو انتهت صلاحية الرابط",
+    loadError: "تعذر تحميل الفاتورة الآن. يرجى المحاولة مرة أخرى لاحقاً",
   },
   en: {
     title: "DARB Service Invoice",
@@ -88,6 +90,7 @@ const LABELS: Record<"ar" | "en", InvoiceLabels> = {
     support: "For questions about this invoice, please contact the DARB team",
     download: "Download PDF",
     notFound: "This invoice could not be found or the link has expired",
+    loadError: "The invoice could not be loaded right now. Please try again later",
   },
 };
 
