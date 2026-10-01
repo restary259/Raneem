@@ -51,15 +51,17 @@ export default function InvoicePage() {
   const [downloading, setDownloading] = useState(false);
   const [cardLoading, setCardLoading] = useState(false);
   const [bankLoading, setBankLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
     void (async () => {
       if (!token) return;
 
-      const { data: registrationData } = await (supabase as any).rpc("get_registration_invoice_by_token", {
+      const { data: registrationData, error: registrationError } = await (supabase as any).rpc("get_registration_invoice_by_token", {
         p_token: token,
       });
+      if (registrationError) console.error("[invoice] registration lookup failed", registrationError.message);
 
       if (active && registrationData) {
         setRegistrationInvoice(registrationData as RegistrationInvoice);
@@ -67,8 +69,12 @@ export default function InvoicePage() {
         return;
       }
 
-      const { data } = await (supabase as any).rpc("get_invoice_by_token", { p_token: token });
-      if (active) setInvoice((data as PublicInvoice) ?? null);
+      const { data, error } = await (supabase as any).rpc("get_invoice_by_token", { p_token: token });
+      if (error) console.error("[invoice] lookup failed", error.message);
+      if (!active) return;
+      // A failed read must not be shown as "not found".
+      if (!data && (error || registrationError)) setLoadFailed(true);
+      setInvoice((data as PublicInvoice) ?? null);
     })().finally(() => active && setLoading(false));
 
     return () => { active = false; };
@@ -108,7 +114,7 @@ export default function InvoicePage() {
   if (!invoice) {
     return (
       <main dir={isArabic ? "rtl" : "ltr"} className="flex min-h-screen items-center justify-center bg-editorial-paper p-6 text-center text-muted-foreground">
-        {emptyView.labels.notFound}
+        {loadFailed ? emptyView.labels.loadError : emptyView.labels.notFound}
       </main>
     );
   }
