@@ -3323,3 +3323,36 @@ verified non-vacuous by reintroducing the defect).
   `OfficeGoogleBusinessSection` now pulls candidates from the server RPC instead
   of receiving a client-filtered `eligibleMembers` prop.
 
+
+## Office Google Business reviews (Phase 5, 2026-10-01)
+- Migration `20261001190000_office_google_reviews.sql` adds the review cache and
+  the first Google *write* path (reply/delete). `google_business_reviews` is
+  unique on `(google_location_id, google_review_id)`, RLS inherits the office's
+  rules, and no browser role holds INSERT/UPDATE/DELETE — writes are RPC-only.
+- **Server-side filtering is the contract.** `list_office_google_reviews`
+  (rating/status/search/sort/limit/offset + `total_count`) and
+  `get_office_google_review_summary` do the work; the React page never filters or
+  paginates a full list.
+- **Sync is a reconciler, not a mirror.** `admin_sync_google_reviews` upserts and
+  marks reviews Google no longer returns as `visibility_state = 'NOT_FOUND'`
+  (never deletes). A sync that predates Google's reply propagation must not erase
+  DARB's optimistic `REPLY_PENDING`, so that status survives the upsert.
+- **Reply flow is confirm-before-commit.** `resolve_google_review_office` maps a
+  DARB review id back to its office/location and rejects a cross-office id;
+  `admin_apply_google_review_reply` only flips DARB status after Google confirms
+  and enforces the 4096-byte limit. The gateway's `gbpDelete` deliberately does
+  not retry (a second DELETE would target an already-gone reply); `gbpPut` retries
+  5xx only.
+- **Lock RPCs are authorized.** `acquire_google_review_sync_lock` /
+  `release_google_review_sync_lock` share the sync gate (`GOOGLE_SYNC_REVIEWS`),
+  so an authenticated caller cannot lock or wedge another office's sync by id.
+  Both are covered by the deploy verifier.
+- `notify_new_google_review` notifies only this office's operators plus admins,
+  with a per-recipient dedupe key (`...:<recipient>`) because
+  `emit_notification`'s unique index is on `dedupe_key` alone.
+- Verification: `/tmp/phase5_verify.sql` (115/115) and
+  `supabase/diagnostics/office_google_phase5_deploy_verify.sql` (76/76, read-only).
+- i18n: `googleReviews.*` in en/ar/he (both `public/locales` and bundled
+  `src/locales`); nav `nav.googleBusinessOverview` / `nav.googleReviews` under the
+  `nav.googleBusiness` group. UI lives at `/team/google/reviews`.
+
