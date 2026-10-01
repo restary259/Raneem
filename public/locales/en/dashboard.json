@@ -1817,8 +1817,6 @@
       "loadError": "Could not check the Google connection.",
       "notLinked": "Google Business is not connected to DARB yet.",
       "noAccounts": "Connected, but no Google business accounts are visible to this Google account.",
-      "locationCount_one": "{{count}} location",
-      "locationCount_other": "{{count}} locations",
       "status": {
         "connected": "Connected",
         "not_linked": "Not connected",
@@ -1831,7 +1829,8 @@
         "upstream": "Google returned an error.",
         "network": "Could not reach Google.",
         "not_linked": "Google Business is not connected."
-      }
+      },
+      "locationCount": "Locations: {{count}}"
     }
   },
   "influencer": {

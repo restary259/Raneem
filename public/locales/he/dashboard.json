@@ -5795,8 +5795,6 @@
       "loadError": "לא ניתן לבדוק את חיבור Google.",
       "notLinked": "Google Business עדיין לא מחובר לדארב.",
       "noAccounts": "מחובר, אך אין חשבונות עסק גלויים לחשבון Google זה.",
-      "locationCount_one": "מיקום אחד",
-      "locationCount_other": "{{count}} מיקומים",
       "status": {
         "connected": "מחובר",
         "not_linked": "לא מחובר",
@@ -5809,7 +5807,8 @@
         "upstream": "Google החזירה שגיאה.",
         "network": "לא ניתן להגיע ל-Google.",
         "not_linked": "Google Business לא מחובר."
-      }
+      },
+      "locationCount": "מיקומים: {{count}}"
     }
   },
   "appointmentActions": {

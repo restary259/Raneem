@@ -1835,8 +1835,6 @@
       "loadError": "تعذّر فحص ربط Google.",
       "notLinked": "لم يتم ربط Google Business بـ DARB بعد.",
       "noAccounts": "تم الربط، لكن لا توجد حسابات أعمال ظاهرة لهذا الحساب.",
-      "locationCount_one": "موقع واحد",
-      "locationCount_other": "{{count}} مواقع",
       "status": {
         "connected": "متصل",
         "not_linked": "غير متصل",
@@ -1849,7 +1847,8 @@
         "upstream": "أعادت Google خطأ.",
         "network": "تعذّر الوصول إلى Google.",
         "not_linked": "Google Business غير متصل."
-      }
+      },
+      "locationCount": "المواقع: {{count}}"
     }
   },
   "influencer": {
