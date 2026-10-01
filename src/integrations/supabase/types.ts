@@ -2039,8 +2039,8 @@ export type Database = {
       documents: {
         Row: {
           case_id: string | null
-          checklist_item_id: string | null
           category: string
+          checklist_item_id: string | null
           created_at: string
           deleted_at: string | null
           expiry_date: string | null
@@ -2058,8 +2058,8 @@ export type Database = {
         }
         Insert: {
           case_id?: string | null
-          checklist_item_id?: string | null
           category?: string
+          checklist_item_id?: string | null
           created_at?: string
           deleted_at?: string | null
           expiry_date?: string | null
@@ -2077,8 +2077,8 @@ export type Database = {
         }
         Update: {
           case_id?: string | null
-          checklist_item_id?: string | null
           category?: string
+          checklist_item_id?: string | null
           created_at?: string
           deleted_at?: string | null
           expiry_date?: string | null
@@ -2100,6 +2100,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
             referencedColumns: ["id"]
           },
           {
