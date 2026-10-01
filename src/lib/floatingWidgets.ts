@@ -21,6 +21,10 @@ export function isDashboardPath(pathname: string): boolean {
  * dashboard's own MobileBottomNav, and the app-download tab must never compete
  * with the signed-in app experience.
  */
+/** Sign-in style pages keep a clean, distraction-free screen. */
+export const AUTH_PATHS = ['/student-auth', '/reset-password', '/activate'] as const;
+
 export function shouldShowFloatingWidgets(pathname: string): boolean {
+  if ((AUTH_PATHS as readonly string[]).includes(pathname)) return false;
   return pathname !== '/apply' && !isDashboardPath(pathname);
 }
