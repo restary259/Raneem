@@ -9,6 +9,8 @@ import CaseFinance, {
   type CaseFinanceReadiness,
 } from "@/components/cases/CaseFinance";
 import CaseInvoiceBlock from "@/components/admin/CaseInvoiceBlock";
+import DirectRegistrationFinance from "@/components/cases/DirectRegistrationFinance";
+import { useEffect } from "react";
 
 /**
  * A submission as the Admin Submissions page fetches it. Declared here (and
@@ -47,6 +49,7 @@ export interface SubmittedCase {
     accommodation_weekly_price: number | null;
     extra_data: Record<string, unknown> | null;
   } | null;
+  registrationInvoice?: any | null;
   documents?: Array<{
     id: string;
     file_name: string;
@@ -90,6 +93,21 @@ export default function SubmissionCaseTabs({
   onFinanceReadinessChange,
 }: SubmissionCaseTabsProps) {
   const { t } = useTranslation("dashboard");
+
+  useEffect(() => {
+    if (caseData.source === "student_referral_registration") {
+      const paid = caseData.registrationInvoice?.payment_status === "paid";
+      onFinanceReadinessChange({
+        servicesSelected: true,
+        serviceTotal: Number(caseData.registrationInvoice?.total_amount ?? 0),
+        agencyConfirmed: paid,
+        agencyAck: paid,
+        confirming: false,
+        germanyRequiredTotal: 0,
+        germanyConfirmedRequired: 0,
+      });
+    }
+  }, [caseData.source, caseData.registrationInvoice?.payment_status, caseData.registrationInvoice?.total_amount, onFinanceReadinessChange]);
 
   // Trigger and content are derived from the SAME boolean so a tab can never
   // appear without content (or vice versa).
@@ -363,12 +381,16 @@ export default function SubmissionCaseTabs({
         forceMount
       >
         <div className="min-w-0 max-w-full">
-          <CaseFinance
-            caseId={caseData.id}
-            canManage={false}
-            canConfirm={true}
-            onReadinessChange={onFinanceReadinessChange}
-          />
+          {caseData.source === "student_referral_registration" ? (
+            <DirectRegistrationFinance invoice={caseData.registrationInvoice} caseStatus={caseData.status} />
+          ) : (
+            <CaseFinance
+              caseId={caseData.id}
+              canManage={false}
+              canConfirm={true}
+              onReadinessChange={onFinanceReadinessChange}
+            />
+          )}
         </div>
       </TabsContent>
 
