@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { RefreshCw, Settings2, Download, Search, FileText, ChevronDown } from 'lucide-react';
-import { exportCorporateWorkbook, exportCorporatePdf } from '@/utils/export';
+import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
 import { useExportContext } from '@/utils/export/useExportContext';
-import { toExportColumns, toExportRows } from './exportMapping';
+import { buildCurrentViewReport, deliverReport, type ExportFormat } from './spreadsheetExport';
+import SheetExportMenu, { type ExtraExportScope } from './SheetExportMenu';
 import { useToast } from '@/hooks/use-toast';
 
 import { SheetEnumGroup, useSheetLabels } from './sheetLabels';
@@ -38,18 +38,21 @@ export interface SheetTableProps {
   fileName: string;
   /** Extra toolbar controls (filters) */
   toolbar?: React.ReactNode;
-  /** Hide the visual sheet title when the parent workspace already provides the context. */
-  showTitle?: boolean;
-  /** Parent-level exports available from the streamlined Admin export menu. */
-  onExportFullReport?: (format: ExportFormat) => Promise<void>;
-  onExportSchoolPacket?: (format: ExportFormat) => Promise<void>;
-  parentExporting?: boolean;
-  /** External filters are owned by SpreadsheetHub; used only for a better empty state. */
+  /**
+   * 'legacy' (default): visible sheet title with Download Excel / Download PDF.
+   * 'menu': no visible title; a single Export menu. The page owns its headings.
+   */
+  variant?: 'legacy' | 'menu';
+  /** Additional export scopes offered by the parent workspace in 'menu' mode. */
+  extraExportScopes?: ExtraExportScope[];
+  /** The parent workspace is preparing an export. */
+  busy?: boolean;
+  /** External filters are owned by the parent; used only for a better empty state. */
   externalFiltersActive?: boolean;
   onClearExternalFilters?: () => void;
 }
 
-export type ExportFormat = 'xlsx' | 'pdf';
+export type { ExportFormat };
 
 export type ValueTranslator = (group: SheetEnumGroup, value: unknown) => string;
 
@@ -88,6 +91,48 @@ const chipForStatus = (raw: string): string => {
 };
 
 
+interface ToolbarControlsProps {
+  onRefresh?: () => void;
+  refreshing: boolean;
+  columns: SheetColumn[];
+  visible: Set<string>;
+  onToggle: (key: string) => void;
+  children: React.ReactNode;
+}
+
+/** Refresh + column picker + export controls, shared by both layouts. */
+const SheetToolbarControls: React.FC<ToolbarControlsProps> = ({ onRefresh, refreshing, columns, visible, onToggle, children }) => {
+  const { t } = useTranslation('dashboard');
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {onRefresh && (
+        <Button variant="outline" size="sm" onClick={onRefresh} aria-label={t('sheets.refresh')} disabled={refreshing}>
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      )}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Settings2 className="h-4 w-4 me-1" />
+            {t('sheets.columns')}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 max-h-80 overflow-auto" align="end">
+          <div className="space-y-2">
+            {columns.map(c => (
+              <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox checked={visible.has(c.key)} onCheckedChange={() => onToggle(c.key)} />
+                <span>{c.label}</span>
+              </label>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {children}
+    </div>
+  );
+};
+
 const SheetTable: React.FC<SheetTableProps> = ({
   title,
   description,
@@ -97,10 +142,9 @@ const SheetTable: React.FC<SheetTableProps> = ({
   onRefresh,
   fileName,
   toolbar,
-  showTitle = true,
-  onExportFullReport,
-  onExportSchoolPacket,
-  parentExporting = false,
+  variant = 'legacy',
+  extraExportScopes,
+  busy = false,
   externalFiltersActive = false,
   onClearExternalFilters,
 }) => {
@@ -110,12 +154,6 @@ const SheetTable: React.FC<SheetTableProps> = ({
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [visible, setVisible] = useState<Set<string>>(
-    () => new Set(columns.filter(c => !c.hidden).map(c => c.key)),
-  );
-  const [exportFormat, setExportFormat] = useState<ExportFormat>('xlsx');
-  const [exportKind, setExportKind] = useState<'current' | 'full' | 'schoolPacket'>('current');
-  const [exportColumnsMode, setExportColumnsMode] = useState<'visible' | 'custom'>('visible');
-  const [exportColumns, setExportColumns] = useState<Set<string>>(
     () => new Set(columns.filter(c => !c.hidden).map(c => c.key)),
   );
   const [exporting, setExporting] = useState(false);
@@ -151,78 +189,33 @@ const SheetTable: React.FC<SheetTableProps> = ({
       return next;
     });
 
-  const toggleExportColumn = (key: string) =>
-    setExportColumns(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-
-  /** One report definition drives both the Excel and the PDF download. */
-  const buildReport = () => {
-    const rowsOut = toExportRows(filteredRows, activeColumns, translate);
-    return {
-      fileName,
-      title,
-      subtitle: description,
-      author,
-      locale,
-      rtl,
-      totalLabel: t('sheets.total'),
-      emptyLabel: t('sheets.noRecords', 'No records'),
-      continuedLabel: t('sheets.pdfPart', 'part'),
-      sheets: [
-        {
-          name: title,
-          title,
-          subtitle: description,
-          columns: toExportColumns(activeColumns),
-          rows: rowsOut,
-        },
-      ],
-    };
-  };
-
-  const handleExport = async (
-    requestedFormat: ExportFormat = exportFormat,
-    requestedKind: 'current' | 'full' | 'schoolPacket' = exportKind,
-  ) => {
-    const hasColumns = requestedKind !== 'current' || (exportColumnsMode === 'visible'
-      ? activeColumns.length > 0
-      : exportColumns.size > 0);
-    if (!hasColumns) {
+  /** Export the rows currently shown (search + parent filters) with the chosen columns. */
+  const exportCurrent = async (format: ExportFormat, selected: SheetColumn[] = activeColumns) => {
+    if (!selected.length) {
       toast({ variant: 'destructive', description: t('sheets.exportNoColumns', 'Choose at least one column.') });
       return;
     }
-
     setExporting(true);
     try {
-      if (requestedKind === 'full' && onExportFullReport) {
-        await onExportFullReport(requestedFormat);
-        return;
-      }
-
-      if (requestedKind === 'schoolPacket' && onExportSchoolPacket) {
-        await onExportSchoolPacket(requestedFormat);
-        return;
-      }
-
-      const selectedColumns = exportColumnsMode === 'visible'
-        ? activeColumns
-        : columns.filter(c => exportColumns.has(c.key));
-
-      const report = buildReport();
-      report.sheets[0].columns = toExportColumns(selectedColumns);
-      report.sheets[0].rows = toExportRows(filteredRows, selectedColumns, translate);
-
-      if (requestedFormat === 'xlsx') {
-        await exportCorporateWorkbook(report);
-      } else {
-        const { empty, rtlFontMissing } = await exportCorporatePdf(report);
-        if (empty) toast({ description: t('sheets.empty') });
-        else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
-      }
+      const report = buildCurrentViewReport({
+        fileName,
+        title,
+        description,
+        columns: selected,
+        rows: filteredRows,
+        translate,
+        author,
+        locale,
+        rtl,
+        labels: {
+          total: t('sheets.total'),
+          empty: t('sheets.noRecords', 'No records'),
+          continued: t('sheets.pdfPart', 'part'),
+        },
+      });
+      const { empty, rtlFontMissing } = await deliverReport(format, report);
+      if (empty) toast({ description: t('sheets.empty') });
+      else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
     } catch {
       toast({ variant: 'destructive', description: t('sheets.exportFailed', 'Could not create the export file') });
     } finally {
@@ -230,175 +223,54 @@ const SheetTable: React.FC<SheetTableProps> = ({
     }
   };
 
+  const working = exporting || busy;
+  const noRows = filteredRows.length === 0;
+
+  const toolbarControls = (
+    <SheetToolbarControls
+      onRefresh={onRefresh}
+      refreshing={variant === 'menu' ? !!loading : false}
+      columns={columns}
+      visible={visible}
+      onToggle={toggle}
+    >
+      {variant === 'menu' ? (
+        <SheetExportMenu
+          columns={columns}
+          visibleColumns={activeColumns}
+          rowCount={filteredRows.length}
+          busy={working}
+          extraScopes={extraExportScopes}
+          onExportCurrent={exportCurrent}
+        />
+      ) : (
+        <>
+          {/* Legacy behaviour: both downloads are disabled when no rows are shown. */}
+          <Button size="sm" onClick={() => void exportCurrent('xlsx')} disabled={noRows || working}>
+            <Download className="h-4 w-4 me-1" />
+            {t('sheets.exportExcel')}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => void exportCurrent('pdf')} disabled={noRows || working}>
+            <FileText className="h-4 w-4 me-1" />
+            {t('sheets.exportPdf')}
+          </Button>
+        </>
+      )}
+    </SheetToolbarControls>
+  );
 
   return (
-    <div className="space-y-3">
-      {showTitle && (
+    <section className="space-y-3" aria-label={variant === 'menu' ? title : undefined}>
+      {variant === 'legacy' ? (
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <h2 className="text-base font-semibold text-foreground">{title}</h2>
             {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {onRefresh && (
-              <Button variant="outline" size="sm" onClick={onRefresh} aria-label={t('sheets.refresh')}>
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            )}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Settings2 className="h-4 w-4 me-1" />
-                  {t('sheets.columns')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 max-h-80 overflow-auto" align="end">
-                <div className="space-y-2">
-                  {columns.map(c => (
-                    <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer">
-                      <Checkbox checked={visible.has(c.key)} onCheckedChange={() => toggle(c.key)} />
-                      <span>{c.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Button size="sm" onClick={() => void handleExport('xlsx', 'current')} disabled={exporting || parentExporting}>
-              <Download className="h-4 w-4 me-1" />
-              {t('sheets.exportExcel')}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => void handleExport('pdf', 'current')} disabled={!filteredRows.length || exporting || parentExporting}>
-              <FileText className="h-4 w-4 me-1" />
-              {t('sheets.exportPdf')}
-            </Button>
-          </div>
+          {toolbarControls}
         </div>
-      )}
-
-      {!showTitle && (
-        <div className="flex items-center justify-end gap-2 flex-wrap">
-          <h2 className="sr-only">{title}</h2>
-          {onRefresh && (
-            <Button variant="outline" size="sm" onClick={onRefresh} aria-label={t('sheets.refresh')} disabled={loading}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Settings2 className="h-4 w-4 me-1" />
-                {t('sheets.columns')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 max-h-80 overflow-auto" align="end">
-              <div className="space-y-2">
-                {columns.map(c => (
-                  <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox checked={visible.has(c.key)} onCheckedChange={() => toggle(c.key)} />
-                    <span>{c.label}</span>
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button size="sm" disabled={exporting || parentExporting}>
-                <Download className="h-4 w-4 me-1" />
-                {exporting || parentExporting ? t('sheets.preparing') : t('sheets.export', 'Export')}
-                <ChevronDown className="h-4 w-4 ms-1" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[340px] p-4" align="end">
-              <div className="space-y-4">
-                <div>
-                  <p className="font-semibold text-sm">{t('sheets.export', 'Export')}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{t('sheets.exportHelp', 'Choose the format, scope and columns for your download.')}</p>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">{t('sheets.exportFormat', 'Format')}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {([
-                      ['xlsx', t('sheets.exportFormatExcel', 'Excel (.xlsx)')],
-                      ['pdf', t('sheets.exportFormatPdf', 'PDF (.pdf)')],
-                    ] as const).map(([value, label]) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setExportFormat(value)}
-                        className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                          exportFormat === value ? 'border-primary bg-primary/10 text-foreground' : 'border-border hover:bg-muted'
-                        }`}
-                        aria-pressed={exportFormat === value}
-                      >
-                        {value === 'xlsx' ? <Download className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">{t('sheets.exportType', 'Export type')}</p>
-                  <div className="space-y-1.5">
-                    <button type="button" onClick={() => setExportKind('current')} className={`w-full rounded-lg border px-3 py-2 text-start text-sm ${exportKind === 'current' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted'}`}>
-                      <span className="font-medium">{t('sheets.exportCurrentView', 'Current view')}</span>
-                      <span className="block text-xs text-muted-foreground">{t('sheets.exportCurrentViewHelp', 'Current filters, search and visible rows')}</span>
-                    </button>
-                    {onExportFullReport && (
-                      <button type="button" onClick={() => setExportKind('full')} className={`w-full rounded-lg border px-3 py-2 text-start text-sm ${exportKind === 'full' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted'}`}>
-                        <span className="font-medium">{t('sheets.exportFullReport', 'Full report')}</span>
-                        <span className="block text-xs text-muted-foreground">{t('sheets.exportFullReportHelp', 'All spreadsheet tabs')}</span>
-                      </button>
-                    )}
-                    {onExportSchoolPacket && (
-                      <button type="button" onClick={() => setExportKind('schoolPacket')} className={`w-full rounded-lg border px-3 py-2 text-start text-sm ${exportKind === 'schoolPacket' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted'}`}>
-                        <span className="font-medium">{t('sheets.exportSchoolPacket', 'School packet')}</span>
-                        <span className="block text-xs text-muted-foreground">{t('sheets.exportSchoolPacketHelp', 'Student details and costs for schools')}</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {exportKind === 'current' && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">{t('sheets.exportColumns', 'Columns')}</p>
-                    <div className="space-y-1.5">
-                      <button type="button" onClick={() => { setExportColumnsMode('visible'); setExportColumns(new Set(activeColumns.map(c => c.key))); }} className={`w-full rounded-lg border px-3 py-2 text-start text-sm ${exportColumnsMode === 'visible' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted'}`}>
-                        <span className="font-medium">{t('sheets.exportVisibleColumns', 'Current visible columns')}</span>
-                      </button>
-                      <button type="button" onClick={() => { setExportColumnsMode('custom'); setExportColumns(prev => prev.size ? prev : new Set(activeColumns.map(c => c.key))); }} className={`w-full rounded-lg border px-3 py-2 text-start text-sm ${exportColumnsMode === 'custom' ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted'}`}>
-                        <span className="font-medium">{t('sheets.exportChooseColumns', 'Choose columns')}</span>
-                      </button>
-                    </div>
-                    {exportColumnsMode === 'custom' && (
-                      <div className="max-h-44 space-y-1 overflow-auto rounded-lg border border-border p-2">
-                        {columns.map(c => (
-                          <label key={c.key} className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted">
-                            <Checkbox checked={exportColumns.has(c.key)} onCheckedChange={() => toggleExportColumn(c.key)} />
-                            <span>{c.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <Button className="w-full" onClick={() => void handleExport()} disabled={
-                  exporting ||
-                  parentExporting ||
-                  ((exportKind === 'current' || exportKind === 'schoolPacket') && !filteredRows.length) ||
-                  (exportKind === 'current' && (exportColumnsMode === 'visible' ? activeColumns.length === 0 : exportColumns.size === 0))
-                }>
-                  <Download className="h-4 w-4 me-2" />
-                  {exporting || parentExporting ? t('sheets.preparing') : t('sheets.export', 'Export')}
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+      ) : (
+        <div className="flex items-center justify-end">{toolbarControls}</div>
       )}
       <div className="flex items-center gap-3 flex-wrap p-3 rounded-lg bg-muted/40 border border-border">
         <div className="relative flex-1 min-w-[180px]">
@@ -494,7 +366,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
           </table>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 
