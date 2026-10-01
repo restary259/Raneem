@@ -72,6 +72,16 @@ jobs:
   code-review:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # The CLI's launcher spawns a DETACHED self-updater on first run in a fresh
+    # runner (its 18-minute cooldown has always expired), which runs
+    # `npm i -g ...@latest` in the background. With ocr_version pinned below that
+    # updater rewrites the package directory *while the review step is running*,
+    # killing it with "Cannot find module '../scripts/../platform'" — observed on
+    # the first run of this workflow. OCR_NO_UPDATE is the launcher's documented
+    # opt-out (verified: it suppresses the update.js spawn entirely) and keeps
+    # the pinned version authoritative for the whole job.
+    env:
+      OCR_NO_UPDATE: '1'
     # PR events, or a human comment starting with the trigger keyword.
     #
     # This repository is public, so `pull_request_target` would otherwise run
