@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 const read = (p: string) => readFileSync(resolve(process.cwd(), p), "utf8");
 
 const MIGRATION = "supabase/migrations/20261001090000_student_referral_registration.sql";
+const COMPLETE_MIGRATION = "supabase/migrations/20261001150000_complete_student_referral_registration_workflow.sql";
 const FLOW = "src/components/student/ReferralRegistrationFlow.tsx";
 const COMMAND_CENTER = "src/pages/admin/AdminCommandCenter.tsx";
 
@@ -89,6 +90,33 @@ describe("student referral registration migration", () => {
   });
 });
 
+describe("complete direct registration workflow", () => {
+  const sql = read(COMPLETE_MIGRATION);
+
+  it("confirms a paid direct registration without creating a second DARB-service invoice", () => {
+    expect(sql).toContain("FUNCTION public.confirm_direct_registration_profile(p_case_id uuid)");
+    expect(sql).toContain("FUNCTION public.submit_student_referral_registration_for_review(p_case_id uuid)");
+    expect(sql).toContain("source <> 'student_referral_registration'");
+    expect(sql).toContain("payment_confirmed = true");
+    expect(sql).toContain("SET status = 'submitted'");
+    expect(sql).not.toContain("issue_case_invoice(");
+  });
+
+  it("routes enrollment rewards to the isolated student-referral reward path", () => {
+    expect(sql).toContain("FUNCTION public.record_student_referral_registration_reward(p_case_id uuid)");
+    expect(sql).toContain("'student_referral'");
+    expect(sql).toContain("now() + interval '20 days'");
+    expect(sql).toContain("NEW.source = 'student_referral_registration'");
+    expect(sql).toContain("record_student_referral_registration_reward(NEW.id)");
+  });
+
+  it("lets paid direct registrations satisfy the enrollment finance gate", () => {
+    expect(sql).toContain("FUNCTION public.assert_case_ready_for_enrollment(p_case_id uuid)");
+    expect(sql).toContain("v_case.source = 'student_referral_registration'");
+    expect(sql).toContain("'direct_registration'");
+  });
+});
+
 describe("registration flow frontend", () => {
   it("loads the catalog through the RPC, not a direct table read", () => {
     const src = read(FLOW);
@@ -110,5 +138,19 @@ describe("admin command center referral queue", () => {
     const block = src.match(/from\('case_registration_invoices'\)[\s\S]{0,300}?;/)?.[0] ?? "";
     expect(block).not.toMatch(/select\('id,case_id,student_name,case_reference/);
     expect(block).toContain("cases(case_reference)");
+  });
+});
+
+describe("direct registration admin surfaces", () => {
+  it("loads real student referral rewards instead of only referral status", () => {
+    const src = read("src/pages/admin/AdminReferralOperationsPage.tsx");
+    expect(src).toContain('from("rewards")');
+    expect(src).toContain('eq("reward_type", "student_referral")');
+    expect(src).toContain("record.rewards.length");
+  });
+
+  it("uses RTL for both Arabic and Hebrew", () => {
+    const src = read("src/pages/admin/AdminReferralOperationsPage.tsx");
+    expect(src).toContain('i18n.language.startsWith("ar") || i18n.language.startsWith("he")');
   });
 });
