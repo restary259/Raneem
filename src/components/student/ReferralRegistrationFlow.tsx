@@ -200,13 +200,24 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
     Promise.all([
       (supabase as any).from("referrals").select("id,referred_name,referred_phone,referral_type,status,referred_case_id,created_at").eq("referrer_user_id", userId).order("created_at", { ascending: false }).limit(30),
       (supabase as any).from("case_registration_invoices").select("id,case_id,invoice_number,public_token,student_name,school_id,program_id,accommodation_id,program_weeks,accommodation_weeks,total_amount,currency,payment_status,status,issued_at,referrer_name,referral_type").eq("referrer_user_id", userId).order("created_at", { ascending: false }).limit(30),
-    ]).then(([referralsRes, invoicesRes]) => {
+    ]).then(async ([referralsRes, invoicesRes]) => {
       if (cancelled) return;
       const invoices = invoicesRes.data ?? [];
       const refs = referralsRes.data ?? [];
+      const caseIds = invoices.map((inv: any) => inv.case_id).filter(Boolean);
+      const rewardsRes = caseIds.length
+        ? await (supabase as any).from("rewards")
+            .select("id,case_id,amount,currency,status,reward_type,unlock_at,payout_requested_at,paid_at,payment_reference")
+            .in("case_id", caseIds)
+            .eq("reward_type", "student_referral")
+        : { data: [], error: null };
+      if (rewardsRes.error) console.error("[referral-history] reward lookup failed", rewardsRes.error);
+      const rewardsByCase = new Map<string, any>();
+      for (const reward of rewardsRes.data ?? []) rewardsByCase.set(reward.case_id, reward);
       const merged = refs.map((ref: any) => ({
         ...ref,
         invoice: invoices.find((inv: any) => inv.case_id === ref.referred_case_id) ?? null,
+        reward: rewardsByCase.get(ref.referred_case_id) ?? null,
       }));
       setHistory(merged);
     }).finally(() => {
@@ -744,8 +755,10 @@ function ReferralHistory({ history, loading, lang, t }: { history: any[]; loadin
                   <p className="text-xs text-muted-foreground">{item.referral_type === "family" ? t("referralRegistration.family") : t("referralRegistration.friend")}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                  {item.invoice ? <Badge variant="secondary">{item.invoice.payment_status}</Badge> : <Badge variant="outline">{item.status || "pending"}</Badge>}
-                  {item.invoice ? <a href={`https://darb.agency/invoice/${encodeURIComponent(item.invoice.public_token)}`} className="inline-flex items-center gap-1 text-primary hover:underline"><ExternalLink className="size-3" />{item.invoice.invoice_number}</a> : null}
+                  {item.invoice ? <Badge variant={item.invoice.payment_status === "paid" ? "success" : "secondary"}>{item.invoice.payment_status}</Badge> : <Badge variant="outline">{item.status || "pending"}</Badge>}
+                  {item.invoice ? <span className="text-muted-foreground" dir="ltr">{item.invoice.total_amount} {item.invoice.currency || "EUR"}</span> : null}
+                  {item.invoice ? <a href={"https://darb.agency/invoice/" + encodeURIComponent(item.invoice.public_token)} className="inline-flex items-center gap-1 text-primary hover:underline"><ExternalLink className="size-3" />{item.invoice.invoice_number}</a> : null}
+                  {item.reward ? <Badge variant={item.reward.status === "paid" ? "success" : "outline"}>{t("referralRegistration.history.reward", "Reward")}: {Number(item.reward.amount).toLocaleString("en-US")} {item.reward.currency || "ILS"}</Badge> : null}
                 </div>
               </div>
             ))}
