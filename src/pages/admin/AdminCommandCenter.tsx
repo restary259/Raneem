@@ -424,7 +424,6 @@ const AdminCommandCenter = () => {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-foreground">{t('admin.commandCenter.title', 'Command Center')}</h1>
-            <p className="text-muted-foreground text-sm mt-1">{t('admin.commandCenter.subtitle', 'Real-time overview of all activity')}</p>
           </div>
           <Button variant="outline" size="sm" onClick={fetchData} disabled={isFetching} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
@@ -451,7 +450,6 @@ const AdminCommandCenter = () => {
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-foreground">{t('admin.commandCenter.title', 'Command Center')}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{t('admin.commandCenter.subtitle', 'Real-time overview of all activity')}</p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={isFetching} className="gap-2">
           <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
