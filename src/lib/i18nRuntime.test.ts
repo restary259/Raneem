@@ -11,8 +11,8 @@ function stubLocaleFetch() {
       const rawUrl = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       const url = new URL(rawUrl, "http://darb.test");
       const parts = url.pathname.split("/");
-      const locale = parts[2];
-      const namespace = parts[3]?.replace(/\.json$/, "");
+      const locale = parts[2] ?? "";
+      const namespace = (parts[3] ?? "").replace(/\.json$/, "");
 
       if (parts.length !== 4 || parts[1] !== "locales" || !["ar", "en", "he"].includes(locale) || namespace !== "dashboard") {
         return new Response("Not found", { status: 404 });
@@ -60,7 +60,9 @@ describe("i18n runtime loading", () => {
     // the real namespace JSON files rather than a second in-memory fixture.
     expect(i18n.hasResourceBundle("ar", "dashboard")).toBe(true);
     expect(
-      vi.mocked(fetch).mock.calls.some(([url]) => String(url) === "/locales/ar/dashboard.json"),
+      vi.mocked(fetch).mock.calls.some(([url]) =>
+        new URL(String(url), "http://darb.test").pathname === "/locales/ar/dashboard.json",
+      ),
     ).toBe(true);
 
     await i18n.changeLanguage("en");
