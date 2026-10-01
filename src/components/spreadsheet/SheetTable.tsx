@@ -209,10 +209,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
         ? activeColumns
         : columns.filter(c => exportColumns.has(c.key));
 
-      const report = {
-        ...buildReport(),
-        columns: undefined,
-      };
+      const report = buildReport();
       report.sheets[0].columns = toExportColumns(selectedColumns);
       report.sheets[0].rows = toExportRows(filteredRows, selectedColumns, translate);
 
