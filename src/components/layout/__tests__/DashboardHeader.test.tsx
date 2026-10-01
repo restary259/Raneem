@@ -74,7 +74,3 @@ describe("DashboardHeader", () => {
   });
 });
 
-function userEventSetup() {
-  const { default: userEvent } = require("@testing-library/user-event");
-  return userEvent.setup();
-}
