@@ -18,9 +18,6 @@ function stubLocaleFetch() {
         return new Response("Not found", { status: 404 });
       }
 
-      if (!match) {
-        return new Response("Not found", { status: 404 });
-      }
 
       requests.push(url.pathname);
 
