@@ -4968,14 +4968,19 @@
       "queueAuthEmpty": "אין כשלי הרשאה",
       "queueAttribution": "שלמות השיוך",
       "queueAttributionEmpty": "לא זוהו בעיות שיוך",
-      "viewAll": "הצגת הכול",
+      "viewAll": "הצג הכול",
       "open": "פתיחה",
       "activityLoadError": "לא ניתן לטעון פעילות אחרונה",
       "queueLoadError": "לא ניתן לטעון",
       "queueStale": "הרענון נכשל — מוצגת הרשימה האחרונה שנטענה.",
       "refreshFailed": "הרענון נכשל — מוצג המידע האחרון שנטען בהצלחה.",
       "loadFailed": "לא ניתן לטעון את מרכז הפיקוד",
-      "loadFailedBody": "לא ניתן היה לקרוא את הסקירה. הנתונים שלך שמורים — נסו שוב כדי לטעון אותם."
+      "loadFailedBody": "לא ניתן היה לקרוא את הסקירה. הנתונים שלך שמורים — נסו שוב כדי לטעון אותם.",
+      "referralRegistrations": "רישומי הפניה",
+      "referralRegistrationsEmpty": "אין רישומי הפניה ממתינים לתשלום",
+      "referredBy": "הופנה על ידי",
+      "transferSubmitted": "העברה נשלחה",
+      "awaitingPayment": "ממתין לתשלום"
     },
     "financials": {
       "title": "לוח בקרה כספי",
@@ -5636,6 +5641,76 @@
       "applied": "ויזה הוגשה",
       "emptyPending": "אין תלמידים רשומים הממתינים לקובץ הוויזה.",
       "emptyApplied": "לא הוגשו קבצי ויזה למנהל."
+    },
+    "referralOperations": {
+      "title": "ניהול הפניות",
+      "description": "מעקב אחר כל רישום הפניה מהשליחה ועד התשלום ובתהליך DARB הרגיל.",
+      "loadError": "לא ניתן לטעון רישומי הפניה",
+      "paymentConfirmed": "התשלום אושר",
+      "invoiceSent": "החשבונית נשלחה",
+      "actionFailed": "הפעולה נכשלה",
+      "empty": "אין רישומי הפניה התואמים לתצוגה.",
+      "metrics": {
+        "total": "רישומים",
+        "pending": "ממתינים לתשלום",
+        "transferSubmitted": "העברות נשלחו",
+        "paid": "שולם",
+        "failed": "נכשל"
+      },
+      "tabs": {
+        "registrations": "רישומים",
+        "referrers": "מפנים",
+        "rewards": "מחזור הפניה"
+      },
+      "search": "חיפוש סטודנט, מספר או מפנה",
+      "filters": {
+        "all": "הכול",
+        "pending": "ממתין לתשלום",
+        "submitted": "העברה נשלחה",
+        "paid": "שולם",
+        "failed": "נכשל"
+      },
+      "fields": {
+        "referrer": "מפנה",
+        "type": "סוג",
+        "school": "בית ספר",
+        "invoice": "חשבונית",
+        "amount": "סה״כ",
+        "status": "מצב רישום",
+        "payment": "תשלום",
+        "reference": "אסמכתא",
+        "method": "שיטה"
+      },
+      "openCase": "פתיחת תיק",
+      "referrersTitle": "מפנים",
+      "referrers": {
+        "registrations": "רישומים",
+        "paid": "שולם",
+        "pending": "ממתין",
+        "enrolled": "נרשם"
+      },
+      "rewardsTitle": "מחזור הפניה",
+      "rewards": {
+        "currentRule": "תגמולי הפניות סטודנטים ממשיכים לפעול לפי הכללים הקיימים. תצוגה זו עוקבת אחר המחזור בלבד."
+      },
+      "bankSettings": {
+        "title": "פרטי העברה בנקאית",
+        "bankName": "שם הבנק",
+        "accountHolder": "בעל החשבון",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "save": "שמירת פרטי בנק"
+      },
+      "bankSaved": "פרטי ההעברה נשמרו",
+      "detail": {
+        "eyebrow": "רישום הפניה",
+        "registration": "רישום",
+        "payment": "תשלום",
+        "selectedServices": "שירותים שנבחרו",
+        "resendInvoice": "שליחת חשבונית מחדש",
+        "confirmPayment": "אישור תשלום",
+        "fullTrace": "התיק הוא הרשומה הראשית. הרישום, ההפניה, החשבונית והתשלום קשורים לאותו תיק וניתנים למעקב בציר הזמן."
+      }
     }
   },
   "appointmentActions": {
@@ -5650,5 +5725,212 @@
     "confirmed": "הפגישה אושרה",
     "cancelled": "הפגישה בוטלה",
     "rescheduled": "מועד הפגישה שונה"
+  },
+  "referralRegistration": {
+    "title": "הפניה ורישום",
+    "description": "רשמו חבר או בן משפחה ישירות דרך DARB. בחרו בית ספר, קורס ומגורים ושלחו את החשבונית.",
+    "masterRecord": "רישום DARB אחד",
+    "masterRecordDesc": "הרישום, החשבונית, התשלום וההפניה נשמרים יחד בתיק אחד.",
+    "friend": "חבר",
+    "family": "בן משפחה",
+    "steps": {
+      "person": "פרטים",
+      "study": "לימודים",
+      "accommodation": "מגורים",
+      "review": "בדיקה"
+    },
+    "fields": {
+      "firstName": "שם פרטי",
+      "middleName": "שם אמצעי",
+      "lastName": "שם משפחה",
+      "dateOfBirth": "תאריך לידה",
+      "gender": "מגדר",
+      "cityOfBirth": "עיר לידה",
+      "nationality": "אזרחות",
+      "passportType": "סוג דרכון",
+      "email": "אימייל",
+      "phone": "טלפון",
+      "emergencyName": "שם איש קשר לחירום",
+      "emergencyPhone": "טלפון חירום",
+      "addressTitle": "כתובת",
+      "street": "רחוב",
+      "houseNumber": "מספר בית",
+      "postcode": "מיקוד",
+      "city": "עיר",
+      "educationLevel": "השכלה",
+      "englishLevel": "רמת אנגלית",
+      "englishUnits": "יחידות אנגלית",
+      "mathUnits": "יחידות מתמטיקה",
+      "degreeInterest": "תחום לימודים / מקצוע",
+      "school": "בית ספר",
+      "course": "קורס",
+      "courseWeeks": "שבועות קורס",
+      "startMonth": "חודש התחלה",
+      "accommodation": "מגורים",
+      "accommodationWeeks": "שבועות מגורים",
+      "insurance": "ביטוח"
+    },
+    "placeholders": {
+      "gender": "בחירת מגדר",
+      "passport": "בחירת דרכון",
+      "select": "בחירה",
+      "noInsurance": "ללא ביטוח"
+    },
+    "gender": {
+      "male": "גבר",
+      "female": "אישה"
+    },
+    "passport": {
+      "israeliBlue": "דרכון ישראלי כחול",
+      "israeliRed": "דרכון ישראלי אדום",
+      "other": "אחר"
+    },
+    "school": {
+      "title": "בחירת בית ספר פעיל"
+    },
+    "course": {
+      "title": "בחירת קורס",
+      "none": "אין קורסים פעילים לבית הספר הזה."
+    },
+    "accommodation": {
+      "title": "בחירת מגורים",
+      "description": "ראו אפשרויות מגורים פעילות לבית הספר, כולל תמונות, פרטי חדר ומחיר שבועי עדכני.",
+      "none": "ללא מגורים",
+      "noneDesc": "המשיכו ללא בחירת מגורים של DARB.",
+      "select": "בחירה",
+      "selected": "נבחר",
+      "details": "הצגת פרטים",
+      "noneAvailable": "אין אפשרויות מגורים פעילות לבית הספר הזה."
+    },
+    "pricing": {
+      "week": "שבוע",
+      "weeks": "שבועות",
+      "lessons": "שיעורים/שבוע",
+      "hours": "שעות/שבוע",
+      "courseEstimate": "הערכת קורס",
+      "accommodationEstimate": "הערכת מגורים",
+      "insuranceEstimate": "הערכת ביטוח",
+      "notSet": "מחיר לא הוגדר",
+      "notSelected": "לא נבחר",
+      "placementFee": "דמי השמת מגורים",
+      "deposit": "פיקדון",
+      "roomType": "סוג חדר",
+      "meals": "ארוחות",
+      "distance": "מרחק",
+      "tiers": "מדרגות מחיר שבועיות",
+      "tiersDesc": "מספר השבועות שנבחר קובע את מדרגת המחיר השבועית.",
+      "months": "חודשים"
+    },
+    "review": {
+      "title": "בדיקת הרישום",
+      "applicant": "הנרשם",
+      "study": "לימודים",
+      "accommodation": "מגורים וביטוח",
+      "financialSummary": "סיכום כספי",
+      "course": "קורס",
+      "registrationFee": "דמי רישום לקורס",
+      "placementFee": "דמי השמת מגורים",
+      "insurance": "ביטוח",
+      "total": "סה״כ",
+      "priceNote": "המחירים מחושבים מחדש ומאומתים בצד השרת בעת השליחה. שינוי בקטלוג לא ישנה חשבונית שכבר הונפקה.",
+      "terms": "אני מאשר/ת שהפרטים נכונים ושיש לי אישור מהאדם שאני רושם/ת לשלוח את המידע הזה."
+    },
+    "navigation": {
+      "back": "חזרה",
+      "next": "המשך",
+      "submit": "יצירת רישום וחשבונית"
+    },
+    "payment": {
+      "card": "תשלום בכרטיס",
+      "cardDesc": "תשלום מאובטח אונליין כשהספק הפיננסי של DARB מוגדר.",
+      "payCard": "תשלום בכרטיס",
+      "cardUnavailable": "תשלום בכרטיס אינו זמין כרגע.",
+      "bank": "העברה בנקאית",
+      "bankDesc": "יש להשתמש במספר הרישום בהערות ההעברה כדי שנוכל להתאים את התשלום.",
+      "bankAction": "פתיחת פרטי העברה",
+      "contact": "יצירת קשר עם DARB",
+      "contactDesc": "מעדיפים עזרה מהצוות? התקשרו ל-DARB.",
+      "viewInvoice": "צפייה בחשבונית ואפשרויות תשלום"
+    },
+    "success": {
+      "eyebrow": "הרישום נוצר",
+      "title": "הרישום והחשבונית נוצרו",
+      "description": "הנרשם הוכנס לתהליך DARB והחשבונית נשלחה לאימייל שלו כאשר שליחת הדואר הייתה זמינה.",
+      "reference": "מספר רישום",
+      "invoice": "חשבונית",
+      "amount": "סה״כ לתשלום",
+      "newReferral": "רישום אדם נוסף"
+    },
+    "errors": {
+      "required": "שדה זה חובה.",
+      "catalog": "לא ניתן לטעון את קטלוג DARB.",
+      "terms": "יש לאשר את פרטי הרישום לפני השליחה.",
+      "submit": "לא ניתן ליצור את הרישום."
+    },
+    "history": {
+      "title": "הרישומים שהפניתי",
+      "empty": "עדיין לא יצרת רישום הפניה."
+    },
+    "insurance": {
+      "none": "ללא ביטוח"
+    },
+    "caseSummary": {
+      "eyebrow": "הפניה ורישום",
+      "title": "רישום הפניה",
+      "paid": "שולם",
+      "pending": "ממתינים לתשלום",
+      "referrer": "הופנה על ידי",
+      "type": "סוג",
+      "invoice": "חשבונית",
+      "total": "סה״כ רישום",
+      "services": "הרישום שנבחר"
+    },
+    "education": {
+      "bagrut": "בגרות",
+      "bachelor": "תואר ראשון",
+      "master": "תואר שני",
+      "other": "אחר"
+    },
+    "english": {
+      "beginner": "מתחיל",
+      "intermediate": "בינוני",
+      "advanced": "מתקדם"
+    },
+    "eyebrow": "דארב",
+    "pageIntro": "רשמו חבר או בן משפחה ישירות דרך DARB. אין צורך בפגישה במשרד כדי להשלים את הרישום.",
+    "backToDashboard": "חזרה ללוח הבקרה"
+  },
+  "invoice": {
+    "registration": {
+      "title": "חשבונית רישום DARB",
+      "reference": "מספר רישום",
+      "referredBy": "הופנה על ידי",
+      "referralType": "סוג הפניה",
+      "friend": "חבר",
+      "family": "בן משפחה",
+      "details": "פרטי רישום",
+      "item": "פריט",
+      "amount": "סכום",
+      "subtotal": "סכום ביניים",
+      "total": "סה״כ לתשלום",
+      "issued": "הונפקה",
+      "due": "לתשלום עד",
+      "memo": "יש לציין את מספר הרישום בהערות ההעברה:",
+      "card": "תשלום בכרטיס",
+      "payCard": "תשלום בכרטיס",
+      "bank": "העברה בנקאית",
+      "bankName": "בנק",
+      "holder": "בעל החשבון",
+      "iban": "IBAN",
+      "bic": "BIC",
+      "bankAction": "סימנתי שביצעתי העברה",
+      "submitted": "ההעברה סומנה — ממתינים לאישור DARB",
+      "download": "הורדת PDF",
+      "contact": "יצירת קשר עם DARB",
+      "cancelled": "החשבונית מבוטלת",
+      "paid": "שולם",
+      "pending": "ממתין לתשלום",
+      "failed": "התשלום נכשל"
+    }
   }
 }

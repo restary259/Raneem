@@ -97,6 +97,53 @@ export const formatInvoiceMoney = (amount: number, currency = "ILS") =>
     maximumFractionDigits: 2,
   })}`;
 
+/** The subset of a frozen invoice item the billing line needs. */
+export interface InvoiceItemLike {
+  kind?: string | null;
+  weeks?: number | null;
+  weekly_price?: number | null;
+  months?: number | null;
+  monthly_price?: number | null;
+  billing_period?: string | null;
+}
+
+const INVOICE_COPY: Record<"ar" | "en", {
+  week: string; weeks: string; weekUnit: string;
+  month: string; months: string; monthUnit: string; oneTime: string;
+}> = {
+  ar: { week: "أسبوع", weeks: "أسابيع", weekUnit: "/أسبوع", month: "شهر", months: "أشهر", monthUnit: "/شهر", oneTime: "دفعة واحدة" },
+  en: { week: "week", weeks: "weeks", weekUnit: "/week", month: "month", months: "months", monthUnit: "/month", oneTime: "one-time" },
+};
+
+/**
+ * The "3 weeks · €245/week" / "6 months · €98/month" line under an invoice item.
+ *
+ * A one_time premium must NOT render as "1 month · €X/month" — the total is
+ * charged once, so labelling it monthly misreads the charge. Mirrors the
+ * frontend's insurancePricing rule.
+ */
+export function formatInvoiceItemBilling(
+  item: InvoiceItemLike,
+  currency: string,
+  isArabic: boolean,
+): string {
+  const c = INVOICE_COPY[isArabic ? "ar" : "en"];
+  if (item.weeks) {
+    const unit = item.weeks === 1 ? c.week : c.weeks;
+    return `${item.weeks} ${unit}${item.weekly_price != null ? ` · ${formatInvoiceMoney(Number(item.weekly_price), currency)}${c.weekUnit}` : ""}`;
+  }
+  if (item.months) {
+    if (item.billing_period && item.billing_period !== "monthly") {
+      return item.monthly_price != null
+        ? `${c.oneTime} · ${formatInvoiceMoney(Number(item.monthly_price), currency)}`
+        : c.oneTime;
+    }
+    const unit = item.months === 1 ? c.month : c.months;
+    return `${item.months} ${unit}${item.monthly_price != null ? ` · ${formatInvoiceMoney(Number(item.monthly_price), currency)}${c.monthUnit}` : ""}`;
+  }
+  return "";
+}
+
 export function createInvoicePresentation(
   meta: InvoicePresentationMeta,
   rawTotals: unknown,

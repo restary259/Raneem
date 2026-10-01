@@ -83,6 +83,18 @@ project_id = "mzbadxfvxioedzdjxamc"
     verify_jwt = false  
   [functions.send-appointment-reminders]  
     verify_jwt = false
+[functions.create-student-referral-registration]
+  verify_jwt = false
+
+[functions.send-student-registration-invoice]
+  verify_jwt = false
+
+[functions.stripe-student-referral-checkout]
+  verify_jwt = false
+
+[functions.stripe-student-referral-webhook]
+  verify_jwt = false
+
 [functions.whatsapp-ai-assist]
   # Role validation is enforced inside requireAuth for asymmetric project JWTs.
   verify_jwt = false

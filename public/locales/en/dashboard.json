@@ -333,7 +333,12 @@
       "queueStale": "Could not refresh — showing the last loaded list.",
       "refreshFailed": "Could not refresh — showing the last data that loaded successfully.",
       "loadFailed": "Unable to load the Command Center",
-      "loadFailedBody": "The overview could not be read. Your data is safe — retry to load it."
+      "loadFailedBody": "The overview could not be read. Your data is safe — retry to load it.",
+      "referralRegistrations": "Referral registrations",
+      "referralRegistrationsEmpty": "No unpaid referral registrations",
+      "referredBy": "Referred by",
+      "transferSubmitted": "Transfer submitted",
+      "awaitingPayment": "Awaiting payment"
     },
     "pipeline": {
       "title": "Application Pipeline",
@@ -1679,6 +1684,76 @@
       "applied": "Visa Applied",
       "emptyPending": "No enrolled students are waiting for their Visa file.",
       "emptyApplied": "No Visa files have been submitted for administration."
+    },
+    "referralOperations": {
+      "title": "Referral Operations",
+      "description": "Track every student referral registration from submission to payment and the normal DARB pipeline.",
+      "loadError": "Could not load referral registrations",
+      "paymentConfirmed": "Payment confirmed",
+      "invoiceSent": "Invoice sent",
+      "actionFailed": "Action failed",
+      "empty": "No referral registrations match this view.",
+      "metrics": {
+        "total": "Registrations",
+        "pending": "Awaiting payment",
+        "transferSubmitted": "Transfers submitted",
+        "paid": "Paid",
+        "failed": "Failed"
+      },
+      "tabs": {
+        "registrations": "Registrations",
+        "referrers": "Referrers",
+        "rewards": "Referral lifecycle"
+      },
+      "search": "Search student, reference or referrer",
+      "filters": {
+        "all": "All",
+        "pending": "Awaiting payment",
+        "submitted": "Transfer submitted",
+        "paid": "Paid",
+        "failed": "Failed"
+      },
+      "fields": {
+        "referrer": "Referrer",
+        "type": "Type",
+        "school": "School",
+        "invoice": "Invoice",
+        "amount": "Total",
+        "status": "Registration status",
+        "payment": "Payment",
+        "reference": "Reference",
+        "method": "Method"
+      },
+      "openCase": "Open case",
+      "referrersTitle": "Referrers",
+      "referrers": {
+        "registrations": "Registrations",
+        "paid": "Paid",
+        "pending": "Pending",
+        "enrolled": "Enrolled"
+      },
+      "rewardsTitle": "Referral lifecycle",
+      "rewards": {
+        "currentRule": "Student referral rewards continue to follow the existing referral rules. This view tracks the linked referral lifecycle without changing reward policy."
+      },
+      "bankSettings": {
+        "title": "Bank transfer settings",
+        "bankName": "Bank name",
+        "accountHolder": "Account holder",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "save": "Save bank details"
+      },
+      "bankSaved": "Bank transfer details saved",
+      "detail": {
+        "eyebrow": "Referral registration",
+        "registration": "Registration",
+        "payment": "Payment",
+        "selectedServices": "Selected services",
+        "resendInvoice": "Resend invoice",
+        "confirmPayment": "Confirm payment",
+        "fullTrace": "The case is the master record. Registration, referral, invoice and payment are linked to the same case and remain traceable from its timeline."
+      }
     }
   },
   "influencer": {
@@ -5648,5 +5723,212 @@
     "confirmed": "Appointment confirmed",
     "cancelled": "Appointment cancelled",
     "rescheduled": "Appointment rescheduled"
+  },
+  "referralRegistration": {
+    "title": "Refer & Register",
+    "description": "Register a friend or family member directly through DARB. Choose their school, course and accommodation, then send them the invoice.",
+    "masterRecord": "One DARB record",
+    "masterRecordDesc": "The registration, invoice, payment and referral stay connected to one case.",
+    "friend": "Friend",
+    "family": "Family member",
+    "steps": {
+      "person": "Person",
+      "study": "Study",
+      "accommodation": "Accommodation",
+      "review": "Review"
+    },
+    "fields": {
+      "firstName": "First name",
+      "middleName": "Middle name",
+      "lastName": "Last name",
+      "dateOfBirth": "Date of birth",
+      "gender": "Gender",
+      "cityOfBirth": "City of birth",
+      "nationality": "Nationality",
+      "passportType": "Passport type",
+      "email": "Email",
+      "phone": "Phone",
+      "emergencyName": "Emergency contact name",
+      "emergencyPhone": "Emergency contact phone",
+      "addressTitle": "Address",
+      "street": "Street",
+      "houseNumber": "House number",
+      "postcode": "Postcode",
+      "city": "City",
+      "educationLevel": "Education level",
+      "englishLevel": "English level",
+      "englishUnits": "English units",
+      "mathUnits": "Math units",
+      "degreeInterest": "Study / major interest",
+      "school": "School",
+      "course": "Course",
+      "courseWeeks": "Course weeks",
+      "startMonth": "Start month",
+      "accommodation": "Accommodation",
+      "accommodationWeeks": "Accommodation weeks",
+      "insurance": "Insurance"
+    },
+    "placeholders": {
+      "gender": "Select gender",
+      "passport": "Select passport type",
+      "select": "Select",
+      "noInsurance": "No insurance"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "passport": {
+      "israeliBlue": "Israeli Blue Passport",
+      "israeliRed": "Israeli Red Passport",
+      "other": "Other"
+    },
+    "school": {
+      "title": "Choose an active school"
+    },
+    "course": {
+      "title": "Choose a course",
+      "none": "No active courses are available for this school."
+    },
+    "accommodation": {
+      "title": "Choose accommodation",
+      "description": "See active accommodation options for this school, including photos, room details and current weekly pricing.",
+      "none": "No accommodation needed",
+      "noneDesc": "Continue without a DARB accommodation selection.",
+      "select": "Select",
+      "selected": "Selected",
+      "details": "View details",
+      "noneAvailable": "No active accommodation is available for this school."
+    },
+    "pricing": {
+      "week": "week",
+      "weeks": "weeks",
+      "lessons": "lessons/week",
+      "hours": "hours/week",
+      "courseEstimate": "Course estimate",
+      "accommodationEstimate": "Accommodation estimate",
+      "insuranceEstimate": "Insurance estimate",
+      "notSet": "Price not set",
+      "notSelected": "Not selected",
+      "placementFee": "Placement fee",
+      "deposit": "Deposit",
+      "roomType": "Room type",
+      "meals": "Meals",
+      "distance": "Distance",
+      "tiers": "Weekly price tiers",
+      "tiersDesc": "The selected number of weeks determines the applicable weekly tier.",
+      "months": "months"
+    },
+    "review": {
+      "title": "Review the registration",
+      "applicant": "Applicant",
+      "study": "Study",
+      "accommodation": "Accommodation & insurance",
+      "financialSummary": "Financial summary",
+      "course": "Course",
+      "registrationFee": "Course registration fee",
+      "placementFee": "Accommodation placement fee",
+      "insurance": "Insurance",
+      "total": "Total",
+      "priceNote": "Final totals are re-read and calculated securely when you submit. Catalog price changes cannot alter this invoice snapshot.",
+      "terms": "I confirm that the information is correct and I have permission from the person I am registering to submit these details."
+    },
+    "navigation": {
+      "back": "Back",
+      "next": "Continue",
+      "submit": "Create registration & invoice"
+    },
+    "payment": {
+      "card": "Card payment",
+      "cardDesc": "Pay securely online. Card checkout is enabled when DARB's payment provider is configured.",
+      "payCard": "Pay by card",
+      "cardUnavailable": "Card payment is not available right now.",
+      "bank": "Bank transfer",
+      "bankDesc": "Use the registration reference in your transfer memo so DARB can match the payment.",
+      "bankAction": "Open bank transfer details",
+      "contact": "Contact DARB",
+      "contactDesc": "Prefer help from the team? Call DARB directly.",
+      "viewInvoice": "View invoice & payment options"
+    },
+    "success": {
+      "eyebrow": "Registration created",
+      "title": "Registration and invoice created",
+      "description": "The referred applicant is now in DARB's workflow. The invoice was sent to their email when delivery was available.",
+      "reference": "Registration reference",
+      "invoice": "Invoice",
+      "amount": "Total due",
+      "newReferral": "Register another person"
+    },
+    "errors": {
+      "required": "This field is required.",
+      "catalog": "Could not load the DARB catalog.",
+      "terms": "Please confirm the registration details before submitting.",
+      "submit": "Could not create the registration."
+    },
+    "history": {
+      "title": "My referred registrations",
+      "empty": "You have not created any referral registrations yet."
+    },
+    "insurance": {
+      "none": "No insurance"
+    },
+    "caseSummary": {
+      "eyebrow": "Refer & Register",
+      "title": "Referral registration",
+      "paid": "Paid",
+      "pending": "Payment pending",
+      "referrer": "Referred by",
+      "type": "Type",
+      "invoice": "Invoice",
+      "total": "Registration total",
+      "services": "Selected registration"
+    },
+    "education": {
+      "bagrut": "Bagrut",
+      "bachelor": "Bachelor",
+      "master": "Master",
+      "other": "Other"
+    },
+    "english": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "eyebrow": "DARB",
+    "pageIntro": "Register a friend or family member directly through DARB. No office appointment is required.",
+    "backToDashboard": "Back to dashboard"
+  },
+  "invoice": {
+    "registration": {
+      "title": "DARB Registration Invoice",
+      "reference": "Registration reference",
+      "referredBy": "Referred by",
+      "referralType": "Referral type",
+      "friend": "Friend",
+      "family": "Family member",
+      "details": "Registration details",
+      "item": "Item",
+      "amount": "Amount",
+      "subtotal": "Subtotal",
+      "total": "Total due",
+      "issued": "Issued",
+      "due": "Due",
+      "memo": "Use this registration reference as the bank-transfer memo:",
+      "card": "Card payment",
+      "payCard": "Pay by card",
+      "bank": "Bank transfer",
+      "bankName": "Bank",
+      "holder": "Account holder",
+      "iban": "IBAN",
+      "bic": "BIC",
+      "bankAction": "I made the bank transfer",
+      "submitted": "Transfer submitted — awaiting DARB confirmation",
+      "download": "Download PDF",
+      "contact": "Contact DARB",
+      "cancelled": "Invoice cancelled",
+      "paid": "Paid",
+      "pending": "Awaiting payment",
+      "failed": "Payment failed"
+    }
   }
 }
