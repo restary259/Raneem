@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Building2, ChevronRight, Clock3, MapPin, Plus, Save, Users, X } from "lucide-react";
+import { ChevronRight, Clock3, MapPin, Plus, Save, Users, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
