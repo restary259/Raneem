@@ -314,7 +314,6 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       const cover = {
         name: t('sheets.cover', 'Contents'),
         title: t('sheets.title'),
-        subtitle: t('sheets.subtitle'),
         columns: [
           { header: t('sheets.coverSheet', 'Report'), type: 'text' as const },
           { header: t('sheets.coverRecords', 'Records'), type: 'number' as const },
@@ -330,7 +329,6 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       await deliver(format, {
         fileName: `DARB-${scope}-report-${new Date().toISOString().slice(0, 10)}`,
         title: t('sheets.title'),
-        subtitle: t('sheets.subtitle'),
         author,
         locale,
         rtl,
@@ -413,35 +411,38 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-full">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className={scope === 'admin' ? "sr-only" : "text-xl font-bold text-foreground"}>{t('sheets.title')}</h1>
+      {scope === 'team' && (
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">{t('sheets.title')}</h1>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {active === 'students' && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
+                  <Download className="h-4 w-4 me-1" />
+                  {t('sheets.schoolPacketExcel', 'School packet (Excel)')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
+                  <FileText className="h-4 w-4 me-1" />
+                  {t('sheets.schoolPacketPdf', 'School packet (PDF)')}
+                </Button>
+              </>
+            )}
+            <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
+              <Download className="h-4 w-4 me-1" />
+              {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
+              <FileText className="h-4 w-4 me-1" />
+              {exporting ? t('sheets.preparing') : t('sheets.exportPdfWorkbook')}
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {active === 'students' && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
-                <Download className="h-4 w-4 me-1" />
-                {t('sheets.schoolPacketExcel', 'School packet (Excel)')}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
-                <FileText className="h-4 w-4 me-1" />
-                {t('sheets.schoolPacketPdf', 'School packet (PDF)')}
-              </Button>
-            </>
-          )}
-          <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
-            <Download className="h-4 w-4 me-1" />
-            {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
-            <FileText className="h-4 w-4 me-1" />
-            {exporting ? t('sheets.preparing') : t('sheets.exportPdfWorkbook')}
-          </Button>
-        </div>
-      </div>
+      )}
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
         <Select value={schoolFilter} onValueChange={setSchoolFilter}>
           <SelectTrigger className="h-9 w-[200px]" aria-label={t('sheets.filterSchool', 'School')}>
             <SelectValue placeholder={t('sheets.filterSchool', 'School')} />
@@ -480,6 +481,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
             {t('sheets.clearFilters', 'Clear filters')}
           </Button>
         )}
+        </div>
       </div>
 
       <Tabs value={active} onValueChange={setActive}>
@@ -495,6 +497,15 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
               loading={!!loading[s.key]}
               onRefresh={() => loadSheet(s)}
               fileName={`DARB-${s.key}-${new Date().toISOString().slice(0, 10)}`}
+              showTitle={scope !== 'admin'}
+              onExportFullReport={scope === 'admin' ? exportAll : undefined}
+              onExportSchoolPacket={scope === 'admin' && active === 'students' ? exportSchoolPacket : undefined}
+              parentExporting={exporting}
+              externalFiltersActive={filtersActive}
+              onClearExternalFilters={() => {
+                setSchoolFilter('all');
+                setMonthFilter('all');
+              }}
             />
           </TabsContent>
         ))}
