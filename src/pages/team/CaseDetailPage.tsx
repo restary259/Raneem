@@ -29,6 +29,7 @@ import CaseOverviewPanel from "@/components/cases/CaseOverviewPanel";
 import CaseStageBlock, { type AppointmentRow } from "@/components/cases/CaseStageBlock";
 import CaseProfilePanel from "@/components/cases/CaseProfilePanel";
 import CaseFinance, { type CaseFinanceHandle, type CaseFinanceReadiness } from "@/components/cases/CaseFinance";
+import DirectRegistrationFinance from "@/components/cases/DirectRegistrationFinance";
 import CaseProgramTab from "@/components/cases/CaseProgramTab";
 import CaseProfileSummary from "@/components/cases/CaseProfileSummary";
 import {
@@ -91,6 +92,7 @@ export default function CaseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [registrationInvoice, setRegistrationInvoice] = useState<any | null>(null);
+  const [directRegistrationConfirming, setDirectRegistrationConfirming] = useState(false);
 
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [outcomeApptId, setOutcomeApptId] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export default function CaseDetailPage() {
         supabase.from("case_submissions").select("*").eq("case_id", id).maybeSingle(),
         supabase.from("documents").select("category").eq("case_id", id),
         supabase.from("platform_settings").select("forgotten_contacted_days").maybeSingle(),
-        (supabase as any).from("case_registration_invoices").select("invoice_number,public_token,referrer_name,referral_type,currency,total_amount,payment_status,items").eq("case_id", id).maybeSingle(),
+        (supabase as any).from("case_registration_invoices").select("invoice_number,public_token,referrer_name,referral_type,currency,total_amount,payment_status,items,discount_amount,subtotal,status,due_at,issued_at").eq("case_id", id).maybeSingle(),
       ]);
 
       if (caseRes.error) throw caseRes.error;
@@ -298,22 +300,38 @@ export default function CaseDetailPage() {
     if (!caseData || !submission || !user) return;
     setSubmitting(true);
     try {
-      // One backend call: it re-checks the gate, flips the case to `submitted`
-      // and issues the invoice from the authoritative server-side financials.
-      const invoice = await submitCaseForReview(caseData.id);
-      toast({ description: t("case.submit.success") });
-      const emailed = await sendInvoiceEmail(invoice);
-      toast({
-        description: emailed
-          ? t("case.invoice.emailSent", { number: invoice.invoice_number })
-          : t("case.invoice.emailFailed", { number: invoice.invoice_number }),
-        variant: emailed ? undefined : "destructive",
-      });
-
-      // Second mail: the student's dashboard activation link. Sent to the same
-      // address as the invoice; the backend skips duplicate invites itself.
       const profileValues = readStudentProfile(caseData as any, submission);
-      const studentEmail = (invoice.student_email || profileValues.student_email || "").trim();
+      let studentEmail = (profileValues.student_email || "").trim();
+
+      if (caseData.source === "student_referral_registration") {
+        const { error } = await (supabase as any).rpc("submit_student_referral_registration_for_review", {
+          p_case_id: caseData.id,
+        });
+        if (error) throw error;
+        toast({
+          description: t(
+            "referralRegistration.caseSummary.submittedSuccess",
+            "Registration submitted for Admin review.",
+          ),
+        });
+      } else {
+        // One backend call: it re-checks the gate, flips the case to submitted
+        // and issues the DARB invoice from the authoritative server-side financials.
+        const invoice = await submitCaseForReview(caseData.id);
+        toast({ description: t("case.submit.success") });
+        const emailed = await sendInvoiceEmail(invoice);
+        toast({
+          description: emailed
+            ? t("case.invoice.emailSent", { number: invoice.invoice_number })
+            : t("case.invoice.emailFailed", { number: invoice.invoice_number }),
+          variant: emailed ? undefined : "destructive",
+        });
+        studentEmail = (invoice.student_email || studentEmail).trim();
+      }
+
+      // Send the student's dashboard activation link after the case is accepted.
+      // Direct registrations already have their registration invoice, so they
+      // do not receive a second DARB-service invoice.
       if (studentEmail) {
         const { error: inviteError } = await supabase.functions.invoke("create-student-from-case", {
           body: {
@@ -381,9 +399,35 @@ export default function CaseDetailPage() {
     }
   };
 
-  /** Top-bar "Confirm & Save": drives the Finance tab's single action, then
-      refetches so the case status flips to payment_confirmed. */
+  /** Top-bar "Confirm & Save": direct registrations use their paid
+      registration invoice; ordinary cases use the existing DARB Finance action. */
   const handleConfirmAndSave = async () => {
+    if (caseData?.source === "student_referral_registration") {
+      setDirectRegistrationConfirming(true);
+      try {
+        const { error } = await (supabase as any).rpc("confirm_direct_registration_profile", {
+          p_case_id: caseData.id,
+        });
+        if (error) throw error;
+        toast({
+          description: t(
+            "referralRegistration.caseSummary.confirmedSuccess",
+            "Registration confirmed and moved to payment confirmed.",
+          ),
+        });
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: t("common.error"),
+          description: error?.message ?? t("common.actionFailed"),
+        });
+      } finally {
+        setDirectRegistrationConfirming(false);
+        await fetchData();
+      }
+      return;
+    }
+
     try {
       await financeApiRef.current?.confirmAndSave();
     } finally {
@@ -423,12 +467,18 @@ export default function CaseDetailPage() {
   const savedComplete = !!submission?.profile_completed_at && missingFields.length === 0;
   const reopenedResend = submission?.review_status === "changes_requested" && !!submission?.payment_confirmed;
 
-  /** Finance is ready to confirm once services are chosen and the total is
-      positive. No manual receipt checkbox — selecting services is sufficient. */
-  const financeReadyToConfirm =
-    !!financeReadiness &&
-    financeReadiness.servicesSelected &&
-    financeReadiness.serviceTotal > 0;
+  const isDirectRegistration = caseData?.source === "student_referral_registration";
+  const directRegistrationReady =
+    isDirectRegistration &&
+    caseData?.status === "profile_completion" &&
+    savedComplete &&
+    registrationInvoice?.payment_status === "paid";
+
+  const financeReadyToConfirm = isDirectRegistration
+    ? directRegistrationReady
+    : !!financeReadiness &&
+      financeReadiness.servicesSelected &&
+      financeReadiness.serviceTotal > 0;
   const phoneUsable = isLinkablePhone(caseData.phone_number);
 
   const openWhatsAppInbox = async () => {
@@ -690,19 +740,23 @@ export default function CaseDetailPage() {
           </TabsContent>
           <TabsContent value="finance">
             <div ref={financeRef} className="rounded-xl transition-shadow">
-              <CaseFinance
-                caseId={caseData.id}
-                canManage={role === "admin" || role === "team_member"}
-                canConfirm={role === "admin"}
-                showGermany
-                caseStatus={caseData.status}
-                studentEmail={studentInvite.email}
-                studentFullName={studentInvite.fullName}
-                studentPhone={studentInvite.phone}
-                studentUserId={caseData.student_user_id ?? null}
-                onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
-                submitting={submitting}
-              />
+              {isDirectRegistration ? (
+                <DirectRegistrationFinance invoice={registrationInvoice} caseStatus={caseData.status} />
+              ) : (
+                <CaseFinance
+                  caseId={caseData.id}
+                  canManage={role === "admin" || role === "team_member"}
+                  canConfirm={role === "admin"}
+                  showGermany
+                  caseStatus={caseData.status}
+                  studentEmail={studentInvite.email}
+                  studentFullName={studentInvite.fullName}
+                  studentPhone={studentInvite.phone}
+                  studentUserId={caseData.student_user_id ?? null}
+                  onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
+                  submitting={submitting}
+                />
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -770,7 +824,7 @@ export default function CaseDetailPage() {
                       disabled={!financeReadyToConfirm}
                       onClick={() => void handleConfirmAndSave()}
                     >
-                      {financeReadiness?.confirming ? (
+                      {(isDirectRegistration ? directRegistrationConfirming : financeReadiness?.confirming) ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Wallet className="h-4 w-4" />
@@ -799,11 +853,11 @@ export default function CaseDetailPage() {
                 if (caseData.status === "profile_completion") {
                   return financeReadyToConfirm
                     ? t("case.actionHint.confirmReady", {
-                        defaultValue: "Confirms the DARB service payment and moves the case to payment confirmed.",
+                        defaultValue: "Confirms the paid Refer & Register file and moves it to payment confirmed.",
                       })
                     : t("case.actionHint.financeNotReady", {
                         defaultValue:
-                          "Open Finance, select the DARB services, then Confirm & Save.",
+                          "Review the paid registration and confirm it to continue.",
                       });
                 }
                 return t("case.actionHint.submitReady", {
@@ -830,24 +884,28 @@ export default function CaseDetailPage() {
 
           <div className={cn("space-y-3", activeView !== "finance" && "hidden")}>
             <div ref={financeRef} className="rounded-xl transition-shadow">
-              <CaseFinance
-                ref={financeApiRef}
-                caseId={caseData.id}
-                canManage={role === "admin" || role === "team_member"}
-                canConfirm={role === "admin"}
-                showGermany={
-                  role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"
-                }
-                caseStatus={caseData.status}
-                studentEmail={studentInvite.email}
-                studentFullName={studentInvite.fullName}
-                studentPhone={studentInvite.phone}
-                studentUserId={caseData.student_user_id ?? null}
-                onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
-                submitting={submitting}
-                delegateActionsToTopBar
-                onReadinessChange={handleReadinessChange}
-              />
+              {isDirectRegistration ? (
+                <DirectRegistrationFinance invoice={registrationInvoice} caseStatus={caseData.status} />
+              ) : (
+                <CaseFinance
+                  ref={financeApiRef}
+                  caseId={caseData.id}
+                  canManage={role === "admin" || role === "team_member"}
+                  canConfirm={role === "admin"}
+                  showGermany={
+                    role === "admin" || caseData.status === "submitted" || caseData.status === "enrollment_paid"
+                  }
+                  caseStatus={caseData.status}
+                  studentEmail={studentInvite.email}
+                  studentFullName={studentInvite.fullName}
+                  studentPhone={studentInvite.phone}
+                  studentUserId={caseData.student_user_id ?? null}
+                  onSubmitToAdmin={canSubmitToAdmin ? handleSubmitToAdmin : undefined}
+                  submitting={submitting}
+                  delegateActionsToTopBar
+                  onReadinessChange={handleReadinessChange}
+                />
+              )}
             </div>
           </div>
         </>
