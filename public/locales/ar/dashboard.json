@@ -2896,6 +2896,15 @@
     "accountMenu": "قائمة الحساب",
     "language": "اللغة",
     "student": "الطالب",
+    "mobile": {
+      "finance": "المالية",
+      "appointments": "المواعيد",
+      "inbox": "الوارد",
+      "earnings": "الأرباح",
+      "network": "الشبكة",
+      "apply": "تقديم الطلب"
+    },
+    "languageSelector": "محدد اللغة",
     "darb": "درب"
   },
   "case": {
