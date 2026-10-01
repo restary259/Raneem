@@ -250,9 +250,9 @@ function RootComponent() {
   );
 }
 
-function RootErrorComponent({ error }: { error: Error }) {
+function RootErrorComponent({ error }: { error: unknown }) {
   if (typeof window !== "undefined") {
-    reportLovableError(error);
+    reportLovableError(error instanceof Error ? error : new Error(String(error)));
   }
   return (
     <div
