@@ -1,14 +1,23 @@
 # OpenCodeReview — AI review on every pull request.
 #
-# Required repository configuration (Settings -> Secrets and variables -> Actions):
+# Works with NO setup: it reviews through GitHub Models using the workflow's own
+# GITHUB_TOKEN (the `models: read` permission below), which is free and needs no
+# separate provider account. Nothing to configure before the first PR.
+#
+# To use a different provider, set these in
+# Settings -> Secrets and variables -> Actions and they take precedence:
 #   secret    OCR_LLM_AUTH_TOKEN     LLM API key
 #   variable  OCR_LLM_URL            LLM API endpoint
 #   variable  OCR_LLM_MODEL          model name
 #   variable  OCR_LLM_USE_ANTHROPIC  'true' for Anthropic, 'false' for OpenAI-compatible
 #
 # The endpoint/model live in variables rather than secrets so they can be swapped
-# (e.g. from a free tier to a paid frontier model) without editing this file or
-# touching the credential.
+# (e.g. from the free default to a paid frontier model) without editing this file
+# or touching the credential.
+#
+# Free-tier caveat: GitHub Models allows only ~50 requests/day on its high-tier
+# models, and a review spends several calls, so expect a handful of PRs per day.
+# Setting a paid provider above is the fix once that bites.
 #
 # `pull_request_target` (not `pull_request`) is deliberate: secrets are withheld
 # from `pull_request` runs triggered by forks, so fork PRs would silently get no
@@ -55,6 +64,9 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # Lets the workflow call GitHub Models with its own token — the zero-setup
+  # default provider. No effect on anything else.
+  models: read
 
 jobs:
   code-review:
@@ -91,27 +103,21 @@ jobs:
         )
       )
     steps:
-      # The action fails hard when the LLM credential is missing, which would
-      # mark every PR red until the repository is configured. Skip with a notice
-      # instead, so the workflow can be merged before the secret is added.
-      # `secrets` is not available in a step-level `if`, hence the env probe.
-      - name: Check LLM configuration
-        id: config
+      # Informational only: the action's inputs below resolve the fallback
+      # themselves, so this never gates the review. The token is deliberately
+      # NOT echoed or written to an output — on a public repository those are
+      # readable, so the credential is passed straight to the action instead.
+      - name: Note LLM provider
         env:
-          TOKEN: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
-          ENDPOINT: ${{ vars.OCR_LLM_URL }}
-          MODEL: ${{ vars.OCR_LLM_MODEL }}
+          PROVIDED_TOKEN: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
         run: |
-          if [ -z "$TOKEN" ] || [ -z "$ENDPOINT" ] || [ -z "$MODEL" ]; then
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=OpenCodeReview skipped::Set the OCR_LLM_AUTH_TOKEN secret and the OCR_LLM_URL / OCR_LLM_MODEL variables to enable AI review."
-          else
-            echo "configured=true" >> "$GITHUB_OUTPUT"
+          if [ -z "$PROVIDED_TOKEN" ]; then
+            echo "::notice title=OpenCodeReview::No LLM secret configured; reviewing via the GitHub Models free tier (openai/gpt-4o). Set OCR_LLM_AUTH_TOKEN + OCR_LLM_URL + OCR_LLM_MODEL to override."
           fi
 
       - name: Get PR context
         id: pr-context
-        if: steps.config.outputs.configured == 'true' && github.event_name == 'issue_comment'
+        if: github.event_name == 'issue_comment'
         uses: actions/github-script@v7
         with:
           script: |
@@ -127,17 +133,20 @@ jobs:
             core.setOutput('head_sha', pullRequest.head.sha);
 
       - name: Run OpenCodeReview
-        if: steps.config.outputs.configured == 'true'
         # Pinned to the v1.12.9 commit rather than a moving tag, and the CLI is
         # pinned to the matching version: the action installs OCR from npm at run
         # time, so pinning the action alone would not freeze review behaviour.
         uses: alibaba/open-code-review@bccbc15f785269400735d5255540c231e6c02b6d # v1.12.9
         with:
           ocr_version: '1.12.9'
-          llm_url: ${{ vars.OCR_LLM_URL }}
-          llm_auth_token: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
-          llm_model: ${{ vars.OCR_LLM_MODEL }}
-          llm_use_anthropic: ${{ vars.OCR_LLM_USE_ANTHROPIC }}
+          # A configured secret/variable wins; otherwise this falls back to the
+          # GitHub Models free tier using the workflow's own token, so review
+          # runs with no repository setup at all. The fallback URL must be the
+          # base endpoint — the CLI appends /chat/completions itself.
+          llm_url: ${{ vars.OCR_LLM_URL || 'https://models.github.ai/inference' }}
+          llm_auth_token: ${{ secrets.OCR_LLM_AUTH_TOKEN || secrets.GITHUB_TOKEN }}
+          llm_model: ${{ vars.OCR_LLM_MODEL || 'openai/gpt-4o' }}
+          llm_use_anthropic: ${{ vars.OCR_LLM_USE_ANTHROPIC || 'false' }}
           # For issue_comment triggers pass the resolved refs; pull_request_target
           # resolves them from the event payload itself.
           base_ref: ${{ steps.pr-context.outputs.base_ref }}
