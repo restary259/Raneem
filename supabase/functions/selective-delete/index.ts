@@ -234,10 +234,19 @@ serve(async (req) => {
           .eq("student_id", student_id);
 
         if (docs?.length) {
+          // file_url is student-editable, so only remove objects inside this
+          // student's own folder; anything else is skipped (never trusted).
+          const ownPrefix = `${student_id}/`;
           const paths = docs
             .map((d: any) => {
-              const parts = d.file_url?.split("/student-documents/");
-              return parts?.[1] ?? null;
+              const raw = typeof d.file_url === "string" ? d.file_url : "";
+              const idx = raw.indexOf("/student-documents/");
+              let p = idx >= 0 ? raw.slice(idx + "/student-documents/".length) : raw;
+              p = p.split("?")[0];
+              try { p = decodeURIComponent(p); } catch { return null; }
+              if (!p.startsWith(ownPrefix)) return null;
+              if (p.includes("..") || p.includes("\\") || p.includes("//")) return null;
+              return p;
             })
             .filter(Boolean) as string[];
 
