@@ -150,11 +150,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         },
         {
           httpEquiv: "Content-Security-Policy",
-          // Defense in depth for deployments that do not apply the host-level
-          // header configuration: explicitly forbid executable inline JS here
-          // while preserving the same approved script origins.
-          content:
-            "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com; upgrade-insecure-requests",
+          // Do NOT add script-src here: TanStack Start hydrates from an inline
+          // bootstrap script (window.$_TSR). A meta script-src without a
+          // per-request nonce blocks it and the app renders a blank screen.
+          content: "upgrade-insecure-requests",
         },
         // PWA
         { name: "theme-color", content: "#082B66" },

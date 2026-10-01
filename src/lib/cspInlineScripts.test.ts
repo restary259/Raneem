@@ -60,7 +60,7 @@ describe("Static HTML inline script guards", () => {
 });
 
 describe("Application CSP meta coverage", () => {
-  it("blocks inline JavaScript even when only the document meta CSP is applied", async () => {
+  it("never restricts script-src in the document meta (would block TanStack hydration)", async () => {
     const head = RootRoute.options.head;
     const rootHead = head
       ? await head({} as Parameters<NonNullable<typeof head>>[0])
@@ -70,10 +70,7 @@ describe("Application CSP meta coverage", () => {
     )?.content;
 
     expect(cspMeta).toBeTypeOf("string");
-    expect(cspMeta).toContain("script-src 'self'");
-    expect(cspMeta).not.toMatch(SCRIPT_SRC_UNSAFE_INLINE);
-    expect(cspMeta).toContain("https://www.googletagmanager.com");
-    expect(cspMeta).toContain("https://www.google-analytics.com");
+    expect(cspMeta).not.toMatch(/script-src/i);
     expect(cspMeta).toContain("upgrade-insecure-requests");
   });
 });
