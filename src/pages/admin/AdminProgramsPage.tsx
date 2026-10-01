@@ -427,8 +427,8 @@ const AdminProgramsPage = () => {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('admin.programs.hubTitle')}</h1>
+      <div className="flex items-center justify-end"> 
+        <h1 className="sr-only">{t('admin.programs.hubTitle')}</h1>
         <div className="flex items-center gap-2">
           <Dialog
             open={schoolOpen}

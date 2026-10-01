@@ -208,15 +208,8 @@ export default function WhatsAppCampaignsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Megaphone className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">{t("campaigns.title")}</h1>
-          </div>
-        </div>
+      <div className="flex flex-wrap items-start justify-end gap-3">
+        <h1 className="sr-only">{t("campaigns.title")}</h1>
         <Button variant="outline" onClick={() => void refresh()} disabled={refreshing}>
           <RefreshCw className={`me-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
           {t("campaigns.refresh")}
