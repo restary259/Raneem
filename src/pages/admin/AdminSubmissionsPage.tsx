@@ -541,15 +541,8 @@ const AdminSubmissionsPage = () => {
 
   return (
     <div className="w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-6 space-y-4 sm:space-y-6 mx-auto">
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {t("admin.submissions.title", "Submitted Applications")}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t("admin.submissions.subtitle", "Cases awaiting enrollment confirmation")}
-          </p>
-        </div>
+      <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+        <h1 className="sr-only">{t("admin.submissions.title", "Submitted Applications")}</h1>
         <Button variant="outline" size="sm" onClick={fetchCases}>
           <RefreshCw className="h-4 w-4" />
         </Button>
