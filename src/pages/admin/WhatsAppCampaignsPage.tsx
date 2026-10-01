@@ -214,7 +214,7 @@ export default function WhatsAppCampaignsPage() {
             <Megaphone className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{t("campaigns.title")}</h1>
+            <h1 className="sr-only">{t("campaigns.title")}</h1>
           </div>
         </div>
         <Button variant="outline" onClick={() => void refresh()} disabled={refreshing}>
