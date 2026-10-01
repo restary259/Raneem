@@ -543,7 +543,7 @@ const AdminSubmissionsPage = () => {
     <div className="w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-6 space-y-4 sm:space-y-6 mx-auto">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="sr-only">
             {t("admin.submissions.title", "Submitted Applications")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
