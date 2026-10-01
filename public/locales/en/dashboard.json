@@ -297,7 +297,6 @@
   "admin": {
     "commandCenter": {
       "title": "Command Center",
-      "subtitle": "Real-time overview of all activity",
       "activeCases": "Active Cases",
       "submitted": "Submitted",
       "enrolled": "Enrolled",
