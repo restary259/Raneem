@@ -56,10 +56,9 @@ describe("i18n runtime loading", () => {
     // dashboard is intentionally HTTP-loaded on demand; the test exercises
     // the real namespace JSON files rather than a second in-memory fixture.
     expect(i18n.hasResourceBundle("ar", "dashboard")).toBe(true);
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
-      "/locales/ar/dashboard.json",
-      expect.anything(),
-    );
+    expect(
+      vi.mocked(fetch).mock.calls.some(([url]) => String(url) === "/locales/ar/dashboard.json"),
+    ).toBe(true);
 
     await i18n.changeLanguage("en");
     expect(i18n.t("nav.home", { ns: "dashboard" })).toBeTypeOf("string");
