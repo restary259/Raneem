@@ -416,7 +416,6 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-foreground">{t('sheets.title')}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{t('sheets.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {active === 'students' && (
