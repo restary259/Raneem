@@ -33,6 +33,27 @@ Deno.serve(async (req) => {
       .eq("email", email)
       .maybeSingle();
 
+    // Admins and internal service callers may welcome anyone. Team members may
+    // only welcome students on a case currently assigned to them.
+    const isAdmin = auth.isServiceRole || auth.roles.includes("admin");
+    if (profile?.id && !isAdmin) {
+      const { data: ownedCase, error: caseError } = await serviceClient
+        .from("cases")
+        .select("id")
+        .eq("student_user_id", profile.id)
+        .eq("assigned_to", auth.userId)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      if (caseError) throw caseError;
+      if (!ownedCase) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (profile?.id) {
       await serviceClient.from("notifications").insert({
         user_id: profile.id,
