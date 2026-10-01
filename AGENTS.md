@@ -26,3 +26,5 @@ Full history and per-feature rationale: `docs/agent-notes.md` (read the relevant
 ## Tests / UI
 - Supabase client mocks must expose every surface the module touches at import (e.g. `auth.onAuthStateChange`); `rpc()` mocks must be chainable thenables.
 - Grids containing `truncate` text need a base `grid-cols-1` and `min-w-0` items; `DialogContent` must stay exported.
+
+- Never put `script-src` in the root document meta CSP: TanStack hydrates from an inline `$_TSR` script and a nonce-less meta policy blanks the app.
