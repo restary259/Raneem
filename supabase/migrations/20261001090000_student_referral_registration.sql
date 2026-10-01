@@ -171,6 +171,22 @@ BEGIN
     END IF;
   END IF;
 
+  -- The canonical table declares `reference`, but the live generation names the
+  -- same value `payment_reference`. Bridge it so the new RPCs (which read and
+  -- write `reference`) do not raise 42703 on the live table.
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'case_registration_payments'
+       AND column_name = 'payment_reference'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'case_registration_payments'
+       AND column_name = 'reference'
+  ) THEN
+    ALTER TABLE public.case_registration_payments
+      RENAME COLUMN payment_reference TO reference;
+  END IF;
+
   -- Additive: the remaining feature columns plus the legacy extras. Written
   -- without column-level NOT NULL constraints so this block is idempotent on
   -- every project shape (the authoritative constraint lives on the freshly
@@ -183,8 +199,8 @@ BEGIN
     ADD COLUMN IF NOT EXISTS failure_reason text,
     ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
     ADD COLUMN IF NOT EXISTS bank_reference text,
-    ADD COLUMN IF NOT EXISTS payment_reference text,
     ADD COLUMN IF NOT EXISTS notes text,
+    ADD COLUMN IF NOT EXISTS reference text,
     ADD COLUMN IF NOT EXISTS stripe_payment_intent_id text;
 END
 $reconcile$;
@@ -245,6 +261,30 @@ DROP TRIGGER IF EXISTS update_case_registration_payments_updated_at
 CREATE TRIGGER update_case_registration_payments_updated_at
   BEFORE UPDATE ON public.case_registration_payments
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Legacy out-of-band generation of the registration RPCs already exists on the
+-- live project with DIFFERENT parameter NAMES for the same signatures. Postgres
+-- refuses `CREATE OR REPLACE FUNCTION` when an input parameter is renamed
+-- ("cannot change name of input parameter"), which aborts the whole file before
+-- any payment RPC is (re)created. Drop the legacy signatures first; each is
+-- recreated below. `IF EXISTS` makes this a no-op on a fresh project.
+DROP FUNCTION IF EXISTS public.resolve_registration_weekly_rate(numeric, jsonb, integer);
+DROP FUNCTION IF EXISTS public.resolve_registration_insurance_monthly_rate(numeric, jsonb, integer);
+DROP FUNCTION IF EXISTS public.get_registration_catalog(uuid);
+DROP FUNCTION IF EXISTS public.create_student_referral_registration_internal(uuid, jsonb);
+DROP FUNCTION IF EXISTS public.get_registration_invoice_by_token(text);
+DROP FUNCTION IF EXISTS public.submit_registration_bank_transfer(text);
+DROP FUNCTION IF EXISTS public.create_registration_card_payment_internal(uuid);
+DROP FUNCTION IF EXISTS public.confirm_registration_payment(uuid, text);
+DROP FUNCTION IF EXISTS public.mark_registration_invoice_email(uuid, text, text);
+DROP FUNCTION IF EXISTS public.update_registration_payment_settings(text, text, text, text);
+-- Superseded legacy overloads of the same RPC name. They are written against the
+-- legacy column names (registration_invoice_id / stripe_session_id /
+-- payment_reference) that the reconcile block above renames, so they would raise
+-- 42703 if anything still called them. The new signatures are created below.
+DROP FUNCTION IF EXISTS public.confirm_registration_card_payment_internal(uuid, text, text);
+DROP FUNCTION IF EXISTS public.fail_registration_card_payment_internal(uuid, text, text);
+DROP FUNCTION IF EXISTS public.resolve_registration_insurance_monthly_rate(jsonb, integer);
 
 CREATE OR REPLACE FUNCTION public.resolve_registration_weekly_rate(
   p_base numeric,
@@ -311,13 +351,6 @@ AS $$
     NULLIF(p_base, 0)
   );
 $$;
-
--- A legacy out-of-band `get_registration_catalog(uuid)` already exists on the
--- live project with a different parameter NAME. `CREATE OR REPLACE FUNCTION`
--- cannot rename an input parameter (Postgres: "cannot change name of input
--- parameter"), so the migration would abort here and every statement after it
--- would never run. Drop the signature first, then create.
-DROP FUNCTION IF EXISTS public.get_registration_catalog(uuid);
 
 CREATE OR REPLACE FUNCTION public.get_registration_catalog(p_school_id uuid)
 RETURNS jsonb

@@ -88,16 +88,34 @@ describe("student referral registration migration", () => {
     expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.get_registration_catalog(uuid) TO authenticated");
   });
 
-  it("drops the legacy catalog RPC before replacing it", () => {
-    // A legacy out-of-band get_registration_catalog(uuid) exists with a different
-    // parameter NAME; CREATE OR REPLACE cannot rename an input parameter, so the
-    // migration aborts there and nothing after it runs. The DROP must precede the
-    // CREATE, and it must be signature-qualified (never a bare DROP FUNCTION).
-    const dropIdx = sql.indexOf("DROP FUNCTION IF EXISTS public.get_registration_catalog(uuid);");
-    const createIdx = sql.indexOf("FUNCTION public.get_registration_catalog(p_school_id uuid)");
-    expect(dropIdx).toBeGreaterThan(-1);
-    expect(createIdx).toBeGreaterThan(-1);
-    expect(dropIdx).toBeLessThan(createIdx);
+  it("drops every legacy registration RPC signature before replacing it", () => {
+    // The live project has an out-of-band generation of these RPCs whose input
+    // parameter NAMES differ (e.g. p_data vs p_payload, p_token vs
+    // p_public_token). CREATE OR REPLACE cannot rename an input parameter, so
+    // each colliding signature must be dropped first or the file aborts and no
+    // payment RPC is ever created.
+    const legacy = [
+      "public.resolve_registration_weekly_rate(numeric, jsonb, integer)",
+      "public.resolve_registration_insurance_monthly_rate(numeric, jsonb, integer)",
+      "public.get_registration_catalog(uuid)",
+      "public.create_student_referral_registration_internal(uuid, jsonb)",
+      "public.get_registration_invoice_by_token(text)",
+      "public.submit_registration_bank_transfer(text)",
+      "public.create_registration_card_payment_internal(uuid)",
+      "public.confirm_registration_payment(uuid, text)",
+      "public.mark_registration_invoice_email(uuid, text, text)",
+      "public.update_registration_payment_settings(text, text, text, text)",
+      "public.confirm_registration_card_payment_internal(uuid, text, text)",
+      "public.fail_registration_card_payment_internal(uuid, text, text)",
+      "public.resolve_registration_insurance_monthly_rate(jsonb, integer)",
+    ];
+    for (const sig of legacy) {
+      const dropIdx = sql.indexOf(`DROP FUNCTION IF EXISTS ${sig};`);
+      const createIdx = sql.indexOf(`CREATE OR REPLACE FUNCTION ${sig.split("(")[0]}(`);
+      expect(dropIdx, `missing DROP for ${sig}`).toBeGreaterThan(-1);
+      expect(createIdx, `missing CREATE for ${sig}`).toBeGreaterThan(-1);
+      expect(dropIdx, `DROP must precede CREATE for ${sig}`).toBeLessThan(createIdx);
+    }
   });
 
   it("never references a non-existent cases.email column", () => {
@@ -129,10 +147,16 @@ describe("student referral registration migration", () => {
     expect(sql).toContain("ADD COLUMN IF NOT EXISTS provider_payment_id text");
 
     // Everything after the bridge must use the canonical names only — a legacy
-    // name leaking into a function body means that RPC still cannot run.
-    const afterReconcile = sql.slice(sql.indexOf("$reconcile$;") + "$reconcile$;".length);
+    // name leaking into a function body means that RPC still cannot run. Strip
+    // line comments first so explanatory prose naming the old columns is fine.
+    const afterReconcile = sql
+      .slice(sql.indexOf("$reconcile$;") + "$reconcile$;".length)
+      .replace(/--[^\n]*/g, "");
     expect(afterReconcile).not.toContain("registration_invoice_id");
     expect(afterReconcile).not.toContain("stripe_session_id");
+    // `reference` is the canonical column the new RPCs read/write; the live
+    // generation names it `payment_reference`, so it must be bridged too.
+    expect(sql).toContain("RENAME COLUMN payment_reference TO reference");
   });
 });
 

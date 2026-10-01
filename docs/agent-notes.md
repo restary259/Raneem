@@ -3242,24 +3242,45 @@ verified non-vacuous by reintroducing the defect).
   `stripe_session_id`→`provider_payment_id`, then `ADD COLUMN IF NOT EXISTS`
   the rest. This is the same failure mode already recorded for
   `case_payment_proofs.payment_id`.
-- **`CREATE OR REPLACE FUNCTION` cannot rename an input parameter.** A legacy
-  out-of-band `get_registration_catalog(uuid)` exists with parameter
-  `p_referrer_user_id`; the migration declares `p_school_id`. Postgres raises
-  `cannot change name of input parameter` and aborts the file at that point,
-  so nothing after it (including every payment RPC) is created. A
-  signature-qualified `DROP FUNCTION IF EXISTS public.get_registration_catalog(uuid)`
-  must precede the `CREATE`.
+- **`CREATE OR REPLACE FUNCTION` cannot rename an input parameter — and TEN
+  registration RPCs collide.** The live project has an out-of-band generation of
+  the whole registration RPC set whose input parameter NAMES differ for the same
+  signatures (`p_data` vs `p_payload`, `p_token` vs `p_public_token`,
+  `p_reference` vs `p_notes`, `p_provider_payment_id` vs `p_stripe_session_id`,
+  `p_failure_reason` vs `p_reason`, `p_base` vs `p_base_price`, `p_age` vs
+  `p_program_weeks`, `p_school_id` vs `p_referrer_user_id`, …). Postgres raises
+  `cannot change name of input parameter` on the FIRST collision and aborts the
+  file, so nothing after it — including every payment RPC — is ever created.
+  Signature-qualified `DROP FUNCTION IF EXISTS` statements must precede the
+  `CREATE`s. Fixing only `get_registration_catalog` was NOT enough: the file
+  still aborted on `create_student_referral_registration_internal` (`p_payload`).
+- **`reference` must be bridged too.** The canonical table declares `reference`;
+  the live generation names the same value `payment_reference`. The new RPCs read
+  and write `reference`, so the reconcile block renames
+  `payment_reference` → `reference` (existing values preserved) rather than
+  leaving a column no function can reach.
+- **Superseded legacy overloads must be dropped.** `confirm_…`/`fail_…_card_payment_internal`
+  exist live as 3-arg overloads and the insurance resolver as a 2-arg overload;
+  they reference the renamed legacy columns and would raise 42703 if called.
+  They are dropped and only the canonical signatures remain.
+- **The live function inventory is recoverable without DB access.** The generated
+  `src/integrations/supabase/types.ts` on `main` was regenerated from the live
+  project post-merge and enumerates every RPC's argument names — use it (and
+  `information_schema.columns` semantics) as the authority for what exists,
+  rather than assuming the repo's migrations describe the deployed schema.
 - **Empirical verification, not inspection.** A Postgres 16 container with a
   stub harness (`auth.uid()`, `has_role`, `log_case_event`,
   `update_updated_at_column`, `enforce_case_stage_transition`, the Supabase
   roles, `pgcrypto`) applies the full migration: fresh project → exit 0, legacy
-  live-shaped project → exit 0, re-run → exit 0. The pre-fix file exits 3 with
-  `column "invoice_id" does not exist`. Guarded in
-  `src/lib/referralRegistrationGuards.test.ts` (3 new cases, verified
-  non-vacuous).
-- **Lesson:** a migration that mutates a table which may already exist must be
-  written against the LIVE schema, and the deployed database — not the repo
-  file — is the source of truth for what already exists. `IF NOT EXISTS`
-  silently preserves an older generation of the same table.
+  live-shaped project (legacy table + the full legacy RPC generation) → exit 0,
+  with a dependency between the legacy resolvers and the create RPC → exit 0,
+  re-run → exit 0. The pre-fix file exits 3 (`column "invoice_id" does not
+  exist`). A seeded `payment_reference` value survives the bridge as `reference`.
+  Guarded in `src/lib/referralRegistrationGuards.test.ts` (verified non-vacuous).
+- **Lesson:** a migration that mutates a table or function which may already
+  exist must be written against the LIVE schema, and the deployed database — not
+  the repo file — is the source of truth for what already exists. `IF NOT EXISTS`
+  and `CREATE OR REPLACE` both silently preserve an older generation of the same
+  object; neither reports the drift.
 - Verification: `npx tsc --noEmit` clean; `npx vitest run` 1800 passed | 1
   skipped; `npm run build` clean.
