@@ -1,122 +1,14 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from '@/lib/router-compat';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
-import type { AppRole } from '@/contexts/AuthContext';
-import { useApplyFormEnabled } from '@/hooks/useApplyFormEnabled';
-import { filterApplyNavItem } from '@/lib/partnerNav';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "@/lib/router-compat";
+import { cn } from "@/lib/utils";
+import type { AppRole } from "@/contexts/AuthContext";
+import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
+import { filterApplyNavItem } from "@/lib/partnerNav";
 import {
-  LayoutDashboard, GitBranch, Users, BookOpen,
-  DollarSign, BarChart2, Activity, Settings,
-  CalendarDays, ClipboardList, UserPlus, GraduationCap,
-  TrendingUp, User, FileText, Inbox, Calculator,
-  Heart, MessageSquare, MoreHorizontal, ClipboardEdit,
-  Sparkles, ShieldCheck, Receipt, Globe, ListChecks,
-  Hotel, Megaphone, Building2, MapPinned, Home,
-} from 'lucide-react';
-
-interface NavItem {
-  key: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-}
-
-// Shared partner/ambassador bottom-nav destinations. Mirrors PARTNER_BASE_NAV
-// in DashboardLayout — kept here separately because those roles cap at 4 primary
-// tabs; remaining destinations live in the "More" sheet.
-const PARTNER_MOBILE_NAV: NavItem[] = [
-  { key: 'nav.overview', icon: LayoutDashboard, href: '/partner' },
-  { key: 'nav.messages', icon: MessageSquare, href: '/partner/messages' },
-  { key: 'nav.students', icon: GraduationCap, href: '/partner/students' },
-  { key: 'nav.earnings', icon: TrendingUp, href: '/partner/earnings' },
-];
-
-// Primary mobile items per role. Student uses five fixed destinations.
-const MOBILE_NAV_CONFIG: Record<AppRole, NavItem[]> = {
-  admin: [
-    { key: 'nav.overview', icon: LayoutDashboard, href: '/admin' },
-    { key: 'nav.pipeline', icon: GitBranch, href: '/admin/pipeline' },
-    { key: 'nav.messages', icon: MessageSquare, href: '/admin/messages' },
-    { key: 'nav.financials', icon: DollarSign, href: '/admin/financials' },
-  ],
-  team_member: [
-    { key: 'nav.myWork', icon: LayoutDashboard, href: '/team' },
-    { key: 'nav.cases', icon: ClipboardList, href: '/team/cases' },
-    { key: 'nav.staffInbox', icon: MessageSquare, href: '/team/messages' },
-    { key: 'nav.appointments', icon: CalendarDays, href: '/team/appointments' },
-  ],
-  social_media_partner: [...PARTNER_MOBILE_NAV],
-  ambassador: [...PARTNER_MOBILE_NAV],
-  agent: [
-    { key: 'nav.overview', icon: LayoutDashboard, href: '/agent' },
-    { key: 'nav.network', icon: Users, href: '/agent/network' },
-    { key: 'nav.earnings', icon: TrendingUp, href: '/agent/earnings' },
-    { key: 'nav.messages', icon: MessageSquare, href: '/agent/messages' },
-  ],
-  // Student: 5 fixed destinations, with DARB replacing the former More action.
-  student: [
-    { key: 'nav.home', icon: Home, href: '/student' },
-    { key: 'nav.cityGuide', icon: MapPinned, href: '/student/city-guide' },
-    { key: 'nav.messages', icon: MessageSquare, href: '/student/messages' },
-    { key: 'nav.account', icon: User, href: '/student/profile' },
-    { key: 'nav.darb', icon: Sparkles, href: '/' },
-  ],
-
-};
-
-/**
- * Destinations that don't fit the 4-tab bar. Previously these routes were
- * simply unreachable on mobile; the "More" sheet now exposes every page the
- * sidebar offers on desktop, so mobile and desktop have parity.
- */
-const MOBILE_MORE_CONFIG: Record<AppRole, NavItem[]> = {
-  admin: [
-    { key: 'nav.students', icon: GraduationCap, href: '/admin/students' },
-    { key: 'nav.team', icon: Users, href: '/admin/members' },
-    { key: 'nav.inbox', icon: Inbox, href: '/admin/inbox' },
-    { key: 'nav.whatsappCampaigns', icon: Megaphone, href: '/admin/whatsapp-campaigns' },
-    { key: 'nav.programs', icon: BookOpen, href: '/admin/programs' },
-    { key: 'nav.offices', icon: Building2, href: '/admin/offices' },
-    { key: 'nav.activity', icon: Activity, href: '/admin/activity' },
-    { key: 'nav.settings', icon: Settings, href: '/admin/settings' },
-  ],
-  team_member: [
-    { key: 'nav.submitNew', icon: UserPlus, href: '/team/submit' },
-    { key: 'nav.catalog', icon: Hotel, href: '/team/catalog' },
-    { key: 'nav.majorIntel', icon: GraduationCap, href: '/team/majors' },
-    { key: 'nav.reports', icon: BarChart2, href: '/team/analytics' },
-    { key: 'nav.bagrut', icon: Calculator, href: '/team/bagrut' },
-    { key: 'nav.cvBuilder', icon: FileText, href: '/team/tools/cv' },
-    { key: 'nav.currency', icon: DollarSign, href: '/team/tools/currency' },
-  ],
-  // Both roles share both features; nav.apply is filtered out at render time
-  // when the member's apply_form_enabled admin toggle is off.
-  social_media_partner: [
-    { key: 'nav.apply', icon: ClipboardEdit, href: '/partner/apply' },
-    { key: 'nav.account', icon: User, href: '/partner/profile' },
-  ],
-  ambassador: [
-    { key: 'nav.apply', icon: ClipboardEdit, href: '/partner/apply' },
-    { key: 'nav.account', icon: User, href: '/partner/profile' },
-  ],
-  agent: [
-    { key: 'nav.students', icon: GraduationCap, href: '/agent/students' },
-    { key: 'nav.apply', icon: ClipboardEdit, href: '/agent/apply' },
-    { key: 'nav.account', icon: User, href: '/agent/profile' },
-  ],
-  student: [
-    { key: 'nav.checklist', icon: ListChecks, href: '/student/checklist' },
-    { key: 'nav.documents', icon: FileText, href: '/student/documents' },
-    { key: 'nav.visa', icon: Globe, href: '/student/visa' },
-    { key: 'nav.fees', icon: Receipt, href: '/student/fees' },
-    { key: 'nav.contacts', icon: Users, href: '/student/contacts' },
-    { key: 'nav.myData', icon: ShieldCheck, href: '/student/my-data' },
-    { key: 'nav.bagrut', icon: Calculator, href: '/student/tools/bagrut' },
-    { key: 'nav.cvBuilder', icon: FileText, href: '/student/tools/cv' },
-    { key: 'nav.refer', icon: Heart, href: '/student/refer' },
-  ],
-};
+  getDashboardNav,
+  matchesDashboardNavPath,
+  type DashboardNavItem,
+} from "@/components/layout/dashboardNavigation";
 
 interface MobileBottomNavProps {
   role: AppRole;
@@ -124,190 +16,58 @@ interface MobileBottomNavProps {
 
 export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const location = useLocation();
-  const { t, i18n } = useTranslation('dashboard');
-  const language = i18n.language;
-  const [moreOpen, setMoreOpen] = useState(false);
-  const items = MOBILE_NAV_CONFIG[role] ?? [];
-  // Mirror the sidebar: hide Apply when the member's apply_form_enabled admin
-  // toggle is off (partner/ambassador/agent).
-  const applyGatedRole = role === 'social_media_partner' || role === 'ambassador' || role === 'agent';
+  const { t } = useTranslation("dashboard");
+  const baseItems = getDashboardNav(role).mobilePrimary;
+  const applyGatedRole =
+    role === "social_media_partner" || role === "ambassador" || role === "agent";
   const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
-  const moreItems =
-    role === 'student'
-      ? []
-      : filterApplyNavItem(MOBILE_MORE_CONFIG[role] ?? [], applyGatedRole, applyFormEnabled);
+  const items = filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled);
 
-  // Shorten keys for label display
-  const shortLabel: Record<string, string> = {
-    'nav.overview': t('nav.overview', 'Home'),
-    'nav.pipeline': t('nav.pipeline', 'Pipeline'),
-    'nav.team': t('nav.team', 'Team'),
-    'nav.financials': t('nav.financials', 'Finance'),
-    'nav.settings': t('nav.settings', 'Settings'),
-    'nav.analytics': t('nav.analytics', 'Analytics'),
-    'nav.reports': t('nav.reports', 'Reports'),
-    'nav.activity': t('nav.activity', 'Activity'),
-    'nav.myWork': t('nav.myWork', 'My work'),
-    'nav.cases': t('nav.cases', 'Cases'),
-    'nav.appointments': t('nav.appointments', 'Appts'),
-    'nav.todayAppts': t('nav.todayAppts', 'Today'),
-    'nav.submitNew': t('nav.submitNew', 'New'),
-    'nav.students': t('nav.students', 'Students'),
-    'nav.myLink': t('nav.myLink', 'My Link'),
-    'nav.earnings': t('nav.earnings', 'Earnings'),
-    'nav.checklist': t('nav.checklist', 'Checklist'),
-    'nav.profile': t('nav.profile', 'Profile'),
-    'nav.account': t('nav.account', 'Account'),
-    'nav.documents': t('nav.documents', 'Docs'),
-    'nav.visa': t('nav.visa', 'Visa'),
-    'nav.fees': t('nav.fees', 'Fees'),
-    'nav.myData': t('nav.myData', 'My data'),
-    'nav.refer': t('nav.refer', 'Refer'),
-    'nav.contacts': t('nav.contacts', 'Contacts'),
-    'nav.programs': t('nav.programs', 'Programs'),
-    'nav.offices': t('nav.offices', language.startsWith('ar') ? 'المكاتب' : language.startsWith('he') ? 'משרדים' : 'Offices'),
-    'nav.submissions': t('nav.submissions', 'Submissions'),
-    'nav.messages': t('nav.messages', 'Messages'),
-    'nav.staffInbox': t('nav.staffInbox', 'Inbox'),
-    'nav.whatsapp': t('nav.whatsapp', 'WhatsApp'),
-    'nav.inbox': t('nav.inbox', 'Applications'),
-    'nav.whatsappCampaigns': t('nav.whatsappCampaigns', 'WhatsApp campaigns'),
-    'nav.network': t('nav.network', 'Network'),
-    'nav.recruit': t('nav.recruit', 'Recruit'),
-    'nav.apply': t('nav.apply', 'Apply'),
-    'nav.bagrut': t('nav.bagrut', 'Bagrut'),
-    'nav.cvBuilder': t('nav.cvBuilder', 'CV'),
-    'nav.currency': t('nav.currency', 'Currency'),
-    'nav.bankDetails': t('nav.bankDetails', 'Bank'),
-    'nav.group.studyFile': t('nav.group.studyFile', 'Study'),
-    'nav.group.communication': t('nav.group.communication', 'Comms'),
-    'nav.group.account': t('nav.group.account', 'Account'),
-    'nav.home': t('nav.home', 'Home'),
-    'nav.nextSteps': t('nav.nextSteps', 'Next'),
-    'nav.cityGuide': t('nav.cityGuideMobile', 'Map'),
-    'nav.darb': t('nav.darb', 'DARB'),
-  };
-
-  const label = (key: string) => shortLabel[key] ?? t(key, key);
-
-  // Grouped desktop-only parents stay active while any of their child routes is open.
-  const groupChildHrefs: Record<string, string[]> = {
-    'nav.group.studyFile': ['/student/checklist', '/student/documents', '/student/visa', '/student/fees'],
-    'nav.group.communication': ['/student/messages', '/student/contacts'],
-    'nav.group.account': ['/student/profile', '/student/my-data'],
-  };
-
-  const isItemActive = (item: NavItem) => {
-    const childHrefs = groupChildHrefs[item.key];
-    if (childHrefs) return childHrefs.some((h) => location.pathname.startsWith(h));
-    return (
-      location.pathname === item.href ||
-      (item.href !== '/admin' &&
-        item.href !== '/team' &&
-        item.href !== '/partner' &&
-        item.href !== '/agent' &&
-        item.href !== '/' &&
-        item.href !== '/student/checklist' &&
-        location.pathname.startsWith(item.href))
-    );
-  };
-
-  const moreActive = moreItems.some((i) => location.pathname.startsWith(i.href));
+  const label = (item: DashboardNavItem) =>
+    t(item.mobileLabelKey ?? item.key);
 
   const tabClass = (active: boolean) =>
     cn(
-      'relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors',
-      'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-      active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+      "relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2",
+      "text-[10px] font-medium transition-colors",
+      "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+      active ? "text-primary" : "text-muted-foreground hover:text-foreground",
     );
 
   return (
     <nav
       role="navigation"
-      aria-label={t('nav.bottomNav', 'Main navigation')}
+      aria-label={t("nav.bottomNav")}
       className="fixed bottom-0 start-0 end-0 z-50 flex min-h-16 items-stretch border-t border-border bg-background/95 shadow-[0_-8px_24px_-20px_hsl(var(--foreground)/0.35)] backdrop-blur-md pb-safe md:hidden"
     >
       {items.map((item) => {
-        const isActive = isItemActive(item);
-        const labelText = label(item.key);
+        const isActive = matchesDashboardNavPath(location.pathname, item);
+        const labelText = label(item);
+
         return (
           <Link
             key={item.key}
             to={item.href}
-            aria-current={isActive ? 'page' : undefined}
+            aria-current={isActive ? "page" : undefined}
             aria-label={labelText}
             className={tabClass(isActive)}
           >
             <item.icon
-              className={cn('h-5 w-5 shrink-0', isActive && 'text-primary')}
+              className={cn("h-5 w-5 shrink-0", isActive && "text-primary")}
               aria-hidden="true"
             />
-            <span className="w-full min-w-0 truncate max-w-[68px] sm:max-w-[72px] text-center leading-tight">
+            <span className="w-full min-w-0 max-w-[84px] text-center leading-tight break-words">
               {labelText}
             </span>
             {isActive && (
               <span
                 aria-hidden="true"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary"
+                className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary"
               />
             )}
           </Link>
         );
       })}
-
-      {moreItems.length > 0 && (
-        <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-          <SheetTrigger
-            className={tabClass(moreActive)}
-            aria-label={t('nav.more', 'More')}
-            aria-current={moreActive ? 'page' : undefined}
-            aria-expanded={moreOpen}
-          >
-            <MoreHorizontal
-              className={cn('h-5 w-5 shrink-0', moreActive && 'text-primary')}
-              aria-hidden="true"
-            />
-            <span className="w-full min-w-0 truncate max-w-[68px] text-center leading-tight">
-              {t('nav.more', 'More')}
-            </span>
-            {moreActive && (
-              <span
-                aria-hidden="true"
-                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary"
-              />
-            )}
-          </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
-            <SheetHeader className="text-start">
-              <SheetTitle className="text-base">{t('nav.more', 'More')}</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {moreItems.map((item) => {
-                const isActive = location.pathname.startsWith(item.href);
-                const labelText = label(item.key);
-                return (
-                  <Link
-                    key={item.key}
-                    to={item.href}
-                    onClick={() => setMoreOpen(false)}
-                    aria-current={isActive ? 'page' : undefined}
-                    aria-label={labelText}
-                    className={cn(
-                       'flex min-h-20 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border p-3 text-center text-xs transition-colors',
-                      isActive
-                        ? 'border-primary/40 bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-muted',
-                    )}
-                  >
-                    <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                    <span className="w-full min-w-0 truncate leading-tight">{labelText}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
     </nav>
   );
 }

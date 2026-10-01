@@ -2878,7 +2878,17 @@
     "accountMenu": "Account menu",
     "language": "Language",
     "student": "Student",
-    "darb": "DARB"
+    "mobile": {
+      "finance": "Finance",
+      "appointments": "Appointments",
+      "inbox": "Inbox",
+      "earnings": "Earnings",
+      "network": "Network",
+      "apply": "Apply"
+    },
+    "languageSelector": "Language selector",
+    "darb": "DARB",
+    "user": "User"
   },
   "case": {
     "status": {

@@ -1,45 +1,45 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
+import React from "react";
+import { useTranslation } from "react-i18next";
 
-const LanguageSwitcher = ({ className = '' }: { className?: string }) => {
-  const { i18n } = useTranslation();
-  const current = i18n.language;
+const LANGUAGES = [
+  { key: "ar", nativeName: "العربية", lang: "ar" },
+  { key: "en", nativeName: "English", lang: "en" },
+  { key: "he", nativeName: "עברית", lang: "he" },
+] as const;
+
+const LanguageSwitcher = ({ className = "" }: { className?: string }) => {
+  const { i18n, t } = useTranslation("dashboard");
+  const current = i18n.resolvedLanguage ?? i18n.language;
+
+  const isCurrent = (key: string) =>
+    current === key || current.startsWith(key + "-");
 
   return (
     <div
       className={`flex shrink-0 items-center gap-1 sm:gap-3 ${className}`}
       dir="ltr"
-      aria-label="Language selector"
+      role="group"
+      aria-label={t("nav.languageSelector")}
     >
-      <button
-        type="button"
-        onClick={() => i18n.changeLanguage('ar')}
-        className={`text-xs whitespace-nowrap underline-offset-4 hover:underline ${current === 'ar' ? 'font-bold' : 'opacity-75'}`}
-        aria-label="العربية"
-        aria-current={current === 'ar' ? 'true' : undefined}
-      >
-        العربية
-      </button>
-      <span aria-hidden="true" className="text-xs opacity-40">|</span>
-      <button
-        type="button"
-        onClick={() => i18n.changeLanguage('en')}
-        className={`text-xs whitespace-nowrap underline-offset-4 hover:underline ${current === 'en' ? 'font-bold' : 'opacity-75'}`}
-        aria-label="English"
-        aria-current={current === 'en' ? 'true' : undefined}
-      >
-        English
-      </button>
-      <span aria-hidden="true" className="opacity-40">|</span>
-      <button
-        type="button"
-        onClick={() => i18n.changeLanguage('he')}
-        className={`text-xs whitespace-nowrap underline-offset-4 hover:underline ${current === 'he' ? 'font-bold' : 'opacity-75'}`}
-        aria-label="עברית"
-        aria-current={current === 'he' ? 'true' : undefined}
-      >
-        עברית
-      </button>
+      {LANGUAGES.map(({ key, nativeName, lang }, index) => (
+        <React.Fragment key={key}>
+          {index > 0 && (
+            <span aria-hidden="true" className="text-xs opacity-40">
+              |
+            </span>
+          )}
+          <button
+            type="button"
+            lang={lang}
+            onClick={() => i18n.changeLanguage(key)}
+            className={`whitespace-nowrap text-xs underline-offset-4 transition-opacity hover:underline ${isCurrent(key) ? "font-bold" : "opacity-75"}`}
+            aria-label={nativeName}
+            aria-current={isCurrent(key) ? "true" : undefined}
+          >
+            {nativeName}
+          </button>
+        </React.Fragment>
+      ))}
     </div>
   );
 };
