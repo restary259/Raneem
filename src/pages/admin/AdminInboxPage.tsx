@@ -187,7 +187,7 @@ const AdminInboxPage = () => {
           <Inbox className="h-5 w-5 text-primary" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold">{t("admin.inbox.title", "Applications Inbox")}</h1>
+          <h1 className="sr-only">{t("admin.inbox.title", "Applications Inbox")}</h1>
         </div>
         {newCount > 0 && <Badge variant="destructive" className="ms-auto">{newCount}</Badge>}
       </div>
