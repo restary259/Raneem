@@ -5324,7 +5324,6 @@
     "rateFamilyDiscount": "Family discount",
     "rateFamilyReward": "Family referrer reward",
     "teamTitle": "Team members",
-    "teamHint": "Override a team member's commission. Leave at default to use the global team rate.",
     "agentsTitle": "Agents & network overrides",
     "search": "Search…",
     "none": "None",
