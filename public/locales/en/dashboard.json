@@ -3801,7 +3801,7 @@
     "schoolPacketHint": "Student details and costs for schools",
     "pdfFontWarning": "Arabic/Hebrew text could not be embedded in this PDF. Use the Excel export instead.",
     "preparing": "Preparing…",
-    "exportFailed": "Could not create the Excel file",
+    "exportFailed": "Could not create the export file",
     "loadError": "Could not load this sheet",
     "columns": "Columns",
     "refresh": "Refresh",
