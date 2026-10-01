@@ -5665,7 +5665,8 @@
         "pending": "ממתינים לתשלום",
         "transferSubmitted": "העברות נשלחו",
         "paid": "שולם",
-        "failed": "נכשל"
+        "failed": "נכשל",
+        "rewardsPending": "תגמולים ממתינים"
       },
       "tabs": {
         "registrations": "רישומים",
