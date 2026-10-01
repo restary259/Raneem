@@ -484,7 +484,6 @@
     },
     "members": {
       "title": "Team Members",
-      "subtitle": "Manage team members, agents, partners and ambassadors",
       "createMember": "Create Member",
       "searchPlaceholder": "Search by name, email, phone, city…",
       "tabTeam": "Team",
@@ -3792,7 +3791,6 @@
   },
   "sheets": {
     "title": "Spreadsheet Hub",
-    "subtitle": "Live tables of students, payments, payouts, commissions and taxes",
     "exportWorkbook": "Full report (Excel)",
     "exportExcel": "Download Excel",
     "exportPdf": "Download PDF",
