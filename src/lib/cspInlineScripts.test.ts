@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { Route as RootRoute } from "@/routes/__root";
 
 const ROOT = process.cwd();
 const read = (...parts: string[]) => fs.readFileSync(path.join(ROOT, ...parts), "utf8");
@@ -55,5 +56,21 @@ describe("Static HTML inline script guards", () => {
     expect(offlineJs).toContain("addEventListener(\"online\"");
     expect(offlineJs).toContain("setInterval");
     expect(offlineJs).toContain("retry-button");
+  });
+});
+
+describe("Application head scripts under strict CSP", () => {
+  it("keeps root head scripts non-executable JSON-LD only", () => {
+    const rootHead = RootRoute.options.head?.();
+    const scripts = rootHead?.scripts ?? [];
+
+    expect(scripts.length).toBeGreaterThan(0);
+
+    for (const script of scripts) {
+      expect(script.type).toBe("application/ld+json");
+      expect(script.children).toBeTypeOf("string");
+      expect(script.children).not.toContain("<script");
+      expect(() => JSON.parse(script.children)).not.toThrow();
+    }
   });
 });
