@@ -5884,7 +5884,8 @@
     },
     "history": {
       "title": "My referred registrations",
-      "empty": "You have not created any referral registrations yet."
+      "empty": "You have not created any referral registrations yet.",
+      "reward": "Reward"
     },
     "insurance": {
       "none": "No insurance"
