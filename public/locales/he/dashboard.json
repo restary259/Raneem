@@ -4949,7 +4949,6 @@
     },
     "commandCenter": {
       "title": "מרכז הפיקוד",
-      "subtitle": "סקירה בזמן אמת של כל הפעילות",
       "activeCases": "תיקים פעילים",
       "submitted": "הוגשו",
       "enrolled": "נרשמו",
