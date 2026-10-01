@@ -297,7 +297,6 @@
   "admin": {
     "commandCenter": {
       "title": "مركز القيادة",
-      "subtitle": "نظرة عامة في الوقت الفعلي على جميع الأنشطة",
       "activeCases": "الحالات النشطة",
       "submitted": "تم التقديم",
       "enrolled": "مسجلون",
