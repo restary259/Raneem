@@ -100,9 +100,7 @@ const AdminCommissionHubPage: React.FC = () => {
             <DollarSign className="h-6 w-6 text-primary" />
             {t("commissionHub.title", "Commission Hub")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t("commissionHub.subtitle", "Single source of truth for every commission relationship")}
-          </p>
+          
         </div>
         <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
           <RefreshCw className="h-4 w-4 me-2" />
