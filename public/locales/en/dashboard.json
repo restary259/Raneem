@@ -1698,7 +1698,8 @@
         "pending": "Awaiting payment",
         "transferSubmitted": "Transfers submitted",
         "paid": "Paid",
-        "failed": "Failed"
+        "failed": "Failed",
+        "rewardsPending": "Rewards pending"
       },
       "tabs": {
         "registrations": "Registrations",
@@ -1734,7 +1735,13 @@
       },
       "rewardsTitle": "Referral lifecycle",
       "rewards": {
-        "currentRule": "Student referral rewards continue to follow the existing referral rules. This view tracks the linked referral lifecycle without changing reward policy."
+        "currentRule": "Student referral rewards continue to follow the existing referral rules. This view tracks the linked referral lifecycle without changing reward policy.",
+        "reward": "Reward",
+        "unlock": "Unlocks",
+        "payoutRequested": "Payout requested",
+        "paidAt": "Paid",
+        "paymentReference": "Payment reference",
+        "notCreated": "No student referral reward has been created yet. It is created when the case reaches enrollment paid."
       },
       "bankSettings": {
         "title": "Bank transfer settings",
@@ -5878,7 +5885,8 @@
     },
     "history": {
       "title": "My referred registrations",
-      "empty": "You have not created any referral registrations yet."
+      "empty": "You have not created any referral registrations yet.",
+      "reward": "Reward"
     },
     "insurance": {
       "none": "No insurance"
@@ -5892,7 +5900,22 @@
       "type": "Type",
       "invoice": "Invoice",
       "total": "Registration total",
-      "services": "Selected registration"
+      "services": "Selected registration",
+      "financeTitle": "Refer & Register finance",
+      "paidDescription": "This registration has its own paid EUR invoice. No separate DARB service invoice or office appointment is required.",
+      "pendingDescription": "The registration remains blocked until its registration invoice is paid and confirmed.",
+      "paymentStatus": "Payment status",
+      "discount": "Referral discount",
+      "registrationInvoice": "Registration invoice",
+      "readyForReview": "Ready for profile review",
+      "waitingForPayment": "Waiting for registration payment",
+      "reviewHint": "Once the payment is confirmed, review the submitted profile and use the top action to confirm it.",
+      "submittedHint": "This registration is already in the Admin review lifecycle.",
+      "confirmedSuccess": "Registration confirmed and moved to payment confirmed.",
+      "submittedSuccess": "Registration submitted for Admin review.",
+      "invoiceMissing": "The direct registration invoice could not be loaded.",
+      "transferSubmitted": "Transfer submitted",
+      "paymentFailed": "Payment failed"
     },
     "education": {
       "bagrut": "Bagrut",

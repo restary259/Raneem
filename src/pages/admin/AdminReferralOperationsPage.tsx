@@ -42,7 +42,7 @@ const paymentLabel: Record<string, string> = {
 export default function AdminReferralOperationsPage() {
   const { t, i18n } = useTranslation("dashboard");
   const { toast } = useToast();
-  const isRtl = i18n.language === "ar";
+  const isRtl = i18n.language.startsWith("ar") || i18n.language.startsWith("he");
   const [tab, setTab] = useState<Tab>("registrations");
   const [records, setRecords] = useState<RegistrationRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +70,7 @@ export default function AdminReferralOperationsPage() {
       const invoiceIds = invoiceRows.map((invoice: any) => invoice.id).filter(Boolean);
       const schoolIds = Array.from(new Set(invoiceRows.map((invoice: any) => invoice.school_id).filter(Boolean)));
 
-      const [casesRes, paymentsRes, referralsRes, settingsRes, schoolRes] = await Promise.all([
+      const [casesRes, paymentsRes, referralsRes, rewardsRes, settingsRes, schoolRes] = await Promise.all([
         caseIds.length
           ? (supabase as any).from("cases").select("id,full_name,phone_number,email,case_reference,status,assigned_to,referred_by,source,created_at").in("id", caseIds)
           : Promise.resolve({ data: [], error: null }),
@@ -79,6 +79,9 @@ export default function AdminReferralOperationsPage() {
           : Promise.resolve({ data: [], error: null }),
         caseIds.length
           ? (supabase as any).from("referrals").select("id,referred_case_id,referrer_user_id,referred_name,referral_type,status,created_at").in("referred_case_id", caseIds)
+          : Promise.resolve({ data: [], error: null }),
+        caseIds.length
+          ? (supabase as any).from("rewards").select("id,case_id,user_id,amount,currency,status,reward_type,referral_id,unlock_at,payout_requested_at,paid_at,payment_reference,case_reference,created_by_event").in("case_id", caseIds).eq("reward_type", "student_referral").order("created_at", { ascending: false })
           : Promise.resolve({ data: [], error: null }),
         (supabase as any).from("platform_settings").select("registration_payment_bank_name,registration_payment_account_holder,registration_payment_iban,registration_payment_bic").limit(1).maybeSingle(),
         schoolIds.length
@@ -89,6 +92,7 @@ export default function AdminReferralOperationsPage() {
       if (casesRes.error) throw casesRes.error;
       if (paymentsRes.error) throw paymentsRes.error;
       if (referralsRes.error) throw referralsRes.error;
+      if (rewardsRes.error) throw rewardsRes.error;
 
       const caseMap = new Map((casesRes.data ?? []).map((row: any) => [row.id, row]));
       const paymentsByInvoice = new Map<string, any>();
@@ -96,12 +100,19 @@ export default function AdminReferralOperationsPage() {
         if (!paymentsByInvoice.has(payment.invoice_id)) paymentsByInvoice.set(payment.invoice_id, payment);
       }
       const referralByCase = new Map((referralsRes.data ?? []).map((row: any) => [row.referred_case_id, row]));
+      const rewardsByCase = new Map<string, any[]>();
+      for (const reward of rewardsRes.data ?? []) {
+        const existing = rewardsByCase.get(reward.case_id) ?? [];
+        existing.push(reward);
+        rewardsByCase.set(reward.case_id, existing);
+      }
 
       setRecords(invoiceRows.map((invoice: any) => ({
         invoice,
         case: caseMap.get(invoice.case_id) ?? null,
         payment: paymentsByInvoice.get(invoice.id) ?? null,
         referral: referralByCase.get(invoice.case_id) ?? null,
+        rewards: rewardsByCase.get(invoice.case_id) ?? [],
       })));
 
       setSchoolNames(Object.fromEntries(
@@ -150,6 +161,10 @@ export default function AdminReferralOperationsPage() {
     submitted: records.filter((r) => r.invoice.payment_status === "submitted").length,
     paid: records.filter((r) => r.invoice.payment_status === "paid").length,
     failed: records.filter((r) => r.invoice.payment_status === "failed").length,
+    rewardsPending: records.reduce(
+      (count, r) => count + r.rewards.filter((reward: any) => ["pending", "approved", "requested"].includes(reward.status)).length,
+      0,
+    ),
   }), [records]);
 
   const referrers = useMemo(() => {
@@ -246,12 +261,13 @@ export default function AdminReferralOperationsPage() {
         </Button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <Metric label={t("admin.referralOperations.metrics.total")} value={counts.total} />
         <Metric label={t("admin.referralOperations.metrics.pending")} value={counts.pending} />
         <Metric label={t("admin.referralOperations.metrics.transferSubmitted")} value={counts.submitted} />
         <Metric label={t("admin.referralOperations.metrics.paid")} value={counts.paid} />
         <Metric label={t("admin.referralOperations.metrics.failed")} value={counts.failed} />
+        <Metric label={t("admin.referralOperations.metrics.rewardsPending", "Rewards pending")} value={counts.rewardsPending} />
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-border">
@@ -338,14 +354,37 @@ export default function AdminReferralOperationsPage() {
           <CardHeader><CardTitle className="text-base">{t("admin.referralOperations.rewardsTitle")}</CardTitle></CardHeader>
           <CardContent>
             {records.length ? <div className="divide-y divide-border">{records.map((record) => (
-              <div key={record.invoice.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="font-semibold">{record.invoice.referrer_name ?? "—"} → {record.invoice.student_name}</p>
-                  <p className="text-xs text-muted-foreground">{record.referral?.status ?? "pending"} · {record.case?.case_reference ?? "—"}</p>
+              <div key={record.invoice.id} className="flex flex-col gap-3 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-semibold">{record.invoice.referrer_name ?? "—"} → {record.invoice.student_name}</p>
+                    <p className="text-xs text-muted-foreground">{record.referral?.status ?? "pending"} · {record.case?.case_reference ?? "—"}</p>
+                  </div>
+                  <div className="text-xs text-muted-foreground sm:text-end">{t("admin.referralOperations.rewards.currentRule")}</div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {t("admin.referralOperations.rewards.currentRule")}
-                </div>
+                {record.rewards.length ? (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {record.rewards.map((reward: any) => (
+                      <div key={reward.id} className="rounded-xl border bg-muted/10 p-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">{t("admin.referralOperations.rewards.reward")}</span>
+                          <Badge variant={reward.status === "paid" ? "success" : "secondary"}>{reward.status}</Badge>
+                        </div>
+                        <p className="mt-1 text-lg font-bold" dir="ltr">{money(Number(reward.amount), reward.currency || "ILS")}</p>
+                        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                          <p>{t("admin.referralOperations.rewards.unlock")}: {reward.unlock_at ? new Date(reward.unlock_at).toLocaleDateString() : "—"}</p>
+                          {reward.payout_requested_at ? <p>{t("admin.referralOperations.rewards.payoutRequested")}: {new Date(reward.payout_requested_at).toLocaleDateString()}</p> : null}
+                          {reward.paid_at ? <p>{t("admin.referralOperations.rewards.paidAt")}: {new Date(reward.paid_at).toLocaleDateString()}</p> : null}
+                          {reward.payment_reference ? <p dir="ltr">{t("admin.referralOperations.rewards.paymentReference")}: {reward.payment_reference}</p> : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed p-3 text-xs text-muted-foreground">
+                    {t("admin.referralOperations.rewards.notCreated", "No student referral reward has been created yet. It is created when enrollment is paid.")}
+                  </div>
+                )}
               </div>
             ))}</div> : empty}
           </CardContent>
