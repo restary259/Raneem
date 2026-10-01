@@ -3700,6 +3700,7 @@
       "l4": "You may cancel in writing at any time; refunds are calculated after deducting work performed and official third-party fees already paid.",
       "link": "Full service details",
       "terms": "Terms & conditions"
+      "duplicate": "This friend is already registered with DARB. Contact the team if you think this is a mistake.",
     },
     "overview": {
       "quickActions": "Quick actions",
