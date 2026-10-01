@@ -792,7 +792,7 @@ export default function AdminStudentsPage() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Building2 className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">{t("admin.students.managementTitle")}</h1>
+          <h1 className="sr-only">{t("admin.students.managementTitle")}</h1>
           <Badge variant="secondary" className="text-xs">{students.length}</Badge>
         </div>
         <Button variant="outline" size="sm" onClick={fetchStudents} className="gap-2">
