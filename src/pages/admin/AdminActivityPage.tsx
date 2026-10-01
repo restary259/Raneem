@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Search, Activity } from 'lucide-react';
+import { RefreshCw, Search } from 'lucide-react';
 import { toneClasses } from '@/lib/statusTokens';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
