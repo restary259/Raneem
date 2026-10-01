@@ -161,6 +161,10 @@ export default function AdminReferralOperationsPage() {
     submitted: records.filter((r) => r.invoice.payment_status === "submitted").length,
     paid: records.filter((r) => r.invoice.payment_status === "paid").length,
     failed: records.filter((r) => r.invoice.payment_status === "failed").length,
+    rewardsPending: records.reduce(
+      (count, r) => count + r.rewards.filter((reward: any) => ["pending", "approved", "requested"].includes(reward.status)).length,
+      0,
+    ),
   }), [records]);
 
   const referrers = useMemo(() => {
@@ -257,12 +261,13 @@ export default function AdminReferralOperationsPage() {
         </Button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <Metric label={t("admin.referralOperations.metrics.total")} value={counts.total} />
         <Metric label={t("admin.referralOperations.metrics.pending")} value={counts.pending} />
         <Metric label={t("admin.referralOperations.metrics.transferSubmitted")} value={counts.submitted} />
         <Metric label={t("admin.referralOperations.metrics.paid")} value={counts.paid} />
         <Metric label={t("admin.referralOperations.metrics.failed")} value={counts.failed} />
+        <Metric label={t("admin.referralOperations.metrics.rewardsPending", "Rewards pending")} value={counts.rewardsPending} />
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-border">
