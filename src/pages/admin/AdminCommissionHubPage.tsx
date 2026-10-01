@@ -243,9 +243,6 @@ const AdminCommissionHubPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-xs text-muted-foreground mb-3">
-                {t("commissionHub.teamHint", "Override a team member's commission. Leave at default to use the global team rate.")}
-              </p>
               {teamMembers.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-3">{t("commissionHub.none", "None")}</p>
               ) : (
