@@ -2,10 +2,40 @@ import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+function stubLocaleFetch() {
+  const requests: string[] = [];
+
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL) => {
+      const rawUrl = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      const url = new URL(rawUrl, "http://darb.test");
+      const match = url.pathname.match(/^\\/locales\\/(ar|en|he)\\/(dashboard)\\.json$/);
+
+      if (!match) {
+        return new Response("Not found", { status: 404 });
+      }
+
+      requests.push(url.pathname);
+
+      const localeFile = path.join(process.cwd(), "public", "locales", match[1], match[2] + ".json");
+      const body = await fs.readFile(localeFile, "utf8");
+
+      return new Response(body, {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }),
+  );
+
+  return requests;
+}
+
 describe("i18n runtime loading", () => {
   beforeEach(() => {
     vi.resetModules();
     localStorage.clear();
+    stubLocaleFetch();
   });
 
   afterEach(() => {
@@ -14,31 +44,6 @@ describe("i18n runtime loading", () => {
   });
 
   it("loads bundled common resources and HTTP-loaded dashboard resources at runtime", async () => {
-    const requests: string[] = [];
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: RequestInfo | URL) => {
-        const rawUrl = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
-        const url = new URL(rawUrl, "http://darb.test");
-        const match = url.pathname.match(/^\\/locales\\/(ar|en|he)\\/(dashboard)\\.json$/);
-
-        if (!match) {
-          return new Response("Not found", { status: 404 });
-        }
-
-        requests.push(url.pathname);
-
-        const localeFile = path.join(process.cwd(), "public", "locales", match[1], match[2] + ".json");
-        const body = await fs.readFile(localeFile, "utf8");
-
-        return new Response(body, {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }),
-    );
-
     const { default: i18n } = await import("../i18n");
 
     // common is bundled directly in src/i18n.ts, so it must be available
@@ -51,7 +56,10 @@ describe("i18n runtime loading", () => {
     // dashboard is intentionally HTTP-loaded on demand; the test exercises
     // the real namespace JSON files rather than a second in-memory fixture.
     expect(i18n.hasResourceBundle("ar", "dashboard")).toBe(true);
-    expect(requests).toContain("/locales/ar/dashboard.json");
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      "/locales/ar/dashboard.json",
+      expect.anything(),
+    );
 
     await i18n.changeLanguage("en");
     expect(i18n.t("nav.home", { ns: "dashboard" })).toBeTypeOf("string");
