@@ -1046,6 +1046,206 @@ export type Database = {
           },
         ]
       }
+      case_registration_invoices: {
+        Row: {
+          accommodation_id: string | null
+          accommodation_weeks: number | null
+          case_id: string
+          created_at: string
+          currency: string
+          discount_amount: number
+          due_at: string | null
+          email_error: string | null
+          email_sent_at: string | null
+          email_status: string
+          id: string
+          invoice_number: string
+          issued_at: string
+          items: Json
+          locale: string
+          payment_status: string
+          program_id: string | null
+          program_weeks: number
+          public_token: string
+          referral_type: string | null
+          referrer_name: string | null
+          referrer_user_id: string | null
+          school_id: string | null
+          status: string
+          student_email: string
+          student_name: string
+          subtotal: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          accommodation_id?: string | null
+          accommodation_weeks?: number | null
+          case_id: string
+          created_at?: string
+          currency?: string
+          discount_amount?: number
+          due_at?: string | null
+          email_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          items?: Json
+          locale?: string
+          payment_status?: string
+          program_id?: string | null
+          program_weeks: number
+          public_token?: string
+          referral_type?: string | null
+          referrer_name?: string | null
+          referrer_user_id?: string | null
+          school_id?: string | null
+          status?: string
+          student_email: string
+          student_name: string
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          accommodation_id?: string | null
+          accommodation_weeks?: number | null
+          case_id?: string
+          created_at?: string
+          currency?: string
+          discount_amount?: number
+          due_at?: string | null
+          email_error?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          items?: Json
+          locale?: string
+          payment_status?: string
+          program_id?: string | null
+          program_weeks?: number
+          public_token?: string
+          referral_type?: string | null
+          referrer_name?: string | null
+          referrer_user_id?: string | null
+          school_id?: string | null
+          status?: string
+          student_email?: string
+          student_name?: string
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_registration_invoices_accommodation_id_fkey"
+            columns: ["accommodation_id"]
+            isOneToOne: false
+            referencedRelation: "accommodations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_registration_invoices_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_registration_invoices_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_registration_invoices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_registration_payments: {
+        Row: {
+          amount: number
+          bank_reference: string | null
+          case_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          payment_method: string
+          payment_reference: string | null
+          registration_invoice_id: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bank_reference?: string | null
+          case_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_method: string
+          payment_reference?: string | null
+          registration_invoice_id: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_reference?: string | null
+          case_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          payment_reference?: string | null
+          registration_invoice_id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_registration_payments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_registration_payments_registration_invoice_id_fkey"
+            columns: ["registration_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "case_registration_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_service_snapshots: {
         Row: {
           case_id: string
@@ -3874,6 +4074,10 @@ export type Database = {
           id: string
           partner_commission_rate: number
           partner_dashboard_show_all_cases: boolean
+          registration_payment_account_holder: string
+          registration_payment_bank_name: string
+          registration_payment_bic: string
+          registration_payment_iban: string
           student_refer_family_discount: number
           student_refer_family_reward: number
           student_refer_friend_discount: number
@@ -3895,6 +4099,10 @@ export type Database = {
           id?: string
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
+          registration_payment_account_holder?: string
+          registration_payment_bank_name?: string
+          registration_payment_bic?: string
+          registration_payment_iban?: string
           student_refer_family_discount?: number
           student_refer_family_reward?: number
           student_refer_friend_discount?: number
@@ -3916,6 +4124,10 @@ export type Database = {
           id?: string
           partner_commission_rate?: number
           partner_dashboard_show_all_cases?: boolean
+          registration_payment_account_holder?: string
+          registration_payment_bank_name?: string
+          registration_payment_bic?: string
+          registration_payment_iban?: string
           student_refer_family_discount?: number
           student_refer_family_reward?: number
           student_refer_friend_discount?: number
@@ -7045,6 +7257,18 @@ export type Database = {
         Args: { p_appointment_id: string }
         Returns: undefined
       }
+      confirm_registration_card_payment_internal: {
+        Args: {
+          p_invoice_id: string
+          p_stripe_payment_intent_id?: string
+          p_stripe_session_id: string
+        }
+        Returns: Json
+      }
+      confirm_registration_payment: {
+        Args: { p_notes?: string; p_payment_id: string }
+        Returns: Json
+      }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
       create_public_appointment_access: {
         Args: { p_case_id: string; p_token_hash: string }
@@ -7052,6 +7276,14 @@ export type Database = {
       }
       create_public_booking_session: {
         Args: { p_full_name: string; p_phone: string }
+        Returns: Json
+      }
+      create_registration_card_payment_internal: {
+        Args: { p_invoice_id: string }
+        Returns: Json
+      }
+      create_student_referral_registration_internal: {
+        Args: { p_payload: Json; p_referrer_user_id: string }
         Returns: Json
       }
       decline_voice_call: { Args: { p_call_id: string }; Returns: undefined }
@@ -7109,6 +7341,14 @@ export type Database = {
       ensure_student_visa_application: {
         Args: { p_case_id: string }
         Returns: string
+      }
+      fail_registration_card_payment_internal: {
+        Args: {
+          p_invoice_id: string
+          p_reason?: string
+          p_stripe_session_id: string
+        }
+        Returns: Json
       }
       finish_voice_call: {
         Args: { p_actor: string; p_call_id: string; p_end_reason: string }
@@ -7502,6 +7742,14 @@ export type Database = {
       }
       get_payout_request_detail: {
         Args: { p_request_id: string }
+        Returns: Json
+      }
+      get_registration_catalog: {
+        Args: { p_referrer_user_id?: string }
+        Returns: Json
+      }
+      get_registration_invoice_by_token: {
+        Args: { p_public_token: string }
         Returns: Json
       }
       get_school_important_contacts: {
@@ -7903,6 +8151,10 @@ export type Database = {
         Args: { p_error?: string; p_invoice_id: string; p_status: string }
         Returns: undefined
       }
+      mark_registration_invoice_email: {
+        Args: { p_error?: string; p_invoice_id: string; p_status: string }
+        Returns: Json
+      }
       mark_student_visa_arrived: {
         Args: { p_case_id: string }
         Returns: string
@@ -8021,6 +8273,14 @@ export type Database = {
         }[]
       }
       resolve_referral_code: { Args: { p_code: string }; Returns: string }
+      resolve_registration_insurance_monthly_rate: {
+        Args: { p_price_tiers: Json; p_program_weeks: number }
+        Returns: number
+      }
+      resolve_registration_weekly_rate: {
+        Args: { p_base_price: number; p_tiers: Json; p_weeks: number }
+        Returns: number
+      }
       resubmit_case_for_review: {
         Args: { p_case_id: string }
         Returns: undefined
@@ -8176,6 +8436,10 @@ export type Database = {
         }
         Returns: string
       }
+      submit_registration_bank_transfer: {
+        Args: { p_public_token: string }
+        Returns: Json
+      }
       submit_student_visa_application: {
         Args: { p_case_id: string }
         Returns: Json
@@ -8195,6 +8459,15 @@ export type Database = {
       team_can_view_student_role: {
         Args: { _student_user_id: string }
         Returns: boolean
+      }
+      update_registration_payment_settings: {
+        Args: {
+          p_account_holder: string
+          p_bank_name: string
+          p_bic: string
+          p_iban: string
+        }
+        Returns: Json
       }
       validate_chat_attachments: { Args: { _att: Json }; Returns: Json }
       whatsapp_apply_marketing_opt_out: {
