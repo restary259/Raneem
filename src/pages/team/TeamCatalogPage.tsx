@@ -225,14 +225,6 @@ export default function TeamCatalogPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
-      <PageHeader
-        title={t("nav.catalog", "Catalog")}
-        subtitle={t(
-          "catalog.pageDesc",
-          "Browse schools, their courses and accommodation.",
-        )}
-      />
-
       {loading ? (
         <LoadingState variant="cards" rows={6} />
       ) : error ? (
@@ -308,10 +300,6 @@ export default function TeamCatalogPage() {
             <>
               <PageHeader
                 title={countryLabel(activeCountry)}
-                subtitle={t(
-                  "catalog.countrySubtitle",
-                  "Schools, courses and accommodation in this country.",
-                )}
                 actions={
                   <Button variant="ghost" size="sm" onClick={backToCountries}>
                     <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
@@ -359,20 +347,6 @@ export default function TeamCatalogPage() {
           ) : school ? (
             /* ── School detail ── */
             <div className="space-y-5">
-              <PageHeader
-                title={localizedName(school, lang)}
-                subtitle={[
-                  school.city,
-                  school.country,
-                ].filter(Boolean).join(", ")}
-                actions={
-                  <Button variant="ghost" size="sm" onClick={backToSchools}>
-                    <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-                    {t("catalog.backToSchools", "Back")}
-                  </Button>
-                }
-              />
-
               {/* School hero */}
               <Card className="overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-[minmax(0,320px)_1fr] 2xl:grid-cols-[minmax(0,420px)_1fr]">

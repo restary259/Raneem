@@ -61,13 +61,6 @@ export default function TeamMajorIntelPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-6">
-      <header className="text-center">
-        <h1 className="text-2xl font-semibold">{t('intel.title', 'Major Intelligence')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('intel.card.subtitle', 'Search a subject and open its card.')}
-        </p>
-      </header>
-
       {subject ? (
         <MajorCard subject={subject} onBack={() => setSubject(null)} />
       ) : (

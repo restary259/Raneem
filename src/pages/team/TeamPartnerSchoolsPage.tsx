@@ -15,11 +15,6 @@ export default function TeamPartnerSchoolsPage() {
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8">
       <PageHeader
-        title={t("partnerSchools.title", "Partner Schools")}
-        subtitle={t(
-          "partnerSchools.subtitle",
-          "Access partner school information, pricing, accommodation and application details.",
-        )}
         actions={
           <Button asChild variant="outline" size="sm">
             <Link to="/team/catalog">

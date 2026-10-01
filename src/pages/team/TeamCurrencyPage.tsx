@@ -1,14 +1,9 @@
-import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import CurrencyConverter from "@/components/calculator/CurrencyConverter";
 
 const TeamCurrencyPage = () => {
-  const { t } = useTranslation("dashboard");
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t("nav.currency", "Currency converter")}</h1>
-      </div>
       <Card>
         <CardContent className="pt-6">
           <CurrencyConverter />
