@@ -147,7 +147,7 @@ const AdminFinancialsPage = () => {
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">{t("admin.financials.title")}</h1>
+        <h1 className="sr-only">{t("admin.financials.title")}</h1>
       </div>
 
       <Tabs defaultValue="overview">
