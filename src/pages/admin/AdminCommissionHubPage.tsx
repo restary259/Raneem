@@ -568,7 +568,6 @@ const AgentSection: React.FC<{
 const PartnerFamilySection: React.FC<{
   icon: React.ElementType;
   title: string;
-  hint: string;
   accounts: Array<{
     id: string; name: string; email: string;
     override: number | null; global_rate: number;
@@ -790,7 +789,7 @@ const StudentReferralSection: React.FC<{
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Heart className="h-4 w-4 text-primary" />
-          {t("commissionHub.studentReferralTitle", "Student referrals (Refer-a-Friend / Family)")}
+          {t("commissionHub.studentReferralTitle", "Student referrals")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
