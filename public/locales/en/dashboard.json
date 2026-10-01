@@ -297,7 +297,6 @@
   "admin": {
     "commandCenter": {
       "title": "Command Center",
-      "subtitle": "Real-time overview of all activity",
       "activeCases": "Active Cases",
       "submitted": "Submitted",
       "enrolled": "Enrolled",
@@ -485,7 +484,6 @@
     },
     "members": {
       "title": "Team Members",
-      "subtitle": "Manage team members, agents, partners and ambassadors",
       "createMember": "Create Member",
       "searchPlaceholder": "Search by name, email, phone, city…",
       "tabTeam": "Team",
@@ -1492,7 +1490,6 @@
     },
     "inbox": {
       "title": "Inbox",
-      "subtitle": "WhatsApp conversations, applications and staff requests",
       "source": {
         "whatsapp": "WhatsApp",
         "all": "All",
@@ -3794,7 +3791,6 @@
   },
   "sheets": {
     "title": "Spreadsheet Hub",
-    "subtitle": "Live tables of students, payments, payouts, commissions and taxes",
     "exportWorkbook": "Full report (Excel)",
     "exportExcel": "Download Excel",
     "exportPdf": "Download PDF",
@@ -5269,7 +5265,6 @@
   },
   "commissionHub": {
     "title": "Commission Hub",
-    "subtitle": "Single source of truth for every commission relationship",
     "modelBanner": "Agent commissions are ADDITIVE: paid on top of the partner's full pool share, funded from Darb's margin. The partner always keeps their full ₪{{pool}}.",
     "tabOverview": "Overview",
     "tabRates": "Global rates",
@@ -5294,9 +5289,7 @@
     "statusInactive": "Inactive",
     "globalRatesExplainer": "Globals are the live defaults for accounts WITHOUT an override — they apply dynamically at enrollment, so an account with no override follows later rate changes. Accounts with an override are pinned to their own amount.",
     "partnersTitle": "Partners",
-    "partnersHint": "All partners — direct and agent-recruited. Override applies only to that account; ambassadors share the same override table, only their global default differs.",
     "ambassadorsTitle": "Ambassadors",
-    "ambassadorsHint": "All ambassadors — direct and agent-recruited. Their default follows the global ambassador rate.",
     "agentSelfRate": "Self-referral rate",
     "agentAdditiveRate": "Additive rate (per recruit)",
     "simPickPerson": "Simulate for (optional)",
@@ -5327,17 +5320,14 @@
     "rateFamilyDiscount": "Family discount",
     "rateFamilyReward": "Family referrer reward",
     "teamTitle": "Team members",
-    "teamHint": "Override a team member's commission. Leave at default to use the global team rate.",
     "agentsTitle": "Agents & network overrides",
     "search": "Search…",
     "none": "None",
     "default": "default",
     "studentsReferred": "{{count}} students",
-    "agentAdditiveNote": "Agent overrides are additive — paid from Darb's margin, never deducted from the partner's pool.",
     "independentTitle": "Direct partners & ambassadors (no recruiter)",
     "independentHint": "Recruited directly by Admin — no agent.",
-    "studentReferralTitle": "Student referrals (Refer-a-Friend / Family)",
-    "studentReferralHint": "Student→student referrals pay ONLY the referring student, funded from Darb's margin. They never propagate upstream to any agent or partner.",
+    "studentReferralTitle": "Student referrals",
     "perStudentOverrides": "Per-student overrides",
     "saved": "Commission rate updated",
     "studentIdRequired": "Enter a student UUID",
@@ -5347,7 +5337,6 @@
     "migrationHint": "Run the latest SQL migration in Supabase SQL Editor, then click Retry.",
     "tabSimulator": "Simulator",
     "simTitle": "Commission simulator (what-if)",
-    "simHint": "Pure preview — mirrors the additive engine. No data is written. Change the inputs to see how a case's commission split would be computed at enrollment.",
     "simAcqType": "Acquisition type",
     "simAcqPartner": "Partner / Ambassador referral",
     "simAcqAgentSelf": "Agent self-referral",

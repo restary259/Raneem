@@ -198,13 +198,6 @@ const CommissionSimulator: React.FC<Props> = ({ t, fetchSimulationInputs, people
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        <p className="text-xs text-muted-foreground">
-          {t(
-            "commissionHub.simHint",
-            "Pure preview — mirrors the additive engine. No data is written. Change the inputs to see how a case's commission split would be computed at enrollment.",
-          )}
-        </p>
-
         {/* Person picker — rates resolved server-side by the engine's resolvers */}
         <div className="space-y-2">
           <Label className="text-sm">{t("commissionHub.simPickPerson", "Simulate for (optional)")}</Label>

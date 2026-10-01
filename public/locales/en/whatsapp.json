@@ -370,7 +370,6 @@
   },
   "campaigns": {
     "title": "WhatsApp campaigns",
-    "subtitle": "Send marketing campaigns only to contacts who have granted marketing consent.",
     "refresh": "Refresh",
     "createTitle": "Create campaign",
     "createHelp": "Choose an approved marketing template and build an audience from contacts who opted in.",

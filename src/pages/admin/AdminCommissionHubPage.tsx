@@ -100,9 +100,7 @@ const AdminCommissionHubPage: React.FC = () => {
             <DollarSign className="h-6 w-6 text-primary" />
             {t("commissionHub.title", "Commission Hub")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t("commissionHub.subtitle", "Single source of truth for every commission relationship")}
-          </p>
+          
         </div>
         <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
           <RefreshCw className="h-4 w-4 me-2" />
@@ -245,9 +243,6 @@ const AdminCommissionHubPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-xs text-muted-foreground mb-3">
-                {t("commissionHub.teamHint", "Override a team member's commission. Leave at default to use the global team rate.")}
-              </p>
               {teamMembers.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-3">{t("commissionHub.none", "None")}</p>
               ) : (
@@ -287,7 +282,6 @@ const AdminCommissionHubPage: React.FC = () => {
           <PartnerFamilySection
             icon={Users}
             title={t("commissionHub.partnersTitle", "Partners")}
-            hint={t("commissionHub.partnersHint", "All partners — direct and agent-recruited. Override applies only to that account; ambassadors share the same override table, only their global default differs.")}
             accounts={partnerList}
             saving={saving}
             onSetCommission={setCommission}
@@ -302,7 +296,6 @@ const AdminCommissionHubPage: React.FC = () => {
           <PartnerFamilySection
             icon={Users2}
             title={t("commissionHub.ambassadorsTitle", "Ambassadors")}
-            hint={t("commissionHub.ambassadorsHint", "All ambassadors — direct and agent-recruited. Their default follows the global ambassador rate.")}
             accounts={ambassadorList}
             saving={saving}
             onSetCommission={setCommission}
@@ -566,9 +559,6 @@ const AgentSection: React.FC<{
             })}
           </div>
         )}
-        <p className="text-xs text-muted-foreground mt-3">
-          {t("commissionHub.agentAdditiveNote", "Agent overrides are additive — paid from Darb's margin, never deducted from the partner's pool.")}
-        </p>
       </CardContent>
     </Card>
   );
@@ -578,7 +568,6 @@ const AgentSection: React.FC<{
 const PartnerFamilySection: React.FC<{
   icon: React.ElementType;
   title: string;
-  hint: string;
   accounts: Array<{
     id: string; name: string; email: string;
     override: number | null; global_rate: number;
@@ -596,7 +585,7 @@ const PartnerFamilySection: React.FC<{
   onSaved: () => void;
   onError: (m: string) => void;
   t: TFunction<"dashboard">;
-}> = ({ icon: Icon, title, hint, accounts, saving, onSetCommission, onSaved, onError, t }) => {
+}> = ({ icon: Icon, title, accounts, saving, onSetCommission, onSaved, onError, t }) => {
   return (
     <Card>
       <CardHeader>
@@ -606,7 +595,6 @@ const PartnerFamilySection: React.FC<{
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-xs text-muted-foreground mb-3">{hint}</p>
         {accounts.length === 0 ? (
           <p className="text-sm text-muted-foreground py-3">{t("commissionHub.none", "None")}</p>
         ) : (
@@ -801,14 +789,10 @@ const StudentReferralSection: React.FC<{
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Heart className="h-4 w-4 text-primary" />
-          {t("commissionHub.studentReferralTitle", "Student referrals (Refer-a-Friend / Family)")}
+          {t("commissionHub.studentReferralTitle", "Student referrals")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-xs text-muted-foreground">
-          {t("commissionHub.studentReferralHint", "Student→student referrals pay ONLY the referring student, funded from Darb's margin. They never propagate upstream to any agent or partner.")}
-        </p>
-
         <div className="space-y-3">
           {fields.map((f) => {
             const draft = drafts[`global_${f.key}`];
