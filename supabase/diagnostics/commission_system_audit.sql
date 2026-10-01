@@ -27,7 +27,24 @@ ORDER BY p.proname, args;
 SELECT c.id, c.status, c.platform_revenue_ils, c.partner_id, c.referred_by
 FROM cases c
 WHERE c.status = 'enrollment_paid'
+  AND c.source IS DISTINCT FROM 'student_referral_registration'
   AND NOT EXISTS (SELECT 1 FROM rewards r WHERE r.case_id = c.id)
+ORDER BY c.created_at DESC
+LIMIT 50;
+
+\echo '─ A2b: Direct student referrals missing configured rewards ─'
+SELECT c.id, c.case_reference, c.status, c.referred_by, rf.referral_type,
+       public.get_student_referral_reward(c.referred_by, rf.referral_type) AS expected_reward
+FROM cases c
+JOIN referrals rf ON rf.referred_case_id = c.id
+WHERE c.status = 'enrollment_paid'
+  AND c.source = 'student_referral_registration'
+  AND public.get_student_referral_reward(c.referred_by, rf.referral_type) > 0
+  AND NOT EXISTS (
+    SELECT 1 FROM rewards r
+    WHERE r.case_id = c.id
+      AND r.reward_type = 'student_referral'
+  )
 ORDER BY c.created_at DESC
 LIMIT 50;
 
