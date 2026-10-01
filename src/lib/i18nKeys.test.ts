@@ -9,7 +9,8 @@ import { PROFILE_FIELD_LABEL_KEYS } from "./studentProfileFields";
  */
 
 const ROOT = process.cwd();
-const LOCALES = ["ar", "en"] as const;\nconst NAV_LOCALES = ["ar", "en", "he"] as const;
+const LOCALES = ["ar", "en"] as const;
+const NAV_LOCALES = ["ar", "en", "he"] as const;
 
 const TEAM_MAJORS_HEBREW_KEYS = [
   "intel.card.empty",
