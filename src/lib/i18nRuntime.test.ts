@@ -10,7 +10,13 @@ function stubLocaleFetch() {
     vi.fn(async (input: RequestInfo | URL) => {
       const rawUrl = typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
       const url = new URL(rawUrl, "http://darb.test");
-      const match = url.pathname.match(/^\\/locales\\/(ar|en|he)\\/(dashboard)\\.json$/);
+      const parts = url.pathname.split("/");
+      const locale = parts[2];
+      const namespace = parts[3]?.replace(/\.json$/, "");
+
+      if (parts.length !== 4 || parts[1] !== "locales" || !["ar", "en", "he"].includes(locale) || namespace !== "dashboard") {
+        return new Response("Not found", { status: 404 });
+      }
 
       if (!match) {
         return new Response("Not found", { status: 404 });
@@ -18,7 +24,7 @@ function stubLocaleFetch() {
 
       requests.push(url.pathname);
 
-      const localeFile = path.join(process.cwd(), "public", "locales", match[1], match[2] + ".json");
+      const localeFile = path.join(process.cwd(), "public", "locales", locale, namespace + ".json");
       const body = await fs.readFile(localeFile, "utf8");
 
       return new Response(body, {
