@@ -86,10 +86,17 @@ describe("notification category catalog", () => {
       );
     expect(producers.length).toBeGreaterThan(0);
 
-    // The newest definition (by migration order) is the live one.
+    // The newest definition (by migration order) is the live one. Read only the
+    // function body: a migration file can hold other CASE...THEN literals (e.g.
+    // the audit actor_role), which are not notification categories.
     const newest = producers[producers.length - 1];
+    const body =
+      newest.match(
+        /FUNCTION public\.notification_category_for_source[\s\S]*?\$function\$([\s\S]*?)\$function\$/,
+      )?.[1] ?? "";
+    expect(body.length).toBeGreaterThan(0);
     const categories = new Set(
-      [...newest.matchAll(/THEN '([a-z_]+)'/g)].map((m) => m[1]),
+      [...body.matchAll(/THEN '([a-z_]+)'/g)].map((m) => m[1]),
     );
     expect(categories.size).toBeGreaterThan(0);
     for (const category of categories) {

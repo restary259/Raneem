@@ -1870,7 +1870,8 @@
       "disconnectTitle": "Disconnect Google Business Profile?",
       "disconnectBody": "This office will stop showing Google data. The Google profile itself is not changed.",
       "disconnectNote": "Only the DARB link is removed. Your Google Business Profile, reviews and posts stay untouched.",
-      "disconnectConfirm": "Disconnect"
+      "disconnectConfirm": "Disconnect",
+      "operatorInactive": "This operator is no longer an active team member."
     },
     "googleConnection": {
       "title": "Google Business connection",
@@ -2751,6 +2752,47 @@
       "openCase": "Open case",
       "upcoming": "Upcoming",
       "staleDays": "{{days}} days without activity"
+    },
+    "googleBusiness": {
+      "title": "Google Business",
+      "subtitle": "Offices you operate on Google. Primary operators can appoint a side manager.",
+      "loading": "Loading your offices…",
+      "loadError": "Could not load your Google Business offices",
+      "actionFailed": "The action failed",
+      "emptyTitle": "No Google Business offices assigned",
+      "emptyDesc": "You are not a Primary or Side Manager for any office yet. Ask an admin to assign you.",
+      "rolePrimary": "Primary",
+      "roleSide": "Side Manager",
+      "googleLocation": "Google location",
+      "locationUnknown": "Not linked yet",
+      "openMaps": "Open in Google Maps",
+      "connectionStatus": "Connection",
+      "primaryOperator": "Primary operator",
+      "sideManager": "Side manager",
+      "notAssigned": "Not assigned",
+      "manageSideManager": "Side manager",
+      "manageSideManagerDesc": "Appoint or remove the side manager for this office. Only you (the primary) and admins can do this.",
+      "selectMember": "Select a team member",
+      "change": "Save",
+      "addSideManager": "Add side manager",
+      "removeSideManager": "Remove side manager",
+      "sideManagerSaved": "Side manager updated",
+      "sideManagerRemoved": "Side manager removed",
+      "sideReadOnly": "Only the primary operator can change the side manager.",
+      "connection": {
+        "not_connected": "Not connected",
+        "pending": "Pending",
+        "connected": "Connected",
+        "error": "Error",
+        "revoked": "Revoked"
+      },
+      "mapping": {
+        "UNMAPPED": "Not mapped",
+        "PENDING_CONFIRMATION": "Pending confirmation",
+        "MAPPED": "Mapped",
+        "DISCONNECTED": "Disconnected",
+        "MAPPING_ERROR": "Mapping error"
+      }
     }
   },
   "catalog": {
@@ -3028,7 +3070,8 @@
     },
     "languageSelector": "Language selector",
     "darb": "DARB",
-    "user": "User"
+    "user": "User",
+    "googleBusiness": "Google Business"
   },
   "case": {
     "status": {

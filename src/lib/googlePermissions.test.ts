@@ -45,6 +45,7 @@ const OPERATIONAL = [
   "GOOGLE_MANAGE_MEDIA",
   "GOOGLE_MANAGE_POSTS",
   "GOOGLE_VIEW_INSIGHTS",
+  "GOOGLE_MANAGE_SUPPORTED_CONTENT",
 ] as const;
 
 const ADMIN_ONLY = [
@@ -52,6 +53,11 @@ const ADMIN_ONLY = [
   "GOOGLE_CONNECT",
   "GOOGLE_DISCONNECT",
   "GOOGLE_RECONNECT",
+  "GOOGLE_DISCOVER_LOCATIONS",
+  "GOOGLE_VIEW_LOCATION",
+  "GOOGLE_MAP_LOCATION",
+  "GOOGLE_REMAP_LOCATION",
+  "GOOGLE_UNMAP_LOCATION",
 ] as const;
 
 describe("canGoogleOfficeAction", () => {
@@ -67,6 +73,9 @@ describe("canGoogleOfficeAction", () => {
     expect(canGoogleOfficeAction(primary, "GOOGLE_ASSIGN_SIDE_MANAGER")).toBe(
       true,
     );
+    expect(canGoogleOfficeAction(primary, "GOOGLE_REMOVE_SIDE_MANAGER")).toBe(
+      true,
+    );
   });
 
   it("denies PRIMARY the admin-only actions", () => {
@@ -77,10 +86,11 @@ describe("canGoogleOfficeAction", () => {
   it("gives SIDE_MANAGER the operational actions only", () => {
     for (const action of OPERATIONAL)
       expect(canGoogleOfficeAction(side, action), action).toBe(true);
-    expect(canGoogleOfficeAction(side, "GOOGLE_ASSIGN_SIDE_MANAGER")).toBe(
-      false,
-    );
-    for (const action of ADMIN_ONLY)
+    for (const action of [
+      "GOOGLE_ASSIGN_SIDE_MANAGER",
+      "GOOGLE_REMOVE_SIDE_MANAGER",
+      ...ADMIN_ONLY,
+    ] as const)
       expect(canGoogleOfficeAction(side, action), action).toBe(false);
   });
 

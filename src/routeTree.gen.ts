@@ -98,6 +98,7 @@ import { Route as TeamIndexRouteImport } from './routes/team.index'
 import { Route as TeamAnalyticsRouteImport } from './routes/team.analytics'
 import { Route as TeamBagrutRouteImport } from './routes/team.bagrut'
 import { Route as TeamCatalogRouteImport } from './routes/team.catalog'
+import { Route as TeamGoogleRouteImport } from './routes/team.google'
 import { Route as TeamMajorsRouteImport } from './routes/team.majors'
 import { Route as TeamMessagesRouteImport } from './routes/team.messages'
 import { Route as TeamSpreadsheetRouteImport } from './routes/team.spreadsheet'
@@ -570,6 +571,11 @@ const TeamCatalogRoute = TeamCatalogRouteImport.update({
   path: '/catalog',
   getParentRoute: () => TeamRoute,
 } as any)
+const TeamGoogleRoute = TeamGoogleRouteImport.update({
+  id: '/google',
+  path: '/google',
+  getParentRoute: () => TeamRoute,
+} as any)
 const TeamMajorsRoute = TeamMajorsRouteImport.update({
   id: '/majors',
   path: '/majors',
@@ -773,6 +779,7 @@ export interface FileRoutesByFullPath {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
+  '/team/google': typeof TeamGoogleRoute
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -882,6 +889,7 @@ export interface FileRoutesByTo {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
+  '/team/google': typeof TeamGoogleRoute
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -997,6 +1005,7 @@ export interface FileRoutesById {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
+  '/team/google': typeof TeamGoogleRoute
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -1113,6 +1122,7 @@ export interface FileRouteTypes {
     | '/team/analytics'
     | '/team/bagrut'
     | '/team/catalog'
+    | '/team/google'
     | '/team/majors'
     | '/team/messages'
     | '/team/spreadsheet'
@@ -1222,6 +1232,7 @@ export interface FileRouteTypes {
     | '/team/analytics'
     | '/team/bagrut'
     | '/team/catalog'
+    | '/team/google'
     | '/team/majors'
     | '/team/messages'
     | '/team/spreadsheet'
@@ -1336,6 +1347,7 @@ export interface FileRouteTypes {
     | '/team/analytics'
     | '/team/bagrut'
     | '/team/catalog'
+    | '/team/google'
     | '/team/majors'
     | '/team/messages'
     | '/team/spreadsheet'
@@ -2038,6 +2050,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamCatalogRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/team/google': {
+      id: '/team/google'
+      path: '/google'
+      fullPath: '/team/google'
+      preLoaderRoute: typeof TeamGoogleRouteImport
+      parentRoute: typeof TeamRoute
+    }
     '/team/majors': {
       id: '/team/majors'
       path: '/majors'
@@ -2340,6 +2359,7 @@ interface TeamRouteChildren {
   TeamAnalyticsRoute: typeof TeamAnalyticsRoute
   TeamBagrutRoute: typeof TeamBagrutRoute
   TeamCatalogRoute: typeof TeamCatalogRoute
+  TeamGoogleRoute: typeof TeamGoogleRoute
   TeamMajorsRoute: typeof TeamMajorsRoute
   TeamMessagesRoute: typeof TeamMessagesRoute
   TeamSpreadsheetRoute: typeof TeamSpreadsheetRoute
@@ -2363,6 +2383,7 @@ const TeamRouteChildren: TeamRouteChildren = {
   TeamAnalyticsRoute: TeamAnalyticsRoute,
   TeamBagrutRoute: TeamBagrutRoute,
   TeamCatalogRoute: TeamCatalogRoute,
+  TeamGoogleRoute: TeamGoogleRoute,
   TeamMajorsRoute: TeamMajorsRoute,
   TeamMessagesRoute: TeamMessagesRoute,
   TeamSpreadsheetRoute: TeamSpreadsheetRoute,

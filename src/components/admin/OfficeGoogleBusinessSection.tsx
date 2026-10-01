@@ -41,6 +41,7 @@ import {
   assignGoogleSideManager,
   getGoogleBusinessActivity,
   getOfficeGoogleMapping,
+  listOfficeGoogleOperatorCandidates,
   removeGoogleOperator,
 } from "@/lib/googleBusinessApi";
 import {
@@ -57,9 +58,8 @@ import type {
   GoogleConnectionStatus,
   GoogleOperatorRole,
   OfficeGoogleMappingRow,
+  OfficeGoogleOperatorCandidate,
 } from "@/types/googleBusiness";
-
-type TeamMemberOption = { id: string; full_name: string };
 
 /** The office fields used for the suggested-match heuristic. */
 export type OfficeMatchFields = {
@@ -73,8 +73,6 @@ export type OfficeMatchFields = {
 
 type Props = {
   officeId: string;
-  /** Active team members who belong to THIS office only. */
-  eligibleMembers: TeamMemberOption[];
   isAdmin: boolean;
   /** The caller's operator role for this office, if any. */
   operatorRole?: GoogleOperatorRole | null;
@@ -108,7 +106,6 @@ type LocationFilter = "all" | "unmapped" | "mapped";
  */
 export default function OfficeGoogleBusinessSection({
   officeId,
-  eligibleMembers,
   isAdmin,
   operatorRole = null,
   office,
@@ -119,6 +116,9 @@ export default function OfficeGoogleBusinessSection({
 
   const [mapping, setMapping] = useState<OfficeGoogleMappingRow | null>(null);
   const [activity, setActivity] = useState<GoogleBusinessActivityRow[]>([]);
+  const [candidates, setCandidates] = useState<OfficeGoogleOperatorCandidate[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [primaryChoice, setPrimaryChoice] = useState("");
@@ -159,14 +159,23 @@ export default function OfficeGoogleBusinessSection({
     async function () {
       setLoading(true);
       try {
-        const [mappingRes, activityRes] = await Promise.all([
+        const canListCandidates = canGoogleOfficeAction(
+          { isAdmin, isOfficeMember: true, operatorRole },
+          "GOOGLE_ASSIGN_SIDE_MANAGER",
+        );
+        const [mappingRes, activityRes, candidatesRes] = await Promise.all([
           getOfficeGoogleMapping(officeId),
           getGoogleBusinessActivity(officeId, 10),
+          canListCandidates
+            ? listOfficeGoogleOperatorCandidates(officeId)
+            : Promise.resolve({ data: [], error: null }),
         ]);
         if (mappingRes.error) throw mappingRes.error;
         if (activityRes.error) throw activityRes.error;
+        if (candidatesRes.error) throw candidatesRes.error;
         setMapping((mappingRes.data || [])[0] || null);
         setActivity(activityRes.data || []);
+        setCandidates(candidatesRes.data || []);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -177,7 +186,7 @@ export default function OfficeGoogleBusinessSection({
         setLoading(false);
       }
     },
-    [officeId, t, toast],
+    [officeId, isAdmin, operatorRole, t, toast],
   );
 
   useEffect(() => {
@@ -358,8 +367,8 @@ export default function OfficeGoogleBusinessSection({
     );
   }, [selected, office]);
 
-  const sideChoices = eligibleMembers.filter(
-    (member) => member.id !== mapping?.primary_operator_id,
+  const sideChoices = candidates.filter(
+    (member) => member.team_member_id !== mapping?.primary_operator_id,
   );
 
   return (
@@ -561,6 +570,12 @@ export default function OfficeGoogleBusinessSection({
                   <p className="truncate text-sm font-medium">
                     {primaryName || t("admin.googleBusiness.notAssigned")}
                   </p>
+                  {primaryName && mapping?.primary_is_active === false ? (
+                    <p className="flex items-center gap-1.5 text-xs text-destructive">
+                      <AlertTriangle className="size-3.5 shrink-0" />
+                      {t("admin.googleBusiness.operatorInactive")}
+                    </p>
+                  ) : null}
                   {isAdmin ? (
                     <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-[1fr_auto]">
                       <Select
@@ -578,9 +593,12 @@ export default function OfficeGoogleBusinessSection({
                           <SelectItem value="none">
                             {t("admin.googleBusiness.notAssigned")}
                           </SelectItem>
-                          {eligibleMembers.map((member) => (
-                            <SelectItem key={member.id} value={member.id}>
-                              {member.full_name}
+                          {candidates.map((member) => (
+                            <SelectItem
+                              key={member.team_member_id}
+                              value={member.team_member_id}
+                            >
+                              {member.full_name || member.team_member_id}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -619,6 +637,12 @@ export default function OfficeGoogleBusinessSection({
                   <p className="truncate text-sm font-medium">
                     {sideName || t("admin.googleBusiness.notAssigned")}
                   </p>
+                  {sideName && mapping?.side_manager_is_active === false ? (
+                    <p className="flex items-center gap-1.5 text-xs text-destructive">
+                      <AlertTriangle className="size-3.5 shrink-0" />
+                      {t("admin.googleBusiness.operatorInactive")}
+                    </p>
+                  ) : null}
                   {canAssignSide ? (
                     <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-[1fr_auto]">
                       <Select
@@ -637,8 +661,11 @@ export default function OfficeGoogleBusinessSection({
                             {t("admin.googleBusiness.notAssigned")}
                           </SelectItem>
                           {sideChoices.map((member) => (
-                            <SelectItem key={member.id} value={member.id}>
-                              {member.full_name}
+                            <SelectItem
+                              key={member.team_member_id}
+                              value={member.team_member_id}
+                            >
+                              {member.full_name || member.team_member_id}
                             </SelectItem>
                           ))}
                         </SelectContent>

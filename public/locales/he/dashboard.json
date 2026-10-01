@@ -738,6 +738,47 @@
       "openCase": "פתיחת התיק",
       "upcoming": "קרובות",
       "staleDays": "{{days}} ימים ללא פעילות"
+    },
+    "googleBusiness": {
+      "title": "ניהול פרופיל Google Business",
+      "subtitle": "המשרדים שאתה מנהל ב-Google. מפעיל ראשי יכול למנות מנהל משנה.",
+      "loading": "טוען את המשרדים שלך…",
+      "loadError": "לא ניתן לטעון את משרדי Google Business שלך",
+      "actionFailed": "הפעולה נכשלה",
+      "emptyTitle": "לא הוקצו משרדי Google Business",
+      "emptyDesc": "אינך מפעיל ראשי או מנהל משנה של משרד כלשהו עדיין. בקש ממנהל להקצות אותך.",
+      "rolePrimary": "ראשי",
+      "roleSide": "מנהל משנה",
+      "googleLocation": "מיקום Google",
+      "locationUnknown": "טרם מקושר",
+      "openMaps": "פתח ב-Google Maps",
+      "connectionStatus": "חיבור",
+      "primaryOperator": "מפעיל ראשי",
+      "sideManager": "מנהל משנה",
+      "notAssigned": "לא הוקצה",
+      "manageSideManager": "מנהל משנה",
+      "manageSideManagerDesc": "מנה או הסר את מנהל המשנה של משרד זה. רק אתה (המפעיל הראשי) ומנהלים יכולים לעשות זאת.",
+      "selectMember": "בחר חבר צוות",
+      "change": "שמירה",
+      "addSideManager": "הוספת מנהל משנה",
+      "removeSideManager": "הסרת מנהל משנה",
+      "sideManagerSaved": "מנהל המשנה עודכן",
+      "sideManagerRemoved": "מנהל המשנה הוסר",
+      "sideReadOnly": "רק המפעיל הראשי יכול לשנות את מנהל המשנה.",
+      "connection": {
+        "not_connected": "לא מחובר",
+        "pending": "ממתין",
+        "connected": "מחובר",
+        "error": "שגיאה",
+        "revoked": "בוטל"
+      },
+      "mapping": {
+        "UNMAPPED": "לא ממופה",
+        "PENDING_CONFIRMATION": "ממתין לאישור",
+        "MAPPED": "ממופה",
+        "DISCONNECTED": "מנותק",
+        "MAPPING_ERROR": "שגיאת מיפוי"
+      }
     }
   },
   "pushSettings": {
@@ -927,7 +968,8 @@
     },
     "languageSelector": "בחירת שפה",
     "darb": "דארב",
-    "user": "משתמש"
+    "user": "משתמש",
+    "googleBusiness": "Google Business (דארב)"
   },
   "common": {
     "loadMore": "טעינת עוד",
@@ -5848,7 +5890,8 @@
       "disconnectTitle": "לנתק את פרופיל Google Business?",
       "disconnectBody": "משרד זה יפסיק להציג נתוני Google. פרופיל Google עצמו אינו משתנה.",
       "disconnectNote": "רק הקישור לדארב מוסר. פרופיל Google Business, הביקורות והפוסטים נשארים ללא שינוי.",
-      "disconnectConfirm": "נתק"
+      "disconnectConfirm": "נתק",
+      "operatorInactive": "מפעיל זה אינו חבר צוות פעיל עוד."
     },
     "googleConnection": {
       "title": "חיבור Google Business",

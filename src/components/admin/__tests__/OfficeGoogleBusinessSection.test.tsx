@@ -60,9 +60,10 @@ vi.mock("@tanstack/react-start", () => ({
   useServerFn: (fn: unknown) => fn,
 }));
 
+// Server-filtered candidates: only active members of THIS office come back.
 const eligible = [
-  { id: "sarah", full_name: "Sarah Müller" },
-  { id: "omar", full_name: "Omar Hassan" },
+  { team_member_id: "sarah", full_name: "Sarah Müller", operator_role: null },
+  { team_member_id: "omar", full_name: "Omar Hassan", operator_role: null },
 ];
 
 const UNMAPPED_ROW = {
@@ -120,12 +121,7 @@ function renderSection(
   props: Partial<React.ComponentProps<typeof OfficeGoogleBusinessSection>> = {},
 ) {
   return render(
-    <OfficeGoogleBusinessSection
-      officeId="berlin"
-      isAdmin
-      eligibleMembers={eligible}
-      {...props}
-    />,
+    <OfficeGoogleBusinessSection officeId="berlin" isAdmin {...props} />,
   );
 }
 
@@ -158,6 +154,8 @@ describe("OfficeGoogleBusinessSection", () => {
         return { data: [UNMAPPED_ROW], error: null };
       if (fn === "admin_get_google_business_activity")
         return { data: [], error: null };
+      if (fn === "list_office_google_operator_candidates")
+        return { data: eligible, error: null };
       return { data: null, error: null };
     };
   });
@@ -361,6 +359,8 @@ describe("OfficeGoogleBusinessSection", () => {
         return { data: [MAPPED_ROW], error: null };
       if (fn === "admin_get_google_business_activity")
         return { data: [], error: null };
+      if (fn === "list_office_google_operator_candidates")
+        return { data: eligible, error: null };
       return { data: null, error: null };
     };
     renderSection();
@@ -380,6 +380,8 @@ describe("OfficeGoogleBusinessSection", () => {
         return { data: [MAPPED_ROW], error: null };
       if (fn === "admin_get_google_business_activity")
         return { data: [], error: null };
+      if (fn === "list_office_google_operator_candidates")
+        return { data: eligible, error: null };
       return { data: null, error: null };
     };
     renderSection();

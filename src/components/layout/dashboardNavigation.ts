@@ -18,6 +18,7 @@ import {
   Hotel,
   Inbox,
   LayoutDashboard,
+  Link2,
   MapPinned,
   Megaphone,
   MessageSquare,
@@ -161,6 +162,7 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
       { key: "nav.partnerSchools", icon: School, href: "/team/partner-schools", group: "nav.group.work" },
       { key: "nav.majorIntel", icon: GraduationCap, href: "/team/majors", group: "nav.group.work" },
       { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
+      { key: "nav.googleBusiness", icon: Link2, href: "/team/google", group: "nav.group.setup" },
       {
         key: "nav.group.tools",
         icon: Wrench,

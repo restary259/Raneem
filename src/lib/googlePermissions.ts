@@ -14,7 +14,9 @@ export const GOOGLE_ACTIONS = [
   "GOOGLE_MANAGE_MEDIA",
   "GOOGLE_MANAGE_POSTS",
   "GOOGLE_VIEW_INSIGHTS",
+  "GOOGLE_MANAGE_SUPPORTED_CONTENT",
   "GOOGLE_ASSIGN_SIDE_MANAGER",
+  "GOOGLE_REMOVE_SIDE_MANAGER",
   "GOOGLE_CHANGE_PRIMARY",
   "GOOGLE_CONNECT",
   "GOOGLE_DISCONNECT",
@@ -37,7 +39,9 @@ const PRIMARY_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_MANAGE_MEDIA",
   "GOOGLE_MANAGE_POSTS",
   "GOOGLE_VIEW_INSIGHTS",
+  "GOOGLE_MANAGE_SUPPORTED_CONTENT",
   "GOOGLE_ASSIGN_SIDE_MANAGER",
+  "GOOGLE_REMOVE_SIDE_MANAGER",
 ]);
 
 const SIDE_MANAGER_ACTIONS: ReadonlySet<GoogleAction> = new Set([
@@ -47,6 +51,23 @@ const SIDE_MANAGER_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_MANAGE_MEDIA",
   "GOOGLE_MANAGE_POSTS",
   "GOOGLE_VIEW_INSIGHTS",
+  "GOOGLE_MANAGE_SUPPORTED_CONTENT",
+]);
+
+/**
+ * Actions no non-admin operator may ever hold, regardless of role. Mirrors the
+ * server's admin-only branch in `authorize_google_office_action`.
+ */
+const ADMIN_ONLY_ACTIONS: ReadonlySet<GoogleAction> = new Set([
+  "GOOGLE_CHANGE_PRIMARY",
+  "GOOGLE_CONNECT",
+  "GOOGLE_DISCONNECT",
+  "GOOGLE_RECONNECT",
+  "GOOGLE_DISCOVER_LOCATIONS",
+  "GOOGLE_VIEW_LOCATION",
+  "GOOGLE_MAP_LOCATION",
+  "GOOGLE_REMAP_LOCATION",
+  "GOOGLE_UNMAP_LOCATION",
 ]);
 
 export type GoogleActorContext = {
@@ -68,19 +89,7 @@ export function canGoogleOfficeAction(
   if (actor.isAdmin) return true;
   if (!actor.isOfficeMember) return false;
 
-  if (
-    action === "GOOGLE_CHANGE_PRIMARY" ||
-    action === "GOOGLE_CONNECT" ||
-    action === "GOOGLE_DISCONNECT" ||
-    action === "GOOGLE_RECONNECT" ||
-    action === "GOOGLE_DISCOVER_LOCATIONS" ||
-    action === "GOOGLE_VIEW_LOCATION" ||
-    action === "GOOGLE_MAP_LOCATION" ||
-    action === "GOOGLE_REMAP_LOCATION" ||
-    action === "GOOGLE_UNMAP_LOCATION"
-  ) {
-    return false;
-  }
+  if (ADMIN_ONLY_ACTIONS.has(action)) return false;
 
   if (actor.operatorRole === "PRIMARY") return PRIMARY_ACTIONS.has(action);
   if (actor.operatorRole === "SIDE_MANAGER")

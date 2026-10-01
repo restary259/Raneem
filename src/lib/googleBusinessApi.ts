@@ -3,7 +3,9 @@ import type {
   GoogleBusinessActivityRow,
   GoogleBusinessLocationRow,
   GoogleOperatorRole,
+  MyGoogleOfficeRow,
   OfficeGoogleMappingRow,
+  OfficeGoogleOperatorCandidate,
   OfficeGoogleProfileRow,
 } from "@/types/googleBusiness";
 
@@ -75,4 +77,24 @@ export function getOfficeGoogleMapping(officeId: string) {
 /** Admin-only: the cached Google locations, with their DARB mapping state. */
 export function listGoogleBusinessLocations() {
   return rpc<GoogleBusinessLocationRow[]>("admin_list_google_locations");
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Primary + Side Manager delegation
+// ---------------------------------------------------------------------------
+
+/** The offices the signed-in Primary / Side Manager may operate. */
+export function listMyGoogleOffices() {
+  return rpc<MyGoogleOfficeRow[]>("list_my_google_offices");
+}
+
+/**
+ * Server-filtered operator candidates for an office. Only active team members
+ * of that office are returned; the browser never assembles this list itself.
+ */
+export function listOfficeGoogleOperatorCandidates(officeId: string) {
+  return rpc<OfficeGoogleOperatorCandidate[]>(
+    "list_office_google_operator_candidates",
+    { p_office_id: officeId },
+  );
 }

@@ -1888,7 +1888,8 @@
       "disconnectTitle": "فصل ملف جوجل التجاري؟",
       "disconnectBody": "سيتوقف هذا المكتب عن عرض بيانات جوجل. لن يتم تغيير ملف جوجل نفسه.",
       "disconnectNote": "يُزال رابط درب فقط. ملف جوجل التجاري وتقييماته ومنشوراته تبقى دون تغيير.",
-      "disconnectConfirm": "فصل"
+      "disconnectConfirm": "فصل",
+      "operatorInactive": "لم يعد هذا المشغّل عضوًا نشطًا في الفريق."
     },
     "googleConnection": {
       "title": "ربط Google Business",
@@ -2769,6 +2770,47 @@
       "openCase": "فتح الملف",
       "upcoming": "قادم",
       "staleDays": "{{days}} يوم بدون نشاط"
+    },
+    "googleBusiness": {
+      "title": "جوجل للأعمال",
+      "subtitle": "المكاتب التي تديرها على جوجل. يمكن للمشغّل الأساسي تعيين مدير مساعد.",
+      "loading": "جارٍ تحميل مكاتبك…",
+      "loadError": "تعذّر تحميل مكاتب جوجل للأعمال الخاصة بك",
+      "actionFailed": "فشلت العملية",
+      "emptyTitle": "لا توجد مكاتب جوجل للأعمال مُعيّنة",
+      "emptyDesc": "لست مشغّلًا أساسيًا أو مديرًا مساعدًا لأي مكتب بعد. اطلب من المسؤول تعيينك.",
+      "rolePrimary": "أساسي",
+      "roleSide": "مدير مساعد",
+      "googleLocation": "موقع جوجل",
+      "locationUnknown": "غير مرتبط بعد",
+      "openMaps": "افتح في خرائط جوجل",
+      "connectionStatus": "الاتصال",
+      "primaryOperator": "المشغّل الأساسي",
+      "sideManager": "المدير المساعد",
+      "notAssigned": "غير معيّن",
+      "manageSideManager": "المدير المساعد",
+      "manageSideManagerDesc": "عيّن أو أزل المدير المساعد لهذا المكتب. يمكنك أنت (المشغّل الأساسي) والمسؤولون فقط القيام بذلك.",
+      "selectMember": "اختر عضو الفريق",
+      "change": "حفظ",
+      "addSideManager": "إضافة مدير مساعد",
+      "removeSideManager": "إزالة المدير المساعد",
+      "sideManagerSaved": "تم تحديث المدير المساعد",
+      "sideManagerRemoved": "تمت إزالة المدير المساعد",
+      "sideReadOnly": "يمكن للمشغّل الأساسي فقط تغيير المدير المساعد.",
+      "connection": {
+        "not_connected": "غير متصل",
+        "pending": "قيد الانتظار",
+        "connected": "متصل",
+        "error": "خطأ",
+        "revoked": "ملغى"
+      },
+      "mapping": {
+        "UNMAPPED": "غير مرتبط",
+        "PENDING_CONFIRMATION": "بانتظار التأكيد",
+        "MAPPED": "مرتبط",
+        "DISCONNECTED": "غير متصل",
+        "MAPPING_ERROR": "خطأ في الربط"
+      }
     }
   },
   "catalog": {
@@ -3046,7 +3088,8 @@
     },
     "languageSelector": "محدد اللغة",
     "darb": "درب",
-    "user": "المستخدم"
+    "user": "المستخدم",
+    "googleBusiness": "جوجل للأعمال"
   },
   "case": {
     "status": {

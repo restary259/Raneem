@@ -3287,3 +3287,39 @@ verified non-vacuous by reintroducing the defect).
   `دارب` and any Latin `DARB` in `ar` locale values — use `درب` (this also fixed
   a Phase 2 `googleConnection.notLinked` leak).
 
+## Office Google Business delegation (Phase 4, 2026-10-01)
+- Migration `20261001180000_office_google_delegation.sql` adds the delegation
+  surface on top of Phase 1/3: `list_my_google_offices()` (offices the caller
+  operates), `list_office_google_operator_candidates(uuid)` (active same-office
+  members, for the assignment selector), `assign_google_side_manager`,
+  `remove_google_operator`, and the `notify_google_operator_event` trigger.
+- **Operator assignment is RPC-only.** `office_google_operators` has no
+  INSERT/UPDATE/DELETE grant to `authenticated`; only Admin (AAL2) or the office
+  PRIMARY can assign/remove the side manager, and the candidate list is filtered
+  server-side (`is_active_team_member` + `office_members.is_active`) so the UI
+  never assembles the eligible set itself. `get_office_google_mapping` now also
+  returns `primary_is_active` / `side_manager_is_active` for the "⚠ Inactive"
+  warning.
+- The `notify_google_operator_event` trigger notifies the *affected member* (never
+  the actor) on assignment/removal, pointing at `/team/google`. Its
+  `google_business` source buckets to the `system` notification category; the
+  Phase 4 migration redefines `notification_category_for_source` and is newer
+  than Phase 3, so it wins on a fresh deploy.
+- **Test gotcha (fixed):** `notificationCategories.test.ts` read every
+  `THEN '...'` literal in the newest producer migration file. Phase 4's file also
+  contains a non-category `CASE ... THEN 'admin'` (the audit `actor_role`), which
+  false-failed the catalog check. The test now slices out just the
+  `notification_category_for_source` body before matching.
+- **Hebrew brand keys:** `nav.googleBusiness` / `team.googleBusiness.title` use
+  `דארב` (the translated brand), not the Latin `Google Business`, or
+  `hebrewLocaleCoverage.test.ts` fails on the untranslated-English guard.
+- Verification: `/tmp/phase4_verify.sql` (98/98) and
+  `supabase/diagnostics/office_google_phase4_deploy_verify.sql` (50/50) cover the
+  candidate list, operator-active flags, mapping RPC checks, grants, and
+  role/session gates.
+- UI: `TeamGoogleBusinessPage` (`/team/google`, nav `nav.googleBusiness`) lists
+  only the caller's offices from `list_my_google_offices`; a PRIMARY gets the
+  side-manager selector, a SIDE_MANAGER gets a read-only view. The admin
+  `OfficeGoogleBusinessSection` now pulls candidates from the server RPC instead
+  of receiving a client-filtered `eligibleMembers` prop.
+
