@@ -260,7 +260,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
                 </div>
               </PopoverContent>
             </Popover>
-            <Button size="sm" onClick={() => { setExportKind('current'); setExportFormat('xlsx'); void handleExport(); }} disabled={!filteredRows.length || exporting || parentExporting}>
+            <Button size="sm" onClick={() => { setExportKind('current'); setExportFormat('xlsx'); void handleExport(); }} disabled={exporting || parentExporting}>
               <Download className="h-4 w-4 me-1" />
               {t('sheets.exportExcel')}
             </Button>
@@ -318,8 +318,8 @@ const SheetTable: React.FC<SheetTableProps> = ({
                   <p className="text-xs font-medium text-muted-foreground">{t('sheets.exportFormat', 'Format')}</p>
                   <div className="grid grid-cols-2 gap-2">
                     {([
-                      ['xlsx', t('sheets.exportExcel', 'Excel')],
-                      ['pdf', t('sheets.exportPdf', 'PDF')],
+                      ['xlsx', t('sheets.exportFormatExcel', 'Excel (.xlsx)')],
+                      ['pdf', t('sheets.exportFormatPdf', 'PDF (.pdf)')],
                     ] as const).map(([value, label]) => (
                       <button
                         key={value}
@@ -383,7 +383,12 @@ const SheetTable: React.FC<SheetTableProps> = ({
                   </div>
                 )}
 
-                <Button className="w-full" onClick={() => void handleExport()} disabled={exporting || parentExporting || !filteredRows.length || (exportKind === 'current' && (exportColumnsMode === 'visible' ? activeColumns.length === 0 : exportColumns.size === 0))}>
+                <Button className="w-full" onClick={() => void handleExport()} disabled={
+                  exporting ||
+                  parentExporting ||
+                  ((exportKind === 'current' || exportKind === 'schoolPacket') && !filteredRows.length) ||
+                  (exportKind === 'current' && (exportColumnsMode === 'visible' ? activeColumns.length === 0 : exportColumns.size === 0))
+                }>
                   <Download className="h-4 w-4 me-2" />
                   {exporting || parentExporting ? t('sheets.preparing') : t('sheets.export', 'Export')}
                 </Button>
