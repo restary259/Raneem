@@ -20,7 +20,14 @@ type UntypedRpc = <T>(
   fn: string,
   args?: Record<string, unknown>,
 ) => Promise<RpcResponse<T>>;
-const rpc = supabase.rpc as unknown as UntypedRpc;
+// Must stay bound: supabase.rpc reads `this.rest`, so a detached reference
+// throws "undefined is not an object (evaluating 'this.rest')".
+const rpc = ((fn: string, args?: Record<string, unknown>) =>
+  (supabase.rpc as unknown as (this: typeof supabase, f: string, a?: Record<string, unknown>) => unknown).call(
+    supabase,
+    fn,
+    args,
+  )) as unknown as UntypedRpc;
 
 export function listOfficeGoogleProfiles() {
   return rpc<OfficeGoogleProfileRow[]>("list_office_google_profiles");

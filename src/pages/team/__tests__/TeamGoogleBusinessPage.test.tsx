@@ -29,14 +29,18 @@ type RpcResult = { data?: unknown; error?: unknown };
 let rpcImpl: (fn: string, args?: RpcArgs) => RpcResult;
 const rpcCalls: { fn: string; args: RpcArgs }[] = [];
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    rpc: (fn: string, args?: RpcArgs) => {
+vi.mock("@/integrations/supabase/client", () => {
+  // Like the real client, rpc depends on `this` — a detached call must fail.
+  const supabase = {
+    rest: {},
+    rpc(this: { rest?: unknown } | undefined, fn: string, args?: RpcArgs) {
+      if (!this || !this.rest) throw new TypeError("undefined is not an object (evaluating 'this.rest')");
       rpcCalls.push({ fn, args });
       return Promise.resolve(rpcImpl(fn, args));
     },
-  },
-}));
+  };
+  return { supabase };
+});
 
 const PRIMARY_OFFICE = {
   office_id: "berlin",
