@@ -1826,6 +1826,30 @@
         "ADMIN_DISCONNECTED_GOOGLE": "فصل المسؤول حساب جوجل",
         "ADMIN_UPDATED_GOOGLE_CONNECTION": "حدّث المسؤول اتصال جوجل"
       }
+    },
+    "googleConnection": {
+      "title": "ربط Google Business",
+      "checkedAt": "آخر فحص {{time}}",
+      "refresh": "تحديث",
+      "loading": "جارٍ فحص الربط…",
+      "loadError": "تعذّر فحص ربط Google.",
+      "notLinked": "لم يتم ربط Google Business بـ DARB بعد.",
+      "noAccounts": "تم الربط، لكن لا توجد حسابات أعمال ظاهرة لهذا الحساب.",
+      "locationCount_one": "موقع واحد",
+      "locationCount_other": "{{count}} مواقع",
+      "status": {
+        "connected": "متصل",
+        "not_linked": "غير متصل",
+        "error": "خطأ"
+      },
+      "errors": {
+        "unauthorized": "انتهت صلاحية الوصول إلى Google. أعد ربط الحساب.",
+        "forbidden": "رفضت Google الوصول (الواجهة غير معتمدة أو لا صلاحية لهذا الحساب).",
+        "rate_limited": "تحدّ Google من الطلبات. حاول بعد قليل.",
+        "upstream": "أعادت Google خطأ.",
+        "network": "تعذّر الوصول إلى Google.",
+        "not_linked": "Google Business غير متصل."
+      }
     }
   },
   "influencer": {
