@@ -140,6 +140,32 @@ export type OfficeGoogleMappingRow = {
   side_manager_id: string | null;
   side_manager_name: string | null;
   updated_at: string;
+  /** Phase 4: false when the assigned operator is no longer a live team member. */
+  primary_is_active: boolean;
+  side_manager_is_active: boolean;
+};
+
+/** Phase 4: one office a Primary / Side Manager may operate (from list_my_google_offices). */
+export type MyGoogleOfficeRow = {
+  office_id: string;
+  office_name: string | null;
+  operator_role: GoogleOperatorRole;
+  mapping_status: GoogleMappingStatus;
+  connection_status: GoogleConnectionStatus;
+  google_location_name: string | null;
+  google_maps_url: string | null;
+  primary_operator_id: string | null;
+  primary_operator_name: string | null;
+  side_manager_id: string | null;
+  side_manager_name: string | null;
+  updated_at: string | null;
+};
+
+/** Phase 4: a same-office active member eligible for a Google operator role. */
+export type OfficeGoogleOperatorCandidate = {
+  team_member_id: string;
+  full_name: string | null;
+  operator_role: GoogleOperatorRole | null;
 };
 
 /** Derives the sync-health badge from a mapping row. */

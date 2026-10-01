@@ -1,0 +1,339 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  AlertTriangle,
+  Building2,
+  Clock3,
+  ExternalLink,
+  Link2,
+  MapPin,
+  ShieldCheck,
+  UserMinus,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  assignGoogleSideManager,
+  listMyGoogleOffices,
+  listOfficeGoogleOperatorCandidates,
+  removeGoogleOperator,
+} from "@/lib/googleBusinessApi";
+import type {
+  MyGoogleOfficeRow,
+  OfficeGoogleOperatorCandidate,
+} from "@/types/googleBusiness";
+
+function errorMessage(error: unknown): string | undefined {
+  return (error as { message?: string } | null)?.message;
+}
+
+/**
+ * The team-facing Google Business surface (Phase 4).
+ *
+ * An office's Primary may appoint or remove the Side Manager here; a Side
+ * Manager gets a read-only view. Every call goes through the same office-scoped
+ * RPCs the admin surface uses, so a forged client cannot reach another office.
+ * No Google write happens in this phase.
+ */
+export default function TeamGoogleBusinessPage() {
+  const { t } = useTranslation("dashboard");
+  const { toast } = useToast();
+
+  const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await listMyGoogleOffices();
+      if (error) throw error;
+      setOffices(data || []);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: errorMessage(error) || t("team.googleBusiness.loadError"),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [t, toast]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return (
+    <div className="mx-auto w-full max-w-4xl space-y-4 px-4 pt-4 sm:px-6">
+      <header className="space-y-1">
+        <h1 className="flex items-center gap-2 text-2xl font-semibold">
+          <Link2 className="size-5 text-primary" />
+          {t("team.googleBusiness.title")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t("team.googleBusiness.subtitle")}
+        </p>
+      </header>
+
+      {loading ? (
+        <Card className="rounded-2xl border-border shadow-sm">
+          <CardContent className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
+            <Clock3 className="size-4 animate-spin" />
+            {t("team.googleBusiness.loading")}
+          </CardContent>
+        </Card>
+      ) : offices.length === 0 ? (
+        <Card className="rounded-2xl border-border shadow-sm">
+          <CardContent className="space-y-2 py-8 text-center">
+            <ShieldCheck className="mx-auto size-8 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              {t("team.googleBusiness.emptyTitle")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("team.googleBusiness.emptyDesc")}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        offices.map((office) => (
+          <TeamGoogleOfficeCard
+            key={office.office_id}
+            office={office}
+            busy={busy}
+            setBusy={setBusy}
+            onChanged={load}
+          />
+        ))
+      )}
+    </div>
+  );
+}
+
+type CardProps = {
+  office: MyGoogleOfficeRow;
+  busy: boolean;
+  setBusy: (v: boolean) => void;
+  onChanged: () => void | Promise<void>;
+};
+
+function TeamGoogleOfficeCard({ office, busy, setBusy, onChanged }: CardProps) {
+  const { t } = useTranslation("dashboard");
+  const { toast } = useToast();
+
+  const isPrimary = office.operator_role === "PRIMARY";
+  const [candidates, setCandidates] = useState<OfficeGoogleOperatorCandidate[]>(
+    [],
+  );
+  const [choice, setChoice] = useState("");
+
+  const loadCandidates = useCallback(async () => {
+    if (!isPrimary) return;
+    const { data, error } = await listOfficeGoogleOperatorCandidates(
+      office.office_id,
+    );
+    if (!error) setCandidates(data || []);
+  }, [isPrimary, office.office_id]);
+
+  useEffect(() => {
+    loadCandidates();
+  }, [loadCandidates]);
+
+  async function run(
+    action: () => Promise<{ error: unknown }>,
+    successKey: string,
+  ) {
+    setBusy(true);
+    try {
+      const { error } = await action();
+      if (error) throw error;
+      toast({ description: t(successKey) });
+      setChoice("");
+      await onChanged();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description:
+          errorMessage(error) || t("team.googleBusiness.actionFailed"),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const sideChoices = candidates.filter(
+    (c) =>
+      c.operator_role !== "PRIMARY" &&
+      c.team_member_id !== office.side_manager_id,
+  );
+
+  const locationLabel =
+    office.google_location_name || t("team.googleBusiness.locationUnknown");
+
+  return (
+    <Card className="rounded-2xl border-border shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <CardTitle className="flex min-w-0 items-center gap-2 text-lg">
+            <Building2 className="size-4 shrink-0 text-primary" />
+            <span className="truncate">{office.office_name}</span>
+          </CardTitle>
+          <Badge variant={isPrimary ? "default" : "secondary"}>
+            {isPrimary
+              ? t("team.googleBusiness.rolePrimary")
+              : t("team.googleBusiness.roleSide")}
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="min-w-0 space-y-1">
+            <Label className="text-xs text-muted-foreground">
+              {t("team.googleBusiness.googleLocation")}
+            </Label>
+            <p className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
+              <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
+              <span className="truncate">{locationLabel}</span>
+            </p>
+            {office.google_maps_url ? (
+              <a
+                href={office.google_maps_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                <ExternalLink className="size-3" />
+                {t("team.googleBusiness.openMaps")}
+              </a>
+            ) : null}
+          </div>
+
+          <div className="min-w-0 space-y-1">
+            <Label className="text-xs text-muted-foreground">
+              {t("team.googleBusiness.connectionStatus")}
+            </Label>
+            <p className="text-sm font-medium">
+              {t(`team.googleBusiness.connection.${office.connection_status}`, {
+                defaultValue: office.connection_status,
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t(`team.googleBusiness.mapping.${office.mapping_status}`, {
+                defaultValue: office.mapping_status,
+              })}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="min-w-0 space-y-1">
+            <Label className="text-xs text-muted-foreground">
+              {t("team.googleBusiness.primaryOperator")}
+            </Label>
+            <p className="truncate text-sm font-medium">
+              {office.primary_operator_name ||
+                t("team.googleBusiness.notAssigned")}
+            </p>
+          </div>
+          <div className="min-w-0 space-y-1">
+            <Label className="text-xs text-muted-foreground">
+              {t("team.googleBusiness.sideManager")}
+            </Label>
+            <p className="truncate text-sm font-medium">
+              {office.side_manager_name || t("team.googleBusiness.notAssigned")}
+            </p>
+          </div>
+        </div>
+
+        {isPrimary ? (
+          <section className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Users className="size-4 text-primary" />
+              {t("team.googleBusiness.manageSideManager")}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("team.googleBusiness.manageSideManagerDesc")}
+            </p>
+            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-[1fr_auto]">
+              <Select
+                value={choice || "none"}
+                onValueChange={(v) => setChoice(v === "none" ? "" : v)}
+              >
+                <SelectTrigger className="min-w-0">
+                  <SelectValue
+                    placeholder={t("team.googleBusiness.selectMember")}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    {t("team.googleBusiness.notAssigned")}
+                  </SelectItem>
+                  {sideChoices.map((c) => (
+                    <SelectItem key={c.team_member_id} value={c.team_member_id}>
+                      {c.full_name || c.team_member_id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                size="sm"
+                disabled={busy || !choice}
+                onClick={() =>
+                  run(
+                    () => assignGoogleSideManager(office.office_id, choice),
+                    "team.googleBusiness.sideManagerSaved",
+                  )
+                }
+              >
+                {busy ? (
+                  <Clock3 className="me-2 size-4 animate-spin" />
+                ) : (
+                  <UserPlus className="me-2 size-4" />
+                )}
+                {office.side_manager_id
+                  ? t("team.googleBusiness.change")
+                  : t("team.googleBusiness.addSideManager")}
+              </Button>
+            </div>
+            {office.side_manager_id ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() =>
+                  run(
+                    () =>
+                      removeGoogleOperator(office.office_id, "SIDE_MANAGER"),
+                    "team.googleBusiness.sideManagerRemoved",
+                  )
+                }
+              >
+                <UserMinus className="me-2 size-4" />
+                {t("team.googleBusiness.removeSideManager")}
+              </Button>
+            ) : null}
+          </section>
+        ) : (
+          <p className="flex items-start gap-2 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+            {t("team.googleBusiness.sideReadOnly")}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

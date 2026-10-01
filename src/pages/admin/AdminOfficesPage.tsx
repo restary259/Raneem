@@ -451,9 +451,6 @@ export default function AdminOfficesPage() {
                     phone: form.phone,
                     website: form.map_url,
                   }}
-                  eligibleMembers={members
-                    .filter(function (m) { return m.office_id === form.id && m.is_active; })
-                    .map(function (m) { return { id: m.user_id, full_name: memberName(m.user_id) }; })}
                   onChanged={load}
                 />
               </section>
