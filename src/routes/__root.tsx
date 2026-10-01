@@ -150,7 +150,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         },
         {
           httpEquiv: "Content-Security-Policy",
-          content: "upgrade-insecure-requests",
+          // Defense in depth for deployments that do not apply the host-level
+          // header configuration: explicitly forbid executable inline JS here
+          // while preserving the same approved script origins.
+          content:
+            "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com; upgrade-insecure-requests",
         },
         // PWA
         { name: "theme-color", content: "#082B66" },
