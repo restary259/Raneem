@@ -27,6 +27,7 @@ import {
   User,
   Mail,
   Phone,
+  Building2,
   FileText,
   Download,
   Trash2,
