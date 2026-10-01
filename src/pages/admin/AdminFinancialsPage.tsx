@@ -145,7 +145,9 @@ const AdminFinancialsPage = () => {
   const { t } = useTranslation("dashboard");
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto"> <Tabs defaultValue="overview">
+    <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+      <h1 className="sr-only">{t("admin.financials.title")}</h1>
+      <Tabs defaultValue="overview">
         <TabsList className="mb-4">
           <TabsTrigger value="overview" className="gap-2">
             <TrendingUp className="h-4 w-4" />
