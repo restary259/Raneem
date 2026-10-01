@@ -26,9 +26,12 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound, MessageCircle, Phone } from "lucide-react";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound, MessageCircle, Phone, Link2 } from "lucide-react";
 import AgentInviteToggle from "./AgentInviteToggle";
 import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
+import AgentParentToggle from "./AgentParentToggle";
+import ReferralLinkToggle from "./ReferralLinkToggle";
+import ApplyFormToggle from "./ApplyFormToggle";
 import ProfileFeatureToggle from "./ProfileFeatureToggle";
 import VoiceCallsToggle from "./VoiceCallsToggle";
 import ReassignAppointmentsToggle from "./ReassignAppointmentsToggle";
@@ -331,178 +334,231 @@ function MemberDetailPanel({
           <CashDebtsCard teamMemberId={member.requester_id} t={t} onChanged={onChanged} />
         )}
 
-        {/* Team member communication access */}
-        {member.role === "team_member" && (
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("admin.members.sectionAccess", "Access")}
-              </h3>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                    <MessageCircle className="h-4 w-4 text-emerald-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-tight">
-                      {t("admin.members.whatsappInboxTitle", "WhatsApp inbox")}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t("admin.members.whatsappInboxDesc", "Allow this team member to access the shared WhatsApp chat box.")}
-                    </p>
-                  </div>
-                  <ProfileFeatureToggle
-                    userId={member.requester_id}
-                    column="whatsapp_inbox_enabled"
-                    value={whatsappInboxEnabled}
-                    onChanged={setWhatsappInboxEnabled}
-                    enableTitle={t("admin.members.whatsappInboxEnableTitle", "Enable WhatsApp inbox?")}
-                    enableBody={t("admin.members.whatsappInboxEnableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will be able to open the shared WhatsApp inbox and message assigned or unassigned conversations.",
-                    })}
-                    disableTitle={t("admin.members.whatsappInboxDisableTitle", "Disable WhatsApp inbox?")}
-                    disableBody={t("admin.members.whatsappInboxDisableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will no longer see the shared WhatsApp inbox. They can still use the WhatsApp button from a case profile to open that case's attached number.",
-                    })}
-                    enabledToast={t("admin.members.whatsappInboxEnabled", "WhatsApp inbox enabled")}
-                    disabledToast={t("admin.members.whatsappInboxDisabled", "WhatsApp inbox disabled")}
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-tight">
-                      {t("admin.members.internalTeamChatTitle", "Internal team chat")}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t("admin.members.internalTeamChatDesc", "Allow direct chats with other team members.")}
-                    </p>
-                  </div>
-                  <ProfileFeatureToggle
-                    userId={member.requester_id}
-                    column="internal_team_chat_enabled"
-                    value={internalTeamChatEnabled}
-                    onChanged={setInternalTeamChatEnabled}
-                    enableTitle={t("admin.members.internalTeamChatEnableTitle", "Enable internal team chat?")}
-                    enableBody={t("admin.members.internalTeamChatEnableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will be able to start direct chats with other team members. This does not grant manager or admin permissions.",
-                    })}
-                    disableTitle={t("admin.members.internalTeamChatDisableTitle", "Disable internal team chat?")}
-                    disableBody={t("admin.members.internalTeamChatDisableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will no longer be able to start new team-member chats.",
-                    })}
-                    enabledToast={t("admin.members.internalTeamChatEnabled", "Internal team chat enabled")}
-                    disabledToast={t("admin.members.internalTeamChatDisabled", "Internal team chat disabled")}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Voice calls — every role, because a call is gated by "these two
-            people can already message each other", not by role. */}
+        {/* Centralized role permissions & feature access */}
         <Card>
           <CardContent className="p-4">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("admin.members.sectionCommunication", "Communication")}
-            </h3>
-
-            <div className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10">
-                <Phone className="h-4 w-4 text-brand" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium leading-tight">
-                  {t("admin.members.voiceCallsTitle", "Voice calls")}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {t("admin.members.voiceCallsDesc", "Allow voice calls with people they already chat with directly.")}
-                </p>
-              </div>
-              <VoiceCallsToggle
-                userId={member.requester_id}
-                userName={member.full_name}
-                value={voiceCallsEnabled}
-                onChanged={setVoiceCallsEnabled}
-              />
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {t("admin.members.sectionPermissions", "Permissions & Features")}
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("admin.members.sectionPermissionsDesc", "All role-specific access controls for this account are managed here.")}
+              </p>
             </div>
-            {member.role === "team_member" && (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{t("admin.members.reassignSwitch", "Reassign office appointments")}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {t("admin.members.reassignDesc", "Can move appointments to other members of their office.")}
+
+            {agentFlagsError ? (
+              <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                <p className="text-xs text-destructive">
+                  {member.role === "agent"
+                    ? t("admin.agents.flagsLoadError", "Couldn't load this agent's permissions.")
+                    : t("admin.members.flagsLoadError", "Couldn't load this member's permissions.")}
+                </p>
+                <Button variant="outline" size="sm" onClick={onRetryAgentFlags}>
+                  {t("common.retry", "Retry")}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(member.role === "agent" ||
+                  member.role === "social_media_partner" ||
+                  member.role === "ambassador") && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {t("admin.members.permissionGroupGrowth", "Growth & Referrals")}
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 rounded-lg border p-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                          <Link2 className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium leading-tight">{t("admin.features.referralLink", "Referral link")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {t("admin.features.referralLinkHint", "Shows a shareable referral link on the member’s dashboard.")}
+                          </p>
+                        </div>
+                        <ReferralLinkToggle
+                          userId={member.requester_id}
+                          userName={member.full_name}
+                          value={referralEnabled}
+                          onChanged={setReferralEnabled}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3 rounded-lg border p-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10">
+                          <Send className="h-4 w-4 text-brand" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium leading-tight">{t("admin.features.applyForm", "Built-in apply form")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {t("admin.features.applyFormHint", "Adds the Apply page to the member’s dashboard.")}
+                          </p>
+                        </div>
+                        <ApplyFormToggle
+                          userId={member.requester_id}
+                          userName={member.full_name}
+                          value={applyFormEnabled}
+                          onChanged={setApplyFormEnabled}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {member.role === "agent" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {t("admin.members.permissionGroupAgent", "Agent capabilities")}
+                    </p>
+                    {agentFlags === null ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-14 w-full" />
+                        <Skeleton className="h-14 w-full" />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <AgentActionRow
+                          icon={Send}
+                          title={t("admin.agents.inviteRowTitle", "Direct invites")}
+                          description={t("admin.agents.inviteRowDesc", "Send partner/ambassador invites from the agent dashboard")}
+                          control={
+                            <AgentInviteToggle
+                              agentId={member.requester_id}
+                              agentName={member.full_name}
+                              canInvite={agentFlags.invite}
+                              onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, invite: next })}
+                            />
+                          }
+                        />
+                        <AgentActionRow
+                          icon={KeyRound}
+                          title={t("admin.agents.createRowTitle", "Manual account creation")}
+                          description={t("admin.agents.createRowDesc", "Create partner/ambassador accounts with a temp password")}
+                          control={
+                            <AgentCreateAccountsToggle
+                              agentId={member.requester_id}
+                              agentName={member.full_name}
+                              canCreateAccounts={agentFlags.create}
+                              onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, create: next })}
+                            />
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {member.role === "team_member" && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {t("admin.members.permissionGroupWorkspace", "Team workspace")}
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 rounded-lg border p-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
+                          <MessageCircle className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium leading-tight">{t("admin.members.whatsappInboxTitle", "WhatsApp inbox")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {t("admin.members.whatsappInboxDesc", "Allow this team member to access the shared WhatsApp chat box.")}
+                          </p>
+                        </div>
+                        <ProfileFeatureToggle
+                          userId={member.requester_id}
+                          column="whatsapp_inbox_enabled"
+                          value={whatsappInboxEnabled}
+                          onChanged={setWhatsappInboxEnabled}
+                          enableTitle={t("admin.members.whatsappInboxEnableTitle", "Enable WhatsApp inbox?")}
+                          enableBody={t("admin.members.whatsappInboxEnableBody", { name: member.full_name, defaultValue: "{{name}} will be able to open the shared WhatsApp inbox and message assigned or unassigned conversations." })}
+                          disableTitle={t("admin.members.whatsappInboxDisableTitle", "Disable WhatsApp inbox?")}
+                          disableBody={t("admin.members.whatsappInboxDisableBody", { name: member.full_name, defaultValue: "{{name}} will no longer see the shared WhatsApp inbox. They can still use the WhatsApp button from a case profile to open that case's attached number." })}
+                          enabledToast={t("admin.members.whatsappInboxEnabled", "WhatsApp inbox enabled")}
+                          disabledToast={t("admin.members.whatsappInboxDisabled", "WhatsApp inbox disabled")}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3 rounded-lg border p-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                          <Users className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium leading-tight">{t("admin.members.internalTeamChatTitle", "Internal team chat")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {t("admin.members.internalTeamChatDesc", "Allow direct chats with other team members.")}
+                          </p>
+                        </div>
+                        <ProfileFeatureToggle
+                          userId={member.requester_id}
+                          column="internal_team_chat_enabled"
+                          value={internalTeamChatEnabled}
+                          onChanged={setInternalTeamChatEnabled}
+                          enableTitle={t("admin.members.internalTeamChatEnableTitle", "Enable internal team chat?")}
+                          enableBody={t("admin.members.internalTeamChatEnableBody", { name: member.full_name, defaultValue: "{{name}} will be able to start direct chats with other team members. This does not grant manager or admin permissions." })}
+                          disableTitle={t("admin.members.internalTeamChatDisableTitle", "Disable internal team chat?")}
+                          disableBody={t("admin.members.internalTeamChatDisableBody", { name: member.full_name, defaultValue: "{{name}} will no longer be able to start new team-member chats." })}
+                          enabledToast={t("admin.members.internalTeamChatEnabled", "Internal team chat enabled")}
+                          disabledToast={t("admin.members.internalTeamChatDisabled", "Internal team chat disabled")}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3 rounded-lg border p-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium leading-tight">{t("admin.members.reassignSwitch", "Reassign office appointments")}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {t("admin.members.reassignDesc", "Can move appointments to other members of their office.")}
+                          </p>
+                        </div>
+                        <ReassignAppointmentsToggle userId={member.requester_id} userName={member.full_name} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {t("admin.members.permissionGroupCommunication", "Communication")}
                   </p>
+                  <div className="flex items-center gap-3 rounded-lg border p-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10">
+                      <Phone className="h-4 w-4 text-brand" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium leading-tight">{t("admin.members.voiceCallsTitle", "Voice calls")}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {t("admin.members.voiceCallsDesc", "Allow voice calls with people they already chat with directly.")}
+                      </p>
+                    </div>
+                    <VoiceCallsToggle
+                      userId={member.requester_id}
+                      userName={member.full_name}
+                      value={voiceCallsEnabled}
+                      onChanged={setVoiceCallsEnabled}
+                    />
+                  </div>
                 </div>
-                <ReassignAppointmentsToggle userId={member.requester_id} userName={member.full_name} />
+
+                {(member.role === "social_media_partner" || member.role === "ambassador") && (
+                  <div className="flex items-center gap-3 rounded-lg border p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium leading-tight">{t("agent.parentSection", "Agent (recruiter)")}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {t("agent.parentHint", "Assigning an agent only routes a flat override from the partner pool on paid cases. Nothing else changes.")}
+                      </p>
+                    </div>
+                    <AgentParentToggle
+                      recruitId={member.requester_id}
+                      recruitName={member.full_name}
+                      currentAgentId={memberAgentId}
+                      onChanged={(next) => { setMemberAgentId(next); onChanged?.(); }}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
-
-        {/* Role-specific Actions */}
-        {member.role === "agent" && (
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                {t("admin.members.sectionActions", "Actions")}
-              </h3>
-              {agentFlagsError ? (
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                  <p className="text-xs text-destructive">
-                    {t("admin.agents.flagsLoadError", "Couldn't load this agent's permissions.")}
-                  </p>
-                  <Button variant="outline" size="sm" onClick={onRetryAgentFlags}>
-                    {t("common.retry", "Retry")}
-                  </Button>
-                </div>
-              ) : agentFlags === null ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-14 w-full" />
-                  <Skeleton className="h-14 w-full" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <AgentActionRow
-                    icon={Send}
-                    title={t("admin.agents.inviteRowTitle", "Direct invites")}
-                    description={t("admin.agents.inviteRowDesc", "Send partner/ambassador invites from the agent dashboard")}
-                    control={
-                      <AgentInviteToggle
-                        agentId={member.requester_id}
-                        agentName={member.full_name}
-                        canInvite={agentFlags.invite}
-                        onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, invite: next })}
-                      />
-                    }
-                  />
-                  <AgentActionRow
-                    icon={KeyRound}
-                    title={t("admin.agents.createRowTitle", "Manual account creation")}
-                    description={t("admin.agents.createRowDesc", "Create partner/ambassador accounts with a temp password")}
-                    control={
-                      <AgentCreateAccountsToggle
-                        agentId={member.requester_id}
-                        agentName={member.full_name}
-                        canCreateAccounts={agentFlags.create}
-                        onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, create: next })}
-                      />
-                    }
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Meta info */}
         <Card>
@@ -726,24 +782,30 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   const [agentFlags, setAgentFlags] = useState<AgentFlags | null>(null);
   const [agentFlagsError, setAgentFlagsError] = useState(false);
   const [agentFlagsRetry, setAgentFlagsRetry] = useState(0);
+  const [referralEnabled, setReferralEnabled] = useState(false);
+  const [applyFormEnabled, setApplyFormEnabled] = useState(false);
   const [whatsappInboxEnabled, setWhatsappInboxEnabled] = useState(false);
   const [internalTeamChatEnabled, setInternalTeamChatEnabled] = useState(false);
   const [voiceCallsEnabled, setVoiceCallsEnabled] = useState(false);
+  const [reassignAppointmentsEnabled, setReassignAppointmentsEnabled] = useState(false);
+  const [memberAgentId, setMemberAgentId] = useState<string | null>(null);
 
   useEffect(() => {
     setAgentFlags(null);
     setAgentFlagsError(false);
+    setReferralEnabled(false);
+    setApplyFormEnabled(false);
     setWhatsappInboxEnabled(false);
     setInternalTeamChatEnabled(false);
     setVoiceCallsEnabled(false);
+    setReassignAppointmentsEnabled(false);
+    setMemberAgentId(member?.agent_id ?? null);
 
     if (!member?.requester_id) return;
 
     let stale = false;
     const loadProfileFlags = async () => {
-      const select = member.role === "agent"
-        ? "agent_can_invite_directly, agent_can_create_accounts, whatsapp_inbox_enabled, internal_team_chat_enabled, voice_calls_enabled"
-        : "whatsapp_inbox_enabled, internal_team_chat_enabled, voice_calls_enabled";
+      const select = "referral_code_enabled, apply_form_enabled, whatsapp_inbox_enabled, internal_team_chat_enabled, voice_calls_enabled, can_reassign_office_appointments, agent_can_invite_directly, agent_can_create_accounts";
       const { data, error } = await supabase
         .from("profiles")
         .select(select)
@@ -758,9 +820,12 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
         return;
       }
 
+      setReferralEnabled(!!(data as any)?.referral_code_enabled);
+      setApplyFormEnabled(!!(data as any)?.apply_form_enabled);
       setWhatsappInboxEnabled(!!(data as any)?.whatsapp_inbox_enabled);
       setInternalTeamChatEnabled(!!(data as any)?.internal_team_chat_enabled);
       setVoiceCallsEnabled(!!(data as any)?.voice_calls_enabled);
+      setReassignAppointmentsEnabled(!!(data as any)?.can_reassign_office_appointments);
 
       if (member.role === "agent") {
         setAgentFlags({
@@ -795,6 +860,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
 
   useEffect(() => {
     if (member?.requester_id) {
+      setMemberAgentId(member.agent_id ?? null);
       loadBreakdown(member.requester_id);
     } else {
       setBreakdown(null);
