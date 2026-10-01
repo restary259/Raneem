@@ -287,3 +287,156 @@ export function googleReviewerLabel(
   }
   return row.reviewer_display_name;
 }
+
+// ---------------------------------------------------------------------------
+// Phase 6 — profile management
+// ---------------------------------------------------------------------------
+
+export type GoogleChangeRequestField =
+  "ADDRESS" | "PRIMARY_CATEGORY" | "LOCATION_MAPPING";
+
+export type GoogleChangeRequestStatus =
+  "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED" | "FAILED";
+
+/**
+ * Field risk classification. HIGH-risk fields cannot be published directly by a
+ * Primary or Side Manager — they go through an Admin-approved change request.
+ * Mirrors `google_profile_high_risk_fields()` on the server.
+ */
+export type GoogleProfileFieldRisk = "LOW" | "MEDIUM" | "HIGH";
+
+export const GOOGLE_PROFILE_HIGH_RISK_FIELDS: readonly string[] = [
+  "primary_category",
+  "address_line_1",
+  "address_line_2",
+  "postal_code",
+  "city",
+  "region",
+  "country",
+  "latitude",
+  "longitude",
+];
+
+export const GOOGLE_PROFILE_MEDIUM_RISK_FIELDS: readonly string[] = [
+  "regular_hours",
+  "special_hours",
+  "attributes",
+  "additional_categories",
+];
+
+/** Risk of a single field, used to pick confirmation UX and routing. */
+export function googleProfileFieldRisk(field: string): GoogleProfileFieldRisk {
+  if (GOOGLE_PROFILE_HIGH_RISK_FIELDS.includes(field)) return "HIGH";
+  if (GOOGLE_PROFILE_MEDIUM_RISK_FIELDS.includes(field)) return "MEDIUM";
+  return "LOW";
+}
+
+/** True when any field in the change set requires Admin approval. */
+export function googleProfileChangeNeedsApproval(
+  fields: readonly string[],
+): boolean {
+  return fields.some((f) => googleProfileFieldRisk(f) === "HIGH");
+}
+
+/** One row from get_office_google_profile(). */
+export type OfficeGoogleProfileDetailRow = {
+  office_id: string;
+  office_name: string | null;
+  mapping_status: GoogleMappingStatus;
+  connection_status: GoogleConnectionStatus;
+  verification_status: GoogleVerificationStatus;
+  google_account_id: string | null;
+  google_location_id: string | null;
+  google_location_resource_name: string | null;
+  google_location_name: string | null;
+  google_place_id: string | null;
+  google_maps_url: string | null;
+  google_state: string | null;
+  business_name: string | null;
+  business_description: string | null;
+  primary_category: string | null;
+  additional_categories: string[];
+  phone_primary: string | null;
+  phone_additional: string[];
+  website_url: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  postal_code: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  regular_hours: Record<
+    string,
+    { open: string; close: string }[] | null
+  > | null;
+  special_hours: {
+    date: string;
+    closed: boolean;
+    periods?: { open: string; close: string }[];
+  }[];
+  attributes: string[];
+  profile_version: number;
+  profile_updated_at: string | null;
+  profile_last_synced_at: string | null;
+  profile_last_successful_sync_at: string | null;
+  profile_sync_error_code: string | null;
+  profile_sync_error_message: string | null;
+  primary_operator_id: string | null;
+  primary_operator_name: string | null;
+  side_manager_id: string | null;
+  side_manager_name: string | null;
+  pending_change_count: number;
+};
+
+/** One row from list_google_profile_change_requests(). */
+export type GoogleProfileChangeRequestRow = {
+  id: string;
+  office_id: string;
+  field: GoogleChangeRequestField;
+  current_value: Record<string, unknown> | null;
+  requested_value: Record<string, unknown>;
+  status: GoogleChangeRequestStatus;
+  reason: string | null;
+  requested_by: string | null;
+  requested_by_name: string | null;
+  requested_by_role: GoogleOperatorActorRole | null;
+  decided_by: string | null;
+  decided_by_name: string | null;
+  decided_at: string | null;
+  decision_note: string | null;
+  applied_at: string | null;
+  apply_error_code: string | null;
+  apply_error_message: string | null;
+  created_at: string;
+};
+
+/** A single field-level difference shown in the change review. */
+export type GoogleProfileDiffEntry = {
+  field: string;
+  before: string | null;
+  after: string | null;
+};
+
+/** Deterministic profile health — never an invented score. */
+export type GoogleProfileHealth =
+  "Healthy" | "NeedsAttention" | "Disconnected" | "Unavailable";
+
+export function googleProfileHealth(
+  row: Pick<
+    OfficeGoogleProfileDetailRow,
+    | "mapping_status"
+    | "connection_status"
+    | "profile_sync_error_code"
+    | "pending_change_count"
+    | "profile_last_successful_sync_at"
+  > | null,
+): GoogleProfileHealth {
+  if (!row) return "Unavailable";
+  if (row.connection_status !== "connected") return "Disconnected";
+  if (row.mapping_status !== "MAPPED") return "Unavailable";
+  if (row.profile_sync_error_code) return "NeedsAttention";
+  if (row.pending_change_count > 0) return "NeedsAttention";
+  return "Healthy";
+}

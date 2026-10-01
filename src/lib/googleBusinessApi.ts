@@ -9,6 +9,10 @@ import type {
   MyGoogleOfficeRow,
   OfficeGoogleMappingRow,
   OfficeGoogleOperatorCandidate,
+  GoogleChangeRequestField,
+  GoogleChangeRequestStatus,
+  GoogleProfileChangeRequestRow,
+  OfficeGoogleProfileDetailRow,
   OfficeGoogleProfileRow,
   OfficeGoogleReviewDetailRow,
   OfficeGoogleReviewSummaryRow,
@@ -28,11 +32,13 @@ type UntypedRpc = <T>(
 // Must stay bound: supabase.rpc reads `this.rest`, so a detached reference
 // throws "undefined is not an object (evaluating 'this.rest')".
 const rpc = ((fn: string, args?: Record<string, unknown>) =>
-  (supabase.rpc as unknown as (this: typeof supabase, f: string, a?: Record<string, unknown>) => unknown).call(
-    supabase,
-    fn,
-    args,
-  )) as unknown as UntypedRpc;
+  (
+    supabase.rpc as unknown as (
+      this: typeof supabase,
+      f: string,
+      a?: Record<string, unknown>,
+    ) => unknown
+  ).call(supabase, fn, args)) as unknown as UntypedRpc;
 
 export function listOfficeGoogleProfiles() {
   return rpc<OfficeGoogleProfileRow[]>("list_office_google_profiles");
@@ -153,5 +159,68 @@ export function getOfficeGoogleReview(officeId: string, reviewId: string) {
   return rpc<OfficeGoogleReviewDetailRow[]>("get_office_google_review", {
     p_office_id: officeId,
     p_review_id: reviewId,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6 — profile management
+// ---------------------------------------------------------------------------
+
+/** The editable Google profile for one office (admin or an operator of it). */
+export function getOfficeGoogleProfile(officeId: string) {
+  return rpc<OfficeGoogleProfileDetailRow[]>("get_office_google_profile", {
+    p_office_id: officeId,
+  });
+}
+
+/** The change-request queue for an office, newest first, pending on top. */
+export function listGoogleProfileChangeRequests(
+  officeId: string,
+  status?: GoogleChangeRequestStatus | null,
+) {
+  return rpc<GoogleProfileChangeRequestRow[]>(
+    "list_google_profile_change_requests",
+    { p_office_id: officeId, p_status: status ?? null },
+  );
+}
+
+/** Submit a high-risk change for Admin approval (Primary / Side Manager). */
+export function submitGoogleProfileChangeRequest(
+  officeId: string,
+  field: GoogleChangeRequestField,
+  requestedValue: Record<string, unknown>,
+  reason?: string | null,
+) {
+  return rpc<{ id: string; status: string; field: string }[]>(
+    "submit_google_profile_change_request",
+    {
+      p_office_id: officeId,
+      p_field: field,
+      p_requested_value: requestedValue,
+      p_reason: reason ?? null,
+    },
+  );
+}
+
+/** Admin: approve or reject a pending change request. */
+export function decideGoogleProfileChangeRequest(
+  officeId: string,
+  requestId: string,
+  decision: "APPROVED" | "REJECTED",
+  note?: string | null,
+) {
+  return rpc<
+    {
+      id: string;
+      status: string;
+      field: string;
+      requested_value: Record<string, unknown>;
+      profile_version: number;
+    }[]
+  >("decide_google_profile_change_request", {
+    p_office_id: officeId,
+    p_request_id: requestId,
+    p_decision: decision,
+    p_note: note ?? null,
   });
 }
