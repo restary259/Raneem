@@ -13,8 +13,9 @@ export default function TeamPartnerSchoolsPage() {
   const { data, loading, error, refetch } = usePartnerCountries();
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1500px] space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:px-8">
       <PageHeader
+        className="mb-6"
         actions={
           <Button asChild variant="outline" size="sm">
             <Link to="/team/catalog">
@@ -31,7 +32,7 @@ export default function TeamPartnerSchoolsPage() {
         <EmptyState title={t("partnerSchools.noCountries", "No countries recorded yet")} />
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(data?.countries ?? []).map((c) => {
           const count = (data?.schools ?? []).filter((s) => s.country_id === c.id).length;
           return (
@@ -42,10 +43,10 @@ export default function TeamPartnerSchoolsPage() {
                     <span aria-hidden>{c.flag_emoji}</span>
                     <span className="truncate">{lang === "ar" ? c.name_ar : c.name_en}</span>
                   </div>
-                  <p className="mt-1 max-w-prose text-sm leading-6 text-muted-foreground">
+                  <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
                     {lang === "ar" ? c.description_ar : c.description_en}
                   </p>
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Building2 className="h-3.5 w-3.5" />
                     {count} {t("partnerSchools.schools", "schools")}
                   </p>
