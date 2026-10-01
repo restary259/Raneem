@@ -28,13 +28,14 @@ Deno.serve(async (req) => {
     if (authError || !userData.user) return json({ error: "Not authenticated" }, 401, corsHeaders);
 
     const userId = userData.user.id;
-    const { data: roleRow } = await admin
+    // A user can hold several roles; maybeSingle() would error on >1 row.
+    const { data: roleRows, error: roleError } = await admin
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+      .eq("user_id", userId);
+    if (roleError) return json({ error: "Could not verify account role" }, 500, corsHeaders);
 
-    if (roleRow?.role !== "student") {
+    if (!(roleRows ?? []).some((r: { role: string }) => r.role === "student")) {
       return json({ error: "Only students can create referral registrations" }, 403, corsHeaders);
     }
 
