@@ -224,7 +224,7 @@ export default function TeamCatalogPage() {
   const schoolPhotoList = allPhotos(school?.photos);
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="mx-auto w-full max-w-[1500px] space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
       {loading ? (
         <LoadingState variant="cards" rows={6} />
       ) : error ? (
@@ -246,7 +246,7 @@ export default function TeamCatalogPage() {
 
           {/* Country selection is the first step, even when only one country exists. */}
           {!school && activeCountry == null && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {countries.map((c) => {
                   const partnerCountry = (partnerCountryData?.countries ?? []).find(
                     (pc) =>
@@ -275,14 +275,14 @@ export default function TeamCatalogPage() {
                                 : partnerCountry?.name_en || countryLabel(c.country)}
                             </span>
                           </div>
-                          <p className="mt-1 max-w-prose text-sm leading-6 text-muted-foreground">
+                          <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
                             {description ||
                               t(
                                 "catalog.countryCardDesc",
                                 "Schools, courses and accommodation available in this country.",
                               )}
                           </p>
-                          <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Building2 className="h-3.5 w-3.5" />
                             {c.schools.length} {t("partnerSchools.schools", "schools")}
                           </p>
