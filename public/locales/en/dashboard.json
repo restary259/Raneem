@@ -805,7 +805,11 @@
         "finance": "Finance",
         "invoice": "Invoice",
         "documents": "Documents"
-      }
+      },
+      "directRegistration": "Direct Refer & Register",
+      "directRegistrationDesc": "This case was already paid through its registration invoice. Confirm enrollment without creating a second DARB service invoice or applying the ordinary commission split.",
+      "registrationInvoice": "Registration invoice",
+      "registrationTotal": "Registration total"
     },
     "financials": {
       "title": "Financial Dashboard",
@@ -3791,6 +3795,25 @@
   },
   "sheets": {
     "title": "Spreadsheet Hub",
+    "export": "Export",
+    "exportHelp": "Choose the format, scope and columns for your download.",
+    "exportFormat": "Format",
+    "exportFormatExcel": "Excel (.xlsx)",
+    "exportFormatPdf": "PDF (.pdf)",
+    "exportType": "Export type",
+    "exportCurrentView": "Current view",
+    "exportCurrentViewHelp": "Current filters, search and visible rows",
+    "exportFullReport": "Full report",
+    "exportFullReportHelp": "All spreadsheet tabs using current filters",
+    "exportSchoolPacket": "School packet",
+    "exportSchoolPacketHelp": "Student details and costs for schools",
+    "exportColumns": "Columns",
+    "exportVisibleColumns": "Current visible columns",
+    "exportChooseColumns": "Choose columns",
+    "exportNoColumns": "Choose at least one column.",
+    "noMatches": "No rows match your filters or search",
+    "noMatchesHelp": "Try changing your filters or search.",
+    "clearSearch": "Clear search",
     "exportWorkbook": "Full report (Excel)",
     "exportExcel": "Download Excel",
     "exportPdf": "Download PDF",
@@ -3801,7 +3824,7 @@
     "schoolPacketHint": "Student details and costs for schools",
     "pdfFontWarning": "Arabic/Hebrew text could not be embedded in this PDF. Use the Excel export instead.",
     "preparing": "Preparing…",
-    "exportFailed": "Could not create the Excel file",
+    "exportFailed": "Could not create the export file",
     "loadError": "Could not load this sheet",
     "columns": "Columns",
     "refresh": "Refresh",
@@ -5904,7 +5927,8 @@
       "submittedSuccess": "Registration submitted for Admin review.",
       "invoiceMissing": "The direct registration invoice could not be loaded.",
       "transferSubmitted": "Transfer submitted",
-      "paymentFailed": "Payment failed"
+      "paymentFailed": "Payment failed",
+      "openInvoice": "Open registration invoice"
     },
     "education": {
       "bagrut": "Bagrut",

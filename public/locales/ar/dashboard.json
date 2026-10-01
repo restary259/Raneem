@@ -805,7 +805,11 @@
         "finance": "المالية",
         "invoice": "الفاتورة",
         "documents": "المستندات"
-      }
+      },
+      "directRegistration": "إحالة وتسجيل مباشر",
+      "directRegistrationDesc": "تم دفع هذا الملف مسبقاً عبر فاتورة التسجيل. أكّد التسجيل دون إنشاء فاتورة خدمات ثانية من درب أو تطبيق تقسيم العمولة المعتاد.",
+      "registrationInvoice": "فاتورة التسجيل",
+      "registrationTotal": "إجمالي التسجيل"
     },
     "financials": {
       "title": "لوحة المالية",
@@ -3809,6 +3813,25 @@
   },
   "sheets": {
     "title": "مركز الجداول",
+    "export": "تصدير",
+    "exportHelp": "اختر الصيغة والنطاق والأعمدة للملف.",
+    "exportFormat": "الصيغة",
+    "exportFormatExcel": "Excel (.xlsx)",
+    "exportFormatPdf": "PDF (.pdf)",
+    "exportType": "نوع التصدير",
+    "exportCurrentView": "العرض الحالي",
+    "exportCurrentViewHelp": "الفلاتر والبحث والصفوف الظاهرة حالياً",
+    "exportFullReport": "التقرير الكامل",
+    "exportFullReportHelp": "جميع جداول البيانات حسب عوامل التصفية الحالية",
+    "exportSchoolPacket": "ملف المدرسة",
+    "exportSchoolPacketHelp": "بيانات الطالب والتكاليف للمدارس",
+    "exportColumns": "الأعمدة",
+    "exportVisibleColumns": "الأعمدة الظاهرة حالياً",
+    "exportChooseColumns": "اختيار الأعمدة",
+    "exportNoColumns": "اختر عموداً واحداً على الأقل.",
+    "noMatches": "لا توجد صفوف مطابقة للفلاتر أو البحث",
+    "noMatchesHelp": "جرّب تغيير الفلاتر أو البحث.",
+    "clearSearch": "مسح البحث",
     "exportWorkbook": "التقرير الكامل (Excel)",
     "exportExcel": "تنزيل Excel",
     "exportPdf": "تنزيل PDF",
@@ -3819,7 +3842,7 @@
     "schoolPacketHint": "بيانات الطلاب والتكاليف للمدارس",
     "pdfFontWarning": "تعذّر تضمين النص العربي/العبري في ملف PDF. استخدم تصدير Excel بدلاً من ذلك.",
     "preparing": "جارٍ التحضير…",
-    "exportFailed": "تعذّر إنشاء ملف Excel",
+    "exportFailed": "تعذّر إنشاء ملف التصدير",
     "loadError": "تعذّر تحميل هذا الجدول",
     "columns": "الأعمدة",
     "refresh": "تحديث",
@@ -5922,7 +5945,8 @@
       "submittedSuccess": "تم إرسال التسجيل إلى الإدارة للمراجعة.",
       "invoiceMissing": "تعذر تحميل فاتورة التسجيل المباشر.",
       "transferSubmitted": "تم إرسال طلب التحويل",
-      "paymentFailed": "فشل الدفع"
+      "paymentFailed": "فشل الدفع",
+      "openInvoice": "فتح فاتورة التسجيل"
     },
     "education": {
       "bagrut": "بجروت",

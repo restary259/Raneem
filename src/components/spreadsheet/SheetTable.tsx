@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
-import { exportCorporateWorkbook, exportCorporatePdf } from '@/utils/export';
 import { useExportContext } from '@/utils/export/useExportContext';
-import { toExportColumns, toExportRows } from './exportMapping';
+import { buildCurrentViewReport, deliverReport, type ExportFormat } from './spreadsheetExport';
+import SheetExportMenu, { type ExtraExportScope } from './SheetExportMenu';
 import { useToast } from '@/hooks/use-toast';
 
 import { SheetEnumGroup, useSheetLabels } from './sheetLabels';
@@ -38,7 +38,21 @@ export interface SheetTableProps {
   fileName: string;
   /** Extra toolbar controls (filters) */
   toolbar?: React.ReactNode;
+  /**
+   * 'legacy' (default): visible sheet title with Download Excel / Download PDF.
+   * 'menu': no visible title; a single Export menu. The page owns its headings.
+   */
+  variant?: 'legacy' | 'menu';
+  /** Additional export scopes offered by the parent workspace in 'menu' mode. */
+  extraExportScopes?: ExtraExportScope[];
+  /** The parent workspace is preparing an export. */
+  busy?: boolean;
+  /** External filters are owned by the parent; used only for a better empty state. */
+  externalFiltersActive?: boolean;
+  onClearExternalFilters?: () => void;
 }
+
+export type { ExportFormat };
 
 export type ValueTranslator = (group: SheetEnumGroup, value: unknown) => string;
 
@@ -77,6 +91,48 @@ const chipForStatus = (raw: string): string => {
 };
 
 
+interface ToolbarControlsProps {
+  onRefresh?: () => void;
+  refreshing: boolean;
+  columns: SheetColumn[];
+  visible: Set<string>;
+  onToggle: (key: string) => void;
+  children: React.ReactNode;
+}
+
+/** Refresh + column picker + export controls, shared by both layouts. */
+const SheetToolbarControls: React.FC<ToolbarControlsProps> = ({ onRefresh, refreshing, columns, visible, onToggle, children }) => {
+  const { t } = useTranslation('dashboard');
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {onRefresh && (
+        <Button variant="outline" size="sm" onClick={onRefresh} aria-label={t('sheets.refresh')} disabled={refreshing}>
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      )}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Settings2 className="h-4 w-4 me-1" />
+            {t('sheets.columns')}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 max-h-80 overflow-auto" align="end">
+          <div className="space-y-2">
+            {columns.map(c => (
+              <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox checked={visible.has(c.key)} onCheckedChange={() => onToggle(c.key)} />
+                <span>{c.label}</span>
+              </label>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {children}
+    </div>
+  );
+};
+
 const SheetTable: React.FC<SheetTableProps> = ({
   title,
   description,
@@ -86,6 +142,11 @@ const SheetTable: React.FC<SheetTableProps> = ({
   onRefresh,
   fileName,
   toolbar,
+  variant = 'legacy',
+  extraExportScopes,
+  busy = false,
+  externalFiltersActive = false,
+  onClearExternalFilters,
 }) => {
   const { t } = useTranslation('dashboard');
   const { translate } = useSheetLabels();
@@ -95,6 +156,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
   const [visible, setVisible] = useState<Set<string>>(
     () => new Set(columns.filter(c => !c.hidden).map(c => c.key)),
   );
+  const [exporting, setExporting] = useState(false);
 
   const activeColumns = useMemo(
     () => columns.filter(c => visible.has(c.key)),
@@ -127,93 +189,89 @@ const SheetTable: React.FC<SheetTableProps> = ({
       return next;
     });
 
-  /** One report definition drives both the Excel and the PDF download. */
-  const buildReport = () => {
-    const rowsOut = toExportRows(filteredRows, activeColumns, translate);
-    return {
-      fileName,
-      title,
-      subtitle: description,
-      author,
-      locale,
-      rtl,
-      totalLabel: t('sheets.total'),
-      emptyLabel: t('sheets.noRecords', 'No records'),
-      continuedLabel: t('sheets.pdfPart', 'part'),
-      sheets: [
-        {
-          name: title,
-          title,
-          subtitle: description,
-          columns: toExportColumns(activeColumns),
-          rows: rowsOut,
-        },
-      ],
-    };
-  };
-
-  const handleExport = async () => {
-    try {
-      await exportCorporateWorkbook(buildReport());
-    } catch {
-      toast({ variant: 'destructive', description: t('sheets.exportFailed') });
+  /** Export the rows currently shown (search + parent filters) with the chosen columns. */
+  const exportCurrent = async (format: ExportFormat, selected: SheetColumn[] = activeColumns) => {
+    if (!selected.length) {
+      toast({ variant: 'destructive', description: t('sheets.exportNoColumns', 'Choose at least one column.') });
+      return;
     }
-  };
-
-  const handleExportPdf = async () => {
+    setExporting(true);
     try {
-      const { empty, rtlFontMissing } = await exportCorporatePdf(buildReport());
+      const report = buildCurrentViewReport({
+        fileName,
+        title,
+        description,
+        columns: selected,
+        rows: filteredRows,
+        translate,
+        author,
+        locale,
+        rtl,
+        labels: {
+          total: t('sheets.total'),
+          empty: t('sheets.noRecords', 'No records'),
+          continued: t('sheets.pdfPart', 'part'),
+        },
+      });
+      const { empty, rtlFontMissing } = await deliverReport(format, report);
       if (empty) toast({ description: t('sheets.empty') });
       else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
     } catch {
-      toast({ variant: 'destructive', description: t('sheets.exportFailed') });
+      toast({ variant: 'destructive', description: t('sheets.exportFailed', 'Could not create the export file') });
+    } finally {
+      setExporting(false);
     }
   };
 
+  const working = exporting || busy;
+  const noRows = filteredRows.length === 0;
 
-  return (
-    <div className="space-y-3">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h2 className="text-base font-semibold text-foreground">{title}</h2>
-          {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {onRefresh && (
-            <Button variant="outline" size="sm" onClick={onRefresh} aria-label={t('sheets.refresh')}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Settings2 className="h-4 w-4 me-1" />
-                {t('sheets.columns')}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 max-h-80 overflow-auto" align="end">
-              <div className="space-y-2">
-                {columns.map(c => (
-                  <label key={c.key} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox checked={visible.has(c.key)} onCheckedChange={() => toggle(c.key)} />
-                    <span>{c.label}</span>
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Button size="sm" onClick={handleExport} disabled={!filteredRows.length}>
+  const toolbarControls = (
+    <SheetToolbarControls
+      onRefresh={onRefresh}
+      refreshing={variant === 'menu' ? !!loading : false}
+      columns={columns}
+      visible={visible}
+      onToggle={toggle}
+    >
+      {variant === 'menu' ? (
+        <SheetExportMenu
+          columns={columns}
+          visibleColumns={activeColumns}
+          rowCount={filteredRows.length}
+          busy={working}
+          extraScopes={extraExportScopes}
+          onExportCurrent={exportCurrent}
+        />
+      ) : (
+        <>
+          {/* Legacy behaviour: both downloads are disabled when no rows are shown. */}
+          <Button size="sm" onClick={() => void exportCurrent('xlsx')} disabled={noRows || working}>
             <Download className="h-4 w-4 me-1" />
             {t('sheets.exportExcel')}
           </Button>
-          <Button size="sm" variant="outline" onClick={handleExportPdf} disabled={!filteredRows.length}>
+          <Button size="sm" variant="outline" onClick={() => void exportCurrent('pdf')} disabled={noRows || working}>
             <FileText className="h-4 w-4 me-1" />
             {t('sheets.exportPdf')}
           </Button>
+        </>
+      )}
+    </SheetToolbarControls>
+  );
 
+  return (
+    <section className="space-y-3" aria-label={variant === 'menu' ? title : undefined}>
+      {variant === 'legacy' ? (
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">{title}</h2>
+            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+          </div>
+          {toolbarControls}
         </div>
-      </div>
-
+      ) : (
+        <div className="flex items-center justify-end">{toolbarControls}</div>
+      )}
       <div className="flex items-center gap-3 flex-wrap p-3 rounded-lg bg-muted/40 border border-border">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -234,9 +292,30 @@ const SheetTable: React.FC<SheetTableProps> = ({
         {loading ? (
           <div className="p-12 text-center text-sm text-muted-foreground">{t('sheets.loading')}</div>
         ) : filteredRows.length === 0 ? (
-          <div className="p-12 text-center">
-            <FileText className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">{t('sheets.empty')}</p>
+          <div className="flex min-h-[160px] flex-col items-center justify-center p-8 text-center">
+            <FileText className="h-8 w-8 text-muted-foreground/30 mb-2" />
+            <p className="text-sm font-medium text-foreground">
+              {search.trim() || externalFiltersActive ? t('sheets.noMatches', 'No rows match your filters or search') : t('sheets.empty')}
+            </p>
+            {(search.trim() || externalFiltersActive) && (
+              <>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('sheets.noMatchesHelp', 'Try changing your filters or search.')}
+                </p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  {search.trim() && (
+                    <Button variant="ghost" size="sm" onClick={() => setSearch('')}>
+                      {t('sheets.clearSearch', 'Clear search')}
+                    </Button>
+                  )}
+                  {externalFiltersActive && onClearExternalFilters && (
+                    <Button variant="ghost" size="sm" onClick={onClearExternalFilters}>
+                      {t('sheets.clearFilters')}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -287,7 +366,7 @@ const SheetTable: React.FC<SheetTableProps> = ({
           </table>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

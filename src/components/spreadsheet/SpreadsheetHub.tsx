@@ -10,7 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
 import { useSheetLabels } from './sheetLabels';
-import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from '@/utils/export';
+import type { CorporateReport } from '@/utils/export';
+import { deliverReport, type ExportFormat } from './spreadsheetExport';
+import type { ExtraExportScope } from './SheetExportMenu';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { toExportColumns, toExportRows } from './exportMapping';
 import {
@@ -275,15 +277,8 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
   const filtersActive = schoolFilter !== 'all' || monthFilter !== 'all';
 
 
-  type ExportFormat = 'xlsx' | 'pdf';
-
-  /**
-   * One report definition, two file formats — the PDF and the workbook always
-   * carry identical sheets, columns and rows.
-   */
   const deliver = async (format: ExportFormat, report: CorporateReport) => {
-    if (format === 'xlsx') return exportCorporateWorkbook(report);
-    const { empty, rtlFontMissing } = await exportCorporatePdf(report);
+    const { empty, rtlFontMissing } = await deliverReport(format, report);
     if (empty) toast({ description: t('sheets.empty') });
     else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
   };
@@ -314,7 +309,6 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       const cover = {
         name: t('sheets.cover', 'Contents'),
         title: t('sheets.title'),
-        subtitle: t('sheets.subtitle'),
         columns: [
           { header: t('sheets.coverSheet', 'Report'), type: 'text' as const },
           { header: t('sheets.coverRecords', 'Records'), type: 'number' as const },
@@ -330,7 +324,6 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       await deliver(format, {
         fileName: `DARB-${scope}-report-${new Date().toISOString().slice(0, 10)}`,
         title: t('sheets.title'),
-        subtitle: t('sheets.subtitle'),
         author,
         locale,
         rtl,
@@ -411,37 +404,61 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
     }
   };
 
+  /** Workspace-level exports offered inside the Admin export menu. */
+  const adminScopes = (sheetKey: string): ExtraExportScope[] => [
+    {
+      value: 'full',
+      label: t('sheets.exportFullReport', 'Full report'),
+      help: t('sheets.exportFullReportHelp', 'All spreadsheet tabs using current filters'),
+      run: exportAll,
+    },
+    ...(sheetKey === 'students'
+      ? [{
+          value: 'schoolPacket',
+          label: t('sheets.exportSchoolPacket', 'School packet'),
+          help: t('sheets.exportSchoolPacketHelp', 'Student details and costs for schools'),
+          requiresRows: true,
+          run: exportSchoolPacket,
+        }]
+      : []),
+  ];
+
   return (
     <div className="p-4 sm:p-6 space-y-4 max-w-full">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className={scope === 'admin' ? "sr-only" : "text-xl font-bold text-foreground"}>{t('sheets.title')}</h1>
+      {/* The page's single h1. Admin hides it visually: the sidebar already names the page. */}
+      {scope === 'admin' && <h1 className="sr-only">{t('sheets.title')}</h1>}
+      {scope === 'team' && (
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">{t('sheets.title')}</h1>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {active === 'students' && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
+                  <Download className="h-4 w-4 me-1" />
+                  {t('sheets.schoolPacketExcel', 'School packet (Excel)')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
+                  <FileText className="h-4 w-4 me-1" />
+                  {t('sheets.schoolPacketPdf', 'School packet (PDF)')}
+                </Button>
+              </>
+            )}
+            <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
+              <Download className="h-4 w-4 me-1" />
+              {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
+              <FileText className="h-4 w-4 me-1" />
+              {exporting ? t('sheets.preparing') : t('sheets.exportPdfWorkbook')}
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {active === 'students' && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
-                <Download className="h-4 w-4 me-1" />
-                {t('sheets.schoolPacketExcel', 'School packet (Excel)')}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
-                <FileText className="h-4 w-4 me-1" />
-                {t('sheets.schoolPacketPdf', 'School packet (PDF)')}
-              </Button>
-            </>
-          )}
-          <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
-            <Download className="h-4 w-4 me-1" />
-            {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
-            <FileText className="h-4 w-4 me-1" />
-            {exporting ? t('sheets.preparing') : t('sheets.exportPdfWorkbook')}
-          </Button>
-        </div>
-      </div>
+      )}
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
         <Select value={schoolFilter} onValueChange={setSchoolFilter}>
           <SelectTrigger className="h-9 w-[200px]" aria-label={t('sheets.filterSchool', 'School')}>
             <SelectValue placeholder={t('sheets.filterSchool', 'School')} />
@@ -480,6 +497,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
             {t('sheets.clearFilters', 'Clear filters')}
           </Button>
         )}
+        </div>
       </div>
 
       <Tabs value={active} onValueChange={setActive}>
@@ -495,6 +513,14 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
               loading={!!loading[s.key]}
               onRefresh={() => loadSheet(s)}
               fileName={`DARB-${s.key}-${new Date().toISOString().slice(0, 10)}`}
+              variant={scope === 'admin' ? 'menu' : 'legacy'}
+              extraExportScopes={scope === 'admin' ? adminScopes(s.key) : undefined}
+              busy={exporting}
+              externalFiltersActive={filtersActive}
+              onClearExternalFilters={() => {
+                setSchoolFilter('all');
+                setMonthFilter('all');
+              }}
             />
           </TabsContent>
         ))}
