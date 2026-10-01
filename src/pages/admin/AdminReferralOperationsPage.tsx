@@ -19,6 +19,7 @@ interface RegistrationRecord {
   case: any;
   payment: any | null;
   referral: any | null;
+  rewards: any[];
 }
 
 const statusLabel: Record<string, string> = {
