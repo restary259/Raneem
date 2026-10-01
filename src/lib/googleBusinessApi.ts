@@ -2,11 +2,16 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   GoogleBusinessActivityRow,
   GoogleBusinessLocationRow,
+  GoogleBusinessReviewListRow,
   GoogleOperatorRole,
+  GoogleReviewFilter,
+  GoogleReviewSort,
   MyGoogleOfficeRow,
   OfficeGoogleMappingRow,
   OfficeGoogleOperatorCandidate,
   OfficeGoogleProfileRow,
+  OfficeGoogleReviewDetailRow,
+  OfficeGoogleReviewSummaryRow,
 } from "@/types/googleBusiness";
 
 type RpcError = { message?: string } | null;
@@ -104,4 +109,49 @@ export function listOfficeGoogleOperatorCandidates(officeId: string) {
     "list_office_google_operator_candidates",
     { p_office_id: officeId },
   );
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5 — reviews
+// ---------------------------------------------------------------------------
+
+export interface ListReviewsParams {
+  officeId: string;
+  limit?: number;
+  offset?: number;
+  rating?: number | null;
+  status?: GoogleReviewFilter;
+  search?: string | null;
+  sort?: GoogleReviewSort;
+  includeHidden?: boolean;
+}
+
+/** Paginated, server-filtered review list. Filtering never happens in React. */
+export function listOfficeGoogleReviews(params: ListReviewsParams) {
+  return rpc<GoogleBusinessReviewListRow[]>("list_office_google_reviews", {
+    p_office_id: params.officeId,
+    p_limit: params.limit ?? 20,
+    p_offset: params.offset ?? 0,
+    p_rating: params.rating ?? null,
+    p_status: params.status ?? "all",
+    p_search: params.search?.trim() || null,
+    p_sort: params.sort ?? "recent",
+    p_include_hidden: params.includeHidden ?? false,
+  });
+}
+
+/** Authoritative rating summary (Google's numbers + the cached histogram). */
+export function getOfficeGoogleReviewSummary(officeId: string) {
+  return rpc<OfficeGoogleReviewSummaryRow[]>(
+    "get_office_google_review_summary",
+    { p_office_id: officeId },
+  );
+}
+
+/** One review plus its DARB activity trail (for the detail drawer). */
+export function getOfficeGoogleReview(officeId: string, reviewId: string) {
+  return rpc<OfficeGoogleReviewDetailRow[]>("get_office_google_review", {
+    p_office_id: officeId,
+    p_review_id: reviewId,
+  });
 }

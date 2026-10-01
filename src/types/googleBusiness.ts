@@ -190,3 +190,100 @@ export function googleSyncHealth(
     return "Unavailable";
   return "Stale";
 }
+
+// ---------------------------------------------------------------------------
+// Phase 5 — reviews
+// ---------------------------------------------------------------------------
+
+/**
+ * DARB's own review lifecycle. Kept separate from Google's raw replyState so a
+ * change in Google's enum cannot silently redefine the product state.
+ */
+export type GoogleReviewReplyStatus =
+  "UNANSWERED" | "ANSWERED" | "REPLY_PENDING" | "REPLY_REJECTED" | "SYNC_ERROR";
+
+/** A review Google stopped returning is marked, never deleted. */
+export type GoogleReviewVisibility =
+  "ACTIVE" | "NOT_FOUND" | "REMOVED" | "STALE";
+
+export type GoogleReviewFilter =
+  "all" | "unanswered" | "replied" | "pending" | "rejected";
+
+export type GoogleReviewSort =
+  "recent" | "oldest" | "rating_desc" | "rating_asc";
+
+/** One row from list_office_google_reviews(). */
+export type GoogleBusinessReviewListRow = {
+  id: string;
+  office_id: string;
+  google_review_id: string;
+  google_location_id: string;
+  reviewer_display_name: string | null;
+  reviewer_profile_photo_url: string | null;
+  reviewer_is_anonymous: boolean;
+  star_rating: number;
+  comment: string | null;
+  review_create_time: string | null;
+  review_update_time: string | null;
+  reply_comment: string | null;
+  reply_update_time: string | null;
+  reply_state: string | null;
+  reply_policy_violation: string | null;
+  darb_reply_status: GoogleReviewReplyStatus;
+  visibility_state: GoogleReviewVisibility;
+  google_review_url: string | null;
+  last_synced_at: string | null;
+  /** Filtered total (not the page size). */
+  total_count: number;
+};
+
+/** One row from get_office_google_review_summary(). */
+export type OfficeGoogleReviewSummaryRow = {
+  office_id: string;
+  average_rating: number | null;
+  total_count: number | null;
+  cached_count: number;
+  unanswered_count: number;
+  rating_1: number;
+  rating_2: number;
+  rating_3: number;
+  rating_4: number;
+  rating_5: number;
+  review_last_synced_at: string | null;
+  review_last_successful_sync_at: string | null;
+  review_sync_error_code: string | null;
+  review_sync_error_message: string | null;
+  mapping_status: GoogleMappingStatus;
+  connection_status: GoogleConnectionStatus;
+  verification_status: GoogleVerificationStatus;
+  google_location_name: string | null;
+  google_maps_url: string | null;
+};
+
+/** A compact DARB activity entry shown in the review detail drawer. */
+export type GoogleReviewActivityEntry = {
+  action: string;
+  actor_role: GoogleOperatorActorRole;
+  actor_user_id: string | null;
+  actor_name: string | null;
+  created_at: string;
+};
+
+/** One row from get_office_google_review(). */
+export type OfficeGoogleReviewDetailRow = GoogleBusinessReviewListRow & {
+  activity: GoogleReviewActivityEntry[];
+};
+
+/** The reviewer label, honouring Google's anonymous flag without inventing a name. */
+export function googleReviewerLabel(
+  row: Pick<
+    GoogleBusinessReviewListRow,
+    "reviewer_display_name" | "reviewer_is_anonymous"
+  >,
+  anonymousLabel: string,
+): string {
+  if (row.reviewer_is_anonymous || !row.reviewer_display_name) {
+    return anonymousLabel;
+  }
+  return row.reviewer_display_name;
+}
