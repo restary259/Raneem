@@ -12,269 +12,58 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import NotificationBell from "@/components/common/NotificationBell";
-import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import NotificationOnboardingDialog from "@/components/notifications/NotificationOnboardingDialog";
 import TabErrorBoundary from "@/components/common/TabErrorBoundary";
-import LanguageSwitcher from "@/components/common/LanguageSwitcher";
-import ThemePicker from "@/components/common/ThemePicker";
-import StudentDashboardHeader from "@/components/student/StudentDashboardHeader";
 import StudentSidebarFooter from "@/components/student/StudentSidebarFooter";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useAppBadge } from "@/hooks/useAppBadge";
 import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
 import { filterApplyNavItem } from "@/lib/partnerNav";
-
 import {
-  LayoutDashboard,
-  GitBranch,
-  Users,
-  BookOpen,
-  FileCheck,
-  DollarSign,
-  BarChart2,
-  Activity,
-  Inbox,
-  MessageSquare,
-  Megaphone,
-
-  Settings,
-  CalendarDays,
-  ClipboardList,
-  UserPlus,
-  GraduationCap,
-  TrendingUp,
-  ListChecks,
-  User,
-  FileText,
-  Globe,
-  Heart,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Home,
-  Table,
-  Calculator,
-  Sparkles,
-  ShieldCheck,
-  Receipt,
-  Wrench,
-  ClipboardEdit,
-  Building2,
-  Hotel,
-  School,
-  MapPinned,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
+  getDashboardNav,
+  matchesDashboardNavPath,
+  type DashboardNavItem,
+} from "@/components/layout/dashboardNavigation";
+import DashboardHeader from "@/components/layout/DashboardHeader";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-interface NavItem {
-  key: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-  /** i18n key of the sidebar group heading this item belongs to */
-  group?: string;
-  /** When present, this item renders as an expandable parent whose children
-   *  live under it (collapsible). `href` is ignored for parents. */
-  children?: NavItem[];
-}
-
-/**
- * Shared partner/ambassador sidebar items. Both roles are functionally
- * identical — each gets the referral link AND the built-in apply form, each
- * gated by an admin per-profile toggle (`referral_code_enabled` /
- * `apply_form_enabled`). The Apply entry is shared here and filtered out at
- * render time in `SidebarNav` when the member's flag is off. Declared as
- * consts so the per-role arrays can still diverge without duplicating the
- * common entries.
- */
-const PARTNER_BASE_NAV: NavItem[] = [
-  { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
-  { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
-  { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
-  { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings" },
-  { key: "nav.account", icon: User, href: "/partner/profile" },
-];
-
-const PARTNER_APPLY_NAV_ITEM: NavItem = {
-  key: "nav.apply",
-  icon: ClipboardEdit,
-  href: "/partner/apply",
-  group: "nav.group.work",
-};
-
-/**
- * Sidebar destinations per role.
- *
- * Sibling pages over the same dataset were merged into tabbed hubs (see
- * `TabHub`), so each role's sidebar lists destinations rather than views:
- * Admin 13 → 9, Team 8 → 5 (+ Tools), Agent 10 → 6. The removed routes still
- * exist and redirect into their hub tab, so bookmarks keep working.
- */
-const NAV_CONFIG: Record<AppRole, NavItem[]> = {
-  admin: [
-    { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.comms" },
-    { key: "nav.whatsappCampaigns", icon: Megaphone, href: "/admin/whatsapp-campaigns", group: "nav.group.comms" },
-    { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
-    // Pipeline hub: board + submissions review.
-    { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
-    { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
-
-    // Money hub: financials + spreadsheet + analytics.
-    { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
-    { key: "nav.commission", icon: DollarSign, href: "/admin/commission", group: "nav.group.money" },
-    { key: "nav.team", icon: Users, href: "/admin/members", group: "nav.group.people" },
-    { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
-    {
-      key: "nav.group.setup",
-      icon: Settings,
-      href: "",
-      children: [
-        { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },
-        { key: "nav.offices", icon: Building2, href: "/admin/offices" },
-        { key: "nav.activity", icon: Activity, href: "/admin/activity" },
-        { key: "nav.settings", icon: Settings, href: "/admin/settings" },
-      ],
-    },
-  ],
-  team_member: [
-    { key: "nav.staffInbox", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
-
-    { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
-    // Cases hub: active cases + student accounts. "Submit new student" is an
-    // action inside that page, not a separate destination.
-    { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
-    { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
-    { key: "nav.catalog", icon: Hotel, href: "/team/catalog", group: "nav.group.work" },
-    { key: "nav.partnerSchools", icon: School, href: "/team/partner-schools", group: "nav.group.work" },
-    { key: "nav.majorIntel", icon: GraduationCap, href: "/team/majors", group: "nav.group.work" },
-
-    // Reports hub: analytics + spreadsheet.
-    { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
-
-    {
-      key: "nav.group.tools",
-      icon: Wrench,
-      href: "",
-      children: [
-        { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
-        { key: "nav.cvBuilder", icon: FileText, href: "/team/tools/cv" },
-        { key: "nav.currency", icon: DollarSign, href: "/team/tools/currency" },
-      ],
-    },
-  ],
-
-  social_media_partner: [...PARTNER_BASE_NAV, PARTNER_APPLY_NAV_ITEM],
-  ambassador: [...PARTNER_BASE_NAV, PARTNER_APPLY_NAV_ITEM],
-  agent: [
-    { key: "nav.overview", icon: LayoutDashboard, href: "/agent", group: "nav.group.work" },
-    // Network hub: network + recruit + performance.
-    { key: "nav.network", icon: Users, href: "/agent/network", group: "nav.group.work" },
-    { key: "nav.students", icon: GraduationCap, href: "/agent/students", group: "nav.group.work" },
-    { key: "nav.apply", icon: ClipboardEdit, href: "/agent/apply", group: "nav.group.work" },
-    // Money hub: earnings + bank details.
-    { key: "nav.earnings", icon: TrendingUp, href: "/agent/earnings", group: "nav.group.money" },
-    { key: "nav.messages", icon: MessageSquare, href: "/agent/messages", group: "nav.group.comms" },
-    { key: "nav.account", icon: User, href: "/agent/profile", group: "nav.group.account" },
-  ],
-
-  student: [
-    { key: "nav.home", icon: Home, href: "/student" },
-    { key: "nav.cityGuide", icon: MapPinned, href: "/student/city-guide" },
-    {
-      key: "nav.group.studyFile",
-      icon: BookOpen,
-      href: "",
-      children: [
-        { key: "nav.checklist", icon: ListChecks, href: "/student/checklist" },
-        { key: "nav.documents", icon: FileText, href: "/student/documents" },
-        { key: "nav.visa", icon: Globe, href: "/student/visa" },
-        { key: "nav.fees", icon: Receipt, href: "/student/fees" },
-      ],
-    },
-    {
-      key: "nav.group.communication",
-      icon: MessageSquare,
-      href: "",
-      children: [
-        { key: "nav.messages", icon: MessageSquare, href: "/student/messages" },
-        { key: "nav.contacts", icon: Users, href: "/student/contacts" },
-      ],
-    },
-    {
-      key: "nav.group.tools",
-      icon: Wrench,
-      href: "",
-      children: [
-        { key: "nav.bagrut", icon: Calculator, href: "/student/tools/bagrut" },
-        { key: "nav.cvBuilder", icon: FileText, href: "/student/tools/cv" },
-      ],
-    },
-    { key: "nav.refer", icon: Heart, href: "/student/refer" },
-  ],
-
-};
 
 function SidebarNav({ role }: { role: AppRole }) {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
-  const baseItems = NAV_CONFIG[role] ?? [];
-  // Partner/ambassador/agent: hide the built-in Apply form when the admin
-  // toggle (profiles.apply_form_enabled) is off for this member.
+  const baseItems = getDashboardNav(role).desktop;
   const applyGatedRole = role === "social_media_partner" || role === "ambassador" || role === "agent";
   const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
-  const items: NavItem[] = useMemo(
+  const items = useMemo(
     () => filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled),
     [baseItems, applyGatedRole, applyFormEnabled],
   );
-
   const unreadMessages = useUnreadCaseMessages(true);
-  const navLabel = (key: string) =>
-    key === "nav.offices"
-      ? i18n.language.startsWith("ar")
-        ? "المكاتب"
-        : i18n.language.startsWith("he")
-          ? "משרדים"
-          : "Offices"
-      : key === "nav.home"
-        ? t("nav.home", i18n.language.startsWith("ar") ? "الرئيسية" : i18n.language.startsWith("he") ? "ראשי" : "Home")
-        : t(key, key);
-
-  const isItemActive = (item: NavItem): boolean => {
-    if (!item.href) return false;
-    const exactHomeRoles = ["/admin", "/team", "/partner", "/agent"];
-    return (
-      location.pathname === item.href ||
-      (!exactHomeRoles.includes(item.href) &&
-        item.href !== "/student/checklist" &&
-        location.pathname.startsWith(item.href))
-    );
-  };
-
-  const isParentActive = (parent: NavItem): boolean =>
-    !!parent.children?.some((child) => isItemActive(child));
-
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  // Auto-expand the group containing the active route; collapse the rest.
+  const isItemActive = (item: DashboardNavItem): boolean =>
+    matchesDashboardNavPath(location.pathname, item);
+
+  const isParentActive = (item: DashboardNavItem): boolean =>
+    !!item.children?.some((child) => isItemActive(child));
+
   useEffect(() => {
     const next: Record<string, boolean> = {};
     for (const item of items) {
       if (item.children?.length) next[item.key] = isParentActive(item);
     }
     setOpenGroups(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, role]);
+  }, [items, location.pathname, role]);
+
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <SidebarContent>
@@ -285,62 +74,73 @@ function SidebarNav({ role }: { role: AppRole }) {
         )}
       >
         {!collapsed && (
-          <Link to="/" className="font-bold text-lg text-primary tracking-tight">
-            {i18n.language === "ar" ? "درب" : "DARB"}
+          <Link
+            to="/"
+            onClick={closeMobileSidebar}
+            className="font-bold text-lg text-primary tracking-tight"
+          >
+            {i18n.language.startsWith("ar") ? "درب" : "DARB"}
           </Link>
         )}
         {collapsed && (
           <span className="font-bold text-primary text-sm">
-            {i18n.language === "ar" ? "د" : "D"}
+            {i18n.language.startsWith("ar") ? "د" : "D"}
           </span>
         )}
       </div>
 
       <SidebarMenu className="mt-2 px-2">
         {items.map((item, index) => {
-          const isActive = isItemActive(item);
-          const showGroup = !!item.group && item.group !== items[index - 1]?.group;
+          const showGroup =
+            !!item.group && item.group !== items[index - 1]?.group;
 
           if (item.children?.length) {
             const parentActive = isParentActive(item);
             const open = !!openGroups[item.key] || collapsed;
+
             return (
               <React.Fragment key={item.key}>
                 {showGroup && !collapsed && (
                   <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {t(item.group as string, item.group as string)}
+                    {t(item.group!)}
                   </p>
                 )}
                 <SidebarMenuItem>
                   <Collapsible
                     open={open}
-                    onOpenChange={(o) => setOpenGroups((prev) => ({ ...prev, [item.key]: o }))}
+                    onOpenChange={(value) =>
+                      setOpenGroups((prev) => ({ ...prev, [item.key]: value }))
+                    }
                   >
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton asChild>
                         <button
                           type="button"
                           className={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors w-full",
+                            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                             "hover:bg-accent hover:text-accent-foreground",
                             parentActive && "bg-primary/10 text-primary font-medium neon-active neon-primary",
                             collapsed && "justify-center px-2",
                           )}
-                          title={collapsed ? navLabel(item.key) : undefined}
+                          title={collapsed ? t(item.key) : undefined}
                         >
                           <item.icon className="h-4 w-4 shrink-0" />
-                          {!collapsed && <span className="flex-1 text-start">{navLabel(item.key)}</span>}
+                          {!collapsed && <span className="flex-1 text-start">{t(item.key)}</span>}
                           {!collapsed && (
-                            <ChevronDown
+                            <span
+                              aria-hidden="true"
                               className={cn(
-                                "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                                "text-muted-foreground transition-transform",
                                 open && "rotate-180",
                               )}
-                            />
+                            >
+                              ▾
+                            </span>
                           )}
                         </button>
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
+
                     {!collapsed && (
                       <CollapsibleContent>
                         <SidebarMenuSub>
@@ -351,6 +151,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                                 <SidebarMenuSubButton asChild isActive={childActive}>
                                   <Link
                                     to={child.href}
+                                    onClick={closeMobileSidebar}
                                     className={cn(
                                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
                                       "hover:bg-accent hover:text-accent-foreground",
@@ -358,7 +159,7 @@ function SidebarNav({ role }: { role: AppRole }) {
                                     )}
                                   >
                                     <child.icon className="h-4 w-4 shrink-0" />
-                                    <span>{navLabel(child.key)}</span>
+                                    <span>{t(child.key)}</span>
                                     {child.key === "nav.messages" && unreadMessages > 0 && (
                                       <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
                                         {unreadMessages}
@@ -378,34 +179,36 @@ function SidebarNav({ role }: { role: AppRole }) {
             );
           }
 
+          const isActive = isItemActive(item);
+
           return (
             <React.Fragment key={item.key}>
               {showGroup && !collapsed && (
                 <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {t(item.group as string, item.group as string)}
+                  {t(item.group!)}
                 </p>
               )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link
                     to={item.href}
+                    onClick={closeMobileSidebar}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                       "hover:bg-accent hover:text-accent-foreground",
                       isActive && "bg-primary/10 text-primary font-medium neon-active neon-primary",
                       collapsed && "justify-center px-2",
                     )}
-                    title={collapsed ? t(item.key, item.key) : undefined}
+                    title={collapsed ? t(item.key) : undefined}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span>{t(item.key, item.key)}</span>}
+                    {!collapsed && <span>{t(item.key)}</span>}
                     {item.key === "nav.messages" && unreadMessages > 0 && (
                       <span className="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">
                         {unreadMessages}
                       </span>
                     )}
                   </Link>
-
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </React.Fragment>
@@ -424,45 +227,13 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t, i18n } = useTranslation("dashboard");
-  const isRtl = i18n.language === "ar";
-  // Every role that has a messages destination gets the header quick-access
-  // button + unread badge. Students have their own messages route too, but they
-  // are gated through StudentOnboardingGate and rarely need the header shortcut
-  // while in the checklist flow; the sidebar item remains their primary path.
-  const canMessage =
-    role === "admin" ||
-    role === "team_member" ||
-    role === "agent" ||
-    role === "social_media_partner" ||
-    role === "ambassador";
-  const headerUnread = useUnreadCaseMessages(canMessage);
-  /* Red count on the installed app icon + browser tab while signed in. */
-  useAppBadge();
-  const messagesHref =
-    role === "admin"
-      ? "/admin/messages"
-      : role === "team_member"
-        ? "/team/messages"
-        : role === "agent"
-          ? "/agent/messages"
-          : role === "student"
-            ? "/student/messages"
-            : "/partner/messages";
-  /* Theme is owned entirely by ThemeScope/next-themes — no manual class work. */
-
-
-
-
-  /** A mobile conversation owns the whole screen; hide the tab bar under it. */
+  const { i18n } = useTranslation("dashboard");
+  const isRtl = i18n.language.startsWith("ar") || i18n.language.startsWith("he");
   const chatFullscreen = useChatFullscreenActive();
-
-  /* The dashboard scrolls an inner <main>, not the window, so the global
-     window.scrollTo(0,0) in App.tsx never applies here — navigating from a
-     scrolled list into a detail page used to land mid-page. Reset the real
-     scroller on pathname change. The search string is deliberately excluded so
-     tab switches (?tab=) keep the reader's position. */
   const mainRef = React.useRef<HTMLElement>(null);
+
+  useAppBadge();
+
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location.pathname]);
@@ -472,8 +243,6 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
     navigate("/");
   };
 
-
-  // Lock the page behind the dashboard so a swipe can't drag the frame/top bar.
   useEffect(() => {
     const els = [document.documentElement, document.body];
     els.forEach((el) => el.classList.add("dashboard-locked"));
@@ -482,76 +251,38 @@ export default function DashboardLayout({ role }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className={cn("fixed inset-0 flex h-[100dvh] w-full overflow-hidden overscroll-none bg-background", isRtl && "dir-rtl")}>
+      <div
+        className={cn(
+          "fixed inset-0 flex h-[100dvh] w-full overflow-hidden overscroll-none bg-background",
+          isRtl && "dir-rtl",
+        )}
+      >
         <Sidebar side={isRtl ? "right" : "left"} collapsible="icon">
           <SidebarNav role={role} />
-          {role === "student" && <StudentSidebarFooter user={user} onSignOut={handleSignOut} />}
+          {role === "student" && (
+            <StudentSidebarFooter user={user} onSignOut={handleSignOut} />
+          )}
         </Sidebar>
 
-        <div className="flex min-h-0 flex-1 min-w-0 flex-col overflow-hidden">
-          {/* Top header */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <div className={cn(chatFullscreen && "hidden")}>
-            {role === "student" ? (
-              <StudentDashboardHeader user={user} onSignOut={handleSignOut} />
-            ) : (
-              <header className="flex h-14 shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-background/95 px-2 backdrop-blur z-10 touch-none sm:px-4">
-                <SidebarTrigger className="h-11 w-11 shrink-0" />
-                <div className="flex min-w-0 shrink-0 items-center gap-0.5 sm:gap-2">
-                  <LanguageSwitcher />
-                  <ThemePicker />
-                  {canMessage && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant={location.pathname.startsWith(messagesHref) ? "secondary" : "ghost"} size="sm" onClick={() => navigate(messagesHref)} aria-label={t("nav.messages")} className="relative h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:p-2">
-                            <MessageSquare className="h-4 w-4" />
-                            <span className="hidden sm:inline text-xs">{t("nav.messages")}</span>
-                            {headerUnread > 0 && <span className="absolute -top-1 -end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground neon-dot neon-danger">{headerUnread}</span>}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{t("nav.messages")}</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                  {user && <NotificationBell role={role} />}
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2">
-                          <Home className="h-4 w-4" />
-                          <span className="hidden sm:inline text-xs">{t("nav.mainSite")}</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>{t("nav.backToMainSite")}</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:w-auto sm:gap-2 sm:p-2">
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </div>
-              </header>
-            )}
+            <DashboardHeader role={role} user={user} onSignOut={handleSignOut} />
           </div>
 
-          {/* Page content.
-              Mobile bottom padding must match the bar's real height — min-h-16
-              (4rem) PLUS the safe-area inset the bar adds via pb-safe — otherwise
-              on notched devices the bar's safe-area portion overlaps the last
-              content. The bar is hidden for full-screen mobile chats. */}
           <main
             ref={mainRef}
             className={cn(
-              "min-h-0 flex-1 min-w-0 overflow-y-auto overflow-x-hidden overscroll-y-none md:pb-0",
+              "min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-none md:pb-0",
               chatFullscreen
                 ? "pb-0"
                 : "pb-[calc(4rem+env(safe-area-inset-bottom))]",
             )}
           >
-
             <TabErrorBoundary>
               <Outlet />
             </TabErrorBoundary>
           </main>
+
           {!chatFullscreen && <MobileBottomNav role={role} />}
           <NotificationOnboardingDialog />
         </div>
