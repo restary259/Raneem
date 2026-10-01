@@ -176,8 +176,7 @@ export default function TeamCasesPage() {
 
   return (
     <div className="p-6 space-y-4 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h1 className="text-2xl font-bold">{isAr ? 'الملفات' : 'Cases'}</h1>
+      <div className="flex items-center justify-end gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           {/* "Submit new student" is an action on this page, not its own
               sidebar destination. */}

@@ -125,10 +125,6 @@ export default function TeamAnalyticsPage() {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto" dir={isRtl ? 'rtl' : 'ltr'}>
-      <h1 className="text-2xl font-bold text-foreground">
-        {t('lawyer.analytics.pageTitle', t('lawyer.tabs.analytics', 'Analytics'))}
-      </h1>
-
       {/* KPI cards — container-query based so the column count tracks the grid's
           own width (after the sidebar takes its cut), not the viewport. 7 across
           only when the grid actually has room; otherwise wraps gracefully. */}

@@ -280,14 +280,6 @@ export default function BagrutConverter() {
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5">
-      {/* ── Page header ── */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">{t("nav.bagrut", "أداة البجروت")}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {t("team.bagrut.subtitle", "تحويل درجات البجروت إلى درجات الجامعات الألمانية")}
-        </p>
-      </div>
-
       {/* ── Progress pill ── (always visible) */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">

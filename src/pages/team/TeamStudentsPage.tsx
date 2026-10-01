@@ -444,14 +444,7 @@ export default function TeamStudentsPage() {
   return (
     <div className="p-4 sm:p-6 space-y-5 max-w-5xl mx-auto">
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{t("team.students.title", "Student Accounts")}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {t("team.students.subtitle", "Create and manage student portal accounts.")}
-          </p>
-        </div>
-
+      <div className="flex items-start justify-end gap-4 flex-wrap">
         <div className="flex gap-2">
           <Button
             variant="outline"

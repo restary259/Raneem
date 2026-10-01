@@ -231,12 +231,9 @@ export default function TeamWorkPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">{t("team.work.title", "My work")}</h1>
-          <p className="text-sm text-muted-foreground" dir="ltr">
-            {dateStr}
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground" dir="ltr">
+          {dateStr}
+        </p>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => navigate("/team/majors")}>
             <GraduationCap className="h-4 w-4" />
