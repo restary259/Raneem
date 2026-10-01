@@ -16,17 +16,11 @@ const ACTIVITY_PAGE = path.resolve(
   "AdminActivityPage.tsx",
 );
 const ACTIVITY_ROUTE = path.resolve(SRC_ROOT, "routes", "admin.activity.tsx");
-const LAYOUT = path.resolve(
+const DASHBOARD_NAV = path.resolve(
   SRC_ROOT,
   "components",
   "layout",
-  "DashboardLayout.tsx",
-);
-const MOBILE_NAV = path.resolve(
-  SRC_ROOT,
-  "components",
-  "layout",
-  "MobileBottomNav.tsx",
+  "dashboardNavigation.ts",
 );
 
 /**
@@ -84,11 +78,8 @@ describe("Admin Overview has no Recent Activity, the Activity Feed keeps it", ()
     expect(fs.readFileSync(ACTIVITY_ROUTE, "utf8")).toMatch(
       /["']\/admin\/activity["']/,
     );
-    expect(fs.readFileSync(LAYOUT, "utf8")).toMatch(
-      /["']\/admin\/activity["']/,
-    );
-    expect(fs.readFileSync(MOBILE_NAV, "utf8")).toMatch(
-      /["']\/admin\/activity["']/,
+    expect(fs.readFileSync(DASHBOARD_NAV, "utf8")).toMatch(
+      /key:\s*["']nav\.activity["'][\s\S]*href:\s*["']\/admin\/activity["']/,
     );
   });
 });

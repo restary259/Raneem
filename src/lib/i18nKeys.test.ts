@@ -212,7 +212,7 @@ describe("i18n coverage", () => {
    * This pins `nav.*` to `dashboard`, which is where the nav dictionary lives.
    */
   it("has every nav.* key in the dashboard dictionaries", () => {
-    const dicts = Object.fromEntries(LOCALES.map((l) => [l, loadDicts(l)]));
+    const dicts = Object.fromEntries(NAV_LOCALES.map((l) => [l, loadDicts(l)]));
     const missing: string[] = [];
 
     for (const file of walk(path.join(ROOT, "src"))) {

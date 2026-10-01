@@ -68,10 +68,13 @@ describe("DashboardHeader", () => {
     await userEvent.click(screen.getByRole("button", { name: "Account menu" }));
 
     expect(screen.getByText("Language")).toBeInTheDocument();
-    expect(screen.getByTestId("language-switcher")).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByTestId("language-switcher")
+        .some((el) => el.className.includes("w-full justify-center gap-2")),
+    ).toBe(true);
     expect(screen.getByText("Choose theme")).toBeInTheDocument();
     expect(screen.getByText("Main Site")).toBeInTheDocument();
     expect(screen.getByText("Sign out")).toBeInTheDocument();
   });
 });
-
