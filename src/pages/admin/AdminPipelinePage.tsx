@@ -534,7 +534,7 @@ const AdminPipelinePage = () => {
     <div className="w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-6 space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 justify-between">
-        <h1 className="text-2xl font-bold text-foreground">{t("admin.pipeline.title", "Application Pipeline")}</h1>
+        <h1 className="sr-only">{t("admin.pipeline.title", "Application Pipeline")}</h1>
         <Button variant="outline" size="sm" onClick={fetchData} className="gap-2">
           <RefreshCw className="h-4 w-4" />
           {t("common.refresh", "Refresh")}
