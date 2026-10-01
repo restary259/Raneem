@@ -303,6 +303,7 @@ export function findDashboardNavItem(
   };
 
   return walk([
+    ...config.mobilePrimary,
     ...config.desktop,
     ...config.accountItems,
     ...(config.quickActions ?? []),
