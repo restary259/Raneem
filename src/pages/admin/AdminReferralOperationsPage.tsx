@@ -249,12 +249,8 @@ export default function AdminReferralOperationsPage() {
 
   return (
     <div className="w-full min-w-0 space-y-5 p-3 sm:p-6" dir={isRtl ? "rtl" : "ltr"}>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">DARB</p>
-          <h1 className="mt-1 text-2xl font-bold sm:text-3xl">{t("admin.referralOperations.title")}</h1>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{t("admin.referralOperations.description")}</p>
-        </div>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end">
+        <h1 className="sr-only">{t("admin.referralOperations.title")}</h1>
         <Button variant="outline" size="sm" onClick={fetchData} disabled={refreshing} className="gap-2">
           {refreshing ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           {t("common.refresh")}
