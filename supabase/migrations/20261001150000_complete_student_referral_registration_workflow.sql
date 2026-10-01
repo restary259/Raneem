@@ -388,3 +388,120 @@ DROP TRIGGER IF EXISTS trg_auto_split_payment ON public.cases;
 CREATE TRIGGER trg_auto_split_payment
   AFTER UPDATE ON public.cases
   FOR EACH ROW EXECUTE FUNCTION public.auto_split_payment();
+
+
+-- Direct registrations have already paid the registration invoice for the
+-- course/accommodation package. They do not use the generic Germany-payment
+-- confirmation rows used by ordinary DARB cases.
+CREATE OR REPLACE FUNCTION public.assert_case_ready_for_enrollment(p_case_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_case RECORD;
+  v_invoice RECORD;
+  v_sub RECORD;
+  v_items jsonb := '[]'::jsonb;
+  v_ready boolean := true;
+  v_req RECORD;
+BEGIN
+  SELECT id, status, source
+    INTO v_case
+    FROM public.cases
+   WHERE id = p_case_id
+     AND deleted_at IS NULL;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Case not found';
+  END IF;
+
+  IF v_case.source = 'student_referral_registration' THEN
+    SELECT id, invoice_number, payment_status, status, total_amount, currency
+      INTO v_invoice
+      FROM public.case_registration_invoices
+     WHERE case_id = p_case_id
+     ORDER BY created_at DESC
+     LIMIT 1;
+
+    IF NOT FOUND OR v_invoice.payment_status <> 'paid' OR v_invoice.status <> 'paid' THEN
+      RAISE EXCEPTION 'ENROLL_BLOCKED: direct registration invoice is not paid'
+        USING ERRCODE = 'check_violation';
+    END IF;
+
+    SELECT program_id, accommodation_id, insurance_id
+      INTO v_sub
+      FROM public.case_submissions
+     WHERE case_id = p_case_id
+       AND deleted_at IS NULL
+     ORDER BY created_at DESC
+     LIMIT 1;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'ENROLL_BLOCKED: student submission is missing'
+        USING ERRCODE = 'check_violation';
+    END IF;
+
+    RETURN jsonb_build_object(
+      'case_id', p_case_id,
+      'ready', true,
+      'direct_registration', true,
+      'registration_invoice_id', v_invoice.id,
+      'registration_invoice_number', v_invoice.invoice_number,
+      'registration_total', v_invoice.total_amount,
+      'registration_currency', v_invoice.currency,
+      'items', jsonb_build_array(
+        jsonb_build_object(
+          'finance_type', 'direct_registration',
+          'confirmed', true,
+          'required', true
+        )
+      )
+    );
+  END IF;
+
+  SELECT program_id, accommodation_id, insurance_id
+    INTO v_sub
+    FROM public.case_submissions
+   WHERE case_id = p_case_id
+     AND deleted_at IS NULL
+   ORDER BY created_at DESC
+   LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'ENROLL_BLOCKED: student submission is missing'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  FOR v_req IN
+    SELECT finance_type, status
+      FROM public.case_finance_confirmations
+     WHERE case_id = p_case_id
+       AND finance_type IN ('language_course','accommodation','insurance')
+  LOOP
+    v_items := v_items || jsonb_build_object(
+      'finance_type', v_req.finance_type,
+      'confirmed', (v_req.status = 'confirmed'),
+      'required', (v_req.finance_type <> 'insurance')
+    );
+
+    IF v_req.status <> 'confirmed' THEN
+      IF (v_req.finance_type = 'language_course' AND v_sub.program_id IS NOT NULL)
+      OR (v_req.finance_type = 'accommodation' AND v_sub.accommodation_id IS NOT NULL) THEN
+        v_ready := false;
+      END IF;
+    END IF;
+  END LOOP;
+
+  IF NOT v_ready THEN
+    RAISE EXCEPTION 'Case % is not ready for enrollment: one or more German finance items are not confirmed', p_case_id
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  RETURN jsonb_build_object('case_id', p_case_id, 'ready', true, 'items', v_items);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.assert_case_ready_for_enrollment(uuid) TO authenticated;
