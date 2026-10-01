@@ -47,13 +47,11 @@ describe("i18n runtime", () => {
     expect(i18n.getFixedT("en")("no.such.key", "Fallback text")).toBe("Fallback text");
   });
 
-  it("falls back he -> en and others -> ar", async () => {
+  it("falls back from Hebrew to English, not Arabic", async () => {
     const i18n = await load();
     i18n.addResource("en", "common", "__probe", "EN probe");
     i18n.addResource("ar", "common", "__probe", "AR probe");
     expect(i18n.getFixedT("he")("__probe")).toBe("EN probe");
-    i18n.removeResourceBundle?.("en", "common");
-    i18n.addResourceBundle("en", "common", (await import("@/locales/en/common.json")).default, true, true);
   });
 
   it("loads an HTTP namespace (dashboard)", async () => {
