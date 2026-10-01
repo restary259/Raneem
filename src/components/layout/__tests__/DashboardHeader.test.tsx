@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import DashboardHeader from "../DashboardHeader";
@@ -24,7 +25,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/lib/router-compat", () => ({
-  Link: ({ to, children, ...props }: { to: string; children?: React.ReactNode; [key: string]: unknown }) => (
+  Link: ({ to, children, ...props }: { to: string; children?: ReactNode; [key: string]: unknown }) => (
     <a href={to} {...props}>{children}</a>
   ),
   useLocation: () => ({ pathname: "/student", search: "", hash: "", state: null, key: "/student" }),
