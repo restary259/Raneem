@@ -11,6 +11,7 @@ import {
   normalizeGbpProfile,
   type GbpRawProfile,
 } from "@/lib/googleBusinessGateway";
+import { assertGoogleWriteAllowed } from "@/lib/googleBusinessWriteGate";
 
 /**
  * Phase 6 server functions: synchronize the Google Business Profile and publish
@@ -313,6 +314,11 @@ export const updateGoogleProfile = createServerFn({ method: "POST" })
 
     let identity: MappingIdentity;
     try {
+      await assertGoogleWriteAllowed(
+        ctx,
+        data.officeId,
+        "GOOGLE_UPDATE_PROFILE",
+      );
       identity = await loadOfficeIdentity(ctx, data.officeId);
     } catch (e) {
       return fail("error", "forbidden", (e as Error).message);
@@ -464,6 +470,18 @@ export const publishGoogleChangeRequest = createServerFn({ method: "POST" })
       request.field === "PRIMARY_CATEGORY"
         ? { primary_category: request.requested_value?.["primary_category"] }
         : (request.requested_value ?? {});
+
+    // Pre-flight WRITE gate: a paused integration must not silently finalize
+    // the change request as failed, so refuse before any Google call.
+    try {
+      await assertGoogleWriteAllowed(
+        ctx,
+        data.officeId,
+        "GOOGLE_APPROVE_CHANGE_REQUEST",
+      );
+    } catch (e) {
+      return fail("forbidden", (e as Error).message);
+    }
 
     let identity: MappingIdentity;
     try {

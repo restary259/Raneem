@@ -187,6 +187,33 @@ BEGIN
 END $$;
 SELECT pg_temp.chk('write freeze: READ stays up', public.google_business_operation_allowed('aaaaaaaa-0000-0000-0000-000000000001','READ') = true);
 SELECT pg_temp.chk('write freeze: WRITE down', public.google_business_operation_allowed('aaaaaaaa-0000-0000-0000-000000000001','WRITE') = false);
+
+-- Phase 10 write pre-flight: every mutation action must classify as WRITE, so
+-- the frontend gate (authorize_google_office_action) refuses BEFORE Google is
+-- called. A VIEW-classified write action would let a paused integration mutate.
+SELECT pg_temp.chk('mutation actions classify as WRITE',
+  (SELECT bool_and(public.google_business_action_kind(a) = 'WRITE')
+   FROM unnest(ARRAY['GOOGLE_REPLY_REVIEW','GOOGLE_UPDATE_PROFILE','GOOGLE_UPDATE_HOURS',
+                     'GOOGLE_UPDATE_ATTRIBUTES','GOOGLE_MANAGE_MEDIA','GOOGLE_MANAGE_POSTS',
+                     'GOOGLE_MANAGE_CUSTOMER_MEDIA','GOOGLE_UPDATE_CATEGORY',
+                     'GOOGLE_UPDATE_ADDRESS','GOOGLE_APPROVE_CHANGE_REQUEST']) a));
+
+-- Evaluated as the Berlin primary, the actor a write pre-flight would use.
+SELECT pg_temp.as_user('22222222-2222-2222-2222-222222222222');
+SELECT pg_temp.chk('write freeze blocks the reply mutation before Google',
+  public.authorize_google_office_action('22222222-2222-2222-2222-222222222222','aaaaaaaa-0000-0000-0000-000000000001','GOOGLE_REPLY_REVIEW') = false);
+SELECT pg_temp.chk('write freeze blocks media upload before Google',
+  public.authorize_google_office_action('22222222-2222-2222-2222-222222222222','aaaaaaaa-0000-0000-0000-000000000001','GOOGLE_MANAGE_MEDIA') = false);
+SELECT pg_temp.chk('write freeze blocks post publish before Google',
+  public.authorize_google_office_action('22222222-2222-2222-2222-222222222222','aaaaaaaa-0000-0000-0000-000000000001','GOOGLE_MANAGE_POSTS') = false);
+SELECT pg_temp.chk('write freeze blocks profile edit before Google',
+  public.authorize_google_office_action('22222222-2222-2222-2222-222222222222','aaaaaaaa-0000-0000-0000-000000000001','GOOGLE_UPDATE_PROFILE') = false);
+-- The pre-flight also checks VIEW for the read-only resolution step; a VIEW that
+-- a paused integration still permits must NOT be enough to pass a WRITE action.
+SELECT pg_temp.chk('VIEW stays allowed while writes are frozen',
+  public.authorize_google_office_action('22222222-2222-2222-2222-222222222222','aaaaaaaa-0000-0000-0000-000000000001','GOOGLE_VIEW') = true);
+
+SELECT pg_temp.as_user('11111111-1111-1111-1111-111111111111');
 DO $$
 BEGIN
   PERFORM public.admin_set_google_business_settings(p_write_enabled => true, p_reason => 'unfreeze');

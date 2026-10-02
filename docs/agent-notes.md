@@ -3661,8 +3661,22 @@ verified non-vacuous by reintroducing the defect).
   same matrix.
 - **Verification.** `supabase/diagnostics/office_google_phase10_deploy_verify.sql`
   (read-only, 49 checks) and
-  `office_google_phase10_behavior_verify.sql` (offline, 46 checks). Ops docs in
+  `office_google_phase10_behavior_verify.sql` (offline, 52 checks). Ops docs in
   `docs/google-business/`.
+- **Write pre-flight gate (Aikido High, fixed).** The lifecycle RPCs enforce
+  `authorize_google_office_action`, but a write locates its resource through an
+  internal resolver gated only on `GOOGLE_VIEW` (which must survive a pause).
+  Calling Google first and rejecting at the persistence RPC let a paused
+  integration still mutate Google. Every write path now calls
+  `assertGoogleWriteAllowed` (`src/lib/googleBusinessWriteGate.ts`) with its
+  operation-specific WRITE action *before* any gateway call: replies
+  (`GOOGLE_REPLY_REVIEW`), profile edits (`GOOGLE_UPDATE_PROFILE`), change
+  requests (`GOOGLE_APPROVE_CHANGE_REQUEST`), media upload/delete
+  (`GOOGLE_MANAGE_MEDIA`), post publish/delete (`GOOGLE_MANAGE_POSTS`). The
+  action is classified server-side (`google_business_action_kind`), so it
+  always maps to the WRITE switch; `googleBusinessWriteGate.test.ts` fails the
+  gate closed on false/null/error, and the behaviour harness asserts every
+  mutation action classifies as `WRITE` and is refused under a write freeze.
 - **CI:** lint is non-blocking and carries pre-existing debt; typecheck and
   tests are the blocking gates. `npm run build` is `vite build` only.
 
