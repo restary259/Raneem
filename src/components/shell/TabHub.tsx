@@ -3,6 +3,7 @@ import { useSearchParams } from "@/lib/router-compat";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs, { type SegmentItem } from "./SegmentedTabs";
 import { LoadingState } from "./States";
+import TabErrorBoundary from "@/components/common/TabErrorBoundary";
 
 export interface HubTab extends SegmentItem {
   /** Panel content. Rendered lazily — only the active tab mounts. */
@@ -46,7 +47,9 @@ export default function TabHub({ tabs, param = "tab", className }: TabHubProps) 
       {tabs.map((tab) => (
         <TabsContent key={tab.value} value={tab.value} className="mt-3 focus-visible:outline-hidden">
           {active === tab.value && (
-            <Suspense fallback={<LoadingState rows={4} />}>{tab.render()}</Suspense>
+            <TabErrorBoundary>
+              <Suspense fallback={<LoadingState rows={4} />}>{tab.render()}</Suspense>
+            </TabErrorBoundary>
           )}
         </TabsContent>
       ))}
