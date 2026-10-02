@@ -469,7 +469,7 @@ export async function collectAllPages<T>(
 // ---------------------------------------------------------------------------
 
 /** Google Business Profile reviews live under the v4 API surface. */
-export const GBP_REVIEWS_API = "mybusiness.googleapis.com/v4";
+export const GBP_REVIEWS_API = "my_business/v4";
 
 /** Google caps reviews.list at 50 per page. */
 export const GBP_REVIEW_PAGE_SIZE = 50;
@@ -1045,7 +1045,7 @@ export function locationPath(
   readMask = GBP_PROFILE_READ_MASK,
 ): string {
   const q = new URLSearchParams({ readMask });
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}?${q}`;
+  return `/${GBP_PROFILE_API}/locations/${locationId}?${q}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1105,7 +1105,7 @@ export function invalidHoursDay(hours: GbpRegularHours | null): string | null {
 // ---------------------------------------------------------------------------
 
 /** Google Business Profile Performance API surface. */
-export const GBP_PERFORMANCE_API = "businessprofileperformance/v1";
+export const GBP_PERFORMANCE_API = "performance/v1";
 
 /** Google caps search-keyword pages at 100. */
 export const GBP_KEYWORD_PAGE_SIZE = 100;
@@ -1539,7 +1539,7 @@ export function mediaPath(
 ): string {
   const q = new URLSearchParams({ pageSize: String(GBP_MEDIA_PAGE_SIZE) });
   if (pageToken) q.set("pageToken", pageToken);
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}/media?${q}`;
+  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media?${q}`;
 }
 
 /** The gateway path for a single media item (GET / PATCH / DELETE). */
@@ -1548,7 +1548,7 @@ export function mediaItemPath(
   locationId: string,
   mediaId: string,
 ): string {
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}/media/${mediaId}`;
+  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media/${mediaId}`;
 }
 
 /** The gateway path that starts a byte upload (returns a resource name). */
@@ -1556,7 +1556,7 @@ export function mediaStartUploadPath(
   accountId: string,
   locationId: string,
 ): string {
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}/media:startUpload`;
+  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media:startUpload`;
 }
 
 /**
@@ -1686,7 +1686,7 @@ export function validateMediaDimensions(
 // ---------------------------------------------------------------------------
 
 /** Google Local Posts live under the v4 API surface. */
-export const GBP_POSTS_API = "mybusiness.googleapis.com/v4";
+export const GBP_POSTS_API = "my_business/v4";
 
 /** Google caps a post summary at 1500 characters. */
 export const GBP_POST_SUMMARY_MAX = 1500;

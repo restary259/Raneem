@@ -142,7 +142,7 @@ describe("performance paths", () => {
       "2026-09-30",
     );
     expect(path).toContain(
-      "/businessprofileperformance/v1/locations/123:fetchMultiDailyMetricsTimeSeries?",
+      "/performance/v1/locations/123:fetchMultiDailyMetricsTimeSeries?",
     );
     expect(path).toContain("dailyMetrics=WEBSITE_CLICKS");
     expect(path).toContain("dailyMetrics=CALL_CLICKS");
