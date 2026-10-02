@@ -74,6 +74,23 @@ export async function gbpPut<T>(
 }
 
 /**
+ * PATCH for a Google location update. Google requires updateMask to name the
+ * fields being written, so only the operator's intended fields change and the
+ * rest of the location is left untouched. Retried on 429/5xx like PUT: the
+ * update is absolute, so replaying it converges.
+ */
+export async function gbpPatch<T>(
+  path: string,
+  body: unknown,
+  creds: { lovableKey: string; connectionKey: string },
+  fetchImpl: FetchLike = fetch,
+  sleep: (ms: number) => Promise<void> = (ms) =>
+    new Promise((r) => setTimeout(r, ms)),
+): Promise<T> {
+  return gbpRequest<T>("PATCH", path, creds, body, fetchImpl, sleep);
+}
+
+/**
  * DELETE is NOT retried on 5xx. A failed response after Google already applied
  * the delete would make a retry hit a now-missing reply; the caller reconciles
  * with a sync instead. 429 is still retried (nothing was applied).
@@ -97,7 +114,7 @@ export async function gbpDelete<T>(
 }
 
 async function gbpRequest<T>(
-  method: "GET" | "PUT" | "DELETE",
+  method: "GET" | "PUT" | "PATCH" | "DELETE",
   path: string,
   creds: { lovableKey: string; connectionKey: string },
   body: unknown,
@@ -452,4 +469,477 @@ export function reviewReplyPath(
   reviewId: string,
 ): string {
   return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/reviews/${reviewId}/reply`;
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6 — pure profile helpers
+//
+// Google's Business Information API representation must not leak through the
+// app: everything the UI sees goes through normalizeGbpProfile() first. The
+// editable content is also hashed here so the client can detect "Google changed
+// since you opened this" without a second round trip.
+// ---------------------------------------------------------------------------
+
+/** Google Business Information API (v1) surface for the location resource. */
+export const GBP_PROFILE_API = "business_information/v1";
+
+/** Read mask for the editable profile: exactly the fields DARB mirrors. */
+export const GBP_PROFILE_READ_MASK = [
+  "name",
+  "title",
+  "profile",
+  "phoneNumbers",
+  "websiteUri",
+  "categories",
+  "storefrontAddress",
+  "regularHours",
+  "specialHours",
+  "latlng",
+  "metadata",
+  "locationState",
+].join(",");
+
+/** Google's description byte limit (not characters). */
+export const GBP_DESCRIPTION_MAX_BYTES = 750;
+/** Google allows up to 9 additional categories. */
+export const GBP_MAX_ADDITIONAL_CATEGORIES = 9;
+
+export type GbpWeekday =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
+
+export const GBP_WEEKDAYS: GbpWeekday[] = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+];
+
+/** One opening period. `open`/`close` are 24h "HH:MM". */
+export type GbpTimePeriod = { open: string; close: string };
+
+/**
+ * A week of opening hours keyed by weekday. `null` means CLOSED, which is
+ * distinct from "not configured" (the key being absent) — the UI renders them
+ * differently and Google treats them differently.
+ */
+export type GbpRegularHours = Partial<
+  Record<GbpWeekday, GbpTimePeriod[] | null>
+>;
+
+export type GbpSpecialHour = {
+  /** ISO date, YYYY-MM-DD. */
+  date: string;
+  closed: boolean;
+  periods?: GbpTimePeriod[];
+};
+
+/** The subset of the Google Location resource the profile editor reads. */
+export type GbpRawProfile = {
+  name?: string;
+  title?: string;
+  profile?: { description?: string };
+  phoneNumbers?: { primaryPhone?: string; additionalPhones?: string[] };
+  websiteUri?: string;
+  categories?: {
+    primaryCategory?: { displayName?: string; name?: string };
+    additionalCategories?: { displayName?: string; name?: string }[];
+  };
+  storefrontAddress?: {
+    addressLines?: string[];
+    locality?: string;
+    administrativeArea?: string;
+    postalCode?: string;
+    regionCode?: string;
+  };
+  regularHours?: {
+    periods?: {
+      openDay?: string;
+      openTime?: { hours?: number; minutes?: number };
+      closeDay?: string;
+      closeTime?: { hours?: number; minutes?: number };
+    }[];
+  };
+  specialHours?: {
+    specialHourPeriods?: {
+      startDate?: { year?: number; month?: number; day?: number };
+      endDate?: { year?: number; month?: number; day?: number };
+      closed?: boolean;
+      openTime?: { hours?: number; minutes?: number };
+      closeTime?: { hours?: number; minutes?: number };
+    }[];
+  };
+  latlng?: { latitude?: number; longitude?: number };
+  metadata?: { placeId?: string; mapsUri?: string };
+  locationState?: { isVerified?: boolean; isSuspended?: boolean };
+};
+
+/** A profile as DARB stores it (server -> RPC payload). */
+export type NormalizedGbpProfile = {
+  business_name: string | null;
+  business_description: string | null;
+  primary_category: string | null;
+  additional_categories: string[];
+  phone_primary: string | null;
+  phone_additional: string[];
+  website_url: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  postal_code: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  regular_hours: GbpRegularHours | null;
+  special_hours: GbpSpecialHour[];
+  google_state: string | null;
+  verification_status: string | null;
+};
+
+/** Two-digit zero-padded clock component. */
+function pad(n: number | undefined): string {
+  return String(n ?? 0).padStart(2, "0");
+}
+
+/** Google TimeOfDay -> "HH:MM". */
+export function googleTimeToClock(
+  t: { hours?: number; minutes?: number } | undefined,
+): string | null {
+  if (!t) return null;
+  return `${pad(t.hours)}:${pad(t.minutes)}`;
+}
+
+/** "HH:MM" -> Google TimeOfDay. */
+export function clockToGoogleTime(
+  clock: string,
+): { hours: number; minutes: number } | null {
+  const m = /^([01][0-9]|2[0-3]):([0-5][0-9])$/.exec(clock);
+  if (!m) return null;
+  return { hours: Number(m[1]), minutes: Number(m[2]) };
+}
+
+/** ISO date parts -> YYYY-MM-DD, or null when incomplete. */
+function googleDateToIso(
+  d: { year?: number; month?: number; day?: number } | undefined,
+): string | null {
+  if (!d?.year || !d?.month || !d?.day) return null;
+  return `${d.year}-${pad(d.month)}-${pad(d.day)}`;
+}
+
+/**
+ * Google regularHours -> DARB's weekday map. Google encodes a day's periods as
+ * a flat list with openDay/closeDay; a day with no periods is left absent
+ * (not configured) rather than collapsed into "closed".
+ */
+export function normalizeGbpRegularHours(
+  raw: GbpRawProfile["regularHours"],
+): GbpRegularHours | null {
+  const periods = raw?.periods;
+  if (!periods?.length) return null;
+  const out: GbpRegularHours = {};
+  for (const p of periods) {
+    const day = (p.openDay ?? "").toUpperCase() as GbpWeekday;
+    if (!GBP_WEEKDAYS.includes(day)) continue;
+    const open = googleTimeToClock(p.openTime);
+    const close = googleTimeToClock(p.closeTime);
+    if (!open || !close) continue;
+    const existing = out[day] ?? [];
+    existing.push({ open, close });
+    out[day] = existing;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/** DARB weekday map -> Google regularHours periods. */
+export function denormalizeGbpRegularHours(
+  hours: GbpRegularHours | null,
+): GbpRawProfile["regularHours"] {
+  if (!hours) return { periods: [] };
+  const periods: NonNullable<GbpRawProfile["regularHours"]>["periods"] = [];
+  for (const day of GBP_WEEKDAYS) {
+    const dayPeriods = hours[day];
+    if (!dayPeriods) continue;
+    for (const p of dayPeriods) {
+      const openTime = clockToGoogleTime(p.open);
+      const closeTime = clockToGoogleTime(p.close);
+      if (!openTime || !closeTime) continue;
+      periods.push({ openDay: day, openTime, closeDay: day, closeTime });
+    }
+  }
+  return { periods };
+}
+
+export function normalizeGbpSpecialHours(
+  raw: GbpRawProfile["specialHours"],
+): GbpSpecialHour[] {
+  const out: GbpSpecialHour[] = [];
+  for (const p of raw?.specialHourPeriods ?? []) {
+    const date = googleDateToIso(p.startDate);
+    if (!date) continue;
+    if (p.closed) {
+      out.push({ date, closed: true });
+      continue;
+    }
+    const open = googleTimeToClock(p.openTime);
+    const close = googleTimeToClock(p.closeTime);
+    if (!open || !close) continue;
+    out.push({ date, closed: false, periods: [{ open, close }] });
+  }
+  return out;
+}
+
+/**
+ * Google Location -> the editable DARB profile.
+ *
+ * Google is the source of truth: this is the canonical Google -> DARB mapping.
+ */
+export function normalizeGbpProfile(raw: GbpRawProfile): NormalizedGbpProfile {
+  const addr = raw.storefrontAddress ?? {};
+  const lines = addr.addressLines ?? [];
+  const state = raw.locationState;
+  return {
+    business_name: raw.title?.trim() || null,
+    business_description: raw.profile?.description?.trim() || null,
+    primary_category:
+      raw.categories?.primaryCategory?.displayName?.trim() || null,
+    additional_categories: (raw.categories?.additionalCategories ?? [])
+      .map((c) => c.displayName?.trim())
+      .filter((c): c is string => Boolean(c)),
+    phone_primary: raw.phoneNumbers?.primaryPhone?.trim() || null,
+    phone_additional: (raw.phoneNumbers?.additionalPhones ?? [])
+      .map((p) => p?.trim())
+      .filter((p): p is string => Boolean(p)),
+    website_url: raw.websiteUri?.trim() || null,
+    address_line_1: lines[0]?.trim() || null,
+    address_line_2: lines[1]?.trim() || null,
+    postal_code: addr.postalCode?.trim() || null,
+    city: addr.locality?.trim() || null,
+    region: addr.administrativeArea?.trim() || null,
+    country: addr.regionCode?.trim() || null,
+    latitude:
+      typeof raw.latlng?.latitude === "number" ? raw.latlng.latitude : null,
+    longitude:
+      typeof raw.latlng?.longitude === "number" ? raw.latlng.longitude : null,
+    regular_hours: normalizeGbpRegularHours(raw.regularHours),
+    special_hours: normalizeGbpSpecialHours(raw.specialHours),
+    google_state: state?.isSuspended ? "SUSPENDED" : state ? "OPEN" : null,
+    verification_status: state
+      ? state.isVerified
+        ? "verified"
+        : "pending"
+      : null,
+  };
+}
+
+/**
+ * DARB field name -> Google location field path. Used to build the updateMask so
+ * a PATCH only touches the fields the operator actually changed.
+ */
+export const GBP_FIELD_TO_GOOGLE_PATH: Record<string, string> = {
+  business_name: "title",
+  business_description: "profile.description",
+  primary_category: "categories.primaryCategory",
+  additional_categories: "categories.additionalCategories",
+  phone_primary: "phoneNumbers.primaryPhone",
+  phone_additional: "phoneNumbers.additionalPhones",
+  website_url: "websiteUri",
+  address_line_1: "storefrontAddress.addressLines",
+  address_line_2: "storefrontAddress.addressLines",
+  postal_code: "storefrontAddress.postalCode",
+  city: "storefrontAddress.locality",
+  region: "storefrontAddress.administrativeArea",
+  country: "storefrontAddress.regionCode",
+  latitude: "latlng.latitude",
+  longitude: "latlng.longitude",
+  regular_hours: "regularHours",
+  special_hours: "specialHours",
+};
+
+/**
+ * Builds a Google Location PATCH body + updateMask from a set of DARB fields.
+ *
+ * Address lines are merged into a single array (Google stores them as a list),
+ * and latitude/longitude collapse into one latlng object so the mask is not
+ * duplicated. Returns the body, the comma-joined mask, and the Google paths
+ * that were written (for the audit trail).
+ */
+export function buildGbpLocationPatch(fields: Record<string, unknown>): {
+  body: GbpRawProfile;
+  updateMask: string;
+  googlePaths: string[];
+} {
+  const body: Record<string, unknown> = {};
+  const paths = new Set<string>();
+
+  const ensure = (obj: string): Record<string, unknown> => {
+    if (!body[obj] || typeof body[obj] !== "object") body[obj] = {};
+    return body[obj] as Record<string, unknown>;
+  };
+
+  if ("business_name" in fields) {
+    body.title = fields.business_name;
+    paths.add("title");
+  }
+  if ("business_description" in fields) {
+    ensure("profile").description = fields.business_description;
+    paths.add("profile.description");
+  }
+  if ("primary_category" in fields) {
+    ensure("categories").primaryCategory = {
+      displayName: fields.primary_category,
+    };
+    paths.add("categories.primaryCategory");
+  }
+  if ("additional_categories" in fields) {
+    const list = Array.isArray(fields.additional_categories)
+      ? (fields.additional_categories as string[])
+      : [];
+    ensure("categories").additionalCategories = list.map((displayName) => ({
+      displayName,
+    }));
+    paths.add("categories.additionalCategories");
+  }
+  if ("phone_primary" in fields || "phone_additional" in fields) {
+    const phones = ensure("phoneNumbers");
+    if ("phone_primary" in fields) {
+      phones.primaryPhone = fields.phone_primary;
+      paths.add("phoneNumbers.primaryPhone");
+    }
+    if ("phone_additional" in fields) {
+      phones.additionalPhones = Array.isArray(fields.phone_additional)
+        ? fields.phone_additional
+        : [];
+      paths.add("phoneNumbers.additionalPhones");
+    }
+  }
+  if ("website_url" in fields) {
+    body.websiteUri = fields.website_url;
+    paths.add("websiteUri");
+  }
+
+  const addrKeys = [
+    "address_line_1",
+    "address_line_2",
+    "postal_code",
+    "city",
+    "region",
+    "country",
+  ] as const;
+  if (addrKeys.some((k) => k in fields)) {
+    const addr = ensure("storefrontAddress");
+    if ("address_line_1" in fields || "address_line_2" in fields) {
+      addr.addressLines = [fields.address_line_1, fields.address_line_2].filter(
+        (v): v is string => typeof v === "string" && v.length > 0,
+      );
+      paths.add("storefrontAddress.addressLines");
+    }
+    if ("postal_code" in fields) {
+      addr.postalCode = fields.postal_code;
+      paths.add("storefrontAddress.postalCode");
+    }
+    if ("city" in fields) {
+      addr.locality = fields.city;
+      paths.add("storefrontAddress.locality");
+    }
+    if ("region" in fields) {
+      addr.administrativeArea = fields.region;
+      paths.add("storefrontAddress.administrativeArea");
+    }
+    if ("country" in fields) {
+      addr.regionCode = fields.country;
+      paths.add("storefrontAddress.regionCode");
+    }
+  }
+
+  if ("latitude" in fields || "longitude" in fields) {
+    body.latlng = {
+      latitude: fields.latitude,
+      longitude: fields.longitude,
+    };
+    paths.add("latlng");
+  }
+
+  if ("regular_hours" in fields) {
+    body.regularHours = denormalizeGbpRegularHours(
+      (fields.regular_hours ?? null) as GbpRegularHours | null,
+    );
+    paths.add("regularHours");
+  }
+  if ("special_hours" in fields) {
+    body.specialHours = { specialHourPeriods: [] };
+    paths.add("specialHours");
+  }
+
+  return {
+    body: body as GbpRawProfile,
+    updateMask: Array.from(paths).join(","),
+    googlePaths: Array.from(paths),
+  };
+}
+
+/** The gateway path for a single location resource. */
+export function locationPath(
+  accountId: string,
+  locationId: string,
+  readMask = GBP_PROFILE_READ_MASK,
+): string {
+  const q = new URLSearchParams({ readMask });
+  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}?${q}`;
+}
+
+// ---------------------------------------------------------------------------
+// Client-side validation (mirrors google_profile_field_error in the migration).
+//
+// These are UX affordances only: the server re-validates every field, so a
+// forged client cannot store an invalid value.
+// ---------------------------------------------------------------------------
+
+const PHONE_RE = /^\+?[0-9 ()./-]{6,25}$/;
+const URL_RE =
+  /^https:\/\/[A-Za-z0-9][A-Za-z0-9.-]*\.[A-Za-z]{2,}(:[0-9]{1,5})?(\/.*)?$/;
+const CLOCK_RE = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
+
+export function isValidPhone(value: string): boolean {
+  const v = value.trim();
+  if (!PHONE_RE.test(v)) return false;
+  return (v.match(/[0-9]/g) ?? []).length >= 6;
+}
+
+export function isValidWebsite(value: string): boolean {
+  return URL_RE.test(value.trim());
+}
+
+/** UTF-8 byte length, matching Google's byte-based limits. */
+export function byteLength(value: string): number {
+  if (typeof TextEncoder !== "undefined") {
+    return new TextEncoder().encode(value).length;
+  }
+  return Buffer.byteLength(value, "utf8");
+}
+
+export function isWithinDescriptionLimit(value: string): boolean {
+  return byteLength(value) <= GBP_DESCRIPTION_MAX_BYTES;
+}
+
+/** Validates a whole week; returns the offending weekday key, or null. */
+export function invalidHoursDay(hours: GbpRegularHours | null): string | null {
+  if (!hours) return null;
+  for (const [day, periods] of Object.entries(hours)) {
+    if (!GBP_WEEKDAYS.includes(day as GbpWeekday)) return day;
+    if (!periods) continue;
+    for (const p of periods) {
+      if (!CLOCK_RE.test(p.open) || !CLOCK_RE.test(p.close)) return day;
+      if (p.close <= p.open) return day;
+    }
+  }
+  return null;
 }

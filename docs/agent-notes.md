@@ -3356,3 +3356,36 @@ verified non-vacuous by reintroducing the defect).
   `src/locales`); nav `nav.googleBusinessOverview` / `nav.googleReviews` under the
   `nav.googleBusiness` group. UI lives at `/team/google/reviews`.
 
+## Office Google Business profile management (Phase 6, 2026-10-01)
+- Migration `20261001200000_office_google_profile_management.sql` turns
+  `office_google_profiles` from a mapping row into the editable mirror of the
+  Google location: identity, contact, categories, address and regular/special
+  hours, plus `profile_version` and a canonical `content_hash`.
+- **Google stays the source of truth.** `normalizeGbpProfile` in
+  `src/lib/googleBusinessGateway.ts` maps a Google location resource into the
+  DARB shape and never invents a value for a missing field; sync only advances
+  `profile_version` when the canonical hash actually changes, so an unchanged
+  poll is a no-op and a re-sync cannot clobber an in-flight edit.
+- **Writes are mask-scoped PATCHes.** `buildGbpLocationPatch` emits only the
+  fields that changed and collapses `latitude`/`longitude` into one `latlng`
+  mask and the two address lines into one `storefrontAddress.addressLines`
+  entry, so Google never sees a duplicate mask path.
+- **High-risk fields are change-requested, not written.** Primary/Side Manager
+  may publish name, description, website, phones, additional categories and
+  hours directly (`GOOGLE_UPDATE_HOURS` / `GOOGLE_UPDATE_ATTRIBUTES` etc.).
+  Primary category and address need an Admin-approved
+  `google_profile_change_requests` row; approval and the actual Google publish
+  are separate steps so a failed publish is observable, never a false success.
+- **Optimistic concurrency + idempotency.** `admin_update_google_profile` takes
+  `expected_version` (a mismatch returns `conflict` rather than overwriting) and
+  an idempotency receipt keyed per office so a retried request cannot
+  double-write. `#variable_conflict use_column` is required where a PL/pgSQL
+  parameter name collides with a column.
+- Change-request immutability trigger allows a `PENDING` request to be revised
+  but not a decided one; `google_profile_field_error` is pure IMMUTABLE, not
+  SECURITY DEFINER.
+- Verification: `/tmp/phase6_verify.sql` (151/151) and
+  `supabase/diagnostics/office_google_phase6_deploy_verify.sql` (92/92, read-only).
+- i18n: `googleProfile.*` in en/ar/he (`public/locales` only — `dashboard` is not
+  bundled in `src/locales`); nav `nav.googleProfile` under the `nav.googleBusiness`
+  group. UI lives at `/team/google/profile`.

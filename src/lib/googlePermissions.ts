@@ -16,6 +16,14 @@ export const GOOGLE_ACTIONS = [
   "GOOGLE_VIEW_INSIGHTS",
   "GOOGLE_MANAGE_SUPPORTED_CONTENT",
   "GOOGLE_SYNC_REVIEWS",
+  // Phase 6 — profile management
+  "GOOGLE_UPDATE_HOURS",
+  "GOOGLE_UPDATE_ATTRIBUTES",
+  "GOOGLE_SYNC_PROFILE",
+  "GOOGLE_REQUEST_HIGH_RISK",
+  "GOOGLE_UPDATE_CATEGORY",
+  "GOOGLE_UPDATE_ADDRESS",
+  "GOOGLE_APPROVE_CHANGE_REQUEST",
   "GOOGLE_ASSIGN_SIDE_MANAGER",
   "GOOGLE_REMOVE_SIDE_MANAGER",
   "GOOGLE_CHANGE_PRIMARY",
@@ -42,6 +50,10 @@ const PRIMARY_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_VIEW_INSIGHTS",
   "GOOGLE_MANAGE_SUPPORTED_CONTENT",
   "GOOGLE_SYNC_REVIEWS",
+  "GOOGLE_UPDATE_HOURS",
+  "GOOGLE_UPDATE_ATTRIBUTES",
+  "GOOGLE_SYNC_PROFILE",
+  "GOOGLE_REQUEST_HIGH_RISK",
   "GOOGLE_ASSIGN_SIDE_MANAGER",
   "GOOGLE_REMOVE_SIDE_MANAGER",
 ]);
@@ -55,11 +67,17 @@ const SIDE_MANAGER_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_VIEW_INSIGHTS",
   "GOOGLE_MANAGE_SUPPORTED_CONTENT",
   "GOOGLE_SYNC_REVIEWS",
+  "GOOGLE_UPDATE_HOURS",
+  "GOOGLE_UPDATE_ATTRIBUTES",
+  "GOOGLE_SYNC_PROFILE",
+  "GOOGLE_REQUEST_HIGH_RISK",
 ]);
 
 /**
  * Actions no non-admin operator may ever hold, regardless of role. Mirrors the
- * server's admin-only branch in `authorize_google_office_action`.
+ * server's admin-only branch in `authorize_google_office_action`. The Phase 6
+ * high-risk actions are here because operators must route those through an
+ * Admin-approved change request instead.
  */
 const ADMIN_ONLY_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_CHANGE_PRIMARY",
@@ -71,6 +89,9 @@ const ADMIN_ONLY_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_MAP_LOCATION",
   "GOOGLE_REMAP_LOCATION",
   "GOOGLE_UNMAP_LOCATION",
+  "GOOGLE_UPDATE_CATEGORY",
+  "GOOGLE_UPDATE_ADDRESS",
+  "GOOGLE_APPROVE_CHANGE_REQUEST",
 ]);
 
 export type GoogleActorContext = {

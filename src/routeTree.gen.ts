@@ -111,6 +111,7 @@ import { Route as TeamAppointmentsIndexRouteImport } from './routes/team.appoint
 import { Route as TeamAppointmentsTodayRouteImport } from './routes/team.appointments.today'
 import { Route as TeamCasesIndexRouteImport } from './routes/team.cases.index'
 import { Route as TeamCasesIdRouteImport } from './routes/team.cases.$id'
+import { Route as TeamGoogleProfileRouteImport } from './routes/team.google.profile'
 import { Route as TeamGoogleReviewsRouteImport } from './routes/team.google.reviews'
 import { Route as TeamPartnerSchoolsIndexRouteImport } from './routes/team.partner-schools.index'
 import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.index'
@@ -637,6 +638,11 @@ const TeamCasesIdRoute = TeamCasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => TeamRoute,
 } as any)
+const TeamGoogleProfileRoute = TeamGoogleProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => TeamGoogleRoute,
+} as any)
 const TeamGoogleReviewsRoute = TeamGoogleReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -803,6 +809,7 @@ export interface FileRoutesByFullPath {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
@@ -914,6 +921,7 @@ export interface FileRoutesByTo {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
@@ -1031,6 +1039,7 @@ export interface FileRoutesById {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
@@ -1149,6 +1158,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
     | '/team/tools/currency'
@@ -1260,6 +1270,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
     | '/team/tools/currency'
@@ -1376,6 +1387,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
     | '/team/tools/currency'
@@ -2153,6 +2165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamCasesIdRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/team/google/profile': {
+      id: '/team/google/profile'
+      path: '/profile'
+      fullPath: '/team/google/profile'
+      preLoaderRoute: typeof TeamGoogleProfileRouteImport
+      parentRoute: typeof TeamGoogleRoute
+    }
     '/team/google/reviews': {
       id: '/team/google/reviews'
       path: '/reviews'
@@ -2375,10 +2394,12 @@ const StudentRouteWithChildren =
   StudentRoute._addFileChildren(StudentRouteChildren)
 
 interface TeamGoogleRouteChildren {
+  TeamGoogleProfileRoute: typeof TeamGoogleProfileRoute
   TeamGoogleReviewsRoute: typeof TeamGoogleReviewsRoute
 }
 
 const TeamGoogleRouteChildren: TeamGoogleRouteChildren = {
+  TeamGoogleProfileRoute: TeamGoogleProfileRoute,
   TeamGoogleReviewsRoute: TeamGoogleReviewsRoute,
 }
 
