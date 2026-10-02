@@ -174,14 +174,15 @@ export async function runGoogleHealthRefresh(
   });
   const row = rows?.[0];
 
-  // A meaningful transition is surfaced to Admin (never on a repeat of the
-  // same event, which is what `changed` guarantees).
+  // A meaningful transition is surfaced (never on a repeat of the same event,
+  // which is what `changed` guarantees).
   if (row?.changed) {
     await notifyHealthTransition(
       officeId,
       row.previous_status ?? null,
       row.health_status,
       options.googleEventId ?? null,
+      options.eventType ?? null,
     ).catch(() => undefined);
   }
 
@@ -208,11 +209,17 @@ async function notifyHealthTransition(
   previous: string | null,
   next: string,
   googleEventId: string | null,
+  triggerEventType: string | null,
 ): Promise<void> {
+  // Prefer the actual Google event that caused the transition, so its audience
+  // is right: DUPLICATE_LOCATION and VOICE_OF_MERCHANT_UPDATED are Admin-only,
+  // while a plain location-state change also reaches the office. Fall back to
+  // the health-derived type when the refresh was not event-driven.
   const eventType =
-    next === "ACTION_REQUIRED" || next === "UNAVAILABLE"
+    triggerEventType ??
+    (next === "ACTION_REQUIRED" || next === "UNAVAILABLE"
       ? "VOICE_OF_MERCHANT_UPDATED"
-      : "UPDATED_LOCATION_STATE";
+      : "UPDATED_LOCATION_STATE");
 
   // Reuse the Phase 9 fan-out: it resolves the audience (office vs Admin) and
   // dedupes per event + recipient.

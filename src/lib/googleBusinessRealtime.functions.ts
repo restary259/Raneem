@@ -141,7 +141,12 @@ export async function captureAndRouteGoogleEvent(
   const row = recorded?.[0];
   if (!row?.event_id) throw new Error("Event was not recorded");
 
-  if (row.is_duplicate) {
+  // A redelivery is a no-op once the event is routed or deliberately ignored.
+  // An event still UNROUTED means a prior attempt persisted it and then failed
+  // before routing (the transient case the webhook's 500-then-retry contract
+  // exists for), so fall through and retry the idempotent route instead of
+  // stranding the event with no office, job, or notification.
+  if (row.is_duplicate && row.routing_status !== "UNROUTED") {
     return {
       eventId: row.event_id,
       isDuplicate: true,
@@ -169,7 +174,7 @@ export async function captureAndRouteGoogleEvent(
 
   return {
     eventId: row.event_id,
-    isDuplicate: false,
+    isDuplicate: row.is_duplicate,
     processingStatus: r?.routing_status === "ROUTED" ? "QUEUED" : "IGNORED",
     routingStatus: r?.routing_status ?? "UNROUTED",
     officeId: r?.office_id ?? null,
@@ -201,6 +206,8 @@ export interface ProcessJobResult {
 async function runSyncType(
   officeId: string,
   syncType: string,
+  triggerEventId: string | null,
+  triggerEventType: string | null,
 ): Promise<{
   status: SyncJobStatus;
   records: number;
@@ -287,7 +294,15 @@ async function runSyncType(
     case "HEALTH": {
       const { runGoogleHealthRefresh } =
         await import("@/lib/googleBusinessHealth.server");
-      const r = await runGoogleHealthRefresh(officeId);
+      // The triggering event's row id lets a real health transition raise the
+      // Admin/office alert through the same per-event dedupe as other events.
+      // The original event type keeps the audience correct (VOM/duplicate go to
+      // Admin, not the office).
+      const r = await runGoogleHealthRefresh(officeId, {
+        source: "EVENT",
+        eventType: triggerEventType ?? "HEALTH_CHECK",
+        googleEventId: triggerEventId,
+      });
       return {
         status: r.ok ? "SUCCESS" : "FAILED",
         records: 0,
@@ -295,6 +310,16 @@ async function runSyncType(
         errorMessage: r.errorMessage,
       };
     }
+    case "FULL":
+      // FULL is a bookkeeping row: `create_google_business_sync_job` already
+      // enqueued the component jobs, which each run on their own. Completing it
+      // immediately keeps it from blocking the queue ahead of its components.
+      return {
+        status: "SUCCESS",
+        records: 0,
+        errorCode: null,
+        errorMessage: null,
+      };
     default:
       return {
         status: "FAILED",
@@ -388,6 +413,7 @@ export async function processGoogleBusinessSyncJobs(
         lock_token: string;
         google_location_id: string | null;
         trigger_event_id: string | null;
+        trigger_event_type: string | null;
       }[]
     >("claim_google_business_sync_job", {
       p_office_id: options.officeId ?? null,
@@ -398,7 +424,12 @@ export async function processGoogleBusinessSyncJobs(
 
     let outcome: Awaited<ReturnType<typeof runSyncType>>;
     try {
-      outcome = await runSyncType(job.office_id, job.sync_type);
+      outcome = await runSyncType(
+        job.office_id,
+        job.sync_type,
+        job.trigger_event_id,
+        job.trigger_event_type,
+      );
     } catch (e) {
       outcome = {
         status: "FAILED",
@@ -408,7 +439,9 @@ export async function processGoogleBusinessSyncJobs(
       };
     }
 
-    await adminRpcOrThrow<boolean>("finish_google_business_sync_job", {
+    const finished = await adminRpcOrThrow<
+      { finalized: boolean; job_status: string; will_retry: boolean }[]
+    >("finish_google_business_sync_job", {
       p_job_id: job.job_id,
       p_token: job.lock_token,
       p_status: outcome.status,
@@ -416,6 +449,31 @@ export async function processGoogleBusinessSyncJobs(
       p_error_code: outcome.errorCode,
       p_error_message: outcome.errorMessage,
     });
+    const fin = finished?.[0];
+
+    // Terminalize the triggering event exactly once, once the job is truly
+    // done retrying: PROCESSED on success, FAILED while a retry is pending,
+    // DEAD_LETTERED when the attempts are exhausted. This is what drives the
+    // event's processing status and the connection's failure/dead-letter
+    // counters, and what lets Admin retry a dead-lettered event.
+    if (fin?.finalized && job.trigger_event_id) {
+      if (!fin.will_retry) {
+        const failed = fin.job_status === "FAILED";
+        await adminRpcOrThrow<boolean>("mark_google_business_event", {
+          p_event_id: job.trigger_event_id,
+          p_status: failed ? "DEAD_LETTERED" : "PROCESSED",
+          p_error_code: outcome.errorCode,
+          p_error_message: outcome.errorMessage,
+        }).catch(() => undefined);
+      } else {
+        await adminRpcOrThrow<boolean>("mark_google_business_event", {
+          p_event_id: job.trigger_event_id,
+          p_status: "FAILED",
+          p_error_code: outcome.errorCode,
+          p_error_message: outcome.errorMessage,
+        }).catch(() => undefined);
+      }
+    }
 
     // A sync failure on an event-driven job is surfaced to Admin.
     if (outcome.status === "FAILED" && job.trigger_event_id) {

@@ -132,6 +132,22 @@ BEGIN
   END LOOP;
 
   --------------------------------------------------------------------------
+  -- 4b. Worker contract: claim carries the triggering event, finish reports
+  --     the resulting status so the caller can terminalize the event once.
+  --------------------------------------------------------------------------
+  PERFORM pg_temp._chk('contract', 'claim_google_business_sync_job returns trigger_event_type',
+    EXISTS (
+      SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public' AND p.proname = 'claim_google_business_sync_job'
+        AND pg_get_function_result(p.oid) ILIKE '%trigger_event_type%'));
+  PERFORM pg_temp._chk('contract', 'finish_google_business_sync_job returns job_status and will_retry',
+    EXISTS (
+      SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public' AND p.proname = 'finish_google_business_sync_job'
+        AND pg_get_function_result(p.oid) ILIKE '%job_status%'
+        AND pg_get_function_result(p.oid) ILIKE '%will_retry%'));
+
+  --------------------------------------------------------------------------
   -- 5. No event/sync/health RPC is EXECUTEable by anon or authenticated
   --    (except the office-scoped read RPCs, which are authenticated-only)
   --------------------------------------------------------------------------

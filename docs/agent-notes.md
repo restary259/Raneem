@@ -3559,7 +3559,23 @@ verified non-vacuous by reintroducing the defect).
   recipient). `GOOGLE_UPDATE` and `NEW_CUSTOMER_MEDIA` fan out at route time in
   `route_google_business_event`. Health/VOM/duplicate notify only when
   `record_google_location_health` reports a real transition -- a repeat of the
-  same event must not re-alert.
+  same event must not re-alert. The worker must thread the triggering event
+  through: `claim_google_business_sync_job` returns `trigger_event_id` and
+  `trigger_event_type`, and the HEALTH branch passes both into
+  `runGoogleHealthRefresh`, so the transition alert uses the *actual* Google
+  event (a `DUPLICATE_LOCATION` stays Admin-only) and is deduped per event +
+  recipient by `notify_google_business_event`.
+- **Redelivery is route-safe.** `record_google_business_event` is idempotent,
+  but capture and routing are two calls; if routing fails after the event is
+  stored, the Pub/Sub redelivery must re-run the (idempotent) route rather than
+  early-return on `is_duplicate` and strand the event UNROUTED.
+- **The event lifecycle is terminalized by the worker.**
+  `finish_google_business_sync_job` returns `(finalized, job_status,
+  will_retry)`; the worker marks the triggering event `PROCESSED` on success,
+  `FAILED` while a retry is pending, and `DEAD_LETTERED` once attempts are
+  exhausted -- which is what feeds the connection failure/dead-letter counters
+  and the Admin retry path. `FULL` is a bookkeeping row the worker completes
+  immediately; its component jobs do the work.
 - **Health is deterministic, never a score.** `google_health_status_from_states`
   returns `HEALTHY|ATTENTION|ACTION_REQUIRED|UNAVAILABLE|UNKNOWN`;
   `google_business_health_events` keeps the transition history.
@@ -3585,8 +3601,9 @@ verified non-vacuous by reintroducing the defect).
   `googleReviews.newReviewBanner|viewNewReview` in en/ar/he (`public/locales`
   only -- `dashboard` is not bundled in `src/locales`).
 - Verification: `supabase/diagnostics/office_google_phase9_deploy_verify.sql`
-  (read-only, 121 checks) plus the offline behaviour harness
-  (56 checks). Unit tests: `src/lib/googleBusinessEvents.test.ts`,
+  (read-only, 123 checks) plus
+  `supabase/diagnostics/office_google_phase9_behavior_verify.sql` (offline
+  behaviour harness, 62 checks). Unit tests: `src/lib/googleBusinessEvents.test.ts`,
   `src/lib/googlePubSubAuth.test.ts`.
 - **Notification click routing is a deep-link, not authorization.** The event
   notifier appends `?review=<entity_id>` to the review link; the Reviews page

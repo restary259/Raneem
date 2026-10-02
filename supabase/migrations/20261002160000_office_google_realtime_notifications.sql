@@ -824,6 +824,9 @@ GRANT EXECUTE ON FUNCTION public.create_google_business_sync_job(uuid, text, tex
   TO service_role;
 
 -- Claim the highest-priority runnable job and take the owner lock.
+-- Dropped first because the return type gains a column (CREATE OR REPLACE
+-- cannot change a return type).
+DROP FUNCTION IF EXISTS public.claim_google_business_sync_job(uuid, text[]);
 CREATE OR REPLACE FUNCTION public.claim_google_business_sync_job(
   p_office_id uuid DEFAULT NULL,
   p_sync_types text[] DEFAULT NULL
@@ -835,7 +838,8 @@ RETURNS TABLE (
   priority text,
   lock_token text,
   google_location_id text,
-  trigger_event_id uuid
+  trigger_event_id uuid,
+  trigger_event_type text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -874,10 +878,14 @@ BEGIN
       updated_at = now()
   WHERE id = v_job_id;
 
+  -- `trigger_event_type` carries the original Google event so the worker can
+  -- raise the alert for the correct audience (e.g. DUPLICATE_LOCATION is
+  -- Admin-only, not office-facing).
   RETURN QUERY
   SELECT j.id, j.office_id, j.sync_type, j.priority, v_token,
-         j.google_location_id, j.trigger_event_id
+         j.google_location_id, j.trigger_event_id, e.event_type
   FROM public.google_business_sync_jobs j
+  LEFT JOIN public.google_business_events e ON e.id = j.trigger_event_id
   WHERE j.id = v_job_id;
 END;
 $fn$;
@@ -885,6 +893,9 @@ $fn$;
 REVOKE ALL ON FUNCTION public.claim_google_business_sync_job(uuid, text[]) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.claim_google_business_sync_job(uuid, text[]) TO service_role;
 
+-- Dropped first because the return type changes from boolean to a row
+-- (CREATE OR REPLACE cannot change a return type).
+DROP FUNCTION IF EXISTS public.finish_google_business_sync_job(uuid, text, text, integer, text, text);
 CREATE OR REPLACE FUNCTION public.finish_google_business_sync_job(
   p_job_id uuid,
   p_token text,
@@ -893,7 +904,7 @@ CREATE OR REPLACE FUNCTION public.finish_google_business_sync_job(
   p_error_code text DEFAULT NULL,
   p_error_message text DEFAULT NULL
 )
-RETURNS boolean
+RETURNS TABLE (finalized boolean, job_status text, will_retry boolean)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -901,6 +912,7 @@ AS $fn$
 DECLARE
   v_job record;
   v_retry boolean;
+  v_final text;
 BEGIN
   IF auth.role() IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'Forbidden';
@@ -912,20 +924,23 @@ BEGIN
 
   SELECT * INTO v_job FROM public.google_business_sync_jobs j WHERE j.id = p_job_id;
   IF v_job.id IS NULL THEN
-    RETURN false;
+    RETURN QUERY SELECT false, NULL::text, false;
+    RETURN;
   END IF;
 
   -- Only the owner token may finalize a RUNNING job.
   IF v_job.status <> 'RUNNING' OR v_job.lock_token IS DISTINCT FROM p_token THEN
-    RETURN false;
+    RETURN QUERY SELECT false, v_job.status, false;
+    RETURN;
   END IF;
 
   -- A transient failure retries with backoff until max_attempts, then stays
   -- FAILED. The lock token is cleared on a retry so the job can be re-claimed.
   v_retry := p_status = 'FAILED' AND v_job.attempt_count < v_job.max_attempts;
+  v_final := CASE WHEN v_retry THEN 'PENDING' ELSE p_status END;
 
   UPDATE public.google_business_sync_jobs
-  SET status = CASE WHEN v_retry THEN 'PENDING' ELSE p_status END,
+  SET status = v_final,
       completed_at = CASE WHEN v_retry THEN NULL ELSE now() END,
       scheduled_at = CASE
         WHEN v_retry THEN now() + make_interval(secs => LEAST(600, 10 * (2 ^ v_job.attempt_count))::int)
@@ -938,7 +953,9 @@ BEGIN
       updated_at = now()
   WHERE id = p_job_id;
 
-  RETURN true;
+  -- The caller learns the resulting status so it can terminalize the
+  -- triggering event exactly once (no retry pending, no false dead-letter).
+  RETURN QUERY SELECT true, v_final, v_retry;
 END;
 $fn$;
 
