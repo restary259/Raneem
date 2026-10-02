@@ -1,9 +1,12 @@
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import {
   collectAllPages,
   formatGbpAddress,
   GBP_LOCATION_READ_MASK,
   normalizeGbpLocation,
+  pickActiveConnectionId,
   resourceId,
 } from "@/lib/googleBusinessGateway";
 import {
@@ -27,6 +30,31 @@ describe("GBP_LOCATION_READ_MASK", () => {
 
   it("requests locationState so verification state is populated", () => {
     expect(fields).toContain("locationState");
+  });
+});
+
+describe("pickActiveConnectionId", () => {
+  // Regression: discovery used to pass p_connection_id = null, so cached
+  // locations lost their connection ownership even when a connection existed.
+  it("prefers the most recent connected connection", () => {
+    expect(
+      pickActiveConnectionId([
+        { id: "c-new", connection_status: "connected" },
+        { id: "c-old", connection_status: "revoked" },
+      ]),
+    ).toBe("c-new");
+  });
+
+  it("falls back to the first row when none is marked connected", () => {
+    expect(
+      pickActiveConnectionId([{ id: "only", connection_status: "pending" }]),
+    ).toBe("only");
+  });
+
+  it("returns null when there is no connection row", () => {
+    expect(pickActiveConnectionId([])).toBeNull();
+    expect(pickActiveConnectionId(null)).toBeNull();
+    expect(pickActiveConnectionId(undefined)).toBeNull();
   });
 });
 
@@ -221,3 +249,24 @@ describe("addressesAgree", () => {
     expect(addressesAgree({ city: "Berlin" }, { city: "Berlin" })).toBe(false);
   });
 });
+
+// Discovery must pass a real connection id to the cache RPC; passing null was
+// the regression that stripped connection ownership from every cached location.
+describe("location discovery wiring", () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), "src/lib/googleBusinessLocation.functions.ts"),
+    "utf8",
+  );
+
+  it("resolves the active connection before syncing", () => {
+    expect(source).toContain("resolveConnectionId");
+    expect(source).toContain("admin_get_google_business_connections");
+    expect(source).toContain("pickActiveConnectionId");
+  });
+
+  it("never passes a null connection id to the sync RPC", () => {
+    expect(source).not.toMatch(/p_connection_id:\s*null/);
+    expect(source).toMatch(/p_connection_id:\s*connectionId/);
+  });
+});
+
