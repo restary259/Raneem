@@ -148,7 +148,7 @@ describe("paths", () => {
   it("targets the v4 reviews endpoint with pageSize 50", () => {
     const p = reviewsPath("acct-1", "loc-berlin");
     expect(p).toContain(
-      "/mybusiness.googleapis.com/v4/accounts/acct-1/locations/loc-berlin/reviews",
+      "/my_business/v4/accounts/acct-1/locations/loc-berlin/reviews",
     );
     expect(p).toContain("pageSize=50");
   });
@@ -157,7 +157,7 @@ describe("paths", () => {
   });
   it("targets the reply sub-resource", () => {
     expect(reviewReplyPath("acct-1", "loc-berlin", "r1")).toBe(
-      "/mybusiness.googleapis.com/v4/accounts/acct-1/locations/loc-berlin/reviews/r1/reply",
+      "/my_business/v4/accounts/acct-1/locations/loc-berlin/reviews/r1/reply",
     );
   });
 });

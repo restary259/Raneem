@@ -290,7 +290,7 @@ describe("normalizeGbpPost", () => {
 
 describe("post gateway paths", () => {
   it("builds list, create and item paths on the v4 surface", () => {
-    expect(postsPath("1", "2")).toContain("mybusiness.googleapis.com/v4");
+    expect(postsPath("1", "2")).toContain("my_business/v4");
     expect(postsPath("1", "2")).toContain("/localPosts?pageSize=100");
     expect(postCreatePath("1", "2")).toMatch(/\/localPosts$/);
     expect(postItemPath("1", "2", "7")).toMatch(/\/localPosts\/7$/);

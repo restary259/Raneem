@@ -469,7 +469,7 @@ export async function collectAllPages<T>(
 // ---------------------------------------------------------------------------
 
 /** Google Business Profile reviews live under the v4 API surface. */
-export const GBP_REVIEWS_API = "mybusiness.googleapis.com/v4";
+export const GBP_REVIEWS_API = "my_business/v4";
 
 /** Google caps reviews.list at 50 per page. */
 export const GBP_REVIEW_PAGE_SIZE = 50;
@@ -1105,7 +1105,7 @@ export function invalidHoursDay(hours: GbpRegularHours | null): string | null {
 // ---------------------------------------------------------------------------
 
 /** Google Business Profile Performance API surface. */
-export const GBP_PERFORMANCE_API = "businessprofileperformance/v1";
+export const GBP_PERFORMANCE_API = "performance/v1";
 
 /** Google caps search-keyword pages at 100. */
 export const GBP_KEYWORD_PAGE_SIZE = 100;
@@ -1686,7 +1686,7 @@ export function validateMediaDimensions(
 // ---------------------------------------------------------------------------
 
 /** Google Local Posts live under the v4 API surface. */
-export const GBP_POSTS_API = "mybusiness.googleapis.com/v4";
+export const GBP_POSTS_API = "my_business/v4";
 
 /** Google caps a post summary at 1500 characters. */
 export const GBP_POST_SUMMARY_MAX = 1500;
