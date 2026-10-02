@@ -442,6 +442,130 @@ export function googleProfileHealth(
 }
 
 // ---------------------------------------------------------------------------
+// Phase 8 — Google Business Performance + Insights
+//
+// Mirrors the Phase 8 read RPCs. Every metric keeps Google's own vocabulary:
+// a "profile view" is never collapsed into an ambiguous "views" number, and a
+// threshold is never shown as an exact value.
+// ---------------------------------------------------------------------------
+
+/** Google's documented daily metrics that DARB requests and stores. */
+export const GOOGLE_PERFORMANCE_METRICS = [
+  "BUSINESS_IMPRESSIONS_DESKTOP_MAPS",
+  "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH",
+  "BUSINESS_IMPRESSIONS_MOBILE_MAPS",
+  "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
+  "BUSINESS_CONVERSATIONS",
+  "BUSINESS_DIRECTION_REQUESTS",
+  "CALL_CLICKS",
+  "WEBSITE_CLICKS",
+  "BUSINESS_BOOKINGS",
+  "BUSINESS_FOOD_MENU_CLICKS",
+] as const;
+
+export type GooglePerformanceMetric =
+  (typeof GOOGLE_PERFORMANCE_METRICS)[number];
+
+/**
+ * A metric's availability. VALUE and ZERO are both measurements; NOT_AVAILABLE
+ * means Google did not report the metric for this office/period at all, so the
+ * UI must not render it as 0.
+ */
+export type GoogleMetricStatus = "VALUE" | "ZERO" | "NOT_AVAILABLE";
+
+export type GoogleMetricTotals = Partial<
+  Record<GooglePerformanceMetric, number>
+>;
+export type GoogleMetricStatusMap = Partial<
+  Record<GooglePerformanceMetric, GoogleMetricStatus>
+>;
+
+export type GooglePerformanceContext = {
+  office_id: string;
+  office_name: string | null;
+  timezone: string;
+  mapping_status: string | null;
+  connection_status: string | null;
+  verification_status: string | null;
+  google_location_name: string | null;
+  google_maps_url: string | null;
+  data_through: string | null;
+  performance_last_synced_at: string | null;
+  performance_last_successful_sync_at: string | null;
+  performance_sync_error_code: string | null;
+  performance_sync_error_message: string | null;
+  has_any_data: boolean;
+  has_keywords: boolean;
+};
+
+export type GooglePerformanceSummary = GooglePerformanceContext & {
+  current_totals: GoogleMetricTotals;
+  previous_totals: GoogleMetricTotals;
+  metric_status: GoogleMetricStatusMap;
+};
+
+export type GooglePerformanceSeriesPoint = {
+  metric: GooglePerformanceMetric;
+  metric_date: string;
+  metric_value: number;
+  data_state: "VALUE" | "ZERO" | "NO_DATA";
+};
+
+export type GoogleSearchKeywordRow = {
+  id: string;
+  month: string;
+  search_keyword: string;
+  insights_value: number;
+  insights_value_type: "VALUE" | "THRESHOLD";
+  total_count: number;
+};
+
+export type GooglePerformanceSyncJob = {
+  id: string;
+  sync_type: "METRICS" | "KEYWORDS" | "BACKFILL";
+  start_date: string | null;
+  end_date: string | null;
+  status: "PENDING" | "RUNNING" | "SUCCESS" | "PARTIAL" | "FAILED";
+  started_at: string | null;
+  completed_at: string | null;
+  records_processed: number;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: string;
+};
+
+/** Phase 8: one office the caller may view Insights for (selector source). */
+export type GooglePerformanceOfficeRow = {
+  office_id: string;
+  office_name: string | null;
+  operator_role: "PRIMARY" | "SIDE_MANAGER" | "ADMIN";
+  mapping_status: string | null;
+  connection_status: string | null;
+  google_location_name: string | null;
+  google_maps_url: string | null;
+  timezone: string;
+  performance_last_synced_at: string | null;
+  performance_data_through: string | null;
+};
+
+export type GooglePerformanceAggregateRow = {
+  office_id: string;
+  office_name: string | null;
+  current_totals: GoogleMetricTotals;
+  previous_totals: GoogleMetricTotals;
+  metric_status: GoogleMetricStatusMap;
+  data_through: string | null;
+  last_synced_at: string | null;
+};
+
+/** Whether a metric should be shown at all: only VALUE/ZERO are measurements. */
+export function isMetricMeasured(
+  status: GoogleMetricStatus | undefined,
+): boolean {
+  return status === "VALUE" || status === "ZERO";
+}
+
+// ---------------------------------------------------------------------------
 // Phase 7 — photos (media) + posts
 // ---------------------------------------------------------------------------
 

@@ -157,20 +157,22 @@ describe("collectAllPages", () => {
       { items: ["d"] },
     ];
     let call = 0;
-    const { items, complete } = await collectAllPages(async () => pages[call++]);
+    const { items, complete } = await collectAllPages(
+      async () => pages[call++],
+    );
     expect(items).toEqual(["a", "b", "c", "d"]);
     expect(complete).toBe(true);
     expect(call).toBe(3);
   });
 
-  it("stops if the provider repeats a page token", async () => {
+  it("stops and reports incomplete if the provider repeats a page token", async () => {
     let call = 0;
     const { items, complete } = await collectAllPages(async () => {
       call++;
       return { items: [call], nextPageToken: "same" };
     });
     expect(items).toEqual([1, 2]);
-    expect(complete).toBe(true);
+    expect(complete).toBe(false);
   });
 
   it("reports incomplete when the page ceiling is hit with a token left", async () => {
@@ -273,4 +275,3 @@ describe("location discovery wiring", () => {
     expect(source).toMatch(/p_connection_id:\s*connectionId/);
   });
 });
-

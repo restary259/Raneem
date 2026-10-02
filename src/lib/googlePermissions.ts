@@ -35,6 +35,8 @@ export const GOOGLE_ACTIONS = [
   "GOOGLE_MAP_LOCATION",
   "GOOGLE_REMAP_LOCATION",
   "GOOGLE_UNMAP_LOCATION",
+  // Phase 8 — performance + insights
+  "GOOGLE_SYNC_PERFORMANCE",
 ] as const;
 
 export type GoogleAction = (typeof GOOGLE_ACTIONS)[number];

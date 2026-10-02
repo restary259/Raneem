@@ -392,10 +392,11 @@ export function formatGbpAddress(
 export interface CollectedPages<T> {
   items: T[];
   /**
-   * False when the page ceiling stopped the walk while the provider still had a
-   * next token. Callers that reconcile a cached set against the provider MUST
-   * treat an incomplete walk as "do not mark anything missing", or a capped
-   * prefix would delete/flag real resources.
+   * False when the walk stopped before the provider ran out of pages — the page
+   * ceiling was reached with a next token pending, or the provider repeated a
+   * cursor (a sign it is looping). Callers that reconcile a cached set against
+   * the provider MUST treat an incomplete walk as "do not mark anything
+   * missing", or a capped prefix would delete/flag real resources.
    */
   complete: boolean;
 }
@@ -409,16 +410,20 @@ export async function collectAllPages<T>(
   const out: T[] = [];
   const seen = new Set<string>();
   let token: string | undefined;
-  let complete = false;
+  let complete = true;
   for (let page = 0; page < maxPages; page++) {
     const { items, nextPageToken } = await fetchPage(token);
     out.push(...items);
-    if (!nextPageToken || seen.has(nextPageToken)) {
-      complete = true;
+    if (!nextPageToken) break;
+    if (seen.has(nextPageToken)) {
+      // A repeated cursor means the provider is looping; the listing is not
+      // trustworthy and must not be treated as exhaustive.
+      complete = false;
       break;
     }
     seen.add(nextPageToken);
     token = nextPageToken;
+    if (page === maxPages - 1) complete = false;
   }
   return { items: out, complete };
 }
@@ -1057,6 +1062,275 @@ export function invalidHoursDay(hours: GbpRegularHours | null): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Phase 8 — pure performance helpers
+//
+// Google's Business Profile Performance API must not leak through the app:
+// everything the UI sees goes through these normalizers first. Kept here (no
+// secrets) so the metric mapping is testable without network.
+// ---------------------------------------------------------------------------
+
+/** Google Business Profile Performance API surface. */
+export const GBP_PERFORMANCE_API = "businessprofileperformance/v1";
+
+/** Google caps search-keyword pages at 100. */
+export const GBP_KEYWORD_PAGE_SIZE = 100;
+
+/**
+ * The documented DailyMetric enum. These are the metrics DARB requests and
+ * stores; `BUSINESS_FOOD_ORDERS` is deliberately absent from the default set
+ * because Google marks it deprecated.
+ */
+export const GBP_DAILY_METRICS = [
+  "BUSINESS_IMPRESSIONS_DESKTOP_MAPS",
+  "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH",
+  "BUSINESS_IMPRESSIONS_MOBILE_MAPS",
+  "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
+  "BUSINESS_CONVERSATIONS",
+  "BUSINESS_DIRECTION_REQUESTS",
+  "CALL_CLICKS",
+  "WEBSITE_CLICKS",
+  "BUSINESS_BOOKINGS",
+  "BUSINESS_FOOD_MENU_CLICKS",
+] as const;
+
+export type GbpDailyMetric = (typeof GBP_DAILY_METRICS)[number];
+
+/**
+ * How DARB groups the metrics for display. Each group is a separate chart; the
+ * UI never puts ten unrelated series into one chart.
+ */
+export const GBP_METRIC_GROUPS: Record<string, readonly GbpDailyMetric[]> = {
+  visibility: [
+    "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH",
+    "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
+    "BUSINESS_IMPRESSIONS_DESKTOP_MAPS",
+    "BUSINESS_IMPRESSIONS_MOBILE_MAPS",
+  ],
+  actions: ["WEBSITE_CLICKS", "CALL_CLICKS", "BUSINESS_DIRECTION_REQUESTS"],
+  conversations: ["BUSINESS_CONVERSATIONS"],
+  bookings: ["BUSINESS_BOOKINGS"],
+  menu: ["BUSINESS_FOOD_MENU_CLICKS"],
+};
+
+/** True when a metric is one DARB stores. Mirrors the SQL helper. */
+export function isSupportedDailyMetric(
+  metric: string,
+): metric is GbpDailyMetric {
+  return (GBP_DAILY_METRICS as readonly string[]).includes(metric);
+}
+
+/** A Google Date message (only the parts DARB needs). */
+export type GbpDate = { year?: number; month?: number; day?: number };
+
+/** Google Date -> YYYY-MM-DD. A missing day yields YYYY-MM-01 (a month value). */
+export function gbpDateToIso(d: GbpDate | undefined | null): string | null {
+  if (!d?.year || !d?.month) return null;
+  const day = d.day ?? 1;
+  const mm = String(d.month).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return `${d.year}-${mm}-${dd}`;
+}
+
+/** YYYY-MM-DD -> Google Date. Returns null for a malformed date. */
+export function isoToGbpDate(iso: string): GbpDate | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return null;
+  return { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) };
+}
+
+/** A single DatedValue in a time series. `value` is absent when Google means 0. */
+export type GbpDatedValue = { date?: GbpDate; value?: string | number };
+
+export type GbpTimeSeries = { datedValues?: GbpDatedValue[] };
+
+export type GbpDailyMetricTimeSeries = {
+  dailyMetric?: string;
+  timeSeries?: GbpTimeSeries;
+};
+
+export type GbpMultiDailyMetricTimeSeries = {
+  dailyMetricTimeSeries?: GbpDailyMetricTimeSeries[];
+};
+
+export type GbpFetchMultiResponse = {
+  multiDailyMetricTimeSeries?: GbpMultiDailyMetricTimeSeries[];
+};
+
+/** One normalized daily datapoint, ready for the sync RPC. */
+export type NormalizedPerformanceRow = {
+  metric: string;
+  metric_date: string;
+  metric_value: number;
+  /** VALUE | ZERO. Google omits a datapoint when the value is zero. */
+  data_state: "VALUE" | "ZERO";
+  metric_scope: "LOCATION";
+  entity_type: "LOCATION";
+  entity_id: "";
+};
+
+/**
+ * Flattens Google's nested multi-metric response into one row per
+ * (metric, date). A datapoint with no `value` is a measured zero (Google omits
+ * zero), so it is stored as ZERO rather than dropped — otherwise a chart could
+ * not tell "0 that day" from "no report that day".
+ */
+export function normalizeMultiDailyMetrics(
+  response: GbpFetchMultiResponse,
+  metrics: readonly string[] = GBP_DAILY_METRICS,
+): NormalizedPerformanceRow[] {
+  const allowed = new Set(metrics);
+  const out: NormalizedPerformanceRow[] = [];
+  for (const multi of response.multiDailyMetricTimeSeries ?? []) {
+    for (const series of multi.dailyMetricTimeSeries ?? []) {
+      const metric = series.dailyMetric;
+      if (!metric || !allowed.has(metric)) continue;
+      for (const point of series.timeSeries?.datedValues ?? []) {
+        const date = gbpDateToIso(point.date);
+        if (!date) continue;
+        const raw = point.value;
+        const hasValue =
+          raw !== undefined && raw !== null && String(raw).trim() !== "";
+        const value = hasValue ? Number(raw) : 0;
+        if (!Number.isFinite(value) || value < 0) continue;
+        out.push({
+          metric,
+          metric_date: date,
+          metric_value: Math.trunc(value),
+          data_state: hasValue && value > 0 ? "VALUE" : "ZERO",
+          metric_scope: "LOCATION",
+          entity_type: "LOCATION",
+          entity_id: "",
+        });
+      }
+    }
+  }
+  return out;
+}
+
+/** The insights union: an exact value, or a threshold below which the real value falls. */
+export type GbpInsightsValue = {
+  value?: string | number;
+  threshold?: string | number;
+};
+
+export type GbpSearchKeywordCount = {
+  searchKeyword?: string;
+  insightsValue?: GbpInsightsValue;
+};
+
+export type GbpSearchKeywordResponse = {
+  searchKeywordsCounts?: GbpSearchKeywordCount[];
+  nextPageToken?: string;
+};
+
+/** One normalized monthly keyword row, ready for the sync RPC. */
+export type NormalizedSearchKeyword = {
+  search_keyword: string;
+  insights_value: number;
+  insights_value_type: "VALUE" | "THRESHOLD";
+  /** Present only when the caller aggregates a single month; null otherwise. */
+  month: string | null;
+};
+
+/**
+ * Normalizes Google's keyword union WITHOUT collapsing a threshold into an
+ * exact number. Google returns `threshold` meaning "the actual value is below
+ * this", so DARB stores the type and the UI renders "<15".
+ *
+ * Google's monthly endpoint aggregates across the requested month range and
+ * does not return a per-month field, so `month` is left null here and assigned
+ * by the sync caller.
+ */
+export function normalizeSearchKeywordCounts(
+  response: GbpSearchKeywordResponse,
+): NormalizedSearchKeyword[] {
+  const out: NormalizedSearchKeyword[] = [];
+  for (const item of response.searchKeywordsCounts ?? []) {
+    const keyword = item.searchKeyword?.trim();
+    if (!keyword) continue;
+    const iv = item.insightsValue ?? {};
+    const hasThreshold =
+      iv.threshold !== undefined &&
+      iv.threshold !== null &&
+      String(iv.threshold).trim() !== "";
+    const raw = hasThreshold ? iv.threshold : iv.value;
+    if (raw === undefined || raw === null || String(raw).trim() === "")
+      continue;
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) continue;
+    out.push({
+      search_keyword: keyword,
+      insights_value: Math.trunc(value),
+      insights_value_type: hasThreshold ? "THRESHOLD" : "VALUE",
+      month: null,
+    });
+  }
+  return out;
+}
+
+/** The gateway path for a multi-metric daily time series request. */
+export function multiDailyMetricsPath(
+  locationId: string,
+  metrics: readonly string[],
+  startDate: string,
+  endDate: string,
+): string {
+  const start = isoToGbpDate(startDate);
+  const end = isoToGbpDate(endDate);
+  if (!start || !end) throw new Error("Invalid date range");
+  const q = new URLSearchParams();
+  for (const metric of metrics) q.append("dailyMetrics", metric);
+  q.set("dailyRange.startDate.year", String(start.year));
+  q.set("dailyRange.startDate.month", String(start.month));
+  q.set("dailyRange.startDate.day", String(start.day));
+  q.set("dailyRange.endDate.year", String(end.year));
+  q.set("dailyRange.endDate.month", String(end.month));
+  q.set("dailyRange.endDate.day", String(end.day));
+  return `/${GBP_PERFORMANCE_API}/locations/${locationId}:fetchMultiDailyMetricsTimeSeries?${q}`;
+}
+
+/** The gateway path for a single-metric daily time series request. */
+export function dailyMetricsPath(
+  locationId: string,
+  metric: string,
+  startDate: string,
+  endDate: string,
+): string {
+  const start = isoToGbpDate(startDate);
+  const end = isoToGbpDate(endDate);
+  if (!start || !end) throw new Error("Invalid date range");
+  const q = new URLSearchParams();
+  q.set("dailyMetric", metric);
+  q.set("dailyRange.startDate.year", String(start.year));
+  q.set("dailyRange.startDate.month", String(start.month));
+  q.set("dailyRange.startDate.day", String(start.day));
+  q.set("dailyRange.endDate.year", String(end.year));
+  q.set("dailyRange.endDate.month", String(end.month));
+  q.set("dailyRange.endDate.day", String(end.day));
+  return `/${GBP_PERFORMANCE_API}/locations/${locationId}:getDailyMetricsTimeSeries?${q}`;
+}
+
+/** The gateway path for the monthly search-keyword list. */
+export function searchKeywordsPath(
+  locationId: string,
+  startMonth: string,
+  endMonth: string,
+  pageToken?: string,
+  pageSize = GBP_KEYWORD_PAGE_SIZE,
+): string {
+  const start = isoToGbpDate(startMonth);
+  const end = isoToGbpDate(endMonth);
+  if (!start || !end) throw new Error("Invalid month range");
+  const q = new URLSearchParams();
+  q.set("monthlyRange.startMonth.year", String(start.year));
+  q.set("monthlyRange.startMonth.month", String(start.month));
+  q.set("monthlyRange.endMonth.year", String(end.year));
+  q.set("monthlyRange.endMonth.month", String(end.month));
+  q.set("pageSize", String(Math.min(pageSize, GBP_KEYWORD_PAGE_SIZE)));
+  if (pageToken) q.set("pageToken", pageToken);
+  return `/${GBP_PERFORMANCE_API}/locations/${locationId}/searchkeywords/impressions/monthly?${q}`;
+}
+
 // Phase 7 — pure media helpers
 //
 // Google's media surface is the v1 Business Information API (media.*). The

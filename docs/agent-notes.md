@@ -3390,6 +3390,95 @@ verified non-vacuous by reintroducing the defect).
   bundled in `src/locales`); nav `nav.googleProfile` under the `nav.googleBusiness`
   group. UI lives at `/team/google/profile`.
 
+## Office Google Business performance + insights (Phase 8, 2026-10-02)
+- Migration `20261002140000_office_google_performance.sql` adds three tables:
+  `google_business_performance_daily` (one row per location/date/metric/scope/
+  entity, `metric_value BIGINT`, `data_state` VALUE|ZERO|NO_DATA),
+  `google_business_search_keywords_monthly` (monthly, `insights_value_type`
+  VALUE|THRESHOLD), and `google_business_performance_sync_jobs`. The extra
+  `metric_scope`/`entity_type`/`entity_id` columns exist so a future Google Post
+  metric can live beside location metrics without a schema change.
+- **Merging a later phase into Phase 8 must not revert the authorizer.** Phase 8
+  redefines `authorize_google_office_action` and `google_actor_can`, so when it
+  merges with a migration that added actions (Phase 7's `GOOGLE_SYNC_MEDIA`,
+  `GOOGLE_SYNC_POSTS`, `GOOGLE_MANAGE_CUSTOMER_MEDIA`), the Phase 8 copy must
+  carry those actions forward. Its redefinition originally dropped them, which
+  would break media/post sync and reopen customer-media moderation. The migration
+  is therefore timestamped `20261002140000` (newer than Phase 7's `...120000`,
+  per the manual-deploy rule that a redefining migration sorts after what it
+  redefines), and the Phase 8 deploy-verify asserts the union so the regression
+  cannot silently return.
+- **The dashboard reads Supabase, never Google.** Only `syncGooglePerformance` /
+  `backfillGooglePerformance` in `src/lib/googleBusinessPerformance.functions.ts`
+  call the Performance API, through the Phase 2 connector gateway
+  (`businessprofileperformance/v1`). OAuth is reused; no second Google login.
+- **Google omissions are not zeros.** `normalizeMultiDailyMetrics` stores a
+  datapoint with no `value` as `ZERO` and a metric the office never reported as
+  `NOT_AVAILABLE`, so the UI shows "Not available" rather than a fabricated 0.
+  `connectNulls={false}` keeps a missing day a gap in the chart.
+- **A keyword threshold is never an exact number.** Google returns a union of
+  `value`/`threshold`; `normalizeSearchKeywordCounts` keeps the type and the UI
+  renders `<15`.
+- **Keywords are fetched one month at a time.** The endpoint AGGREGATES over the
+  whole `monthlyRange` and returns no per-month field, so a multi-month request
+  cannot be attributed to any month. `keywordSyncMonths` (current + 5 prior) is
+  fetched as one single-month request per month, each stored under its own
+  `month`; the keyword table shows a Month column. Keyword reads use their own
+  rolling 6-month window, not the metrics preset, so a 7-day view still shows
+  search discovery. A failed keyword read surfaces an error, never an empty
+  table (no laundering query errors into `[]`).
+- **Period comparison is DARB's, and labelled so.** `percentChange` returns null
+  for a zero baseline ("No previous baseline"), never infinite growth; cards say
+  "vs previous period". Admin "All offices" is explicitly badged
+  `DARB aggregate` with a note that Google publishes no combined figure, and the
+  per-office list is a plain measurement, no "best/worst office" labels.
+- **Office-first authorization.** Every RPC resolves office -> membership ->
+  Google operator -> `office_google_profiles`; a client never supplies a Google
+  location id. Read RPCs gate on `GOOGLE_VIEW_INSIGHTS`, sync on the new
+  `GOOGLE_SYNC_PERFORMANCE`; the daily/keyword triggers reject a row whose
+  `google_location_id` does not belong to the row's office. The performance
+  tables' RLS policies and `list_google_performance_offices` use the same
+  `GOOGLE_VIEW_INSIGHTS` check (not plain office membership), so an ordinary
+  member cannot read analytics or enumerate offices through the browser client.
+- Sync is lock-guarded, retries with capped backoff, never retries 401/403, and
+  re-fetches a recent window with UPSERT so late Google corrections land.
+  Metrics and keywords are separate jobs: a keyword failure returns PARTIAL and
+  keeps the healthy metrics.
+- **The sync lock is owner-tokened, and finalizers verify the job.** `acquire_*`
+  returns a random token; `release_*` and both finalizers require it, and the
+  stale window is clamped server-side (60s..1800s) so a caller cannot widen it.
+  A finalizer only writes for a `RUNNING` job of its expected type while the
+  caller still holds the lock, and reconciliation deletes are conditional on the
+  same lock, so an older completion cannot poison or erase a newer sync's rows.
+  The finalizer does NOT clear the lock — the caller owns the lock lifecycle,
+  which keeps multi-chunk backfill working (chunk 2 must still hold the token).
+  `admin_fail_google_performance_sync_job` validates job status and token
+  *before* any write, so an operator cannot abort another sync's job.
+- **`data_through` is the newest datapoint Google actually returned**, not the
+  requested end date, and the previous value is preserved when a response has
+  none — so a lagging or empty sync cannot be shown as Healthy. Keyword
+  reconcile deletes terms Google no longer returns for the refreshed months.
+- **A truncated keyword listing never reconciles.** `collectAllPages` now returns
+  `{ items, complete }`; hitting the page ceiling or a repeated cursor marks the
+  month incomplete, and the keyword sync fails (retryable
+  `GOOGLE_PERFORMANCE_PAGINATION`) instead of deleting terms Google still
+  reports.
+- CSV export neutralizes spreadsheet formula injection (`= + - @ tab CR LF`) in
+  keywords, office and location names, and the keyword export walks every page
+  (bounded) so it is not limited to the first 100 rows.
+- Verification: the migration applies cleanly on a real Postgres 17 with stubbed
+  `auth`/`authorize`; runtime checks confirm a foreign failure token is rejected
+  while the job stays RUNNING, a live token finalizes and clears the lock, a
+  forged metrics finalizer is rejected, RLS hides rows without
+  `GOOGLE_VIEW_INSIGHTS`, and keyword reconcile removes a dropped term. Unit
+  tests: `src/lib/googleBusinessPerformance.test.ts`,
+  `src/lib/googlePerformanceExport.test.ts`, `src/lib/googleBusinessLocation.test.ts`.
+- i18n: `googleInsights.*` + `nav.googleInsights` in en/ar/he
+  (`public/locales` only — `dashboard` is not bundled in `src/locales`). UI at
+  `/team/google/insights`; nav entry under the `nav.googleBusiness` group.
+- Verification: `supabase/diagnostics/office_google_phase8_deploy_verify.sql`
+  (read-only).
+
 ## Office Google Business photos + posts (Phase 7, 2026-10-02)
 
 - Migration `20261002120000_office_google_media_posts.sql`. Two caches:
@@ -3438,4 +3527,3 @@ verified non-vacuous by reintroducing the defect).
   (`public/locales` only — `dashboard` is not bundled in `src/locales`); nav
   `nav.googlePosts` / `nav.googlePhotos` under the `nav.googleBusiness` group.
   UI at `/team/google/photos` and `/team/google/posts`.
-
