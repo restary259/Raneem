@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  GBP_PROFILE_READ_MASK,
   buildGbpLocationPatch,
   byteLength,
   denormalizeGbpRegularHours,
