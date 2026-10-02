@@ -2777,6 +2777,115 @@ export type Database = {
           },
         ]
       }
+      google_profile_change_requests: {
+        Row: {
+          applied_at: string | null
+          apply_error_code: string | null
+          apply_error_message: string | null
+          created_at: string
+          current_value: Json | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          field: string
+          google_location_id: string | null
+          id: string
+          office_id: string
+          reason: string | null
+          requested_by: string | null
+          requested_by_role: string | null
+          requested_value: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          apply_error_code?: string | null
+          apply_error_message?: string | null
+          created_at?: string
+          current_value?: Json | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          field: string
+          google_location_id?: string | null
+          id?: string
+          office_id: string
+          reason?: string | null
+          requested_by?: string | null
+          requested_by_role?: string | null
+          requested_value: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          apply_error_code?: string | null
+          apply_error_message?: string | null
+          created_at?: string
+          current_value?: Json | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          field?: string
+          google_location_id?: string | null
+          id?: string
+          office_id?: string
+          reason?: string | null
+          requested_by?: string | null
+          requested_by_role?: string | null
+          requested_value?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_profile_change_requests_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_profile_update_receipts: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          idempotency_key: string
+          office_id: string
+          request_hash: string
+          result: Json
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          office_id: string
+          request_hash: string
+          result: Json
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          office_id?: string
+          request_hash?: string
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_profile_update_receipts_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       important_contacts: {
         Row: {
           address_ar: string | null
@@ -3643,7 +3752,15 @@ export type Database = {
       }
       office_google_profiles: {
         Row: {
+          additional_categories: Json
+          address_line_1: string | null
+          address_line_2: string | null
+          attributes: Json
+          business_description: string | null
+          business_name: string | null
+          city: string | null
           connection_status: string
+          country: string | null
           created_at: string
           google_account_id: string | null
           google_address_line_1: string | null
@@ -3659,6 +3776,7 @@ export type Database = {
           google_place_id: string | null
           google_postal_code: string | null
           google_primary_category: string | null
+          google_state: string | null
           google_status: string | null
           google_store_code: string | null
           google_verification_state: string | null
@@ -3669,10 +3787,26 @@ export type Database = {
           last_error_message: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          phone_additional: Json
+          phone_primary: string | null
+          postal_code: string | null
+          primary_category: string | null
+          profile_last_successful_sync_at: string | null
+          profile_last_synced_at: string | null
+          profile_sync_error_code: string | null
+          profile_sync_error_message: string | null
+          profile_sync_locked_at: string | null
+          profile_synced_hash: string | null
+          profile_updated_at: string | null
+          profile_version: number
+          region: string | null
+          regular_hours: Json | null
           review_average_rating: number | null
           review_last_successful_sync_at: string | null
           review_last_synced_at: string | null
@@ -3680,11 +3814,21 @@ export type Database = {
           review_sync_error_message: string | null
           review_sync_locked_at: string | null
           review_total_count: number | null
+          special_hours: Json
           updated_at: string
           verification_status: string
+          website_url: string | null
         }
         Insert: {
+          additional_categories?: Json
+          address_line_1?: string | null
+          address_line_2?: string | null
+          attributes?: Json
+          business_description?: string | null
+          business_name?: string | null
+          city?: string | null
           connection_status?: string
+          country?: string | null
           created_at?: string
           google_account_id?: string | null
           google_address_line_1?: string | null
@@ -3700,6 +3844,7 @@ export type Database = {
           google_place_id?: string | null
           google_postal_code?: string | null
           google_primary_category?: string | null
+          google_state?: string | null
           google_status?: string | null
           google_store_code?: string | null
           google_verification_state?: string | null
@@ -3710,10 +3855,26 @@ export type Database = {
           last_error_message?: string | null
           last_successful_sync_at?: string | null
           last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           mapped_at?: string | null
           mapped_by?: string | null
           mapping_status?: string
           office_id: string
+          phone_additional?: Json
+          phone_primary?: string | null
+          postal_code?: string | null
+          primary_category?: string | null
+          profile_last_successful_sync_at?: string | null
+          profile_last_synced_at?: string | null
+          profile_sync_error_code?: string | null
+          profile_sync_error_message?: string | null
+          profile_sync_locked_at?: string | null
+          profile_synced_hash?: string | null
+          profile_updated_at?: string | null
+          profile_version?: number
+          region?: string | null
+          regular_hours?: Json | null
           review_average_rating?: number | null
           review_last_successful_sync_at?: string | null
           review_last_synced_at?: string | null
@@ -3721,11 +3882,21 @@ export type Database = {
           review_sync_error_message?: string | null
           review_sync_locked_at?: string | null
           review_total_count?: number | null
+          special_hours?: Json
           updated_at?: string
           verification_status?: string
+          website_url?: string | null
         }
         Update: {
+          additional_categories?: Json
+          address_line_1?: string | null
+          address_line_2?: string | null
+          attributes?: Json
+          business_description?: string | null
+          business_name?: string | null
+          city?: string | null
           connection_status?: string
+          country?: string | null
           created_at?: string
           google_account_id?: string | null
           google_address_line_1?: string | null
@@ -3741,6 +3912,7 @@ export type Database = {
           google_place_id?: string | null
           google_postal_code?: string | null
           google_primary_category?: string | null
+          google_state?: string | null
           google_status?: string | null
           google_store_code?: string | null
           google_verification_state?: string | null
@@ -3751,10 +3923,26 @@ export type Database = {
           last_error_message?: string | null
           last_successful_sync_at?: string | null
           last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           mapped_at?: string | null
           mapped_by?: string | null
           mapping_status?: string
           office_id?: string
+          phone_additional?: Json
+          phone_primary?: string | null
+          postal_code?: string | null
+          primary_category?: string | null
+          profile_last_successful_sync_at?: string | null
+          profile_last_synced_at?: string | null
+          profile_sync_error_code?: string | null
+          profile_sync_error_message?: string | null
+          profile_sync_locked_at?: string | null
+          profile_synced_hash?: string | null
+          profile_updated_at?: string | null
+          profile_version?: number
+          region?: string | null
+          regular_hours?: Json | null
           review_average_rating?: number | null
           review_last_successful_sync_at?: string | null
           review_last_synced_at?: string | null
@@ -3762,8 +3950,10 @@ export type Database = {
           review_sync_error_message?: string | null
           review_sync_locked_at?: string | null
           review_total_count?: number | null
+          special_hours?: Json
           updated_at?: string
           verification_status?: string
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -7541,6 +7731,10 @@ export type Database = {
     }
     Functions: {
       accept_voice_call: { Args: { p_call_id: string }; Returns: Json }
+      acquire_google_profile_sync_lock: {
+        Args: { p_office_id: string; p_stale_after_seconds?: number }
+        Returns: boolean
+      }
       acquire_google_review_sync_lock: {
         Args: { p_office_id: string; p_stale_after_seconds?: number }
         Returns: boolean
@@ -7554,6 +7748,24 @@ export type Database = {
           p_unit_price: number
         }
         Returns: Json
+      }
+      admin_apply_google_profile_update: {
+        Args: {
+          p_actor_user_id?: string
+          p_expected_version?: number
+          p_fields: Json
+          p_google_status?: number
+          p_idempotency_key?: string
+          p_office_id: string
+        }
+        Returns: {
+          applied_fields: Json
+          error_code: string
+          error_message: string
+          ok: boolean
+          profile_version: number
+          status: string
+        }[]
       }
       admin_apply_google_review_reply: {
         Args: {
@@ -7594,6 +7806,17 @@ export type Database = {
       admin_early_release_rewards: {
         Args: { p_member_id: string; p_note: string; p_reward_ids: string[] }
         Returns: Json
+      }
+      admin_finalize_google_change_request: {
+        Args: {
+          p_actor_user_id?: string
+          p_error_code?: string
+          p_error_message?: string
+          p_office_id: string
+          p_ok: boolean
+          p_request_id: string
+        }
+        Returns: string
       }
       admin_get_google_business_activity: {
         Args: { p_limit?: number; p_office_id: string }
@@ -7665,7 +7888,15 @@ export type Database = {
           p_office_id: string
         }
         Returns: {
+          additional_categories: Json
+          address_line_1: string | null
+          address_line_2: string | null
+          attributes: Json
+          business_description: string | null
+          business_name: string | null
+          city: string | null
           connection_status: string
+          country: string | null
           created_at: string
           google_account_id: string | null
           google_address_line_1: string | null
@@ -7681,6 +7912,7 @@ export type Database = {
           google_place_id: string | null
           google_postal_code: string | null
           google_primary_category: string | null
+          google_state: string | null
           google_status: string | null
           google_store_code: string | null
           google_verification_state: string | null
@@ -7691,10 +7923,26 @@ export type Database = {
           last_error_message: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          phone_additional: Json
+          phone_primary: string | null
+          postal_code: string | null
+          primary_category: string | null
+          profile_last_successful_sync_at: string | null
+          profile_last_synced_at: string | null
+          profile_sync_error_code: string | null
+          profile_sync_error_message: string | null
+          profile_sync_locked_at: string | null
+          profile_synced_hash: string | null
+          profile_updated_at: string | null
+          profile_version: number
+          region: string | null
+          regular_hours: Json | null
           review_average_rating: number | null
           review_last_successful_sync_at: string | null
           review_last_synced_at: string | null
@@ -7702,8 +7950,10 @@ export type Database = {
           review_sync_error_message: string | null
           review_sync_locked_at: string | null
           review_total_count: number | null
+          special_hours: Json
           updated_at: string
           verification_status: string
+          website_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -7719,7 +7969,15 @@ export type Database = {
           p_office_id: string
         }
         Returns: {
+          additional_categories: Json
+          address_line_1: string | null
+          address_line_2: string | null
+          attributes: Json
+          business_description: string | null
+          business_name: string | null
+          city: string | null
           connection_status: string
+          country: string | null
           created_at: string
           google_account_id: string | null
           google_address_line_1: string | null
@@ -7735,6 +7993,7 @@ export type Database = {
           google_place_id: string | null
           google_postal_code: string | null
           google_primary_category: string | null
+          google_state: string | null
           google_status: string | null
           google_store_code: string | null
           google_verification_state: string | null
@@ -7745,10 +8004,26 @@ export type Database = {
           last_error_message: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          phone_additional: Json
+          phone_primary: string | null
+          postal_code: string | null
+          primary_category: string | null
+          profile_last_successful_sync_at: string | null
+          profile_last_synced_at: string | null
+          profile_sync_error_code: string | null
+          profile_sync_error_message: string | null
+          profile_sync_locked_at: string | null
+          profile_synced_hash: string | null
+          profile_updated_at: string | null
+          profile_version: number
+          region: string | null
+          regular_hours: Json | null
           review_average_rating: number | null
           review_last_successful_sync_at: string | null
           review_last_synced_at: string | null
@@ -7756,8 +8031,10 @@ export type Database = {
           review_sync_error_message: string | null
           review_sync_locked_at: string | null
           review_total_count: number | null
+          special_hours: Json
           updated_at: string
           verification_status: string
+          website_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -7765,6 +8042,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_mark_google_profile_sync_error: {
+        Args: {
+          p_actor_user_id?: string
+          p_error_code: string
+          p_error_message: string
+          p_office_id: string
+        }
+        Returns: undefined
       }
       admin_mark_google_review_sync_error: {
         Args: {
@@ -7813,6 +8099,20 @@ export type Database = {
         Args: { p_connection_id: string; p_locations: Json }
         Returns: number
       }
+      admin_sync_google_profile: {
+        Args: {
+          p_actor_user_id?: string
+          p_force?: boolean
+          p_office_id: string
+          p_profile: Json
+        }
+        Returns: {
+          changed_fields: Json
+          google_values: Json
+          profile_version: number
+          status: string
+        }[]
+      }
       admin_sync_google_reviews: {
         Args: {
           p_average_rating?: number
@@ -7829,7 +8129,15 @@ export type Database = {
       admin_unmap_office_google_location: {
         Args: { p_office_id: string }
         Returns: {
+          additional_categories: Json
+          address_line_1: string | null
+          address_line_2: string | null
+          attributes: Json
+          business_description: string | null
+          business_name: string | null
+          city: string | null
           connection_status: string
+          country: string | null
           created_at: string
           google_account_id: string | null
           google_address_line_1: string | null
@@ -7845,6 +8153,7 @@ export type Database = {
           google_place_id: string | null
           google_postal_code: string | null
           google_primary_category: string | null
+          google_state: string | null
           google_status: string | null
           google_store_code: string | null
           google_verification_state: string | null
@@ -7855,10 +8164,26 @@ export type Database = {
           last_error_message: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          phone_additional: Json
+          phone_primary: string | null
+          postal_code: string | null
+          primary_category: string | null
+          profile_last_successful_sync_at: string | null
+          profile_last_synced_at: string | null
+          profile_sync_error_code: string | null
+          profile_sync_error_message: string | null
+          profile_sync_locked_at: string | null
+          profile_synced_hash: string | null
+          profile_updated_at: string | null
+          profile_version: number
+          region: string | null
+          regular_hours: Json | null
           review_average_rating: number | null
           review_last_successful_sync_at: string | null
           review_last_synced_at: string | null
@@ -7866,8 +8191,10 @@ export type Database = {
           review_sync_error_message: string | null
           review_sync_locked_at: string | null
           review_total_count: number | null
+          special_hours: Json
           updated_at: string
           verification_status: string
+          website_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -7900,7 +8227,15 @@ export type Database = {
       admin_upsert_office_google_profile: {
         Args: { p_office_id: string; p_patch?: Json }
         Returns: {
+          additional_categories: Json
+          address_line_1: string | null
+          address_line_2: string | null
+          attributes: Json
+          business_description: string | null
+          business_name: string | null
+          city: string | null
           connection_status: string
+          country: string | null
           created_at: string
           google_account_id: string | null
           google_address_line_1: string | null
@@ -7916,6 +8251,7 @@ export type Database = {
           google_place_id: string | null
           google_postal_code: string | null
           google_primary_category: string | null
+          google_state: string | null
           google_status: string | null
           google_store_code: string | null
           google_verification_state: string | null
@@ -7926,10 +8262,26 @@ export type Database = {
           last_error_message: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          phone_additional: Json
+          phone_primary: string | null
+          postal_code: string | null
+          primary_category: string | null
+          profile_last_successful_sync_at: string | null
+          profile_last_synced_at: string | null
+          profile_sync_error_code: string | null
+          profile_sync_error_message: string | null
+          profile_sync_locked_at: string | null
+          profile_synced_hash: string | null
+          profile_updated_at: string | null
+          profile_version: number
+          region: string | null
+          regular_hours: Json | null
           review_average_rating: number | null
           review_last_successful_sync_at: string | null
           review_last_synced_at: string | null
@@ -7937,8 +8289,10 @@ export type Database = {
           review_sync_error_message: string | null
           review_sync_locked_at: string | null
           review_total_count: number | null
+          special_hours: Json
           updated_at: string
           verification_status: string
+          website_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -8098,6 +8452,21 @@ export type Database = {
       create_student_referral_registration_internal: {
         Args: { p_data: Json; p_referrer_user_id: string }
         Returns: Json
+      }
+      decide_google_profile_change_request: {
+        Args: {
+          p_decision: string
+          p_note?: string
+          p_office_id: string
+          p_request_id: string
+        }
+        Returns: {
+          field: string
+          id: string
+          profile_version: number
+          requested_value: Json
+          status: string
+        }[]
       }
       decline_voice_call: { Args: { p_call_id: string }; Returns: undefined }
       delete_catalog_entity: {
@@ -8571,6 +8940,52 @@ export type Database = {
           verification_status: string
         }[]
       }
+      get_office_google_profile: {
+        Args: { p_office_id: string }
+        Returns: {
+          additional_categories: Json
+          address_line_1: string
+          address_line_2: string
+          attributes: Json
+          business_description: string
+          business_name: string
+          city: string
+          connection_status: string
+          country: string
+          google_account_id: string
+          google_location_id: string
+          google_location_name: string
+          google_location_resource_name: string
+          google_maps_url: string
+          google_place_id: string
+          google_state: string
+          latitude: number
+          longitude: number
+          mapping_status: string
+          office_id: string
+          office_name: string
+          pending_change_count: number
+          phone_additional: Json
+          phone_primary: string
+          postal_code: string
+          primary_category: string
+          primary_operator_id: string
+          primary_operator_name: string
+          profile_last_successful_sync_at: string
+          profile_last_synced_at: string
+          profile_sync_error_code: string
+          profile_sync_error_message: string
+          profile_updated_at: string
+          profile_version: number
+          region: string
+          regular_hours: Json
+          side_manager_id: string
+          side_manager_name: string
+          special_hours: Json
+          verification_status: string
+          website_url: string
+        }[]
+      }
       get_office_google_review: {
         Args: { p_office_id: string; p_review_id: string }
         Returns: {
@@ -8781,6 +9196,44 @@ export type Database = {
           id: string
         }[]
       }
+      google_actor_can: {
+        Args: { p_action: string; p_office_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      google_actor_role: {
+        Args: { p_office_id: string; p_user_id: string }
+        Returns: string
+      }
+      google_profile_content: {
+        Args: {
+          p_additional_categories: Json
+          p_address_line_1: string
+          p_address_line_2: string
+          p_attributes: Json
+          p_business_description: string
+          p_business_name: string
+          p_city: string
+          p_country: string
+          p_latitude: number
+          p_longitude: number
+          p_phone_additional: Json
+          p_phone_primary: string
+          p_postal_code: string
+          p_primary_category: string
+          p_region: string
+          p_regular_hours: Json
+          p_special_hours: Json
+          p_website_url: string
+        }
+        Returns: Json
+      }
+      google_profile_field_error: {
+        Args: { p_field: string; p_value: Json }
+        Returns: string
+      }
+      google_profile_hash: { Args: { p_profile: Json }; Returns: string }
+      google_profile_high_risk_fields: { Args: never; Returns: string[] }
+      google_user_is_admin: { Args: { p_user_id: string }; Returns: boolean }
       has_internal_team_chat_access: {
         Args: { p_user: string }
         Returns: boolean
@@ -8886,6 +9339,30 @@ export type Database = {
           source: string
           suggested_partner_id: string
           suggested_referred_by: string
+        }[]
+      }
+      list_google_profile_change_requests: {
+        Args: { p_office_id: string; p_status?: string }
+        Returns: {
+          applied_at: string
+          apply_error_code: string
+          apply_error_message: string
+          created_at: string
+          current_value: Json
+          decided_at: string
+          decided_by: string
+          decided_by_name: string
+          decision_note: string
+          field: string
+          google_location_id: string
+          id: string
+          office_id: string
+          reason: string
+          requested_by: string
+          requested_by_name: string
+          requested_by_role: string
+          requested_value: Json
+          status: string
         }[]
       }
       list_my_google_offices: {
@@ -9217,6 +9694,10 @@ export type Database = {
         Returns: undefined
       }
       reject_recruit_application: { Args: { p_id: string }; Returns: undefined }
+      release_google_profile_sync_lock: {
+        Args: { p_office_id: string }
+        Returns: undefined
+      }
       release_google_review_sync_lock: {
         Args: { p_office_id: string }
         Returns: undefined
@@ -9431,6 +9912,19 @@ export type Database = {
             Args: { p_file_path: string; p_note?: string; p_payment_id: string }
             Returns: string
           }
+      submit_google_profile_change_request: {
+        Args: {
+          p_field: string
+          p_office_id: string
+          p_reason?: string
+          p_requested_value: Json
+        }
+        Returns: {
+          field: string
+          id: string
+          status: string
+        }[]
+      }
       submit_recruit_application: {
         Args: {
           p_city?: string

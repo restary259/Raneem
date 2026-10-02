@@ -85,17 +85,20 @@ BEGIN
     'get_office_google_profile(uuid)',
     'acquire_google_profile_sync_lock(uuid,integer)',
     'release_google_profile_sync_lock(uuid)',
-    'admin_sync_google_profile(uuid,jsonb,boolean)',
-    'admin_mark_google_profile_sync_error(uuid,text,text)',
-    'admin_apply_google_profile_update(uuid,jsonb,integer,text,integer)',
+    'admin_sync_google_profile(uuid,jsonb,boolean,uuid)',
+    'admin_mark_google_profile_sync_error(uuid,text,text,uuid)',
+    'admin_apply_google_profile_update(uuid,jsonb,integer,text,integer,uuid)',
+    'google_actor_can(uuid,uuid,text)',
+    'google_actor_role(uuid,uuid)',
+    'google_user_is_admin(uuid)',
     'google_profile_field_error(text,jsonb)',
     'google_profile_high_risk_fields()',
-    'google_profile_content(text,text,text,jsonb,text,jsonb,text,text,text,text,text,text,text,jsonb,jsonb,jsonb)',
+    'google_profile_content(text,text,text,jsonb,text,jsonb,text,text,text,text,text,text,text,numeric,numeric,jsonb,jsonb,jsonb)',
     'google_profile_hash(jsonb)',
     'submit_google_profile_change_request(uuid,text,jsonb,text)',
     'list_google_profile_change_requests(uuid,text)',
     'decide_google_profile_change_request(uuid,uuid,text,text)',
-    'admin_finalize_google_change_request(uuid,uuid,boolean,text,text)',
+    'admin_finalize_google_change_request(uuid,uuid,boolean,text,text,uuid)',
     'validate_google_change_request()'
   ]) AS sig
   LOOP
@@ -147,6 +150,20 @@ BEGIN
     v_src LIKE '%external_change%');
   PERFORM pg_temp._chk('sync', 'force accepts Google''s version',
     v_src LIKE '%p_force%');
+  PERFORM pg_temp._chk('sync', 'is service-role only',
+    v_src LIKE '%IS DISTINCT FROM ''service_role''%');
+  PERFORM pg_temp._chk('sync', 'attributes the actor explicitly',
+    v_src LIKE '%p_actor_user_id%');
+
+  -- Server-only persistence RPCs must refuse a plain browser session.
+  SELECT p.prosrc INTO v_src FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public' AND p.proname = 'admin_apply_google_profile_update' LIMIT 1;
+  PERFORM pg_temp._chk('update', 'is service-role only',
+    v_src LIKE '%IS DISTINCT FROM ''service_role''%');
+  PERFORM pg_temp._chk('update', 'attributes the actor explicitly',
+    v_src LIKE '%p_actor_user_id%');
+  PERFORM pg_temp._chk('update', 'authorizes the real actor, not auth.uid()',
+    v_src LIKE '%google_actor_can%');
 
   SELECT p.prosrc INTO v_src FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public' AND p.proname = 'decide_google_profile_change_request' LIMIT 1;
@@ -183,12 +200,12 @@ BEGIN
   END LOOP;
 
   --------------------------------------------------------------------------
-  -- 6. Grants — authenticated yes, anon no
+  -- 6. Grants — browser-facing RPCs yes, server-only RPCs no
   --------------------------------------------------------------------------
+  -- Browser roles may reach these: they never accept a caller-supplied Google
+  -- snapshot, and every one of them re-checks office membership + operator role.
   FOR r IN SELECT unnest(ARRAY[
     'get_office_google_profile(uuid)',
-    'admin_sync_google_profile(uuid,jsonb,boolean)',
-    'admin_apply_google_profile_update(uuid,jsonb,integer,text,integer)',
     'submit_google_profile_change_request(uuid,text,jsonb,text)',
     'list_google_profile_change_requests(uuid,text)',
     'decide_google_profile_change_request(uuid,uuid,text,text)',
@@ -202,9 +219,69 @@ BEGIN
       NOT COALESCE(has_function_privilege('anon', pg_temp._fn_oid(r.sig), 'EXECUTE'), false));
   END LOOP;
 
+  -- Server-only RPCs: these assert "Google accepted this" or persist a
+  -- caller-supplied snapshot, so no browser role may EXECUTE them. Reaching
+  -- them requires the service-role connector (or an AAL2 admin session).
+  FOR r IN SELECT unnest(ARRAY[
+    'admin_sync_google_profile(uuid,jsonb,boolean,uuid)',
+    'admin_mark_google_profile_sync_error(uuid,text,text,uuid)',
+    'admin_apply_google_profile_update(uuid,jsonb,integer,text,integer,uuid)',
+    'admin_finalize_google_change_request(uuid,uuid,boolean,text,text,uuid)'
+  ]) AS sig
+  LOOP
+    PERFORM pg_temp._chk('grant', 'authenticated CANNOT EXECUTE ' || r.sig,
+      NOT COALESCE(has_function_privilege('authenticated', pg_temp._fn_oid(r.sig), 'EXECUTE'), false));
+    PERFORM pg_temp._chk('grant', 'anon CANNOT EXECUTE ' || r.sig,
+      NOT COALESCE(has_function_privilege('anon', pg_temp._fn_oid(r.sig), 'EXECUTE'), false));
+    PERFORM pg_temp._chk('grant', 'service_role can EXECUTE ' || r.sig,
+      COALESCE(has_function_privilege('service_role', pg_temp._fn_oid(r.sig), 'EXECUTE'), false));
+  END LOOP;
+
+  PERFORM pg_temp._chk('grant', 'authenticated CANNOT EXECUTE google_user_is_admin',
+    COALESCE(pg_temp._fn_oid('google_user_is_admin(uuid)'), 0::oid) = 0::oid
+    OR NOT COALESCE(has_function_privilege('authenticated',
+      pg_temp._fn_oid('google_user_is_admin(uuid)'), 'EXECUTE'), false));
+
   PERFORM pg_temp._chk('grant', 'authenticated CANNOT EXECUTE validate_google_change_request',
-    NOT COALESCE(has_function_privilege('authenticated',
-      'public.validate_google_change_request()', 'EXECUTE'), false));
+    COALESCE(pg_temp._fn_oid('validate_google_change_request()'), 0::oid) = 0::oid
+    OR NOT COALESCE(has_function_privilege('authenticated',
+      pg_temp._fn_oid('validate_google_change_request()'), 'EXECUTE'), false));
+
+  --------------------------------------------------------------------------
+  -- 6b. No stale overload survives an upgrade
+  --------------------------------------------------------------------------
+  -- A prior revision of migration 20261001200000 used shorter signatures that
+  -- were GRANTed to `authenticated`. `CREATE OR REPLACE` would leave them in
+  -- place as extra overloads, re-opening the hole. Assert one definition per
+  -- name, and that no browser role can reach ANY overload of the server-only
+  -- RPCs (checked by name, so a re-introduced overload fails the deploy).
+  FOR r IN SELECT unnest(ARRAY[
+    'admin_sync_google_profile','admin_mark_google_profile_sync_error',
+    'admin_apply_google_profile_update','admin_finalize_google_change_request',
+    'google_profile_content','list_google_profile_change_requests'
+  ]) AS fname
+  LOOP
+    PERFORM pg_temp._chk('overload', r.fname || ' has exactly one definition',
+      (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+       WHERE n.nspname = 'public' AND p.proname = r.fname) = 1);
+  END LOOP;
+
+  FOR r IN SELECT unnest(ARRAY[
+    'admin_sync_google_profile','admin_mark_google_profile_sync_error',
+    'admin_apply_google_profile_update','admin_finalize_google_change_request'
+  ]) AS fname
+  LOOP
+    PERFORM pg_temp._chk('overload', 'no overload of ' || r.fname || ' is EXECUTEable by authenticated',
+      NOT EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = r.fname
+          AND COALESCE(has_function_privilege('authenticated', p.oid, 'EXECUTE'), false)));
+    PERFORM pg_temp._chk('overload', 'no overload of ' || r.fname || ' is EXECUTEable by anon',
+      NOT EXISTS (
+        SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = r.fname
+          AND COALESCE(has_function_privilege('anon', p.oid, 'EXECUTE'), false)));
+  END LOOP;
 
   --------------------------------------------------------------------------
   -- 7. Table privileges — reads only for browser roles
