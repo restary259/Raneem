@@ -653,7 +653,7 @@ export const publishGooglePost = createServerFn({ method: "POST" })
 
     const resourceName =
       normalized?.google_post_resource_name ??
-      `accounts/${identity.google_account_id}/locations/${identity.google_location_id}/localPosts/${googlePostId}`;
+      `accounts/${bareGoogleId(identity.google_account_id)}/locations/${bareGoogleId(identity.google_location_id)}/localPosts/${googlePostId}`;
 
     try {
       await adminRpcOrThrow("admin_apply_google_post_publish", {

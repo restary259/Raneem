@@ -48,7 +48,10 @@ export function mapGbpError(status: number, body: string): GbpError {
             : status >= 400 && status < 500
               ? "invalid_request"
               : "upstream";
-  return new GbpError(code, status, message || `HTTP ${status}`);
+  const readable = /^\s*<(!doctype|html)/i.test(message ?? "")
+    ? (status === 404 ? "Google couldn't find this listing (404)" : `Google returned an error page (HTTP ${status})`)
+    : message;
+  return new GbpError(code, status, readable || `HTTP ${status}`);
 }
 
 type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
@@ -562,7 +565,7 @@ export function normalizeGbpReview(
     google_review_id: reviewId,
     google_review_resource_name:
       raw.name?.trim() ||
-      `accounts/${opts.accountId}/locations/${opts.locationId}/reviews/${reviewId}`,
+      `accounts/${bareGoogleId(opts.accountId)}/locations/${bareGoogleId(opts.locationId)}/reviews/${reviewId}`,
     reviewer_display_name: raw.reviewer?.isAnonymous
       ? null
       : raw.reviewer?.displayName?.trim() || null,
@@ -609,7 +612,7 @@ export function reviewsPath(
 ): string {
   const q = new URLSearchParams({ pageSize: String(GBP_REVIEW_PAGE_SIZE) });
   if (pageToken) q.set("pageToken", pageToken);
-  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/reviews?${q}`;
+  return `/${GBP_REVIEWS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/reviews?${q}`;
 }
 
 /** The gateway path for a single review's reply. */
@@ -618,7 +621,7 @@ export function reviewReplyPath(
   locationId: string,
   reviewId: string,
 ): string {
-  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/reviews/${reviewId}/reply`;
+  return `/${GBP_REVIEWS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/reviews/${reviewId}/reply`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1045,7 +1048,7 @@ export function locationPath(
   readMask = GBP_PROFILE_READ_MASK,
 ): string {
   const q = new URLSearchParams({ readMask });
-  return `/${GBP_PROFILE_API}/locations/${locationId}?${q}`;
+  return `/${GBP_PROFILE_API}/locations/${bareGoogleId(locationId)}?${q}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1321,7 +1324,7 @@ export function multiDailyMetricsPath(
   q.set("dailyRange.endDate.year", String(end.year));
   q.set("dailyRange.endDate.month", String(end.month));
   q.set("dailyRange.endDate.day", String(end.day));
-  return `/${GBP_PERFORMANCE_API}/locations/${locationId}:fetchMultiDailyMetricsTimeSeries?${q}`;
+  return `/${GBP_PERFORMANCE_API}/locations/${bareGoogleId(locationId)}:fetchMultiDailyMetricsTimeSeries?${q}`;
 }
 
 /** The gateway path for a single-metric daily time series request. */
@@ -1342,7 +1345,7 @@ export function dailyMetricsPath(
   q.set("dailyRange.endDate.year", String(end.year));
   q.set("dailyRange.endDate.month", String(end.month));
   q.set("dailyRange.endDate.day", String(end.day));
-  return `/${GBP_PERFORMANCE_API}/locations/${locationId}:getDailyMetricsTimeSeries?${q}`;
+  return `/${GBP_PERFORMANCE_API}/locations/${bareGoogleId(locationId)}:getDailyMetricsTimeSeries?${q}`;
 }
 
 /** The gateway path for the monthly search-keyword list. */
@@ -1363,7 +1366,7 @@ export function searchKeywordsPath(
   q.set("monthlyRange.endMonth.month", String(end.month));
   q.set("pageSize", String(Math.min(pageSize, GBP_KEYWORD_PAGE_SIZE)));
   if (pageToken) q.set("pageToken", pageToken);
-  return `/${GBP_PERFORMANCE_API}/locations/${locationId}/searchkeywords/impressions/monthly?${q}`;
+  return `/${GBP_PERFORMANCE_API}/locations/${bareGoogleId(locationId)}/searchkeywords/impressions/monthly?${q}`;
 }
 
 // Phase 7 — pure media helpers
@@ -1539,7 +1542,7 @@ export function mediaPath(
 ): string {
   const q = new URLSearchParams({ pageSize: String(GBP_MEDIA_PAGE_SIZE) });
   if (pageToken) q.set("pageToken", pageToken);
-  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media?${q}`;
+  return `/${GBP_REVIEWS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/media?${q}`;
 }
 
 /** The gateway path for a single media item (GET / PATCH / DELETE). */
@@ -1548,7 +1551,7 @@ export function mediaItemPath(
   locationId: string,
   mediaId: string,
 ): string {
-  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media/${mediaId}`;
+  return `/${GBP_REVIEWS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/media/${mediaId}`;
 }
 
 /** The gateway path that starts a byte upload (returns a resource name). */
@@ -1556,7 +1559,7 @@ export function mediaStartUploadPath(
   accountId: string,
   locationId: string,
 ): string {
-  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media:startUpload`;
+  return `/${GBP_REVIEWS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/media:startUpload`;
 }
 
 /**
@@ -1861,7 +1864,7 @@ export function postsPath(
 ): string {
   const q = new URLSearchParams({ pageSize: "100" });
   if (pageToken) q.set("pageToken", pageToken);
-  return `/${GBP_POSTS_API}/accounts/${accountId}/locations/${locationId}/localPosts?${q}`;
+  return `/${GBP_POSTS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/localPosts?${q}`;
 }
 
 /** The gateway path for a single Local Post (GET / PATCH / DELETE). */
@@ -1870,12 +1873,12 @@ export function postItemPath(
   locationId: string,
   postId: string,
 ): string {
-  return `/${GBP_POSTS_API}/accounts/${accountId}/locations/${locationId}/localPosts/${postId}`;
+  return `/${GBP_POSTS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/localPosts/${postId}`;
 }
 
 /** The gateway path that creates a Local Post. */
 export function postCreatePath(accountId: string, locationId: string): string {
-  return `/${GBP_POSTS_API}/accounts/${accountId}/locations/${locationId}/localPosts`;
+  return `/${GBP_POSTS_API}/accounts/${bareGoogleId(accountId)}/locations/${bareGoogleId(locationId)}/localPosts`;
 }
 
 /** A DARB post draft (the fields the composer edits). */
@@ -2022,4 +2025,10 @@ export function buildGbpPostBody(
   if (media.length) body.media = media;
 
   return body;
+}
+
+/** Reduce "accounts/1", "locations/2", "accounts/1/locations/2" or "2" to the bare trailing id. */
+export function bareGoogleId(value: string): string {
+  const parts = String(value ?? "").trim().split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? "";
 }
