@@ -2688,6 +2688,95 @@ export type Database = {
           },
         ]
       }
+      google_business_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          darb_reply_status: string
+          google_account_id: string
+          google_connection_id: string | null
+          google_location_id: string
+          google_review_id: string
+          google_review_resource_name: string
+          google_review_url: string | null
+          id: string
+          last_synced_at: string | null
+          office_id: string
+          reply_comment: string | null
+          reply_policy_violation: string | null
+          reply_state: string | null
+          reply_update_time: string | null
+          review_create_time: string | null
+          review_update_time: string | null
+          reviewer_display_name: string | null
+          reviewer_is_anonymous: boolean
+          reviewer_profile_photo_url: string | null
+          star_rating: number
+          updated_at: string
+          visibility_state: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          darb_reply_status?: string
+          google_account_id: string
+          google_connection_id?: string | null
+          google_location_id: string
+          google_review_id: string
+          google_review_resource_name: string
+          google_review_url?: string | null
+          id?: string
+          last_synced_at?: string | null
+          office_id: string
+          reply_comment?: string | null
+          reply_policy_violation?: string | null
+          reply_state?: string | null
+          reply_update_time?: string | null
+          review_create_time?: string | null
+          review_update_time?: string | null
+          reviewer_display_name?: string | null
+          reviewer_is_anonymous?: boolean
+          reviewer_profile_photo_url?: string | null
+          star_rating: number
+          updated_at?: string
+          visibility_state?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          darb_reply_status?: string
+          google_account_id?: string
+          google_connection_id?: string | null
+          google_location_id?: string
+          google_review_id?: string
+          google_review_resource_name?: string
+          google_review_url?: string | null
+          id?: string
+          last_synced_at?: string | null
+          office_id?: string
+          reply_comment?: string | null
+          reply_policy_violation?: string | null
+          reply_state?: string | null
+          reply_update_time?: string | null
+          review_create_time?: string | null
+          review_update_time?: string | null
+          reviewer_display_name?: string | null
+          reviewer_is_anonymous?: boolean
+          reviewer_profile_photo_url?: string | null
+          star_rating?: number
+          updated_at?: string
+          visibility_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_reviews_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       important_contacts: {
         Row: {
           address_ar: string | null
@@ -3584,6 +3673,13 @@ export type Database = {
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          review_average_rating: number | null
+          review_last_successful_sync_at: string | null
+          review_last_synced_at: string | null
+          review_sync_error_code: string | null
+          review_sync_error_message: string | null
+          review_sync_locked_at: string | null
+          review_total_count: number | null
           updated_at: string
           verification_status: string
         }
@@ -3618,6 +3714,13 @@ export type Database = {
           mapped_by?: string | null
           mapping_status?: string
           office_id: string
+          review_average_rating?: number | null
+          review_last_successful_sync_at?: string | null
+          review_last_synced_at?: string | null
+          review_sync_error_code?: string | null
+          review_sync_error_message?: string | null
+          review_sync_locked_at?: string | null
+          review_total_count?: number | null
           updated_at?: string
           verification_status?: string
         }
@@ -3652,6 +3755,13 @@ export type Database = {
           mapped_by?: string | null
           mapping_status?: string
           office_id?: string
+          review_average_rating?: number | null
+          review_last_successful_sync_at?: string | null
+          review_last_synced_at?: string | null
+          review_sync_error_code?: string | null
+          review_sync_error_message?: string | null
+          review_sync_locked_at?: string | null
+          review_total_count?: number | null
           updated_at?: string
           verification_status?: string
         }
@@ -7431,6 +7541,10 @@ export type Database = {
     }
     Functions: {
       accept_voice_call: { Args: { p_call_id: string }; Returns: Json }
+      acquire_google_review_sync_lock: {
+        Args: { p_office_id: string; p_stale_after_seconds?: number }
+        Returns: boolean
+      }
       admin_adjust_case_service: {
         Args: {
           p_case_service_id: string
@@ -7440,6 +7554,21 @@ export type Database = {
           p_unit_price: number
         }
         Returns: Json
+      }
+      admin_apply_google_review_reply: {
+        Args: {
+          p_action: string
+          p_google_reply_state?: string
+          p_google_status?: number
+          p_office_id: string
+          p_policy_violation?: string
+          p_reply_comment?: string
+          p_review_id: string
+        }
+        Returns: {
+          darb_reply_status: string
+          reply_comment: string
+        }[]
       }
       admin_assign_google_primary: {
         Args: { p_office_id: string; p_team_member_id: string }
@@ -7566,6 +7695,13 @@ export type Database = {
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          review_average_rating: number | null
+          review_last_successful_sync_at: string | null
+          review_last_synced_at: string | null
+          review_sync_error_code: string | null
+          review_sync_error_message: string | null
+          review_sync_locked_at: string | null
+          review_total_count: number | null
           updated_at: string
           verification_status: string
         }
@@ -7613,6 +7749,13 @@ export type Database = {
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          review_average_rating: number | null
+          review_last_successful_sync_at: string | null
+          review_last_synced_at: string | null
+          review_sync_error_code: string | null
+          review_sync_error_message: string | null
+          review_sync_locked_at: string | null
+          review_total_count: number | null
           updated_at: string
           verification_status: string
         }
@@ -7622,6 +7765,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_mark_google_review_sync_error: {
+        Args: {
+          p_error_code: string
+          p_error_message: string
+          p_office_id: string
+        }
+        Returns: undefined
       }
       admin_reactivate_account: {
         Args: {
@@ -7662,6 +7813,19 @@ export type Database = {
         Args: { p_connection_id: string; p_locations: Json }
         Returns: number
       }
+      admin_sync_google_reviews: {
+        Args: {
+          p_average_rating?: number
+          p_office_id: string
+          p_reviews: Json
+          p_total_count?: number
+        }
+        Returns: {
+          inserted: number
+          marked_not_found: number
+          updated: number
+        }[]
+      }
       admin_unmap_office_google_location: {
         Args: { p_office_id: string }
         Returns: {
@@ -7695,6 +7859,13 @@ export type Database = {
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          review_average_rating: number | null
+          review_last_successful_sync_at: string | null
+          review_last_synced_at: string | null
+          review_sync_error_code: string | null
+          review_sync_error_message: string | null
+          review_sync_locked_at: string | null
+          review_total_count: number | null
           updated_at: string
           verification_status: string
         }
@@ -7759,6 +7930,13 @@ export type Database = {
           mapped_by: string | null
           mapping_status: string
           office_id: string
+          review_average_rating: number | null
+          review_last_successful_sync_at: string | null
+          review_last_synced_at: string | null
+          review_sync_error_code: string | null
+          review_sync_error_message: string | null
+          review_sync_locked_at: string | null
+          review_total_count: number | null
           updated_at: string
           verification_status: string
         }
@@ -8393,6 +8571,55 @@ export type Database = {
           verification_status: string
         }[]
       }
+      get_office_google_review: {
+        Args: { p_office_id: string; p_review_id: string }
+        Returns: {
+          activity: Json
+          comment: string
+          darb_reply_status: string
+          google_location_id: string
+          google_review_id: string
+          google_review_url: string
+          id: string
+          last_synced_at: string
+          office_id: string
+          reply_comment: string
+          reply_policy_violation: string
+          reply_state: string
+          reply_update_time: string
+          review_create_time: string
+          review_update_time: string
+          reviewer_display_name: string
+          reviewer_is_anonymous: boolean
+          reviewer_profile_photo_url: string
+          star_rating: number
+          visibility_state: string
+        }[]
+      }
+      get_office_google_review_summary: {
+        Args: { p_office_id: string }
+        Returns: {
+          average_rating: number
+          cached_count: number
+          connection_status: string
+          google_location_name: string
+          google_maps_url: string
+          mapping_status: string
+          office_id: string
+          rating_1: number
+          rating_2: number
+          rating_3: number
+          rating_4: number
+          rating_5: number
+          review_last_successful_sync_at: string
+          review_last_synced_at: string
+          review_sync_error_code: string
+          review_sync_error_message: string
+          total_count: number
+          unanswered_count: number
+          verification_status: string
+        }[]
+      }
       get_partner_commission_rate: {
         Args: { p_user_id: string }
         Returns: number
@@ -8710,6 +8937,40 @@ export type Database = {
           verification_status: string
         }[]
       }
+      list_office_google_reviews: {
+        Args: {
+          p_include_hidden?: boolean
+          p_limit?: number
+          p_office_id: string
+          p_offset?: number
+          p_rating?: number
+          p_search?: string
+          p_sort?: string
+          p_status?: string
+        }
+        Returns: {
+          comment: string
+          darb_reply_status: string
+          google_location_id: string
+          google_review_id: string
+          google_review_url: string
+          id: string
+          last_synced_at: string
+          office_id: string
+          reply_comment: string
+          reply_policy_violation: string
+          reply_state: string
+          reply_update_time: string
+          review_create_time: string
+          review_update_time: string
+          reviewer_display_name: string
+          reviewer_is_anonymous: boolean
+          reviewer_profile_photo_url: string
+          star_rating: number
+          total_count: number
+          visibility_state: string
+        }[]
+      }
       list_office_members: {
         Args: { p_office_id: string }
         Returns: {
@@ -8880,6 +9141,15 @@ export type Database = {
         Args: { _source: string }
         Returns: string
       }
+      notify_new_google_review: {
+        Args: {
+          p_office_id: string
+          p_review_id: string
+          p_reviewer: string
+          p_star_rating: number
+        }
+        Returns: undefined
+      }
       partner_base_pool: { Args: { p_partner_id: string }; Returns: number }
       preview_case_commission_split: {
         Args: { p_case_id: string }
@@ -8947,6 +9217,10 @@ export type Database = {
         Returns: undefined
       }
       reject_recruit_application: { Args: { p_id: string }; Returns: undefined }
+      release_google_review_sync_lock: {
+        Args: { p_office_id: string }
+        Returns: undefined
+      }
       remove_google_operator: {
         Args: { p_office_id: string; p_role: string }
         Returns: undefined
@@ -8967,6 +9241,19 @@ export type Database = {
         Returns: string
       }
       request_payout_via_chat: { Args: { p_notes?: string }; Returns: Json }
+      resolve_google_review_office: {
+        Args: { p_office_id: string; p_review_id: string }
+        Returns: {
+          darb_reply_status: string
+          google_account_id: string
+          google_location_id: string
+          google_review_id: string
+          google_review_resource_name: string
+          office_id: string
+          reply_comment: string
+          review_id: string
+        }[]
+      }
       resolve_partner_link: {
         Args: { p_code: string }
         Returns: {
