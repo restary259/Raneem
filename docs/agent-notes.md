@@ -3426,13 +3426,32 @@ verified non-vacuous by reintroducing the defect).
   Google operator -> `office_google_profiles`; a client never supplies a Google
   location id. Read RPCs gate on `GOOGLE_VIEW_INSIGHTS`, sync on the new
   `GOOGLE_SYNC_PERFORMANCE`; the daily/keyword triggers reject a row whose
-  `google_location_id` does not belong to the row's office.
-- Sync is lock-guarded (self-expiring advisory lock), retries with capped
-  backoff, never retries 401/403, and re-fetches a recent window with UPSERT so
-  late Google corrections land. Metrics and keywords are separate jobs: a keyword
-  failure returns PARTIAL and keeps the healthy metrics.
+  `google_location_id` does not belong to the row's office. The performance
+  tables' RLS policies and `list_google_performance_offices` use the same
+  `GOOGLE_VIEW_INSIGHTS` check (not plain office membership), so an ordinary
+  member cannot read analytics or enumerate offices through the browser client.
+- Sync is lock-guarded, retries with capped backoff, never retries 401/403, and
+  re-fetches a recent window with UPSERT so late Google corrections land.
+  Metrics and keywords are separate jobs: a keyword failure returns PARTIAL and
+  keeps the healthy metrics.
+- **The sync lock is owner-tokened, and finalizers verify the job.** `acquire_*`
+  returns a random token; `release_*` and both finalizers require it, and the
+  stale window is clamped server-side (60s..1800s) so a caller cannot widen it.
+  A finalizer only writes for a `RUNNING` job of its expected type while the
+  caller still holds the lock, and reconciliation deletes are conditional on the
+  same lock, so an older completion cannot poison or erase a newer sync's rows.
+  The finalizer does NOT clear the lock — the caller owns the lock lifecycle,
+  which keeps multi-chunk backfill working (chunk 2 must still hold the token).
+- **`data_through` is the newest datapoint Google actually returned**, not the
+  requested end date, and the previous value is preserved when a response has
+  none — so a lagging or empty sync cannot be shown as Healthy. Keyword
+  reconcile deletes terms Google no longer returns for the refreshed months.
+- CSV export neutralizes spreadsheet formula injection (`= + - @ tab CR LF`) in
+  keywords, office and location names, and the keyword export walks every page
+  (bounded) so it is not limited to the first 100 rows.
 - i18n: `googleInsights.*` + `nav.googleInsights` in en/ar/he
   (`public/locales` only — `dashboard` is not bundled in `src/locales`). UI at
   `/team/google/insights`; nav entry under the `nav.googleBusiness` group.
 - Verification: `supabase/diagnostics/office_google_phase8_deploy_verify.sql`
-  (92/92, read-only); unit tests in `src/lib/googleBusinessPerformance.test.ts`.
+  (read-only); unit tests in `src/lib/googleBusinessPerformance.test.ts` and
+  `src/lib/googlePerformanceExport.test.ts`.
