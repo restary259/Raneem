@@ -12,17 +12,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  adminGetGoogleBusinessControls,
   adminGoogleAttentionOffices,
+  adminGoogleIntegrityAudit,
   adminGoogleIntegrationHealth,
   adminGoogleEventTimeline,
   adminListGoogleDeadLetters,
   adminRetryGoogleEvent,
+  adminSetGoogleBusinessControls,
   adminUpdateGooglePubSubConfig,
   getGoogleNotificationTypes,
   type AdminAttentionOffice,
   type AdminDeadLetterRow,
   type AdminEventTimelineRow,
+  type AdminIntegrityCheck,
   type AdminIntegrationHealth,
+  type GoogleBusinessControls,
 } from "@/lib/googleBusinessRealtime.functions";
 import { Input } from "@/components/ui/input";
 
@@ -62,6 +67,8 @@ export default function AdminGoogleIntegrationPage() {
   const [events, setEvents] = useState<AdminEventTimelineRow[]>([]);
   const [deadLetters, setDeadLetters] = useState<AdminDeadLetterRow[]>([]);
   const [supportedTypes, setSupportedTypes] = useState<string[]>([]);
+  const [controls, setControls] = useState<GoogleBusinessControls | null>(null);
+  const [integrity, setIntegrity] = useState<AdminIntegrityCheck[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -72,18 +79,22 @@ export default function AdminGoogleIntegrationPage() {
     setLoading(true);
     setError(null);
     try {
-      const [h, a, e, d, types] = await Promise.all([
+      const [h, a, e, d, types, c, i] = await Promise.all([
         adminGoogleIntegrationHealth(),
         adminGoogleAttentionOffices(),
         adminGoogleEventTimeline({ data: { limit: 25 } }),
         adminListGoogleDeadLetters({ data: { limit: 25 } }),
         getGoogleNotificationTypes(),
+        adminGetGoogleBusinessControls(),
+        adminGoogleIntegrityAudit(),
       ]);
       setHealth(h);
       setAttention(a);
       setEvents(e);
       setDeadLetters(d);
       setSupportedTypes(types.supported);
+      setControls(c);
+      setIntegrity(i);
       setTopicDraft((cur) => cur || (h?.pubsubTopic ?? ""));
       setSubscriptionDraft((cur) => cur || (h?.pubsubSubscription ?? ""));
     } catch (err) {
@@ -173,6 +184,29 @@ export default function AdminGoogleIntegrationPage() {
     load,
     t,
   ]);
+
+  const setControl = useCallback(
+    async (patch: {
+      globalEnabled?: boolean;
+      readEnabled?: boolean;
+      writeEnabled?: boolean;
+    }) => {
+      setBusy(true);
+      try {
+        await adminSetGoogleBusinessControls({ data: patch });
+        await load();
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("googleIntegration.actionFailed"),
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [load, t],
+  );
 
   const status = health?.pubsubStatus ?? "not_configured";
   const statusLabel =
@@ -499,6 +533,136 @@ export default function AdminGoogleIntegrationPage() {
               {t("googleIntegration.save")}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            {t("googleIntegration.controls.title")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            {t("googleIntegration.controls.hint")}
+          </p>
+          {controls && !controls.globalEnabled ? (
+            <p className="text-sm text-destructive">
+              <AlertTriangle className="me-2 inline h-4 w-4" />
+              {t("googleIntegration.controls.pausedBanner")}
+              {controls.reason ? ` — ${controls.reason}` : ""}
+            </p>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <span className="text-sm">
+                {t("googleIntegration.controls.live")}
+              </span>
+              <Button
+                size="sm"
+                variant={controls?.globalEnabled ? "outline" : "default"}
+                disabled={busy}
+                onClick={() =>
+                  void setControl({
+                    globalEnabled: !(controls?.globalEnabled ?? true),
+                  })
+                }
+              >
+                {controls?.globalEnabled
+                  ? t("googleIntegration.controls.pause")
+                  : t("googleIntegration.controls.resume")}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <span className="text-sm">
+                {t("googleIntegration.controls.reads")}
+              </span>
+              <Button
+                size="sm"
+                variant={controls?.readEnabled ? "outline" : "default"}
+                disabled={busy || !controls?.globalEnabled}
+                onClick={() =>
+                  void setControl({
+                    readEnabled: !(controls?.readEnabled ?? true),
+                  })
+                }
+              >
+                {controls?.readEnabled
+                  ? t("googleIntegration.controls.disable")
+                  : t("googleIntegration.controls.enable")}
+              </Button>
+            </div>
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <span className="text-sm">
+                {t("googleIntegration.controls.writes")}
+              </span>
+              <Button
+                size="sm"
+                variant={controls?.writeEnabled ? "outline" : "default"}
+                disabled={busy || !controls?.globalEnabled}
+                onClick={() =>
+                  void setControl({
+                    writeEnabled: !(controls?.writeEnabled ?? true),
+                  })
+                }
+              >
+                {controls?.writeEnabled
+                  ? t("googleIntegration.controls.disable")
+                  : t("googleIntegration.controls.enable")}
+              </Button>
+            </div>
+          </div>
+          {controls ? (
+            <p className="text-xs text-muted-foreground">
+              {t("googleIntegration.controls.officesDisabled", {
+                count: controls.officesDisabled,
+              })}
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            {t("googleIntegration.audit.title")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {integrity.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t("googleIntegration.audit.loading")}
+            </p>
+          ) : (
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {integrity.map((check) => {
+                const bad = check.violationCount > 0;
+                return (
+                  <li
+                    key={check.checkKey}
+                    className="flex items-start justify-between gap-2 border-b pb-2 text-sm last:border-0"
+                  >
+                    <div className="flex items-start gap-2">
+                      {bad ? (
+                        <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />
+                      ) : (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                      )}
+                      <span>{check.checkKey}</span>
+                    </div>
+                    <span
+                      className={
+                        bad
+                          ? "font-medium text-destructive"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {check.violationCount}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </CardContent>
       </Card>
     </div>

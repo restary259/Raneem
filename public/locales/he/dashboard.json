@@ -6651,7 +6651,24 @@
     "loadError": "לא ניתן לטעון את מצב האינטגרציה.",
     "actionFailed": "הפעולה נכשלה. נסה שוב.",
     "syncOffice": "סנכרן משרד",
-    "save": "שמור"
+    "save": "שמור",
+    "controls": {
+      "title": "בקרות ייצור",
+      "hint": "מתגי חירום. השהיה עוצרת את כל פעולות Google החיות; הנתונים השמורים נשארים קריאים.",
+      "pausedBanner": "Google Business מושהה",
+      "live": "אינטגרציה חיה",
+      "reads": "פעולות קריאה ב-Google",
+      "writes": "פעולות כתיבה ב-Google",
+      "pause": "השהה",
+      "resume": "המשך",
+      "enable": "הפעל",
+      "disable": "בטל",
+      "officesDisabled": "{{count}} משרדים מושהים"
+    },
+    "audit": {
+      "title": "ביקורת שלמות הנתונים",
+      "loading": "מריץ ביקורת…"
+    }
   },
   "googleEvents": {
     "newReview": "ביקורת חדשה ב-Google",

@@ -47,6 +47,14 @@ const OPERATIONAL = [
   "GOOGLE_VIEW_INSIGHTS",
   "GOOGLE_MANAGE_SUPPORTED_CONTENT",
   "GOOGLE_SYNC_REVIEWS",
+  // Phase 6-9 operational additions that must mirror the server.
+  "GOOGLE_SYNC_PROFILE",
+  "GOOGLE_REQUEST_HIGH_RISK",
+  "GOOGLE_SYNC_MEDIA",
+  "GOOGLE_SYNC_POSTS",
+  "GOOGLE_SYNC_OFFICE",
+  "GOOGLE_VIEW_HEALTH",
+  "GOOGLE_VIEW_SYNC_STATUS",
 ] as const;
 
 const ADMIN_ONLY = [
@@ -59,6 +67,12 @@ const ADMIN_ONLY = [
   "GOOGLE_MAP_LOCATION",
   "GOOGLE_REMAP_LOCATION",
   "GOOGLE_UNMAP_LOCATION",
+  // Account-level Pub/Sub config, customer-media moderation, raw events and
+  // retries are Admin-only on the server too.
+  "GOOGLE_MANAGE_NOTIFICATIONS",
+  "GOOGLE_MANAGE_CUSTOMER_MEDIA",
+  "GOOGLE_VIEW_EVENTS",
+  "GOOGLE_RETRY_EVENT",
 ] as const;
 
 describe("canGoogleOfficeAction", () => {
