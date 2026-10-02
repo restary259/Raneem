@@ -238,6 +238,21 @@ export function resourceId(resourceName: string): string {
   return parts.length ? parts[parts.length - 1] : resourceName;
 }
 
+type ConnectionLike = { id?: string | null; connection_status?: string | null };
+
+/**
+ * The DARB Google connection a discovery snapshot belongs to, chosen from the
+ * admin-gated `admin_get_google_business_connections` rows. Prefers the most
+ * recent `connected` row, else the first row; null when there is no connection.
+ */
+export function pickActiveConnectionId(
+  rows: ConnectionLike[] | null | undefined,
+): string | null {
+  const list = Array.isArray(rows) ? rows : [];
+  const connected = list.find((r) => r?.connection_status === "connected");
+  return (connected ?? list[0])?.id ?? null;
+}
+
 function verificationStateOf(loc: GbpRawLocation): string | null {
   const state = loc.locationState;
   if (!state) return null;

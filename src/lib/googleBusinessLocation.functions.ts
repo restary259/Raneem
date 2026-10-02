@@ -8,6 +8,7 @@ import {
   GBP_LOCATION_READ_MASK,
   gbpGet,
   normalizeGbpLocation,
+  pickActiveConnectionId,
   type GbpRawLocation,
   type NormalizedGbpLocation,
 } from "@/lib/googleBusinessGateway";
@@ -65,6 +66,22 @@ async function rpcOrThrow<T>(
   const { data, error } = await context.supabase.rpc(fn, args);
   if (error) throw new Error(error.message || "Request failed");
   return data as T;
+}
+
+type ConnectionRow = { id?: string; connection_status?: string };
+
+/**
+ * The DARB-level Google connection the discovered locations belong to. The
+ * browser never chooses it: the admin-gated RPC returns it and we prefer the
+ * most recent `connected` row. Returns null when no connection row exists yet.
+ */
+async function resolveConnectionId(context: SupabaseCtx): Promise<string | null> {
+  const rows = await rpcOrThrow<ConnectionRow[]>(
+    context,
+    "admin_get_google_business_connections",
+    {},
+  );
+  return pickActiveConnectionId(rows);
 }
 
 export interface DiscoveredLocation {
@@ -165,11 +182,14 @@ export const discoverGoogleBusinessLocations = createServerFn({
       // 3. Cache the snapshot (admin-only RPC), then read it back joined with
       //    mapping state so the UI sees "mapped -> office" in one call.
       if (normalized.length) {
+        const connectionId = await resolveConnectionId(
+          context as unknown as SupabaseCtx,
+        );
         await rpcOrThrow<number>(
           context as unknown as SupabaseCtx,
           "admin_sync_google_locations",
           {
-            p_connection_id: null,
+            p_connection_id: connectionId,
             p_locations: normalized,
           },
         );
