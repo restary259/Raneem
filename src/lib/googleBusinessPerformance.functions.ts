@@ -123,7 +123,8 @@ type PerformanceErrorCode =
   | "GOOGLE_PERMISSION_DENIED"
   | "GOOGLE_PERFORMANCE_QUOTA"
   | "GOOGLE_PERFORMANCE_TIMEOUT"
-  | "GOOGLE_PERFORMANCE_STALE";
+  | "GOOGLE_PERFORMANCE_STALE"
+  | "GOOGLE_PERFORMANCE_PAGINATION";
 
 function normalizePerformanceError(error: unknown): {
   code: PerformanceErrorCode;
@@ -152,6 +153,9 @@ function normalizePerformanceError(error: unknown): {
   }
   if (lower.includes("verified")) {
     return { code: "GOOGLE_LOCATION_NOT_VERIFIED", message };
+  }
+  if (lower.includes("pagination")) {
+    return { code: "GOOGLE_PERFORMANCE_PAGINATION", message };
   }
   if (
     err.status === 404 ||
@@ -753,7 +757,7 @@ async function syncKeywordsPhase(
   const fetched = await withRetry(async () => {
     const collected: ReturnType<typeof normalizeSearchKeywordCounts> = [];
     for (const month of months) {
-      const rows = await collectAllPages<
+      const page = await collectAllPages<
         ReturnType<typeof normalizeSearchKeywordCounts>[number]
       >(async (pageToken) => {
         const res = await gbpGet<GbpSearchKeywordResponse>(
@@ -771,7 +775,17 @@ async function syncKeywordsPhase(
           nextPageToken: res.nextPageToken ?? undefined,
         };
       });
-      for (const row of rows) collected.push({ ...row, month });
+      // A truncated listing (page ceiling or repeated cursor) is not a complete
+      // picture of the month. Reconciling from it would delete terms Google
+      // still reports, so treat it as a retryable failure and keep the cache.
+      if (!page.complete) {
+        throw new GbpError(
+          "upstream",
+          0,
+          "Google search keyword pagination was truncated.",
+        );
+      }
+      for (const row of page.items) collected.push({ ...row, month });
     }
     return collected;
   });

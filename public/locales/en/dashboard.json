@@ -6412,6 +6412,7 @@
       "GOOGLE_PERFORMANCE_QUOTA": "Google performance quota reached. Try again later.",
       "GOOGLE_PERFORMANCE_TIMEOUT": "Google timed out. The sync will retry.",
       "GOOGLE_PERFORMANCE_STALE": "The stored performance data is stale. Run a sync.",
+      "GOOGLE_PERFORMANCE_PAGINATION": "Google returned an incomplete keyword listing. The sync will retry and keep the existing data.",
       "not_linked": "Google Business is not connected for this office.",
       "locked": "A sync is already running for this office."
     },

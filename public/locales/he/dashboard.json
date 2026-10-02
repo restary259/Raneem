@@ -6414,6 +6414,7 @@
       "GOOGLE_PERFORMANCE_QUOTA": "הגעת למכסת הביצועים של Google. נסה שוב מאוחר יותר.",
       "GOOGLE_PERFORMANCE_TIMEOUT": "פסק הזמן של Google. הסנכרון ינוסה שוב.",
       "GOOGLE_PERFORMANCE_STALE": "נתוני הביצועים המאוחסנים מיושנים. הרץ סנכרון.",
+      "GOOGLE_PERFORMANCE_PAGINATION": "Google החזיר רשימת מילות מפתח חלקית. הסנכרון ינסה שוב וישמור על הנתונים הקיימים.",
       "not_linked": "Google Business אינו מחובר למשרד הזה.",
       "locked": "סינכרון כבר פועל עבור משרד זה."
     },

@@ -1493,14 +1493,18 @@ DECLARE
   v_actor uuid := auth.uid();
   v_office_id uuid;
   v_location_id text;
+  v_job_status text;
+  v_lock_token text;
 BEGIN
   IF p_status NOT IN ('FAILED','PARTIAL') THEN
     RAISE EXCEPTION 'Invalid failure status' USING ERRCODE = 'check_violation';
   END IF;
 
-  SELECT j.office_id, j.google_location_id INTO v_office_id, v_location_id
+  SELECT j.office_id, j.google_location_id, j.status
+  INTO v_office_id, v_location_id, v_job_status
   FROM public.google_business_performance_sync_jobs j
-  WHERE j.id = p_job_id;
+  WHERE j.id = p_job_id
+  FOR UPDATE;
 
   IF v_office_id IS NULL THEN
     RAISE EXCEPTION 'Sync job not found' USING ERRCODE = 'no_data_found';
@@ -1513,12 +1517,34 @@ BEGIN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
+  -- A failure may only be recorded by the sync that still owns the live lock
+  -- and only against its own RUNNING job. Checking before any write stops an
+  -- operator from aborting another sync's job (which would then be rejected as
+  -- "not running") and from forging a failure audit.
+  IF v_job_status <> 'RUNNING' THEN
+    RAISE EXCEPTION 'Sync job is not running' USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT ogp.performance_sync_lock_token
+  INTO v_lock_token
+  FROM public.office_google_profiles ogp
+  WHERE ogp.office_id = v_office_id;
+
+  IF v_lock_token IS NULL OR p_token IS NULL OR v_lock_token <> p_token THEN
+    RAISE EXCEPTION 'Sync lock not held' USING ERRCODE = 'check_violation';
+  END IF;
+
   UPDATE public.google_business_performance_sync_jobs
   SET status = p_status,
       completed_at = now(),
       error_code = left(COALESCE(p_error_code, 'error'), 64),
       error_message = left(COALESCE(p_error_message, 'Sync failed'), 500)
-  WHERE id = p_job_id;
+  WHERE id = p_job_id
+    AND EXISTS (
+      SELECT 1 FROM public.office_google_profiles ogp
+      WHERE ogp.office_id = v_office_id
+        AND ogp.performance_sync_lock_token = p_token
+    );
 
   -- Only a fully FAILED job records the office error; a PARTIAL keeps metrics
   -- healthy and just records that keywords lagged. The lock is only released
@@ -1673,4 +1699,10 @@ GRANT ALL ON public.google_business_performance_sync_jobs TO service_role;
 --      must raise 'Sync job is not running' / 'Sync lock not held'.
 -- F) Direct read: a member who is not the office's Google operator selects from
 --      google_business_performance_daily -> RLS returns zero rows.
+-- G) Foreign failure: call admin_fail_google_performance_sync_job for a RUNNING
+--      job with a token that is not the live lock token -> must raise
+--      'Sync lock not held' and leave the job RUNNING (no forged failure).
+-- H) Truncated keywords: a keyword listing that stops on the page ceiling is
+--      reported as incomplete and the sync fails without reconciling, so cached
+--      terms are preserved rather than deleted.
 -- ===========================================================================

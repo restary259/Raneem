@@ -131,7 +131,7 @@ export const discoverGoogleBusinessLocations = createServerFn({
         }>(`/account_management/v1/accounts?${q}`, creds);
         return { items: res.accounts ?? [], nextPageToken: res.nextPageToken };
       });
-      const accountSummaries = accounts
+      const accountSummaries = accounts.items
         .filter((a): a is { name: string; accountName?: string } =>
           Boolean(a.name),
         )
@@ -156,7 +156,7 @@ export const discoverGoogleBusinessLocations = createServerFn({
             nextPageToken: res.nextPageToken,
           };
         });
-        for (const loc of raw) {
+        for (const loc of raw.items) {
           const row = normalizeGbpLocation(account.name, loc);
           if (row) normalized.push(row);
         }

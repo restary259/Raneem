@@ -292,23 +292,38 @@ export function formatGbpAddress(
  * that keeps handing back the same token, and a hard page ceiling so a
  * misbehaving API cannot loop forever.
  */
+export type CollectPagesResult<T> = {
+  items: T[];
+  /** False when the collector stopped on the page ceiling or a repeated
+   *  cursor, so callers can tell a complete listing from a truncated one. */
+  complete: boolean;
+};
+
 export async function collectAllPages<T>(
   fetchPage: (
     pageToken: string | undefined,
   ) => Promise<{ items: T[]; nextPageToken?: string }>,
   maxPages = 20,
-): Promise<T[]> {
+): Promise<CollectPagesResult<T>> {
   const out: T[] = [];
   const seen = new Set<string>();
   let token: string | undefined;
+  let complete = true;
   for (let page = 0; page < maxPages; page++) {
     const { items, nextPageToken } = await fetchPage(token);
     out.push(...items);
-    if (!nextPageToken || seen.has(nextPageToken)) break;
+    if (!nextPageToken) break;
+    if (seen.has(nextPageToken)) {
+      // A repeated cursor means the provider is looping; the listing is not
+      // trustworthy and must not be treated as exhaustive.
+      complete = false;
+      break;
+    }
     seen.add(nextPageToken);
     token = nextPageToken;
+    if (page === maxPages - 1) complete = false;
   }
-  return out;
+  return { items: out, complete };
 }
 
 // ---------------------------------------------------------------------------

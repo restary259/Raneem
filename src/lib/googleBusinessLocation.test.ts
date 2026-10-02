@@ -102,7 +102,7 @@ describe("formatGbpAddress", () => {
 });
 
 describe("collectAllPages", () => {
-  it("follows nextPageToken until exhausted", async () => {
+  it("follows nextPageToken until exhausted and reports complete", async () => {
     const pages = [
       { items: ["a", "b"], nextPageToken: "t1" },
       { items: ["c"], nextPageToken: "t2" },
@@ -110,26 +110,30 @@ describe("collectAllPages", () => {
     ];
     let call = 0;
     const all = await collectAllPages(async () => pages[call++]);
-    expect(all).toEqual(["a", "b", "c", "d"]);
+    expect(all.items).toEqual(["a", "b", "c", "d"]);
+    expect(all.complete).toBe(true);
     expect(call).toBe(3);
   });
 
-  it("stops if the provider repeats a page token", async () => {
+  it("stops and reports incomplete if the provider repeats a page token", async () => {
     let call = 0;
     const all = await collectAllPages(async () => {
       call++;
       return { items: [call], nextPageToken: "same" };
     });
-    expect(all).toEqual([1, 2]);
+    expect(all.items).toEqual([1, 2]);
+    expect(all.complete).toBe(false);
   });
 
-  it("honours the page ceiling", async () => {
+  it("honours the page ceiling and reports incomplete", async () => {
     let call = 0;
-    await collectAllPages(async () => {
+    const all = await collectAllPages(async () => {
       call++;
       return { items: [call], nextPageToken: `t${call}` };
     }, 3);
     expect(call).toBe(3);
+    expect(all.items).toEqual([1, 2, 3]);
+    expect(all.complete).toBe(false);
   });
 });
 

@@ -204,7 +204,7 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
         return { items: res.reviews ?? [], nextPageToken: res.nextPageToken };
       });
 
-      for (const item of raw) {
+      for (const item of raw.items) {
         const row = normalizeGbpReview(item, {
           accountId: identity.google_account_id,
           locationId: identity.google_location_id,

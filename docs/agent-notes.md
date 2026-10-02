@@ -3442,16 +3442,29 @@ verified non-vacuous by reintroducing the defect).
   same lock, so an older completion cannot poison or erase a newer sync's rows.
   The finalizer does NOT clear the lock — the caller owns the lock lifecycle,
   which keeps multi-chunk backfill working (chunk 2 must still hold the token).
+  `admin_fail_google_performance_sync_job` validates job status and token
+  *before* any write, so an operator cannot abort another sync's job.
 - **`data_through` is the newest datapoint Google actually returned**, not the
   requested end date, and the previous value is preserved when a response has
   none — so a lagging or empty sync cannot be shown as Healthy. Keyword
   reconcile deletes terms Google no longer returns for the refreshed months.
+- **A truncated keyword listing never reconciles.** `collectAllPages` now returns
+  `{ items, complete }`; hitting the page ceiling or a repeated cursor marks the
+  month incomplete, and the keyword sync fails (retryable
+  `GOOGLE_PERFORMANCE_PAGINATION`) instead of deleting terms Google still
+  reports.
 - CSV export neutralizes spreadsheet formula injection (`= + - @ tab CR LF`) in
   keywords, office and location names, and the keyword export walks every page
   (bounded) so it is not limited to the first 100 rows.
+- Verification: the migration applies cleanly on a real Postgres 17 with stubbed
+  `auth`/`authorize`; runtime checks confirm a foreign failure token is rejected
+  while the job stays RUNNING, a live token finalizes and clears the lock, a
+  forged metrics finalizer is rejected, RLS hides rows without
+  `GOOGLE_VIEW_INSIGHTS`, and keyword reconcile removes a dropped term. Unit
+  tests: `src/lib/googleBusinessPerformance.test.ts`,
+  `src/lib/googlePerformanceExport.test.ts`, `src/lib/googleBusinessLocation.test.ts`.
 - i18n: `googleInsights.*` + `nav.googleInsights` in en/ar/he
   (`public/locales` only — `dashboard` is not bundled in `src/locales`). UI at
   `/team/google/insights`; nav entry under the `nav.googleBusiness` group.
 - Verification: `supabase/diagnostics/office_google_phase8_deploy_verify.sql`
-  (read-only); unit tests in `src/lib/googleBusinessPerformance.test.ts` and
-  `src/lib/googlePerformanceExport.test.ts`.
+  (read-only).
