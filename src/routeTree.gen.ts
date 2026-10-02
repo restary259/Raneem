@@ -98,7 +98,6 @@ import { Route as TeamIndexRouteImport } from './routes/team.index'
 import { Route as TeamAnalyticsRouteImport } from './routes/team.analytics'
 import { Route as TeamBagrutRouteImport } from './routes/team.bagrut'
 import { Route as TeamCatalogRouteImport } from './routes/team.catalog'
-import { Route as TeamGoogleRouteImport } from './routes/team.google'
 import { Route as TeamMajorsRouteImport } from './routes/team.majors'
 import { Route as TeamMessagesRouteImport } from './routes/team.messages'
 import { Route as TeamSpreadsheetRouteImport } from './routes/team.spreadsheet'
@@ -111,6 +110,7 @@ import { Route as TeamAppointmentsIndexRouteImport } from './routes/team.appoint
 import { Route as TeamAppointmentsTodayRouteImport } from './routes/team.appointments.today'
 import { Route as TeamCasesIndexRouteImport } from './routes/team.cases.index'
 import { Route as TeamCasesIdRouteImport } from './routes/team.cases.$id'
+import { Route as TeamGoogleIndexRouteImport } from './routes/team.google.index'
 import { Route as TeamGoogleInsightsRouteImport } from './routes/team.google.insights'
 import { Route as TeamGooglePhotosRouteImport } from './routes/team.google.photos'
 import { Route as TeamGooglePostsRouteImport } from './routes/team.google.posts'
@@ -576,11 +576,6 @@ const TeamCatalogRoute = TeamCatalogRouteImport.update({
   path: '/catalog',
   getParentRoute: () => TeamRoute,
 } as any)
-const TeamGoogleRoute = TeamGoogleRouteImport.update({
-  id: '/google',
-  path: '/google',
-  getParentRoute: () => TeamRoute,
-} as any)
 const TeamMajorsRoute = TeamMajorsRouteImport.update({
   id: '/majors',
   path: '/majors',
@@ -641,30 +636,35 @@ const TeamCasesIdRoute = TeamCasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => TeamRoute,
 } as any)
+const TeamGoogleIndexRoute = TeamGoogleIndexRouteImport.update({
+  id: '/google/',
+  path: '/google/',
+  getParentRoute: () => TeamRoute,
+} as any)
 const TeamGoogleInsightsRoute = TeamGoogleInsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
-  getParentRoute: () => TeamGoogleRoute,
+  id: '/google/insights',
+  path: '/google/insights',
+  getParentRoute: () => TeamRoute,
 } as any)
 const TeamGooglePhotosRoute = TeamGooglePhotosRouteImport.update({
-  id: '/photos',
-  path: '/photos',
-  getParentRoute: () => TeamGoogleRoute,
+  id: '/google/photos',
+  path: '/google/photos',
+  getParentRoute: () => TeamRoute,
 } as any)
 const TeamGooglePostsRoute = TeamGooglePostsRouteImport.update({
-  id: '/posts',
-  path: '/posts',
-  getParentRoute: () => TeamGoogleRoute,
+  id: '/google/posts',
+  path: '/google/posts',
+  getParentRoute: () => TeamRoute,
 } as any)
 const TeamGoogleProfileRoute = TeamGoogleProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => TeamGoogleRoute,
+  id: '/google/profile',
+  path: '/google/profile',
+  getParentRoute: () => TeamRoute,
 } as any)
 const TeamGoogleReviewsRoute = TeamGoogleReviewsRouteImport.update({
-  id: '/reviews',
-  path: '/reviews',
-  getParentRoute: () => TeamGoogleRoute,
+  id: '/google/reviews',
+  path: '/google/reviews',
+  getParentRoute: () => TeamRoute,
 } as any)
 const TeamPartnerSchoolsIndexRoute = TeamPartnerSchoolsIndexRouteImport.update({
   id: '/partner-schools/',
@@ -809,7 +809,6 @@ export interface FileRoutesByFullPath {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
-  '/team/google': typeof TeamGoogleRouteWithChildren
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -837,6 +836,7 @@ export interface FileRoutesByFullPath {
   '/team/tools/cv': typeof TeamToolsCvRoute
   '/team/appointments/': typeof TeamAppointmentsIndexRoute
   '/team/cases/': typeof TeamCasesIndexRoute
+  '/team/google/': typeof TeamGoogleIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -924,7 +924,6 @@ export interface FileRoutesByTo {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
-  '/team/google': typeof TeamGoogleRouteWithChildren
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -952,6 +951,7 @@ export interface FileRoutesByTo {
   '/team/tools/cv': typeof TeamToolsCvRoute
   '/team/appointments': typeof TeamAppointmentsIndexRoute
   '/team/cases': typeof TeamCasesIndexRoute
+  '/team/google': typeof TeamGoogleIndexRoute
   '/team/partner-schools': typeof TeamPartnerSchoolsIndexRoute
   '/team/students': typeof TeamStudentsIndexRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -1045,7 +1045,6 @@ export interface FileRoutesById {
   '/team/analytics': typeof TeamAnalyticsRoute
   '/team/bagrut': typeof TeamBagrutRoute
   '/team/catalog': typeof TeamCatalogRoute
-  '/team/google': typeof TeamGoogleRouteWithChildren
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
@@ -1073,6 +1072,7 @@ export interface FileRoutesById {
   '/team/tools/cv': typeof TeamToolsCvRoute
   '/team/appointments/': typeof TeamAppointmentsIndexRoute
   '/team/cases/': typeof TeamCasesIndexRoute
+  '/team/google/': typeof TeamGoogleIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
@@ -1167,7 +1167,6 @@ export interface FileRouteTypes {
     | '/team/analytics'
     | '/team/bagrut'
     | '/team/catalog'
-    | '/team/google'
     | '/team/majors'
     | '/team/messages'
     | '/team/spreadsheet'
@@ -1195,6 +1194,7 @@ export interface FileRouteTypes {
     | '/team/tools/cv'
     | '/team/appointments/'
     | '/team/cases/'
+    | '/team/google/'
     | '/team/partner-schools/'
     | '/team/students/'
     | '/api/public/whatsapp/webhook'
@@ -1282,7 +1282,6 @@ export interface FileRouteTypes {
     | '/team/analytics'
     | '/team/bagrut'
     | '/team/catalog'
-    | '/team/google'
     | '/team/majors'
     | '/team/messages'
     | '/team/spreadsheet'
@@ -1310,6 +1309,7 @@ export interface FileRouteTypes {
     | '/team/tools/cv'
     | '/team/appointments'
     | '/team/cases'
+    | '/team/google'
     | '/team/partner-schools'
     | '/team/students'
     | '/api/public/whatsapp/webhook'
@@ -1402,7 +1402,6 @@ export interface FileRouteTypes {
     | '/team/analytics'
     | '/team/bagrut'
     | '/team/catalog'
-    | '/team/google'
     | '/team/majors'
     | '/team/messages'
     | '/team/spreadsheet'
@@ -1430,6 +1429,7 @@ export interface FileRouteTypes {
     | '/team/tools/cv'
     | '/team/appointments/'
     | '/team/cases/'
+    | '/team/google/'
     | '/team/partner-schools/'
     | '/team/students/'
     | '/api/public/whatsapp/webhook'
@@ -2110,13 +2110,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamCatalogRouteImport
       parentRoute: typeof TeamRoute
     }
-    '/team/google': {
-      id: '/team/google'
-      path: '/google'
-      fullPath: '/team/google'
-      preLoaderRoute: typeof TeamGoogleRouteImport
-      parentRoute: typeof TeamRoute
-    }
     '/team/majors': {
       id: '/team/majors'
       path: '/majors'
@@ -2201,40 +2194,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamCasesIdRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/team/google/': {
+      id: '/team/google/'
+      path: '/google'
+      fullPath: '/team/google/'
+      preLoaderRoute: typeof TeamGoogleIndexRouteImport
+      parentRoute: typeof TeamRoute
+    }
     '/team/google/insights': {
       id: '/team/google/insights'
-      path: '/insights'
+      path: '/google/insights'
       fullPath: '/team/google/insights'
       preLoaderRoute: typeof TeamGoogleInsightsRouteImport
-      parentRoute: typeof TeamGoogleRoute
+      parentRoute: typeof TeamRoute
     }
     '/team/google/photos': {
       id: '/team/google/photos'
-      path: '/photos'
+      path: '/google/photos'
       fullPath: '/team/google/photos'
       preLoaderRoute: typeof TeamGooglePhotosRouteImport
-      parentRoute: typeof TeamGoogleRoute
+      parentRoute: typeof TeamRoute
     }
     '/team/google/posts': {
       id: '/team/google/posts'
-      path: '/posts'
+      path: '/google/posts'
       fullPath: '/team/google/posts'
       preLoaderRoute: typeof TeamGooglePostsRouteImport
-      parentRoute: typeof TeamGoogleRoute
+      parentRoute: typeof TeamRoute
     }
     '/team/google/profile': {
       id: '/team/google/profile'
-      path: '/profile'
+      path: '/google/profile'
       fullPath: '/team/google/profile'
       preLoaderRoute: typeof TeamGoogleProfileRouteImport
-      parentRoute: typeof TeamGoogleRoute
+      parentRoute: typeof TeamRoute
     }
     '/team/google/reviews': {
       id: '/team/google/reviews'
-      path: '/reviews'
+      path: '/google/reviews'
       fullPath: '/team/google/reviews'
       preLoaderRoute: typeof TeamGoogleReviewsRouteImport
-      parentRoute: typeof TeamGoogleRoute
+      parentRoute: typeof TeamRoute
     }
     '/team/partner-schools/': {
       id: '/team/partner-schools/'
@@ -2450,31 +2450,10 @@ const StudentRouteChildren: StudentRouteChildren = {
 const StudentRouteWithChildren =
   StudentRoute._addFileChildren(StudentRouteChildren)
 
-interface TeamGoogleRouteChildren {
-  TeamGoogleInsightsRoute: typeof TeamGoogleInsightsRoute
-  TeamGooglePhotosRoute: typeof TeamGooglePhotosRoute
-  TeamGooglePostsRoute: typeof TeamGooglePostsRoute
-  TeamGoogleProfileRoute: typeof TeamGoogleProfileRoute
-  TeamGoogleReviewsRoute: typeof TeamGoogleReviewsRoute
-}
-
-const TeamGoogleRouteChildren: TeamGoogleRouteChildren = {
-  TeamGoogleInsightsRoute: TeamGoogleInsightsRoute,
-  TeamGooglePhotosRoute: TeamGooglePhotosRoute,
-  TeamGooglePostsRoute: TeamGooglePostsRoute,
-  TeamGoogleProfileRoute: TeamGoogleProfileRoute,
-  TeamGoogleReviewsRoute: TeamGoogleReviewsRoute,
-}
-
-const TeamGoogleRouteWithChildren = TeamGoogleRoute._addFileChildren(
-  TeamGoogleRouteChildren,
-)
-
 interface TeamRouteChildren {
   TeamAnalyticsRoute: typeof TeamAnalyticsRoute
   TeamBagrutRoute: typeof TeamBagrutRoute
   TeamCatalogRoute: typeof TeamCatalogRoute
-  TeamGoogleRoute: typeof TeamGoogleRouteWithChildren
   TeamMajorsRoute: typeof TeamMajorsRoute
   TeamMessagesRoute: typeof TeamMessagesRoute
   TeamSpreadsheetRoute: typeof TeamSpreadsheetRoute
@@ -2483,11 +2462,17 @@ interface TeamRouteChildren {
   TeamIndexRoute: typeof TeamIndexRoute
   TeamAppointmentsTodayRoute: typeof TeamAppointmentsTodayRoute
   TeamCasesIdRoute: typeof TeamCasesIdRoute
+  TeamGoogleInsightsRoute: typeof TeamGoogleInsightsRoute
+  TeamGooglePhotosRoute: typeof TeamGooglePhotosRoute
+  TeamGooglePostsRoute: typeof TeamGooglePostsRoute
+  TeamGoogleProfileRoute: typeof TeamGoogleProfileRoute
+  TeamGoogleReviewsRoute: typeof TeamGoogleReviewsRoute
   TeamStudentsIdRoute: typeof TeamStudentsIdRoute
   TeamToolsCurrencyRoute: typeof TeamToolsCurrencyRoute
   TeamToolsCvRoute: typeof TeamToolsCvRoute
   TeamAppointmentsIndexRoute: typeof TeamAppointmentsIndexRoute
   TeamCasesIndexRoute: typeof TeamCasesIndexRoute
+  TeamGoogleIndexRoute: typeof TeamGoogleIndexRoute
   TeamPartnerSchoolsIndexRoute: typeof TeamPartnerSchoolsIndexRoute
   TeamStudentsIndexRoute: typeof TeamStudentsIndexRoute
   TeamPartnerSchoolsCountrySchoolRoute: typeof TeamPartnerSchoolsCountrySchoolRoute
@@ -2498,7 +2483,6 @@ const TeamRouteChildren: TeamRouteChildren = {
   TeamAnalyticsRoute: TeamAnalyticsRoute,
   TeamBagrutRoute: TeamBagrutRoute,
   TeamCatalogRoute: TeamCatalogRoute,
-  TeamGoogleRoute: TeamGoogleRouteWithChildren,
   TeamMajorsRoute: TeamMajorsRoute,
   TeamMessagesRoute: TeamMessagesRoute,
   TeamSpreadsheetRoute: TeamSpreadsheetRoute,
@@ -2507,11 +2491,17 @@ const TeamRouteChildren: TeamRouteChildren = {
   TeamIndexRoute: TeamIndexRoute,
   TeamAppointmentsTodayRoute: TeamAppointmentsTodayRoute,
   TeamCasesIdRoute: TeamCasesIdRoute,
+  TeamGoogleInsightsRoute: TeamGoogleInsightsRoute,
+  TeamGooglePhotosRoute: TeamGooglePhotosRoute,
+  TeamGooglePostsRoute: TeamGooglePostsRoute,
+  TeamGoogleProfileRoute: TeamGoogleProfileRoute,
+  TeamGoogleReviewsRoute: TeamGoogleReviewsRoute,
   TeamStudentsIdRoute: TeamStudentsIdRoute,
   TeamToolsCurrencyRoute: TeamToolsCurrencyRoute,
   TeamToolsCvRoute: TeamToolsCvRoute,
   TeamAppointmentsIndexRoute: TeamAppointmentsIndexRoute,
   TeamCasesIndexRoute: TeamCasesIndexRoute,
+  TeamGoogleIndexRoute: TeamGoogleIndexRoute,
   TeamPartnerSchoolsIndexRoute: TeamPartnerSchoolsIndexRoute,
   TeamStudentsIndexRoute: TeamStudentsIndexRoute,
   TeamPartnerSchoolsCountrySchoolRoute: TeamPartnerSchoolsCountrySchoolRoute,
