@@ -40,7 +40,7 @@ export default function TeamCatalogPage() {
   const { t } = useTranslation("dashboard");
   const lang = useLang();
   const { data, loading, error, refetch } = useTeamCatalog();
-  const { data: partnerCountryData } = usePartnerCountries();
+  const { data: partnerCountryData, loading: partnerCountriesLoading } = usePartnerCountries();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [filters, setFilters] = useState<CatalogFilterValues>(EMPTY_FILTERS);
@@ -225,7 +225,7 @@ export default function TeamCatalogPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
-      {loading ? (
+      {loading || (partnerCountriesLoading && !partnerCountryData && activeCountry == null && !school) ? (
         <LoadingState variant="cards" rows={6} />
       ) : error ? (
         <ErrorState
