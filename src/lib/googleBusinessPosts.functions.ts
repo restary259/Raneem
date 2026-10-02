@@ -20,6 +20,7 @@ import {
   type GbpPostTopicType,
   type GbpRawPost,
   type NormalizedGbpPost,
+  bareGoogleId,
 } from "@/lib/googleBusinessGateway";
 
 /**
