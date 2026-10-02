@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   collectAllPages,
   formatGbpAddress,
+  GBP_LOCATION_READ_MASK,
   normalizeGbpLocation,
   resourceId,
 } from "@/lib/googleBusinessGateway";
@@ -9,6 +10,25 @@ import {
   addressesAgree,
   suggestLocationMatch,
 } from "@/lib/googleLocationMatch";
+
+describe("GBP_LOCATION_READ_MASK", () => {
+  // Regression: a bare top-level `placeId` path makes Google reject the whole
+  // accounts.locations.list call with INVALID_ARGUMENT. Place ID lives under
+  // `metadata` (v1 Metadata.placeId), which normalizeGbpLocation already reads.
+  const fields = GBP_LOCATION_READ_MASK.split(",").map((f) => f.trim());
+
+  it("does not request the non-existent top-level `placeId` field", () => {
+    expect(fields).not.toContain("placeId");
+  });
+
+  it("requests `metadata`, which carries placeId and mapsUri", () => {
+    expect(fields).toContain("metadata");
+  });
+
+  it("requests locationState so verification state is populated", () => {
+    expect(fields).toContain("locationState");
+  });
+});
 
 describe("resourceId", () => {
   it("takes the last path segment of a Google resource name", () => {

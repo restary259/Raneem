@@ -1,7 +1,7 @@
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase } from "@/integrations/supabase/client";
-import { GbpError, gbpGet } from "@/lib/googleBusinessGateway";
+import { GbpError, GBP_LOCATION_READ_MASK, gbpGet } from "@/lib/googleBusinessGateway";
 
 const attachBearer = createMiddleware({ type: "function" }).client(async ({ next }) => {
   const { data } = await supabase.auth.getSession();
@@ -98,7 +98,7 @@ export const getGoogleBusinessOverview = createServerFn({ method: "POST" })
         try {
           let token: string | undefined;
           for (let page = 0; page < MAX_PAGES; page++) {
-            const q = new URLSearchParams({ pageSize: "100", readMask: "name,title,storefrontAddress" });
+            const q = new URLSearchParams({ pageSize: "100", readMask: GBP_LOCATION_READ_MASK });
             if (token) q.set("pageToken", token);
             const res = await gbpGet<{ locations?: any[]; nextPageToken?: string }>(
               `/business_information/v1/${account.name}/locations?${q}`,

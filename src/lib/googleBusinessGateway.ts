@@ -166,9 +166,17 @@ async function gbpRequest<T>(
 // Kept here (no secrets) so discovery + mapping are testable without network.
 // ---------------------------------------------------------------------------
 
-/** Read mask for discovery: the fields DARB maps and shows, nothing more. */
+/**
+ * Read mask for discovery: the fields DARB maps and shows, nothing more.
+ *
+ * `placeId`/`mapsUri` are NOT top-level Location fields — they live under
+ * `metadata` (v1 `Metadata.placeId`), which `normalizeGbpLocation` already reads
+ * (`loc.metadata?.placeId`). Requesting a bare `placeId` path makes Google reject
+ * the whole `accounts.locations.list` call with INVALID_ARGUMENT, so the mask must
+ * only name real top-level fields plus the nested `metadata` container.
+ */
 export const GBP_LOCATION_READ_MASK =
-  "name,title,storeCode,phoneNumbers,websiteUri,categories,storefrontAddress,metadata,placeId";
+  "name,title,storeCode,phoneNumbers,websiteUri,categories,storefrontAddress,locationState,metadata";
 
 export type GbpRawLocation = {
   name?: string;
