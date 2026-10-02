@@ -2688,6 +2688,232 @@ export type Database = {
           },
         ]
       }
+      google_business_media: {
+        Row: {
+          attribution: string | null
+          created_at: string
+          created_by: string | null
+          darb_category: string | null
+          description: string | null
+          google_account_id: string | null
+          google_connection_id: string | null
+          google_full_url: string | null
+          google_location_id: string
+          google_media_id: string
+          google_media_resource_name: string
+          google_source_url: string | null
+          google_thumbnail_url: string | null
+          height: number | null
+          id: string
+          last_synced_at: string | null
+          media_category: string | null
+          media_format: string | null
+          media_origin: string
+          media_state: string
+          office_id: string
+          storage_path: string | null
+          updated_at: string
+          upload_operation_id: string | null
+          width: number | null
+        }
+        Insert: {
+          attribution?: string | null
+          created_at?: string
+          created_by?: string | null
+          darb_category?: string | null
+          description?: string | null
+          google_account_id?: string | null
+          google_connection_id?: string | null
+          google_full_url?: string | null
+          google_location_id: string
+          google_media_id: string
+          google_media_resource_name: string
+          google_source_url?: string | null
+          google_thumbnail_url?: string | null
+          height?: number | null
+          id?: string
+          last_synced_at?: string | null
+          media_category?: string | null
+          media_format?: string | null
+          media_origin?: string
+          media_state?: string
+          office_id: string
+          storage_path?: string | null
+          updated_at?: string
+          upload_operation_id?: string | null
+          width?: number | null
+        }
+        Update: {
+          attribution?: string | null
+          created_at?: string
+          created_by?: string | null
+          darb_category?: string | null
+          description?: string | null
+          google_account_id?: string | null
+          google_connection_id?: string | null
+          google_full_url?: string | null
+          google_location_id?: string
+          google_media_id?: string
+          google_media_resource_name?: string
+          google_source_url?: string | null
+          google_thumbnail_url?: string | null
+          height?: number | null
+          id?: string
+          last_synced_at?: string | null
+          media_category?: string | null
+          media_format?: string | null
+          media_origin?: string
+          media_state?: string
+          office_id?: string
+          storage_path?: string | null
+          updated_at?: string
+          upload_operation_id?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_media_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_business_posts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cta_type: string | null
+          cta_url: string | null
+          delete_locked_at: string | null
+          delete_operation_id: string | null
+          deleted_at: string | null
+          event_end: string | null
+          event_start: string | null
+          event_title: string | null
+          google_account_id: string | null
+          google_connection_id: string | null
+          google_location_id: string | null
+          google_post_id: string | null
+          google_post_resource_name: string | null
+          google_state: string | null
+          google_update_time: string | null
+          id: string
+          language_code: string
+          last_error_code: string | null
+          last_error_message: string | null
+          last_synced_at: string | null
+          last_synced_hash: string | null
+          media_ids: string[]
+          media_urls: string[]
+          offer_coupon_code: string | null
+          offer_terms: string | null
+          offer_url: string | null
+          office_id: string
+          publish_locked_at: string | null
+          publish_operation_id: string | null
+          published_at: string | null
+          search_url: string | null
+          status: string
+          summary: string | null
+          topic_type: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cta_type?: string | null
+          cta_url?: string | null
+          delete_locked_at?: string | null
+          delete_operation_id?: string | null
+          deleted_at?: string | null
+          event_end?: string | null
+          event_start?: string | null
+          event_title?: string | null
+          google_account_id?: string | null
+          google_connection_id?: string | null
+          google_location_id?: string | null
+          google_post_id?: string | null
+          google_post_resource_name?: string | null
+          google_state?: string | null
+          google_update_time?: string | null
+          id?: string
+          language_code?: string
+          last_error_code?: string | null
+          last_error_message?: string | null
+          last_synced_at?: string | null
+          last_synced_hash?: string | null
+          media_ids?: string[]
+          media_urls?: string[]
+          offer_coupon_code?: string | null
+          offer_terms?: string | null
+          offer_url?: string | null
+          office_id: string
+          publish_locked_at?: string | null
+          publish_operation_id?: string | null
+          published_at?: string | null
+          search_url?: string | null
+          status?: string
+          summary?: string | null
+          topic_type?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cta_type?: string | null
+          cta_url?: string | null
+          delete_locked_at?: string | null
+          delete_operation_id?: string | null
+          deleted_at?: string | null
+          event_end?: string | null
+          event_start?: string | null
+          event_title?: string | null
+          google_account_id?: string | null
+          google_connection_id?: string | null
+          google_location_id?: string | null
+          google_post_id?: string | null
+          google_post_resource_name?: string | null
+          google_state?: string | null
+          google_update_time?: string | null
+          id?: string
+          language_code?: string
+          last_error_code?: string | null
+          last_error_message?: string | null
+          last_synced_at?: string | null
+          last_synced_hash?: string | null
+          media_ids?: string[]
+          media_urls?: string[]
+          offer_coupon_code?: string | null
+          offer_terms?: string | null
+          offer_url?: string | null
+          office_id?: string
+          publish_locked_at?: string | null
+          publish_operation_id?: string | null
+          published_at?: string | null
+          search_url?: string | null
+          status?: string
+          summary?: string | null
+          topic_type?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_posts_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_business_reviews: {
         Row: {
           comment: string | null
@@ -2773,6 +2999,108 @@ export type Database = {
             columns: ["office_id"]
             isOneToOne: false
             referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_media_upload_receipts: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          media_id: string | null
+          office_id: string
+          operation_id: string
+          result: Json | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          media_id?: string | null
+          office_id: string
+          operation_id: string
+          result?: Json | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          media_id?: string | null
+          office_id?: string
+          operation_id?: string
+          result?: Json | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_media_upload_receipts_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_media_upload_receipts_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_post_operation_receipts: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          id: string
+          office_id: string
+          operation: string
+          operation_id: string
+          post_id: string | null
+          request_hash: string
+          result: Json
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          office_id: string
+          operation: string
+          operation_id: string
+          post_id?: string | null
+          request_hash: string
+          result: Json
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          id?: string
+          office_id?: string
+          operation?: string
+          operation_id?: string
+          post_id?: string | null
+          request_hash?: string
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_post_operation_receipts_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_post_operation_receipts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_posts"
             referencedColumns: ["id"]
           },
         ]
@@ -3792,10 +4120,20 @@ export type Database = {
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
+          media_last_successful_sync_at: string | null
+          media_last_synced_at: string | null
+          media_sync_error_code: string | null
+          media_sync_error_message: string | null
+          media_sync_locked_at: string | null
           office_id: string
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
+          posts_last_successful_sync_at: string | null
+          posts_last_synced_at: string | null
+          posts_sync_error_code: string | null
+          posts_sync_error_message: string | null
+          posts_sync_locked_at: string | null
           primary_category: string | null
           profile_last_successful_sync_at: string | null
           profile_last_synced_at: string | null
@@ -3860,10 +4198,20 @@ export type Database = {
           mapped_at?: string | null
           mapped_by?: string | null
           mapping_status?: string
+          media_last_successful_sync_at?: string | null
+          media_last_synced_at?: string | null
+          media_sync_error_code?: string | null
+          media_sync_error_message?: string | null
+          media_sync_locked_at?: string | null
           office_id: string
           phone_additional?: Json
           phone_primary?: string | null
           postal_code?: string | null
+          posts_last_successful_sync_at?: string | null
+          posts_last_synced_at?: string | null
+          posts_sync_error_code?: string | null
+          posts_sync_error_message?: string | null
+          posts_sync_locked_at?: string | null
           primary_category?: string | null
           profile_last_successful_sync_at?: string | null
           profile_last_synced_at?: string | null
@@ -3928,10 +4276,20 @@ export type Database = {
           mapped_at?: string | null
           mapped_by?: string | null
           mapping_status?: string
+          media_last_successful_sync_at?: string | null
+          media_last_synced_at?: string | null
+          media_sync_error_code?: string | null
+          media_sync_error_message?: string | null
+          media_sync_locked_at?: string | null
           office_id?: string
           phone_additional?: Json
           phone_primary?: string | null
           postal_code?: string | null
+          posts_last_successful_sync_at?: string | null
+          posts_last_synced_at?: string | null
+          posts_sync_error_code?: string | null
+          posts_sync_error_message?: string | null
+          posts_sync_locked_at?: string | null
           primary_category?: string | null
           profile_last_successful_sync_at?: string | null
           profile_last_synced_at?: string | null
@@ -7731,6 +8089,31 @@ export type Database = {
     }
     Functions: {
       accept_voice_call: { Args: { p_call_id: string }; Returns: Json }
+      acquire_google_media_sync_lock: {
+        Args: { p_office_id: string; p_stale_after_seconds?: number }
+        Returns: boolean
+      }
+      acquire_google_post_delete_lock: {
+        Args: {
+          p_office_id: string
+          p_post_id: string
+          p_stale_after_seconds?: number
+        }
+        Returns: boolean
+      }
+      acquire_google_post_publish_lock: {
+        Args: {
+          p_office_id: string
+          p_operation_id: string
+          p_post_id: string
+          p_stale_after_seconds?: number
+        }
+        Returns: boolean
+      }
+      acquire_google_posts_sync_lock: {
+        Args: { p_office_id: string; p_stale_after_seconds?: number }
+        Returns: boolean
+      }
       acquire_google_profile_sync_lock: {
         Args: { p_office_id: string; p_stale_after_seconds?: number }
         Returns: boolean
@@ -7748,6 +8131,27 @@ export type Database = {
           p_unit_price: number
         }
         Returns: Json
+      }
+      admin_apply_google_post_publish: {
+        Args: {
+          p_actor_user_id?: string
+          p_google_post_id: string
+          p_google_post_resource_name: string
+          p_google_state: string
+          p_google_update_time?: string
+          p_media_urls?: string[]
+          p_office_id: string
+          p_operation_id: string
+          p_post_id: string
+          p_request_hash: string
+          p_search_url?: string
+        }
+        Returns: {
+          post_id: string
+          published_at: string
+          status: string
+          version: number
+        }[]
       }
       admin_apply_google_profile_update: {
         Args: {
@@ -7928,10 +8332,20 @@ export type Database = {
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
+          media_last_successful_sync_at: string | null
+          media_last_synced_at: string | null
+          media_sync_error_code: string | null
+          media_sync_error_message: string | null
+          media_sync_locked_at: string | null
           office_id: string
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
+          posts_last_successful_sync_at: string | null
+          posts_last_synced_at: string | null
+          posts_sync_error_code: string | null
+          posts_sync_error_message: string | null
+          posts_sync_locked_at: string | null
           primary_category: string | null
           profile_last_successful_sync_at: string | null
           profile_last_synced_at: string | null
@@ -8009,10 +8423,20 @@ export type Database = {
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
+          media_last_successful_sync_at: string | null
+          media_last_synced_at: string | null
+          media_sync_error_code: string | null
+          media_sync_error_message: string | null
+          media_sync_locked_at: string | null
           office_id: string
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
+          posts_last_successful_sync_at: string | null
+          posts_last_synced_at: string | null
+          posts_sync_error_code: string | null
+          posts_sync_error_message: string | null
+          posts_sync_locked_at: string | null
           primary_category: string | null
           profile_last_successful_sync_at: string | null
           profile_last_synced_at: string | null
@@ -8042,6 +8466,57 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_mark_google_media_deleted: {
+        Args: {
+          p_actor_user_id?: string
+          p_google_status?: number
+          p_media_id: string
+          p_office_id: string
+        }
+        Returns: {
+          media_id: string
+          media_state: string
+        }[]
+      }
+      admin_mark_google_media_sync_error: {
+        Args: {
+          p_error_code: string
+          p_error_message: string
+          p_office_id: string
+        }
+        Returns: undefined
+      }
+      admin_mark_google_post_deleted: {
+        Args: {
+          p_actor_user_id?: string
+          p_google_status?: number
+          p_office_id: string
+          p_operation_id?: string
+          p_post_id: string
+        }
+        Returns: {
+          post_id: string
+          status: string
+        }[]
+      }
+      admin_mark_google_post_publish_failed: {
+        Args: {
+          p_actor_user_id?: string
+          p_error_code: string
+          p_error_message: string
+          p_office_id: string
+          p_post_id: string
+        }
+        Returns: undefined
+      }
+      admin_mark_google_posts_sync_error: {
+        Args: {
+          p_error_code: string
+          p_error_message: string
+          p_office_id: string
+        }
+        Returns: undefined
       }
       admin_mark_google_profile_sync_error: {
         Args: {
@@ -8099,6 +8574,32 @@ export type Database = {
         Args: { p_connection_id: string; p_locations: Json }
         Returns: number
       }
+      admin_sync_google_media: {
+        Args: {
+          p_actor_user_id?: string
+          p_complete?: boolean
+          p_media: Json
+          p_office_id: string
+        }
+        Returns: {
+          inserted: number
+          marked_not_found: number
+          updated: number
+        }[]
+      }
+      admin_sync_google_posts: {
+        Args: {
+          p_actor_user_id?: string
+          p_complete?: boolean
+          p_office_id: string
+          p_posts: Json
+        }
+        Returns: {
+          inserted: number
+          marked_deleted: number
+          updated: number
+        }[]
+      }
       admin_sync_google_profile: {
         Args: {
           p_actor_user_id?: string
@@ -8115,7 +8616,9 @@ export type Database = {
       }
       admin_sync_google_reviews: {
         Args: {
+          p_actor_user_id?: string
           p_average_rating?: number
+          p_complete?: boolean
           p_office_id: string
           p_reviews: Json
           p_total_count?: number
@@ -8169,10 +8672,20 @@ export type Database = {
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
+          media_last_successful_sync_at: string | null
+          media_last_synced_at: string | null
+          media_sync_error_code: string | null
+          media_sync_error_message: string | null
+          media_sync_locked_at: string | null
           office_id: string
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
+          posts_last_successful_sync_at: string | null
+          posts_last_synced_at: string | null
+          posts_sync_error_code: string | null
+          posts_sync_error_message: string | null
+          posts_sync_locked_at: string | null
           primary_category: string | null
           profile_last_successful_sync_at: string | null
           profile_last_synced_at: string | null
@@ -8267,10 +8780,20 @@ export type Database = {
           mapped_at: string | null
           mapped_by: string | null
           mapping_status: string
+          media_last_successful_sync_at: string | null
+          media_last_synced_at: string | null
+          media_sync_error_code: string | null
+          media_sync_error_message: string | null
+          media_sync_locked_at: string | null
           office_id: string
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
+          posts_last_successful_sync_at: string | null
+          posts_last_synced_at: string | null
+          posts_sync_error_code: string | null
+          posts_sync_error_message: string | null
+          posts_sync_locked_at: string | null
           primary_category: string | null
           profile_last_successful_sync_at: string | null
           profile_last_synced_at: string | null
@@ -8352,6 +8875,17 @@ export type Database = {
           source_attribution_method: string
         }[]
       }
+      begin_google_media_upload: {
+        Args: {
+          p_office_id: string
+          p_operation_id: string
+          p_request_hash: string
+        }
+        Returns: {
+          media: Json
+          status: string
+        }[]
+      }
       can_access_case_thread: {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean
@@ -8380,6 +8914,17 @@ export type Database = {
       chat_sender_label: {
         Args: { _lang?: string; _sender: string; _viewer: string }
         Returns: string
+      }
+      check_google_post_operation: {
+        Args: {
+          p_office_id: string
+          p_operation: string
+          p_operation_id: string
+        }
+        Returns: {
+          found: boolean
+          result: Json
+        }[]
       }
       check_identity_conflict: { Args: { _email: string }; Returns: Json }
       check_referral_code: {
@@ -8435,6 +8980,14 @@ export type Database = {
       confirm_registration_payment: {
         Args: { p_payment_id: string; p_reference?: string }
         Returns: Json
+      }
+      create_google_post_draft: {
+        Args: { p_office_id: string; p_post: Json }
+        Returns: {
+          post_id: string
+          status: string
+          version: number
+        }[]
       }
       create_payout_batch: { Args: { p_reward_ids: string[] }; Returns: string }
       create_public_appointment_access: {
@@ -8523,6 +9076,15 @@ export type Database = {
       ensure_student_visa_application: {
         Args: { p_case_id: string }
         Returns: string
+      }
+      fail_google_media_upload: {
+        Args: {
+          p_error_code: string
+          p_error_message: string
+          p_office_id: string
+          p_operation_id: string
+        }
+        Returns: undefined
       }
       fail_registration_card_payment_internal: {
         Args: { p_failure_reason?: string; p_payment_id: string }
@@ -8940,6 +9502,46 @@ export type Database = {
           verification_status: string
         }[]
       }
+      get_office_google_media_summary: {
+        Args: { p_office_id: string }
+        Returns: {
+          business_count: number
+          connection_status: string
+          cover_count: number
+          customer_count: number
+          exterior_count: number
+          google_location_name: string
+          google_maps_url: string
+          interior_count: number
+          logo_count: number
+          mapping_status: string
+          media_last_successful_sync_at: string
+          media_last_synced_at: string
+          media_sync_error_code: string
+          media_sync_error_message: string
+          office_id: string
+          other_count: number
+          team_count: number
+        }[]
+      }
+      get_office_google_posts_summary: {
+        Args: { p_office_id: string }
+        Returns: {
+          connection_status: string
+          deleted_count: number
+          draft_count: number
+          failed_count: number
+          google_location_name: string
+          google_maps_url: string
+          mapping_status: string
+          office_id: string
+          posts_last_successful_sync_at: string
+          posts_last_synced_at: string
+          posts_sync_error_code: string
+          posts_sync_error_message: string
+          published_count: number
+        }[]
+      }
       get_office_google_profile: {
         Args: { p_office_id: string }
         Returns: {
@@ -9204,6 +9806,9 @@ export type Database = {
         Args: { p_office_id: string; p_user_id: string }
         Returns: string
       }
+      google_post_content: { Args: { p_post: Json }; Returns: Json }
+      google_post_field_error: { Args: { p_post: Json }; Returns: string }
+      google_post_hash: { Args: { p_content: Json }; Returns: string }
       google_profile_content: {
         Args: {
           p_additional_categories: Json
@@ -9382,12 +9987,88 @@ export type Database = {
           updated_at: string
         }[]
       }
+      list_office_google_media: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_office_id: string
+          p_offset?: number
+          p_origin?: string
+          p_search?: string
+        }
+        Returns: {
+          attribution: string
+          created_at: string
+          darb_category: string
+          description: string
+          google_full_url: string
+          google_location_id: string
+          google_media_id: string
+          google_source_url: string
+          google_thumbnail_url: string
+          height: number
+          id: string
+          last_synced_at: string
+          media_category: string
+          media_format: string
+          media_origin: string
+          media_state: string
+          office_id: string
+          total_count: number
+          width: number
+        }[]
+      }
       list_office_google_operator_candidates: {
         Args: { p_office_id: string }
         Returns: {
           full_name: string
           operator_role: string
           team_member_id: string
+        }[]
+      }
+      list_office_google_posts: {
+        Args: {
+          p_limit?: number
+          p_office_id: string
+          p_offset?: number
+          p_search?: string
+          p_status?: string
+          p_topic_type?: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string
+          created_by_name: string
+          cta_type: string
+          cta_url: string
+          deleted_at: string
+          event_end: string
+          event_start: string
+          event_title: string
+          google_location_id: string
+          google_post_id: string
+          google_state: string
+          google_update_time: string
+          id: string
+          language_code: string
+          last_error_code: string
+          last_error_message: string
+          last_synced_at: string
+          media_ids: string[]
+          media_urls: string[]
+          offer_coupon_code: string
+          offer_terms: string
+          offer_url: string
+          office_id: string
+          published_at: string
+          search_url: string
+          status: string
+          summary: string
+          topic_type: string
+          total_count: number
+          updated_at: string
+          updated_by: string
+          version: number
         }[]
       }
       list_office_google_profiles: {
@@ -9685,6 +10366,18 @@ export type Database = {
         Args: { p_case_id: string; p_total_payment_ils?: number }
         Returns: undefined
       }
+      record_google_media_upload: {
+        Args: {
+          p_actor_user_id?: string
+          p_media: Json
+          p_office_id: string
+          p_operation_id: string
+        }
+        Returns: {
+          media_id: string
+          media_state: string
+        }[]
+      }
       record_partner_click: {
         Args: { p_code: string; p_session_id: string; p_user_agent: string }
         Returns: undefined
@@ -9694,6 +10387,22 @@ export type Database = {
         Returns: undefined
       }
       reject_recruit_application: { Args: { p_id: string }; Returns: undefined }
+      release_google_media_sync_lock: {
+        Args: { p_office_id: string }
+        Returns: undefined
+      }
+      release_google_post_delete_lock: {
+        Args: { p_office_id: string; p_post_id: string }
+        Returns: undefined
+      }
+      release_google_post_publish_lock: {
+        Args: { p_office_id: string; p_post_id: string }
+        Returns: undefined
+      }
+      release_google_posts_sync_lock: {
+        Args: { p_office_id: string }
+        Returns: undefined
+      }
       release_google_profile_sync_lock: {
         Args: { p_office_id: string }
         Returns: undefined
@@ -9722,6 +10431,52 @@ export type Database = {
         Returns: string
       }
       request_payout_via_chat: { Args: { p_notes?: string }; Returns: Json }
+      resolve_google_media_office: {
+        Args: { p_media_id: string; p_office_id: string }
+        Returns: {
+          google_account_id: string
+          google_location_id: string
+          google_media_id: string
+          google_media_resource_name: string
+          media_id: string
+          media_origin: string
+          media_state: string
+          office_id: string
+        }[]
+      }
+      resolve_google_post_media_urls: {
+        Args: { p_media_ids: string[]; p_office_id: string }
+        Returns: string[]
+      }
+      resolve_google_post_office: {
+        Args: { p_office_id: string; p_post_id: string }
+        Returns: {
+          cta_type: string
+          cta_url: string
+          delete_operation_id: string
+          event_end: string
+          event_start: string
+          event_title: string
+          google_account_id: string
+          google_location_id: string
+          google_post_id: string
+          google_post_resource_name: string
+          language_code: string
+          media_ids: string[]
+          media_urls: string[]
+          offer_coupon_code: string
+          offer_terms: string
+          offer_url: string
+          office_id: string
+          post_id: string
+          publish_operation_id: string
+          published_at: string
+          status: string
+          summary: string
+          topic_type: string
+          version: number
+        }[]
+      }
       resolve_google_review_office: {
         Args: { p_office_id: string; p_review_id: string }
         Returns: {
@@ -9961,6 +10716,19 @@ export type Database = {
       team_can_view_student_role: {
         Args: { _student_user_id: string }
         Returns: boolean
+      }
+      update_google_post_draft: {
+        Args: {
+          p_expected_version?: number
+          p_office_id: string
+          p_post: Json
+          p_post_id: string
+        }
+        Returns: {
+          post_id: string
+          status: string
+          version: number
+        }[]
       }
       update_registration_payment_settings: {
         Args: {
