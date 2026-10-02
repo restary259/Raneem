@@ -571,11 +571,11 @@ export default function TeamGoogleInsightsPage() {
   const newestJob = jobs[0] ?? null;
 
   // A keyword sync that lagged behind a healthy metrics sync is derived from the
-  // latest job rather than transient client state, so it survives the reload
-  // that follows a sync and clears itself once keywords succeed again.
+  // latest keyword job rather than transient client state, so it survives the
+  // reload that follows a sync and clears itself once keywords succeed again.
   const keywordSyncLagging =
     !isAll &&
-    jobs.some((j) => j.sync_type === "KEYWORDS" && j.status === "FAILED");
+    (jobs.find((j) => j.sync_type === "KEYWORDS")?.status ?? null) === "FAILED";
 
   // -------------------------------------------------------------------------
   // Render
