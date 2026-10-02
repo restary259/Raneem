@@ -2387,7 +2387,6 @@ DECLARE
   v_location_id text;
   v_account_id text;
   v_item jsonb;
-  v_existing uuid;
   v_post_id uuid;
   v_ins integer := 0;
   v_upd integer := 0;
