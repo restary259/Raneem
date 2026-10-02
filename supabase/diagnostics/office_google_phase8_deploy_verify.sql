@@ -110,12 +110,12 @@ BEGIN
     'list_office_google_performance_sync_jobs(uuid,integer)',
     'admin_google_performance_aggregate(date,date,date,date,uuid[])',
     'admin_create_google_performance_sync_job(uuid,text,date,date)',
-    'admin_complete_google_performance_metrics_job(uuid,jsonb,jsonb,date,date,date)',
-    'admin_complete_google_performance_keywords_job(uuid,jsonb,date)',
-    'admin_fail_google_performance_sync_job(uuid,text,text,text)',
+    'admin_complete_google_performance_metrics_job(uuid,text,jsonb,jsonb,date,date)',
+    'admin_complete_google_performance_keywords_job(uuid,text,jsonb,date)',
+    'admin_fail_google_performance_sync_job(uuid,text,text,text,text)',
     'admin_record_google_performance_audit(uuid,text,jsonb)',
     'acquire_google_performance_sync_lock(uuid,integer)',
-    'release_google_performance_sync_lock(uuid)',
+    'release_google_performance_sync_lock(uuid,text)',
     'google_performance_metric_supported(text)',
     'google_performance_metric_scope(text)',
     'validate_google_performance_row()']) AS sig
@@ -136,12 +136,12 @@ BEGIN
     'list_office_google_performance_sync_jobs(uuid,integer)',
     'admin_google_performance_aggregate(date,date,date,date,uuid[])',
     'admin_create_google_performance_sync_job(uuid,text,date,date)',
-    'admin_complete_google_performance_metrics_job(uuid,jsonb,jsonb,date,date,date)',
-    'admin_complete_google_performance_keywords_job(uuid,jsonb,date)',
-    'admin_fail_google_performance_sync_job(uuid,text,text,text)',
+    'admin_complete_google_performance_metrics_job(uuid,text,jsonb,jsonb,date,date)',
+    'admin_complete_google_performance_keywords_job(uuid,text,jsonb,date)',
+    'admin_fail_google_performance_sync_job(uuid,text,text,text,text)',
     'admin_record_google_performance_audit(uuid,text,jsonb)',
     'acquire_google_performance_sync_lock(uuid,integer)',
-    'release_google_performance_sync_lock(uuid)']) AS sig
+    'release_google_performance_sync_lock(uuid,text)']) AS sig
   LOOP
     v_oid := to_regprocedure('public.' || r.sig);
     SELECT p.prosrc INTO v_src FROM pg_proc p WHERE p.oid = v_oid;

@@ -28,6 +28,18 @@ function formatThreshold(
 }
 
 /**
+ * Neutralizes spreadsheet formula injection. A keyword, office or location name
+ * is provider/user data and can begin with `=`, `+`, `-`, `@`, tab or CR; the
+ * shared CSV writer only quotes and escapes quotes, so a leading formula
+ * character would still be evaluated when the file is opened in Excel/Sheets.
+ * Prefixing a single quote keeps the text intact and forces it to be read as
+ * text.
+ */
+function sanitizeCsvCell(value: string): string {
+  return /^[=+\-@\t\r\n]/.test(value) ? `'${value}` : value;
+}
+
+/**
  * Builds export rows for the shared CSV writer. One flat table so there is a
  * single export control, not one per section.
  */
@@ -36,14 +48,14 @@ export function buildPerformanceExportRows(
   keywords: GoogleSearchKeywordRow[],
   ctx: PerformanceExportContext,
 ): Record<string, unknown>[] {
-  const office = ctx.officeName ?? "";
-  const location = ctx.googleLocationName ?? "";
+  const office = sanitizeCsvCell(ctx.officeName ?? "");
+  const location = sanitizeCsvCell(ctx.googleLocationName ?? "");
 
   return [
     ...series.map((point) => ({
       Date: point.metric_date,
       Office: office,
-      Metric: ctx.metricLabel(point.metric),
+      Metric: sanitizeCsvCell(ctx.metricLabel(point.metric)),
       Value: point.metric_value,
       "Google Location": location,
       "Search Keyword": "",
@@ -55,7 +67,7 @@ export function buildPerformanceExportRows(
       Metric: "",
       Value: formatThreshold(row.insights_value, row.insights_value_type),
       "Google Location": location,
-      "Search Keyword": row.search_keyword,
+      "Search Keyword": sanitizeCsvCell(row.search_keyword),
       Month: row.month,
     })),
   ];

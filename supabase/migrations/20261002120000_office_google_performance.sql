@@ -376,26 +376,29 @@ ALTER TABLE public.office_google_profiles
   ADD COLUMN IF NOT EXISTS performance_sync_error_code TEXT,
   ADD COLUMN IF NOT EXISTS performance_sync_error_message TEXT,
   ADD COLUMN IF NOT EXISTS performance_sync_locked_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS performance_sync_lock_token TEXT,
   ADD COLUMN IF NOT EXISTS performance_data_through DATE;
 
 -- ---------------------------------------------------------------------------
 -- 6. Sync lock — one performance sync per office at a time
 --
--- Advisory + self-expiring so a crashed sync cannot wedge the office. Shares the
--- GOOGLE_SYNC_PERFORMANCE gate, so an authenticated caller cannot lock or wedge
--- another office's sync by id.
+-- Owner-tokened and self-expiring: a sync acquires the lock and receives a
+-- random token, and only that token may release it or finalize a job. A second
+-- operator can therefore never release a live lock, and the stale window is
+-- clamped server-side so a caller cannot widen it.
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.acquire_google_performance_sync_lock(
   p_office_id uuid,
   p_stale_after_seconds integer DEFAULT 300
 )
-RETURNS boolean
+RETURNS text
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $fn$
 DECLARE
+  v_token text;
   v_acquired boolean;
 BEGIN
   IF NOT (
@@ -405,29 +408,40 @@ BEGIN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
+  v_token := encode(gen_random_bytes(24), 'hex');
+
   UPDATE public.office_google_profiles
   SET performance_sync_locked_at = now(),
+      performance_sync_lock_token = v_token,
       updated_at = now()
   WHERE office_id = p_office_id
     AND (
       performance_sync_locked_at IS NULL
-      OR performance_sync_locked_at < now() - make_interval(secs => GREATEST(p_stale_after_seconds, 60))
+      OR performance_sync_locked_at < now() - make_interval(secs => LEAST(GREATEST(p_stale_after_seconds, 60), 1800))
     )
   RETURNING true INTO v_acquired;
 
-  RETURN COALESCE(v_acquired, false);
+  IF NOT COALESCE(v_acquired, false) THEN
+    RETURN NULL;
+  END IF;
+  RETURN v_token;
 END;
 $fn$;
 
 REVOKE ALL ON FUNCTION public.acquire_google_performance_sync_lock(uuid, integer) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.acquire_google_performance_sync_lock(uuid, integer) TO authenticated, service_role;
 
-CREATE OR REPLACE FUNCTION public.release_google_performance_sync_lock(p_office_id uuid)
-RETURNS void
+CREATE OR REPLACE FUNCTION public.release_google_performance_sync_lock(
+  p_office_id uuid,
+  p_token text
+)
+RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $fn$
+DECLARE
+  v_released boolean;
 BEGIN
   IF NOT (
     public.is_admin_session()
@@ -436,15 +450,23 @@ BEGIN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
+  -- Only the holder of the current token may release: a stale sync that lost the
+  -- lock cannot clear a newer sync's lock.
   UPDATE public.office_google_profiles
   SET performance_sync_locked_at = NULL,
+      performance_sync_lock_token = NULL,
       updated_at = now()
-  WHERE office_id = p_office_id;
+  WHERE office_id = p_office_id
+    AND performance_sync_lock_token IS NOT NULL
+    AND performance_sync_lock_token = p_token
+  RETURNING true INTO v_released;
+
+  RETURN COALESCE(v_released, false);
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.release_google_performance_sync_lock(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.release_google_performance_sync_lock(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.release_google_performance_sync_lock(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.release_google_performance_sync_lock(uuid, text) TO authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 7. Read RPC — performance summary (current + previous period)
@@ -705,6 +727,9 @@ BEGIN
   JOIN public.offices o ON o.id = ogo.office_id AND o.deleted_at IS NULL
   LEFT JOIN public.office_google_profiles ogp ON ogp.office_id = ogo.office_id
   WHERE ogo.team_member_id = auth.uid()
+    AND public.authorize_google_office_action(
+      auth.uid(), ogo.office_id, 'GOOGLE_VIEW_INSIGHTS'
+    )
   ORDER BY o.name_en;
 END;
 $fn$;
@@ -1060,13 +1085,13 @@ GRANT EXECUTE ON FUNCTION public.admin_create_google_performance_sync_job(uuid, 
 
 CREATE OR REPLACE FUNCTION public.admin_complete_google_performance_metrics_job(
   p_job_id uuid,
+  p_token text,
   p_rows jsonb,
   p_metrics jsonb,
   p_start_date date,
-  p_end_date date,
-  p_data_through date DEFAULT NULL
+  p_end_date date
 )
-RETURNS TABLE (inserted integer, updated integer, deleted integer)
+RETURNS TABLE (inserted integer, updated integer, deleted integer, data_through date)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -1088,12 +1113,17 @@ DECLARE
   v_etype text;
   v_eid text;
   v_state text;
+  v_job_status text;
+  v_job_type text;
+  v_lock_token text;
+  v_observed_max date;
 BEGIN
   IF jsonb_typeof(p_rows) <> 'array' THEN
     RAISE EXCEPTION 'p_rows must be a JSON array';
   END IF;
 
-  SELECT j.office_id, j.google_location_id INTO v_office_id, v_location_id
+  SELECT j.office_id, j.google_location_id, j.status, j.sync_type
+  INTO v_office_id, v_location_id, v_job_status, v_job_type
   FROM public.google_business_performance_sync_jobs j
   WHERE j.id = p_job_id
   FOR UPDATE;
@@ -1107,6 +1137,26 @@ BEGIN
     OR public.authorize_google_office_action(v_actor, v_office_id, 'GOOGLE_SYNC_PERFORMANCE')
   ) THEN
     RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  -- The finalizer accepts arbitrary rows, so it must only run for a job the
+  -- server itself created and while this caller still holds the sync lock.
+  -- Without this an operator could POST fabricated analytics straight into the
+  -- cache and the admin all-office aggregate.
+  IF v_job_status <> 'RUNNING' THEN
+    RAISE EXCEPTION 'Sync job is not running' USING ERRCODE = 'check_violation';
+  END IF;
+  IF v_job_type NOT IN ('METRICS','BACKFILL') THEN
+    RAISE EXCEPTION 'Sync job type mismatch' USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT ogp.performance_sync_lock_token
+  INTO v_lock_token
+  FROM public.office_google_profiles ogp
+  WHERE ogp.office_id = v_office_id;
+
+  IF v_lock_token IS NULL OR p_token IS NULL OR v_lock_token <> p_token THEN
+    RAISE EXCEPTION 'Sync lock not held' USING ERRCODE = 'check_violation';
   END IF;
 
   SELECT ogp.google_account_id INTO v_account_id
@@ -1176,9 +1226,23 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- data-through is the newest date Google actually reported, not the requested
+  -- end date: a lagging or empty response must not be presented as current.
+  SELECT max((r->>'metric_date')::date) INTO v_observed_max
+  FROM jsonb_array_elements(p_rows) r
+  WHERE NULLIF(r->>'metric_date', '') IS NOT NULL;
+
+  IF v_observed_max IS NOT NULL THEN
+    UPDATE public.office_google_profiles
+    SET performance_data_through = GREATEST(COALESCE(performance_data_through, v_observed_max), v_observed_max),
+        updated_at = now()
+    WHERE office_id = v_office_id;
+  END IF;
+
   -- Reconcile: a metric row in range that Google no longer returns is removed so
   -- a stale value cannot linger. Only the requested metrics/location-wide scope
-  -- are touched.
+  -- are touched, and only while this job still owns the lock, so a stale
+  -- completion cannot delete rows a newer sync wrote.
   IF array_length(v_metrics, 1) IS NOT NULL THEN
     DELETE FROM public.google_business_performance_daily d
     WHERE d.office_id = v_office_id
@@ -1188,6 +1252,11 @@ BEGIN
       AND d.entity_id = ''
       AND d.metric = ANY (v_metrics)
       AND d.metric_date BETWEEN p_start_date AND p_end_date
+      AND EXISTS (
+        SELECT 1 FROM public.office_google_profiles ogp
+        WHERE ogp.office_id = v_office_id
+          AND ogp.performance_sync_lock_token = p_token
+      )
       AND NOT EXISTS (
         SELECT 1 FROM jsonb_array_elements(p_rows) r
         WHERE (r->>'metric') = d.metric
@@ -1209,8 +1278,6 @@ BEGIN
       performance_last_successful_sync_at = now(),
       performance_sync_error_code = NULL,
       performance_sync_error_message = NULL,
-      performance_sync_locked_at = NULL,
-      performance_data_through = COALESCE(p_data_through, performance_data_through),
       updated_at = now()
   WHERE office_id = v_office_id;
 
@@ -1223,15 +1290,15 @@ BEGIN
     CASE WHEN public.is_admin_session() THEN 'admin' ELSE 'PRIMARY' END,
     'GOOGLE_PERFORMANCE_SYNC_COMPLETED', 'performance', p_job_id::text,
     jsonb_build_object('inserted', v_ins, 'updated', v_upd, 'deleted', v_del,
-                       'data_through', p_data_through)
+                       'data_through', v_observed_max)
   );
 
-  RETURN QUERY SELECT v_ins, v_upd, v_del;
+  RETURN QUERY SELECT v_ins, v_upd, v_del, v_observed_max;
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_complete_google_performance_metrics_job(uuid, jsonb, jsonb, date, date, date) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_complete_google_performance_metrics_job(uuid, jsonb, jsonb, date, date, date) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_complete_google_performance_metrics_job(uuid, text, jsonb, jsonb, date, date) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_complete_google_performance_metrics_job(uuid, text, jsonb, jsonb, date, date) TO authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 14. Write RPC — complete the KEYWORDS phase
@@ -1243,6 +1310,7 @@ GRANT EXECUTE ON FUNCTION public.admin_complete_google_performance_metrics_job(u
 
 CREATE OR REPLACE FUNCTION public.admin_complete_google_performance_keywords_job(
   p_job_id uuid,
+  p_token text,
   p_rows jsonb,
   p_month date
 )
@@ -1263,12 +1331,18 @@ DECLARE
   v_keyword text;
   v_month date;
   v_type text;
+  v_job_status text;
+  v_job_type text;
+  v_start_date date;
+  v_end_date date;
+  v_lock_token text;
 BEGIN
   IF jsonb_typeof(p_rows) <> 'array' THEN
     RAISE EXCEPTION 'p_rows must be a JSON array';
   END IF;
 
-  SELECT j.office_id, j.google_location_id INTO v_office_id, v_location_id
+  SELECT j.office_id, j.google_location_id, j.status, j.sync_type, j.start_date, j.end_date
+  INTO v_office_id, v_location_id, v_job_status, v_job_type, v_start_date, v_end_date
   FROM public.google_business_performance_sync_jobs j
   WHERE j.id = p_job_id
   FOR UPDATE;
@@ -1282,6 +1356,24 @@ BEGIN
     OR public.authorize_google_office_action(v_actor, v_office_id, 'GOOGLE_SYNC_PERFORMANCE')
   ) THEN
     RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  -- See the metrics finalizer: only a server-created, still-running job may
+  -- finalize, and only while its sync lock is held.
+  IF v_job_status <> 'RUNNING' THEN
+    RAISE EXCEPTION 'Sync job is not running' USING ERRCODE = 'check_violation';
+  END IF;
+  IF v_job_type <> 'KEYWORDS' THEN
+    RAISE EXCEPTION 'Sync job type mismatch' USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT ogp.performance_sync_lock_token
+  INTO v_lock_token
+  FROM public.office_google_profiles ogp
+  WHERE ogp.office_id = v_office_id;
+
+  IF v_lock_token IS NULL OR p_token IS NULL OR v_lock_token <> p_token THEN
+    RAISE EXCEPTION 'Sync lock not held' USING ERRCODE = 'check_violation';
   END IF;
 
   SELECT ogp.google_account_id INTO v_account_id
@@ -1334,6 +1426,24 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- Reconcile: every month in this job's range is refreshed by one single-month
+  -- request, so a term that disappears from Google's response for a month must
+  -- be removed for that month rather than lingering as a stale current value.
+  DELETE FROM public.google_business_search_keywords_monthly k
+  WHERE k.office_id = v_office_id
+    AND k.google_location_id = v_location_id
+    AND k.month BETWEEN v_start_date AND v_end_date
+    AND EXISTS (
+      SELECT 1 FROM public.office_google_profiles ogp
+      WHERE ogp.office_id = v_office_id
+        AND ogp.performance_sync_lock_token = p_token
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM jsonb_array_elements(p_rows) r
+      WHERE COALESCE(NULLIF(r->>'month', '')::date, p_month) = k.month
+        AND NULLIF(btrim(COALESCE(r->>'search_keyword', '')), '') = k.search_keyword
+    );
+
   UPDATE public.google_business_performance_sync_jobs
   SET status = 'SUCCESS',
       completed_at = now(),
@@ -1357,8 +1467,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_complete_google_performance_keywords_job(uuid, jsonb, date) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_complete_google_performance_keywords_job(uuid, jsonb, date) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_complete_google_performance_keywords_job(uuid, text, jsonb, date) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_complete_google_performance_keywords_job(uuid, text, jsonb, date) TO authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 15. Write RPC — mark a sync job FAILED / PARTIAL
@@ -1370,6 +1480,7 @@ GRANT EXECUTE ON FUNCTION public.admin_complete_google_performance_keywords_job(
 CREATE OR REPLACE FUNCTION public.admin_fail_google_performance_sync_job(
   p_job_id uuid,
   p_status text,
+  p_token text DEFAULT NULL,
   p_error_code text DEFAULT NULL,
   p_error_message text DEFAULT NULL
 )
@@ -1409,20 +1520,28 @@ BEGIN
       error_message = left(COALESCE(p_error_message, 'Sync failed'), 500)
   WHERE id = p_job_id;
 
-  -- Only a fully FAILED job clears the office error; a PARTIAL keeps metrics
-  -- healthy and just records that keywords lagged.
+  -- Only a fully FAILED job records the office error; a PARTIAL keeps metrics
+  -- healthy and just records that keywords lagged. The lock is only released
+  -- when this caller still holds it, so a stale failure cannot clear a newer
+  -- sync's lock.
   IF p_status = 'FAILED' THEN
     UPDATE public.office_google_profiles
     SET performance_sync_error_code = left(COALESCE(p_error_code, 'error'), 64),
         performance_sync_error_message = left(COALESCE(p_error_message, 'Sync failed'), 500),
         performance_sync_locked_at = NULL,
+        performance_sync_lock_token = NULL,
         updated_at = now()
-    WHERE office_id = v_office_id;
+    WHERE office_id = v_office_id
+      AND performance_sync_lock_token IS NOT NULL
+      AND performance_sync_lock_token = p_token;
   ELSE
     UPDATE public.office_google_profiles
     SET performance_sync_locked_at = NULL,
+        performance_sync_lock_token = NULL,
         updated_at = now()
-    WHERE office_id = v_office_id;
+    WHERE office_id = v_office_id
+      AND performance_sync_lock_token IS NOT NULL
+      AND performance_sync_lock_token = p_token;
   END IF;
 
   INSERT INTO public.google_business_activity (
@@ -1439,8 +1558,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_fail_google_performance_sync_job(uuid, text, text, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_fail_google_performance_sync_job(uuid, text, text, text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_fail_google_performance_sync_job(uuid, text, text, text, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_fail_google_performance_sync_job(uuid, text, text, text, text) TO authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- 16. Write RPC — record a meaningful performance view / export (audit)
@@ -1501,11 +1620,8 @@ CREATE POLICY "Office members read google performance"
 ON public.google_business_performance_daily FOR SELECT TO authenticated
 USING (
   public.is_admin_session()
-  OR EXISTS (
-    SELECT 1 FROM public.office_members om
-    WHERE om.office_id = google_business_performance_daily.office_id
-      AND om.user_id = auth.uid()
-      AND om.is_active = true
+  OR public.authorize_google_office_action(
+    auth.uid(), google_business_performance_daily.office_id, 'GOOGLE_VIEW_INSIGHTS'
   )
 );
 
@@ -1514,11 +1630,8 @@ CREATE POLICY "Office members read google search keywords"
 ON public.google_business_search_keywords_monthly FOR SELECT TO authenticated
 USING (
   public.is_admin_session()
-  OR EXISTS (
-    SELECT 1 FROM public.office_members om
-    WHERE om.office_id = google_business_search_keywords_monthly.office_id
-      AND om.user_id = auth.uid()
-      AND om.is_active = true
+  OR public.authorize_google_office_action(
+    auth.uid(), google_business_search_keywords_monthly.office_id, 'GOOGLE_VIEW_INSIGHTS'
   )
 );
 
@@ -1527,11 +1640,8 @@ CREATE POLICY "Office members read google performance jobs"
 ON public.google_business_performance_sync_jobs FOR SELECT TO authenticated
 USING (
   public.is_admin_session()
-  OR EXISTS (
-    SELECT 1 FROM public.office_members om
-    WHERE om.office_id = google_business_performance_sync_jobs.office_id
-      AND om.user_id = auth.uid()
-      AND om.is_active = true
+  OR public.authorize_google_office_action(
+    auth.uid(), google_business_performance_sync_jobs.office_id, 'GOOGLE_VIEW_INSIGHTS'
   )
 );
 
@@ -1557,5 +1667,10 @@ GRANT ALL ON public.google_business_performance_sync_jobs TO service_role;
 -- C) Threshold: a keyword row with insights_value_type='THRESHOLD' must never be
 --      returned by a VALUE-only filter.
 -- D) Sync lock: two concurrent acquire_google_performance_sync_lock(:berlin)
---      calls -> exactly one returns true.
+--      calls -> exactly one returns a non-null token.
+-- E) Forged write: call admin_complete_google_performance_metrics_job with a
+--      job id that is not RUNNING or a token that is not the live lock token ->
+--      must raise 'Sync job is not running' / 'Sync lock not held'.
+-- F) Direct read: a member who is not the office's Google operator selects from
+--      google_business_performance_daily -> RLS returns zero rows.
 -- ===========================================================================

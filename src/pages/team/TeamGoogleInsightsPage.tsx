@@ -981,13 +981,23 @@ export default function TeamGoogleInsightsPage() {
                       </div>
                     ) : null}
                     {summary &&
-                    summary.metric_status.BUSINESS_BOOKINGS ===
+                    summary.metric_status.BUSINESS_BOOKINGS !==
                       "NOT_AVAILABLE" ? (
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span>{t("googleInsights.bookings")}</span>
+                        <span className="font-medium tabular-nums">
+                          {formatCount(
+                            summary.current_totals.BUSINESS_BOOKINGS ?? 0,
+                            locale,
+                          )}
+                        </span>
+                      </div>
+                    ) : (
                       <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                         <span>{t("googleInsights.bookings")}</span>
                         <span>{t("googleInsights.notAvailable")}</span>
                       </div>
-                    ) : null}
+                    )}
                   </div>
                 </CardContent>
               </Card>

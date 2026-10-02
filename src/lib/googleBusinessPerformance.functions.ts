@@ -406,10 +406,47 @@ export const recordGooglePerformanceAudit = createServerFn({ method: "POST" })
 /** Recent re-fetch window. Google data can change or arrive late, so each sync
  *  re-fetches a recent window and upserts rather than appending. */
 const RECENT_SYNC_DAYS = 7;
+
+/** Google caps the keyword endpoint page size at 100. */
+const KEYWORD_PAGE_SIZE = 100;
+/** Safety bound so an export can never loop unboundedly on a broken cursor. */
+const MAX_KEYWORD_EXPORT_PAGES = 100;
 /** A backfill never silently runs for a decade; the server clamps the span. */
 const MAX_BACKFILL_DAYS = 550;
 /** Months of keyword history a sync refreshes (one Google request per month). */
 const KEYWORD_BACKFILL_MONTHS = 5;
+
+/**
+ * Walks the keyword list RPC page by page so the CSV export contains every
+ * keyword in the range, not just the first screen. Ordered deterministically
+ * server-side and bounded so a broken cursor cannot loop forever.
+ */
+async function collectAllKeywordPages(
+  ctx: SupabaseCtx,
+  args: { officeId: string; startMonth: string; endMonth: string },
+): Promise<GoogleSearchKeywordRow[]> {
+  const rows: GoogleSearchKeywordRow[] = [];
+  for (let page = 0; page < MAX_KEYWORD_EXPORT_PAGES; page += 1) {
+    const batch = await rpcOrThrow<GoogleSearchKeywordRow[]>(
+      ctx,
+      "list_office_google_search_keywords",
+      {
+        p_office_id: args.officeId,
+        p_start_month: args.startMonth,
+        p_end_month: args.endMonth,
+        p_search: null,
+        p_sort: "impressions_desc",
+        p_limit: KEYWORD_PAGE_SIZE,
+        p_offset: page * KEYWORD_PAGE_SIZE,
+      },
+    );
+    if (!batch || batch.length === 0) break;
+    rows.push(...batch);
+    if (batch.length < KEYWORD_PAGE_SIZE) break;
+  }
+  return rows;
+}
+
 const SYNC_RETRY_ATTEMPTS = 3;
 
 export type PerformanceSyncResult = {
@@ -517,7 +554,7 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
       -((data.days ?? RECENT_SYNC_DAYS) - 1),
     );
 
-    const lock = await rpcOrThrow<boolean>(
+    const lockToken = await rpcOrThrow<string | null>(
       ctx,
       "acquire_google_performance_sync_lock",
       {
@@ -525,7 +562,7 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
         p_stale_after_seconds: 300,
       },
     );
-    if (!lock) {
+    if (!lockToken) {
       return {
         ok: false,
         status: "locked",
@@ -542,17 +579,22 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
       locationId,
       startDate,
       endDate,
+      lockToken,
       creds,
     });
 
     let keywordsResult: { inserted: number; updated: number } | null = null;
     let keywordsError: { code: PerformanceErrorCode; message: string } | null =
       null;
-    if (data.includeKeywords !== false) {
+    // Keywords are secondary: a failed metrics phase has already recorded the
+    // failure and released the lock, so there is no point (and no valid lock)
+    // for a keyword request.
+    if (metricsResult.ok && data.includeKeywords !== false) {
       const kw = await syncKeywordsPhase(ctx, {
         officeId: data.officeId,
         locationId,
         timeZone,
+        lockToken,
         creds,
       });
       if (kw.ok) keywordsResult = kw.value;
@@ -561,6 +603,7 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
 
     await rpcOrThrow<void>(ctx, "release_google_performance_sync_lock", {
       p_office_id: data.officeId,
+      p_token: lockToken,
     });
 
     if (!metricsResult.ok) {
@@ -575,13 +618,17 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
       };
     }
 
+    // data-through is what Google actually reported, never the requested end
+    // date: a lagging or empty response must not look current.
+    const dataThrough = metricsResult.value.dataThrough;
+
     if (keywordsError) {
       return {
         ok: true,
         status: "partial",
         metrics: metricsResult.value,
         keywords: null,
-        dataThrough: endDate,
+        dataThrough,
         errorCode: keywordsError.code,
         errorMessage: keywordsError.message,
       };
@@ -592,7 +639,7 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
       status: "synced",
       metrics: metricsResult.value,
       keywords: keywordsResult,
-      dataThrough: endDate,
+      dataThrough,
       errorCode: null,
       errorMessage: null,
     };
@@ -605,10 +652,16 @@ async function syncMetricsPhase(
     locationId: string;
     startDate: string;
     endDate: string;
+    lockToken: string;
     creds: { lovableKey: string; connectionKey: string };
   },
 ): Promise<
-  SyncPhaseResult<{ inserted: number; updated: number; deleted: number }>
+  SyncPhaseResult<{
+    inserted: number;
+    updated: number;
+    deleted: number;
+    dataThrough: string | null;
+  }>
 > {
   const jobId = await rpcOrThrow<string>(
     ctx,
@@ -635,6 +688,7 @@ async function syncMetricsPhase(
     await rpcOrThrow<void>(ctx, "admin_fail_google_performance_sync_job", {
       p_job_id: jobId,
       p_status: "FAILED",
+      p_token: args.lockToken,
       p_error_code: fetched.code,
       p_error_message: fetched.message,
     });
@@ -643,18 +697,29 @@ async function syncMetricsPhase(
 
   const rows = normalizeMultiDailyMetrics(fetched.value, GBP_DAILY_METRICS);
   const saved = await rpcOrThrow<
-    { inserted: number; updated: number; deleted: number }[]
+    {
+      inserted: number;
+      updated: number;
+      deleted: number;
+      data_through: string | null;
+    }[]
   >(ctx, "admin_complete_google_performance_metrics_job", {
     p_job_id: jobId,
+    p_token: args.lockToken,
     p_rows: rows,
     p_metrics: [...GBP_DAILY_METRICS],
     p_start_date: args.startDate,
     p_end_date: args.endDate,
-    p_data_through: args.endDate,
   });
+  const row = saved?.[0];
   return {
     ok: true,
-    value: saved?.[0] ?? { inserted: 0, updated: 0, deleted: 0 },
+    value: {
+      inserted: row?.inserted ?? 0,
+      updated: row?.updated ?? 0,
+      deleted: row?.deleted ?? 0,
+      dataThrough: row?.data_through ?? null,
+    },
   };
 }
 
@@ -664,6 +729,7 @@ async function syncKeywordsPhase(
     officeId: string;
     locationId: string;
     timeZone: string;
+    lockToken: string;
     creds: { lovableKey: string; connectionKey: string };
   },
 ): Promise<SyncPhaseResult<{ inserted: number; updated: number }>> {
@@ -714,6 +780,7 @@ async function syncKeywordsPhase(
     await rpcOrThrow<void>(ctx, "admin_fail_google_performance_sync_job", {
       p_job_id: jobId,
       p_status: "FAILED",
+      p_token: args.lockToken,
       p_error_code: fetched.code,
       p_error_message: fetched.message,
     });
@@ -723,7 +790,12 @@ async function syncKeywordsPhase(
   const saved = await rpcOrThrow<{ inserted: number; updated: number }[]>(
     ctx,
     "admin_complete_google_performance_keywords_job",
-    { p_job_id: jobId, p_rows: fetched.value, p_month: endMonth },
+    {
+      p_job_id: jobId,
+      p_token: args.lockToken,
+      p_rows: fetched.value,
+      p_month: endMonth,
+    },
   );
   return { ok: true, value: saved?.[0] ?? { inserted: 0, updated: 0 } };
 }
@@ -782,7 +854,7 @@ export const backfillGooglePerformance = createServerFn({ method: "POST" })
       locationIdFromResourceName(identity.google_location_resource_name) ??
       identity.google_location_id;
 
-    const lock = await rpcOrThrow<boolean>(
+    const lockToken = await rpcOrThrow<string | null>(
       ctx,
       "acquire_google_performance_sync_lock",
       {
@@ -790,7 +862,7 @@ export const backfillGooglePerformance = createServerFn({ method: "POST" })
         p_stale_after_seconds: 300,
       },
     );
-    if (!lock) {
+    if (!lockToken) {
       return {
         ok: false,
         status: "locked",
@@ -808,6 +880,7 @@ export const backfillGooglePerformance = createServerFn({ method: "POST" })
     let totalInserted = 0;
     let totalUpdated = 0;
     let totalDeleted = 0;
+    let maxDataThrough: string | null = null;
     let failure: { code: PerformanceErrorCode; message: string } | null = null;
 
     while (cursor <= data.endDate) {
@@ -819,6 +892,7 @@ export const backfillGooglePerformance = createServerFn({ method: "POST" })
         locationId,
         startDate: cursor,
         endDate: chunkEnd,
+        lockToken,
         creds,
       });
       if (!phase.ok) {
@@ -828,11 +902,18 @@ export const backfillGooglePerformance = createServerFn({ method: "POST" })
       totalInserted += phase.value.inserted;
       totalUpdated += phase.value.updated;
       totalDeleted += phase.value.deleted;
+      if (
+        phase.value.dataThrough &&
+        (!maxDataThrough || phase.value.dataThrough > maxDataThrough)
+      ) {
+        maxDataThrough = phase.value.dataThrough;
+      }
       cursor = addDaysIso(chunkEnd, 1);
     }
 
     await rpcOrThrow<void>(ctx, "release_google_performance_sync_lock", {
       p_office_id: data.officeId,
+      p_token: lockToken,
     });
 
     if (failure) {
@@ -859,7 +940,7 @@ export const backfillGooglePerformance = createServerFn({ method: "POST" })
         deleted: totalDeleted,
       },
       keywords: null,
-      dataThrough: data.endDate,
+      dataThrough: maxDataThrough,
       errorCode: null,
       errorMessage: null,
     };
@@ -916,19 +997,11 @@ export const getGooglePerformanceExport = createServerFn({ method: "POST" })
     const keywords =
       data.includeKeywords === false
         ? []
-        : await rpcOrThrow<GoogleSearchKeywordRow[]>(
-            ctx,
-            "list_office_google_search_keywords",
-            {
-              p_office_id: data.officeId,
-              p_start_month: firstOfMonth(data.startDate),
-              p_end_month: firstOfMonth(data.endDate),
-              p_search: null,
-              p_sort: "impressions_desc",
-              p_limit: 100,
-              p_offset: 0,
-            },
-          );
+        : await collectAllKeywordPages(ctx, {
+            officeId: data.officeId,
+            startMonth: firstOfMonth(data.startDate),
+            endMonth: firstOfMonth(data.endDate),
+          });
     return {
       series,
       keywords,
