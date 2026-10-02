@@ -250,7 +250,17 @@ async function gbpRequest<T>(
  * only name real top-level fields plus the nested `metadata` container.
  */
 export const GBP_LOCATION_READ_MASK =
-  "name,title,storeCode,phoneNumbers,websiteUri,categories,storefrontAddress,locationState,metadata";
+  "name,title,storeCode,phoneNumbers,websiteUri,categories,storefrontAddress,metadata";
+
+/** v1 Location.metadata — carries ids plus the verification/health flags. */
+export type GbpLocationMetadata = {
+  placeId?: string;
+  mapsUri?: string;
+  newReviewUri?: string;
+  hasVoiceOfMerchant?: boolean;
+  isDisconnected?: boolean;
+  duplicateLocation?: string;
+};
 
 export type GbpRawLocation = {
   name?: string;
@@ -266,8 +276,8 @@ export type GbpRawLocation = {
     postalCode?: string;
     regionCode?: string;
   };
-  metadata?: { placeId?: string; mapsUri?: string; newReviewUri?: string };
-  /** Google returns this on the Location resource; kept for the cache. */
+  metadata?: GbpLocationMetadata;
+  /** Legacy (not requestable in v1); only read from older cached payloads. */
   locationState?: {
     isVerified?: boolean;
     isSuspended?: boolean;
@@ -320,12 +330,39 @@ export function pickActiveConnectionId(
   return (connected ?? list[0])?.id ?? null;
 }
 
+type GbpStateSource = {
+  metadata?: GbpLocationMetadata;
+  locationState?: { isVerified?: boolean; isSuspended?: boolean };
+};
+
+/**
+ * Verification from v1 `metadata` (hasVoiceOfMerchant). Falls back to the
+ * legacy `locationState` found in older cached payloads.
+ */
+export function gbpVerificationOf(loc: GbpStateSource): string | null {
+  const legacy = loc.locationState;
+  if (legacy?.isSuspended) return "SUSPENDED";
+  const m = loc.metadata;
+  if (m && typeof m.hasVoiceOfMerchant === "boolean") {
+    return m.hasVoiceOfMerchant ? "VERIFIED" : "PENDING";
+  }
+  if (legacy) return legacy.isVerified ? "VERIFIED" : "PENDING";
+  return null;
+}
+
+/** Listing health: SUSPENDED / DISCONNECTED / DUPLICATE / OPEN, or null if unknown. */
+export function gbpLocationStateOf(loc: GbpStateSource): string | null {
+  if (loc.locationState?.isSuspended) return "SUSPENDED";
+  const m = loc.metadata;
+  if (m?.isDisconnected) return "DISCONNECTED";
+  if (m?.duplicateLocation) return "DUPLICATE";
+  if (m && typeof m.hasVoiceOfMerchant === "boolean") return "OPEN";
+  if (loc.locationState) return "OPEN";
+  return null;
+}
+
 function verificationStateOf(loc: GbpRawLocation): string | null {
-  const state = loc.locationState;
-  if (!state) return null;
-  if (state.isSuspended) return "SUSPENDED";
-  if (state.isVerified) return "VERIFIED";
-  return "PENDING";
+  return gbpVerificationOf(loc);
 }
 
 /**
@@ -361,11 +398,7 @@ export function normalizeGbpLocation(
     place_id: loc.metadata?.placeId?.trim() || null,
     maps_url: loc.metadata?.mapsUri?.trim() || null,
     verification_state: verificationStateOf(loc),
-    location_state: loc.locationState?.isSuspended
-      ? "SUSPENDED"
-      : loc.locationState
-        ? "OPEN"
-        : null,
+    location_state: gbpLocationStateOf(loc),
     raw_location_json: loc,
   };
 }
@@ -613,7 +646,6 @@ export const GBP_PROFILE_READ_MASK = [
   "specialHours",
   "latlng",
   "metadata",
-  "locationState",
 ].join(",");
 
 /** Google's description byte limit (not characters). */
@@ -695,7 +727,8 @@ export type GbpRawProfile = {
     }[];
   };
   latlng?: { latitude?: number; longitude?: number };
-  metadata?: { placeId?: string; mapsUri?: string };
+  metadata?: GbpLocationMetadata;
+  /** Legacy (not requestable in v1); only read from older cached payloads. */
   locationState?: { isVerified?: boolean; isSuspended?: boolean };
 };
 
@@ -822,7 +855,8 @@ export function normalizeGbpSpecialHours(
 export function normalizeGbpProfile(raw: GbpRawProfile): NormalizedGbpProfile {
   const addr = raw.storefrontAddress ?? {};
   const lines = addr.addressLines ?? [];
-  const state = raw.locationState;
+  const state = gbpLocationStateOf(raw);
+  const verification = gbpVerificationOf(raw);
   return {
     business_name: raw.title?.trim() || null,
     business_description: raw.profile?.description?.trim() || null,
@@ -848,12 +882,13 @@ export function normalizeGbpProfile(raw: GbpRawProfile): NormalizedGbpProfile {
       typeof raw.latlng?.longitude === "number" ? raw.latlng.longitude : null,
     regular_hours: normalizeGbpRegularHours(raw.regularHours),
     special_hours: normalizeGbpSpecialHours(raw.specialHours),
-    google_state: state?.isSuspended ? "SUSPENDED" : state ? "OPEN" : null,
-    verification_status: state
-      ? state.isVerified
-        ? "verified"
-        : "pending"
-      : null,
+    google_state: state,
+    verification_status:
+      verification === null
+        ? null
+        : verification === "VERIFIED"
+          ? "verified"
+          : "pending",
   };
 }
 

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  GBP_PROFILE_READ_MASK,
   buildGbpLocationPatch,
   byteLength,
   denormalizeGbpRegularHours,
@@ -147,6 +148,16 @@ describe("normalizeGbpProfile", () => {
       normalizeGbpProfile({ locationState: { isSuspended: true } })
         .google_state,
     ).toBe("SUSPENDED");
+  });
+
+  it("reads verification from v1 metadata", () => {
+    const out = normalizeGbpProfile({ metadata: { hasVoiceOfMerchant: true } });
+    expect(out.google_state).toBe("OPEN");
+    expect(out.verification_status).toBe("verified");
+  });
+
+  it("never requests locationState in the profile mask", () => {
+    expect(GBP_PROFILE_READ_MASK.split(",")).not.toContain("locationState");
   });
 });
 
