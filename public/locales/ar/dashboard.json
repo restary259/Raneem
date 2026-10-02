@@ -3098,7 +3098,8 @@
     "googleProfile": "الملف",
     "googlePosts": "المنشورات",
     "googlePhotos": "الصور",
-    "googleInsights": "الرؤى"
+    "googleInsights": "الرؤى",
+    "googleIntegration": "تكامل Google"
   },
   "case": {
     "status": {
@@ -3688,7 +3689,9 @@
     "connectionErrorHint": "اطلب من المسؤول إعادة ربط اتصال جوجل للأعمال. بيانات التقييمات الحالية لا تزال متاحة.",
     "pageOf": "{{from}}–{{to}} من {{total}}",
     "previous": "السابق",
-    "next": "التالي"
+    "next": "التالي",
+    "newReviewBanner": "وصل تقييم جديد",
+    "viewNewReview": "عرض"
   },
   "partner": {
     "earningsTitle": "أرباحي",
@@ -6594,5 +6597,87 @@
       "offer_url_not_https": "يجب أن يبدأ رابط العرض بـ https://.",
       "language_invalid": "اختر لغة صالحة."
     }
+  },
+  "googleIntegration": {
+    "title": "تكامل Google Business",
+    "subtitle": "أحداث فورية ومزامنة خلفية وصحة الموقع.",
+    "connection": "الاتصال",
+    "connected": "متصل",
+    "notConnected": "غير متصل",
+    "oauth": "OAuth",
+    "pubsub": "Pub/Sub",
+    "topic": "الموضوع",
+    "subscription": "الاشتراك",
+    "accountLevelHint": "يسمح Google بإعداد إشعارات واحد وموضوع Pub/Sub واحد لكل حساب Google Business.",
+    "oneTopicHint": "ينطبق هذا الإعداد على كل مكتب مرتبط بحساب Google.",
+    "notificationTypes": "الإشعارات",
+    "notificationType": {
+      "GOOGLE_UPDATE": "تحديثات Google",
+      "NEW_REVIEW": "تقييمات جديدة",
+      "UPDATED_REVIEW": "تقييمات محدّثة",
+      "NEW_CUSTOMER_MEDIA": "وسائط العملاء",
+      "DUPLICATE_LOCATION": "موقع مكرر",
+      "VOICE_OF_MERCHANT_UPDATED": "Voice of Merchant",
+      "UPDATED_LOCATION_STATE": "حالة الموقع"
+    },
+    "eventProcessing": "معالجة الأحداث",
+    "receiving": "يستقبل",
+    "healthy": "سليم",
+    "misconfigured": "إعداد خاطئ",
+    "failing": "الأحداث لا تُعالج",
+    "deadLetters": "الرسائل الميتة",
+    "noDeadLetters": "لا توجد أحداث فاشلة",
+    "inspect": "فحص",
+    "retry": "إعادة المحاولة",
+    "events": "الأحداث",
+    "recentEvents": "أحدث الأحداث",
+    "viewEvents": "عرض الأحداث",
+    "noEvents": "لا توجد أحداث Google بعد.",
+    "event": "الحدث",
+    "office": "المكتب",
+    "received": "استُلم",
+    "processed": "عُولج",
+    "attention": "انتباه",
+    "noAttention": "لا توجد مكاتب تحتاج إلى انتباه.",
+    "unansweredReviews": "{{count}} تقييم بلا رد",
+    "healthReason": "السبب",
+    "lastEvent": "آخر حدث Google",
+    "lastEventReceived": "آخر حدث مستلم",
+    "lastEventProcessed": "آخر حدث معالج",
+    "lastReconciliation": "آخر مزامنة",
+    "mappedOffices": "مكتب مرتبط",
+    "healthyMappings": "ربط سليم",
+    "pending": "قيد الانتظار",
+    "running": "قيد التنفيذ",
+    "failed": "فشل",
+    "syncing": "جارٍ المزامنة...",
+    "syncFailed": "فشلت المزامنة",
+    "syncQueued": "تمت جدولة المزامنة",
+    "synchronized": "حُدّث الآن",
+    "officeHealth": "Google Business",
+    "status": {
+      "HEALTHY": "سليم",
+      "ATTENTION": "انتباه",
+      "ACTION_REQUIRED": "إجراء مطلوب",
+      "UNAVAILABLE": "غير متاح",
+      "UNKNOWN": "غير معروف"
+    },
+    "refresh": "تحديث",
+    "loading": "جارٍ التحميل...",
+    "loadError": "تعذّر تحميل حالة التكامل.",
+    "actionFailed": "فشل الإجراء. حاول مرة أخرى.",
+    "syncOffice": "مزامنة المكتب",
+    "save": "حفظ"
+  },
+  "googleEvents": {
+    "newReview": "تقييم جديد على Google",
+    "updatedReview": "تم تحديث تقييم على Google",
+    "customerMedia": "صورة جديدة من عميل",
+    "googleUpdate": "يتوفر تحديث لملف Google",
+    "locationStateChanged": "تغيّرت حالة الموقع على Google",
+    "duplicateLocation": "موقع مكرر محتمل",
+    "voiceOfMerchantChanged": "تغيّرت حالة Voice of Merchant",
+    "syncFailed": "فشلت مزامنة Google",
+    "connectionRequired": "اتصال Google Business يحتاج إلى انتباه"
   }
 }

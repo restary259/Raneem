@@ -18,6 +18,7 @@ import {
   Home,
   Hotel,
   Image,
+  Plug,
   Inbox,
   LayoutDashboard,
   Link2,
@@ -137,6 +138,7 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
         children: [
           { key: "nav.programs", icon: BookOpen, href: "/admin/programs" },
           { key: "nav.offices", icon: Building2, href: "/admin/offices" },
+          { key: "nav.googleIntegration", icon: Plug, href: "/admin/google" },
           { key: "nav.activity", icon: Activity, href: "/admin/activity" },
           { key: "nav.settings", icon: Settings, href: "/admin/settings" },
         ],

@@ -161,17 +161,16 @@ const syncInput = z.object({ officeId: z.string().uuid() });
  * customer-media marker when Google sends it, so customer photos are never
  * silently claimed as business-owned.
  */
-export const syncGoogleMedia = createServerFn({ method: "POST" })
-  .middleware([attachBearer, requireSupabaseAuth])
-  .inputValidator((input) => syncInput.parse(input))
-  .handler(async ({ context, data }): Promise<SyncMediaResult> => {
-    const ctx = context as unknown as SupabaseCtx;
+export async function runGoogleMediaSync(
+  ctx: SupabaseCtx,
+  officeId: string,
+): Promise<SyncMediaResult> {
     const empty = { inserted: 0, updated: 0, markedNotFound: 0 };
 
     const acquired = await rpcOrThrow<boolean>(
       ctx,
       "acquire_google_media_sync_lock",
-      { p_office_id: data.officeId, p_stale_after_seconds: 120 },
+      { p_office_id: officeId, p_stale_after_seconds: 120 },
     );
     if (!acquired) {
       return {
@@ -186,7 +185,7 @@ export const syncGoogleMedia = createServerFn({ method: "POST" })
     const creds = gbpCreds();
     if (!creds) {
       await rpcOrThrow(ctx, "admin_mark_google_media_sync_error", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_error_code: "not_linked",
         p_error_message: "Google Business connection is not configured",
       });
@@ -200,7 +199,7 @@ export const syncGoogleMedia = createServerFn({ method: "POST" })
     }
 
     try {
-      const identity = await loadOfficeIdentity(ctx, data.officeId);
+      const identity = await loadOfficeIdentity(ctx, officeId);
 
       const { items: raw, complete } = await collectAllPages<GbpRawMedia>(
         async (pageToken) => {
@@ -230,7 +229,7 @@ export const syncGoogleMedia = createServerFn({ method: "POST" })
       const applied = await adminRpcOrThrow<
         { inserted: number; updated: number; marked_not_found: number }[]
       >("admin_sync_google_media", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_media: normalized,
         // An incomplete walk must not mark anything NOT_FOUND.
         p_complete: complete,
@@ -254,7 +253,7 @@ export const syncGoogleMedia = createServerFn({ method: "POST" })
       console.error(`Google media sync failed [${err.status}]: ${err.message}`);
       try {
         await rpcOrThrow(ctx, "admin_mark_google_media_sync_error", {
-          p_office_id: data.officeId,
+          p_office_id: officeId,
           p_error_code: err.code,
           p_error_message: err.message,
         });
@@ -269,7 +268,14 @@ export const syncGoogleMedia = createServerFn({ method: "POST" })
         errorMessage: err.message,
       };
     }
-  });
+}
+
+export const syncGoogleMedia = createServerFn({ method: "POST" })
+  .middleware([attachBearer, requireSupabaseAuth])
+  .inputValidator((input) => syncInput.parse(input))
+  .handler(async ({ context, data }): Promise<SyncMediaResult> =>
+    runGoogleMediaSync(context as unknown as SupabaseCtx, data.officeId),
+  );
 
 // ---------------------------------------------------------------------------
 // Upload — DARB -> Google (byte upload)

@@ -155,18 +155,17 @@ const syncInput = z.object({ officeId: z.string().uuid() });
  * the Google API. The lock is always released — on success by the sync RPC, on
  * failure by the error RPC — so a crashed sync cannot wedge the office.
  */
-export const syncGoogleReviews = createServerFn({ method: "POST" })
-  .middleware([attachBearer, requireSupabaseAuth])
-  .inputValidator((input) => syncInput.parse(input))
-  .handler(async ({ context, data }): Promise<SyncReviewsResult> => {
-    const ctx = context as unknown as SupabaseCtx;
+export async function runGoogleReviewsSync(
+  ctx: SupabaseCtx,
+  officeId: string,
+): Promise<SyncReviewsResult> {
     const empty = { inserted: 0, updated: 0, markedNotFound: 0 };
 
     // Acquire the lock first: a second concurrent sync must not call Google.
     const acquired = await rpcOrThrow<boolean>(
       ctx,
       "acquire_google_review_sync_lock",
-      { p_office_id: data.officeId, p_stale_after_seconds: 120 },
+      { p_office_id: officeId, p_stale_after_seconds: 120 },
     );
     if (!acquired) {
       return {
@@ -181,7 +180,7 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
     const creds = gbpCreds();
     if (!creds) {
       await rpcOrThrow(ctx, "admin_mark_google_review_sync_error", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_error_code: "not_linked",
         p_error_message: "Google Business connection is not configured",
       });
@@ -195,7 +194,7 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
     }
 
     try {
-      const identity = await loadOfficeIdentity(ctx, data.officeId);
+      const identity = await loadOfficeIdentity(ctx, officeId);
 
       let averageRating: number | null = null;
       let totalCount: number | null = null;
@@ -233,7 +232,7 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
       const applied = await adminRpcOrThrow<
         { inserted: number; updated: number; marked_not_found: number }[]
       >("admin_sync_google_reviews", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_reviews: normalized,
         p_average_rating: averageRating,
         p_total_count: totalCount,
@@ -263,7 +262,7 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
       // cached reviews are left exactly as they were.
       try {
         await rpcOrThrow(ctx, "admin_mark_google_review_sync_error", {
-          p_office_id: data.officeId,
+          p_office_id: officeId,
           p_error_code: err.code,
           p_error_message: err.message,
         });
@@ -272,7 +271,7 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
       }
       try {
         await rpcOrThrow(ctx, "release_google_review_sync_lock", {
-          p_office_id: data.officeId,
+          p_office_id: officeId,
         });
       } catch {
         /* the stale window will reclaim it */
@@ -285,7 +284,14 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
         errorMessage: err.message,
       };
     }
-  });
+}
+
+export const syncGoogleReviews = createServerFn({ method: "POST" })
+  .middleware([attachBearer, requireSupabaseAuth])
+  .inputValidator((input) => syncInput.parse(input))
+  .handler(async ({ context, data }): Promise<SyncReviewsResult> =>
+    runGoogleReviewsSync(context as unknown as SupabaseCtx, data.officeId),
+  );
 
 // ---------------------------------------------------------------------------
 // Reply write path
