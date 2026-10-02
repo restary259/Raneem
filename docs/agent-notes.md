@@ -3398,6 +3398,16 @@ verified non-vacuous by reintroducing the defect).
   VALUE|THRESHOLD), and `google_business_performance_sync_jobs`. The extra
   `metric_scope`/`entity_type`/`entity_id` columns exist so a future Google Post
   metric can live beside location metrics without a schema change.
+- **Merging a later phase into Phase 8 must not revert the authorizer.** Phase 8
+  redefines `authorize_google_office_action` and `google_actor_can`, so when it
+  merges with a migration that added actions (Phase 7's `GOOGLE_SYNC_MEDIA`,
+  `GOOGLE_SYNC_POSTS`, `GOOGLE_MANAGE_CUSTOMER_MEDIA`), the Phase 8 copy must
+  carry those actions forward. Its redefinition originally dropped them, which
+  would break media/post sync and reopen customer-media moderation. The migration
+  is therefore timestamped `20261002140000` (newer than Phase 7's `...120000`,
+  per the manual-deploy rule that a redefining migration sorts after what it
+  redefines), and the Phase 8 deploy-verify asserts the union so the regression
+  cannot silently return.
 - **The dashboard reads Supabase, never Google.** Only `syncGooglePerformance` /
   `backfillGooglePerformance` in `src/lib/googleBusinessPerformance.functions.ts`
   call the Performance API, through the Phase 2 connector gateway
