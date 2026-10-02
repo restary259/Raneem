@@ -2780,6 +2780,127 @@ export type Database = {
           },
         ]
       }
+      google_business_performance_daily: {
+        Row: {
+          created_at: string
+          data_state: string
+          entity_id: string
+          entity_type: string
+          google_account_id: string
+          google_connection_id: string | null
+          google_location_id: string
+          id: string
+          last_synced_at: string | null
+          metric: string
+          metric_date: string
+          metric_scope: string
+          metric_value: number
+          office_id: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_state?: string
+          entity_id?: string
+          entity_type?: string
+          google_account_id: string
+          google_connection_id?: string | null
+          google_location_id: string
+          id?: string
+          last_synced_at?: string | null
+          metric: string
+          metric_date: string
+          metric_scope?: string
+          metric_value?: number
+          office_id: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_state?: string
+          entity_id?: string
+          entity_type?: string
+          google_account_id?: string
+          google_connection_id?: string | null
+          google_location_id?: string
+          id?: string
+          last_synced_at?: string | null
+          metric?: string
+          metric_date?: string
+          metric_scope?: string
+          metric_value?: number
+          office_id?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_performance_daily_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_business_performance_sync_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          end_date: string | null
+          error_code: string | null
+          error_message: string | null
+          google_location_id: string | null
+          id: string
+          office_id: string
+          records_processed: number
+          start_date: string | null
+          started_at: string | null
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          end_date?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          google_location_id?: string | null
+          id?: string
+          office_id: string
+          records_processed?: number
+          start_date?: string | null
+          started_at?: string | null
+          status?: string
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          end_date?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          google_location_id?: string | null
+          id?: string
+          office_id?: string
+          records_processed?: number
+          start_date?: string | null
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_performance_sync_jobs_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_business_posts: {
         Row: {
           created_at: string
@@ -2996,6 +3117,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "google_business_reviews_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_business_search_keywords_monthly: {
+        Row: {
+          created_at: string
+          google_account_id: string
+          google_connection_id: string | null
+          google_location_id: string
+          id: string
+          insights_value: number
+          insights_value_type: string
+          last_synced_at: string | null
+          month: string
+          office_id: string
+          search_keyword: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          google_account_id: string
+          google_connection_id?: string | null
+          google_location_id: string
+          id?: string
+          insights_value: number
+          insights_value_type?: string
+          last_synced_at?: string | null
+          month: string
+          office_id: string
+          search_keyword: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          google_account_id?: string
+          google_connection_id?: string | null
+          google_location_id?: string
+          id?: string
+          insights_value?: number
+          insights_value_type?: string
+          last_synced_at?: string | null
+          month?: string
+          office_id?: string
+          search_keyword?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_search_keywords_monthly_office_id_fkey"
             columns: ["office_id"]
             isOneToOne: false
             referencedRelation: "offices"
@@ -4126,6 +4303,13 @@ export type Database = {
           media_sync_error_message: string | null
           media_sync_locked_at: string | null
           office_id: string
+          performance_data_through: string | null
+          performance_last_successful_sync_at: string | null
+          performance_last_synced_at: string | null
+          performance_sync_error_code: string | null
+          performance_sync_error_message: string | null
+          performance_sync_lock_token: string | null
+          performance_sync_locked_at: string | null
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
@@ -4204,6 +4388,13 @@ export type Database = {
           media_sync_error_message?: string | null
           media_sync_locked_at?: string | null
           office_id: string
+          performance_data_through?: string | null
+          performance_last_successful_sync_at?: string | null
+          performance_last_synced_at?: string | null
+          performance_sync_error_code?: string | null
+          performance_sync_error_message?: string | null
+          performance_sync_lock_token?: string | null
+          performance_sync_locked_at?: string | null
           phone_additional?: Json
           phone_primary?: string | null
           postal_code?: string | null
@@ -4282,6 +4473,13 @@ export type Database = {
           media_sync_error_message?: string | null
           media_sync_locked_at?: string | null
           office_id?: string
+          performance_data_through?: string | null
+          performance_last_successful_sync_at?: string | null
+          performance_last_synced_at?: string | null
+          performance_sync_error_code?: string | null
+          performance_sync_error_message?: string | null
+          performance_sync_lock_token?: string | null
+          performance_sync_locked_at?: string | null
           phone_additional?: Json
           phone_primary?: string | null
           postal_code?: string | null
@@ -8093,6 +8291,10 @@ export type Database = {
         Args: { p_office_id: string; p_stale_after_seconds?: number }
         Returns: boolean
       }
+      acquire_google_performance_sync_lock: {
+        Args: { p_office_id: string; p_stale_after_seconds?: number }
+        Returns: string
+      }
       acquire_google_post_delete_lock: {
         Args: {
           p_office_id: string
@@ -8203,6 +8405,43 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_complete_google_performance_keywords_job: {
+        Args: {
+          p_job_id: string
+          p_month: string
+          p_rows: Json
+          p_token: string
+        }
+        Returns: {
+          inserted: number
+          updated: number
+        }[]
+      }
+      admin_complete_google_performance_metrics_job: {
+        Args: {
+          p_end_date: string
+          p_job_id: string
+          p_metrics: Json
+          p_rows: Json
+          p_start_date: string
+          p_token: string
+        }
+        Returns: {
+          data_through: string
+          deleted: number
+          inserted: number
+          updated: number
+        }[]
+      }
+      admin_create_google_performance_sync_job: {
+        Args: {
+          p_end_date?: string
+          p_office_id: string
+          p_start_date?: string
+          p_sync_type: string
+        }
+        Returns: string
+      }
       admin_deactivate_account: {
         Args: { _reason?: string; _target_id: string }
         Returns: Json
@@ -8210,6 +8449,16 @@ export type Database = {
       admin_early_release_rewards: {
         Args: { p_member_id: string; p_note: string; p_reward_ids: string[] }
         Returns: Json
+      }
+      admin_fail_google_performance_sync_job: {
+        Args: {
+          p_error_code?: string
+          p_error_message?: string
+          p_job_id: string
+          p_status: string
+          p_token?: string
+        }
+        Returns: undefined
       }
       admin_finalize_google_change_request: {
         Args: {
@@ -8264,6 +8513,24 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      admin_google_performance_aggregate: {
+        Args: {
+          p_end_date: string
+          p_office_ids?: string[]
+          p_prev_end_date?: string
+          p_prev_start_date?: string
+          p_start_date: string
+        }
+        Returns: {
+          current_totals: Json
+          data_through: string
+          last_synced_at: string
+          metric_status: Json
+          office_id: string
+          office_name: string
+          previous_totals: Json
+        }[]
       }
       admin_list_google_locations: {
         Args: never
@@ -8338,6 +8605,13 @@ export type Database = {
           media_sync_error_message: string | null
           media_sync_locked_at: string | null
           office_id: string
+          performance_data_through: string | null
+          performance_last_successful_sync_at: string | null
+          performance_last_synced_at: string | null
+          performance_sync_error_code: string | null
+          performance_sync_error_message: string | null
+          performance_sync_lock_token: string | null
+          performance_sync_locked_at: string | null
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
@@ -8429,6 +8703,13 @@ export type Database = {
           media_sync_error_message: string | null
           media_sync_locked_at: string | null
           office_id: string
+          performance_data_through: string | null
+          performance_last_successful_sync_at: string | null
+          performance_last_synced_at: string | null
+          performance_sync_error_code: string | null
+          performance_sync_error_message: string | null
+          performance_sync_lock_token: string | null
+          performance_sync_locked_at: string | null
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
@@ -8550,6 +8831,10 @@ export type Database = {
           p_office_id: string
         }
         Returns: string
+      }
+      admin_record_google_performance_audit: {
+        Args: { p_action: string; p_after_data?: Json; p_office_id: string }
+        Returns: undefined
       }
       admin_respond_payout_request: {
         Args: {
@@ -8678,6 +8963,13 @@ export type Database = {
           media_sync_error_message: string | null
           media_sync_locked_at: string | null
           office_id: string
+          performance_data_through: string | null
+          performance_last_successful_sync_at: string | null
+          performance_last_synced_at: string | null
+          performance_sync_error_code: string | null
+          performance_sync_error_message: string | null
+          performance_sync_lock_token: string | null
+          performance_sync_locked_at: string | null
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
@@ -8786,6 +9078,13 @@ export type Database = {
           media_sync_error_message: string | null
           media_sync_locked_at: string | null
           office_id: string
+          performance_data_through: string | null
+          performance_last_successful_sync_at: string | null
+          performance_last_synced_at: string | null
+          performance_sync_error_code: string | null
+          performance_sync_error_message: string | null
+          performance_sync_lock_token: string | null
+          performance_sync_locked_at: string | null
           phone_additional: Json
           phone_primary: string | null
           postal_code: string | null
@@ -9524,6 +9823,68 @@ export type Database = {
           team_count: number
         }[]
       }
+      get_office_google_performance_context: {
+        Args: { p_office_id: string }
+        Returns: {
+          connection_status: string
+          data_through: string
+          google_location_name: string
+          google_maps_url: string
+          has_any_data: boolean
+          has_keywords: boolean
+          mapping_status: string
+          office_id: string
+          office_name: string
+          performance_last_successful_sync_at: string
+          performance_last_synced_at: string
+          performance_sync_error_code: string
+          performance_sync_error_message: string
+          timezone: string
+          verification_status: string
+        }[]
+      }
+      get_office_google_performance_series: {
+        Args: {
+          p_end_date: string
+          p_metrics?: string[]
+          p_office_id: string
+          p_start_date: string
+        }
+        Returns: {
+          data_state: string
+          metric: string
+          metric_date: string
+          metric_value: number
+        }[]
+      }
+      get_office_google_performance_summary: {
+        Args: {
+          p_end_date: string
+          p_office_id: string
+          p_prev_end_date?: string
+          p_prev_start_date?: string
+          p_start_date: string
+        }
+        Returns: {
+          connection_status: string
+          current_totals: Json
+          data_through: string
+          google_location_name: string
+          google_maps_url: string
+          has_any_data: boolean
+          mapping_status: string
+          metric_status: Json
+          office_id: string
+          office_name: string
+          performance_last_successful_sync_at: string
+          performance_last_synced_at: string
+          performance_sync_error_code: string
+          performance_sync_error_message: string
+          previous_totals: Json
+          timezone: string
+          verification_status: string
+        }[]
+      }
       get_office_google_posts_summary: {
         Args: { p_office_id: string }
         Returns: {
@@ -9806,6 +10167,14 @@ export type Database = {
         Args: { p_office_id: string; p_user_id: string }
         Returns: string
       }
+      google_performance_metric_scope: {
+        Args: { p_metric: string }
+        Returns: string
+      }
+      google_performance_metric_supported: {
+        Args: { p_metric: string }
+        Returns: boolean
+      }
       google_post_content: { Args: { p_post: Json }; Returns: Json }
       google_post_field_error: { Args: { p_post: Json }; Returns: string }
       google_post_hash: { Args: { p_content: Json }; Returns: string }
@@ -9946,6 +10315,21 @@ export type Database = {
           suggested_referred_by: string
         }[]
       }
+      list_google_performance_offices: {
+        Args: never
+        Returns: {
+          connection_status: string
+          google_location_name: string
+          google_maps_url: string
+          mapping_status: string
+          office_id: string
+          office_name: string
+          operator_role: string
+          performance_data_through: string
+          performance_last_synced_at: string
+          timezone: string
+        }[]
+      }
       list_google_profile_change_requests: {
         Args: { p_office_id: string; p_status?: string }
         Returns: {
@@ -10024,6 +10408,22 @@ export type Database = {
           full_name: string
           operator_role: string
           team_member_id: string
+        }[]
+      }
+      list_office_google_performance_sync_jobs: {
+        Args: { p_limit?: number; p_office_id: string }
+        Returns: {
+          completed_at: string
+          created_at: string
+          end_date: string
+          error_code: string
+          error_message: string
+          id: string
+          records_processed: number
+          start_date: string
+          started_at: string
+          status: string
+          sync_type: string
         }[]
       }
       list_office_google_posts: {
@@ -10127,6 +10527,25 @@ export type Database = {
           star_rating: number
           total_count: number
           visibility_state: string
+        }[]
+      }
+      list_office_google_search_keywords: {
+        Args: {
+          p_end_month?: string
+          p_limit?: number
+          p_office_id: string
+          p_offset?: number
+          p_search?: string
+          p_sort?: string
+          p_start_month?: string
+        }
+        Returns: {
+          id: string
+          insights_value: number
+          insights_value_type: string
+          month: string
+          search_keyword: string
+          total_count: number
         }[]
       }
       list_office_members: {
@@ -10390,6 +10809,10 @@ export type Database = {
       release_google_media_sync_lock: {
         Args: { p_office_id: string }
         Returns: undefined
+      }
+      release_google_performance_sync_lock: {
+        Args: { p_office_id: string; p_token: string }
+        Returns: boolean
       }
       release_google_post_delete_lock: {
         Args: { p_office_id: string; p_post_id: string }
