@@ -1910,7 +1910,10 @@
         "rate_limited": "تحدّ Google من الطلبات. حاول بعد قليل.",
         "upstream": "أعادت Google خطأ.",
         "network": "تعذّر الوصول إلى Google.",
-        "not_linked": "Google Business غير متصل."
+        "not_linked": "Google Business غير متصل.",
+        "invalid_request": "رفضت Google الطلب باعتباره غير صالح.",
+        "not_found": "لم يتم العثور على مورد Google المطلوب.",
+        "internal": "تعذّر على درب إكمال طلب Google."
       },
       "locationCount": "المواقع: {{count}}"
     }

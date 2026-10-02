@@ -129,7 +129,8 @@ export const getGoogleBusinessOverview = createServerFn({ method: "POST" })
       });
       return { status: "connected", checkedAt, accounts, errorCode: null, errorMessage: null };
     } catch (e) {
-      const err = e instanceof GbpError ? e : new GbpError("upstream", 0, (e as Error).message);
+      // Non-GbpError = our own failure, not Google's; keep the attribution honest.
+      const err = e instanceof GbpError ? e : new GbpError("internal", 0, (e as Error).message);
       console.error(`Google Business request failed [${err.status}]: ${err.message}`);
       await audit(context.userId, "GOOGLE_HEALTH_FAILED", { code: err.code, status: err.status });
       return { status: "error", checkedAt, accounts: [], errorCode: err.code, errorMessage: err.message };

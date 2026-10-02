@@ -10,9 +10,12 @@ export type GbpErrorCode =
   | "not_linked"
   | "unauthorized"
   | "forbidden"
+  | "invalid_request"
+  | "not_found"
   | "rate_limited"
   | "upstream"
-  | "network";
+  | "network"
+  | "internal";
 
 export class GbpError extends Error {
   constructor(
@@ -38,9 +41,13 @@ export function mapGbpError(status: number, body: string): GbpError {
       ? "unauthorized"
       : status === 403
         ? "forbidden"
-        : status === 429
-          ? "rate_limited"
-          : "upstream";
+        : status === 404
+          ? "not_found"
+          : status === 429
+            ? "rate_limited"
+            : status >= 400 && status < 500
+              ? "invalid_request"
+              : "upstream";
   return new GbpError(code, status, message || `HTTP ${status}`);
 }
 

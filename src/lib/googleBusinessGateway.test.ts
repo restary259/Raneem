@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import {
   buildGbpLocationPatch,
   byteLength,
@@ -38,6 +40,18 @@ describe("mapGbpError", () => {
     expect(mapGbpError(401, "x").code).toBe("unauthorized");
     expect(mapGbpError(429, "x").code).toBe("rate_limited");
     expect(mapGbpError(500, "x").code).toBe("upstream");
+  });
+
+  // Regression: a provider 400 (e.g. a bad readMask) must not be flattened into
+  // the generic `upstream` bucket — that hid the real INVALID_ARGUMENT cause.
+  it("classifies provider 4xx precisely instead of as upstream", () => {
+    expect(mapGbpError(400, "x").code).toBe("invalid_request");
+    expect(mapGbpError(404, "x").code).toBe("not_found");
+    expect(mapGbpError(401, "x").code).toBe("unauthorized");
+    expect(mapGbpError(403, "x").code).toBe("forbidden");
+    expect(mapGbpError(429, "x").code).toBe("rate_limited");
+    expect(mapGbpError(500, "x").code).toBe("upstream");
+    expect(mapGbpError(503, "x").code).toBe("upstream");
   });
 });
 
@@ -304,3 +318,39 @@ describe("client validation mirrors the server", () => {
     expect(invalidHoursDay({ SUNDAY: null })).toBeNull();
   });
 });
+
+// The connection panel renders `admin.googleConnection.errors.${code}` for any
+// error code, so every code this module can emit needs a translation in each
+// locale — otherwise the user sees a raw key path instead of a message.
+describe("googleConnection error-code translations", () => {
+  const LOCALES = ["en", "ar", "he"] as const;
+  const CODES = [
+    "not_linked",
+    "unauthorized",
+    "forbidden",
+    "invalid_request",
+    "not_found",
+    "rate_limited",
+    "upstream",
+    "network",
+    "internal",
+  ] as const;
+
+  it.each(LOCALES)("has every error code translated in %s", (lang) => {
+    const file = path.join(
+      process.cwd(),
+      "public",
+      "locales",
+      lang,
+      "dashboard.json",
+    );
+    const dict = JSON.parse(fs.readFileSync(file, "utf8"));
+    const errors = dict?.admin?.googleConnection?.errors;
+    expect(errors, `${lang} googleConnection.errors missing`).toBeTruthy();
+    for (const code of CODES) {
+      expect(typeof errors[code], `${lang} missing ${code}`).toBe("string");
+      expect(errors[code].length, `${lang} empty ${code}`).toBeGreaterThan(0);
+    }
+  });
+});
+

@@ -1892,7 +1892,10 @@
         "rate_limited": "Google is rate limiting requests. Try again shortly.",
         "upstream": "Google returned an error.",
         "network": "Could not reach Google.",
-        "not_linked": "Google Business is not connected."
+        "not_linked": "Google Business is not connected.",
+        "invalid_request": "Google rejected the request as invalid.",
+        "not_found": "The requested Google resource was not found.",
+        "internal": "DARB could not complete the Google request."
       },
       "locationCount": "Locations: {{count}}"
     }
