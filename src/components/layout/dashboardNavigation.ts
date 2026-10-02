@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BarChart2,
+  BarChart3,
   BookOpen,
   Building2,
   Calculator,
@@ -184,6 +185,11 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
             key: "nav.googleProfile",
             icon: Store,
             href: "/team/google/profile",
+          },
+          {
+            key: "nav.googleInsights",
+            icon: BarChart3,
+            href: "/team/google/insights",
           },
         ],
       },

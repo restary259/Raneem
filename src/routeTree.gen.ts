@@ -111,6 +111,7 @@ import { Route as TeamAppointmentsIndexRouteImport } from './routes/team.appoint
 import { Route as TeamAppointmentsTodayRouteImport } from './routes/team.appointments.today'
 import { Route as TeamCasesIndexRouteImport } from './routes/team.cases.index'
 import { Route as TeamCasesIdRouteImport } from './routes/team.cases.$id'
+import { Route as TeamGoogleInsightsRouteImport } from './routes/team.google.insights'
 import { Route as TeamGoogleProfileRouteImport } from './routes/team.google.profile'
 import { Route as TeamGoogleReviewsRouteImport } from './routes/team.google.reviews'
 import { Route as TeamPartnerSchoolsIndexRouteImport } from './routes/team.partner-schools.index'
@@ -638,6 +639,11 @@ const TeamCasesIdRoute = TeamCasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => TeamRoute,
 } as any)
+const TeamGoogleInsightsRoute = TeamGoogleInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => TeamGoogleRoute,
+} as any)
 const TeamGoogleProfileRoute = TeamGoogleProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -809,6 +815,7 @@ export interface FileRoutesByFullPath {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/insights': typeof TeamGoogleInsightsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
@@ -921,6 +928,7 @@ export interface FileRoutesByTo {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/insights': typeof TeamGoogleInsightsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
@@ -1039,6 +1047,7 @@ export interface FileRoutesById {
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
+  '/team/google/insights': typeof TeamGoogleInsightsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
@@ -1158,6 +1167,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/insights'
     | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
@@ -1270,6 +1280,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/insights'
     | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
@@ -1387,6 +1398,7 @@ export interface FileRouteTypes {
     | '/student/tools/cv'
     | '/team/appointments/today'
     | '/team/cases/$id'
+    | '/team/google/insights'
     | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
@@ -2165,6 +2177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamCasesIdRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/team/google/insights': {
+      id: '/team/google/insights'
+      path: '/insights'
+      fullPath: '/team/google/insights'
+      preLoaderRoute: typeof TeamGoogleInsightsRouteImport
+      parentRoute: typeof TeamGoogleRoute
+    }
     '/team/google/profile': {
       id: '/team/google/profile'
       path: '/profile'
@@ -2394,11 +2413,13 @@ const StudentRouteWithChildren =
   StudentRoute._addFileChildren(StudentRouteChildren)
 
 interface TeamGoogleRouteChildren {
+  TeamGoogleInsightsRoute: typeof TeamGoogleInsightsRoute
   TeamGoogleProfileRoute: typeof TeamGoogleProfileRoute
   TeamGoogleReviewsRoute: typeof TeamGoogleReviewsRoute
 }
 
 const TeamGoogleRouteChildren: TeamGoogleRouteChildren = {
+  TeamGoogleInsightsRoute: TeamGoogleInsightsRoute,
   TeamGoogleProfileRoute: TeamGoogleProfileRoute,
   TeamGoogleReviewsRoute: TeamGoogleReviewsRoute,
 }

@@ -3389,3 +3389,43 @@ verified non-vacuous by reintroducing the defect).
 - i18n: `googleProfile.*` in en/ar/he (`public/locales` only — `dashboard` is not
   bundled in `src/locales`); nav `nav.googleProfile` under the `nav.googleBusiness`
   group. UI lives at `/team/google/profile`.
+
+## Office Google Business performance + insights (Phase 8, 2026-10-02)
+- Migration `20261002120000_office_google_performance.sql` adds three tables:
+  `google_business_performance_daily` (one row per location/date/metric/scope/
+  entity, `metric_value BIGINT`, `data_state` VALUE|ZERO|NO_DATA),
+  `google_business_search_keywords_monthly` (monthly, `insights_value_type`
+  VALUE|THRESHOLD), and `google_business_performance_sync_jobs`. The extra
+  `metric_scope`/`entity_type`/`entity_id` columns exist so a future Google Post
+  metric can live beside location metrics without a schema change.
+- **The dashboard reads Supabase, never Google.** Only `syncGooglePerformance` /
+  `backfillGooglePerformance` in `src/lib/googleBusinessPerformance.functions.ts`
+  call the Performance API, through the Phase 2 connector gateway
+  (`businessprofileperformance/v1`). OAuth is reused; no second Google login.
+- **Google omissions are not zeros.** `normalizeMultiDailyMetrics` stores a
+  datapoint with no `value` as `ZERO` and a metric the office never reported as
+  `NOT_AVAILABLE`, so the UI shows "Not available" rather than a fabricated 0.
+  `connectNulls={false}` keeps a missing day a gap in the chart.
+- **A keyword threshold is never an exact number.** Google returns a union of
+  `value`/`threshold`; `normalizeSearchKeywordCounts` keeps the type and the UI
+  renders `<15`. Keywords are monthly (the endpoint has no per-month field), so a
+  sync stores the last month of the resolved range and labels it as such.
+- **Period comparison is DARB's, and labelled so.** `percentChange` returns null
+  for a zero baseline ("No previous baseline"), never infinite growth; cards say
+  "vs previous period". Admin "All offices" is explicitly badged
+  `DARB aggregate` with a note that Google publishes no combined figure, and the
+  per-office list is a plain measurement, no "best/worst office" labels.
+- **Office-first authorization.** Every RPC resolves office -> membership ->
+  Google operator -> `office_google_profiles`; a client never supplies a Google
+  location id. Read RPCs gate on `GOOGLE_VIEW_INSIGHTS`, sync on the new
+  `GOOGLE_SYNC_PERFORMANCE`; the daily/keyword triggers reject a row whose
+  `google_location_id` does not belong to the row's office.
+- Sync is lock-guarded (self-expiring advisory lock), retries with capped
+  backoff, never retries 401/403, and re-fetches a recent window with UPSERT so
+  late Google corrections land. Metrics and keywords are separate jobs: a keyword
+  failure returns PARTIAL and keeps the healthy metrics.
+- i18n: `googleInsights.*` + `nav.googleInsights` in en/ar/he
+  (`public/locales` only — `dashboard` is not bundled in `src/locales`). UI at
+  `/team/google/insights`; nav entry under the `nav.googleBusiness` group.
+- Verification: `supabase/diagnostics/office_google_phase8_deploy_verify.sql`
+  (92/92, read-only); unit tests in `src/lib/googleBusinessPerformance.test.ts`.
