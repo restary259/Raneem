@@ -1,14 +1,62 @@
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import {
   collectAllPages,
   formatGbpAddress,
+  GBP_LOCATION_READ_MASK,
   normalizeGbpLocation,
+  pickActiveConnectionId,
   resourceId,
 } from "@/lib/googleBusinessGateway";
 import {
   addressesAgree,
   suggestLocationMatch,
 } from "@/lib/googleLocationMatch";
+
+describe("GBP_LOCATION_READ_MASK", () => {
+  // Regression: a bare top-level `placeId` path makes Google reject the whole
+  // accounts.locations.list call with INVALID_ARGUMENT. Place ID lives under
+  // `metadata` (v1 Metadata.placeId), which normalizeGbpLocation already reads.
+  const fields = GBP_LOCATION_READ_MASK.split(",").map((f) => f.trim());
+
+  it("does not request the non-existent top-level `placeId` field", () => {
+    expect(fields).not.toContain("placeId");
+  });
+
+  it("requests `metadata`, which carries placeId and mapsUri", () => {
+    expect(fields).toContain("metadata");
+  });
+
+  it("requests locationState so verification state is populated", () => {
+    expect(fields).toContain("locationState");
+  });
+});
+
+describe("pickActiveConnectionId", () => {
+  // Regression: discovery used to pass p_connection_id = null, so cached
+  // locations lost their connection ownership even when a connection existed.
+  it("prefers the most recent connected connection", () => {
+    expect(
+      pickActiveConnectionId([
+        { id: "c-new", connection_status: "connected" },
+        { id: "c-old", connection_status: "revoked" },
+      ]),
+    ).toBe("c-new");
+  });
+
+  it("falls back to the first row when none is marked connected", () => {
+    expect(
+      pickActiveConnectionId([{ id: "only", connection_status: "pending" }]),
+    ).toBe("only");
+  });
+
+  it("returns null when there is no connection row", () => {
+    expect(pickActiveConnectionId([])).toBeNull();
+    expect(pickActiveConnectionId(null)).toBeNull();
+    expect(pickActiveConnectionId(undefined)).toBeNull();
+  });
+});
 
 describe("resourceId", () => {
   it("takes the last path segment of a Google resource name", () => {
@@ -109,31 +157,33 @@ describe("collectAllPages", () => {
       { items: ["d"] },
     ];
     let call = 0;
-    const all = await collectAllPages(async () => pages[call++]);
-    expect(all.items).toEqual(["a", "b", "c", "d"]);
-    expect(all.complete).toBe(true);
+    const { items, complete } = await collectAllPages(
+      async () => pages[call++],
+    );
+    expect(items).toEqual(["a", "b", "c", "d"]);
+    expect(complete).toBe(true);
     expect(call).toBe(3);
   });
 
   it("stops and reports incomplete if the provider repeats a page token", async () => {
     let call = 0;
-    const all = await collectAllPages(async () => {
+    const { items, complete } = await collectAllPages(async () => {
       call++;
       return { items: [call], nextPageToken: "same" };
     });
-    expect(all.items).toEqual([1, 2]);
-    expect(all.complete).toBe(false);
+    expect(items).toEqual([1, 2]);
+    expect(complete).toBe(false);
   });
 
-  it("honours the page ceiling and reports incomplete", async () => {
+  it("reports incomplete when the page ceiling is hit with a token left", async () => {
     let call = 0;
-    const all = await collectAllPages(async () => {
+    const { items, complete } = await collectAllPages(async () => {
       call++;
       return { items: [call], nextPageToken: `t${call}` };
     }, 3);
     expect(call).toBe(3);
-    expect(all.items).toEqual([1, 2, 3]);
-    expect(all.complete).toBe(false);
+    expect(items).toEqual([1, 2, 3]);
+    expect(complete).toBe(false);
   });
 });
 
@@ -203,5 +253,25 @@ describe("addressesAgree", () => {
 
   it("does not agree on a city alone", () => {
     expect(addressesAgree({ city: "Berlin" }, { city: "Berlin" })).toBe(false);
+  });
+});
+
+// Discovery must pass a real connection id to the cache RPC; passing null was
+// the regression that stripped connection ownership from every cached location.
+describe("location discovery wiring", () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), "src/lib/googleBusinessLocation.functions.ts"),
+    "utf8",
+  );
+
+  it("resolves the active connection before syncing", () => {
+    expect(source).toContain("resolveConnectionId");
+    expect(source).toContain("admin_get_google_business_connections");
+    expect(source).toContain("pickActiveConnectionId");
+  });
+
+  it("never passes a null connection id to the sync RPC", () => {
+    expect(source).not.toMatch(/p_connection_id:\s*null/);
+    expect(source).toMatch(/p_connection_id:\s*connectionId/);
   });
 });

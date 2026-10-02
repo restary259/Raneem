@@ -8,7 +8,7 @@
 --   3. supabase/migrations/20261001180000_office_google_delegation.sql
 --   4. supabase/migrations/20261001190000_office_google_reviews.sql
 --   5. supabase/migrations/20261001200000_office_google_profile_management.sql
---   6. supabase/migrations/20261002120000_office_google_performance.sql
+--   6. supabase/migrations/20261002140000_office_google_performance.sql
 --
 -- Asserts the Phase 8 performance layer landed and the security posture holds:
 --   * the three performance tables, their unique keys, indexes and RLS
@@ -159,6 +159,13 @@ BEGIN
     public.authorize_google_office_action(NULL, gen_random_uuid(), 'GOOGLE_SYNC_PERFORMANCE') = false);
   PERFORM pg_temp._chk('behavior', 'authorize() denies an unknown action',
     public.authorize_google_office_action(auth.uid(), gen_random_uuid(), 'GOOGLE_NOPE') = false);
+  -- This migration REDEFINES the authorizer, so it must not silently drop the
+  -- Phase 7 actions: a lost GOOGLE_SYNC_MEDIA/POSTS breaks media/post sync, and
+  -- a lost GOOGLE_MANAGE_CUSTOMER_MEDIA reopens customer-media moderation.
+  PERFORM pg_temp._chk('security', 'authorize() still knows the Phase 7 sync actions',
+    public.authorize_google_office_action(NULL, gen_random_uuid(), 'GOOGLE_SYNC_MEDIA') = false
+    AND public.authorize_google_office_action(NULL, gen_random_uuid(), 'GOOGLE_SYNC_POSTS') = false
+    AND public.authorize_google_office_action(NULL, gen_random_uuid(), 'GOOGLE_MANAGE_CUSTOMER_MEDIA') = false);
   PERFORM pg_temp._chk('behavior', 'metric helper accepts WEBSITE_CLICKS',
     public.google_performance_metric_supported('WEBSITE_CLICKS'));
   PERFORM pg_temp._chk('behavior', 'metric helper rejects a made-up metric',

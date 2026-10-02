@@ -252,6 +252,10 @@ BEGIN
     'GOOGLE_UPDATE_CATEGORY',
     'GOOGLE_UPDATE_ADDRESS',
     'GOOGLE_APPROVE_CHANGE_REQUEST',
+    -- Phase 7 operational
+    'GOOGLE_SYNC_MEDIA',
+    'GOOGLE_SYNC_POSTS',
+    'GOOGLE_MANAGE_CUSTOMER_MEDIA',
     -- Phase 8 operational
     'GOOGLE_SYNC_PERFORMANCE',
     -- Delegation
@@ -350,7 +354,10 @@ BEGIN
     -- High-risk direct execution: operators must request approval instead.
     'GOOGLE_UPDATE_CATEGORY',
     'GOOGLE_UPDATE_ADDRESS',
-    'GOOGLE_APPROVE_CHANGE_REQUEST'
+    'GOOGLE_APPROVE_CHANGE_REQUEST',
+    -- Phase 7: customer-media moderation is deliberately outside ordinary
+    -- business-photo management.
+    'GOOGLE_MANAGE_CUSTOMER_MEDIA'
   ) THEN
     RETURN false;
   END IF;

@@ -84,7 +84,7 @@ BEGIN
     'get_office_google_review_summary(uuid)',
     'get_office_google_review(uuid,uuid)',
     'resolve_google_review_office(uuid,uuid)',
-    'admin_sync_google_reviews(uuid,jsonb,numeric,integer)',
+    'admin_sync_google_reviews(uuid,jsonb,numeric,integer,boolean,uuid)',
     'admin_mark_google_review_sync_error(uuid,text,text)',
     'admin_apply_google_review_reply(uuid,uuid,text,text,text,text,integer)',
     'acquire_google_review_sync_lock(uuid,integer)',
@@ -182,6 +182,15 @@ BEGIN
     PERFORM pg_temp._chk('grant', 'anon CANNOT EXECUTE ' || r.sig,
       NOT COALESCE(has_function_privilege('anon', pg_temp._fn_oid(r.sig), 'EXECUTE'), false));
   END LOOP;
+
+  -- admin_sync_google_reviews is service-role only (connector asserts the
+  -- Google snapshot); the browser role must not reach it.
+  PERFORM pg_temp._chk('grant', 'authenticated CANNOT EXECUTE admin_sync_google_reviews',
+    NOT COALESCE(has_function_privilege('authenticated',
+      'public.admin_sync_google_reviews(uuid,jsonb,numeric,integer,boolean,uuid)', 'EXECUTE'), false));
+  PERFORM pg_temp._chk('grant', 'anon CANNOT EXECUTE admin_sync_google_reviews',
+    NOT COALESCE(has_function_privilege('anon',
+      'public.admin_sync_google_reviews(uuid,jsonb,numeric,integer,boolean,uuid)', 'EXECUTE'), false));
 
   -- The notifier and the validator are internal only.
   PERFORM pg_temp._chk('grant', 'authenticated CANNOT EXECUTE notify_new_google_review',

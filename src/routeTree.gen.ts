@@ -112,6 +112,8 @@ import { Route as TeamAppointmentsTodayRouteImport } from './routes/team.appoint
 import { Route as TeamCasesIndexRouteImport } from './routes/team.cases.index'
 import { Route as TeamCasesIdRouteImport } from './routes/team.cases.$id'
 import { Route as TeamGoogleInsightsRouteImport } from './routes/team.google.insights'
+import { Route as TeamGooglePhotosRouteImport } from './routes/team.google.photos'
+import { Route as TeamGooglePostsRouteImport } from './routes/team.google.posts'
 import { Route as TeamGoogleProfileRouteImport } from './routes/team.google.profile'
 import { Route as TeamGoogleReviewsRouteImport } from './routes/team.google.reviews'
 import { Route as TeamPartnerSchoolsIndexRouteImport } from './routes/team.partner-schools.index'
@@ -644,6 +646,16 @@ const TeamGoogleInsightsRoute = TeamGoogleInsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => TeamGoogleRoute,
 } as any)
+const TeamGooglePhotosRoute = TeamGooglePhotosRouteImport.update({
+  id: '/photos',
+  path: '/photos',
+  getParentRoute: () => TeamGoogleRoute,
+} as any)
+const TeamGooglePostsRoute = TeamGooglePostsRouteImport.update({
+  id: '/posts',
+  path: '/posts',
+  getParentRoute: () => TeamGoogleRoute,
+} as any)
 const TeamGoogleProfileRoute = TeamGoogleProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -816,6 +828,8 @@ export interface FileRoutesByFullPath {
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
   '/team/google/insights': typeof TeamGoogleInsightsRoute
+  '/team/google/photos': typeof TeamGooglePhotosRoute
+  '/team/google/posts': typeof TeamGooglePostsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
@@ -929,6 +943,8 @@ export interface FileRoutesByTo {
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
   '/team/google/insights': typeof TeamGoogleInsightsRoute
+  '/team/google/photos': typeof TeamGooglePhotosRoute
+  '/team/google/posts': typeof TeamGooglePostsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
@@ -1048,6 +1064,8 @@ export interface FileRoutesById {
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
   '/team/cases/$id': typeof TeamCasesIdRoute
   '/team/google/insights': typeof TeamGoogleInsightsRoute
+  '/team/google/photos': typeof TeamGooglePhotosRoute
+  '/team/google/posts': typeof TeamGooglePostsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
   '/team/students/$id': typeof TeamStudentsIdRoute
@@ -1168,6 +1186,8 @@ export interface FileRouteTypes {
     | '/team/appointments/today'
     | '/team/cases/$id'
     | '/team/google/insights'
+    | '/team/google/photos'
+    | '/team/google/posts'
     | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
@@ -1281,6 +1301,8 @@ export interface FileRouteTypes {
     | '/team/appointments/today'
     | '/team/cases/$id'
     | '/team/google/insights'
+    | '/team/google/photos'
+    | '/team/google/posts'
     | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
@@ -1399,6 +1421,8 @@ export interface FileRouteTypes {
     | '/team/appointments/today'
     | '/team/cases/$id'
     | '/team/google/insights'
+    | '/team/google/photos'
+    | '/team/google/posts'
     | '/team/google/profile'
     | '/team/google/reviews'
     | '/team/students/$id'
@@ -2184,6 +2208,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamGoogleInsightsRouteImport
       parentRoute: typeof TeamGoogleRoute
     }
+    '/team/google/photos': {
+      id: '/team/google/photos'
+      path: '/photos'
+      fullPath: '/team/google/photos'
+      preLoaderRoute: typeof TeamGooglePhotosRouteImport
+      parentRoute: typeof TeamGoogleRoute
+    }
+    '/team/google/posts': {
+      id: '/team/google/posts'
+      path: '/posts'
+      fullPath: '/team/google/posts'
+      preLoaderRoute: typeof TeamGooglePostsRouteImport
+      parentRoute: typeof TeamGoogleRoute
+    }
     '/team/google/profile': {
       id: '/team/google/profile'
       path: '/profile'
@@ -2414,12 +2452,16 @@ const StudentRouteWithChildren =
 
 interface TeamGoogleRouteChildren {
   TeamGoogleInsightsRoute: typeof TeamGoogleInsightsRoute
+  TeamGooglePhotosRoute: typeof TeamGooglePhotosRoute
+  TeamGooglePostsRoute: typeof TeamGooglePostsRoute
   TeamGoogleProfileRoute: typeof TeamGoogleProfileRoute
   TeamGoogleReviewsRoute: typeof TeamGoogleReviewsRoute
 }
 
 const TeamGoogleRouteChildren: TeamGoogleRouteChildren = {
   TeamGoogleInsightsRoute: TeamGoogleInsightsRoute,
+  TeamGooglePhotosRoute: TeamGooglePhotosRoute,
+  TeamGooglePostsRoute: TeamGooglePostsRoute,
   TeamGoogleProfileRoute: TeamGoogleProfileRoute,
   TeamGoogleReviewsRoute: TeamGoogleReviewsRoute,
 }

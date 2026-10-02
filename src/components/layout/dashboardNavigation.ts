@@ -17,6 +17,7 @@ import {
   Heart,
   Home,
   Hotel,
+  Image,
   Inbox,
   LayoutDashboard,
   Link2,
@@ -185,6 +186,16 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
             key: "nav.googleProfile",
             icon: Store,
             href: "/team/google/profile",
+          },
+          {
+            key: "nav.googlePosts",
+            icon: Megaphone,
+            href: "/team/google/posts",
+          },
+          {
+            key: "nav.googlePhotos",
+            icon: Image,
+            href: "/team/google/photos",
           },
           {
             key: "nav.googleInsights",

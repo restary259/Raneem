@@ -8,6 +8,7 @@ import {
   GBP_LOCATION_READ_MASK,
   gbpGet,
   normalizeGbpLocation,
+  pickActiveConnectionId,
   type GbpRawLocation,
   type NormalizedGbpLocation,
 } from "@/lib/googleBusinessGateway";
@@ -67,6 +68,22 @@ async function rpcOrThrow<T>(
   return data as T;
 }
 
+type ConnectionRow = { id?: string; connection_status?: string };
+
+/**
+ * The DARB-level Google connection the discovered locations belong to. The
+ * browser never chooses it: the admin-gated RPC returns it and we prefer the
+ * most recent `connected` row. Returns null when no connection row exists yet.
+ */
+async function resolveConnectionId(context: SupabaseCtx): Promise<string | null> {
+  const rows = await rpcOrThrow<ConnectionRow[]>(
+    context,
+    "admin_get_google_business_connections",
+    {},
+  );
+  return pickActiveConnectionId(rows);
+}
+
 export interface DiscoveredLocation {
   resourceName: string;
   locationId: string;
@@ -119,7 +136,7 @@ export const discoverGoogleBusinessLocations = createServerFn({
 
     try {
       // 1. Accounts visible to the connection.
-      const accounts = await collectAllPages<{
+      const { items: accounts } = await collectAllPages<{
         name?: string;
         accountName?: string;
       }>(async (pageToken) => {
@@ -131,7 +148,7 @@ export const discoverGoogleBusinessLocations = createServerFn({
         }>(`/account_management/v1/accounts?${q}`, creds);
         return { items: res.accounts ?? [], nextPageToken: res.nextPageToken };
       });
-      const accountSummaries = accounts.items
+      const accountSummaries = accounts
         .filter((a): a is { name: string; accountName?: string } =>
           Boolean(a.name),
         )
@@ -141,22 +158,24 @@ export const discoverGoogleBusinessLocations = createServerFn({
       //    verified it came from — never a client-supplied account id.
       const normalized: NormalizedGbpLocation[] = [];
       for (const account of accountSummaries) {
-        const raw = await collectAllPages<GbpRawLocation>(async (pageToken) => {
-          const q = new URLSearchParams({
-            pageSize: "100",
-            readMask: GBP_LOCATION_READ_MASK,
-          });
-          if (pageToken) q.set("pageToken", pageToken);
-          const res = await gbpGet<{
-            locations?: GbpRawLocation[];
-            nextPageToken?: string;
-          }>(`/business_information/v1/${account.name}/locations?${q}`, creds);
-          return {
-            items: res.locations ?? [],
-            nextPageToken: res.nextPageToken,
-          };
-        });
-        for (const loc of raw.items) {
+        const { items: raw } = await collectAllPages<GbpRawLocation>(
+          async (pageToken) => {
+            const q = new URLSearchParams({
+              pageSize: "100",
+              readMask: GBP_LOCATION_READ_MASK,
+            });
+            if (pageToken) q.set("pageToken", pageToken);
+            const res = await gbpGet<{
+              locations?: GbpRawLocation[];
+              nextPageToken?: string;
+            }>(`/business_information/v1/${account.name}/locations?${q}`, creds);
+            return {
+              items: res.locations ?? [],
+              nextPageToken: res.nextPageToken,
+            };
+          },
+        );
+        for (const loc of raw) {
           const row = normalizeGbpLocation(account.name, loc);
           if (row) normalized.push(row);
         }
@@ -165,11 +184,14 @@ export const discoverGoogleBusinessLocations = createServerFn({
       // 3. Cache the snapshot (admin-only RPC), then read it back joined with
       //    mapping state so the UI sees "mapped -> office" in one call.
       if (normalized.length) {
+        const connectionId = await resolveConnectionId(
+          context as unknown as SupabaseCtx,
+        );
         await rpcOrThrow<number>(
           context as unknown as SupabaseCtx,
           "admin_sync_google_locations",
           {
-            p_connection_id: null,
+            p_connection_id: connectionId,
             p_locations: normalized,
           },
         );
@@ -189,10 +211,12 @@ export const discoverGoogleBusinessLocations = createServerFn({
         errorMessage: null,
       };
     } catch (e) {
+      // A non-GbpError here is our own failure (e.g. the sync/list RPC), not a
+      // Google provider error — label it `internal` so the UI does not blame Google.
       const err =
         e instanceof GbpError
           ? e
-          : new GbpError("upstream", 0, (e as Error).message);
+          : new GbpError("internal", 0, (e as Error).message);
       console.error(
         `Google location discovery failed [${err.status}]: ${err.message}`,
       );
