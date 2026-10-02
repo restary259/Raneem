@@ -3623,3 +3623,39 @@ verified non-vacuous by reintroducing the defect).
   `channel()` (and `removeChannel`) surface, or `supabase.channel is not a
   function` fails the whole file.
 
+## Google Business dashboard visibility gate (Phase 10, 2026-10-02)
+- Migration `20261002180000_office_google_dashboard_visibility.sql` (newest
+  timestamp, deploys last) adds `has_google_business_access()`: a boolean-only,
+  `SECURITY DEFINER`, `STABLE` RPC the Team dashboard asks. It mirrors
+  `authorize_google_office_action` -- an office assignment only counts while the
+  caller is an active team member AND an active member of that office, so a
+  deactivated member loses the page immediately. It reveals nothing about which
+  office or role, so it is not an enumeration oracle. `office_google_operators`
+  is added to `supabase_realtime` via the same `pg_publication_tables` guard the
+  Phase 9 migration uses.
+- The gate is a nav-level flag, not a per-role nav list: the team
+  `nav.googleBusiness` parent carries `googleBusinessNavKey: true` and owns all
+  six `/team/google*` children, so filtering the parent hides the whole tab set.
+  `resolveDashboardNavItems(role, items, { applyFormEnabled, googleBusinessAccess })`
+  in `dashboardNavigation.ts` is the one pure composer the sidebar, the header
+  title resolver and tests share (apply-form gate first, then Google). Non-team
+  roles are untouched by the Google flag.
+- `useGoogleBusinessAccess(active)` (`src/hooks/useGoogleBusinessAccess.ts`)
+  returns `boolean | null`: `null` while unresolved so the route gate can wait
+  instead of bouncing a cold operator, `false` on any failure (a failed read
+  hides the surface rather than leaking it), and re-reads on
+  `office_google_operators` realtime changes. Only `DashboardLayout` and
+  `DashboardHeader` call it with `active = role === "team_member"`, so other
+  roles never make the RPC call.
+- Hiding nav is cosmetic only: `GoogleBusinessAccessGate`
+  (`src/components/auth/`) wraps every `team.google.*` route component and
+  redirects to `/team` when access is not confirmed. The office-scoped data RPCs
+  reject an unassigned caller regardless, so the gate closes the URL, not the
+  security boundary.
+- Tests: the pure composer and flag are covered in
+  `dashboardNavigation.test.ts`; the hook (resolve true/false/error, inactive
+  skip, realtime re-read, unsubscribe) in `useGoogleBusinessAccess.test.tsx`;
+  the gate (loading / render / redirect) in `GoogleBusinessAccessGate.test.tsx`.
+  `DashboardHeader.test.tsx` mocks `useGoogleBusinessAccess` because the header
+  now depends on `AuthProvider`.
+

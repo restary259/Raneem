@@ -17,6 +17,7 @@ import ThemePicker from "@/components/common/ThemePicker";
 import NotificationBell from "@/components/common/NotificationBell";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { AppRole } from "@/contexts/AuthContext";
+import { useGoogleBusinessAccess } from "@/hooks/useGoogleBusinessAccess";
 import {
   findDashboardNavItem,
   getDashboardNav,
@@ -203,10 +204,21 @@ export default function DashboardHeader({ role, user, onSignOut }: DashboardHead
   const location = useLocation();
   const navigate = useNavigate();
   const config = getDashboardNav(role);
-  const currentItem = useMemo(
-    () => findDashboardNavItem(role, location.pathname),
-    [role, location.pathname],
-  );
+  const googleBusinessAccess = useGoogleBusinessAccess(role === "team_member");
+  const currentItem = useMemo(() => {
+    const item = findDashboardNavItem(role, location.pathname);
+    // A team member without a Google assignment must not see the Google page
+    // title (or a stale tab title) in the header.
+    if (
+      role === "team_member" &&
+      !googleBusinessAccess &&
+      item &&
+      item.href.startsWith("/team/google")
+    ) {
+      return undefined;
+    }
+    return item;
+  }, [role, location.pathname, googleBusinessAccess]);
 
   const pageTitleKey = currentItem?.key ?? config.homeTitleKey;
   const messageItem = config.messagesHref

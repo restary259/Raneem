@@ -38,6 +38,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { AppRole } from "@/contexts/AuthContext";
+import { filterApplyNavItem } from "@/lib/partnerNav";
 
 export interface DashboardNavItem {
   key: string;
@@ -47,6 +48,12 @@ export interface DashboardNavItem {
   children?: DashboardNavItem[];
   mobileLabelKey?: string;
   activePrefixes?: string[];
+  /**
+   * Marks the Google Business nav entry. It is hidden for team members until
+   * they are assigned as an office Google operator (see
+   * `filterGoogleBusinessNavItems`).
+   */
+  googleBusinessNavKey?: boolean;
 }
 
 export interface DashboardQuickAction extends DashboardNavItem {}
@@ -119,6 +126,69 @@ const STUDENT_QUICK_ACTIONS: DashboardQuickAction[] = [
   { key: "nav.refer", icon: Heart, href: "/student/refer" },
 ];
 
+// The team member's Google Business surface is hidden until they are assigned
+// as an office operator. The parent group carries the `googleBusinessNavKey`
+// flag so both the sidebar and the header title resolver can hide it.
+const TEAM_DESKTOP_NAV: DashboardNavItem[] = [
+  { key: "nav.staffInbox", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
+  { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
+  { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
+  { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
+  { key: "nav.catalog", icon: Hotel, href: "/team/catalog", group: "nav.group.work" },
+  { key: "nav.partnerSchools", icon: School, href: "/team/partner-schools", group: "nav.group.work" },
+  { key: "nav.majorIntel", icon: GraduationCap, href: "/team/majors", group: "nav.group.work" },
+  { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
+  {
+    key: "nav.googleBusiness",
+    icon: Link2,
+    href: "",
+    group: "nav.group.setup",
+    googleBusinessNavKey: true,
+    children: [
+      {
+        key: "nav.googleBusinessOverview",
+        icon: Link2,
+        href: "/team/google",
+      },
+      {
+        key: "nav.googleReviews",
+        icon: Star,
+        href: "/team/google/reviews",
+      },
+      {
+        key: "nav.googleProfile",
+        icon: Store,
+        href: "/team/google/profile",
+      },
+      {
+        key: "nav.googlePosts",
+        icon: Megaphone,
+        href: "/team/google/posts",
+      },
+      {
+        key: "nav.googlePhotos",
+        icon: Image,
+        href: "/team/google/photos",
+      },
+      {
+        key: "nav.googleInsights",
+        icon: BarChart3,
+        href: "/team/google/insights",
+      },
+    ],
+  },
+  {
+    key: "nav.group.tools",
+    icon: Wrench,
+    href: "",
+    children: [
+      { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
+      { key: "nav.cvBuilder", icon: FileText, href: "/team/tools/cv" },
+      { key: "nav.currency", icon: DollarSign, href: "/team/tools/currency" },
+    ],
+  },
+];
+
 export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
   admin: {
     desktop: [
@@ -159,64 +229,7 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
   },
 
   team_member: {
-    desktop: [
-      { key: "nav.staffInbox", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
-      { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
-      { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
-      { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
-      { key: "nav.catalog", icon: Hotel, href: "/team/catalog", group: "nav.group.work" },
-      { key: "nav.partnerSchools", icon: School, href: "/team/partner-schools", group: "nav.group.work" },
-      { key: "nav.majorIntel", icon: GraduationCap, href: "/team/majors", group: "nav.group.work" },
-      { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
-      {
-        key: "nav.googleBusiness",
-        icon: Link2,
-        href: "",
-        group: "nav.group.setup",
-        children: [
-          {
-            key: "nav.googleBusinessOverview",
-            icon: Link2,
-            href: "/team/google",
-          },
-          {
-            key: "nav.googleReviews",
-            icon: Star,
-            href: "/team/google/reviews",
-          },
-          {
-            key: "nav.googleProfile",
-            icon: Store,
-            href: "/team/google/profile",
-          },
-          {
-            key: "nav.googlePosts",
-            icon: Megaphone,
-            href: "/team/google/posts",
-          },
-          {
-            key: "nav.googlePhotos",
-            icon: Image,
-            href: "/team/google/photos",
-          },
-          {
-            key: "nav.googleInsights",
-            icon: BarChart3,
-            href: "/team/google/insights",
-          },
-        ],
-      },
-      {
-        key: "nav.group.tools",
-        icon: Wrench,
-        href: "",
-        children: [
-          { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
-          { key: "nav.cvBuilder", icon: FileText, href: "/team/tools/cv" },
-          { key: "nav.currency", icon: DollarSign, href: "/team/tools/currency" },
-        ],
-      },
-    ],
+    desktop: TEAM_DESKTOP_NAV,
     mobilePrimary: [
       { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
       { key: "nav.cases", icon: ClipboardList, href: "/team/cases" },
@@ -313,6 +326,52 @@ const EXACT_DASHBOARD_HOME_PATHS = new Set([
 
 export function getDashboardNav(role: AppRole): DashboardRoleConfig {
   return DASHBOARD_NAV_CONFIG[role];
+}
+
+/**
+ * Removes the Google Business nav entry (and its tab children) unless the
+ * caller is allowed to see it. Only the team member role is gated; every other
+ * role keeps its nav untouched. Pure so the sidebar, the header title resolver
+ * and tests share one predicate.
+ */
+export function filterGoogleBusinessNavItems(
+  role: AppRole,
+  items: DashboardNavItem[],
+  hasAccess: boolean | null,
+): DashboardNavItem[] {
+  if (role !== "team_member" || hasAccess) return items;
+  return items.filter((item) => !item.googleBusinessNavKey);
+}
+
+export interface DashboardNavFilters {
+  applyFormEnabled?: boolean;
+  googleBusinessAccess?: boolean | null;
+}
+
+const APPLY_GATED_ROLES: ReadonlySet<AppRole> = new Set([
+  "social_media_partner",
+  "ambassador",
+  "agent",
+]);
+
+/**
+ * The one place a role's desktop nav is composed from its config and the live
+ * per-user flags. Keeping it pure means the sidebar, the header title resolver
+ * and tests all apply the same gates in the same order.
+ */
+export function resolveDashboardNavItems(
+  role: AppRole,
+  items: DashboardNavItem[],
+  filters: DashboardNavFilters = {},
+): DashboardNavItem[] {
+  const applyFormEnabled = filters.applyFormEnabled ?? true;
+  const googleBusinessAccess = filters.googleBusinessAccess ?? true;
+
+  return filterGoogleBusinessNavItems(
+    role,
+    filterApplyNavItem(items, APPLY_GATED_ROLES.has(role), applyFormEnabled),
+    googleBusinessAccess,
+  );
 }
 
 export function matchesDashboardNavPath(pathname: string, item: DashboardNavItem): boolean {

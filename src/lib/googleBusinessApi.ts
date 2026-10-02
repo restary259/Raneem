@@ -113,6 +113,15 @@ export function listMyGoogleOffices() {
 }
 
 /**
+ * Whether the signed-in team member is assigned as a Google operator on at
+ * least one office. Drives the Team dashboard visibility gate; the server is
+ * authoritative and returns a bare boolean.
+ */
+export function hasGoogleBusinessAccess() {
+  return rpc<boolean>("has_google_business_access");
+}
+
+/**
  * Server-filtered operator candidates for an office. Only active team members
  * of that office are returned; the browser never assembles this list itself.
  */

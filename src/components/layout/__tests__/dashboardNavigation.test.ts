@@ -4,7 +4,9 @@ import path from "node:path";
 
 import {
   DASHBOARD_NAV_CONFIG,
+  filterGoogleBusinessNavItems,
   matchesDashboardNavPath,
+  resolveDashboardNavItems,
   type DashboardNavItem,
 } from "../dashboardNavigation";
 
@@ -93,5 +95,57 @@ describe("dashboard navigation configuration", () => {
     expect(
       matchesDashboardNavPath("/student/my-data", DASHBOARD_NAV_CONFIG.student.mobilePrimary[3]),
     ).toBe(true);
+  });
+
+  it("flags the team Google Business entry for gating", () => {
+    const flagged = DASHBOARD_NAV_CONFIG.team_member.desktop.filter(
+      (item) => item.googleBusinessNavKey,
+    );
+    expect(flagged.map((item) => item.key)).toEqual(["nav.googleBusiness"]);
+    // The flag lives only on the parent group, so removing it removes every tab.
+    expect(flagged[0].children?.map((child) => child.href)).toEqual([
+      "/team/google",
+      "/team/google/reviews",
+      "/team/google/profile",
+      "/team/google/posts",
+      "/team/google/photos",
+      "/team/google/insights",
+    ]);
+  });
+
+  it("hides the Google Business entry from an unassigned team member only", () => {
+    const teamNav = DASHBOARD_NAV_CONFIG.team_member.desktop;
+
+    const hidden = filterGoogleBusinessNavItems("team_member", teamNav, false);
+    expect(hidden.some((item) => item.googleBusinessNavKey)).toBe(false);
+    expect(hidden).toHaveLength(teamNav.length - 1);
+
+    const shown = filterGoogleBusinessNavItems("team_member", teamNav, true);
+    expect(shown).toBe(teamNav);
+
+    // An unresolved read is treated as no access.
+    expect(
+      filterGoogleBusinessNavItems("team_member", teamNav, null).map((i) => i.key),
+    ).toEqual(hidden.map((i) => i.key));
+
+    // Admin keeps the entry regardless of the flag.
+    const adminNav = DASHBOARD_NAV_CONFIG.admin.desktop;
+    expect(filterGoogleBusinessNavItems("admin", adminNav, false)).toBe(adminNav);
+  });
+
+  it("composes the apply and Google gates for the sidebar", () => {
+    const teamNav = DASHBOARD_NAV_CONFIG.team_member.desktop;
+    const hidden = resolveDashboardNavItems("team_member", teamNav, {
+      googleBusinessAccess: false,
+    });
+    expect(hidden.some((item) => item.googleBusinessNavKey)).toBe(false);
+    // Non-team roles are unaffected by the Google flag.
+    const partnerNav = DASHBOARD_NAV_CONFIG.social_media_partner.desktop;
+    const partnerHiddenApply = resolveDashboardNavItems(
+      "social_media_partner",
+      partnerNav,
+      { applyFormEnabled: false, googleBusinessAccess: false },
+    );
+    expect(partnerHiddenApply.some((item) => item.key === "nav.apply")).toBe(false);
   });
 });
