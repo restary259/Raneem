@@ -154,6 +154,9 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const { dir, isRtl } = useDirection();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  // A campaign / Google Business link can enter the funnel with ?office=slug.
+  // It preselects the office server-side; the applicant can still change it.
+  const officeSlug = (searchParams.get("office") || "").trim().toLowerCase() || undefined;
 
   const [step, setStep] = useState(1);
   const [phase, setPhase] = useState<"form" | "booking" | "processing" | "done">("form");
@@ -216,6 +219,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
     phone_number: a.phone.trim(),
     source: "apply_page",
     ref_code: refCode,
+    office_slug: officeSlug ?? null,
     city: a.city.trim() || null,
     education_level: a.education || null,
     bagrut_score: null,
@@ -275,7 +279,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
             <h2 className="text-2xl font-bold leading-tight sm:text-3xl">{t("apply.bookEarlyTitle")}</h2>
             <p className="text-sm leading-6 text-muted-foreground">{t("apply.bookEarlyBody")}</p>
           </div>
-          <PublicOfficeBooking token={bookingToken} autoOpen onBooked={() => setPhase("processing")} />
+          <PublicOfficeBooking token={bookingToken} autoOpen officeSlug={officeSlug} onBooked={() => setPhase("processing")} />
           <div className="mt-6 text-center">
             <button type="button" onClick={() => setBookingOpen(false)} className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">{t("apply.bookEarlyBack")}</button>
           </div>

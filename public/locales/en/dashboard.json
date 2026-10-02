@@ -2533,7 +2533,7 @@
       "labelStudent": "Student",
       "labelDate": "Date",
       "labelTime": "Time",
-      "labelTimeRange": "(8 am – 8 pm)",
+      "labelTimeRange": "({{start}} – {{end}})",
       "labelDuration": "Duration",
       "labelNotes": "Notes",
       "placeholderCase": "Select existing case…",
@@ -2795,7 +2795,13 @@
         "MAPPED": "Mapped",
         "DISCONNECTED": "Disconnected",
         "MAPPING_ERROR": "Mapping error"
-      }
+      },
+      "tabOverview": "Overview",
+      "tabReviews": "Reviews",
+      "tabProfile": "Profile",
+      "tabPhotos": "Photos",
+      "tabPosts": "Posts",
+      "tabInsights": "Insights"
     }
   },
   "catalog": {
@@ -6661,5 +6667,39 @@
     "voiceOfMerchantChanged": "Voice of Merchant status changed",
     "syncFailed": "Google sync failed",
     "connectionRequired": "Google Business connection needs attention"
+  },
+  "officeWorkspace": {
+    "loading": "Loading office…",
+    "forbidden": "You do not have access to this office",
+    "notFound": "Office not found",
+    "backToOffices": "Back to offices",
+    "overview": "Overview",
+    "appointments": "Appointments",
+    "team": "Team",
+    "googleBusiness": "Google Business",
+    "active": "Active",
+    "inactive": "Inactive",
+    "bookingEnabled": "Booking enabled",
+    "bookingDisabled": "Booking disabled",
+    "openMaps": "Google Maps",
+    "primary": "Primary",
+    "sideManager": "Side Manager",
+    "members": "Team",
+    "googleHealthy": "Connected",
+    "googleOffline": "Not connected",
+    "directoryTitle": "Offices",
+    "directorySubtitle": "Open an office to manage its appointments, team, and Google Business.",
+    "directoryEmpty": "No offices available yet.",
+    "today": "Today",
+    "viewCalendar": "View calendar",
+    "noAppointmentsToday": "No appointments today.",
+    "unknownClient": "Client",
+    "open": "Open",
+    "publicBooking": "Public booking",
+    "applyLink": "Apply",
+    "manageTeam": "Manage team",
+    "noTeam": "No team members assigned yet.",
+    "unknownMember": "Team member",
+    "staff": "Staff"
   }
 }

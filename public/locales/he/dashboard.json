@@ -460,7 +460,7 @@
       "labelStudent": "סטודנט",
       "labelDate": "תאריך",
       "labelTime": "שעה",
-      "labelTimeRange": "(8:00 – 20:00)",
+      "labelTimeRange": "({{start}} – {{end}})",
       "labelDuration": "משך",
       "labelNotes": "הערות",
       "placeholderCase": "בחירת תיק קיים…",
@@ -778,7 +778,13 @@
         "MAPPED": "ממופה",
         "DISCONNECTED": "מנותק",
         "MAPPING_ERROR": "שגיאת מיפוי"
-      }
+      },
+      "tabOverview": "סקירה",
+      "tabReviews": "ביקורות",
+      "tabProfile": "פרופיל",
+      "tabPhotos": "תמונות",
+      "tabPosts": "פוסטים",
+      "tabInsights": "תובנות"
     }
   },
   "pushSettings": {
@@ -6663,5 +6669,39 @@
     "voiceOfMerchantChanged": "מצב Voice of Merchant השתנה",
     "syncFailed": "סנכרון Google נכשל",
     "connectionRequired": "חיבור Google Business דורש תשומת לב"
+  },
+  "officeWorkspace": {
+    "loading": "טוען משרד…",
+    "forbidden": "אין לך גישה למשרד הזה",
+    "notFound": "המשרד לא נמצא",
+    "backToOffices": "חזרה למשרדים",
+    "overview": "סקירה",
+    "appointments": "פגישות",
+    "team": "צוות",
+    "googleBusiness": "ניהול Google Business",
+    "active": "פעיל",
+    "inactive": "לא פעיל",
+    "bookingEnabled": "הזמנות מופעלות",
+    "bookingDisabled": "הזמנות מושבתות",
+    "openMaps": "פתח ב-Google Maps",
+    "primary": "ראשי",
+    "sideManager": "מנהל משנה",
+    "members": "צוות",
+    "googleHealthy": "מחובר",
+    "googleOffline": "לא מחובר",
+    "directoryTitle": "משרדים",
+    "directorySubtitle": "פתח משרד כדי לנהל פגישות, צוות ו-Google Business.",
+    "directoryEmpty": "אין משרדים זמינים עדיין.",
+    "today": "היום",
+    "viewCalendar": "הצג יומן",
+    "noAppointmentsToday": "אין פגישות היום.",
+    "unknownClient": "לקוח",
+    "open": "פתח",
+    "publicBooking": "הזמנה ציבורית",
+    "applyLink": "הגשת בקשה",
+    "manageTeam": "ניהול צוות",
+    "noTeam": "לא הוקצו חברי צוות עדיין.",
+    "unknownMember": "חבר צוות",
+    "staff": "צוות"
   }
 }

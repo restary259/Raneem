@@ -6,20 +6,41 @@ const request = z.object({
   action: z.enum(["read", "offices", "availability", "book", "reschedule", "cancel"]),
   slot: z.string().datetime().optional(),
   officeId: z.string().uuid().optional(),
+  officeSlug: z.string().trim().min(1).max(80).optional(),
   serviceType: z.string().trim().min(1).max(80).optional(),
 });
 
 type OfficeRow = {
   id: string;
+  slug: string;
   name_ar: string;
   name_en: string;
   name_he: string;
   city: string;
+  country: string;
   address_line_1: string | null;
   phone: string | null;
   map_url: string | null;
   timezone: string;
 };
+
+// Resolves a public office slug to an id, refusing offices that are inactive,
+// soft-deleted, or not accepting bookings. A client-supplied slug is never
+// trusted as authorization — only the resolved id is used, and the appointment
+// RPC re-validates the office before writing.
+async function resolveBookableOfficeId(supabaseAdmin: any, slug: string | null | undefined): Promise<string | null> {
+  if (!slug) return null;
+  const result = await supabaseAdmin
+    .from("offices")
+    .select("id")
+    .eq("slug", slug.trim().toLowerCase())
+    .eq("is_active", true)
+    .eq("booking_enabled", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (result.error) throw new Error("Offices are temporarily unavailable.");
+  return result.data?.id ?? null;
+}
 
 type BookingMember = {
   user_id: string;
@@ -99,7 +120,7 @@ async function getAuthorizedBookingRead(supabaseAdmin: any, tokenHash: string) {
 async function getBookableOffices(supabaseAdmin: any) {
   const officeResult = await supabaseAdmin
     .from("offices")
-    .select("id,name_ar,name_en,name_he,city,address_line_1,phone,map_url,timezone")
+    .select("id,slug,name_ar,name_en,name_he,city,country,address_line_1,phone,map_url,timezone")
     .eq("is_active", true)
     .is("deleted_at", null)
     .eq("booking_enabled", true)
@@ -155,7 +176,7 @@ async function getBookableOffices(supabaseAdmin: any) {
 async function calculateAvailability(supabaseAdmin: any, officeId: string, serviceType = "consultation") {
   const officeResult = await supabaseAdmin
     .from("offices")
-    .select("id,name_ar,name_en,name_he,city,address_line_1,phone,map_url,timezone,booking_enabled,is_active")
+    .select("id,slug,name_ar,name_en,name_he,city,country,address_line_1,phone,map_url,timezone,booking_enabled,is_active")
     .eq("id", officeId)
     .maybeSingle();
 
@@ -327,15 +348,24 @@ async function calculateAvailability(supabaseAdmin: any, officeId: string, servi
 const publicBookingStartRequest = z.object({
   fullName: z.string().trim().min(2).max(120),
   phone: z.string().trim().min(8).max(30),
+  officeSlug: z.string().trim().min(1).max(80).optional(),
 });
 
 export const startPublicBooking = createServerFn({ method: "POST" })
   .inputValidator(function (input) { return publicBookingStartRequest.parse(input); })
   .handler(async function ({ data }) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // A public entry point (Google Business / campaign link) may carry an office
+    // slug. It is resolved server-side so the case is attributed to the office
+    // immediately — even if the applicant never books an appointment. An unknown
+    // or unavailable slug is simply ignored rather than failing the booking.
+    const officeId = await resolveBookableOfficeId(supabaseAdmin, data.officeSlug);
+
     const result = await supabaseAdmin.rpc("create_public_booking_session", {
       p_full_name: data.fullName,
       p_phone: data.phone,
+      p_office_id: officeId,
     });
 
     if (result.error) {
@@ -362,7 +392,14 @@ export const managePublicBooking = createServerFn({ method: "POST" })
     if (data.action === "offices") {
       const current = await getAuthorizedBookingRead(supabaseAdmin, tokenHash);
       const offices = await getBookableOffices(supabaseAdmin);
-      return { offices: offices, current_office_id: current.office_id || null };
+      // `officeSlug` preselects the entry office without locking the applicant
+      // in: the UI still shows the full list so they can switch if they want.
+      const preferredOfficeId = await resolveBookableOfficeId(supabaseAdmin, data.officeSlug);
+      return {
+        offices: offices,
+        current_office_id: current.office_id || null,
+        preferred_office_id: preferredOfficeId,
+      };
     }
 
     if (data.action === "availability") {

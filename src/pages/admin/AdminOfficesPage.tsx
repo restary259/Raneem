@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "@/lib/router-compat";
 import OfficeGoogleBusinessSection from "@/components/admin/OfficeGoogleBusinessSection";
 import GoogleBusinessConnectionPanel from "@/components/admin/GoogleBusinessConnectionPanel";
 
@@ -35,6 +36,17 @@ const SERVICE_TYPES = [
   ["visa", "Visa"],
   ["accommodation", "Accommodation"],
 ] as const;
+
+// Country drives the default timezone so a new office cannot inherit
+// Asia/Jerusalem by accident. The admin can still override the timezone.
+const COUNTRY_DEFAULTS: Record<string, { label: string; timezone: string }> = {
+  IL: { label: "Israel", timezone: "Asia/Jerusalem" },
+  DE: { label: "Germany", timezone: "Europe/Berlin" },
+  AT: { label: "Austria", timezone: "Europe/Vienna" },
+  CH: { label: "Switzerland", timezone: "Europe/Zurich" },
+  GB: { label: "United Kingdom", timezone: "Europe/London" },
+  US: { label: "United States", timezone: "America/New_York" },
+};
 
 const makeHours = (): DayHours[] => DAYS.map(function (entry) {
   const weekday = entry[0];
@@ -78,17 +90,18 @@ function localizedOfficeName(office: Office, language: string) {
 export default function AdminOfficesPage() {
   const { i18n } = useTranslation("dashboard");
   const { toast } = useToast();
+  const navigate = useNavigate();
   const language = i18n.language;
   const isRtl = language === "ar" || language === "he";
 
   const labels = useMemo(function () {
     if (language.startsWith("ar")) {
       return {
-        title: "مكاتب درب", add: "إضافة مكتب", edit: "إدارة المكتب",
+        title: "مكاتب درب", add: "إضافة مكتب", edit: "إدارة المكتب", openOffice: "فتح المكتب",
         save: "حفظ", cancel: "إلغاء", general: "بيانات المكتب", team: "الفريق المسؤول", booking: "إعدادات الحجز", hours: "ساعات العمل",
         routing: "توجيه الخدمات", primary: "عضو الفريق الأساسي", backup: "عضو احتياط", noMember: "غير محدد", active: "نشط",
         inactive: "غير نشط", enabled: "مفعّل", disabled: "غير مفعّل", city: "المدينة", address: "العنوان", phone: "الهاتف",
-        type: "نوع المكتب", timezone: "المنطقة الزمنية", nameAr: "الاسم بالعربي", nameEn: "الاسم بالإنجليزي", nameHe: "الاسم بالعبرية",
+        type: "نوع المكتب", country: "الدولة", timezone: "المنطقة الزمنية", nameAr: "الاسم بالعربي", nameEn: "الاسم بالإنجليزي", nameHe: "الاسم بالعبرية",
         slug: "الرابط", code: "رمز المكتب", bookingEnabled: "السماح بالحجز", interval: "الفاصل (دقيقة)", duration: "مدة الموعد (دقيقة)",
         lead: "أقل مدة قبل الحجز (دقيقة)", horizon: "أقصى أيام للحجز", closed: "مغلق", open: "مفتوح", service: "الخدمة", member: "عضو الفريق",
         addRule: "إضافة توجيه", none: "لا توجد قواعد إضافية", warning: "لتفعيل الحجز يجب اختيار عضو فريق أساسي.",
@@ -97,11 +110,11 @@ export default function AdminOfficesPage() {
     }
     if (language.startsWith("he")) {
       return {
-        title: "משרדי DARB", add: "הוספת משרד", edit: "ניהול משרד",
+        title: "משרדי DARB", add: "הוספת משרד", edit: "ניהול משרד", openOffice: "פתח משרד",
         save: "שמירה", cancel: "ביטול", general: "פרטי המשרד", team: "הצוות האחראי", booking: "הגדרות הזמנה", hours: "שעות פעילות",
         routing: "ניתוב שירותים", primary: "חבר צוות ראשי", backup: "חבר גיבוי", noMember: "לא מוגדר", active: "פעיל",
         inactive: "לא פעיל", enabled: "מופעל", disabled: "מושבת", city: "עיר", address: "כתובת", phone: "טלפון",
-        type: "סוג משרד", timezone: "אזור זמן", nameAr: "שם בערבית", nameEn: "שם באנגלית", nameHe: "שם בעברית",
+        type: "סוג משרד", country: "מדינה", timezone: "אזור זמן", nameAr: "שם בערבית", nameEn: "שם באנגלית", nameHe: "שם בעברית",
         slug: "Slug", code: "קוד משרד", bookingEnabled: "אפשר הזמנות", interval: "מרווח (דקות)", duration: "משך (דקות)",
         lead: "מינימום לפני הזמנה (דקות)", horizon: "מקסימום ימים קדימה", closed: "סגור", open: "פתוח", service: "שירות", member: "חבר צוות",
         addRule: "הוספת ניתוב", none: "אין כללי ניתוב נוספים", warning: "יש לבחור חבר צוות ראשי לפני הפעלת הזמנות.",
@@ -109,11 +122,11 @@ export default function AdminOfficesPage() {
       };
     }
     return {
-      title: "DARB Offices", add: "Add office", edit: "Manage office",
+      title: "DARB Offices", add: "Add office", edit: "Manage office", openOffice: "Open office",
       save: "Save", cancel: "Cancel", general: "Office details", team: "Responsible team", booking: "Booking settings", hours: "Working hours",
       routing: "Service routing", primary: "Primary team member", backup: "Backup member", noMember: "Not assigned", active: "Active",
       inactive: "Inactive", enabled: "Enabled", disabled: "Disabled", city: "City", address: "Address", phone: "Phone",
-      type: "Office type", timezone: "Timezone", nameAr: "Arabic name", nameEn: "English name", nameHe: "Hebrew name",
+      type: "Office type", country: "Country", timezone: "Timezone", nameAr: "Arabic name", nameEn: "English name", nameHe: "Hebrew name",
       slug: "Public slug", code: "Office code", bookingEnabled: "Enable booking", interval: "Slot interval (minutes)", duration: "Default duration (minutes)",
       lead: "Minimum lead time (minutes)", horizon: "Maximum days ahead", closed: "Closed", open: "Open", service: "Service", member: "Team member",
       addRule: "Add routing rule", none: "No additional routing rules", warning: "Select a primary team member before enabling booking.",
@@ -362,7 +375,10 @@ export default function AdminOfficesPage() {
                   <div className="flex items-start gap-2 text-sm"><MapPin className="mt-0.5 size-4 shrink-0 text-primary" /><div><div className="text-xs text-muted-foreground">{labels.city}</div><div className="font-medium">{office.city}</div></div></div>
                   <div className="flex items-start gap-2 text-sm"><Users className="mt-0.5 size-4 shrink-0 text-primary" /><div><div className="text-xs text-muted-foreground">{labels.primary}</div><div className="font-medium">{item.primaryName}</div></div></div>
                 </div>
-                <Button variant="outline" className="w-full" onClick={function () { openEdit(office); }}>{labels.edit}<ChevronRight className={isRtl ? "ms-auto size-4 rotate-180" : "ms-auto size-4"} /></Button>
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={function () { navigate(`/admin/offices/${office.slug}`); }}>{labels.openOffice}<ChevronRight className={isRtl ? "ms-auto size-4 rotate-180" : "ms-auto size-4"} /></Button>
+                  <Button variant="outline" onClick={function () { openEdit(office); }}>{labels.edit}</Button>
+                </div>
               </CardContent>
             </Card>
           );
@@ -386,7 +402,32 @@ export default function AdminOfficesPage() {
                 <div><Label>{labels.city}</Label><Input value={form.city} onChange={function (e) { setField("city", e.target.value); }} /></div>
                 <div className="md:col-span-2"><Label>{labels.address}</Label><Input value={form.address_line_1} onChange={function (e) { setField("address_line_1", e.target.value); }} /></div>
                 <div><Label>{labels.phone}</Label><Input value={form.phone} onChange={function (e) { setField("phone", e.target.value); }} /></div>
-                <div className="md:col-span-2"><Label>{labels.timezone}</Label><Input value={form.timezone} onChange={function (e) { setField("timezone", e.target.value); }} /></div>
+                <div>
+                  <Label>{labels.country}</Label>
+                  <Select
+                    value={form.country}
+                    onValueChange={function (v) {
+                      setForm(function (previous) {
+                        const next = Object.assign({}, previous, { country: v });
+                        // Follow the country's timezone only while the current
+                        // one still matches the previous country's default.
+                        const previousDefault = COUNTRY_DEFAULTS[previous.country]?.timezone;
+                        if (!previous.timezone || previous.timezone === previousDefault) {
+                          next.timezone = COUNTRY_DEFAULTS[v]?.timezone || previous.timezone;
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(COUNTRY_DEFAULTS).map(function (entry) {
+                        return <SelectItem key={entry[0]} value={entry[0]}>{entry[0]} — {entry[1].label}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>{labels.timezone}</Label><Input value={form.timezone} onChange={function (e) { setField("timezone", e.target.value); }} /></div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex items-center justify-between rounded-xl border border-border p-3"><span className="text-sm font-medium">{labels.active}</span><Switch checked={form.is_active} onCheckedChange={function (v) { setField("is_active", v); }} /></div>

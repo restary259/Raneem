@@ -2551,7 +2551,7 @@
       "labelStudent": "الطالب",
       "labelDate": "التاريخ",
       "labelTime": "الوقت",
-      "labelTimeRange": "(8 ص – 8 م)",
+      "labelTimeRange": "({{start}} – {{end}})",
       "labelDuration": "المدة",
       "labelNotes": "ملاحظات",
       "placeholderCase": "اختر حالة موجودة…",
@@ -2813,7 +2813,13 @@
         "MAPPED": "مرتبط",
         "DISCONNECTED": "غير متصل",
         "MAPPING_ERROR": "خطأ في الربط"
-      }
+      },
+      "tabOverview": "نظرة عامة",
+      "tabReviews": "التقييمات",
+      "tabProfile": "الملف",
+      "tabPhotos": "الصور",
+      "tabPosts": "المنشورات",
+      "tabInsights": "الرؤى"
     }
   },
   "catalog": {
@@ -6679,5 +6685,39 @@
     "voiceOfMerchantChanged": "تغيّرت حالة Voice of Merchant",
     "syncFailed": "فشلت مزامنة Google",
     "connectionRequired": "اتصال Google Business يحتاج إلى انتباه"
+  },
+  "officeWorkspace": {
+    "loading": "جار تحميل المكتب…",
+    "forbidden": "ليس لديك صلاحية الوصول إلى هذا المكتب",
+    "notFound": "المكتب غير موجود",
+    "backToOffices": "العودة إلى المكاتب",
+    "overview": "نظرة عامة",
+    "appointments": "المواعيد",
+    "team": "الفريق",
+    "googleBusiness": "نشاطي على Google",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "bookingEnabled": "الحجز مفعّل",
+    "bookingDisabled": "الحجز غير مفعّل",
+    "openMaps": "خرائط Google",
+    "primary": "الأساسي",
+    "sideManager": "المدير المساعد",
+    "members": "الفريق",
+    "googleHealthy": "متصل",
+    "googleOffline": "غير متصل",
+    "directoryTitle": "المكاتب",
+    "directorySubtitle": "افتح مكتباً لإدارة مواعيده وفريقه ونشاطه على Google.",
+    "directoryEmpty": "لا توجد مكاتب متاحة بعد.",
+    "today": "اليوم",
+    "viewCalendar": "عرض التقويم",
+    "noAppointmentsToday": "لا توجد مواعيد اليوم.",
+    "unknownClient": "العميل",
+    "open": "فتح",
+    "publicBooking": "الحجز العام",
+    "applyLink": "تقديم الطلب",
+    "manageTeam": "إدارة الفريق",
+    "noTeam": "لم يتم تعيين أعضاء فريق بعد.",
+    "unknownMember": "عضو الفريق",
+    "staff": "موظف"
   }
 }
