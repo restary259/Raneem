@@ -1045,7 +1045,7 @@ export function locationPath(
   readMask = GBP_PROFILE_READ_MASK,
 ): string {
   const q = new URLSearchParams({ readMask });
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}?${q}`;
+  return `/${GBP_PROFILE_API}/locations/${locationId}?${q}`;
 }
 
 // ---------------------------------------------------------------------------
