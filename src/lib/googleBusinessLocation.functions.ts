@@ -189,10 +189,12 @@ export const discoverGoogleBusinessLocations = createServerFn({
         errorMessage: null,
       };
     } catch (e) {
+      // A non-GbpError here is our own failure (e.g. the sync/list RPC), not a
+      // Google provider error — label it `internal` so the UI does not blame Google.
       const err =
         e instanceof GbpError
           ? e
-          : new GbpError("upstream", 0, (e as Error).message);
+          : new GbpError("internal", 0, (e as Error).message);
       console.error(
         `Google location discovery failed [${err.status}]: ${err.message}`,
       );

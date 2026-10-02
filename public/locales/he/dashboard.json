@@ -5973,7 +5973,10 @@
         "rate_limited": "Google מגבילה בקשות. נסו שוב בעוד רגע.",
         "upstream": "Google החזירה שגיאה.",
         "network": "לא ניתן להגיע ל-Google.",
-        "not_linked": "Google Business לא מחובר."
+        "not_linked": "Google Business לא מחובר.",
+        "invalid_request": "Google דחתה את הבקשה כפסולה.",
+        "not_found": "משאב ה-Google המבוקש לא נמצא.",
+        "internal": "דארב לא הצליחה להשלים את בקשת Google."
       },
       "locationCount": "מיקומים: {{count}}"
     }
