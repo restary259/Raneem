@@ -65,6 +65,22 @@ async function rpcOrThrow<T>(
   return data as T;
 }
 
+/**
+ * Invokes a service-role-only RPC through the admin client, passing the
+ * authenticated actor explicitly so the RPC can still authorize them. The
+ * connector is the only party that may assert "Google returned this snapshot".
+ */
+async function adminRpcOrThrow<T>(
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc(fn as never, args as never);
+  if (error) throw new Error(error.message || "Request failed");
+  return data as T;
+}
+
 /** The office's Google identity, resolved server-side (never from the client). */
 type MappingIdentity = {
   google_account_id: string;
@@ -185,24 +201,26 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
       let totalCount: number | null = null;
       const normalized: NormalizedGbpReview[] = [];
 
-      const raw = await collectAllPages<GbpRawReview>(async (pageToken) => {
-        const res = await gbpGet<GbpReviewsListResponse>(
-          reviewsPath(
-            identity.google_account_id,
-            identity.google_location_id,
-            pageToken,
-          ),
-          creds,
-        );
-        // The summary is authoritative on the first page; keep the first value.
-        if (averageRating === null && typeof res.averageRating === "number") {
-          averageRating = res.averageRating;
-        }
-        if (totalCount === null && typeof res.totalReviewCount === "number") {
-          totalCount = res.totalReviewCount;
-        }
-        return { items: res.reviews ?? [], nextPageToken: res.nextPageToken };
-      });
+      const { items: raw, complete } = await collectAllPages<GbpRawReview>(
+        async (pageToken) => {
+          const res = await gbpGet<GbpReviewsListResponse>(
+            reviewsPath(
+              identity.google_account_id,
+              identity.google_location_id,
+              pageToken,
+            ),
+            creds,
+          );
+          // The summary is authoritative on the first page; keep the first value.
+          if (averageRating === null && typeof res.averageRating === "number") {
+            averageRating = res.averageRating;
+          }
+          if (totalCount === null && typeof res.totalReviewCount === "number") {
+            totalCount = res.totalReviewCount;
+          }
+          return { items: res.reviews ?? [], nextPageToken: res.nextPageToken };
+        },
+      );
 
       for (const item of raw) {
         const row = normalizeGbpReview(item, {
@@ -212,13 +230,16 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
         if (row) normalized.push(row);
       }
 
-      const applied = await rpcOrThrow<
+      const applied = await adminRpcOrThrow<
         { inserted: number; updated: number; marked_not_found: number }[]
-      >(ctx, "admin_sync_google_reviews", {
+      >("admin_sync_google_reviews", {
         p_office_id: data.officeId,
         p_reviews: normalized,
         p_average_rating: averageRating,
         p_total_count: totalCount,
+        // An incomplete walk must not mark anything NOT_FOUND.
+        p_complete: complete,
+        p_actor_user_id: ctx.userId,
       });
       const counts = applied?.[0];
       return {

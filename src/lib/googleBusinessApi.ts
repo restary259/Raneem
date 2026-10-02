@@ -16,6 +16,12 @@ import type {
   OfficeGoogleProfileRow,
   OfficeGoogleReviewDetailRow,
   OfficeGoogleReviewSummaryRow,
+  GoogleBusinessMediaListRow,
+  GoogleMediaFilter,
+  OfficeGoogleMediaSummaryRow,
+  GoogleBusinessPostListRow,
+  GooglePostFilter,
+  OfficeGooglePostsSummaryRow,
 } from "@/types/googleBusiness";
 
 type RpcError = { message?: string } | null;
@@ -222,5 +228,77 @@ export function decideGoogleProfileChangeRequest(
     p_request_id: requestId,
     p_decision: decision,
     p_note: note ?? null,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 — photos (media)
+// ---------------------------------------------------------------------------
+
+export interface ListMediaParams {
+  officeId: string;
+  category?: GoogleMediaFilter;
+  origin?: "all" | "BUSINESS" | "CUSTOMER";
+  search?: string | null;
+  limit?: number;
+  offset?: number;
+}
+
+/** Paginated, server-filtered media list. Filtering never happens in React. */
+export function listOfficeGoogleMedia(params: ListMediaParams) {
+  return rpc<GoogleBusinessMediaListRow[]>("list_office_google_media", {
+    p_office_id: params.officeId,
+    p_category: params.category ?? "all",
+    p_origin: params.origin ?? "all",
+    p_search: params.search?.trim() || null,
+    p_limit: params.limit ?? 60,
+    p_offset: params.offset ?? 0,
+  });
+}
+
+/** Authoritative media counts + sync health for one office. */
+export function getOfficeGoogleMediaSummary(officeId: string) {
+  return rpc<OfficeGoogleMediaSummaryRow[]>("get_office_google_media_summary", {
+    p_office_id: officeId,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 — Google Posts
+// ---------------------------------------------------------------------------
+
+export interface ListPostsParams {
+  officeId: string;
+  status?: GooglePostFilter;
+  topicType?: "all" | "STANDARD" | "EVENT" | "OFFER";
+  search?: string | null;
+  limit?: number;
+  offset?: number;
+}
+
+/** Paginated, server-filtered post list. Filtering never happens in React. */
+export function listOfficeGooglePosts(params: ListPostsParams) {
+  return rpc<GoogleBusinessPostListRow[]>("list_office_google_posts", {
+    p_office_id: params.officeId,
+    p_status: params.status ?? "all",
+    p_topic_type: params.topicType ?? "all",
+    p_search: params.search?.trim() || null,
+    p_limit: params.limit ?? 30,
+    p_offset: params.offset ?? 0,
+  });
+}
+
+/** Post counts + sync health for one office. */
+export function getOfficeGooglePostsSummary(officeId: string) {
+  return rpc<OfficeGooglePostsSummaryRow[]>("get_office_google_posts_summary", {
+    p_office_id: officeId,
+  });
+}
+
+/** Resolve a DARB post id to its office/location (rejects a cross-office id). */
+export function resolveGooglePostOffice(officeId: string, postId: string) {
+  return rpc<Record<string, unknown>[]>("resolve_google_post_office", {
+    p_office_id: officeId,
+    p_post_id: postId,
   });
 }
