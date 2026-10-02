@@ -189,6 +189,29 @@ describe("gbpPost / gbpUploadBytes retry policy", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("does NOT retry a create on a network failure (the request may have been applied)", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("ECONNRESET"));
+    await expect(
+      gbpPost("/x", {}, creds, fetchImpl as never, noSleep),
+    ).rejects.toBeInstanceOf(GbpError);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT retry a byte upload on a network failure", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("ECONNRESET"));
+    await expect(
+      gbpUploadBytes(
+        "/u",
+        jpegBytes(),
+        "image/jpeg",
+        creds,
+        fetchImpl as never,
+        noSleep,
+      ),
+    ).rejects.toBeInstanceOf(GbpError);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it("retries an upload once on 429 but not on 500", async () => {
     const rateLimited = vi
       .fn()

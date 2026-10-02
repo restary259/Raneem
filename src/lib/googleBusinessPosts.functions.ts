@@ -70,6 +70,22 @@ async function rpcOrThrow<T>(
   return data as T;
 }
 
+/**
+ * Invokes a service-role-only RPC through the admin client, passing the
+ * authenticated actor explicitly so the RPC can still authorize them. The
+ * connector is the only party that may assert "Google returned this snapshot".
+ */
+async function adminRpcOrThrow<T>(
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc(fn as never, args as never);
+  if (error) throw new Error(error.message || "Request failed");
+  return data as T;
+}
+
 type MappingIdentity = {
   google_account_id: string;
   google_location_id: string;
@@ -227,20 +243,22 @@ export const syncGooglePosts = createServerFn({ method: "POST" })
     try {
       const identity = await loadOfficeIdentity(ctx, data.officeId);
 
-      const raw = await collectAllPages<GbpRawPost>(async (pageToken) => {
-        const res = await gbpGet<GbpPostsListResponse>(
-          postsPath(
-            identity.google_account_id,
-            identity.google_location_id,
-            pageToken,
-          ),
-          creds,
-        );
-        return {
-          items: res.localPosts ?? [],
-          nextPageToken: res.nextPageToken,
-        };
-      });
+      const { items: raw, complete } = await collectAllPages<GbpRawPost>(
+        async (pageToken) => {
+          const res = await gbpGet<GbpPostsListResponse>(
+            postsPath(
+              identity.google_account_id,
+              identity.google_location_id,
+              pageToken,
+            ),
+            creds,
+          );
+          return {
+            items: res.localPosts ?? [],
+            nextPageToken: res.nextPageToken,
+          };
+        },
+      );
 
       const normalized: NormalizedGbpPost[] = [];
       for (const item of raw) {
@@ -248,11 +266,14 @@ export const syncGooglePosts = createServerFn({ method: "POST" })
         if (row) normalized.push(row);
       }
 
-      const applied = await rpcOrThrow<
+      const applied = await adminRpcOrThrow<
         { inserted: number; updated: number; marked_deleted: number }[]
-      >(ctx, "admin_sync_google_posts", {
+      >("admin_sync_google_posts", {
         p_office_id: data.officeId,
         p_posts: normalized,
+        // An incomplete walk must not mark anything DELETED_EXTERNALLY.
+        p_complete: complete,
+        p_actor_user_id: ctx.userId,
       });
       const counts = applied?.[0];
       return {
@@ -596,11 +617,12 @@ export const publishGooglePost = createServerFn({ method: "POST" })
         `Google post publish failed [${err.status}]: ${err.message}`,
       );
       // The draft is retained and marked FAILED; the lock is released.
-      await rpcOrThrow(ctx, "admin_mark_google_post_publish_failed", {
+      await adminRpcOrThrow("admin_mark_google_post_publish_failed", {
         p_office_id: data.officeId,
         p_post_id: data.postId,
         p_error_code: err.code,
         p_error_message: err.message,
+        p_actor_user_id: ctx.userId,
       });
       return fail(
         err.code === "network" ? "uncertain" : "error",
@@ -615,11 +637,12 @@ export const publishGooglePost = createServerFn({ method: "POST" })
     const googlePostId =
       normalized?.google_post_id ?? post.google_post_id ?? null;
     if (!googlePostId) {
-      await rpcOrThrow(ctx, "admin_mark_google_post_publish_failed", {
+      await adminRpcOrThrow("admin_mark_google_post_publish_failed", {
         p_office_id: data.officeId,
         p_post_id: data.postId,
         p_error_code: "bad_response",
         p_error_message: "Google accepted the post but returned no id",
+        p_actor_user_id: ctx.userId,
       });
       return fail(
         "error",
@@ -632,18 +655,34 @@ export const publishGooglePost = createServerFn({ method: "POST" })
       normalized?.google_post_resource_name ??
       `accounts/${identity.google_account_id}/locations/${identity.google_location_id}/localPosts/${googlePostId}`;
 
-    await rpcOrThrow(ctx, "admin_apply_google_post_publish", {
-      p_office_id: data.officeId,
-      p_post_id: data.postId,
-      p_google_post_id: googlePostId,
-      p_google_post_resource_name: resourceName,
-      p_google_state: normalized?.google_state ?? null,
-      p_operation_id: data.idempotencyKey,
-      p_request_hash: `${post.version}`,
-      p_media_urls: mediaUrls,
-      p_search_url: normalized?.search_url ?? null,
-      p_google_update_time: normalized?.google_update_time ?? null,
-    });
+    try {
+      await adminRpcOrThrow("admin_apply_google_post_publish", {
+        p_office_id: data.officeId,
+        p_post_id: data.postId,
+        p_google_post_id: googlePostId,
+        p_google_post_resource_name: resourceName,
+        p_google_state: normalized?.google_state ?? null,
+        p_operation_id: data.idempotencyKey,
+        p_request_hash: `${post.version}`,
+        p_media_urls: mediaUrls,
+        p_search_url: normalized?.search_url ?? null,
+        p_google_update_time: normalized?.google_update_time ?? null,
+        p_actor_user_id: ctx.userId,
+      });
+    } catch (e) {
+      // Google accepted but DARB refused to record it (e.g. the publish lock was
+      // taken over). Surface it as uncertain rather than claiming success; do not
+      // mark FAILED, since another operation may own the post now.
+      console.error(
+        "Persisting Google post publish failed:",
+        (e as Error).message,
+      );
+      return fail(
+        "uncertain",
+        "apply_failed",
+        "Google accepted the post but DARB could not record it. Refresh posts.",
+      );
+    }
 
     return {
       ok: true,
@@ -694,11 +733,12 @@ export const deleteGooglePost = createServerFn({ method: "POST" })
 
     // A draft that never reached Google is removed locally — no Google call.
     if (!post.google_post_id) {
-      await rpcOrThrow(ctx, "admin_mark_google_post_deleted", {
+      await adminRpcOrThrow("admin_mark_google_post_deleted", {
         p_office_id: data.officeId,
         p_post_id: data.postId,
         p_operation_id: null,
         p_google_status: 200,
+        p_actor_user_id: ctx.userId,
       });
       return {
         ok: true,
@@ -755,11 +795,12 @@ export const deleteGooglePost = createServerFn({ method: "POST" })
           : new GbpError("upstream", 0, (e as Error).message);
       // 404 means Google already has no such post: converge instead of failing.
       if (err.status === 404) {
-        await rpcOrThrow(ctx, "admin_mark_google_post_deleted", {
+        await adminRpcOrThrow("admin_mark_google_post_deleted", {
           p_office_id: data.officeId,
           p_post_id: data.postId,
           p_operation_id: null,
           p_google_status: 404,
+          p_actor_user_id: ctx.userId,
         });
         return {
           ok: true,
@@ -781,11 +822,12 @@ export const deleteGooglePost = createServerFn({ method: "POST" })
       );
     }
 
-    await rpcOrThrow(ctx, "admin_mark_google_post_deleted", {
+    await adminRpcOrThrow("admin_mark_google_post_deleted", {
       p_office_id: data.officeId,
       p_post_id: data.postId,
       p_operation_id: null,
       p_google_status: 200,
+      p_actor_user_id: ctx.userId,
     });
     return { ok: true, status: "deleted", errorCode: null, errorMessage: null };
   });

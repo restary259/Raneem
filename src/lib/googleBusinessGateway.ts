@@ -114,9 +114,11 @@ export async function gbpDelete<T>(
 }
 
 /**
- * POST for a Google *create*. Deliberately NOT retried: a 5xx after Google
- * already created the resource would make a replay create a second one. The
- * caller de-duplicates with an idempotency receipt instead.
+ * POST for a Google *create*. Deliberately NOT retried at all: a 5xx OR a
+ * dropped connection after Google already created the resource would make a
+ * replay create a second one, so a network failure must surface as "uncertain"
+ * for the caller to reconcile — never be retried. The caller de-duplicates with
+ * an idempotency receipt instead.
  */
 export async function gbpPost<T>(
   path: string,
@@ -126,13 +128,23 @@ export async function gbpPost<T>(
   sleep: (ms: number) => Promise<void> = (ms) =>
     new Promise((r) => setTimeout(r, ms)),
 ): Promise<T> {
-  return gbpRequest<T>("POST", path, creds, body, fetchImpl, sleep, false);
+  return gbpRequest<T>(
+    "POST",
+    path,
+    creds,
+    body,
+    fetchImpl,
+    sleep,
+    false,
+    false,
+  );
 }
 
 /**
  * POST raw bytes for a Google byte upload (media:startUpload -> upload bytes).
- * Also NOT retried: the upload session is single-use, so a replay would target
- * a spent session rather than harmlessly converge.
+ * Also NOT retried at all: the upload session is single-use, so a replay would
+ * target a spent session, and a dropped connection after Google accepted the
+ * bytes is a "uncertain" outcome the caller must reconcile rather than retry.
  */
 export async function gbpUploadBytes<T>(
   path: string,
@@ -143,38 +155,17 @@ export async function gbpUploadBytes<T>(
   sleep: (ms: number) => Promise<void> = (ms) =>
     new Promise((r) => setTimeout(r, ms)),
 ): Promise<T> {
-  let last: GbpError | null = null;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    let res: Response;
-    try {
-      res = await fetchImpl(`${GBP_GATEWAY_URL}${path}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${creds.lovableKey}`,
-          "X-Connection-Api-Key": creds.connectionKey,
-          "Content-Type": contentType,
-        },
-        // A Uint8Array is a valid fetch body at runtime (undici/Bun); the DOM
-        // lib typing for BodyInit is narrower than the platform.
-        body: bytes as unknown as BodyInit,
-      });
-    } catch (e) {
-      last = new GbpError("network", 0, (e as Error).message);
-      await sleep(250);
-      continue;
-    }
-    if (res.ok) {
-      if (res.status === 204) return undefined as T;
-      const text = await res.text();
-      return (text ? JSON.parse(text) : undefined) as T;
-    }
-    const resBody = await res.text();
-    last = mapGbpError(res.status, resBody);
-    // Only 429 (nothing was applied) is retried.
-    if (res.status !== 429 || attempt === 1) throw last;
-    await sleep(500);
-  }
-  throw last ?? new GbpError("upstream", 0, "Unknown error");
+  return gbpRequest<T>(
+    "POST",
+    path,
+    creds,
+    bytes,
+    fetchImpl,
+    sleep,
+    false,
+    false,
+    contentType,
+  );
 }
 
 async function gbpRequest<T>(
@@ -185,8 +176,11 @@ async function gbpRequest<T>(
   fetchImpl: FetchLike,
   sleep: (ms: number) => Promise<void>,
   retryServerErrors = true,
+  retryNetworkErrors = true,
+  rawContentType?: string,
 ): Promise<T> {
   let last: GbpError | null = null;
+  const isRaw = rawContentType !== undefined;
   for (let attempt = 0; attempt < 3; attempt++) {
     let res: Response;
     try {
@@ -195,12 +189,21 @@ async function gbpRequest<T>(
         headers: {
           Authorization: `Bearer ${creds.lovableKey}`,
           "X-Connection-Api-Key": creds.connectionKey,
-          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+          ...(body === undefined
+            ? {}
+            : { "Content-Type": isRaw ? rawContentType : "application/json" }),
         },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        // A Uint8Array is a valid fetch body at runtime (undici/Bun); the DOM
+        // lib typing for BodyInit is narrower than the platform.
+        ...(body === undefined
+          ? {}
+          : { body: (isRaw ? body : JSON.stringify(body)) as BodyInit }),
       });
     } catch (e) {
       last = new GbpError("network", 0, (e as Error).message);
+      // A non-idempotent create must never replay a dropped connection: the
+      // request may have reached Google and been applied.
+      if (!retryNetworkErrors) throw last;
       await sleep(250 * 2 ** attempt);
       continue;
     }
@@ -356,23 +359,38 @@ export function formatGbpAddress(
  * that keeps handing back the same token, and a hard page ceiling so a
  * misbehaving API cannot loop forever.
  */
+export interface CollectedPages<T> {
+  items: T[];
+  /**
+   * False when the page ceiling stopped the walk while the provider still had a
+   * next token. Callers that reconcile a cached set against the provider MUST
+   * treat an incomplete walk as "do not mark anything missing", or a capped
+   * prefix would delete/flag real resources.
+   */
+  complete: boolean;
+}
+
 export async function collectAllPages<T>(
   fetchPage: (
     pageToken: string | undefined,
   ) => Promise<{ items: T[]; nextPageToken?: string }>,
   maxPages = 20,
-): Promise<T[]> {
+): Promise<CollectedPages<T>> {
   const out: T[] = [];
   const seen = new Set<string>();
   let token: string | undefined;
+  let complete = false;
   for (let page = 0; page < maxPages; page++) {
     const { items, nextPageToken } = await fetchPage(token);
     out.push(...items);
-    if (!nextPageToken || seen.has(nextPageToken)) break;
+    if (!nextPageToken || seen.has(nextPageToken)) {
+      complete = true;
+      break;
+    }
     seen.add(nextPageToken);
     token = nextPageToken;
   }
-  return out;
+  return { items: out, complete };
 }
 
 // ---------------------------------------------------------------------------

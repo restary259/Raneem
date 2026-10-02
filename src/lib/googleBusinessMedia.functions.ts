@@ -73,6 +73,22 @@ async function rpcOrThrow<T>(
   return data as T;
 }
 
+/**
+ * Invokes a service-role-only RPC through the admin client, passing the
+ * authenticated actor explicitly so the RPC can still authorize them. The
+ * connector is the only party that may assert "Google returned this snapshot".
+ */
+async function adminRpcOrThrow<T>(
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc(fn as never, args as never);
+  if (error) throw new Error(error.message || "Request failed");
+  return data as T;
+}
+
 type MappingIdentity = {
   google_account_id: string;
   google_location_id: string;
@@ -186,20 +202,22 @@ export const syncGoogleMedia = createServerFn({ method: "POST" })
     try {
       const identity = await loadOfficeIdentity(ctx, data.officeId);
 
-      const raw = await collectAllPages<GbpRawMedia>(async (pageToken) => {
-        const res = await gbpGet<GbpMediaListResponse>(
-          mediaPath(
-            identity.google_account_id,
-            identity.google_location_id,
-            pageToken,
-          ),
-          creds,
-        );
-        return {
-          items: res.mediaItems ?? [],
-          nextPageToken: res.nextPageToken,
-        };
-      });
+      const { items: raw, complete } = await collectAllPages<GbpRawMedia>(
+        async (pageToken) => {
+          const res = await gbpGet<GbpMediaListResponse>(
+            mediaPath(
+              identity.google_account_id,
+              identity.google_location_id,
+              pageToken,
+            ),
+            creds,
+          );
+          return {
+            items: res.mediaItems ?? [],
+            nextPageToken: res.nextPageToken,
+          };
+        },
+      );
 
       const normalized: NormalizedGbpMedia[] = [];
       for (const item of raw) {
@@ -209,11 +227,14 @@ export const syncGoogleMedia = createServerFn({ method: "POST" })
         if (row) normalized.push(row);
       }
 
-      const applied = await rpcOrThrow<
+      const applied = await adminRpcOrThrow<
         { inserted: number; updated: number; marked_not_found: number }[]
-      >(ctx, "admin_sync_google_media", {
+      >("admin_sync_google_media", {
         p_office_id: data.officeId,
         p_media: normalized,
+        // An incomplete walk must not mark anything NOT_FOUND.
+        p_complete: complete,
+        p_actor_user_id: ctx.userId,
       });
       const counts = applied?.[0];
       return {
@@ -271,8 +292,14 @@ export interface UploadMediaResult {
 
 const uploadInput = z.object({
   officeId: z.string().uuid(),
-  /** Base64 (optionally a data: URL). The server sniffs the real bytes. */
-  dataBase64: z.string().min(16),
+  /**
+   * Base64 (optionally a data: URL). The server sniffs the real bytes. The
+   * length is bounded BEFORE decoding so an oversized payload is rejected by the
+   * schema instead of being expanded into memory first: 14,000,000 base64 chars
+   * decodes to ~10.5 MB, just above the 10 MB byte limit that `validateMediaBytes`
+   * then enforces on the real bytes.
+   */
+  dataBase64: z.string().min(16).max(14_000_000),
   declaredMime: z.string().min(3).max(100).optional(),
   darbCategory: z
     .enum(["cover", "logo", "exterior", "interior", "team", "other"])
@@ -466,12 +493,13 @@ export const uploadGoogleMedia = createServerFn({ method: "POST" })
       storage_path: objectPath,
     };
 
-    const recorded = await rpcOrThrow<
+    const recorded = await adminRpcOrThrow<
       { media_id: string; media_state: string }[]
-    >(ctx, "record_google_media_upload", {
+    >("record_google_media_upload", {
       p_office_id: data.officeId,
       p_operation_id: data.uploadOperationId,
       p_media: payload,
+      p_actor_user_id: ctx.userId,
     });
 
     return {
@@ -567,10 +595,11 @@ export const deleteGoogleMedia = createServerFn({ method: "POST" })
           : new GbpError("upstream", 0, (e as Error).message);
       // 404 means Google already has no such media: converge instead of failing.
       if (err.status === 404) {
-        await rpcOrThrow(ctx, "admin_mark_google_media_deleted", {
+        await adminRpcOrThrow("admin_mark_google_media_deleted", {
           p_office_id: data.officeId,
           p_media_id: data.mediaId,
           p_google_status: 404,
+          p_actor_user_id: ctx.userId,
         });
         return {
           ok: true,
@@ -588,10 +617,11 @@ export const deleteGoogleMedia = createServerFn({ method: "POST" })
       );
     }
 
-    await rpcOrThrow(ctx, "admin_mark_google_media_deleted", {
+    await adminRpcOrThrow("admin_mark_google_media_deleted", {
       p_office_id: data.officeId,
       p_media_id: data.mediaId,
       p_google_status: 200,
+      p_actor_user_id: ctx.userId,
     });
     return { ok: true, status: "deleted", errorCode: null, errorMessage: null };
   });

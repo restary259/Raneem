@@ -185,24 +185,26 @@ export const syncGoogleReviews = createServerFn({ method: "POST" })
       let totalCount: number | null = null;
       const normalized: NormalizedGbpReview[] = [];
 
-      const raw = await collectAllPages<GbpRawReview>(async (pageToken) => {
-        const res = await gbpGet<GbpReviewsListResponse>(
-          reviewsPath(
-            identity.google_account_id,
-            identity.google_location_id,
-            pageToken,
-          ),
-          creds,
-        );
-        // The summary is authoritative on the first page; keep the first value.
-        if (averageRating === null && typeof res.averageRating === "number") {
-          averageRating = res.averageRating;
-        }
-        if (totalCount === null && typeof res.totalReviewCount === "number") {
-          totalCount = res.totalReviewCount;
-        }
-        return { items: res.reviews ?? [], nextPageToken: res.nextPageToken };
-      });
+      const { items: raw } = await collectAllPages<GbpRawReview>(
+        async (pageToken) => {
+          const res = await gbpGet<GbpReviewsListResponse>(
+            reviewsPath(
+              identity.google_account_id,
+              identity.google_location_id,
+              pageToken,
+            ),
+            creds,
+          );
+          // The summary is authoritative on the first page; keep the first value.
+          if (averageRating === null && typeof res.averageRating === "number") {
+            averageRating = res.averageRating;
+          }
+          if (totalCount === null && typeof res.totalReviewCount === "number") {
+            totalCount = res.totalReviewCount;
+          }
+          return { items: res.reviews ?? [], nextPageToken: res.nextPageToken };
+        },
+      );
 
       for (const item of raw) {
         const row = normalizeGbpReview(item, {

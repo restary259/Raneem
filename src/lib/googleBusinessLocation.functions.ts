@@ -119,7 +119,7 @@ export const discoverGoogleBusinessLocations = createServerFn({
 
     try {
       // 1. Accounts visible to the connection.
-      const accounts = await collectAllPages<{
+      const { items: accounts } = await collectAllPages<{
         name?: string;
         accountName?: string;
       }>(async (pageToken) => {
@@ -141,21 +141,23 @@ export const discoverGoogleBusinessLocations = createServerFn({
       //    verified it came from — never a client-supplied account id.
       const normalized: NormalizedGbpLocation[] = [];
       for (const account of accountSummaries) {
-        const raw = await collectAllPages<GbpRawLocation>(async (pageToken) => {
-          const q = new URLSearchParams({
-            pageSize: "100",
-            readMask: GBP_LOCATION_READ_MASK,
-          });
-          if (pageToken) q.set("pageToken", pageToken);
-          const res = await gbpGet<{
-            locations?: GbpRawLocation[];
-            nextPageToken?: string;
-          }>(`/business_information/v1/${account.name}/locations?${q}`, creds);
-          return {
-            items: res.locations ?? [],
-            nextPageToken: res.nextPageToken,
-          };
-        });
+        const { items: raw } = await collectAllPages<GbpRawLocation>(
+          async (pageToken) => {
+            const q = new URLSearchParams({
+              pageSize: "100",
+              readMask: GBP_LOCATION_READ_MASK,
+            });
+            if (pageToken) q.set("pageToken", pageToken);
+            const res = await gbpGet<{
+              locations?: GbpRawLocation[];
+              nextPageToken?: string;
+            }>(`/business_information/v1/${account.name}/locations?${q}`, creds);
+            return {
+              items: res.locations ?? [],
+              nextPageToken: res.nextPageToken,
+            };
+          },
+        );
         for (const loc of raw) {
           const row = normalizeGbpLocation(account.name, loc);
           if (row) normalized.push(row);

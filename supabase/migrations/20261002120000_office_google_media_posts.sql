@@ -877,7 +877,9 @@ GRANT EXECUTE ON FUNCTION public.begin_google_media_upload(uuid, text, text) TO 
 CREATE OR REPLACE FUNCTION public.record_google_media_upload(
   p_office_id uuid,
   p_operation_id text,
-  p_media jsonb
+  p_media jsonb,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (media_id uuid, media_state text)
 LANGUAGE plpgsql
@@ -885,17 +887,20 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_location_id text;
   v_account_id text;
   v_media_id uuid;
   v_state text;
   v_row jsonb;
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_MANAGE_MEDIA')
-  ) THEN
+  -- Recording a Google media upload asserts "Google accepted this". That
+  -- assertion must come from the connector, so this RPC is service-role only.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_MANAGE_MEDIA') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -988,8 +993,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.record_google_media_upload(uuid, text, jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.record_google_media_upload(uuid, text, jsonb) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.record_google_media_upload(uuid, text, jsonb, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.record_google_media_upload(uuid, text, jsonb, uuid) TO service_role;
 
 -- The upload failed after begin: release the receipt so a retry is allowed.
 CREATE OR REPLACE FUNCTION public.fail_google_media_upload(
@@ -1450,7 +1455,9 @@ GRANT EXECUTE ON FUNCTION public.resolve_google_post_office(uuid, uuid) TO authe
 CREATE OR REPLACE FUNCTION public.admin_mark_google_media_deleted(
   p_office_id uuid,
   p_media_id uuid,
-  p_google_status integer DEFAULT 200
+  p_google_status integer DEFAULT 200,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (media_id uuid, media_state text)
 LANGUAGE plpgsql
@@ -1458,15 +1465,18 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_origin text;
   v_google_media_id text;
   v_location_id text;
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_MANAGE_MEDIA')
-  ) THEN
+  -- Recording a Google media deletion asserts "Google removed this". That
+  -- assertion must come from the connector, so this RPC is service-role only.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_MANAGE_MEDIA') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -1504,8 +1514,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_mark_google_media_deleted(uuid, uuid, integer) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_mark_google_media_deleted(uuid, uuid, integer) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_mark_google_media_deleted(uuid, uuid, integer, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_mark_google_media_deleted(uuid, uuid, integer, uuid) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- 11. Media sync — upsert Google's media, mark what Google no longer returns
@@ -1513,7 +1523,12 @@ GRANT EXECUTE ON FUNCTION public.admin_mark_google_media_deleted(uuid, uuid, int
 
 CREATE OR REPLACE FUNCTION public.admin_sync_google_media(
   p_office_id uuid,
-  p_media jsonb
+  p_media jsonb,
+  -- False when the caller's pagination walk was capped with a token remaining.
+  -- An incomplete set must never drive the "Google no longer returns it" sweep.
+  p_complete boolean DEFAULT true,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (inserted integer, updated integer, marked_not_found integer)
 LANGUAGE plpgsql
@@ -1521,7 +1536,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_location_id text;
   v_account_id text;
   v_item jsonb;
@@ -1532,10 +1547,14 @@ DECLARE
   v_nf integer := 0;
   v_seen text[] := ARRAY[]::text[];
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_SYNC_MEDIA')
-  ) THEN
+  -- This RPC persists a caller-supplied Google snapshot, so only the
+  -- service-role connector may call it; the connector passes the authenticated
+  -- actor as p_actor_user_id. Authorization still runs against that actor.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_SYNC_MEDIA') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -1618,14 +1637,17 @@ BEGIN
     END IF;
   END LOOP;
 
-  -- Media Google no longer returns: mark NOT_FOUND (never delete).
-  UPDATE public.google_business_media
-  SET media_state = 'NOT_FOUND', updated_at = now()
-  WHERE office_id = p_office_id
-    AND google_location_id = v_location_id
-    AND media_state IN ('PUBLISHED','PROCESSING','SUBMITTED')
-    AND NOT (google_media_id = ANY (v_seen));
-  GET DIAGNOSTICS v_nf = ROW_COUNT;
+  -- Media Google no longer returns: mark NOT_FOUND (never delete). Only a
+  -- COMPLETE walk may drive this sweep — a capped prefix would flag real media.
+  IF COALESCE(p_complete, true) THEN
+    UPDATE public.google_business_media
+    SET media_state = 'NOT_FOUND', updated_at = now()
+    WHERE office_id = p_office_id
+      AND google_location_id = v_location_id
+      AND media_state IN ('PUBLISHED','PROCESSING','SUBMITTED')
+      AND NOT (google_media_id = ANY (v_seen));
+    GET DIAGNOSTICS v_nf = ROW_COUNT;
+  END IF;
 
   UPDATE public.office_google_profiles
   SET media_last_synced_at = now(),
@@ -1650,8 +1672,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_sync_google_media(uuid, jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_sync_google_media(uuid, jsonb) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_sync_google_media(uuid, jsonb, boolean, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_sync_google_media(uuid, jsonb, boolean, uuid) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.admin_mark_google_media_sync_error(
   p_office_id uuid,
@@ -1819,8 +1841,10 @@ BEGIN
       USING ERRCODE = 'insufficient_privilege';
   END IF;
 
-  IF v_status IN ('DELETE_PENDING','DELETED') THEN
-    RAISE EXCEPTION 'A deleted post cannot be edited'
+  -- A publish in flight will write Google's id and content hash back onto this
+  -- row; an edit now would race it and be silently overwritten, so refuse it.
+  IF v_status IN ('DELETE_PENDING','DELETED','PUBLISHING') THEN
+    RAISE EXCEPTION 'A post cannot be edited while it is being published or deleted'
       USING ERRCODE = 'invalid_parameter_value';
   END IF;
 
@@ -1919,11 +1943,14 @@ BEGIN
   UPDATE public.google_business_posts
   SET publish_locked_at = now(),
       publish_operation_id = p_operation_id,
-      status = CASE WHEN status = 'DRAFT' THEN 'PUBLISHING' ELSE status END,
+      status = CASE WHEN status IN ('DRAFT','PUBLISHING') THEN 'PUBLISHING' ELSE status END,
       updated_at = now()
   WHERE id = p_post_id
     AND office_id = p_office_id
-    AND status NOT IN ('PUBLISHING','DELETE_PENDING','DELETED')
+    -- A live publish/delete is never stolen. A PUBLISHING row whose lock has
+    -- gone stale (the connector crashed after Google accepted but before the
+    -- result was recorded) IS reclaimable, so the post cannot wedge forever.
+    AND status NOT IN ('DELETE_PENDING','DELETED')
     AND (
       publish_locked_at IS NULL
       OR publish_locked_at < now() - make_interval(secs => GREATEST(p_stale_after_seconds, 30))
@@ -2014,7 +2041,9 @@ CREATE OR REPLACE FUNCTION public.admin_apply_google_post_publish(
   p_request_hash text,
   p_media_urls text[] DEFAULT ARRAY[]::text[],
   p_search_url text DEFAULT NULL,
-  p_google_update_time timestamptz DEFAULT NULL
+  p_google_update_time timestamptz DEFAULT NULL,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (post_id uuid, status text, version integer, published_at timestamptz)
 LANGUAGE plpgsql
@@ -2022,23 +2051,28 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_office_id uuid;
   v_status text;
   v_version integer;
   v_location_id text;
+  v_lock_operation text;
   v_published timestamptz := now();
   v_result jsonb;
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_MANAGE_POSTS')
-  ) THEN
+  -- Recording a successful publish asserts "Google accepted this create/patch".
+  -- That assertion must come from the connector, so this RPC is service-role
+  -- only; an Admin's own in-browser session cannot forge a published post.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
-  SELECT p.office_id, p.status, p.version, p.google_location_id
-  INTO v_office_id, v_status, v_version, v_location_id
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_MANAGE_POSTS') THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  SELECT p.office_id, p.status, p.version, p.google_location_id, p.publish_operation_id
+  INTO v_office_id, v_status, v_version, v_location_id, v_lock_operation
   FROM public.google_business_posts p WHERE p.id = p_post_id;
 
   IF v_office_id IS NULL THEN
@@ -2048,6 +2082,14 @@ BEGIN
   IF v_office_id <> p_office_id THEN
     RAISE EXCEPTION 'Post does not belong to this office'
       USING ERRCODE = 'insufficient_privilege';
+  END IF;
+
+  -- A success may only be recorded for the publish operation that holds the
+  -- lock. A late/duplicate call for an older operation is refused so it cannot
+  -- stamp a Google id onto a post another operation has since taken over.
+  IF v_lock_operation IS DISTINCT FROM p_operation_id THEN
+    RAISE EXCEPTION 'Publish lock is held by a different operation'
+      USING ERRCODE = 'serialization_failure';
   END IF;
 
   UPDATE public.google_business_posts
@@ -2098,15 +2140,17 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_apply_google_post_publish(uuid, uuid, text, text, text, text, text, text[], text, timestamptz) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_apply_google_post_publish(uuid, uuid, text, text, text, text, text, text[], text, timestamptz) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_apply_google_post_publish(uuid, uuid, text, text, text, text, text, text[], text, timestamptz, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_apply_google_post_publish(uuid, uuid, text, text, text, text, text, text[], text, timestamptz, uuid) TO service_role;
 
 -- Persist a failed publish: the draft is retained, status FAILED, lock released.
 CREATE OR REPLACE FUNCTION public.admin_mark_google_post_publish_failed(
   p_office_id uuid,
   p_post_id uuid,
   p_error_code text,
-  p_error_message text
+  p_error_message text,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -2114,13 +2158,16 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_location_id text;
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_MANAGE_POSTS')
-  ) THEN
+  -- Recording a publish outcome asserts "Google rejected/accepted this". That
+  -- assertion must come from the connector, so this RPC is service-role only.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_MANAGE_POSTS') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -2157,8 +2204,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_mark_google_post_publish_failed(uuid, uuid, text, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_mark_google_post_publish_failed(uuid, uuid, text, text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_mark_google_post_publish_failed(uuid, uuid, text, text, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_mark_google_post_publish_failed(uuid, uuid, text, text, uuid) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- 16. Post delete — after Google confirms
@@ -2240,7 +2287,9 @@ CREATE OR REPLACE FUNCTION public.admin_mark_google_post_deleted(
   p_office_id uuid,
   p_post_id uuid,
   p_operation_id text DEFAULT NULL,
-  p_google_status integer DEFAULT 200
+  p_google_status integer DEFAULT 200,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (post_id uuid, status text)
 LANGUAGE plpgsql
@@ -2248,16 +2297,19 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_office_id uuid;
   v_location_id text;
   v_was_draft boolean;
   v_result jsonb;
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_MANAGE_POSTS')
-  ) THEN
+  -- Recording a Google post deletion asserts "Google removed this". That
+  -- assertion must come from the connector, so this RPC is service-role only.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_MANAGE_POSTS') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -2309,8 +2361,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_mark_google_post_deleted(uuid, uuid, text, integer) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_mark_google_post_deleted(uuid, uuid, text, integer) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_mark_google_post_deleted(uuid, uuid, text, integer, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_mark_google_post_deleted(uuid, uuid, text, integer, uuid) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- 17. Posts sync — upsert Google's posts, mark externally-deleted ones
@@ -2318,7 +2370,12 @@ GRANT EXECUTE ON FUNCTION public.admin_mark_google_post_deleted(uuid, uuid, text
 
 CREATE OR REPLACE FUNCTION public.admin_sync_google_posts(
   p_office_id uuid,
-  p_posts jsonb
+  p_posts jsonb,
+  -- False when the caller's pagination walk was capped with a token remaining.
+  -- An incomplete set must never drive the "Google no longer returns it" sweep.
+  p_complete boolean DEFAULT true,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (inserted integer, updated integer, marked_deleted integer)
 LANGUAGE plpgsql
@@ -2326,7 +2383,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_location_id text;
   v_account_id text;
   v_item jsonb;
@@ -2336,11 +2393,18 @@ DECLARE
   v_upd integer := 0;
   v_del integer := 0;
   v_seen text[] := ARRAY[]::text[];
+  v_existing public.google_business_posts%ROWTYPE;
+  v_incoming_hash text;
+  v_local_authoritative boolean;
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_SYNC_POSTS')
-  ) THEN
+  -- This RPC persists a caller-supplied Google snapshot, so only the
+  -- service-role connector may call it; the connector passes the authenticated
+  -- actor as p_actor_user_id. Authorization still runs against that actor.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_SYNC_POSTS') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -2366,12 +2430,12 @@ BEGIN
     END IF;
     v_seen := v_seen || (v_item->>'google_post_id');
 
-    SELECT p.id INTO v_existing
+    SELECT p.* INTO v_existing
     FROM public.google_business_posts p
     WHERE p.google_location_id = v_location_id
       AND p.google_post_id = v_item->>'google_post_id';
 
-    IF v_existing IS NULL THEN
+    IF v_existing.id IS NULL THEN
       INSERT INTO public.google_business_posts (
         office_id, google_account_id, google_location_id,
         google_post_id, google_post_resource_name,
@@ -2412,44 +2476,91 @@ BEGIN
       RETURNING id INTO v_post_id;
       v_ins := v_ins + 1;
     ELSE
+      -- DARB may hold an un-pushed local edit (a FAILED publish, or a draft of a
+      -- published post). Never let Google's older copy silently overwrite it:
+      -- only adopt Google's content when DARB has not diverged from what it last
+      -- synced. `google_post_content` ignores `version`, so `last_synced_hash`
+      -- is the identity of "what DARB last saw".
+      v_incoming_hash := public.google_post_hash(public.google_post_content(v_item));
+      v_local_authoritative :=
+        v_existing.last_synced_hash IS NOT NULL
+        AND public.google_post_hash(public.google_post_content(
+              jsonb_build_object(
+                'topic_type', v_existing.topic_type,
+                'language_code', v_existing.language_code,
+                'summary', v_existing.summary,
+                'cta_type', v_existing.cta_type,
+                'cta_url', v_existing.cta_url,
+                'event_title', v_existing.event_title,
+                'event_start', v_existing.event_start,
+                'event_end', v_existing.event_end,
+                'offer_coupon_code', v_existing.offer_coupon_code,
+                'offer_url', v_existing.offer_url,
+                'offer_terms', v_existing.offer_terms,
+                'media_ids', to_jsonb(v_existing.media_ids)
+              ))) <> v_existing.last_synced_hash;
+
       UPDATE public.google_business_posts p
-      SET topic_type = COALESCE(NULLIF(v_item->>'topic_type',''), p.topic_type),
-          language_code = COALESCE(NULLIF(v_item->>'language_code',''), p.language_code),
-          summary = COALESCE(NULLIF(v_item->>'summary',''), p.summary),
-          cta_type = COALESCE(NULLIF(v_item->>'cta_type',''), p.cta_type),
-          cta_url = COALESCE(NULLIF(v_item->>'cta_url',''), p.cta_url),
-          event_title = COALESCE(NULLIF(v_item->>'event_title',''), p.event_title),
-          event_start = COALESCE(NULLIF(v_item->>'event_start','')::timestamptz, p.event_start),
-          event_end = COALESCE(NULLIF(v_item->>'event_end','')::timestamptz, p.event_end),
-          offer_coupon_code = COALESCE(NULLIF(v_item->>'offer_coupon_code',''), p.offer_coupon_code),
-          offer_url = COALESCE(NULLIF(v_item->>'offer_url',''), p.offer_url),
-          offer_terms = COALESCE(NULLIF(v_item->>'offer_terms',''), p.offer_terms),
-          media_urls = COALESCE(
-            (SELECT array_agg(x) FROM jsonb_array_elements_text(COALESCE(v_item->'media_urls','[]'::jsonb)) x),
-            p.media_urls),
+      SET topic_type = CASE WHEN v_local_authoritative THEN p.topic_type
+                            ELSE COALESCE(NULLIF(v_item->>'topic_type',''), p.topic_type) END,
+          language_code = CASE WHEN v_local_authoritative THEN p.language_code
+                               ELSE COALESCE(NULLIF(v_item->>'language_code',''), p.language_code) END,
+          summary = CASE WHEN v_local_authoritative THEN p.summary
+                         ELSE COALESCE(NULLIF(v_item->>'summary',''), p.summary) END,
+          cta_type = CASE WHEN v_local_authoritative THEN p.cta_type
+                          ELSE COALESCE(NULLIF(v_item->>'cta_type',''), p.cta_type) END,
+          cta_url = CASE WHEN v_local_authoritative THEN p.cta_url
+                         ELSE COALESCE(NULLIF(v_item->>'cta_url',''), p.cta_url) END,
+          event_title = CASE WHEN v_local_authoritative THEN p.event_title
+                             ELSE COALESCE(NULLIF(v_item->>'event_title',''), p.event_title) END,
+          event_start = CASE WHEN v_local_authoritative THEN p.event_start
+                             ELSE COALESCE(NULLIF(v_item->>'event_start','')::timestamptz, p.event_start) END,
+          event_end = CASE WHEN v_local_authoritative THEN p.event_end
+                           ELSE COALESCE(NULLIF(v_item->>'event_end','')::timestamptz, p.event_end) END,
+          offer_coupon_code = CASE WHEN v_local_authoritative THEN p.offer_coupon_code
+                                   ELSE COALESCE(NULLIF(v_item->>'offer_coupon_code',''), p.offer_coupon_code) END,
+          offer_url = CASE WHEN v_local_authoritative THEN p.offer_url
+                           ELSE COALESCE(NULLIF(v_item->>'offer_url',''), p.offer_url) END,
+          offer_terms = CASE WHEN v_local_authoritative THEN p.offer_terms
+                             ELSE COALESCE(NULLIF(v_item->>'offer_terms',''), p.offer_terms) END,
+          media_urls = CASE WHEN v_local_authoritative THEN p.media_urls
+                            ELSE COALESCE(
+                              (SELECT array_agg(x) FROM jsonb_array_elements_text(COALESCE(v_item->'media_urls','[]'::jsonb)) x),
+                              p.media_urls) END,
           google_state = COALESCE(NULLIF(v_item->>'google_state',''), p.google_state),
           search_url = COALESCE(NULLIF(v_item->>'search_url',''), p.search_url),
-          -- Google no longer returns it -> it was removed externally. Never
-          -- leave a removed post reading PUBLISHED forever.
-          status = CASE WHEN p.status = 'DELETED' THEN p.status ELSE 'PUBLISHED' END,
+          -- A locally-FAILED publish must not read PUBLISHED just because Google
+          -- still returns the old post; only a non-divergent row is reconciled.
+          status = CASE
+            WHEN p.status = 'DELETED' THEN p.status
+            WHEN v_local_authoritative AND p.status = 'FAILED' THEN 'FAILED'
+            ELSE 'PUBLISHED'
+          END,
           google_update_time = COALESCE(NULLIF(v_item->>'google_update_time','')::timestamptz, p.google_update_time),
           last_synced_at = now(),
           updated_at = now(),
-          last_synced_hash = public.google_post_hash(public.google_post_content(v_item))
-      WHERE p.id = v_existing;
+          -- When DARB holds the newer content, keep the baseline so the conflict
+          -- stays detectable (and republishable) until it is resolved.
+          last_synced_hash = CASE WHEN v_local_authoritative THEN p.last_synced_hash
+                                  ELSE v_incoming_hash END
+      WHERE p.id = v_existing.id;
       v_upd := v_upd + 1;
     END IF;
   END LOOP;
 
   -- Posts Google no longer returns: mark DELETED_EXTERNALLY (never delete).
-  UPDATE public.google_business_posts
-  SET status = 'DELETED_EXTERNALLY', deleted_at = now(), updated_at = now()
-  WHERE office_id = p_office_id
-    AND google_location_id = v_location_id
-    AND status = 'PUBLISHED'
-    AND google_post_id IS NOT NULL
-    AND NOT (google_post_id = ANY (v_seen));
-  GET DIAGNOSTICS v_del = ROW_COUNT;
+  -- Only a COMPLETE walk may drive this sweep — a capped prefix would mark real
+  -- posts externally deleted.
+  IF COALESCE(p_complete, true) THEN
+    UPDATE public.google_business_posts
+    SET status = 'DELETED_EXTERNALLY', deleted_at = now(), updated_at = now()
+    WHERE office_id = p_office_id
+      AND google_location_id = v_location_id
+      AND status = 'PUBLISHED'
+      AND google_post_id IS NOT NULL
+      AND NOT (google_post_id = ANY (v_seen));
+    GET DIAGNOSTICS v_del = ROW_COUNT;
+  END IF;
 
   UPDATE public.office_google_profiles
   SET posts_last_synced_at = now(),
@@ -2474,8 +2585,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_sync_google_posts(uuid, jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_sync_google_posts(uuid, jsonb) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_sync_google_posts(uuid, jsonb, boolean, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_sync_google_posts(uuid, jsonb, boolean, uuid) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.admin_mark_google_posts_sync_error(
   p_office_id uuid,
