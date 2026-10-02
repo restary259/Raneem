@@ -6414,6 +6414,8 @@
       "GOOGLE_PERFORMANCE_STALE": "The stored performance data is stale. Run a sync.",
       "not_linked": "Google Business is not connected for this office.",
       "locked": "A sync is already running for this office."
-    }
+    },
+    "month": "Month",
+    "keywordsLagging": "Search keyword data did not sync and will retry on the next sync."
   }
 }

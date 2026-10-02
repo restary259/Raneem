@@ -52,11 +52,13 @@ import {
   expectedDataThrough,
   formatCount,
   formatInsightsValue,
+  formatMonth,
   groupSeriesByDate,
   METRIC_LABEL_KEYS,
   googlePerformanceHealth,
   officeToday,
   percentChange,
+  previousMonths,
   previousPeriod,
   resolveDateRange,
   type InsightsPreset,
@@ -90,6 +92,8 @@ import type {
 } from "@/types/googleBusiness";
 
 const KEYWORD_PAGE_SIZE = 25;
+/** Months of keyword history shown; matches the sync's keyword backfill. */
+const KEYWORD_MONTHS = 6;
 
 const CHART_COLORS = {
   search: "#2563eb",
@@ -164,6 +168,7 @@ export default function TeamGoogleInsightsPage() {
   const [keywordSearchInput, setKeywordSearchInput] = useState("");
   const [keywordSearch, setKeywordSearch] = useState("");
   const [jobs, setJobs] = useState<GooglePerformanceSyncJob[]>([]);
+  const [keywordError, setKeywordError] = useState<string | null>(null);
   const [aggregate, setAggregate] = useState<GooglePerformanceAggregateRow[]>(
     [],
   );
@@ -309,10 +314,18 @@ export default function TeamGoogleInsightsPage() {
   const loadKeywords = useCallback(
     async (offset: number, search: string, append: boolean) => {
       if (!selected || isAll || !range) return;
+      // Keywords are monthly and their own data domain, so their window is a
+      // month range, not the metrics preset: a 7-day metrics view still shows
+      // the recent months of search discovery.
+      const months = previousMonths(
+        range.endDate.slice(0, 7) + "-01",
+        KEYWORD_MONTHS - 1,
+      );
+      const startMonth = months[months.length - 1];
       const rows = await runKeywords({
         data: {
           officeId: selected,
-          startMonth: range.startDate.slice(0, 7) + "-01",
+          startMonth,
           endMonth: range.endDate.slice(0, 7) + "-01",
           search: search || undefined,
           limit: KEYWORD_PAGE_SIZE,
@@ -321,6 +334,7 @@ export default function TeamGoogleInsightsPage() {
         },
       });
       setKeywords((prev) => (append ? [...prev, ...rows] : rows));
+      setKeywordError(null);
       // Keep the last known total when an append page comes back empty rather
       // than hiding "Load more" by zeroing the count.
       if (rows.length > 0 || !append) {
@@ -332,8 +346,15 @@ export default function TeamGoogleInsightsPage() {
   );
 
   useEffect(() => {
-    loadKeywords(0, keywordSearch, false).catch(() => setKeywords([]));
-  }, [loadKeywords, keywordSearch]);
+    if (!selected || isAll || !range) return;
+    loadKeywords(0, keywordSearch, false).catch((error) => {
+      // A failed read is not an empty dataset: surface it distinctly instead of
+      // rendering "no data" (AGENTS.md: never launder query errors into []).
+      setKeywordError(errorMessage(error) || t("googleInsights.loadError"));
+      setKeywords([]);
+      setKeywordTotal(0);
+    });
+  }, [isAll, keywordSearch, loadKeywords, range, selected, t]);
 
   // -------------------------------------------------------------------------
   // Actions
@@ -351,7 +372,9 @@ export default function TeamGoogleInsightsPage() {
           }),
         });
       } else if (result.status === "partial") {
-        toast({ description: t("googleInsights.partialSync") });
+        // "partial" means the keyword phase lagged, so do not claim metrics
+        // synced when a later reordering could make this fire on a metrics miss.
+        toast({ description: t("googleInsights.keywordsLagging") });
       } else if (result.status === "locked") {
         toast({
           variant: "destructive",
@@ -811,6 +834,9 @@ export default function TeamGoogleInsightsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                {t("googleInsights.websiteClicks")}
+              </p>
               {aggregate
                 .slice()
                 .sort(
@@ -988,7 +1014,11 @@ export default function TeamGoogleInsightsPage() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {keywords.length === 0 ? (
+                  {keywordError ? (
+                    <p className="py-6 text-center text-sm text-destructive">
+                      {keywordError}
+                    </p>
+                  ) : keywords.length === 0 ? (
                     <p className="py-6 text-center text-sm text-muted-foreground">
                       {t("googleInsights.noData")}
                     </p>
@@ -999,6 +1029,7 @@ export default function TeamGoogleInsightsPage() {
                           <TableHead>
                             {t("googleInsights.searchKeyword")}
                           </TableHead>
+                          <TableHead>{t("googleInsights.month")}</TableHead>
                           <TableHead className="text-end">
                             {t("googleInsights.impressions")}
                           </TableHead>
@@ -1009,6 +1040,9 @@ export default function TeamGoogleInsightsPage() {
                           <TableRow key={row.id}>
                             <TableCell className="truncate">
                               {row.search_keyword}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap text-muted-foreground">
+                              {formatMonth(row.month, locale)}
                             </TableCell>
                             <TableCell className="text-end tabular-nums">
                               {row.insights_value_type === "THRESHOLD" ? (

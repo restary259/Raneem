@@ -19,6 +19,7 @@ import {
   addDaysIso,
   daysBetweenInclusive,
   firstOfMonth,
+  keywordSyncMonths,
   officeToday,
   resolveMonthRange,
 } from "@/lib/googlePerformance";
@@ -407,6 +408,8 @@ export const recordGooglePerformanceAudit = createServerFn({ method: "POST" })
 const RECENT_SYNC_DAYS = 7;
 /** A backfill never silently runs for a decade; the server clamps the span. */
 const MAX_BACKFILL_DAYS = 550;
+/** Months of keyword history a sync refreshes (one Google request per month). */
+const KEYWORD_BACKFILL_MONTHS = 5;
 const SYNC_RETRY_ATTEMPTS = 3;
 
 export type PerformanceSyncResult = {
@@ -664,37 +667,47 @@ async function syncKeywordsPhase(
     creds: { lovableKey: string; connectionKey: string };
   },
 ): Promise<SyncPhaseResult<{ inserted: number; updated: number }>> {
-  const { startMonth, endMonth } = resolveMonthRange(6, args.timeZone);
+  // Google's keyword endpoint AGGREGATES impressions across the whole
+  // `monthlyRange` and returns no per-month field, so a multi-month request
+  // cannot be attributed to any single month. Fetch one month per request and
+  // store each month's own value, so a row's `month` is truthful.
+  const { endMonth } = resolveMonthRange(1, args.timeZone);
+  const months = keywordSyncMonths(endMonth, KEYWORD_BACKFILL_MONTHS);
   const jobId = await rpcOrThrow<string>(
     ctx,
     "admin_create_google_performance_sync_job",
     {
       p_office_id: args.officeId,
       p_sync_type: "KEYWORDS",
-      p_start_date: startMonth,
+      p_start_date: months[months.length - 1],
       p_end_date: endMonth,
     },
   );
 
   const fetched = await withRetry(async () => {
-    return collectAllPages<
-      ReturnType<typeof normalizeSearchKeywordCounts>[number]
-    >(async (pageToken) => {
-      const res = await gbpGet<GbpSearchKeywordResponse>(
-        searchKeywordsPath(
-          args.locationId,
-          startMonth,
-          endMonth,
-          pageToken,
-          GBP_KEYWORD_PAGE_SIZE,
-        ),
-        args.creds,
-      );
-      return {
-        items: normalizeSearchKeywordCounts(res),
-        nextPageToken: res.nextPageToken ?? undefined,
-      };
-    });
+    const collected: ReturnType<typeof normalizeSearchKeywordCounts> = [];
+    for (const month of months) {
+      const rows = await collectAllPages<
+        ReturnType<typeof normalizeSearchKeywordCounts>[number]
+      >(async (pageToken) => {
+        const res = await gbpGet<GbpSearchKeywordResponse>(
+          searchKeywordsPath(
+            args.locationId,
+            month,
+            month,
+            pageToken,
+            GBP_KEYWORD_PAGE_SIZE,
+          ),
+          args.creds,
+        );
+        return {
+          items: normalizeSearchKeywordCounts(res),
+          nextPageToken: res.nextPageToken ?? undefined,
+        };
+      });
+      for (const row of rows) collected.push({ ...row, month });
+    }
+    return collected;
   });
 
   if (!fetched.ok) {
@@ -707,14 +720,10 @@ async function syncKeywordsPhase(
     return fetched;
   }
 
-  // Google aggregates keyword impressions across the requested month range and
-  // does not return a per-month field, so the rows are stored against the last
-  // month of the range and labelled as such in the UI.
-  const rows = fetched.value.map((row) => ({ ...row, month: endMonth }));
   const saved = await rpcOrThrow<{ inserted: number; updated: number }[]>(
     ctx,
     "admin_complete_google_performance_keywords_job",
-    { p_job_id: jobId, p_rows: rows, p_month: endMonth },
+    { p_job_id: jobId, p_rows: fetched.value, p_month: endMonth },
   );
   return { ok: true, value: saved?.[0] ?? { inserted: 0, updated: 0 } };
 }

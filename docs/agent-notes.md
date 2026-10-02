@@ -3408,8 +3408,15 @@ verified non-vacuous by reintroducing the defect).
   `connectNulls={false}` keeps a missing day a gap in the chart.
 - **A keyword threshold is never an exact number.** Google returns a union of
   `value`/`threshold`; `normalizeSearchKeywordCounts` keeps the type and the UI
-  renders `<15`. Keywords are monthly (the endpoint has no per-month field), so a
-  sync stores the last month of the resolved range and labels it as such.
+  renders `<15`.
+- **Keywords are fetched one month at a time.** The endpoint AGGREGATES over the
+  whole `monthlyRange` and returns no per-month field, so a multi-month request
+  cannot be attributed to any month. `keywordSyncMonths` (current + 5 prior) is
+  fetched as one single-month request per month, each stored under its own
+  `month`; the keyword table shows a Month column. Keyword reads use their own
+  rolling 6-month window, not the metrics preset, so a 7-day view still shows
+  search discovery. A failed keyword read surfaces an error, never an empty
+  table (no laundering query errors into `[]`).
 - **Period comparison is DARB's, and labelled so.** `percentChange` returns null
   for a zero baseline ("No previous baseline"), never infinite growth; cards say
   "vs previous period". Admin "All offices" is explicitly badged

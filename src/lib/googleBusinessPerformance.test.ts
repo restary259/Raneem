@@ -10,10 +10,14 @@ import {
   daysBetweenInclusive,
   expectedDataThrough,
   formatInsightsValue,
+  formatMonth,
   googlePerformanceHealth,
   groupSeriesByDate,
+  keywordSyncMonths,
+  monthsInRange,
   officeToday,
   percentChange,
+  previousMonths,
   previousPeriod,
   resolveDateRange,
   resolveMonthRange,
@@ -196,6 +200,49 @@ describe("date helpers (office timezone)", () => {
     );
     expect(endMonth).toBe("2026-10-01");
     expect(startMonth).toBe("2026-05-01");
+  });
+
+  it("lists each month in a range so keywords can be fetched per month", () => {
+    // Google aggregates over the whole monthlyRange, so the sync must request
+    // one month at a time and store that month's own value.
+    expect(monthsInRange("2026-08-01", "2026-10-01")).toEqual([
+      "2026-08-01",
+      "2026-09-01",
+      "2026-10-01",
+    ]);
+    expect(monthsInRange("2026-11-01", "2027-02-01")).toEqual([
+      "2026-11-01",
+      "2026-12-01",
+      "2027-01-01",
+      "2027-02-01",
+    ]);
+  });
+
+  it("lists the months immediately before a month, newest first", () => {
+    expect(previousMonths("2026-10-01", 5)).toEqual([
+      "2026-09-01",
+      "2026-08-01",
+      "2026-07-01",
+      "2026-06-01",
+      "2026-05-01",
+    ]);
+    expect(previousMonths("2026-01-01", 2)).toEqual([
+      "2025-12-01",
+      "2025-11-01",
+    ]);
+  });
+
+  it("builds the sync's per-month fetch list, current month first", () => {
+    expect(keywordSyncMonths("2026-10-01", 2)).toEqual([
+      "2026-10-01",
+      "2026-09-01",
+      "2026-08-01",
+    ]);
+  });
+
+  it("labels a keyword month for display", () => {
+    expect(formatMonth("2026-09-01", "en")).toMatch(/September 2026/);
+    expect(formatMonth(null, "en")).toBe("—");
   });
 
   it("treats yesterday as the newest data Google could have reported", () => {

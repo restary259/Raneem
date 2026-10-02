@@ -115,6 +115,46 @@ export function resolveMonthRange(
   };
 }
 
+/** The list of months in a range, inclusive, as first-of-month ISO dates. */
+export function monthsInRange(
+  startMonth: string,
+  endMonth: string,
+  maxMonths = 24,
+): string[] {
+  const months: string[] = [];
+  let cursor = firstOfMonth(startMonth);
+  const end = firstOfMonth(endMonth);
+  while (cursor <= end && months.length < maxMonths) {
+    months.push(cursor);
+    const [y, m] = cursor.split("-").map(Number);
+    cursor = toIso(y + Math.floor(m / 12), (m % 12) + 1, 1);
+  }
+  return months;
+}
+
+/** The `count` months immediately before `month` (exclusive of `month`). */
+export function previousMonths(month: string, count: number): string[] {
+  const [y, m] = firstOfMonth(month).split("-").map(Number);
+  const out: string[] = [];
+  for (let i = 1; i <= count; i++) {
+    const d = new Date(Date.UTC(y, m - 1 - i, 1));
+    out.push(toIso(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+  }
+  return out;
+}
+
+/**
+ * The months a keyword sync fetches: the current month plus `backfill` prior
+ * months. Google aggregates over the whole `monthlyRange`, so each is fetched
+ * as its own single-month request and stored against that month.
+ */
+export function keywordSyncMonths(
+  endMonth: string,
+  backfill: number,
+): string[] {
+  return [firstOfMonth(endMonth), ...previousMonths(endMonth, backfill)];
+}
+
 /** The last date Google could plausibly have reported, used for the Stale check. */
 export function expectedDataThrough(
   timeZone: string,
@@ -197,6 +237,20 @@ export function formatInsightsValue(
 ): string {
   const formatted = formatCount(value, locale);
   return type === "THRESHOLD" ? `<${formatted}` : formatted;
+}
+
+/** A month label (e.g. "September 2026") for the monthly keyword table. */
+export function formatMonth(iso: string | null, locale: string): string {
+  if (!iso) return "—";
+  const [y, m] = iso.split("-").map(Number);
+  if (!y || !m) return "—";
+  const tag =
+    locale === "ar" ? "ar-u-nu-latn" : locale === "he" ? "he" : "en-US";
+  return new Intl.DateTimeFormat(tag, {
+    year: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, 1)));
 }
 
 /** Derived data health for the Insights header. Stale means the newest stored
