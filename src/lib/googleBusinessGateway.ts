@@ -1539,7 +1539,7 @@ export function mediaPath(
 ): string {
   const q = new URLSearchParams({ pageSize: String(GBP_MEDIA_PAGE_SIZE) });
   if (pageToken) q.set("pageToken", pageToken);
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}/media?${q}`;
+  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media?${q}`;
 }
 
 /** The gateway path for a single media item (GET / PATCH / DELETE). */
@@ -1548,7 +1548,7 @@ export function mediaItemPath(
   locationId: string,
   mediaId: string,
 ): string {
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}/media/${mediaId}`;
+  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media/${mediaId}`;
 }
 
 /** The gateway path that starts a byte upload (returns a resource name). */
@@ -1556,7 +1556,7 @@ export function mediaStartUploadPath(
   accountId: string,
   locationId: string,
 ): string {
-  return `/${GBP_PROFILE_API}/accounts/${accountId}/locations/${locationId}/media:startUpload`;
+  return `/${GBP_REVIEWS_API}/accounts/${accountId}/locations/${locationId}/media:startUpload`;
 }
 
 /**
