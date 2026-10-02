@@ -28,8 +28,23 @@ describe("GBP_LOCATION_READ_MASK", () => {
     expect(fields).toContain("metadata");
   });
 
-  it("requests locationState so verification state is populated", () => {
-    expect(fields).toContain("locationState");
+  it("never requests locationState (Google v1 rejects it with 400)", () => {
+    expect(fields).not.toContain("locationState");
+  });
+
+  it("reads verification from metadata.hasVoiceOfMerchant", () => {
+    const v = normalizeGbpLocation("accounts/1", {
+      name: "accounts/1/locations/2",
+      metadata: { hasVoiceOfMerchant: true },
+    });
+    expect(v!.verification_state).toBe("VERIFIED");
+    expect(v!.location_state).toBe("OPEN");
+    const p = normalizeGbpLocation("accounts/1", {
+      name: "accounts/1/locations/2",
+      metadata: { hasVoiceOfMerchant: false, isDisconnected: true },
+    });
+    expect(p!.verification_state).toBe("PENDING");
+    expect(p!.location_state).toBe("DISCONNECTED");
   });
 });
 

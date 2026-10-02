@@ -148,6 +148,16 @@ describe("normalizeGbpProfile", () => {
         .google_state,
     ).toBe("SUSPENDED");
   });
+
+  it("reads verification from v1 metadata", () => {
+    const out = normalizeGbpProfile({ metadata: { hasVoiceOfMerchant: true } });
+    expect(out.google_state).toBe("OPEN");
+    expect(out.verification_status).toBe("verified");
+  });
+
+  it("never requests locationState in the profile mask", () => {
+    expect(GBP_PROFILE_READ_MASK.split(",")).not.toContain("locationState");
+  });
 });
 
 describe("regular hours round-trip", () => {
