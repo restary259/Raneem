@@ -32,9 +32,33 @@
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. Editable, versioned profile columns on the existing mapping row
+-- 0. Drop pre-hardening overloads
+-- ---------------------------------------------------------------------------
+-- An earlier revision of this migration granted the four server-only RPCs to
+-- `authenticated` with a shorter signature, and shaped two other functions
+-- differently. `CREATE OR REPLACE` cannot replace a function with a different
+-- argument list — it silently creates a second, still-reachable overload — and
+-- it cannot change a return type at all. On a database that already ran that
+-- revision the old, browser-executable functions would therefore survive the
+-- upgrade. Drop them explicitly by full old signature; each DROP is a no-op on
+-- a fresh database.
+--
+--   * 4 RPCs: gained `p_actor_user_id`, were `GRANT`ed to `authenticated`.
+--   * google_profile_content: gained `p_latitude`/`p_longitude` (16 -> 18 args).
+--   * list_google_profile_change_requests: return TABLE gained
+--     `google_location_id` (return-type change => must DROP, not replace).
 -- ---------------------------------------------------------------------------
 
+DROP FUNCTION IF EXISTS public.admin_sync_google_profile(uuid, jsonb, boolean);
+DROP FUNCTION IF EXISTS public.admin_mark_google_profile_sync_error(uuid, text, text);
+DROP FUNCTION IF EXISTS public.admin_apply_google_profile_update(uuid, jsonb, integer, text, integer);
+DROP FUNCTION IF EXISTS public.admin_finalize_google_change_request(uuid, uuid, boolean, text, text);
+DROP FUNCTION IF EXISTS public.google_profile_content(text,text,text,jsonb,text,jsonb,text,text,text,text,text,text,text,jsonb,jsonb,jsonb);
+DROP FUNCTION IF EXISTS public.list_google_profile_change_requests(uuid, text);
+
+-- ---------------------------------------------------------------------------
+-- 1. Editable, versioned profile columns on the existing mapping row
+-- ---------------------------------------------------------------------------
 ALTER TABLE public.office_google_profiles
   -- Business information
   ADD COLUMN IF NOT EXISTS business_name TEXT,
@@ -223,9 +247,29 @@ GRANT EXECUTE ON FUNCTION public.google_profile_hash(jsonb) TO authenticated, se
 --           direct execution is Admin-only
 -- ---------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION public.authorize_google_office_action(
-  p_user_id uuid,
+-- Does this user hold the admin role? Unlike `has_role`, this is not gated on
+-- `auth.uid()` being set, so it is usable from the service-role connector
+-- (where `auth.uid()` is empty). Not granted to browser roles: it exists only
+-- for the SECURITY DEFINER functions in this migration.
+CREATE OR REPLACE FUNCTION public.google_user_is_admin(p_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = p_user_id AND role = 'admin'::public.app_role
+  );
+$fn$;
+
+REVOKE ALL ON FUNCTION public.google_user_is_admin(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.google_user_is_admin(uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.google_actor_can(
   p_office_id uuid,
+  p_user_id uuid,
   p_action text
 )
 RETURNS boolean
@@ -242,52 +286,11 @@ BEGIN
     RETURN false;
   END IF;
 
-  IF p_action NOT IN (
-    'GOOGLE_VIEW',
-    'GOOGLE_REPLY_REVIEW',
-    'GOOGLE_UPDATE_PROFILE',
-    'GOOGLE_UPDATE_HOURS',
-    'GOOGLE_UPDATE_ATTRIBUTES',
-    'GOOGLE_MANAGE_MEDIA',
-    'GOOGLE_MANAGE_POSTS',
-    'GOOGLE_VIEW_INSIGHTS',
-    'GOOGLE_MANAGE_SUPPORTED_CONTENT',
-    -- Phase 5 operational
-    'GOOGLE_SYNC_REVIEWS',
-    -- Phase 6 operational
-    'GOOGLE_SYNC_PROFILE',
-    'GOOGLE_REQUEST_HIGH_RISK',
-    -- Phase 6 high-risk direct execution (Admin only)
-    'GOOGLE_UPDATE_CATEGORY',
-    'GOOGLE_UPDATE_ADDRESS',
-    'GOOGLE_APPROVE_CHANGE_REQUEST',
-    -- Delegation
-    'GOOGLE_ASSIGN_SIDE_MANAGER',
-    'GOOGLE_REMOVE_SIDE_MANAGER',
-    'GOOGLE_CHANGE_PRIMARY',
-    -- Admin-only connection controls
-    'GOOGLE_CONNECT',
-    'GOOGLE_DISCONNECT',
-    'GOOGLE_RECONNECT',
-    -- Phase 3 (admin-only)
-    'GOOGLE_DISCOVER_LOCATIONS',
-    'GOOGLE_VIEW_LOCATION',
-    'GOOGLE_MAP_LOCATION',
-    'GOOGLE_REMAP_LOCATION',
-    'GOOGLE_UNMAP_LOCATION'
-  ) THEN
-    RETURN false;
-  END IF;
-
-  IF auth.role() = 'service_role' THEN
-    RETURN true;
-  END IF;
-
-  IF p_user_id IS DISTINCT FROM auth.uid() THEN
-    RETURN false;
-  END IF;
-
-  IF public.is_admin_session() THEN
+  -- Admin, but only with the same guarantees the browser path requires:
+  -- a live AAL2 admin session, or a trusted service-role connector acting on
+  -- behalf of a user who holds the admin role.
+  IF (public.is_admin_session() AND auth.uid() = p_user_id)
+     OR (auth.role() = 'service_role' AND public.google_user_is_admin(p_user_id)) THEN
     RETURN EXISTS (
       SELECT 1 FROM public.offices o
       WHERE o.id = p_office_id AND o.deleted_at IS NULL
@@ -338,10 +341,106 @@ BEGIN
 END;
 $fn$;
 
+REVOKE ALL ON FUNCTION public.google_actor_can(uuid, uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.google_actor_can(uuid, uuid, text) TO authenticated, service_role;
+
+-- The public authorizer: identity + whitelist checks, then the shared core.
+-- One function remains the single source of truth for every Google action.
+CREATE OR REPLACE FUNCTION public.authorize_google_office_action(
+  p_user_id uuid,
+  p_office_id uuid,
+  p_action text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+BEGIN
+  IF p_user_id IS NULL OR p_office_id IS NULL THEN
+    RETURN false;
+  END IF;
+
+  IF p_action NOT IN (
+    'GOOGLE_VIEW',
+    'GOOGLE_REPLY_REVIEW',
+    'GOOGLE_UPDATE_PROFILE',
+    'GOOGLE_UPDATE_HOURS',
+    'GOOGLE_UPDATE_ATTRIBUTES',
+    'GOOGLE_MANAGE_MEDIA',
+    'GOOGLE_MANAGE_POSTS',
+    'GOOGLE_VIEW_INSIGHTS',
+    'GOOGLE_MANAGE_SUPPORTED_CONTENT',
+    -- Phase 5 operational
+    'GOOGLE_SYNC_REVIEWS',
+    -- Phase 6 operational
+    'GOOGLE_SYNC_PROFILE',
+    'GOOGLE_REQUEST_HIGH_RISK',
+    -- Phase 6 high-risk direct execution (Admin only)
+    'GOOGLE_UPDATE_CATEGORY',
+    'GOOGLE_UPDATE_ADDRESS',
+    'GOOGLE_APPROVE_CHANGE_REQUEST',
+    -- Delegation
+    'GOOGLE_ASSIGN_SIDE_MANAGER',
+    'GOOGLE_REMOVE_SIDE_MANAGER',
+    'GOOGLE_CHANGE_PRIMARY',
+    -- Admin-only connection controls
+    'GOOGLE_CONNECT',
+    'GOOGLE_DISCONNECT',
+    'GOOGLE_RECONNECT',
+    -- Phase 3 (admin-only)
+    'GOOGLE_DISCOVER_LOCATIONS',
+    'GOOGLE_VIEW_LOCATION',
+    'GOOGLE_MAP_LOCATION',
+    'GOOGLE_REMAP_LOCATION',
+    'GOOGLE_UNMAP_LOCATION'
+  ) THEN
+    RETURN false;
+  END IF;
+
+  IF auth.role() = 'service_role' THEN
+    RETURN true;
+  END IF;
+
+  IF p_user_id IS DISTINCT FROM auth.uid() THEN
+    RETURN false;
+  END IF;
+
+  RETURN public.google_actor_can(p_office_id, p_user_id, p_action);
+END;
+$fn$;
+
 REVOKE ALL ON FUNCTION public.authorize_google_office_action(uuid, uuid, text)
   FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.authorize_google_office_action(uuid, uuid, text)
   TO authenticated, service_role;
+
+-- Resolve an actor's Google role for audit rows. Uses `google_user_is_admin`
+-- (not `has_role`) so it is correct even when the caller is the service-role
+-- connector acting on behalf of a user, where `auth.uid()` is empty.
+CREATE OR REPLACE FUNCTION public.google_actor_role(
+  p_office_id uuid,
+  p_user_id uuid
+)
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $fn$
+  SELECT CASE
+    WHEN p_user_id IS NULL THEN NULL
+    WHEN public.google_user_is_admin(p_user_id) THEN 'admin'
+    ELSE (
+      SELECT ogo.role FROM public.office_google_operators ogo
+      WHERE ogo.office_id = p_office_id AND ogo.team_member_id = p_user_id
+    )
+  END;
+$fn$;
+
+REVOKE ALL ON FUNCTION public.google_actor_role(uuid, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.google_actor_role(uuid, uuid) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- 7. Canonical editable-content snapshot
@@ -364,6 +463,8 @@ CREATE OR REPLACE FUNCTION public.google_profile_content(
   p_city text,
   p_region text,
   p_country text,
+  p_latitude numeric,
+  p_longitude numeric,
   p_regular_hours jsonb,
   p_special_hours jsonb,
   p_attributes jsonb
@@ -387,14 +488,18 @@ AS $fn$
     'city', p_city,
     'region', p_region,
     'country', p_country,
+    -- Coordinates belong in the fingerprint: a Google coordinate-only change
+    -- must advance the version instead of being seen as "unchanged".
+    'latitude', p_latitude,
+    'longitude', p_longitude,
     'regular_hours', p_regular_hours,
     'special_hours', COALESCE(p_special_hours, '[]'::jsonb),
     'attributes', COALESCE(p_attributes, '[]'::jsonb)
   );
 $fn$;
 
-REVOKE ALL ON FUNCTION public.google_profile_content(text,text,text,jsonb,text,jsonb,text,text,text,text,text,text,text,jsonb,jsonb,jsonb) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.google_profile_content(text,text,text,jsonb,text,jsonb,text,text,text,text,text,text,text,jsonb,jsonb,jsonb) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.google_profile_content(text,text,text,jsonb,text,jsonb,text,text,text,text,text,text,text,numeric,numeric,jsonb,jsonb,jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.google_profile_content(text,text,text,jsonb,text,jsonb,text,text,text,text,text,text,text,numeric,numeric,jsonb,jsonb,jsonb) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- 8. Read RPC — the profile the UI edits
@@ -598,7 +703,10 @@ GRANT EXECUTE ON FUNCTION public.release_google_profile_sync_lock(uuid) TO authe
 CREATE OR REPLACE FUNCTION public.admin_sync_google_profile(
   p_office_id uuid,
   p_profile jsonb,
-  p_force boolean DEFAULT false
+  p_force boolean DEFAULT false,
+  -- Trusted server callers (the connector server function) pass the
+  -- authenticated actor explicitly; a browser caller can never reach this RPC.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (
   status text,
@@ -611,7 +719,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_row public.office_google_profiles%ROWTYPE;
   v_incoming jsonb;
   v_current jsonb;
@@ -619,10 +727,14 @@ DECLARE
   v_changed jsonb;
   v_changed_keys text[];
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_SYNC_PROFILE')
-  ) THEN
+  -- This RPC persists a caller-supplied Google snapshot, so only the
+  -- service-role connector may call it; the connector passes the authenticated
+  -- actor as p_actor_user_id. Authorization still runs against that actor.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_SYNC_PROFILE') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -652,6 +764,8 @@ BEGIN
     COALESCE(p_profile->>'city', v_row.city),
     COALESCE(p_profile->>'region', v_row.region),
     COALESCE(p_profile->>'country', v_row.country),
+    COALESCE((p_profile->>'latitude')::numeric, v_row.latitude),
+    COALESCE((p_profile->>'longitude')::numeric, v_row.longitude),
     COALESCE(p_profile->'regular_hours', v_row.regular_hours),
     COALESCE(p_profile->'special_hours', v_row.special_hours),
     COALESCE(p_profile->'attributes', v_row.attributes)
@@ -662,6 +776,7 @@ BEGIN
     v_row.additional_categories, v_row.phone_primary, v_row.phone_additional,
     v_row.website_url, v_row.address_line_1, v_row.address_line_2,
     v_row.postal_code, v_row.city, v_row.region, v_row.country,
+    v_row.latitude, v_row.longitude,
     v_row.regular_hours, v_row.special_hours, v_row.attributes
   );
 
@@ -750,7 +865,7 @@ BEGIN
   )
   VALUES (
     p_office_id, v_row.google_location_id, v_actor,
-    CASE WHEN public.is_admin_session() THEN 'admin' ELSE 'PRIMARY' END,
+    COALESCE(public.google_actor_role(p_office_id, v_actor), 'PRIMARY'),
     'GOOGLE_PROFILE_SYNCED', 'profile', p_office_id::text,
     jsonb_build_object('changed', v_changed_keys),
     jsonb_build_object('changed', v_changed_keys, 'forced', p_force)
@@ -760,8 +875,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_sync_google_profile(uuid, jsonb, boolean) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_sync_google_profile(uuid, jsonb, boolean) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_sync_google_profile(uuid, jsonb, boolean, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_sync_google_profile(uuid, jsonb, boolean, uuid) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- 11. Write RPC — record a profile sync failure (releases the lock)
@@ -770,7 +885,8 @@ GRANT EXECUTE ON FUNCTION public.admin_sync_google_profile(uuid, jsonb, boolean)
 CREATE OR REPLACE FUNCTION public.admin_mark_google_profile_sync_error(
   p_office_id uuid,
   p_error_code text,
-  p_error_message text
+  p_error_message text,
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -778,12 +894,13 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_SYNC_PROFILE')
-  ) THEN
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_SYNC_PROFILE') THEN
     RAISE EXCEPTION 'Forbidden';
   END IF;
 
@@ -799,7 +916,7 @@ BEGIN
   )
   VALUES (
     p_office_id, v_actor,
-    CASE WHEN public.is_admin_session() THEN 'admin' ELSE 'PRIMARY' END,
+    COALESCE(public.google_actor_role(p_office_id, v_actor), 'PRIMARY'),
     'GOOGLE_PROFILE_ACTION_FAILED', 'profile',
     jsonb_build_object('operation', 'sync',
                        'code', left(COALESCE(p_error_code,'error'), 64),
@@ -808,10 +925,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_mark_google_profile_sync_error(uuid, text, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_mark_google_profile_sync_error(uuid, text, text) TO authenticated, service_role;
-
-
+REVOKE ALL ON FUNCTION public.admin_mark_google_profile_sync_error(uuid, text, text, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_mark_google_profile_sync_error(uuid, text, text, uuid) TO service_role;
 -- ---------------------------------------------------------------------------
 -- 12. Server-side field validation
 --
@@ -1031,7 +1146,9 @@ CREATE OR REPLACE FUNCTION public.admin_apply_google_profile_update(
   p_fields jsonb,
   p_expected_version integer DEFAULT NULL,
   p_idempotency_key text DEFAULT NULL,
-  p_google_status integer DEFAULT NULL
+  p_google_status integer DEFAULT NULL,
+  -- Trusted server callers pass the authenticated actor explicitly.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS TABLE (
   ok boolean,
@@ -1046,7 +1163,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
   v_row public.office_google_profiles%ROWTYPE;
   v_key text;
   v_value jsonb;
@@ -1060,6 +1177,13 @@ DECLARE
   v_hash text;
   v_result jsonb;
 BEGIN
+  -- Recording an edit asserts "Google accepted this". That assertion must come
+  -- from the connector server function, so this RPC is service-role only; an
+  -- Admin's own in-browser session cannot forge a published profile.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
   IF p_fields IS NULL OR jsonb_typeof(p_fields) <> 'object' OR p_fields = '{}'::jsonb THEN
     RETURN QUERY SELECT false, 'invalid'::text, NULL::integer, '[]'::jsonb,
       'empty'::text, 'No fields supplied'::text;
@@ -1072,17 +1196,13 @@ BEGIN
   -- Authorization: high-risk needs the admin-only action.
   IF v_high THEN
     IF NOT (
-      public.is_admin_session()
-      OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_UPDATE_CATEGORY')
-      OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_UPDATE_ADDRESS')
+      public.google_actor_can(p_office_id, v_actor, 'GOOGLE_UPDATE_CATEGORY')
+      OR public.google_actor_can(p_office_id, v_actor, 'GOOGLE_UPDATE_ADDRESS')
     ) THEN
       RAISE EXCEPTION 'Forbidden';
     END IF;
   ELSE
-    IF NOT (
-      public.is_admin_session()
-      OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_UPDATE_PROFILE')
-    ) THEN
+    IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_UPDATE_PROFILE') THEN
       RAISE EXCEPTION 'Forbidden';
     END IF;
   END IF;
@@ -1218,6 +1338,8 @@ BEGIN
         CASE WHEN p_fields ? 'city' THEN NULLIF(btrim(p_fields->>'city'),'') ELSE city END,
         CASE WHEN p_fields ? 'region' THEN NULLIF(btrim(p_fields->>'region'),'') ELSE region END,
         CASE WHEN p_fields ? 'country' THEN NULLIF(btrim(p_fields->>'country'),'') ELSE country END,
+        CASE WHEN p_fields ? 'latitude' THEN (p_fields->>'latitude')::numeric ELSE latitude END,
+        CASE WHEN p_fields ? 'longitude' THEN (p_fields->>'longitude')::numeric ELSE longitude END,
         CASE WHEN p_fields ? 'regular_hours' THEN p_fields->'regular_hours' ELSE regular_hours END,
         CASE WHEN p_fields ? 'special_hours' THEN COALESCE(p_fields->'special_hours','[]'::jsonb) ELSE special_hours END,
         CASE WHEN p_fields ? 'attributes' THEN COALESCE(p_fields->'attributes','[]'::jsonb) ELSE attributes END
@@ -1232,10 +1354,7 @@ BEGIN
   )
   VALUES (
     p_office_id, v_row.google_location_id, v_actor,
-    CASE WHEN public.is_admin_session() THEN 'admin'
-         WHEN EXISTS (SELECT 1 FROM public.office_google_operators o
-                      WHERE o.office_id = p_office_id AND o.team_member_id = v_actor AND o.role = 'PRIMARY')
-           THEN 'PRIMARY' ELSE 'SIDE_MANAGER' END,
+    COALESCE(public.google_actor_role(p_office_id, v_actor), 'SIDE_MANAGER'),
     'GOOGLE_PROFILE_UPDATED', 'profile', p_office_id::text,
     v_before,
     v_after || jsonb_build_object('_fields', to_jsonb(v_keys), '_google_status', p_google_status)
@@ -1256,9 +1375,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_apply_google_profile_update(uuid, jsonb, integer, text, integer) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_apply_google_profile_update(uuid, jsonb, integer, text, integer) TO authenticated, service_role;
-
+REVOKE ALL ON FUNCTION public.admin_apply_google_profile_update(uuid, jsonb, integer, text, integer, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_apply_google_profile_update(uuid, jsonb, integer, text, integer, uuid) TO service_role;
 -- ---------------------------------------------------------------------------
 -- 14. Change requests — submit / list / decide
 --
@@ -1407,6 +1525,7 @@ RETURNS TABLE (
   id uuid,
   office_id uuid,
   field text,
+  google_location_id text,
   current_value jsonb,
   requested_value jsonb,
   status text,
@@ -1437,7 +1556,8 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  SELECT r.id, r.office_id, r.field, r.current_value, r.requested_value,
+  SELECT r.id, r.office_id, r.field, r.google_location_id, r.current_value,
+         r.requested_value,
          r.status, r.reason, r.requested_by, rq.full_name, r.requested_by_role,
          r.decided_by, dc.full_name, r.decided_at, r.decision_note,
          r.applied_at, r.apply_error_code, r.apply_error_message, r.created_at
@@ -1514,6 +1634,50 @@ BEGIN
       USING ERRCODE = 'insufficient_privilege';
   END IF;
 
+  -- The approved value is bound to the location it was written for. If the
+  -- office has since been remapped, approving would publish a stale value to a
+  -- different Google location, so the request is cancelled and reported back
+  -- as CANCELLED (not as a failed approval) to the caller.
+  IF v_req.google_location_id IS NOT NULL
+     AND v_req.google_location_id IS DISTINCT FROM (
+       SELECT ogp.google_location_id FROM public.office_google_profiles ogp
+       WHERE ogp.office_id = p_office_id
+     ) THEN
+    UPDATE public.google_profile_change_requests
+    SET status = 'CANCELLED',
+        decided_by = v_actor,
+        decided_at = now(),
+        decision_note = left('Cancelled: office remapped to a different Google location', 500),
+        updated_at = now()
+    WHERE id = p_request_id;
+
+    SELECT ogp.profile_version INTO v_version
+    FROM public.office_google_profiles ogp WHERE ogp.office_id = p_office_id;
+
+    INSERT INTO public.google_business_activity (
+      office_id, google_location_id, actor_user_id, actor_role,
+      action, resource_type, resource_id, after_data
+    )
+    VALUES (
+      p_office_id, v_req.google_location_id, v_actor, 'admin',
+      'GOOGLE_PROFILE_CHANGE_CANCELLED', 'change_request', p_request_id::text,
+      jsonb_build_object('field', v_req.field, 'reason', 'office_remapped')
+    );
+
+    PERFORM public.emit_notification(
+      v_req.requested_by, NULL, 'google_business',
+      'Google profile change cancelled',
+      'تم إلغاء تعديل ملف Google',
+      'Your Google profile change was cancelled because the office was remapped.',
+      'تم إلغاء تعديل ملف Google الخاص بك لأن المكتب تم إعادة ربطه.',
+      NULL, '/team/google/profile',
+      'google_change_decision:' || p_request_id::text
+    );
+
+    RETURN QUERY SELECT p_request_id, 'CANCELLED'::text, v_req.field, v_req.requested_value, v_version;
+    RETURN;
+  END IF;
+
   UPDATE public.google_profile_change_requests
   SET status = p_decision,
       decided_by = v_actor,
@@ -1571,7 +1735,10 @@ CREATE OR REPLACE FUNCTION public.admin_finalize_google_change_request(
   p_request_id uuid,
   p_ok boolean,
   p_error_code text DEFAULT NULL,
-  p_error_message text DEFAULT NULL
+  p_error_message text DEFAULT NULL,
+  -- Trusted server callers (the connector server function) pass the
+  -- authenticated actor explicitly; a browser caller can never reach this RPC.
+  p_actor_user_id uuid DEFAULT NULL
 )
 RETURNS text
 LANGUAGE plpgsql
@@ -1579,14 +1746,48 @@ SECURITY DEFINER
 SET search_path = public
 AS $fn$
 DECLARE
-  v_actor uuid := auth.uid();
   v_status text;
+  v_actor uuid := COALESCE(p_actor_user_id, auth.uid());
+  v_req public.google_profile_change_requests%ROWTYPE;
+  v_current_location text;
 BEGIN
-  IF NOT (
-    public.is_admin_session()
-    OR public.authorize_google_office_action(v_actor, p_office_id, 'GOOGLE_APPROVE_CHANGE_REQUEST')
-  ) THEN
+  -- Stamping a request as applied asserts "Google accepted this", so the call
+  -- must originate from the connector server function, not a browser session.
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  -- Finalizing an approved change is an Admin action; re-check the actor so a
+  -- compromised connector cannot touch another office's request.
+  IF NOT public.google_actor_can(p_office_id, v_actor, 'GOOGLE_APPROVE_CHANGE_REQUEST') THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  SELECT * INTO v_req
+  FROM public.google_profile_change_requests
+  WHERE id = p_request_id AND office_id = p_office_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RETURN 'not_found';
+  END IF;
+
+  SELECT ogp.google_location_id INTO v_current_location
+  FROM public.office_google_profiles ogp WHERE ogp.office_id = p_office_id;
+
+  -- Final guard before the value is treated as published: if the office was
+  -- remapped after approval, cancel instead of recording a value that went (or
+  -- would go) to the wrong location.
+  IF p_ok
+     AND v_req.google_location_id IS NOT NULL
+     AND v_req.google_location_id IS DISTINCT FROM v_current_location THEN
+    UPDATE public.google_profile_change_requests
+    SET status = 'CANCELLED',
+        decision_note = left('Cancelled: office remapped to a different Google location', 500),
+        updated_at = now()
+    WHERE id = p_request_id AND office_id = p_office_id
+    RETURNING status INTO v_status;
+    RETURN COALESCE(v_status, 'not_found');
   END IF;
 
   IF p_ok THEN
@@ -1612,8 +1813,8 @@ BEGIN
 END;
 $fn$;
 
-REVOKE ALL ON FUNCTION public.admin_finalize_google_change_request(uuid, uuid, boolean, text, text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_finalize_google_change_request(uuid, uuid, boolean, text, text) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_finalize_google_change_request(uuid, uuid, boolean, text, text, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_finalize_google_change_request(uuid, uuid, boolean, text, text, uuid) TO service_role;
 
 -- ---------------------------------------------------------------------------
 -- 15. Row Level Security + privileges
@@ -1629,11 +1830,8 @@ CREATE POLICY "Office members read google change requests"
 ON public.google_profile_change_requests FOR SELECT TO authenticated
 USING (
   public.is_admin_session()
-  OR EXISTS (
-    SELECT 1 FROM public.office_members om
-    WHERE om.office_id = google_profile_change_requests.office_id
-      AND om.user_id = auth.uid()
-      AND om.is_active = true
+  OR public.google_actor_can(
+    google_profile_change_requests.office_id, auth.uid(), 'GOOGLE_VIEW'
   )
 );
 
@@ -1663,4 +1861,3 @@ GRANT ALL ON public.google_profile_update_receipts TO service_role;
 --    '{"primary_category":"..."}' -> raises 'Forbidden'.
 -- D) Validation: phone_primary => 'abc123' -> status = 'invalid'.
 -- ===========================================================================
-
