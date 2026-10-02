@@ -440,3 +440,174 @@ export function googleProfileHealth(
   if (row.pending_change_count > 0) return "NeedsAttention";
   return "Healthy";
 }
+
+// ---------------------------------------------------------------------------
+// Phase 7 — photos (media) + posts
+// ---------------------------------------------------------------------------
+
+/** BUSINESS = DARB/business uploaded; CUSTOMER = contributed by a customer. */
+export type GoogleMediaOrigin = "BUSINESS" | "CUSTOMER";
+
+/**
+ * Google's processing/lifecycle state plus DARB's own terminal states.
+ * SUBMITTED -> PROCESSING -> PUBLISHED is Google's async path; NOT_FOUND means
+ * Google no longer returns the item.
+ */
+export type GoogleMediaState =
+  | "SUBMITTED"
+  | "PROCESSING"
+  | "PUBLISHED"
+  | "FAILED"
+  | "REJECTED"
+  | "NOT_FOUND"
+  | "DELETED";
+
+export type GoogleMediaFilter =
+  "all" | "cover" | "logo" | "exterior" | "interior" | "team" | "other";
+
+/** One row from list_office_google_media(). */
+export type GoogleBusinessMediaListRow = {
+  id: string;
+  office_id: string;
+  google_media_id: string;
+  google_location_id: string;
+  media_format: string | null;
+  media_category: string | null;
+  darb_category: string | null;
+  media_origin: GoogleMediaOrigin;
+  google_source_url: string | null;
+  google_thumbnail_url: string | null;
+  google_full_url: string | null;
+  description: string | null;
+  width: number | null;
+  height: number | null;
+  attribution: string | null;
+  media_state: GoogleMediaState;
+  created_at: string;
+  last_synced_at: string | null;
+  /** Filtered total (not the page size). */
+  total_count: number;
+};
+
+/** One row from get_office_google_media_summary(). */
+export type OfficeGoogleMediaSummaryRow = {
+  office_id: string;
+  business_count: number;
+  customer_count: number;
+  cover_count: number;
+  logo_count: number;
+  exterior_count: number;
+  interior_count: number;
+  team_count: number;
+  other_count: number;
+  media_last_synced_at: string | null;
+  media_last_successful_sync_at: string | null;
+  media_sync_error_code: string | null;
+  media_sync_error_message: string | null;
+  mapping_status: GoogleMappingStatus;
+  connection_status: GoogleConnectionStatus;
+  google_location_name: string | null;
+  google_maps_url: string | null;
+};
+
+/** DARB's post lifecycle. Never merged with Google's raw state. */
+export type GooglePostStatus =
+  | "DRAFT"
+  | "PUBLISHING"
+  | "PUBLISHED"
+  | "UPDATE_PENDING"
+  | "DELETE_PENDING"
+  | "DELETED"
+  | "DELETED_EXTERNALLY"
+  | "FAILED";
+
+export type GooglePostFilter =
+  "all" | "published" | "drafts" | "failed" | "deleted";
+
+/** One row from list_office_google_posts(). */
+export type GoogleBusinessPostListRow = {
+  id: string;
+  office_id: string;
+  google_post_id: string | null;
+  google_location_id: string | null;
+  topic_type: string;
+  language_code: string;
+  summary: string | null;
+  cta_type: string | null;
+  cta_url: string | null;
+  event_title: string | null;
+  event_start: string | null;
+  event_end: string | null;
+  offer_coupon_code: string | null;
+  offer_url: string | null;
+  offer_terms: string | null;
+  media_ids: string[];
+  media_urls: string[];
+  google_state: string | null;
+  search_url: string | null;
+  status: GooglePostStatus;
+  last_error_code: string | null;
+  last_error_message: string | null;
+  published_at: string | null;
+  deleted_at: string | null;
+  version: number;
+  google_update_time: string | null;
+  created_by: string | null;
+  created_by_name: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  last_synced_at: string | null;
+  total_count: number;
+};
+
+/** One row from get_office_google_posts_summary(). */
+export type OfficeGooglePostsSummaryRow = {
+  office_id: string;
+  draft_count: number;
+  published_count: number;
+  failed_count: number;
+  deleted_count: number;
+  posts_last_synced_at: string | null;
+  posts_last_successful_sync_at: string | null;
+  posts_sync_error_code: string | null;
+  posts_sync_error_message: string | null;
+  mapping_status: GoogleMappingStatus;
+  connection_status: GoogleConnectionStatus;
+  google_location_name: string | null;
+  google_maps_url: string | null;
+};
+
+/** The four post shapes DARB offers. Product posts are deliberately absent. */
+export type GooglePostKind = "UPDATE" | "EVENT" | "OFFER" | "CTA";
+
+/**
+ * The DARB post kind is a product concept; Google only knows topicType. A CTA
+ * post is a STANDARD post that carries a callToAction, so the mapping is not
+ * one-to-one and must not be conflated.
+ */
+export function googlePostKind(row: {
+  topic_type: string;
+  cta_type: string | null;
+}): GooglePostKind {
+  if (row.topic_type === "EVENT") return "EVENT";
+  if (row.topic_type === "OFFER") return "OFFER";
+  if (row.cta_type) return "CTA";
+  return "UPDATE";
+}
+
+/** True when DARB may delete/edit the row (never an externally-deleted post). */
+export function isGooglePostEditable(status: GooglePostStatus): boolean {
+  return (
+    status !== "DELETED" &&
+    status !== "DELETED_EXTERNALLY" &&
+    status !== "DELETE_PENDING"
+  );
+}
+
+/** True when the row is read-only customer media. */
+export function isCustomerMediaRow(row: {
+  media_origin: GoogleMediaOrigin;
+}): boolean {
+  return row.media_origin === "CUSTOMER";
+}

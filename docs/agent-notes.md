@@ -3389,3 +3389,53 @@ verified non-vacuous by reintroducing the defect).
 - i18n: `googleProfile.*` in en/ar/he (`public/locales` only — `dashboard` is not
   bundled in `src/locales`); nav `nav.googleProfile` under the `nav.googleBusiness`
   group. UI lives at `/team/google/profile`.
+
+## Office Google Business photos + posts (Phase 7, 2026-10-02)
+
+- Migration `20261002120000_office_google_media_posts.sql`. Two caches:
+  `google_business_media` and `google_business_posts`, each keyed by
+  `(google_location_id, google_<resource>_id)` so a re-sync cannot duplicate.
+- **Customer media is separated by `media_origin` ('BUSINESS' | 'CUSTOMER'),
+  not a second table.** Customer rows are VIEW ONLY: `admin_mark_google_media_deleted`
+  refuses them and the UI hides edit/delete. `GOOGLE_MANAGE_CUSTOMER_MEDIA` is
+  deliberately not operator-held (the authorizer returns false for it).
+- **DARB category != Google category.** `darb_category` is the friendly label
+  (`cover`/`logo`/`exterior`/`interior`/`team`/`other`); `media_category` is
+  Google's enum. `googleMediaCategoryFor` maps to COVER/LOGO/EXTERIOR/INTERIOR/
+  TEAM/ADDITIONAL and the DARB word is never sent.
+- **Two publish paths, deliberately.** Location photos use the byte upload
+  (`media:startUpload` -> upload bytes -> `Media.Create` with `dataRef`); Local
+  Post media must be a URL, so `resolve_google_post_media_urls` returns the
+  Google-hosted URL of a same-office BUSINESS media row. Post media is capped at
+  1 (`media_ids` max 1) in the composer.
+- **Google is the source of truth.** Sync upserts and marks rows Google no longer
+  returns (`NOT_FOUND` for media, `DELETED_EXTERNALLY` for posts) instead of
+  deleting, so an external change is visible and the audit trail survives.
+- **Persist only after Google confirms.** Upload: stage -> startUpload -> bytes ->
+  Create -> `record_google_media_upload`. Publish: local draft -> Google create/
+  patch -> `admin_apply_google_post_publish`. A failure marks FAILED and keeps the
+  draft; a network failure is reported `uncertain`, never retried blindly.
+- **Irreversible actions guarded at the RPC.** Publish/delete use
+  `acquire_google_post_publish_lock` / `acquire_google_post_delete_lock`
+  (advisory, self-expiring) plus `google_post_operation_receipts` keyed per
+  office so a double tap or retry returns the first result. Media uploads use
+  `google_media_upload_receipts` + `begin_google_media_upload`.
+- **Optimistic concurrency.** `google_business_posts.version` +
+  `expectedVersion` on update; a stale editor gets `conflict`, never a silent
+  overwrite.
+- **Bytes are validated, never the filename/MIME.** `sniffImageMime` /
+  `validateMediaBytes` check magic bytes server-side; a JPEG named `.png` is
+  rejected before Google is called.
+- `gbpPost` and `gbpUploadBytes` in the gateway are NOT retried on 5xx (only
+  429), because a replay after Google already created the resource would
+  double-create.
+- `src/lib/googleBusinessMedia.functions.ts` and
+  `googleBusinessPosts.functions.ts` are the server layer; pure helpers and
+  normalizers live in `googleBusinessGateway.ts`. Tests:
+  `src/lib/googleBusinessMediaPosts.test.ts`.
+- Verification: `supabase/diagnostics/office_google_phase7_deploy_verify.sql`
+  (read-only). i18n: `googleMedia.*` / `googlePosts.*` in en/ar/he
+  (`public/locales` only — `dashboard` is not bundled in `src/locales`); nav
+  `nav.googlePosts` / `nav.googlePhotos` under the `nav.googleBusiness` group.
+  UI at `/team/google/photos` and `/team/google/posts`.
+
