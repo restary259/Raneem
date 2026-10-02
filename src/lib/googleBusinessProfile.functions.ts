@@ -60,6 +60,22 @@ async function rpcOrThrow<T>(
   return data as T;
 }
 
+/**
+ * Invokes a service-role-only RPC through the admin client, passing the
+ * authenticated actor explicitly so the RPC can still authorize them. The
+ * connector is the only party that may assert "Google returned this snapshot".
+ */
+async function adminRpcOrThrow<T>(
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.rpc(fn as never, args as never);
+  if (error) throw new Error(error.message || "Request failed");
+  return data as T;
+}
+
 type MappingIdentity = {
   google_account_id: string;
   google_location_id: string;
@@ -142,10 +158,11 @@ export async function runGoogleProfileSync(
 
     const creds = gbpCreds();
     if (!creds) {
-      await rpcOrThrow(ctx, "admin_mark_google_profile_sync_error", {
+      await adminRpcOrThrow("admin_mark_google_profile_sync_error", {
         p_office_id: officeId,
         p_error_code: "not_linked",
         p_error_message: "Google Business connection is not configured",
+        p_actor_user_id: ctx.userId,
       });
       return {
         ok: false,
@@ -165,7 +182,7 @@ export async function runGoogleProfileSync(
       );
       const normalized = normalizeGbpProfile(raw);
 
-      const applied = await rpcOrThrow<
+      const applied = await adminRpcOrThrow<
         {
           status: string;
           profile_version: number;
@@ -176,10 +193,11 @@ export async function runGoogleProfileSync(
           }[];
           google_values: Record<string, JsonValue> | null;
         }[]
-      >(ctx, "admin_sync_google_profile", {
+      >("admin_sync_google_profile", {
         p_office_id: officeId,
         p_profile: normalized,
         p_force: force,
+        p_actor_user_id: ctx.userId,
       });
       const row = applied?.[0];
       const status = (row?.status ?? "synced") as SyncProfileResult["status"];
@@ -201,10 +219,11 @@ export async function runGoogleProfileSync(
         `Google profile sync failed [${err.status}]: ${err.message}`,
       );
       try {
-        await rpcOrThrow(ctx, "admin_mark_google_profile_sync_error", {
+        await adminRpcOrThrow("admin_mark_google_profile_sync_error", {
           p_office_id: officeId,
           p_error_code: err.code,
           p_error_message: err.message,
+          p_actor_user_id: ctx.userId,
         });
       } catch {
         /* best effort — the stale window reclaims the lock */
@@ -333,7 +352,7 @@ export const updateGoogleProfile = createServerFn({ method: "POST" })
 
     // Google accepted: persist. The RPC re-checks authorization, validation,
     // version and idempotency — a forged client cannot bypass any of them.
-    const applied = await rpcOrThrow<
+    const applied = await adminRpcOrThrow<
       {
         ok: boolean;
         status: string;
@@ -342,12 +361,13 @@ export const updateGoogleProfile = createServerFn({ method: "POST" })
         error_code: string | null;
         error_message: string | null;
       }[]
-    >(ctx, "admin_apply_google_profile_update", {
+    >("admin_apply_google_profile_update", {
       p_office_id: data.officeId,
       p_fields: data.fields,
       p_expected_version: data.expectedVersion ?? null,
       p_idempotency_key: data.idempotencyKey ?? null,
       p_google_status: 200,
+      p_actor_user_id: ctx.userId,
     });
     const row = applied?.[0];
 
@@ -449,12 +469,13 @@ export const publishGoogleChangeRequest = createServerFn({ method: "POST" })
     try {
       identity = await loadOfficeIdentity(ctx, data.officeId);
     } catch (e) {
-      await rpcOrThrow(ctx, "admin_finalize_google_change_request", {
+      await adminRpcOrThrow("admin_finalize_google_change_request", {
         p_office_id: data.officeId,
         p_request_id: data.requestId,
         p_ok: false,
         p_error_code: "forbidden",
         p_error_message: (e as Error).message,
+        p_actor_user_id: ctx.userId,
       });
       return fail("forbidden", (e as Error).message);
     }
@@ -476,38 +497,41 @@ export const publishGoogleChangeRequest = createServerFn({ method: "POST" })
         e instanceof GbpError
           ? e
           : new GbpError("upstream", 0, (e as Error).message);
-      await rpcOrThrow(ctx, "admin_finalize_google_change_request", {
+      await adminRpcOrThrow("admin_finalize_google_change_request", {
         p_office_id: data.officeId,
         p_request_id: data.requestId,
         p_ok: false,
         p_error_code: err.code,
         p_error_message: err.message,
+        p_actor_user_id: ctx.userId,
       });
       return fail(err.code, err.message);
     }
 
-    const applied = await rpcOrThrow<
+    const applied = await adminRpcOrThrow<
       {
         ok: boolean;
         status: string;
         profile_version: number | null;
         applied_fields: unknown;
       }[]
-    >(ctx, "admin_apply_google_profile_update", {
+    >("admin_apply_google_profile_update", {
       p_office_id: data.officeId,
       p_fields: fields,
       p_expected_version: null,
       p_idempotency_key: null,
       p_google_status: 200,
+      p_actor_user_id: ctx.userId,
     });
     const row = applied?.[0];
 
-    await rpcOrThrow(ctx, "admin_finalize_google_change_request", {
+    await adminRpcOrThrow("admin_finalize_google_change_request", {
       p_office_id: data.officeId,
       p_request_id: data.requestId,
       p_ok: Boolean(row?.ok),
       p_error_code: row?.ok ? null : "apply_failed",
       p_error_message: row?.ok ? null : "Approved change could not be recorded",
+      p_actor_user_id: ctx.userId,
     });
 
     return {
