@@ -48,6 +48,7 @@ import {
 import { StarRating } from "@/components/google/StarRating";
 import { useToast } from "@/hooks/use-toast";
 import {
+  getOfficeGoogleReview,
   getOfficeGoogleReviewSummary,
   listMyGoogleOffices,
   listOfficeGoogleReviews,
@@ -58,6 +59,8 @@ import {
   syncGoogleReviews,
 } from "@/lib/googleBusinessReviews.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { subscribeTables } from "@/lib/realtimeRegistry";
+import { useSearchParams } from "@/lib/router-compat";
 import {
   GBP_REPLY_MAX_BYTES,
   replyByteLength,
@@ -67,6 +70,7 @@ import type {
   GoogleReviewFilter,
   GoogleReviewSort,
   MyGoogleOfficeRow,
+  OfficeGoogleReviewDetailRow,
   OfficeGoogleReviewSummaryRow,
 } from "@/types/googleBusiness";
 
@@ -110,6 +114,7 @@ function relativeTime(value: string | null, t: TFunction<"dashboard">): string {
 export default function TeamGoogleReviewsPage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
   const [officeId, setOfficeId] = useState<string | null>(null);
@@ -125,6 +130,7 @@ export default function TeamGoogleReviewsPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [newReviewsAvailable, setNewReviewsAvailable] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState("");
   const [replyTarget, setReplyTarget] =
@@ -206,6 +212,28 @@ export default function TeamGoogleReviewsPage() {
     load();
   }, [load]);
 
+  // A NEW_REVIEW event lands in `google_business_reviews`; nudge the operator
+  // instead of silently changing the list under them. Our own reply/sync
+  // writes also touch the table, so they are suppressed briefly.
+  const suppressRealtimeUntil = useRef(0);
+  useEffect(() => {
+    return subscribeTables(
+      "google-business-reviews",
+      ["google_business_reviews"],
+      () => {
+        if (Date.now() < suppressRealtimeUntil.current) return;
+        setNewReviewsAvailable(true);
+      },
+    );
+  }, []);
+
+  // Our own writes should not raise the "new review" banner.
+  const refresh = useCallback(async () => {
+    suppressRealtimeUntil.current = Date.now() + 2000;
+    setNewReviewsAvailable(false);
+    await load();
+  }, [load]);
+
   // Reset to page 1 whenever the query changes.
   useEffect(() => {
     setOffset(0);
@@ -215,6 +243,29 @@ export default function TeamGoogleReviewsPage() {
     () => reviews.find((r) => r.id === selectedId) ?? null,
     [reviews, selectedId],
   );
+
+  // A notification deep-links to one review (`?review=<id>`). The id may live
+  // outside the current page/filter, so fetch it directly and select it; the
+  // RPC re-checks office authorization, so an id from another office yields
+  // nothing rather than leaking a review.
+  const deepLinkId = searchParams.get("review");
+  useEffect(() => {
+    if (!deepLinkId || !officeId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await getOfficeGoogleReview(officeId, deepLinkId);
+      if (cancelled) return;
+      const row: OfficeGoogleReviewDetailRow | undefined = data?.[0];
+      if (!row) return;
+      setReviews((prev) =>
+        prev.some((r) => r.id === row.id) ? prev : [row, ...prev],
+      );
+      setSelectedId(row.id);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [deepLinkId, officeId]);
 
   const draftBytes = replyByteLength(replyDraft);
   const draftValid =
@@ -238,7 +289,7 @@ export default function TeamGoogleReviewsPage() {
             updated: result.updated,
           }),
         });
-        await load();
+        await refresh();
       } else if (result.status === "locked") {
         toast({ description: t("googleReviews.syncInProgress") });
       } else {
@@ -279,7 +330,7 @@ export default function TeamGoogleReviewsPage() {
         }
         setReplyTarget(null);
         setReplyDraft("");
-        await load();
+        await refresh();
       } else {
         // Keep the draft so the operator never loses their text.
         toast({
@@ -306,7 +357,7 @@ export default function TeamGoogleReviewsPage() {
       if (result.ok) {
         toast({ description: t("googleReviews.replyDeleted") });
         setConfirmDelete(null);
-        await load();
+        await refresh();
       } else {
         toast({
           variant: "destructive",
@@ -409,6 +460,18 @@ export default function TeamGoogleReviewsPage() {
           <p className="text-muted-foreground">
             {t("googleReviews.notVerified")}
           </p>
+        </div>
+      )}
+
+      {newReviewsAvailable && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm">
+          <span className="flex items-center gap-2">
+            <Star className="size-4 text-amber-400" />
+            {t("googleReviews.newReviewBanner")}
+          </span>
+          <Button size="sm" variant="outline" onClick={() => void refresh()}>
+            {t("googleReviews.viewNewReview")}
+          </Button>
         </div>
       )}
 

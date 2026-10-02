@@ -134,17 +134,17 @@ const syncInput = z.object({
  * The sync lock is advisory and self-expiring so a crashed sync cannot wedge the
  * office. An external change is reported, not applied, unless `force` is set.
  */
-export const syncGoogleProfile = createServerFn({ method: "POST" })
-  .middleware([attachBearer, requireSupabaseAuth])
-  .inputValidator((input) => syncInput.parse(input))
-  .handler(async ({ context, data }): Promise<SyncProfileResult> => {
-    const ctx = context as unknown as SupabaseCtx;
+export async function runGoogleProfileSync(
+  ctx: SupabaseCtx,
+  officeId: string,
+  force = false,
+): Promise<SyncProfileResult> {
     const empty = { changedFields: [], googleValues: null };
 
     const acquired = await rpcOrThrow<boolean>(
       ctx,
       "acquire_google_profile_sync_lock",
-      { p_office_id: data.officeId, p_stale_after_seconds: 120 },
+      { p_office_id: officeId, p_stale_after_seconds: 120 },
     );
     if (!acquired) {
       return {
@@ -159,7 +159,7 @@ export const syncGoogleProfile = createServerFn({ method: "POST" })
     const creds = gbpCreds();
     if (!creds) {
       await adminRpcOrThrow("admin_mark_google_profile_sync_error", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_error_code: "not_linked",
         p_error_message: "Google Business connection is not configured",
         p_actor_user_id: ctx.userId,
@@ -174,7 +174,7 @@ export const syncGoogleProfile = createServerFn({ method: "POST" })
     }
 
     try {
-      const identity = await loadOfficeIdentity(ctx, data.officeId);
+      const identity = await loadOfficeIdentity(ctx, officeId);
 
       const raw = await gbpGet<GbpRawProfile>(
         locationPath(identity.google_account_id, identity.google_location_id),
@@ -194,9 +194,9 @@ export const syncGoogleProfile = createServerFn({ method: "POST" })
           google_values: Record<string, JsonValue> | null;
         }[]
       >("admin_sync_google_profile", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_profile: normalized,
-        p_force: data.force ?? false,
+        p_force: force,
         p_actor_user_id: ctx.userId,
       });
       const row = applied?.[0];
@@ -220,7 +220,7 @@ export const syncGoogleProfile = createServerFn({ method: "POST" })
       );
       try {
         await adminRpcOrThrow("admin_mark_google_profile_sync_error", {
-          p_office_id: data.officeId,
+          p_office_id: officeId,
           p_error_code: err.code,
           p_error_message: err.message,
           p_actor_user_id: ctx.userId,
@@ -236,7 +236,18 @@ export const syncGoogleProfile = createServerFn({ method: "POST" })
         errorMessage: err.message,
       };
     }
-  });
+}
+
+export const syncGoogleProfile = createServerFn({ method: "POST" })
+  .middleware([attachBearer, requireSupabaseAuth])
+  .inputValidator((input) => syncInput.parse(input))
+  .handler(async ({ context, data }): Promise<SyncProfileResult> =>
+    runGoogleProfileSync(
+      context as unknown as SupabaseCtx,
+      data.officeId,
+      data.force ?? false,
+    ),
+  );
 
 // ---------------------------------------------------------------------------
 // Update — DARB -> Google

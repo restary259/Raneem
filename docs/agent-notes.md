@@ -3527,3 +3527,99 @@ verified non-vacuous by reintroducing the defect).
   (`public/locales` only — `dashboard` is not bundled in `src/locales`); nav
   `nav.googlePosts` / `nav.googlePhotos` under the `nav.googleBusiness` group.
   UI at `/team/google/photos` and `/team/google/posts`.
+
+
+## Real-time Google notifications + background sync (Phase 9, 2026-10-02)
+
+- Migration `20261002160000_office_google_realtime_notifications.sql`. Four new
+  tables: `google_business_events`, `google_business_sync_jobs`,
+  `google_business_location_health`, `google_business_health_events`; plus
+  `office_id/entity_type/entity_id/google_event_type` on `notifications` and the
+  Pub/Sub columns on `google_business_connections` / `office_google_profiles`.
+- **One Pub/Sub pipeline, not one per office.** Google's notification setting is
+  account-level with a single topic per account, so the Admin UI configures it
+  once (`admin_update_google_pubsub_config`); `route_google_business_event`
+  fans each event out to the office. Never offer a per-office topic.
+- **The webhook never trusts `office_id`.** `resolve_google_event_office` derives
+  the office from `google_location_id` -> `office_google_profiles`. An unknown
+  account/location is parked `UNKNOWN_ACCOUNT`/`UNKNOWN_LOCATION` and alerted to
+  Admin; it is never guessed. A mismatched account/location pair is rejected.
+- **Capture is separate from processing.** `record_google_business_event` is
+  idempotent on `google_message_id` (UNIQUE) and stores `payload_hash`; the
+  webhook persists + routes + ACKs, and the cron worker
+  (`dispatch_google_business_worker`) does the Google API calls. A Pub/Sub retry
+  therefore never repeats the heavy work.
+- **Reconciliation is enqueued by a cron-safe wrapper.**
+  `cron_enqueue_google_reconciliation` runs as the DB owner (pg_cron has no
+  `auth.role()`), so it does NOT go through
+  `enqueue_google_reconciliation_jobs`, which is service-role-gated. Both are
+  revoked from browser roles; only the cron wrapper is owner-callable.
+- **Fan-out timing is deliberate.** Review alerts are emitted by
+  `notify_new_google_review` from the review sync (star copy, deduped per
+  recipient). `GOOGLE_UPDATE` and `NEW_CUSTOMER_MEDIA` fan out at route time in
+  `route_google_business_event`. Health/VOM/duplicate notify only when
+  `record_google_location_health` reports a real transition -- a repeat of the
+  same event must not re-alert. The worker must thread the triggering event
+  through: `claim_google_business_sync_job` returns `trigger_event_id` and
+  `trigger_event_type`, and the HEALTH branch passes both into
+  `runGoogleHealthRefresh`, so the transition alert uses the *actual* Google
+  event (a `DUPLICATE_LOCATION` stays Admin-only) and is deduped per event +
+  recipient by `notify_google_business_event`.
+- **Redelivery is route-safe.** `record_google_business_event` is idempotent,
+  but capture and routing are two calls; if routing fails after the event is
+  stored, the Pub/Sub redelivery must re-run the (idempotent) route rather than
+  early-return on `is_duplicate` and strand the event UNROUTED.
+- **The event lifecycle is terminalized by the worker.**
+  `finish_google_business_sync_job` returns `(finalized, job_status,
+  will_retry)`; the worker marks the triggering event `PROCESSED` on success,
+  `FAILED` while a retry is pending, and `DEAD_LETTERED` once attempts are
+  exhausted -- which is what feeds the connection failure/dead-letter counters
+  and the Admin retry path. `FULL` is a bookkeeping row the worker completes
+  immediately; its component jobs do the work.
+- **Health is deterministic, never a score.** `google_health_status_from_states`
+  returns `HEALTHY|ATTENTION|ACTION_REQUIRED|UNAVAILABLE|UNKNOWN`;
+  `google_business_health_events` keeps the transition history.
+- **Sync jobs are coalesced and locked.** A partial unique index allows one
+  active job per `(office_id, sync_type)`; `claim_google_business_sync_job`
+  takes an owner token and `finish_google_business_sync_job` only writes for that
+  token, so a crashed worker cannot finalize a job it no longer owns. The
+  Phase 5-8 sync cores (`runGoogleReviewsSync`, `runGoogleMediaSync`,
+  `runGooglePostsSync`, `runGoogleProfileSync`, `runGooglePerformanceSync`) are
+  called unchanged -- Phase 9 orchestrates, it does not duplicate.
+- **Server layer.** `src/lib/googleBusinessRealtime.functions.ts` (capture, route,
+  worker, admin APIs), `src/lib/googleBusinessEvents.ts` (pure parser),
+  `src/lib/googlePubSubAuth.ts` (OIDC/JWT push verification),
+  `src/lib/googleBusinessHealth.server.ts`. Routes:
+  `src/routes/api/public/google-business/webhook.ts` (push endpoint) and
+  `src/routes/api/cron/google-business-worker.ts` (drainer).
+- **Realtime.** `google_business_reviews`, `google_business_location_health` and
+  `google_business_sync_jobs` are added to `supabase_realtime`; the office
+  Reviews page subscribes through `subscribeTables` and shows a "new review"
+  banner instead of silently rewriting the list. The browser never talks to
+  Google.
+- i18n: `googleIntegration.*`, `googleEvents.*` and
+  `googleReviews.newReviewBanner|viewNewReview` in en/ar/he (`public/locales`
+  only -- `dashboard` is not bundled in `src/locales`).
+- Verification: `supabase/diagnostics/office_google_phase9_deploy_verify.sql`
+  (read-only, 123 checks) plus
+  `supabase/diagnostics/office_google_phase9_behavior_verify.sql` (offline
+  behaviour harness, 62 checks). Unit tests: `src/lib/googleBusinessEvents.test.ts`,
+  `src/lib/googlePubSubAuth.test.ts`.
+- **Notification click routing is a deep-link, not authorization.** The event
+  notifier appends `?review=<entity_id>` to the review link; the Reviews page
+  reads it via `useSearchParams`, fetches that one review with
+  `get_office_google_review` (which re-checks `GOOGLE_VIEW` for the office and
+  rejects a review from another office) and selects it even when it is outside
+  the current page/filter. The route itself grants nothing.
+- **Office-facing health/sync surface.** `TeamGoogleBusinessPage` shows each
+  office's `get_office_google_health` state, the last Google event, recent
+  `list_office_google_sync_jobs` rows, and a "Sync office" button that enqueues
+  a FULL job through `requestOfficeGoogleSync` (authorized by
+  `authorize_google_office_action`, then created as service role). It
+  subscribes to `google_business_location_health` + `google_business_sync_jobs`
+  so the card updates itself.
+- Test-mock rule reminder: a page test that renders a component using
+  `subscribeTables` must give its `@/integrations/supabase/client` mock a
+  `channel()` (and `removeChannel`) surface, or `supabase.channel is not a
+  function` fails the whole file.
+

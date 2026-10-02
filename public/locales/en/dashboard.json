@@ -3080,7 +3080,8 @@
     "googleProfile": "Profile",
     "googlePosts": "Posts",
     "googlePhotos": "Photos",
-    "googleInsights": "Insights"
+    "googleInsights": "Insights",
+    "googleIntegration": "Google Integration"
   },
   "case": {
     "status": {
@@ -3670,7 +3671,9 @@
     "connectionErrorHint": "Ask an Admin to reconnect the Google Business connection. Existing review data is still available.",
     "pageOf": "{{from}}–{{to}} of {{total}}",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "newReviewBanner": "New review received",
+    "viewNewReview": "View"
   },
   "partner": {
     "earningsTitle": "My Earnings",
@@ -6576,5 +6579,87 @@
       "offer_url_not_https": "The offer URL must start with https://.",
       "language_invalid": "Choose a valid language."
     }
+  },
+  "googleIntegration": {
+    "title": "Google Business Integration",
+    "subtitle": "Real-time events, background sync and location health.",
+    "connection": "Connection",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "oauth": "OAuth",
+    "pubsub": "Pub/Sub",
+    "topic": "Topic",
+    "subscription": "Subscription",
+    "accountLevelHint": "Google allows one notification setting and one Pub/Sub topic per Google Business account.",
+    "oneTopicHint": "This configuration applies to every office on the connected Google account.",
+    "notificationTypes": "Notifications",
+    "notificationType": {
+      "GOOGLE_UPDATE": "Google updates",
+      "NEW_REVIEW": "New reviews",
+      "UPDATED_REVIEW": "Updated reviews",
+      "NEW_CUSTOMER_MEDIA": "Customer media",
+      "DUPLICATE_LOCATION": "Duplicate location",
+      "VOICE_OF_MERCHANT_UPDATED": "Voice of Merchant",
+      "UPDATED_LOCATION_STATE": "Location state"
+    },
+    "eventProcessing": "Event processing",
+    "receiving": "Receiving",
+    "healthy": "Healthy",
+    "misconfigured": "Misconfigured",
+    "failing": "Events not being processed",
+    "deadLetters": "Dead letters",
+    "noDeadLetters": "No failed events",
+    "inspect": "Inspect",
+    "retry": "Retry event",
+    "events": "Events",
+    "recentEvents": "Recent events",
+    "viewEvents": "View events",
+    "noEvents": "No Google events yet.",
+    "event": "Event",
+    "office": "Office",
+    "received": "Received",
+    "processed": "Processed",
+    "attention": "Attention",
+    "noAttention": "No offices need attention.",
+    "unansweredReviews": "{{count}} unanswered reviews",
+    "healthReason": "Reason",
+    "lastEvent": "Last Google event",
+    "lastEventReceived": "Last event received",
+    "lastEventProcessed": "Last event processed",
+    "lastReconciliation": "Last reconciliation",
+    "mappedOffices": "mapped offices",
+    "healthyMappings": "healthy mappings",
+    "pending": "Pending",
+    "running": "Running",
+    "failed": "Failed",
+    "syncing": "Syncing...",
+    "syncFailed": "Sync failed",
+    "syncQueued": "Sync queued",
+    "synchronized": "Updated just now",
+    "officeHealth": "Google Business",
+    "status": {
+      "HEALTHY": "Healthy",
+      "ATTENTION": "Attention",
+      "ACTION_REQUIRED": "Action required",
+      "UNAVAILABLE": "Unavailable",
+      "UNKNOWN": "Unknown"
+    },
+    "refresh": "Refresh",
+    "loading": "Loading...",
+    "loadError": "Could not load the integration status.",
+    "actionFailed": "The action failed. Try again.",
+    "syncOffice": "Sync office",
+    "save": "Save"
+  },
+  "googleEvents": {
+    "newReview": "New Google review",
+    "updatedReview": "Google review updated",
+    "customerMedia": "New customer photo",
+    "googleUpdate": "Google profile update available",
+    "locationStateChanged": "Google location status changed",
+    "duplicateLocation": "Potential duplicate location",
+    "voiceOfMerchantChanged": "Voice of Merchant status changed",
+    "syncFailed": "Google sync failed",
+    "connectionRequired": "Google Business connection needs attention"
   }
 }

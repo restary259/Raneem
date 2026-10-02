@@ -499,20 +499,11 @@ async function withRetry<T>(
  * independently; if metrics land and keywords fail the result is PARTIAL and the
  * stored metrics survive.
  */
-export const syncGooglePerformance = createServerFn({ method: "POST" })
-  .middleware([attachBearer, requireSupabaseAuth])
-  .inputValidator(
-    (input: { officeId: string; includeKeywords?: boolean; days?: number }) =>
-      z
-        .object({
-          officeId: z.string().uuid(),
-          includeKeywords: z.boolean().optional(),
-          days: z.number().int().min(1).max(MAX_BACKFILL_DAYS).optional(),
-        })
-        .parse(input),
-  )
-  .handler(async ({ data, context }): Promise<PerformanceSyncResult> => {
-    const ctx = context as unknown as SupabaseCtx;
+export async function runGooglePerformanceSync(
+  ctx: SupabaseCtx,
+  officeId: string,
+  options: { includeKeywords?: boolean; days?: number } = {},
+): Promise<PerformanceSyncResult> {
     const creds = gbpCreds();
     if (!creds) {
       return {
@@ -526,7 +517,7 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
       };
     }
 
-    const identity = await loadOfficeIdentity(ctx, data.officeId).catch(
+    const identity = await loadOfficeIdentity(ctx, officeId).catch(
       () => null,
     );
     if (!identity) {
@@ -548,21 +539,21 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
     const contextRows = await rpcOrThrow<GooglePerformanceContext[]>(
       ctx,
       "get_office_google_performance_context",
-      { p_office_id: data.officeId },
+      { p_office_id: officeId },
     );
     const timeZone = contextRows?.[0]?.timezone || "UTC";
 
     const endDate = officeToday(timeZone);
     const startDate = addDaysIso(
       endDate,
-      -((data.days ?? RECENT_SYNC_DAYS) - 1),
+      -((options.days ?? RECENT_SYNC_DAYS) - 1),
     );
 
     const lockToken = await rpcOrThrow<string | null>(
       ctx,
       "acquire_google_performance_sync_lock",
       {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_stale_after_seconds: 300,
       },
     );
@@ -579,7 +570,7 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
     }
 
     const metricsResult = await syncMetricsPhase(ctx, {
-      officeId: data.officeId,
+      officeId: officeId,
       locationId,
       startDate,
       endDate,
@@ -593,9 +584,9 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
     // Keywords are secondary: a failed metrics phase has already recorded the
     // failure and released the lock, so there is no point (and no valid lock)
     // for a keyword request.
-    if (metricsResult.ok && data.includeKeywords !== false) {
+    if (metricsResult.ok && options.includeKeywords !== false) {
       const kw = await syncKeywordsPhase(ctx, {
-        officeId: data.officeId,
+        officeId: officeId,
         locationId,
         timeZone,
         lockToken,
@@ -606,7 +597,7 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
     }
 
     await rpcOrThrow<void>(ctx, "release_google_performance_sync_lock", {
-      p_office_id: data.officeId,
+      p_office_id: officeId,
       p_token: lockToken,
     });
 
@@ -647,7 +638,26 @@ export const syncGooglePerformance = createServerFn({ method: "POST" })
       errorCode: null,
       errorMessage: null,
     };
-  });
+}
+
+export const syncGooglePerformance = createServerFn({ method: "POST" })
+  .middleware([attachBearer, requireSupabaseAuth])
+  .inputValidator(
+    (input: { officeId: string; includeKeywords?: boolean; days?: number }) =>
+      z
+        .object({
+          officeId: z.string().uuid(),
+          includeKeywords: z.boolean().optional(),
+          days: z.number().int().min(1).max(MAX_BACKFILL_DAYS).optional(),
+        })
+        .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<PerformanceSyncResult> =>
+    runGooglePerformanceSync(context as unknown as SupabaseCtx, data.officeId, {
+      includeKeywords: data.includeKeywords,
+      days: data.days,
+    }),
+  );
 
 async function syncMetricsPhase(
   ctx: SupabaseCtx,

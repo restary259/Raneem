@@ -975,7 +975,8 @@
     "googleProfile": "פרופיל",
     "googlePosts": "פוסטים",
     "googlePhotos": "תמונות",
-    "googleInsights": "תובנות"
+    "googleInsights": "תובנות",
+    "googleIntegration": "אינטגרציית Google"
   },
   "common": {
     "loadMore": "טעינת עוד",
@@ -3567,7 +3568,9 @@
     "connectionErrorHint": "בקש ממנהל לחבר מחדש את חיבור Google Business. נתוני הביקורות הקיימים עדיין זמינים.",
     "pageOf": "{{from}}–{{to}} מתוך {{total}}",
     "previous": "הקודם",
-    "next": "הבא"
+    "next": "הבא",
+    "newReviewBanner": "התקבלה ביקורת חדשה",
+    "viewNewReview": "הצג"
   },
   "agent": {
     "welcome": "ברוכים הבאים",
@@ -6578,5 +6581,87 @@
       "offer_url_not_https": "כתובת המבצע חייבת להתחיל ב-https://.",
       "language_invalid": "בחר שפה תקינה."
     }
+  },
+  "googleIntegration": {
+    "title": "אינטגרציית Google Business",
+    "subtitle": "אירועים בזמן אמת, סנכרון רקע ובריאות המיקום.",
+    "connection": "חיבור",
+    "connected": "מחובר",
+    "notConnected": "לא מחובר",
+    "oauth": "OAuth",
+    "pubsub": "Pub/Sub",
+    "topic": "נושא",
+    "subscription": "מנוי",
+    "accountLevelHint": "Google מאפשרת הגדרת התראות אחת ונושא Pub/Sub אחד לכל חשבון Google Business.",
+    "oneTopicHint": "הגדרה זו חלה על כל המשרדים בחשבון Google המחובר.",
+    "notificationTypes": "התראות",
+    "notificationType": {
+      "GOOGLE_UPDATE": "עדכוני Google",
+      "NEW_REVIEW": "ביקורות חדשות",
+      "UPDATED_REVIEW": "ביקורות מעודכנות",
+      "NEW_CUSTOMER_MEDIA": "מדיה של לקוחות",
+      "DUPLICATE_LOCATION": "מיקום כפול",
+      "VOICE_OF_MERCHANT_UPDATED": "Voice of Merchant",
+      "UPDATED_LOCATION_STATE": "מצב המיקום"
+    },
+    "eventProcessing": "עיבוד אירועים",
+    "receiving": "מקבל",
+    "healthy": "תקין",
+    "misconfigured": "מוגדר שגוי",
+    "failing": "אירועים אינם מעובדים",
+    "deadLetters": "הודעות שלא נמסרו",
+    "noDeadLetters": "אין אירועים שנכשלו",
+    "inspect": "בדיקה",
+    "retry": "נסה שוב",
+    "events": "אירועים",
+    "recentEvents": "אירועים אחרונים",
+    "viewEvents": "הצג אירועים",
+    "noEvents": "אין עדיין אירועי Google.",
+    "event": "אירוע",
+    "office": "משרד",
+    "received": "התקבל",
+    "processed": "עובד",
+    "attention": "דרוש מעקב",
+    "noAttention": "אין משרדים הדורשים תשומת לב.",
+    "unansweredReviews": "{{count}} ביקורות ללא מענה",
+    "healthReason": "סיבה",
+    "lastEvent": "אירוע Google אחרון",
+    "lastEventReceived": "אירוע אחרון שהתקבל",
+    "lastEventProcessed": "אירוע אחרון שעובד",
+    "lastReconciliation": "סנכרון אחרון",
+    "mappedOffices": "משרדים ממופים",
+    "healthyMappings": "מיפויים תקינים",
+    "pending": "ממתין",
+    "running": "פועל",
+    "failed": "נכשל",
+    "syncing": "מסנכרן...",
+    "syncFailed": "הסנכרון נכשל",
+    "syncQueued": "הסנכרון הוגדר בתור",
+    "synchronized": "עודכן כעת",
+    "officeHealth": "Google Business",
+    "status": {
+      "HEALTHY": "תקין",
+      "ATTENTION": "דרוש מעקב",
+      "ACTION_REQUIRED": "נדרשת פעולה",
+      "UNAVAILABLE": "לא זמין",
+      "UNKNOWN": "לא ידוע"
+    },
+    "refresh": "רענן",
+    "loading": "טוען...",
+    "loadError": "לא ניתן לטעון את מצב האינטגרציה.",
+    "actionFailed": "הפעולה נכשלה. נסה שוב.",
+    "syncOffice": "סנכרן משרד",
+    "save": "שמור"
+  },
+  "googleEvents": {
+    "newReview": "ביקורת חדשה ב-Google",
+    "updatedReview": "ביקורת Google עודכנה",
+    "customerMedia": "תמונה חדשה מלקוח",
+    "googleUpdate": "קיים עדכון לפרופיל Google",
+    "locationStateChanged": "מצב המיקום ב-Google השתנה",
+    "duplicateLocation": "מיקום כפול אפשרי",
+    "voiceOfMerchantChanged": "מצב Voice of Merchant השתנה",
+    "syncFailed": "סנכרון Google נכשל",
+    "connectionRequired": "חיבור Google Business דורש תשומת לב"
   }
 }

@@ -42,6 +42,7 @@ import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminCommissionRouteImport } from './routes/admin.commission'
 import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
+import { Route as AdminGoogleRouteImport } from './routes/admin.google'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
@@ -104,6 +105,7 @@ import { Route as TeamSpreadsheetRouteImport } from './routes/team.spreadsheet'
 import { Route as TeamSubmitRouteImport } from './routes/team.submit'
 import { Route as TeamWhatsappRouteImport } from './routes/team.whatsapp'
 import { Route as AdminCasesIdRouteImport } from './routes/admin.cases.$id'
+import { Route as ApiCronGoogleBusinessWorkerRouteImport } from './routes/api/cron/google-business-worker'
 import { Route as StudentToolsBagrutRouteImport } from './routes/student.tools.bagrut'
 import { Route as StudentToolsCvRouteImport } from './routes/student.tools.cv'
 import { Route as TeamAppointmentsIndexRouteImport } from './routes/team.appointments.index'
@@ -121,6 +123,7 @@ import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.in
 import { Route as TeamStudentsIdRouteImport } from './routes/team.students.$id'
 import { Route as TeamToolsCurrencyRouteImport } from './routes/team.tools.currency'
 import { Route as TeamToolsCvRouteImport } from './routes/team.tools.cv'
+import { Route as ApiPublicGoogleBusinessWebhookRouteImport } from './routes/api/public/google-business/webhook'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -291,6 +294,11 @@ const AdminCommissionRoute = AdminCommissionRouteImport.update({
 const AdminFinancialsRoute = AdminFinancialsRouteImport.update({
   id: '/financials',
   path: '/financials',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGoogleRoute = AdminGoogleRouteImport.update({
+  id: '/google',
+  path: '/google',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminInboxRoute = AdminInboxRouteImport.update({
@@ -606,6 +614,12 @@ const AdminCasesIdRoute = AdminCasesIdRouteImport.update({
   path: '/cases/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiCronGoogleBusinessWorkerRoute =
+  ApiCronGoogleBusinessWorkerRouteImport.update({
+    id: '/api/cron/google-business-worker',
+    path: '/api/cron/google-business-worker',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const StudentToolsBagrutRoute = StudentToolsBagrutRouteImport.update({
   id: '/tools/bagrut',
   path: '/tools/bagrut',
@@ -691,6 +705,12 @@ const TeamToolsCvRoute = TeamToolsCvRouteImport.update({
   path: '/tools/cv',
   getParentRoute: () => TeamRoute,
 } as any)
+const ApiPublicGoogleBusinessWebhookRoute =
+  ApiPublicGoogleBusinessWebhookRouteImport.update({
+    id: '/api/public/google-business/webhook',
+    path: '/api/public/google-business/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWhatsappWebhookRoute =
   ApiPublicWhatsappWebhookRouteImport.update({
     id: '/api/public/whatsapp/webhook',
@@ -759,6 +779,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/google': typeof AdminGoogleRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -822,6 +843,7 @@ export interface FileRoutesByFullPath {
   '/student/': typeof StudentIndexRoute
   '/team/': typeof TeamIndexRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/api/cron/google-business-worker': typeof ApiCronGoogleBusinessWorkerRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
@@ -839,6 +861,7 @@ export interface FileRoutesByFullPath {
   '/team/google/': typeof TeamGoogleIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/api/public/google-business/webhook': typeof ApiPublicGoogleBusinessWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -874,6 +897,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/google': typeof AdminGoogleRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -937,6 +961,7 @@ export interface FileRoutesByTo {
   '/student': typeof StudentIndexRoute
   '/team': typeof TeamIndexRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/api/cron/google-business-worker': typeof ApiCronGoogleBusinessWorkerRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
@@ -954,6 +979,7 @@ export interface FileRoutesByTo {
   '/team/google': typeof TeamGoogleIndexRoute
   '/team/partner-schools': typeof TeamPartnerSchoolsIndexRoute
   '/team/students': typeof TeamStudentsIndexRoute
+  '/api/public/google-business/webhook': typeof ApiPublicGoogleBusinessWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -995,6 +1021,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/commission': typeof AdminCommissionRoute
   '/admin/financials': typeof AdminFinancialsRoute
+  '/admin/google': typeof AdminGoogleRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -1058,6 +1085,7 @@ export interface FileRoutesById {
   '/student/': typeof StudentIndexRoute
   '/team/': typeof TeamIndexRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/api/cron/google-business-worker': typeof ApiCronGoogleBusinessWorkerRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
   '/team/appointments/today': typeof TeamAppointmentsTodayRoute
@@ -1075,6 +1103,7 @@ export interface FileRoutesById {
   '/team/google/': typeof TeamGoogleIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/api/public/google-business/webhook': typeof ApiPublicGoogleBusinessWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1117,6 +1146,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/commission'
     | '/admin/financials'
+    | '/admin/google'
     | '/admin/inbox'
     | '/admin/members'
     | '/admin/messages'
@@ -1180,6 +1210,7 @@ export interface FileRouteTypes {
     | '/student/'
     | '/team/'
     | '/admin/cases/$id'
+    | '/api/cron/google-business-worker'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
     | '/team/appointments/today'
@@ -1197,6 +1228,7 @@ export interface FileRouteTypes {
     | '/team/google/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/api/public/google-business/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1232,6 +1264,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/commission'
     | '/admin/financials'
+    | '/admin/google'
     | '/admin/inbox'
     | '/admin/members'
     | '/admin/messages'
@@ -1295,6 +1328,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/team'
     | '/admin/cases/$id'
+    | '/api/cron/google-business-worker'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
     | '/team/appointments/today'
@@ -1312,6 +1346,7 @@ export interface FileRouteTypes {
     | '/team/google'
     | '/team/partner-schools'
     | '/team/students'
+    | '/api/public/google-business/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1352,6 +1387,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/commission'
     | '/admin/financials'
+    | '/admin/google'
     | '/admin/inbox'
     | '/admin/members'
     | '/admin/messages'
@@ -1415,6 +1451,7 @@ export interface FileRouteTypes {
     | '/student/'
     | '/team/'
     | '/admin/cases/$id'
+    | '/api/cron/google-business-worker'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
     | '/team/appointments/today'
@@ -1432,6 +1469,7 @@ export interface FileRouteTypes {
     | '/team/google/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/api/public/google-business/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1479,6 +1517,8 @@ export interface RootRouteChildren {
   ResourcesLebenslaufBuilderRoute: typeof ResourcesLebenslaufBuilderRoute
   BlogIndexRoute: typeof BlogIndexRoute
   ResourcesIndexRoute: typeof ResourcesIndexRoute
+  ApiCronGoogleBusinessWorkerRoute: typeof ApiCronGoogleBusinessWorkerRoute
+  ApiPublicGoogleBusinessWebhookRoute: typeof ApiPublicGoogleBusinessWebhookRoute
   ApiPublicWhatsappWebhookRoute: typeof ApiPublicWhatsappWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1716,6 +1756,13 @@ declare module '@tanstack/react-router' {
       path: '/financials'
       fullPath: '/admin/financials'
       preLoaderRoute: typeof AdminFinancialsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/google': {
+      id: '/admin/google'
+      path: '/google'
+      fullPath: '/admin/google'
+      preLoaderRoute: typeof AdminGoogleRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/inbox': {
@@ -2152,6 +2199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCasesIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/cron/google-business-worker': {
+      id: '/api/cron/google-business-worker'
+      path: '/api/cron/google-business-worker'
+      fullPath: '/api/cron/google-business-worker'
+      preLoaderRoute: typeof ApiCronGoogleBusinessWorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/tools/bagrut': {
       id: '/student/tools/bagrut'
       path: '/tools/bagrut'
@@ -2271,6 +2325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamToolsCvRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/api/public/google-business/webhook': {
+      id: '/api/public/google-business/webhook'
+      path: '/api/public/google-business/webhook'
+      fullPath: '/api/public/google-business/webhook'
+      preLoaderRoute: typeof ApiPublicGoogleBusinessWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/whatsapp/webhook': {
       id: '/api/public/whatsapp/webhook'
       path: '/api/public/whatsapp/webhook'
@@ -2321,6 +2382,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminCommissionRoute: typeof AdminCommissionRoute
   AdminFinancialsRoute: typeof AdminFinancialsRoute
+  AdminGoogleRoute: typeof AdminGoogleRoute
   AdminInboxRoute: typeof AdminInboxRoute
   AdminMembersRoute: typeof AdminMembersRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
@@ -2345,6 +2407,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminCommissionRoute: AdminCommissionRoute,
   AdminFinancialsRoute: AdminFinancialsRoute,
+  AdminGoogleRoute: AdminGoogleRoute,
   AdminInboxRoute: AdminInboxRoute,
   AdminMembersRoute: AdminMembersRoute,
   AdminMessagesRoute: AdminMessagesRoute,
@@ -2549,6 +2612,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesLebenslaufBuilderRoute: ResourcesLebenslaufBuilderRoute,
   BlogIndexRoute: BlogIndexRoute,
   ResourcesIndexRoute: ResourcesIndexRoute,
+  ApiCronGoogleBusinessWorkerRoute: ApiCronGoogleBusinessWorkerRoute,
+  ApiPublicGoogleBusinessWebhookRoute: ApiPublicGoogleBusinessWebhookRoute,
   ApiPublicWhatsappWebhookRoute: ApiPublicWhatsappWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

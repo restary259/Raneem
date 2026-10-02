@@ -203,17 +203,16 @@ const syncInput = z.object({ officeId: z.string().uuid() });
  * Posts Google no longer returns are marked DELETED_EXTERNALLY, never left
  * reading PUBLISHED forever.
  */
-export const syncGooglePosts = createServerFn({ method: "POST" })
-  .middleware([attachBearer, requireSupabaseAuth])
-  .inputValidator((input) => syncInput.parse(input))
-  .handler(async ({ context, data }): Promise<SyncPostsResult> => {
-    const ctx = context as unknown as SupabaseCtx;
+export async function runGooglePostsSync(
+  ctx: SupabaseCtx,
+  officeId: string,
+): Promise<SyncPostsResult> {
     const empty = { inserted: 0, updated: 0, markedDeleted: 0 };
 
     const acquired = await rpcOrThrow<boolean>(
       ctx,
       "acquire_google_posts_sync_lock",
-      { p_office_id: data.officeId, p_stale_after_seconds: 120 },
+      { p_office_id: officeId, p_stale_after_seconds: 120 },
     );
     if (!acquired) {
       return {
@@ -228,7 +227,7 @@ export const syncGooglePosts = createServerFn({ method: "POST" })
     const creds = gbpCreds();
     if (!creds) {
       await rpcOrThrow(ctx, "admin_mark_google_posts_sync_error", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_error_code: "not_linked",
         p_error_message: "Google Business connection is not configured",
       });
@@ -242,7 +241,7 @@ export const syncGooglePosts = createServerFn({ method: "POST" })
     }
 
     try {
-      const identity = await loadOfficeIdentity(ctx, data.officeId);
+      const identity = await loadOfficeIdentity(ctx, officeId);
 
       const { items: raw, complete } = await collectAllPages<GbpRawPost>(
         async (pageToken) => {
@@ -270,7 +269,7 @@ export const syncGooglePosts = createServerFn({ method: "POST" })
       const applied = await adminRpcOrThrow<
         { inserted: number; updated: number; marked_deleted: number }[]
       >("admin_sync_google_posts", {
-        p_office_id: data.officeId,
+        p_office_id: officeId,
         p_posts: normalized,
         // An incomplete walk must not mark anything DELETED_EXTERNALLY.
         p_complete: complete,
@@ -294,7 +293,7 @@ export const syncGooglePosts = createServerFn({ method: "POST" })
       console.error(`Google posts sync failed [${err.status}]: ${err.message}`);
       try {
         await rpcOrThrow(ctx, "admin_mark_google_posts_sync_error", {
-          p_office_id: data.officeId,
+          p_office_id: officeId,
           p_error_code: err.code,
           p_error_message: err.message,
         });
@@ -309,7 +308,14 @@ export const syncGooglePosts = createServerFn({ method: "POST" })
         errorMessage: err.message,
       };
     }
-  });
+}
+
+export const syncGooglePosts = createServerFn({ method: "POST" })
+  .middleware([attachBearer, requireSupabaseAuth])
+  .inputValidator((input) => syncInput.parse(input))
+  .handler(async ({ context, data }): Promise<SyncPostsResult> =>
+    runGooglePostsSync(context as unknown as SupabaseCtx, data.officeId),
+  );
 
 // ---------------------------------------------------------------------------
 // Draft create / update

@@ -31,10 +31,23 @@ const rpcCalls: { fn: string; args: RpcArgs }[] = [];
 
 vi.mock("@/integrations/supabase/client", () => {
   // Like the real client, rpc depends on `this` — a detached call must fail.
+  const channel = () => {
+    const ch = {
+      on: () => ch,
+      subscribe: () => ch,
+      unsubscribe: () => undefined,
+    };
+    return ch;
+  };
   const supabase = {
     rest: {},
+    channel,
+    removeChannel: () => Promise.resolve(),
     rpc(this: { rest?: unknown } | undefined, fn: string, args?: RpcArgs) {
-      if (!this || !this.rest) throw new TypeError("undefined is not an object (evaluating 'this.rest')");
+      if (!this || !this.rest)
+        throw new TypeError(
+          "undefined is not an object (evaluating 'this.rest')",
+        );
       rpcCalls.push({ fn, args });
       return Promise.resolve(rpcImpl(fn, args));
     },
