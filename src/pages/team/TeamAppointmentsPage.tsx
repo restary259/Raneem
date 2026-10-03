@@ -1154,153 +1154,159 @@ export default function TeamAppointmentsPage() {
 
       {/* ══ DAY VIEW ══ */}
       {!loading && view === "day" && (
-        <div className="flex-1 overflow-auto max-w-full">
-          <div className="min-w-0">
-            <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-2.5">
-              <div
-                className={cn(
-                  "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium",
-                  isToday(currentDate)
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground",
-                )}
-              >
-                <CalendarIcon className="h-3.5 w-3.5" />
-                {currentDate.toLocaleDateString(calLocale, {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}
-                {isToday(currentDate) && (
-                  <span className="text-xs opacity-80">
-                    {t("team.appointments.todayPill")}
-                  </span>
-                )}
-              </div>
-            </div>
-            {HOURS.map((hour) => {
-              const slotAppts = getSlot(currentDate, hour);
-              const isOver =
-                dragOverSlot &&
-                isSameDay(dragOverSlot.day, currentDate) &&
-                dragOverSlot.hour === hour;
-              return (
-                <div
-                  key={hour}
-                  className={cn(
-                    "grid border-b border-border/40 min-h-[72px] transition-colors",
-                    isOver ? "bg-violet-50" : "hover:bg-muted/15",
-                  )}
-                  style={{ gridTemplateColumns: "64px 1fr" }}
-                  onDragOver={(e) => handleDragOver(e, currentDate, hour)}
-                  onDrop={(e) => handleDrop(e, currentDate, hour)}
-                  onDragLeave={() => setDragOverSlot(null)}
-                  onClick={() => openNew(currentDate, hour)}
-                >
-                  <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-e border-border/40 select-none">
-                    {hourLabel(hour)}
-                  </div>
-                  <div className="min-w-0 p-1.5 cursor-pointer">
-                    {isOver && (
-                      <div className="text-[10px] text-violet-600 font-medium mb-1">
-                        {t("team.appointments.dropSchedule")}
-                      </div>
-                    )}
-                    {slotAppts.map((a) => (
-                      <ApptBlock key={a.id} appt={a} />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ══ WEEK VIEW ══ */}
-      {!loading && view === "week" && (
-        <div className="flex-1 overflow-auto max-w-full">
-          <div className="min-w-[700px]">
-            {/* Day headers */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="shrink-0 border-b border-border bg-background px-4 py-2.5">
             <div
-              className="sticky top-0 z-10 bg-background border-b border-border grid"
-              style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
+              className={cn(
+                "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium",
+                isToday(currentDate)
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-foreground",
+              )}
             >
-              <div className="border-e border-border/40" />
-              {weekDays.map((day) => (
-                <div
-                  key={day.toISOString()}
-                  className={cn(
-                    "py-2 px-1 text-center border-e border-border/40",
-
-                    isToday(day) && "bg-violet-50/50",
-                  )}
-                >
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                    {day.toLocaleDateString(calLocale, { weekday: "short" })}
-                  </div>
-                  <div
-                    className={cn(
-                      "text-sm font-semibold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5 cursor-pointer transition-colors",
-                      isToday(day)
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted",
-                    )}
-                    onClick={() => {
-                      setCurrentDate(day);
-                      setView("day");
-                    }}
-                  >
-                    {format(day, "d")}
-                  </div>
-                </div>
-              ))}
+              <CalendarIcon className="h-3.5 w-3.5" />
+              {currentDate.toLocaleDateString(calLocale, {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
+              {isToday(currentDate) && (
+                <span className="text-xs opacity-80">
+                  {t("team.appointments.todayPill")}
+                </span>
+              )}
             </div>
-            {/* Hour rows */}
-            {HOURS.map((hour) => (
-              <div
-                key={hour}
-                className="grid border-b border-border/30 min-h-[64px]"
-                style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
-              >
-                <div className="py-1 px-3 text-xs text-muted-foreground border-e border-border/40 flex items-start pt-2 shrink-0 select-none">
-                  {hourLabel(hour)}
-                </div>
-                {weekDays.map((day) => {
-                  const slotAppts = getSlot(day, hour);
-                  const isOver =
-                    dragOverSlot &&
-                    isSameDay(dragOverSlot.day, day) &&
-                    dragOverSlot.hour === hour;
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className={cn(
-                        "min-w-0 border-e border-border/30 p-0.5 relative transition-colors cursor-pointer",
-
-                        isToday(day) && "bg-violet-50/25",
-                        isOver ? "bg-violet-100/70" : "hover:bg-muted/20",
-                      )}
-                      onDragOver={(e) => handleDragOver(e, day, hour)}
-                      onDrop={(e) => handleDrop(e, day, hour)}
-                      onDragLeave={() => setDragOverSlot(null)}
-                      onClick={() => openNew(day, hour)}
-                    >
+          </div>
+          <div className="min-h-0 flex-1 overflow-auto max-w-full">
+            <div className="flex min-h-full min-w-0 flex-col">
+              {HOURS.map((hour) => {
+                const slotAppts = getSlot(currentDate, hour);
+                const isOver =
+                  dragOverSlot &&
+                  isSameDay(dragOverSlot.day, currentDate) &&
+                  dragOverSlot.hour === hour;
+                return (
+                  <div
+                    key={hour}
+                    className={cn(
+                      "grid flex-1 border-b border-border/40 min-h-[72px] transition-colors",
+                      isOver ? "bg-violet-50" : "hover:bg-muted/15",
+                    )}
+                    style={{ gridTemplateColumns: "64px 1fr" }}
+                    onDragOver={(e) => handleDragOver(e, currentDate, hour)}
+                    onDrop={(e) => handleDrop(e, currentDate, hour)}
+                    onDragLeave={() => setDragOverSlot(null)}
+                    onClick={() => openNew(currentDate, hour)}
+                  >
+                    <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-e border-border/40 select-none">
+                      {hourLabel(hour)}
+                    </div>
+                    <div className="min-w-0 p-1.5 cursor-pointer">
                       {isOver && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                          <div className="text-[9px] text-violet-600 font-semibold bg-violet-50 border border-violet-200 rounded-md px-1.5 py-0.5">
-                            {t("team.appointments.dropHere")}
-                          </div>
+                        <div className="text-[10px] text-violet-600 font-medium mb-1">
+                          {t("team.appointments.dropSchedule")}
                         </div>
                       )}
                       {slotAppts.map((a) => (
                         <ApptBlock key={a.id} appt={a} />
                       ))}
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ WEEK VIEW ══ */}
+      {!loading && view === "week" && (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-auto max-w-full">
+            <div className="flex min-h-full min-w-[700px] flex-col">
+              {/* Day headers */}
+              <div
+                className="sticky top-0 z-10 bg-background border-b border-border grid shrink-0"
+                style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
+              >
+                <div className="border-e border-border/40" />
+                {weekDays.map((day) => (
+                  <div
+                    key={day.toISOString()}
+                    className={cn(
+                      "py-2 px-1 text-center border-e border-border/40",
+
+                      isToday(day) && "bg-violet-50/50",
+                    )}
+                  >
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      {day.toLocaleDateString(calLocale, { weekday: "short" })}
+                    </div>
+                    <div
+                      className={cn(
+                        "text-sm font-semibold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5 cursor-pointer transition-colors",
+                        isToday(day)
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted",
+                      )}
+                      onClick={() => {
+                        setCurrentDate(day);
+                        setView("day");
+                      }}
+                    >
+                      {format(day, "d")}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+              {/* Hour rows */}
+              <div className="flex min-h-0 flex-1 flex-col">
+                {HOURS.map((hour) => (
+                  <div
+                    key={hour}
+                    className="grid flex-1 border-b border-border/30 min-h-[64px]"
+                    style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
+                  >
+                    <div className="py-1 px-3 text-xs text-muted-foreground border-e border-border/40 flex items-start pt-2 shrink-0 select-none">
+                      {hourLabel(hour)}
+                    </div>
+                    {weekDays.map((day) => {
+                      const slotAppts = getSlot(day, hour);
+                      const isOver =
+                        dragOverSlot &&
+                        isSameDay(dragOverSlot.day, day) &&
+                        dragOverSlot.hour === hour;
+                      return (
+                        <div
+                          key={day.toISOString()}
+                          className={cn(
+                            "min-w-0 border-e border-border/30 p-0.5 relative transition-colors cursor-pointer",
+
+                            isToday(day) && "bg-violet-50/25",
+                            isOver ? "bg-violet-100/70" : "hover:bg-muted/20",
+                          )}
+                          onDragOver={(e) => handleDragOver(e, day, hour)}
+                          onDrop={(e) => handleDrop(e, day, hour)}
+                          onDragLeave={() => setDragOverSlot(null)}
+                          onClick={() => openNew(day, hour)}
+                        >
+                          {isOver && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                              <div className="text-[9px] text-violet-600 font-semibold bg-violet-50 border border-violet-200 rounded-md px-1.5 py-0.5">
+                                {t("team.appointments.dropHere")}
+                              </div>
+                            </div>
+                          )}
+                          {slotAppts.map((a) => (
+                            <ApptBlock key={a.id} appt={a} />
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
