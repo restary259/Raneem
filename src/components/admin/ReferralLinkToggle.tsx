@@ -16,6 +16,7 @@ const ReferralLinkToggle: React.FC<Props> = ({ userId, userName, value, onChange
     <ProfileFeatureToggle
       userId={userId}
       column="referral_code_enabled"
+      label={t('admin.features.referralLink', 'Referral link')}
       value={value}
       onChanged={onChanged}
       enableTitle={t('admin.features.referralEnableTitle', 'Enable referral link?')}

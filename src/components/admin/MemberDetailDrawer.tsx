@@ -25,15 +25,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatILS } from "@/lib/money";
-import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Trash2, Banknote, Landmark, Send, KeyRound, MessageCircle, Phone } from "lucide-react";
-import AgentInviteToggle from "./AgentInviteToggle";
-import AgentCreateAccountsToggle from "./AgentCreateAccountsToggle";
-import ProfileFeatureToggle from "./ProfileFeatureToggle";
-import VoiceCallsToggle from "./VoiceCallsToggle";
-import ReassignAppointmentsToggle from "./ReassignAppointmentsToggle";
+import { Shield, Handshake, UserCheck, Users, Crown, DollarSign, Award, Network, Banknote, Landmark, BarChart3, ShieldCheck } from "lucide-react";
+import AccountPermissionsTab from "./AccountPermissionsTab";
 import DeactivateAccountDialog, { type DeactivateTarget } from "./DeactivateAccountDialog";
-import { cn } from "@/lib/utils";
 import { getRoleLabel, getRoleColors } from "@/lib/roleLabels";
 
 interface MemberDetailDrawerProps {
@@ -70,11 +66,6 @@ interface PanelSlot {
   Close: React.ElementType;
 }
 
-interface AgentFlags {
-  invite: boolean;
-  create: boolean;
-}
-
 interface PanelProps {
   member: import("./MemberList").MemberRow;
   breakdown: CommissionBreakdown | null;
@@ -86,45 +77,13 @@ interface PanelProps {
   t: TFunction;
   onChanged?: () => void;
   onOpenChange: (open: boolean) => void;
+  onDeactivate: () => void;
+  activePermissions: number;
+  setActivePermissions: React.Dispatch<React.SetStateAction<number>>;
   deactivateTarget: DeactivateTarget | null;
   setDeactivateTarget: React.Dispatch<React.SetStateAction<DeactivateTarget | null>>;
-  agentFlags: AgentFlags | null;
-  setAgentFlags: React.Dispatch<React.SetStateAction<AgentFlags | null>>;
-  agentFlagsError: boolean;
-  whatsappInboxEnabled: boolean;
-  setWhatsappInboxEnabled: React.Dispatch<React.SetStateAction<boolean>>;
-  internalTeamChatEnabled: boolean;
-  setInternalTeamChatEnabled: React.Dispatch<React.SetStateAction<boolean>>;
-  voiceCallsEnabled: boolean;
-  setVoiceCallsEnabled: React.Dispatch<React.SetStateAction<boolean>>;
-  onRetryAgentFlags: () => void;
   slots: PanelSlot;
   bodyClassName: string;
-}
-
-function AgentActionRow({
-  icon: Icon,
-  title,
-  description,
-  control,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  control: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border p-3">
-      <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
-        <Icon className="h-4 w-4 text-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium leading-tight">{title}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-      </div>
-      {control}
-    </div>
-  );
 }
 
 function MemberDetailPanel({
@@ -138,18 +97,11 @@ function MemberDetailPanel({
   t,
   onChanged,
   onOpenChange,
+  onDeactivate,
+  activePermissions,
+  setActivePermissions,
   deactivateTarget,
   setDeactivateTarget,
-  agentFlags,
-  setAgentFlags,
-  agentFlagsError,
-  whatsappInboxEnabled,
-  setWhatsappInboxEnabled,
-  internalTeamChatEnabled,
-  setInternalTeamChatEnabled,
-  voiceCallsEnabled,
-  setVoiceCallsEnabled,
-  onRetryAgentFlags,
   slots,
   bodyClassName,
 }: PanelProps) {
@@ -190,45 +142,48 @@ function MemberDetailPanel({
             </Description>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={member.is_deactivated ? "destructive" : "outline"} className="gap-1">
-            {member.is_deactivated ? (
-              <>
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                </svg>
-                {t("admin.members.statusDeactivated", "Deactivated")}
-              </>
-            ) : (
-              <>
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <path d="M22 4L12 14.01l-3-3" />
-                </svg>
-                {t("admin.members.statusActive", "Active")}
-              </>
-            )}
-          </Badge>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              setDeactivateTarget({
-                id: member.requester_id,
-                full_name: member.full_name,
-                email: member.email,
-                roleLabel,
-              })
-            }
-          >
-            <Trash2 className="h-4 w-4" />
-            {t("admin.members.deactivate", "Deactivate")}
-          </Button>
-        </div>
+        <Badge variant={member.is_deactivated ? "destructive" : "outline"} className="gap-1 self-start sm:self-auto">
+          {member.is_deactivated ? (
+            <>
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              </svg>
+              {t("admin.members.statusDeactivated", "Deactivated")}
+            </>
+          ) : (
+            <>
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <path d="M22 4L12 14.01l-3-3" />
+              </svg>
+              {t("admin.members.statusActive", "Active")}
+            </>
+          )}
+        </Badge>
       </Header>
 
-      <div className={bodyClassName}>
+      <Tabs defaultValue="overview" className="flex flex-col gap-4">
+        <div className={bodyClassName}>
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="overview" className="gap-2">
+              <BarChart3 className="h-4 w-4 shrink-0" />
+              <span className="truncate">{t("admin.members.tabOverview", "Overview & Financials")}</span>
+            </TabsTrigger>
+            <TabsTrigger value="permissions" className="gap-2">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <span className="truncate">{t("admin.members.tabPermissions", "Permissions & Access")}</span>
+              {activePermissions > 0 && (
+                <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1.5 text-[10px] tabular-nums">
+                  {activePermissions}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="overview" className="mt-0">
+          <div className={bodyClassName}>
         {/* Primary KPIs */}
         <Card>
           <CardContent className="p-4">
@@ -331,179 +286,6 @@ function MemberDetailPanel({
           <CashDebtsCard teamMemberId={member.requester_id} t={t} onChanged={onChanged} />
         )}
 
-        {/* Team member communication access */}
-        {member.role === "team_member" && (
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                {t("admin.members.sectionAccess", "Access")}
-              </h3>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                    <MessageCircle className="h-4 w-4 text-emerald-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-tight">
-                      {t("admin.members.whatsappInboxTitle", "WhatsApp inbox")}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t("admin.members.whatsappInboxDesc", "Allow this team member to access the shared WhatsApp chat box.")}
-                    </p>
-                  </div>
-                  <ProfileFeatureToggle
-                    userId={member.requester_id}
-                    column="whatsapp_inbox_enabled"
-                    value={whatsappInboxEnabled}
-                    onChanged={setWhatsappInboxEnabled}
-                    enableTitle={t("admin.members.whatsappInboxEnableTitle", "Enable WhatsApp inbox?")}
-                    enableBody={t("admin.members.whatsappInboxEnableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will be able to open the shared WhatsApp inbox and message assigned or unassigned conversations.",
-                    })}
-                    disableTitle={t("admin.members.whatsappInboxDisableTitle", "Disable WhatsApp inbox?")}
-                    disableBody={t("admin.members.whatsappInboxDisableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will no longer see the shared WhatsApp inbox. They can still use the WhatsApp button from a case profile to open that case's attached number.",
-                    })}
-                    enabledToast={t("admin.members.whatsappInboxEnabled", "WhatsApp inbox enabled")}
-                    disabledToast={t("admin.members.whatsappInboxDisabled", "WhatsApp inbox disabled")}
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-tight">
-                      {t("admin.members.internalTeamChatTitle", "Internal team chat")}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t("admin.members.internalTeamChatDesc", "Allow direct chats with other team members.")}
-                    </p>
-                  </div>
-                  <ProfileFeatureToggle
-                    userId={member.requester_id}
-                    column="internal_team_chat_enabled"
-                    value={internalTeamChatEnabled}
-                    onChanged={setInternalTeamChatEnabled}
-                    enableTitle={t("admin.members.internalTeamChatEnableTitle", "Enable internal team chat?")}
-                    enableBody={t("admin.members.internalTeamChatEnableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will be able to start direct chats with other team members. This does not grant manager or admin permissions.",
-                    })}
-                    disableTitle={t("admin.members.internalTeamChatDisableTitle", "Disable internal team chat?")}
-                    disableBody={t("admin.members.internalTeamChatDisableBody", {
-                      name: member.full_name,
-                      defaultValue: "{{name}} will no longer be able to start new team-member chats.",
-                    })}
-                    enabledToast={t("admin.members.internalTeamChatEnabled", "Internal team chat enabled")}
-                    disabledToast={t("admin.members.internalTeamChatDisabled", "Internal team chat disabled")}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Voice calls — every role, because a call is gated by "these two
-            people can already message each other", not by role. */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("admin.members.sectionCommunication", "Communication")}
-            </h3>
-
-            <div className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10">
-                <Phone className="h-4 w-4 text-brand" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium leading-tight">
-                  {t("admin.members.voiceCallsTitle", "Voice calls")}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {t("admin.members.voiceCallsDesc", "Allow voice calls with people they already chat with directly.")}
-                </p>
-              </div>
-              <VoiceCallsToggle
-                userId={member.requester_id}
-                userName={member.full_name}
-                value={voiceCallsEnabled}
-                onChanged={setVoiceCallsEnabled}
-              />
-            </div>
-            {member.role === "team_member" && (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{t("admin.members.reassignSwitch", "Reassign office appointments")}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {t("admin.members.reassignDesc", "Can move appointments to other members of their office.")}
-                  </p>
-                </div>
-                <ReassignAppointmentsToggle userId={member.requester_id} userName={member.full_name} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Role-specific Actions */}
-        {member.role === "agent" && (
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                {t("admin.members.sectionActions", "Actions")}
-              </h3>
-              {agentFlagsError ? (
-                <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                  <p className="text-xs text-destructive">
-                    {t("admin.agents.flagsLoadError", "Couldn't load this agent's permissions.")}
-                  </p>
-                  <Button variant="outline" size="sm" onClick={onRetryAgentFlags}>
-                    {t("common.retry", "Retry")}
-                  </Button>
-                </div>
-              ) : agentFlags === null ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-14 w-full" />
-                  <Skeleton className="h-14 w-full" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <AgentActionRow
-                    icon={Send}
-                    title={t("admin.agents.inviteRowTitle", "Direct invites")}
-                    description={t("admin.agents.inviteRowDesc", "Send partner/ambassador invites from the agent dashboard")}
-                    control={
-                      <AgentInviteToggle
-                        agentId={member.requester_id}
-                        agentName={member.full_name}
-                        canInvite={agentFlags.invite}
-                        onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, invite: next })}
-                      />
-                    }
-                  />
-                  <AgentActionRow
-                    icon={KeyRound}
-                    title={t("admin.agents.createRowTitle", "Manual account creation")}
-                    description={t("admin.agents.createRowDesc", "Create partner/ambassador accounts with a temp password")}
-                    control={
-                      <AgentCreateAccountsToggle
-                        agentId={member.requester_id}
-                        agentName={member.full_name}
-                        canCreateAccounts={agentFlags.create}
-                        onChanged={(next) => setAgentFlags((prev) => prev && { ...prev, create: next })}
-                      />
-                    }
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {/* Meta info */}
         <Card>
           <CardContent className="p-4">
@@ -530,7 +312,20 @@ function MemberDetailPanel({
             </div>
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="permissions" className="mt-0">
+          <div className={bodyClassName}>
+            <AccountPermissionsTab
+              member={member}
+              onChanged={onChanged}
+              onDeactivate={onDeactivate}
+              onActiveCountChange={setActivePermissions}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <DeactivateAccountDialog
         target={deactivateTarget}
@@ -723,59 +518,7 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   const [breakdown, setBreakdown] = useState<CommissionBreakdown | null>(null);
   const [loadingBreakdown, setLoadingBreakdown] = useState(false);
   const [deactivateTarget, setDeactivateTarget] = useState<DeactivateTarget | null>(null);
-  const [agentFlags, setAgentFlags] = useState<AgentFlags | null>(null);
-  const [agentFlagsError, setAgentFlagsError] = useState(false);
-  const [agentFlagsRetry, setAgentFlagsRetry] = useState(0);
-  const [whatsappInboxEnabled, setWhatsappInboxEnabled] = useState(false);
-  const [internalTeamChatEnabled, setInternalTeamChatEnabled] = useState(false);
-  const [voiceCallsEnabled, setVoiceCallsEnabled] = useState(false);
-
-  useEffect(() => {
-    setAgentFlags(null);
-    setAgentFlagsError(false);
-    setWhatsappInboxEnabled(false);
-    setInternalTeamChatEnabled(false);
-    setVoiceCallsEnabled(false);
-
-    if (!member?.requester_id) return;
-
-    let stale = false;
-    const loadProfileFlags = async () => {
-      const select = member.role === "agent"
-        ? "agent_can_invite_directly, agent_can_create_accounts, whatsapp_inbox_enabled, internal_team_chat_enabled, voice_calls_enabled"
-        : "whatsapp_inbox_enabled, internal_team_chat_enabled, voice_calls_enabled";
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(select)
-        .eq("id", member.requester_id)
-        .maybeSingle();
-
-      if (stale) return;
-
-      if (error) {
-        console.error("Failed to load member feature flags:", error);
-        if (member.role === "agent") setAgentFlagsError(true);
-        return;
-      }
-
-      setWhatsappInboxEnabled(!!(data as any)?.whatsapp_inbox_enabled);
-      setInternalTeamChatEnabled(!!(data as any)?.internal_team_chat_enabled);
-      setVoiceCallsEnabled(!!(data as any)?.voice_calls_enabled);
-
-      if (member.role === "agent") {
-        setAgentFlags({
-          invite: !!(data as any)?.agent_can_invite_directly,
-          create: !!(data as any)?.agent_can_create_accounts,
-        });
-      }
-    };
-
-    void loadProfileFlags();
-
-    return () => {
-      stale = true;
-    };
-  }, [member?.requester_id, member?.role, agentFlagsRetry]);
+  const [activePermissions, setActivePermissions] = useState(0);
 
   const loadBreakdown = useCallback(async (id: string) => {
     setLoadingBreakdown(true);
@@ -850,6 +593,14 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     { label: t("admin.members.kpiAvailable", "Available for Payout"), value: formatILS(member.available_amount) },
   ];
 
+  const onDeactivate = () =>
+    setDeactivateTarget({
+      id: member.requester_id,
+      full_name: member.full_name,
+      email: member.email,
+      roleLabel,
+    });
+
   const panelProps = {
     member,
     breakdown,
@@ -861,18 +612,11 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     t,
     onChanged,
     onOpenChange,
+    onDeactivate,
+    activePermissions,
+    setActivePermissions,
     deactivateTarget,
     setDeactivateTarget,
-    agentFlags,
-    setAgentFlags,
-    agentFlagsError,
-    whatsappInboxEnabled,
-    setWhatsappInboxEnabled,
-    internalTeamChatEnabled,
-    setInternalTeamChatEnabled,
-    voiceCallsEnabled,
-    setVoiceCallsEnabled,
-    onRetryAgentFlags: () => setAgentFlagsRetry((n) => n + 1),
   };
 
   if (isMobile) {

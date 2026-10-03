@@ -16,6 +16,7 @@ const ApplyFormToggle: React.FC<Props> = ({ userId, userName, value, onChanged }
     <ProfileFeatureToggle
       userId={userId}
       column="apply_form_enabled"
+      label={t('admin.features.applyForm', 'Built-in apply form')}
       value={value}
       onChanged={onChanged}
       enableTitle={t('admin.features.applyEnableTitle', 'Enable apply form?')}

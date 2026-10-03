@@ -105,6 +105,13 @@ const renderDrawer = () =>
     />,
   );
 
+// The permission switches now live on the "Permissions & Access" tab of the
+// drawer; the Overview tab is the default. Radix unmounts the inactive panel,
+// so the tab must be opened before the agent toggles mount.
+const openPermissionsTab = async () => {
+  await userEvent.click(screen.getByRole('tab', { name: /permissions/i }));
+};
+
 const switchState = (el: HTMLElement) => el.getAttribute('data-state');
 
 // The drawer renders one switch per per-profile flag, and that set grows as
@@ -127,6 +134,7 @@ describe('MemberDetailDrawer agent permission toggles', () => {
       error: null,
     };
     renderDrawer();
+    await openPermissionsTab();
 
     await waitFor(() => expect(inviteSwitch()).toBeInTheDocument());
     expect(switchState(inviteSwitch())).toBe('checked');
@@ -139,6 +147,7 @@ describe('MemberDetailDrawer agent permission toggles', () => {
       error: null,
     };
     renderDrawer();
+    await openPermissionsTab();
 
     await waitFor(() => expect(inviteSwitch()).toBeInTheDocument());
     const invite = inviteSwitch();
@@ -160,6 +169,7 @@ describe('MemberDetailDrawer agent permission toggles', () => {
       error: null,
     };
     renderDrawer();
+    await openPermissionsTab();
 
     await waitFor(() => expect(inviteSwitch()).toBeInTheDocument());
     const invite = inviteSwitch();
@@ -178,12 +188,13 @@ describe('MemberDetailDrawer agent permission toggles', () => {
   it('load error shows a retryable error row, and retry recovers', async () => {
     flagsResult = { data: null, error: { message: 'boom' } };
     renderDrawer();
+    await openPermissionsTab();
 
     expect(
-      await screen.findByText("Couldn't load this agent's permissions."),
+      await screen.findByText("Couldn't load this account's permissions."),
     ).toBeInTheDocument();
-    // Only the agent switches are gated on the error; the voice-calls switch is
-    // not, so it stays mounted and this asserts the agent row is suppressed.
+    // A failed flags read gates the whole permissions panel — no switch may
+    // render as OFF when its true value is unknown.
     expect(screen.queryByRole('switch', { name: 'Direct invites' })).toBeNull();
     const callsAfterError = flagsCalls;
 
