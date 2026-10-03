@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
+import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import type { TFunction } from "i18next";
 import {
   AlertTriangle,
@@ -263,6 +264,11 @@ export default function TeamGoogleProfilePage() {
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
   // Office context from the canonical office route (or legacy ?office=slug).
   const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
+  // On the canonical office route the layout already resolved/authorized the
+  // office; inherit it and hide the redundant selector there.
+  const workspaceContext = useOfficeWorkspaceContext();
+  const inOfficeWorkspace = workspaceContext !== null;
+  const effectiveOfficeId = workspaceContext?.officeId ?? workspaceOfficeId;
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [profile, setProfile] = useState<OfficeGoogleProfileDetailRow | null>(
     null,
@@ -305,11 +311,12 @@ export default function TeamGoogleProfilePage() {
     setOfficeId(
       (current) =>
         current ??
-        (workspaceOfficeId && list.some((o) => o.office_id === workspaceOfficeId)
-          ? workspaceOfficeId
+        (effectiveOfficeId &&
+        list.some((o) => o.office_id === effectiveOfficeId)
+          ? effectiveOfficeId
           : (list[0]?.office_id ?? null)),
     );
-  }, [toast, workspaceOfficeId]);
+  }, [toast, effectiveOfficeId]);
 
   useEffect(() => {
     loadOffices();
@@ -318,12 +325,12 @@ export default function TeamGoogleProfilePage() {
   // Follow the URL's office when it changes (e.g. navigating between offices).
   useEffect(() => {
     if (
-      workspaceOfficeId &&
-      offices.some((o) => o.office_id === workspaceOfficeId)
+      effectiveOfficeId &&
+      offices.some((o) => o.office_id === effectiveOfficeId)
     ) {
-      setOfficeId(workspaceOfficeId);
+      setOfficeId(effectiveOfficeId);
     }
-  }, [workspaceOfficeId, offices]);
+  }, [effectiveOfficeId, offices]);
 
   const load = useCallback(async () => {
     if (!officeId) {
@@ -559,7 +566,7 @@ export default function TeamGoogleProfilePage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <HealthBadge row={profile} t={t} />
-          {offices.length > 1 && (
+          {!inOfficeWorkspace && offices.length > 1 && (
             <Select value={officeId ?? undefined} onValueChange={setOfficeId}>
               <SelectTrigger className="w-[190px]">
                 <Building2 className="size-4" />

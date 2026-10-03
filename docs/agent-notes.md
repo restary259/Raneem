@@ -3806,3 +3806,50 @@ function` fails the whole file.
   mutation action classifies as `WRITE` and is refused under a write freeze.
 - **CI:** lint is non-blocking and carries pre-existing debt; typecheck and
   tests are the blocking gates. `npm run build` is `vite build` only.
+
+## Multi-Office + Google Forensic Audit remediation
+
+Remediation of the forensic audit findings (2026-10-02). No P0 confirmed; the
+items below are the P1/P2 follow-ups.
+
+- **P1 — Public booking office rebinding.** `manage_public_appointment` folded
+  `p_office_id` in on every action, so a rescheduling applicant could silently
+  rebind *both* `appointments.office_id` and `cases.office_id` to another
+  office. Fixed in `supabase/migrations/20261002200000_office_booking_office_integrity.sql`:
+  the RPC now ignores `p_office_id` whenever an appointment already exists
+  (`v_office_id := COALESCE(v_appt.office_id, v_case.office_id)`), and a
+  `BEFORE INSERT OR UPDATE` trigger (`enforce_public_booking_office_invariant`)
+  repairs creation-time alignment but rejects any later office change for
+  `public_booking` rows. Backfills pre-existing divergences first. The RPC is
+  no longer the only line of defence.
+- **P1 — Google global kill switch singleton + fail-open.**
+  `google_business_settings` guarded the global row with plain
+  `UNIQUE (google_connection_id)`, which treats NULLs as distinct and therefore
+  never enforced a single global row; `get_google_business_settings` also
+  COALESCEd a missing row to `true`. Fixed in
+  `supabase/migrations/20261002210000_office_google_global_switch_singleton.sql`:
+  duplicates are folded with `bool_and` (fail closed) before adding the partial
+  unique index `uq_google_settings_global ON google_business_settings ((1))
+  WHERE google_connection_id IS NULL`, and the resolver now denies all
+  READ/WRITE/CONFIG/EVENT operations when the authoritative global row is
+  absent. `admin_get_google_business_settings` likewise reports `false`, never
+  `true`.
+- **P2 — Duplicate office selectors on canonical Google pages.**
+  `TeamGoogle{Reviews,Profile,Photos,Posts}Page.tsx` rendered their own office
+  dropdown under `/team/offices/:slug/google/*` even though
+  `OfficeWorkspaceLayout` already establishes the authoritative office. They now
+  read `useOfficeWorkspaceContext()` and inherit `officeId`/name from the
+  workspace, and the redundant selector is hidden on canonical routes (kept only
+  on the legacy cross-office/`?office=` view). Same convention as
+  `TeamAppointmentsPage`'s workspace scoping.
+- **P2 — Timezone hardening.** `TeamAppointmentsPage.tsx` computed slots with
+  browser-local `Date` arithmetic, so a manager in one zone editing an office
+  calendar in another saw shifted slots. Added `zonedParts` /`zonedWallTimeToUtc`
+  helpers (native `Intl`, two-pass DST correction) and route every slot match,
+  drop, save, prefill and display through the active office's
+  `office.timezone` (workspace context first, then the office row, then the
+  browser as a documented fallback). `offices` selects now include `timezone`.
+- **Follow-on:** fixed a pre-existing `tsc` error in
+  `publicBooking.functions.ts` (`p_office_id: officeId ?? undefined`) so the
+  typecheck gate is green.
+

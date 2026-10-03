@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
+import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import type { TFunction } from "i18next";
 import {
   AlertTriangle,
@@ -151,6 +152,11 @@ export default function TeamGooglePhotosPage() {
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
   // Office context from the canonical office route (or legacy ?office=slug).
   const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
+  // On the canonical office route the layout already resolved/authorized the
+  // office; inherit it and hide the redundant selector there.
+  const workspaceContext = useOfficeWorkspaceContext();
+  const inOfficeWorkspace = workspaceContext !== null;
+  const effectiveOfficeId = workspaceContext?.officeId ?? workspaceOfficeId;
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [summary, setSummary] = useState<OfficeGoogleMediaSummaryRow | null>(
     null,
@@ -186,11 +192,12 @@ export default function TeamGooglePhotosPage() {
     setOfficeId(
       (current) =>
         current ??
-        (workspaceOfficeId && list.some((o) => o.office_id === workspaceOfficeId)
-          ? workspaceOfficeId
+        (effectiveOfficeId &&
+        list.some((o) => o.office_id === effectiveOfficeId)
+          ? effectiveOfficeId
           : (list[0]?.office_id ?? null)),
     );
-  }, [toast, workspaceOfficeId]);
+  }, [toast, effectiveOfficeId]);
 
   useEffect(() => {
     loadOffices();
@@ -199,12 +206,12 @@ export default function TeamGooglePhotosPage() {
   // Follow the URL's office when it changes (e.g. navigating between offices).
   useEffect(() => {
     if (
-      workspaceOfficeId &&
-      offices.some((o) => o.office_id === workspaceOfficeId)
+      effectiveOfficeId &&
+      offices.some((o) => o.office_id === effectiveOfficeId)
     ) {
-      setOfficeId(workspaceOfficeId);
+      setOfficeId(effectiveOfficeId);
     }
-  }, [workspaceOfficeId, offices]);
+  }, [effectiveOfficeId, offices]);
 
   const load = useCallback(async () => {
     if (!officeId) return;
@@ -428,7 +435,7 @@ export default function TeamGooglePhotosPage() {
     <div className="mx-auto w-full max-w-6xl space-y-4 px-4 pt-4 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
-          {offices.length > 1 ? (
+          {!inOfficeWorkspace && offices.length > 1 ? (
             <Select
               value={officeId ?? ""}
               onValueChange={(v) => setOfficeId(v)}
@@ -446,7 +453,9 @@ export default function TeamGooglePhotosPage() {
             </Select>
           ) : (
             <h1 className="truncate text-2xl font-semibold">
-              {offices[0]?.office_name ?? t("googleMedia.title")}
+              {workspaceContext?.context.office.name ??
+                offices[0]?.office_name ??
+                t("googleMedia.title")}
             </h1>
           )}
         </div>
