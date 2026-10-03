@@ -57,7 +57,7 @@ export const Route = createFileRoute("/educational-programs")({
                   lang === "ar" ? major.description : major.descriptionEN,
                 provider: {
                   "@type": "EducationalOrganization",
-                  name: "Darb Study Pathways",
+                  name: "Darb Study International",
                   url: SITE,
                 },
               },

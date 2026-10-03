@@ -6,20 +6,20 @@ import { serverErrorResponse } from "../_shared/errors.ts";
 
 const VISA_EMAIL_TEMPLATES: Record<string, { subject: string; body: (name: string) => string }> = {
   applied: {
-    subject: "Your Visa Application Has Been Submitted – Darb Agency",
-    body: (name) => `Dear ${name},\n\nWe are pleased to inform you that your visa application has been submitted.\n\nOur team is monitoring the process and will keep you updated on any changes.\n\nBest regards,\nDarb Agency Team`,
+    subject: "Your Visa Application Has Been Submitted – Darb Study International",
+    body: (name) => `Dear ${name},\n\nWe are pleased to inform you that your visa application has been submitted.\n\nOur team is monitoring the process and will keep you updated on any changes.\n\nBest regards,\nDarb Study International Team`,
   },
-  approved: {
-    subject: "Congratulations! Your Visa Has Been Approved – Darb Agency",
-    body: (name) => `Dear ${name},\n\nGreat news! Your visa has been approved.\n\nPlease check your student dashboard for next steps regarding your arrival in Germany.\n\nBest regards,\nDarb Agency Team`,
+  visa_approved: {
+    subject: "Congratulations! Your Visa Has Been Approved – Darb Study International",
+    body: (name) => `Dear ${name},\n\nGreat news! Your visa has been approved.\n\nPlease check your student dashboard for next steps regarding your arrival in Germany.\n\nBest regards,\nDarb Study International Team`,
   },
-  rejected: {
-    subject: "Visa Application Update – Darb Agency",
-    body: (name) => `Dear ${name},\n\nUnfortunately, your visa application was not approved at this time.\n\nPlease contact our team to discuss next steps and possible reapplication.\n\nBest regards,\nDarb Agency Team`,
+  visa_rejected: {
+    subject: "Visa Application Update – Darb Study International",
+    body: (name) => `Dear ${name},\n\nUnfortunately, your visa application was not approved at this time.\n\nPlease contact our team to discuss next steps and possible reapplication.\n\nBest regards,\nDarb Study International Team`,
   },
-  received: {
-    subject: "Your Visa Has Been Received – Darb Agency",
-    body: (name) => `Dear ${name},\n\nYour visa has been received and is ready for collection.\n\nPlease check your dashboard for further instructions.\n\nBest regards,\nDarb Agency Team`,
+  visa_received: {
+    subject: "Your Visa Has Been Received – Darb Study International",
+    body: (name) => `Dear ${name},\n\nYour visa has been received and is ready for collection.\n\nPlease check your dashboard for further instructions.\n\nBest regards,\nDarb Study International Team`,
   },
 };
 
