@@ -366,7 +366,7 @@ export const HEIDELBERG_GALLERY: HeidelbergPhoto[] = [
   HEIDELBERG_HERO,
   HEIDELBERG_SECTIONS[8].photos[1],
   HEIDELBERG_SECTIONS[1].photos[3],
-  HEIDELBERG_SECTIONS[7].photos[0],
+  HEIDELBERG_SECTIONS[5].photos[0],
   HEIDELBERG_SECTIONS[8].photos[0],
 ];
 
