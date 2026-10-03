@@ -187,8 +187,8 @@ function MemberDetailPanel({
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="mt-0 min-h-0 flex-1">
-          <div className={bodyClassName}>
+        <TabsContent value="overview" className="mt-0 min-h-0 flex-1 flex-col data-[state=active]:flex">
+          <div className={bodyClassName} data-vaul-no-drag>
         {/* Primary KPIs */}
         <Card>
           <CardContent className="p-4">
@@ -320,8 +320,8 @@ function MemberDetailPanel({
           </div>
         </TabsContent>
 
-        <TabsContent value="permissions" className="mt-0 min-h-0 flex-1">
-          <div className={bodyClassName}>
+        <TabsContent value="permissions" className="mt-0 min-h-0 flex-1 flex-col data-[state=active]:flex">
+          <div className={bodyClassName} data-vaul-no-drag>
             <AccountPermissionsTab
               member={member}
               onChanged={onChanged}
@@ -627,11 +627,11 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-        <DrawerContent className="w-full sm:max-w-2xl lg:max-w-3xl flex flex-col h-full max-h-screen">
+        <DrawerContent className="w-full sm:max-w-2xl lg:max-w-3xl flex flex-col h-[100dvh] max-h-[100dvh]">
           <MemberDetailPanel
             {...panelProps}
             slots={{ Header: DrawerHeader, Title: DrawerTitle, Description: DrawerDescription, Close: DrawerClose }}
-            bodyClassName="p-4 space-y-6 flex-1 min-h-0 overflow-y-auto"
+            bodyClassName="p-4 space-y-6 flex-1 min-h-0 overflow-y-auto overscroll-contain"
 
           />
         </DrawerContent>
