@@ -189,6 +189,19 @@ export default function AdminOfficesPage() {
     setForm(function (previous) { return Object.assign({}, previous, { [key]: value }); });
   }
 
+  // Unassigning a member must stay savable: booking needs a primary, so it is
+  // switched off automatically, and routing rules pointing at removed people drop.
+  function assignMember(key: "primary_user_id" | "backup_user_id", value: string) {
+    setForm(function (previous) {
+      const next = Object.assign({}, previous, { [key]: value });
+      if (key === "primary_user_id" && next.backup_user_id === value) next.backup_user_id = "";
+      if (!next.primary_user_id) next.booking_enabled = false;
+      const allowed = [next.primary_user_id, next.backup_user_id].filter(Boolean);
+      next.routingRules = previous.routingRules.filter(function (r) { return !r.assigned_user_id || allowed.indexOf(r.assigned_user_id) >= 0; });
+      return next;
+    });
+  }
+
   function openCreate() {
     const next = makeForm();
     next.display_order = offices.length + 1;
@@ -438,8 +451,9 @@ export default function AdminOfficesPage() {
             <section className="space-y-3">
               <h3 className="text-sm font-semibold">{labels.team}</h3>
               <div className="grid gap-3 md:grid-cols-2">
-                <div><Label>{labels.primary}</Label><Select value={form.primary_user_id || "none"} onValueChange={function (v) { setField("primary_user_id", v === "none" ? "" : v); }}><SelectTrigger><SelectValue placeholder={labels.noMember} /></SelectTrigger><SelectContent><SelectItem value="none">{labels.noMember}</SelectItem>{teamMembers.map(function (m) { return <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>; })}</SelectContent></Select></div>
-                <div><Label>{labels.backup}</Label><Select value={form.backup_user_id || "none"} onValueChange={function (v) { setField("backup_user_id", v === "none" ? "" : v); }}><SelectTrigger><SelectValue placeholder={labels.noMember} /></SelectTrigger><SelectContent><SelectItem value="none">{labels.noMember}</SelectItem>{teamMembers.filter(function (m) { return m.id !== form.primary_user_id; }).map(function (m) { return <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>; })}</SelectContent></Select></div>
+                <div><Label>{labels.primary}</Label><Select value={form.primary_user_id || "none"} onValueChange={function (v) { assignMember("primary_user_id", v === "none" ? "" : v); }}><SelectTrigger><SelectValue placeholder={labels.noMember} /></SelectTrigger><SelectContent><SelectItem value="none">{labels.noMember}</SelectItem>{teamMembers.map(function (m) { return <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>; })}</SelectContent></Select></div>
+                <div><Label>{labels.backup}</Label><Select value={form.backup_user_id || "none"} onValueChange={function (v) { assignMember("backup_user_id", v === "none" ? "" : v); }}><SelectTrigger><SelectValue placeholder={labels.noMember} /></SelectTrigger><SelectContent><SelectItem value="none">{labels.noMember}</SelectItem>{teamMembers.filter(function (m) { return m.id !== form.primary_user_id; }).map(function (m) { return <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>; })}</SelectContent></Select></div>
+              {form.booking_enabled && !form.primary_user_id ? null : !form.primary_user_id && form.id ? <p className="text-xs text-muted-foreground">{labels.warning}</p> : null}
               </div>
             </section>
 
