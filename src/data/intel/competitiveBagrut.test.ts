@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ALL_MAJOR_INTEL } from './majorIntel';
 import {
   COMPETITIVE_BGRUT_BY_MAJOR,
   COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR,
@@ -113,8 +114,7 @@ describe('competitive Bagrut planning benchmarks', () => {
     expect(competitiveBagrutForMajor('unknown-major')).toBeUndefined();
   });
 
-  it('covers every verified university-route major and excludes Culinary Arts', async () => {
-    const { ALL_MAJOR_INTEL } = await import('./majorIntel');
+  it('covers every verified university-route major and excludes Culinary Arts', () => {
     const missing = ALL_MAJOR_INTEL
       .filter((major) => major.status === 'verified')
       .filter((major) => !major.competitiveBagrutThreshold)
