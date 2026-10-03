@@ -121,7 +121,11 @@ export default function TeamPartnerSchoolPage() {
       }
       if (has("schedule", "time", "monday", "دوام", "وقت")) {
         push(
-          `${name} — ${loc(c.schedule_text_en, c.schedule_text_ar)} · ${t("partnerSchools.maxStudents", "Maximum {{count}} students", { count: c.max_students })} · ${loc(c.start_rule_en, c.start_rule_ar)}`,
+          `${name} — ${loc(c.schedule_text_en, c.schedule_text_ar)} · ${
+            c.min_students && c.max_students
+              ? `${c.min_students}–${c.max_students}`
+              : t("partnerSchools.maxStudents", "Maximum {{count}} students", { count: c.max_students })
+          } · ${loc(c.start_rule_en, c.start_rule_ar)}`,
           c.source_name,
           c.last_verified_at,
         );
@@ -278,9 +282,11 @@ export default function TeamPartnerSchoolPage() {
                 <Fact
                   label={t("partnerSchools.classSize", "Class size")}
                   value={
-                    standard.max_students
-                      ? `${t("partnerSchools.max", "Max")} ${standard.max_students}`
-                      : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
+                    standard.min_students && standard.max_students
+                      ? `${standard.min_students}–${standard.max_students}`
+                      : standard.max_students
+                        ? `${t("partnerSchools.max", "Max")} ${standard.max_students}`
+                        : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
                   }
                 />
                 <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
