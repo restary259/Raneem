@@ -163,8 +163,8 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
     nav: { ar: "الجامعات", en: "Universities", he: "אוניברסיטאות" },
     title: { ar: "الجامعات والحرم الجامعي", en: "Universities and campuses", he: "אוניברסיטאות וקמפוסים" },
     body: {
-      ar: "إلى جانب جامعة هايدلبرغ توجد في المدينة Pädagogische Hochschule (كلية التربية) وSRH Hochschule Heidelberg (جامعة خاصة) وHochschule für Jüdische Studien. للجامعة ثلاثة أحرام: البلدة القديمة للعلوم الإنسانية، وBergheim للعلوم الاجتماعية والاقتصاد، وNeuenheimer Feld (الحرم العلمي شمال النهر) للطب والعلوم الطبيعية.",
-      en: "Besides Heidelberg University, the city has the Pädagogische Hochschule (University of Education), SRH Hochschule Heidelberg (private) and the Hochschule für Jüdische Studien. The university has three campuses: the Old Town for humanities, Bergheim for social sciences and economics, and Neuenheimer Feld, the science campus north of the river, for medicine and natural sciences.",
+      ar: "إلى جانب جامعة هايدلبرغ توجد في المدينة Pädagogische Hochschule (كلية التربية) وSRH Hochschule Heidelberg (جامعة خاصة) وHochschule für Jüdische Studien. للجامعة ثلاثة أحرام: البلدة القديمة Altstadt، وBergheim، وNeuenheimer Feld وهو الحرم العلمي شمال النهر حيث الطب والعلوم الطبيعية.",
+      en: "Besides Heidelberg University, the city has the Pädagogische Hochschule (University of Education), SRH Hochschule Heidelberg (private) and the Hochschule für Jüdische Studien. The university has three campuses: the Old Town (Altstadt), Bergheim and Neuenheimer Feld, the science campus north of the river where medicine and the natural sciences are based.",
       he: "מלבד אוניברסיטת היידלברג יש בעיר את Pädagogische Hochschule (מכללה לחינוך), SRH Hochschule Heidelberg (פרטית) ואת Hochschule für Jüdische Studien. לאוניברסיטה שלושה קמפוסים: העיר העתיקה, Bergheim ו-Neuenheimer Feld לרפואה ולמדעי הטבע.",
     },
     facts: [
@@ -243,7 +243,7 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
       he: "שוק הדיור בהיידלברג צפוף מאוד. המעונות מנוהלים על ידי Studierendenwerk Heidelberg ולא על ידי האוניברסיטה, וקבלה ללימודים לא מבטיחה חדר. הגישו בקשה מוקדם. החלופה היא חדר בדירה משותפת (WG).",
     },
     facts: [
-      { value: "992 € / شهر", label: { ar: "الحد الأدنى للمعيشة للتأشيرة (صيف 2026)", en: "Visa minimum per month (summer 2026)", he: "מינימום לחודש לוויזה (קיץ 2026)" } },
+      { value: "992 €", label: { ar: "الحد الأدنى للمعيشة للتأشيرة (صيف 2026)", en: "Visa minimum per month (summer 2026)", he: "מינימום לחודש לוויזה (קיץ 2026)" } },
       { value: "243–797 €", label: { ar: "إيجار سكن الطلاب شهريًا حسب السكن", en: "Dorm rent per month, depending on dorm", he: "שכר דירה במעונות לחודש" } },
     ],
     photos: [

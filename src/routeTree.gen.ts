@@ -23,6 +23,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as EducationalDestinationsRouteImport } from './routes/educational-destinations'
 import { Route as EducationalProgramsRouteImport } from './routes/educational-programs'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as HeidelbergRouteImport } from './routes/heidelberg'
 import { Route as LocationsRouteImport } from './routes/locations'
 import { Route as OfficeVisitRouteImport } from './routes/office-visit'
 import { Route as PartnerRouteImport } from './routes/partner'
@@ -224,6 +225,11 @@ const EducationalProgramsRoute = EducationalProgramsRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeidelbergRoute = HeidelbergRouteImport.update({
+  id: '/heidelberg',
+  path: '/heidelberg',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocationsRoute = LocationsRouteImport.update({
@@ -930,6 +936,7 @@ export interface FileRoutesByFullPath {
   '/educational-destinations': typeof EducationalDestinationsRoute
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
+  '/heidelberg': typeof HeidelbergRoute
   '/locations': typeof LocationsRoute
   '/office-visit': typeof OfficeVisitRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -1076,6 +1083,7 @@ export interface FileRoutesByTo {
   '/educational-destinations': typeof EducationalDestinationsRoute
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
+  '/heidelberg': typeof HeidelbergRoute
   '/locations': typeof LocationsRoute
   '/office-visit': typeof OfficeVisitRoute
   '/partners': typeof PartnersRoute
@@ -1216,6 +1224,7 @@ export interface FileRoutesById {
   '/educational-destinations': typeof EducationalDestinationsRoute
   '/educational-programs': typeof EducationalProgramsRoute
   '/faq': typeof FaqRoute
+  '/heidelberg': typeof HeidelbergRoute
   '/locations': typeof LocationsRoute
   '/office-visit': typeof OfficeVisitRoute
   '/partner': typeof PartnerRouteWithChildren
@@ -1366,6 +1375,7 @@ export interface FileRouteTypes {
     | '/educational-destinations'
     | '/educational-programs'
     | '/faq'
+    | '/heidelberg'
     | '/locations'
     | '/office-visit'
     | '/partner'
@@ -1512,6 +1522,7 @@ export interface FileRouteTypes {
     | '/educational-destinations'
     | '/educational-programs'
     | '/faq'
+    | '/heidelberg'
     | '/locations'
     | '/office-visit'
     | '/partners'
@@ -1651,6 +1662,7 @@ export interface FileRouteTypes {
     | '/educational-destinations'
     | '/educational-programs'
     | '/faq'
+    | '/heidelberg'
     | '/locations'
     | '/office-visit'
     | '/partner'
@@ -1800,6 +1812,7 @@ export interface RootRouteChildren {
   EducationalDestinationsRoute: typeof EducationalDestinationsRoute
   EducationalProgramsRoute: typeof EducationalProgramsRoute
   FaqRoute: typeof FaqRoute
+  HeidelbergRoute: typeof HeidelbergRoute
   LocationsRoute: typeof LocationsRoute
   OfficeVisitRoute: typeof OfficeVisitRoute
   PartnerRoute: typeof PartnerRouteWithChildren
@@ -1930,6 +1943,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heidelberg': {
+      id: '/heidelberg'
+      path: '/heidelberg'
+      fullPath: '/heidelberg'
+      preLoaderRoute: typeof HeidelbergRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/locations': {
@@ -3189,6 +3209,7 @@ const rootRouteChildren: RootRouteChildren = {
   EducationalDestinationsRoute: EducationalDestinationsRoute,
   EducationalProgramsRoute: EducationalProgramsRoute,
   FaqRoute: FaqRoute,
+  HeidelbergRoute: HeidelbergRoute,
   LocationsRoute: LocationsRoute,
   OfficeVisitRoute: OfficeVisitRoute,
   PartnerRoute: PartnerRouteWithChildren,

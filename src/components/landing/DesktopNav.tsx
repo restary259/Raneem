@@ -18,6 +18,7 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
   const { dir } = useDirection();
 
   const studyGermany = [
+    { title: t('nav.heidelberg'), href: '/heidelberg', description: t('nav.heidelbergDesc') },
     { title: t('nav.educationalDestinations'), href: '/educational-destinations', description: t('nav.educationalDestinationsDesc') },
     { title: t('nav.majors'), href: '/educational-programs', description: t('seo.edProgDesc', { ns: 'common' }) },
     { title: t('nav.majorQuizNav'), href: '/quiz', description: t('seo.quizDesc', { ns: 'common' }) },

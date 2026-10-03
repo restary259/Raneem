@@ -248,3 +248,10 @@ export const services = {
 export const countries = [
   { code: "germany", name: "Germany", flag: "🇩🇪", color: "bg-red-600" }
 ];
+
+/**
+ * Darb currently operates in one German city. Other cities stay in the data
+ * so they can be re-enabled by adding their id here.
+ */
+export const ACTIVE_DESTINATION_CITIES: ReadonlyArray<LanguageYearCity["id"]> = ["heidelberg"];
+export const activeLanguageYearCities = languageYearCities.filter((c) => ACTIVE_DESTINATION_CITIES.includes(c.id));

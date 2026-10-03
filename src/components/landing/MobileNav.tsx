@@ -40,6 +40,7 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
               <ChevronDown className={'h-4 w-4 text-gray-500 transition-transform duration-200 ' + (studyGermanyOpen ? 'rotate-180' : '')} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
+              <Link onClick={close} to="/heidelberg" className={itemClass}>{t('nav.heidelberg')}</Link>
               <Link onClick={close} to="/educational-destinations" className={itemClass}>{t('nav.educationalDestinations')}</Link>
               <Link onClick={close} to="/educational-programs" className={itemClass}>{t('nav.majors')}</Link>
               <Link onClick={close} to="/quiz" className={itemClass}>{t('nav.majorQuizNav')}</Link>
