@@ -2578,10 +2578,19 @@ export type Database = {
           connected_by: string | null
           connection_status: string
           created_at: string
+          dead_letter_count: number
+          event_failure_count: number
           google_account_id: string | null
           google_email: string | null
           id: string
+          last_event_processed_at: string | null
+          last_event_received_at: string | null
+          notification_setting_verified_at: string | null
+          notification_types: string[]
           provider: string
+          pubsub_status: string
+          pubsub_subscription: string | null
+          pubsub_topic: string | null
           revoked_at: string | null
           updated_at: string
         }
@@ -2590,10 +2599,19 @@ export type Database = {
           connected_by?: string | null
           connection_status?: string
           created_at?: string
+          dead_letter_count?: number
+          event_failure_count?: number
           google_account_id?: string | null
           google_email?: string | null
           id?: string
+          last_event_processed_at?: string | null
+          last_event_received_at?: string | null
+          notification_setting_verified_at?: string | null
+          notification_types?: string[]
           provider?: string
+          pubsub_status?: string
+          pubsub_subscription?: string | null
+          pubsub_topic?: string | null
           revoked_at?: string | null
           updated_at?: string
         }
@@ -2602,14 +2620,217 @@ export type Database = {
           connected_by?: string | null
           connection_status?: string
           created_at?: string
+          dead_letter_count?: number
+          event_failure_count?: number
           google_account_id?: string | null
           google_email?: string | null
           id?: string
+          last_event_processed_at?: string | null
+          last_event_received_at?: string | null
+          notification_setting_verified_at?: string | null
+          notification_types?: string[]
           provider?: string
+          pubsub_status?: string
+          pubsub_subscription?: string | null
+          pubsub_topic?: string | null
           revoked_at?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      google_business_events: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          event_type: string
+          google_account_id: string | null
+          google_connection_id: string | null
+          google_event_id: string | null
+          google_location_id: string | null
+          google_message_id: string | null
+          google_resource_name: string | null
+          id: string
+          office_id: string | null
+          payload_hash: string | null
+          payload_json: Json | null
+          processed_at: string | null
+          processing_status: string
+          received_at: string
+          routing_status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          event_type: string
+          google_account_id?: string | null
+          google_connection_id?: string | null
+          google_event_id?: string | null
+          google_location_id?: string | null
+          google_message_id?: string | null
+          google_resource_name?: string | null
+          id?: string
+          office_id?: string | null
+          payload_hash?: string | null
+          payload_json?: Json | null
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          routing_status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          event_type?: string
+          google_account_id?: string | null
+          google_connection_id?: string | null
+          google_event_id?: string | null
+          google_location_id?: string | null
+          google_message_id?: string | null
+          google_resource_name?: string | null
+          id?: string
+          office_id?: string | null
+          payload_hash?: string | null
+          payload_json?: Json | null
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          routing_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_events_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_business_events_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_business_health_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          google_event_id: string | null
+          google_location_id: string | null
+          id: string
+          new_state: string | null
+          office_id: string | null
+          previous_state: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          google_event_id?: string | null
+          google_location_id?: string | null
+          id?: string
+          new_state?: string | null
+          office_id?: string | null
+          previous_state?: string | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          google_event_id?: string | null
+          google_location_id?: string | null
+          id?: string
+          new_state?: string | null
+          office_id?: string | null
+          previous_state?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_health_events_google_event_id_fkey"
+            columns: ["google_event_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_business_health_events_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_business_location_health: {
+        Row: {
+          created_at: string
+          duplicate_state: string | null
+          google_location_id: string | null
+          health_status: string
+          id: string
+          last_checked_at: string | null
+          last_error_code: string | null
+          last_error_message: string | null
+          last_event_at: string | null
+          location_state: string | null
+          office_id: string
+          updated_at: string
+          verification_state: string | null
+          voice_of_merchant_state: string | null
+        }
+        Insert: {
+          created_at?: string
+          duplicate_state?: string | null
+          google_location_id?: string | null
+          health_status?: string
+          id?: string
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_error_message?: string | null
+          last_event_at?: string | null
+          location_state?: string | null
+          office_id: string
+          updated_at?: string
+          verification_state?: string | null
+          voice_of_merchant_state?: string | null
+        }
+        Update: {
+          created_at?: string
+          duplicate_state?: string | null
+          google_location_id?: string | null
+          health_status?: string
+          id?: string
+          last_checked_at?: string | null
+          last_error_code?: string | null
+          last_error_message?: string | null
+          last_event_at?: string | null
+          location_state?: string | null
+          office_id?: string
+          updated_at?: string
+          verification_state?: string | null
+          voice_of_merchant_state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_location_health_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: true
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       google_business_locations: {
         Row: {
@@ -3180,6 +3401,141 @@ export type Database = {
           },
         ]
       }
+      google_business_settings: {
+        Row: {
+          created_at: string
+          global_enabled: boolean
+          google_connection_id: string | null
+          id: string
+          read_enabled: boolean
+          reason: string | null
+          updated_at: string
+          updated_by: string | null
+          write_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          global_enabled?: boolean
+          google_connection_id?: string | null
+          id?: string
+          read_enabled?: boolean
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          write_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          global_enabled?: boolean
+          google_connection_id?: string | null
+          id?: string
+          read_enabled?: boolean
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          write_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_settings_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: true
+            referencedRelation: "google_business_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_business_sync_jobs: {
+        Row: {
+          attempt_count: number
+          completed_at: string | null
+          created_at: string
+          google_connection_id: string | null
+          google_location_id: string | null
+          id: string
+          last_error_code: string | null
+          last_error_message: string | null
+          lock_token: string | null
+          locked_at: string | null
+          max_attempts: number
+          office_id: string
+          priority: string
+          records_processed: number
+          scheduled_at: string
+          started_at: string | null
+          status: string
+          sync_type: string
+          trigger_event_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          completed_at?: string | null
+          created_at?: string
+          google_connection_id?: string | null
+          google_location_id?: string | null
+          id?: string
+          last_error_code?: string | null
+          last_error_message?: string | null
+          lock_token?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          office_id: string
+          priority?: string
+          records_processed?: number
+          scheduled_at?: string
+          started_at?: string | null
+          status?: string
+          sync_type: string
+          trigger_event_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          completed_at?: string | null
+          created_at?: string
+          google_connection_id?: string | null
+          google_location_id?: string | null
+          id?: string
+          last_error_code?: string | null
+          last_error_message?: string | null
+          lock_token?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          office_id?: string
+          priority?: string
+          records_processed?: number
+          scheduled_at?: string
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+          trigger_event_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_business_sync_jobs_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_business_sync_jobs_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_business_sync_jobs_trigger_event_id_fkey"
+            columns: ["trigger_event_id"]
+            isOneToOne: false
+            referencedRelation: "google_business_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_media_upload_receipts: {
         Row: {
           actor_user_id: string | null
@@ -3620,6 +3976,7 @@ export type Database = {
           last_contacted: string | null
           math_units: number | null
           notes: string | null
+          office_id: string | null
           partner_link_id: string | null
           passport_type: string | null
           phone: string
@@ -3657,6 +4014,7 @@ export type Database = {
           last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
+          office_id?: string | null
           partner_link_id?: string | null
           passport_type?: string | null
           phone: string
@@ -3694,6 +4052,7 @@ export type Database = {
           last_contacted?: string | null
           math_units?: number | null
           notes?: string | null
+          office_id?: string | null
           partner_link_id?: string | null
           passport_type?: string | null
           phone?: string
@@ -3722,6 +4081,13 @@ export type Database = {
             columns: ["companion_lead_id"]
             isOneToOne: false
             referencedRelation: "leads_lawyer_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
             referencedColumns: ["id"]
           },
           {
@@ -4041,10 +4407,14 @@ export type Database = {
           category: string
           created_at: string
           dedupe_key: string | null
+          entity_id: string | null
+          entity_type: string | null
+          google_event_type: string | null
           id: string
           is_read: boolean
           link: string | null
           metadata: Json
+          office_id: string | null
           priority: string
           read: boolean
           source: string
@@ -4061,10 +4431,14 @@ export type Database = {
           category?: string
           created_at?: string
           dedupe_key?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          google_event_type?: string | null
           id?: string
           is_read?: boolean
           link?: string | null
           metadata?: Json
+          office_id?: string | null
           priority?: string
           read?: boolean
           source?: string
@@ -4081,10 +4455,14 @@ export type Database = {
           category?: string
           created_at?: string
           dedupe_key?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          google_event_type?: string | null
           id?: string
           is_read?: boolean
           link?: string | null
           metadata?: Json
+          office_id?: string | null
           priority?: string
           read?: boolean
           source?: string
@@ -4099,6 +4477,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: false
+            referencedRelation: "offices"
             referencedColumns: ["id"]
           },
         ]
@@ -4286,10 +4671,12 @@ export type Database = {
           google_store_code: string | null
           google_verification_state: string | null
           google_website: string | null
+          health_status: string
           id: string
           last_error_at: string | null
           last_error_code: string | null
           last_error_message: string | null
+          last_google_event_at: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
           latitude: number | null
@@ -4371,10 +4758,12 @@ export type Database = {
           google_store_code?: string | null
           google_verification_state?: string | null
           google_website?: string | null
+          health_status?: string
           id?: string
           last_error_at?: string | null
           last_error_code?: string | null
           last_error_message?: string | null
+          last_google_event_at?: string | null
           last_successful_sync_at?: string | null
           last_synced_at?: string | null
           latitude?: number | null
@@ -4456,10 +4845,12 @@ export type Database = {
           google_store_code?: string | null
           google_verification_state?: string | null
           google_website?: string | null
+          health_status?: string
           id?: string
           last_error_at?: string | null
           last_error_code?: string | null
           last_error_message?: string | null
+          last_google_event_at?: string | null
           last_successful_sync_at?: string | null
           last_synced_at?: string | null
           latitude?: number | null
@@ -4521,6 +4912,50 @@ export type Database = {
           },
           {
             foreignKeyName: "office_google_profiles_office_id_fkey"
+            columns: ["office_id"]
+            isOneToOne: true
+            referencedRelation: "offices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      office_google_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          office_id: string
+          read_enabled: boolean
+          reason: string | null
+          updated_at: string
+          updated_by: string | null
+          write_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          office_id: string
+          read_enabled?: boolean
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          write_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          office_id?: string
+          read_enabled?: boolean
+          reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          write_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "office_google_settings_office_id_fkey"
             columns: ["office_id"]
             isOneToOne: true
             referencedRelation: "offices"
@@ -8500,10 +8935,19 @@ export type Database = {
           connected_by: string | null
           connection_status: string
           created_at: string
+          dead_letter_count: number
+          event_failure_count: number
           google_account_id: string | null
           google_email: string | null
           id: string
+          last_event_processed_at: string | null
+          last_event_received_at: string | null
+          notification_setting_verified_at: string | null
+          notification_types: string[]
           provider: string
+          pubsub_status: string
+          pubsub_subscription: string | null
+          pubsub_topic: string | null
           revoked_at: string | null
           updated_at: string
         }[]
@@ -8513,6 +8957,70 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      admin_get_google_business_settings: {
+        Args: never
+        Returns: {
+          connection_id: string
+          global_enabled: boolean
+          google_email: string
+          offices_disabled: number
+          read_enabled: boolean
+          reason: string
+          updated_at: string
+          write_enabled: boolean
+        }[]
+      }
+      admin_google_attention_offices: {
+        Args: never
+        Returns: {
+          health_reason: string
+          health_status: string
+          last_event_at: string
+          office_id: string
+          office_name: string
+          unanswered_reviews: number
+        }[]
+      }
+      admin_google_event_timeline: {
+        Args: { p_limit?: number; p_office_id?: string }
+        Returns: {
+          event_id: string
+          event_type: string
+          google_location_id: string
+          office_id: string
+          office_name: string
+          processed_at: string
+          processing_status: string
+          received_at: string
+          routing_status: string
+        }[]
+      }
+      admin_google_integration_health: {
+        Args: never
+        Returns: {
+          connection_id: string
+          connection_status: string
+          dead_letter_count: number
+          dead_lettered_events: number
+          event_failure_count: number
+          failed_events: number
+          failed_jobs: number
+          google_email: string
+          healthy_mappings: number
+          last_event_processed_at: string
+          last_event_received_at: string
+          mapped_offices: number
+          notification_types: string[]
+          offices_action_required: number
+          offices_attention: number
+          pending_events: number
+          pending_jobs: number
+          pubsub_status: string
+          pubsub_subscription: string
+          pubsub_topic: string
+          running_jobs: number
+        }[]
       }
       admin_google_performance_aggregate: {
         Args: {
@@ -8530,6 +9038,50 @@ export type Database = {
           office_id: string
           office_name: string
           previous_totals: Json
+        }[]
+      }
+      admin_list_google_business_events: {
+        Args: {
+          p_limit?: number
+          p_office_id?: string
+          p_offset?: number
+          p_status?: string
+        }
+        Returns: {
+          attempt_count: number
+          error_code: string
+          error_message: string
+          event_id: string
+          event_type: string
+          google_account_id: string
+          google_event_id: string
+          google_location_id: string
+          google_message_id: string
+          google_resource_name: string
+          office_id: string
+          office_name: string
+          payload_hash: string
+          payload_json: Json
+          processed_at: string
+          processing_status: string
+          received_at: string
+          routing_status: string
+          total_count: number
+        }[]
+      }
+      admin_list_google_dead_letters: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempt_count: number
+          error_code: string
+          error_message: string
+          event_id: string
+          event_type: string
+          google_location_id: string
+          office_id: string
+          office_name: string
+          processed_at: string
+          received_at: string
         }[]
       }
       admin_list_google_locations: {
@@ -8588,10 +9140,12 @@ export type Database = {
           google_store_code: string | null
           google_verification_state: string | null
           google_website: string | null
+          health_status: string
           id: string
           last_error_at: string | null
           last_error_code: string | null
           last_error_message: string | null
+          last_google_event_at: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
           latitude: number | null
@@ -8686,10 +9240,12 @@ export type Database = {
           google_store_code: string | null
           google_verification_state: string | null
           google_website: string | null
+          health_status: string
           id: string
           last_error_at: string | null
           last_error_code: string | null
           last_error_message: string | null
+          last_google_event_at: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
           latitude: number | null
@@ -8845,6 +9401,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_retry_google_business_event: {
+        Args: { p_event_id: string }
+        Returns: {
+          event_id: string
+          processing_status: string
+          sync_job_id: string
+        }[]
+      }
       admin_set_commission: {
         Args: {
           p_amount: number
@@ -8854,6 +9418,26 @@ export type Database = {
           p_reason?: string
         }
         Returns: Json
+      }
+      admin_set_google_business_settings: {
+        Args: {
+          p_global_enabled?: boolean
+          p_office_enabled?: boolean
+          p_office_id?: string
+          p_office_read_enabled?: boolean
+          p_office_write_enabled?: boolean
+          p_read_enabled?: boolean
+          p_reason?: string
+          p_write_enabled?: boolean
+        }
+        Returns: {
+          out_global_enabled: boolean
+          out_office_enabled: boolean
+          out_office_id: string
+          out_read_enabled: boolean
+          out_scope: string
+          out_write_enabled: boolean
+        }[]
       }
       admin_sync_google_locations: {
         Args: { p_connection_id: string; p_locations: Json }
@@ -8946,10 +9530,12 @@ export type Database = {
           google_store_code: string | null
           google_verification_state: string | null
           google_website: string | null
+          health_status: string
           id: string
           last_error_at: string | null
           last_error_code: string | null
           last_error_message: string | null
+          last_google_event_at: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
           latitude: number | null
@@ -9015,10 +9601,19 @@ export type Database = {
           connected_by: string | null
           connection_status: string
           created_at: string
+          dead_letter_count: number
+          event_failure_count: number
           google_account_id: string | null
           google_email: string | null
           id: string
+          last_event_processed_at: string | null
+          last_event_received_at: string | null
+          notification_setting_verified_at: string | null
+          notification_types: string[]
           provider: string
+          pubsub_status: string
+          pubsub_subscription: string | null
+          pubsub_topic: string | null
           revoked_at: string | null
           updated_at: string
         }
@@ -9028,6 +9623,21 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      admin_update_google_pubsub_config: {
+        Args: {
+          p_connection_id: string
+          p_notification_types?: string[]
+          p_status?: string
+          p_subscription?: string
+          p_topic?: string
+        }
+        Returns: {
+          connection_id: string
+          notification_types: string[]
+          pubsub_status: string
+          pubsub_topic: string
+        }[]
       }
       admin_upsert_office_google_profile: {
         Args: { p_office_id: string; p_patch?: Json }
@@ -9061,10 +9671,12 @@ export type Database = {
           google_store_code: string | null
           google_verification_state: string | null
           google_website: string | null
+          health_status: string
           id: string
           last_error_at: string | null
           last_error_code: string | null
           last_error_message: string | null
+          last_google_event_at: string | null
           last_successful_sync_at: string | null
           last_synced_at: string | null
           latitude: number | null
@@ -9157,6 +9769,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      audit_google_business_integrity: {
+        Args: never
+        Returns: {
+          check_key: string
+          detail: string
+          severity: string
+          violation_count: number
+        }[]
+      }
+      audit_office_google_integrity: {
+        Args: { p_office_id: string }
+        Returns: {
+          detail: string
+          item: string
+          ok: boolean
+        }[]
+      }
       authorize_google_office_action: {
         Args: { p_action: string; p_office_id: string; p_user_id: string }
         Returns: boolean
@@ -9233,6 +9862,19 @@ export type Database = {
           valid: boolean
         }[]
       }
+      claim_google_business_sync_job: {
+        Args: { p_office_id?: string; p_sync_types?: string[] }
+        Returns: {
+          google_location_id: string
+          job_id: string
+          lock_token: string
+          office_id: string
+          priority: string
+          sync_type: string
+          trigger_event_id: string
+          trigger_event_type: string
+        }[]
+      }
       cleanup_stale_voice_calls: { Args: never; Returns: number }
       clear_case_thread: { Args: { p_case_id: string }; Returns: number }
       clear_must_change_password: { Args: never; Returns: undefined }
@@ -9280,6 +9922,19 @@ export type Database = {
         Args: { p_payment_id: string; p_reference?: string }
         Returns: Json
       }
+      create_google_business_sync_job: {
+        Args: {
+          p_office_id: string
+          p_priority?: string
+          p_sync_type: string
+          p_trigger_event_id?: string
+        }
+        Returns: {
+          is_existing: boolean
+          job_id: string
+          status: string
+        }[]
+      }
       create_google_post_draft: {
         Args: { p_office_id: string; p_post: Json }
         Returns: {
@@ -9294,7 +9949,7 @@ export type Database = {
         Returns: undefined
       }
       create_public_booking_session: {
-        Args: { p_full_name: string; p_phone: string }
+        Args: { p_full_name: string; p_office_id?: string; p_phone: string }
         Returns: Json
       }
       create_registration_card_payment_internal: {
@@ -9305,6 +9960,11 @@ export type Database = {
         Args: { p_data: Json; p_referrer_user_id: string }
         Returns: Json
       }
+      cron_enqueue_google_reconciliation: {
+        Args: { p_priority?: string; p_sync_type: string }
+        Returns: number
+      }
+      cron_recover_stale_google_sync_jobs: { Args: never; Returns: undefined }
       decide_google_profile_change_request: {
         Args: {
           p_decision: string
@@ -9334,6 +9994,7 @@ export type Database = {
         Returns: boolean
       }
       dispatch_appointment_reminders: { Args: never; Returns: undefined }
+      dispatch_google_business_worker: { Args: never; Returns: undefined }
       dispatch_whatsapp_follow_up_tasks: { Args: never; Returns: undefined }
       dispatch_whatsapp_marketing_campaigns: { Args: never; Returns: undefined }
       edit_case_message: {
@@ -9342,6 +10003,23 @@ export type Database = {
       }
       edit_direct_message: {
         Args: { p_body: string; p_message_id: string }
+        Returns: undefined
+      }
+      emit_google_notification: {
+        Args: {
+          _body_ar: string
+          _body_en: string
+          _dedupe_key?: string
+          _entity_id: string
+          _entity_type: string
+          _google_event_type: string
+          _link?: string
+          _office_id: string
+          _priority?: string
+          _title_ar: string
+          _title_en: string
+          _user_id: string
+        }
         Returns: undefined
       }
       emit_notification: {
@@ -9360,6 +10038,10 @@ export type Database = {
         Returns: undefined
       }
       end_voice_call: { Args: { p_call_id: string }; Returns: undefined }
+      enqueue_google_reconciliation_jobs: {
+        Args: { p_priority?: string; p_sync_type: string }
+        Returns: number
+      }
       ensure_agent_recruit_link: {
         Args: never
         Returns: {
@@ -9388,6 +10070,21 @@ export type Database = {
       fail_registration_card_payment_internal: {
         Args: { p_failure_reason?: string; p_payment_id: string }
         Returns: Json
+      }
+      finish_google_business_sync_job: {
+        Args: {
+          p_error_code?: string
+          p_error_message?: string
+          p_job_id: string
+          p_records_processed?: number
+          p_status: string
+          p_token: string
+        }
+        Returns: {
+          finalized: boolean
+          job_status: string
+          will_retry: boolean
+        }[]
       }
       finish_voice_call: {
         Args: { p_actor: string; p_call_id: string; p_end_reason: string }
@@ -9554,6 +10251,15 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      get_google_business_settings: {
+        Args: { p_office_id?: string }
+        Returns: {
+          global_enabled: boolean
+          office_found: boolean
+          read_enabled: boolean
+          write_enabled: boolean
+        }[]
       }
       get_independent_accounts: { Args: never; Returns: Json }
       get_influencer_lead_ids: {
@@ -9761,6 +10467,22 @@ export type Database = {
       }
       get_my_permissions: { Args: never; Returns: string[] }
       get_my_role: { Args: never; Returns: string }
+      get_office_google_health: {
+        Args: { p_office_id: string }
+        Returns: {
+          duplicate_state: string
+          health_status: string
+          last_checked_at: string
+          last_error_code: string
+          last_error_message: string
+          last_event_at: string
+          last_google_event_at: string
+          location_state: string
+          office_id: string
+          verification_state: string
+          voice_of_merchant_state: string
+        }[]
+      }
       get_office_google_mapping: {
         Args: { p_office_id: string }
         Returns: {
@@ -9998,6 +10720,18 @@ export type Database = {
           verification_status: string
         }[]
       }
+      get_office_team: {
+        Args: { p_office_id: string }
+        Returns: {
+          full_name: string
+          is_active: boolean
+          is_primary: boolean
+          membership_type: string
+          priority: number
+          user_id: string
+        }[]
+      }
+      get_office_workspace: { Args: { p_office_id: string }; Returns: Json }
       get_partner_commission_rate: {
         Args: { p_user_id: string }
         Returns: number
@@ -10167,6 +10901,23 @@ export type Database = {
         Args: { p_office_id: string; p_user_id: string }
         Returns: string
       }
+      google_business_action_kind: {
+        Args: { p_action: string }
+        Returns: string
+      }
+      google_business_operation_allowed: {
+        Args: { p_kind: string; p_office_id: string }
+        Returns: boolean
+      }
+      google_health_status_from_states: {
+        Args: {
+          p_duplicate_state: string
+          p_location_state: string
+          p_verification_state: string
+          p_voice_of_merchant_state: string
+        }
+        Returns: string
+      }
       google_performance_metric_scope: {
         Args: { p_metric: string }
         Returns: string
@@ -10208,6 +10959,7 @@ export type Database = {
       google_profile_hash: { Args: { p_profile: Json }; Returns: string }
       google_profile_high_risk_fields: { Args: never; Returns: string[] }
       google_user_is_admin: { Args: { p_user_id: string }; Returns: boolean }
+      has_google_business_access: { Args: never; Returns: boolean }
       has_internal_team_chat_access: {
         Args: { p_user: string }
         Returns: boolean
@@ -10238,6 +10990,7 @@ export type Database = {
           p_full_name: string
           p_german_level?: string
           p_math_units?: number
+          p_office_id?: string
           p_passport_type?: string
           p_phone: string
           p_preferred_city?: string
@@ -10255,6 +11008,7 @@ export type Database = {
         Args: { _thread_id: string; _user_id: string }
         Returns: boolean
       }
+      is_office_member: { Args: { p_office_id: string }; Returns: boolean }
       is_whatsapp_staff: { Args: { p_user: string }; Returns: boolean }
       issue_case_invoice: { Args: { p_case_id: string }; Returns: Json }
       list_agent_directory: {
@@ -10324,6 +11078,7 @@ export type Database = {
           mapping_status: string
           office_id: string
           office_name: string
+          office_slug: string
           operator_role: string
           performance_data_through: string
           performance_last_synced_at: string
@@ -10363,12 +11118,41 @@ export type Database = {
           mapping_status: string
           office_id: string
           office_name: string
+          office_slug: string
           operator_role: string
           primary_operator_id: string
           primary_operator_name: string
           side_manager_id: string
           side_manager_name: string
           updated_at: string
+        }[]
+      }
+      list_my_offices: {
+        Args: never
+        Returns: {
+          booking_enabled: boolean
+          city: string
+          country: string
+          google_connected: boolean
+          is_active: boolean
+          map_url: string
+          member_count: number
+          name: string
+          office_id: string
+          primary_name: string
+          slug: string
+          timezone: string
+        }[]
+      }
+      list_office_google_health_events: {
+        Args: { p_limit?: number; p_office_id: string }
+        Returns: {
+          created_at: string
+          event_type: string
+          health_event_id: string
+          new_state: string
+          previous_state: string
+          source: string
         }[]
       }
       list_office_google_media: {
@@ -10548,6 +11332,24 @@ export type Database = {
           total_count: number
         }[]
       }
+      list_office_google_sync_jobs: {
+        Args: { p_limit?: number; p_office_id: string }
+        Returns: {
+          attempt_count: number
+          completed_at: string
+          created_at: string
+          job_id: string
+          last_error_code: string
+          last_error_message: string
+          max_attempts: number
+          priority: string
+          records_processed: number
+          scheduled_at: string
+          started_at: string
+          status: string
+          sync_type: string
+        }[]
+      }
       list_office_members: {
         Args: { p_office_id: string }
         Returns: {
@@ -10702,6 +11504,15 @@ export type Database = {
         Args: { p_thread_id: string }
         Returns: undefined
       }
+      mark_google_business_event: {
+        Args: {
+          p_error_code?: string
+          p_error_message?: string
+          p_event_id: string
+          p_status: string
+        }
+        Returns: boolean
+      }
       mark_invoice_email: {
         Args: { p_error?: string; p_invoice_id: string; p_status: string }
         Returns: undefined
@@ -10717,6 +11528,17 @@ export type Database = {
       notification_category_for_source: {
         Args: { _source: string }
         Returns: string
+      }
+      notify_google_business_event: {
+        Args: {
+          p_entity_id?: string
+          p_entity_type?: string
+          p_event_id: string
+          p_event_type: string
+          p_extra?: Json
+          p_office_id: string
+        }
+        Returns: number
       }
       notify_new_google_review: {
         Args: {
@@ -10785,6 +11607,46 @@ export type Database = {
         Args: { p_case_id: string; p_total_payment_ils?: number }
         Returns: undefined
       }
+      record_google_business_event: {
+        Args: {
+          p_event_type: string
+          p_google_account_id?: string
+          p_google_event_id?: string
+          p_google_location_id?: string
+          p_google_message_id: string
+          p_google_resource_name?: string
+          p_payload?: Json
+          p_payload_hash?: string
+        }
+        Returns: {
+          event_id: string
+          is_duplicate: boolean
+          office_id: string
+          processing_status: string
+          routing_status: string
+        }[]
+      }
+      record_google_location_health: {
+        Args: {
+          p_duplicate_state?: string
+          p_error_code?: string
+          p_error_message?: string
+          p_event_type?: string
+          p_google_event_id?: string
+          p_google_location_id?: string
+          p_location_state?: string
+          p_office_id: string
+          p_source?: string
+          p_verification_state?: string
+          p_voice_of_merchant_state?: string
+        }
+        Returns: {
+          changed: boolean
+          health_event_id: string
+          health_status: string
+          previous_status: string
+        }[]
+      }
       record_google_media_upload: {
         Args: {
           p_actor_user_id?: string
@@ -10800,6 +11662,13 @@ export type Database = {
       record_partner_click: {
         Args: { p_code: string; p_session_id: string; p_user_agent: string }
         Returns: undefined
+      }
+      recover_stale_google_sync_jobs: {
+        Args: { p_timeout?: string }
+        Returns: {
+          failed: number
+          recovered: number
+        }[]
       }
       reject_case_payment: {
         Args: { p_payment_id: string; p_reason?: string }
@@ -10854,6 +11723,17 @@ export type Database = {
         Returns: string
       }
       request_payout_via_chat: { Args: { p_notes?: string }; Returns: Json }
+      resolve_google_event_office: {
+        Args: { p_google_account_id: string; p_google_location_id: string }
+        Returns: {
+          google_account_id: string
+          google_connection_id: string
+          google_location_resource_name: string
+          matched: boolean
+          office_id: string
+          reason: string
+        }[]
+      }
       resolve_google_media_office: {
         Args: { p_media_id: string; p_office_id: string }
         Returns: {
@@ -10913,6 +11793,7 @@ export type Database = {
           review_id: string
         }[]
       }
+      resolve_office_slug: { Args: { p_slug: string }; Returns: string }
       resolve_partner_link: {
         Args: { p_code: string }
         Returns: {
@@ -10965,6 +11846,19 @@ export type Database = {
             }
             Returns: Json
           }
+      route_google_business_event: {
+        Args: { p_event_id: string }
+        Returns: {
+          event_id: string
+          event_type: string
+          is_duplicate: boolean
+          office_id: string
+          priority: string
+          routing_status: string
+          sync_job_id: string
+          sync_type: string
+        }[]
+      }
       save_case_intel_intake: {
         Args: { p_case_id: string; p_intake: Json }
         Returns: {
