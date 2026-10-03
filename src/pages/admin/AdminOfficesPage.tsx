@@ -453,7 +453,7 @@ export default function AdminOfficesPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 <div><Label>{labels.primary}</Label><Select value={form.primary_user_id || "none"} onValueChange={function (v) { assignMember("primary_user_id", v === "none" ? "" : v); }}><SelectTrigger><SelectValue placeholder={labels.noMember} /></SelectTrigger><SelectContent><SelectItem value="none">{labels.noMember}</SelectItem>{teamMembers.map(function (m) { return <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>; })}</SelectContent></Select></div>
                 <div><Label>{labels.backup}</Label><Select value={form.backup_user_id || "none"} onValueChange={function (v) { assignMember("backup_user_id", v === "none" ? "" : v); }}><SelectTrigger><SelectValue placeholder={labels.noMember} /></SelectTrigger><SelectContent><SelectItem value="none">{labels.noMember}</SelectItem>{teamMembers.filter(function (m) { return m.id !== form.primary_user_id; }).map(function (m) { return <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>; })}</SelectContent></Select></div>
-              {form.booking_enabled && !form.primary_user_id ? null : !form.primary_user_id && form.id ? <p className="text-xs text-muted-foreground">{labels.warning}</p> : null}
+              {!form.primary_user_id ? <p className="text-xs text-muted-foreground md:col-span-2">{labels.warning}</p> : null}
               </div>
             </section>
 
@@ -472,10 +472,10 @@ export default function AdminOfficesPage() {
               <div className="grid gap-2">
                 {form.hours.map(function (day) {
                   const dayName = DAYS[day.weekday][1];
-                  return <div key={day.weekday} className="grid grid-cols-[auto_1fr_1fr] items-center gap-2 rounded-xl border border-border p-3">
-                    <div className="w-28 text-sm font-medium">{dayName}</div>
+                  return <div key={day.weekday} className="grid grid-cols-[1fr_auto] items-center gap-2 rounded-xl border border-border p-3 sm:grid-cols-[7rem_auto_1fr]">
+                    <div className="min-w-0 text-sm font-medium">{dayName}</div>
                     <button type="button" className={day.is_open ? "rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-primary" : "rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"} onClick={function () { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { is_open: !h.is_open }) : h; })); }}>{day.is_open ? labels.open : labels.closed}</button>
-                    <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2"><Input type="time" value={day.open_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { open_time: e.target.value }) : h; })); }} /><Input type="time" value={day.close_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { close_time: e.target.value }) : h; })); }} /></div>
+                    <div className="col-span-2 grid grid-cols-2 gap-2 sm:col-span-1"><Input type="time" value={day.open_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { open_time: e.target.value }) : h; })); }} /><Input type="time" value={day.close_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { close_time: e.target.value }) : h; })); }} /></div>
                   </div>;
                 })}
               </div>
