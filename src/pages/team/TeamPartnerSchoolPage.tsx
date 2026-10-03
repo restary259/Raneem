@@ -278,9 +278,11 @@ export default function TeamPartnerSchoolPage() {
                 <Fact
                   label={t("partnerSchools.classSize", "Class size")}
                   value={
-                    standard.max_students
-                      ? `${t("partnerSchools.max", "Max")} ${standard.max_students}`
-                      : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
+                    standard.min_students && standard.max_students
+                      ? `${standard.min_students}–${standard.max_students}`
+                      : standard.max_students
+                        ? `${t("partnerSchools.max", "Max")} ${standard.max_students}`
+                        : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
                   }
                 />
                 <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
