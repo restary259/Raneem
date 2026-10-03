@@ -327,12 +327,13 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
 ];
 
 export const HEIDELBERG_COPY = {
-  heroTitle: { ar: "الدراسة في هايدلبرغ", en: "Study in Heidelberg", he: "ללמוד בהיידלברג" },
+  heroTitle: { ar: "تعرّف على هايدلبرغ", en: "Get to know Heidelberg", he: "הכירו את היידלברג" },
   heroSubtitle: {
-    ar: "دليل عملي للطالب وأهله: الجامعات، السكن، المواصلات والحياة اليومية في مدينة درب الوحيدة حاليًا.",
-    en: "A practical guide for students and parents: universities, housing, transport and everyday life in Darb's current city.",
-    he: "מדריך מעשי לסטודנטים ולהורים: אוניברסיטאות, מגורים, תחבורה וחיי היום-יום.",
+    ar: "كل ما تحتاج معرفته كطالب: الجامعة، السكن، المواصلات والحياة اليومية.",
+    en: "Everything you need to know as a student: university, housing, transport and everyday life.",
+    he: "כל מה שצריך לדעת כסטודנטים: אוניברסיטה, מגורים, תחבורה וחיי היום-יום.",
   },
+
   ctaTitle: { ar: "ابدأ تقييم ملفك للدراسة في هايدلبرغ", en: "Start your Heidelberg study assessment", he: "התחילו הערכת תיק ללימודים בהיידלברג" },
   ctaBody: {
     ar: "فريق درب يراجع ملفك ويتواصل معك خلال 24 ساعة.",
@@ -344,7 +345,7 @@ export const HEIDELBERG_COPY = {
 } satisfies Record<string, L10n>;
 
 export const HEIDELBERG_SEO = {
-  title: "الدراسة في هايدلبرغ | درب",
+  title: "تعرّف على هايدلبرغ | درب",
   description:
     "دليل عملي للدراسة في هايدلبرغ: الجامعات، المستشفى الجامعي، المكتبة، السكن، المواصلات والرياضة وحياة الطلاب. مع درب للتعليم الدولي.",
 };
