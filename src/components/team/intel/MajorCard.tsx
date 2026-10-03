@@ -239,27 +239,14 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
               )}
               {intel?.competitiveBagrutThreshold?.status === 'verified' && intel.competitiveBagrutThreshold.value != null ? (
                 <div className="rounded-md border border-dashed border-border bg-muted/20 p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {t('intel.card.benchmarkTitle', 'DARB planning benchmark')}
-                        </p>
-                        <Badge variant="secondary" className="text-[10px]">
-                          {t('intel.card.benchmarkBadge', 'Internal')}
-                        </Badge>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {t('intel.card.benchmarkValueLabel', 'Target Bagrut average')}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-end">
-                      <span className="font-mono text-2xl font-semibold tabular-nums">{intel.competitiveBagrutThreshold.value}+</span>
-                    </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t('intel.card.benchmarkValueLabel', 'Target Bagrut average')}
+                    </p>
+                    <span className="font-mono text-2xl font-semibold tabular-nums">
+                      {intel.competitiveBagrutThreshold.value}+
+                    </span>
                   </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {t('intel.card.benchmarkHint', 'Internal DARB planning indicator used to assess an applicant’s profile. It is not an official university cutoff or a guarantee of admission.')}
-                  </p>
                 </div>
               ) : null}
             </div>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ALL_MAJOR_INTEL } from './majorIntel';
 import {
   COMPETITIVE_BGRUT_BY_MAJOR,
   COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR,
@@ -29,6 +30,59 @@ const EXPECTED = {
   'international-law': 90,
   'business-administration': 75,
   economics: 75,
+  physiotherapy: 93,
+  nursing: 93,
+  'computer-engineering': 79,
+  'environmental-engineering': 79,
+  'electrical-engineering-information-technology': 79,
+  'environmental-protection-engineering': 79,
+  'materials-science': 79,
+  'artificial-intelligence': 75,
+  cybersecurity: 75,
+  'data-science': 75,
+  'cloud-computing': 75,
+  'game-development': 75,
+  'information-management': 75,
+  'environmental-science': 83,
+  mathematics: 83,
+  physics: 83,
+  chemistry: 83,
+  biology: 83,
+  psychology: 83,
+  sociology: 83,
+  'political-science': 83,
+  philosophy: 83,
+  'social-work': 83,
+  linguistics: 83,
+  'media-communication': 83,
+  history: 83,
+  'international-business': 75,
+  marketing: 75,
+  'finance-accounting': 75,
+  entrepreneurship: 75,
+  'supply-chain': 75,
+  'human-resources': 75,
+  'criminal-law': 90,
+  'business-law': 90,
+  'fine-arts': 70,
+  'graphic-design': 70,
+  music: 70,
+  theater: 70,
+  'film-media': 70,
+  'elementary-education': 83,
+  'special-education': 83,
+  'educational-psychology': 83,
+  'curriculum-instruction': 83,
+  'educational-administration': 83,
+  'agricultural-science': 83,
+  'environmental-management': 83,
+  forestry: 83,
+  'marine-science': 83,
+  'sustainable-development': 83,
+  'tourism-management': 83,
+  'hotel-management': 83,
+  'event-management': 83,
+  'travel-tourism': 83,
 } as const;
 
 describe('competitive Bagrut planning benchmarks', () => {
@@ -61,5 +115,15 @@ describe('competitive Bagrut planning benchmarks', () => {
 
   it('does not invent benchmarks for unregistered majors', () => {
     expect(competitiveBagrutForMajor('unknown-major')).toBeUndefined();
+  });
+
+  it('covers every verified university-route major and excludes Culinary Arts', () => {
+    const missing = ALL_MAJOR_INTEL
+      .filter((major) => major.status === 'verified')
+      .filter((major) => !major.competitiveBagrutThreshold)
+      .map((major) => major.id);
+
+    expect(missing).toEqual(['culinary-arts']);
+    expect(competitiveBagrutForMajor('culinary-arts')).toBeUndefined();
   });
 });
