@@ -168,7 +168,8 @@ function MemberDetailPanel({
           overflow-y-auto body stays the scroll region. Without this the extra
           Tabs/TabsContent flex layer grows past the drawer and clips content. */}
       <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className={bodyClassName}>
+        {/* Tab strip must not stretch: only the panels below grow and scroll. */}
+        <div className="shrink-0 px-4 pt-4">
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="overview" className="gap-2">
               <BarChart3 className="h-4 w-4 shrink-0" />
