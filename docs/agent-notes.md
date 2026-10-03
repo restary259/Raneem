@@ -3806,3 +3806,84 @@ function` fails the whole file.
   mutation action classifies as `WRITE` and is refused under a write freeze.
 - **CI:** lint is non-blocking and carries pre-existing debt; typecheck and
   tests are the blocking gates. `npm run build` is `vite build` only.
+
+## Multi-Office + Google Forensic Audit remediation
+
+Remediation of the forensic audit findings (2026-10-02). No P0 confirmed; the
+items below are the P1/P2 follow-ups.
+
+- **P1 — Public booking office rebinding.** `manage_public_appointment` folded
+  `p_office_id` in on every action, so a rescheduling applicant could silently
+  rebind *both* `appointments.office_id` and `cases.office_id` to another
+  office. Fixed in `supabase/migrations/20261002200000_office_booking_office_integrity.sql`:
+  the RPC now ignores `p_office_id` whenever an appointment already exists
+  (`v_office_id := COALESCE(v_appt.office_id, v_case.office_id)`), and a
+  `BEFORE INSERT OR UPDATE` trigger (`enforce_public_booking_office_invariant`)
+  repairs creation-time alignment but rejects any later office change for
+  `public_booking` rows. Backfills pre-existing divergences first. The RPC is
+  no longer the only line of defence.
+- **P1 — Google global kill switch singleton + fail-open.**
+  `google_business_settings` guarded the global row with plain
+  `UNIQUE (google_connection_id)`, which treats NULLs as distinct and therefore
+  never enforced a single global row; `get_google_business_settings` also
+  COALESCEd a missing row to `true`. Fixed in
+  `supabase/migrations/20261002210000_office_google_global_switch_singleton.sql`:
+  duplicates are folded with `bool_and` (fail closed) before adding the partial
+  unique index `uq_google_settings_global ON google_business_settings ((1))
+  WHERE google_connection_id IS NULL`, and the resolver now denies all
+  READ/WRITE/CONFIG/EVENT operations when the authoritative global row is
+  absent. `admin_get_google_business_settings` likewise reports `false`, never
+  `true`.
+- **P2 — Duplicate office selectors on canonical Google pages.**
+  `TeamGoogle{Reviews,Profile,Photos,Posts}Page.tsx` rendered their own office
+  dropdown under `/team/offices/:slug/google/*` even though
+  `OfficeWorkspaceLayout` already establishes the authoritative office. They now
+  read `useOfficeWorkspaceContext()` and inherit `officeId`/name from the
+  workspace, and the redundant selector is hidden on canonical routes (kept only
+  on the legacy cross-office/`?office=` view). Same convention as
+  `TeamAppointmentsPage`'s workspace scoping.
+- **P2 — Timezone hardening.** `TeamAppointmentsPage.tsx` computed slots with
+  browser-local `Date` arithmetic, so a manager in one zone editing an office
+  calendar in another saw shifted slots. Added `zonedParts` /`zonedWallTimeToUtc`
+  helpers (native `Intl`, two-pass DST correction) and route every slot match,
+  drop, save, prefill and display through the active office's
+  `office.timezone` (workspace context first, then the office row, then the
+  browser as a documented fallback). `offices` selects now include `timezone`.
+- **Follow-on:** fixed a pre-existing `tsc` error in
+  `publicBooking.functions.ts` (`p_office_id: officeId ?? undefined`) so the
+  typecheck gate is green.
+
+- **Follow-on (code review): reconcile the public booking UI with the office
+  lock.** The P1 RPC fix made existing bookings office-immutable, but
+  `PublicOfficeBooking.tsx` still showed the multi-office chooser to rescheduling
+  applicants (`multiOffice = offices.length > 1`) and still sent `officeId` on
+  `reschedule`, so an applicant could pick office B, see B's availability, and
+  have the server keep office A — a wrong "Time unavailable" or a silently
+  discarded choice. The chooser is now hidden for a live booking
+  (`multiOffice = offices.length > 1 && !current`) and `officeId` is sent only
+  for `book`. Contract changes that live at the RPC must update their entry
+  points in the same change. Regression test added in
+  `PublicOfficeBooking.test.tsx`.
+
+- **Follow-on (code review): canonical Google pages could silently operate a
+  different office.** `TeamGoogle{Reviews,Profile,Photos,Posts}Page` resolved
+  the active office as `effectiveOfficeId` if it appeared in
+  `list_my_google_offices()`, otherwise `list[0]`. An operator who belongs to
+  office A but is a Google operator only for office B, opening the canonical A
+  page, therefore read/wrote B while the workspace header and URL said A — with
+  the selector hidden on canonical routes, `inOfficeWorkspace=true`, there was
+  no visible way to notice or correct it. Server authz still bound every write
+  to the office actually passed, so this was confusion, not a bypass, but it
+  broke the "page name = office acted on" invariant. Resolution is now a single
+  pure helper, `resolveGooglePageOffice` (`src/lib/googleOfficeSelection.ts`):
+  on a canonical office route, use the workspace office or `null` — never fall
+  back to another office — and render an explicit "no Google access for this
+  office" state. The legacy `?office=` cross-office view keeps the first-office
+  fallback. Keys `googleMedia/googlePosts.noOfficeTitle` +
+  `workspaceNoAccessDesc` (en/ar/he) were added. Tests:
+  `googleOfficeSelection.test.ts` (matrix) and
+  `__tests__/TeamGoogleReviewsPage.test.tsx` (page refuses to query another
+  office's reviews). Lesson: any "pick the active tenant" helper must treat the
+  route-named tenant as non-negotiable; a fallback to "some tenant" is a
+  cross-tenant correctness bug even when RLS still enforces authorization.
+

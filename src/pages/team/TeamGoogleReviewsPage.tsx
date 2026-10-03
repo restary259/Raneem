@@ -61,7 +61,9 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { subscribeTables } from "@/lib/realtimeRegistry";
 import { useSearchParams } from "@/lib/router-compat";
+import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
+import { resolveGooglePageOffice } from "@/lib/googleOfficeSelection";
 import {
   GBP_REPLY_MAX_BYTES,
   replyByteLength,
@@ -119,8 +121,15 @@ export default function TeamGoogleReviewsPage() {
   // Office context from `/team/offices/<slug>/google/reviews` (route param) or
   // the legacy `?office=<slug>` search param.
   const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
+  // On the canonical office route `OfficeWorkspaceLayout` already resolved and
+  // authorized the office; inherit it so the page can never diverge from the
+  // workspace header/URL (and drop the redundant selector).
+  const workspaceContext = useOfficeWorkspaceContext();
+  const inOfficeWorkspace = workspaceContext !== null;
+  const effectiveOfficeId = workspaceContext?.officeId ?? workspaceOfficeId;
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
+  const [officesLoading, setOfficesLoading] = useState(true);
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [summary, setSummary] = useState<OfficeGoogleReviewSummaryRow | null>(
     null,
@@ -156,18 +165,21 @@ export default function TeamGoogleReviewsPage() {
     const { data, error } = await listMyGoogleOffices();
     if (error) {
       toast({ variant: "destructive", description: error.message });
+      setOfficesLoading(false);
       return;
     }
     const list = data || [];
     setOffices(list);
-    setOfficeId(
-      (current) =>
-        current ??
-        (workspaceOfficeId && list.some((o) => o.office_id === workspaceOfficeId)
-          ? workspaceOfficeId
-          : (list[0]?.office_id ?? null)),
+    setOfficeId((current) =>
+      resolveGooglePageOffice({
+        inOfficeWorkspace,
+        effectiveOfficeId,
+        officeIds: list.map((o) => o.office_id),
+        current,
+      }),
     );
-  }, [toast, workspaceOfficeId]);
+    setOfficesLoading(false);
+  }, [toast, effectiveOfficeId, inOfficeWorkspace]);
 
   useEffect(() => {
     loadOffices();
@@ -176,12 +188,12 @@ export default function TeamGoogleReviewsPage() {
   // Follow the URL's office when it changes (e.g. navigating between offices).
   useEffect(() => {
     if (
-      workspaceOfficeId &&
-      offices.some((o) => o.office_id === workspaceOfficeId)
+      effectiveOfficeId &&
+      offices.some((o) => o.office_id === effectiveOfficeId)
     ) {
-      setOfficeId(workspaceOfficeId);
+      setOfficeId(effectiveOfficeId);
     }
-  }, [workspaceOfficeId, offices]);
+  }, [effectiveOfficeId, offices]);
 
   const activeFilter =
     RATING_FILTERS.find((f) => f.key === filter) ?? RATING_FILTERS[0];
@@ -389,6 +401,29 @@ export default function TeamGoogleReviewsPage() {
     }
   }
 
+  // On a canonical office route where the signed-in operator has no Google
+  // access for this office, say so explicitly instead of silently operating a
+  // different office.
+  if (inOfficeWorkspace && !officesLoading && !officeId) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6">
+        <Card className="rounded-2xl border-border shadow-sm">
+          <CardContent className="space-y-2 py-10 text-center">
+            <ShieldAlert className="mx-auto size-8 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              {t("googleReviews.noOfficeTitle")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("googleReviews.workspaceNoAccessDesc", {
+                office: workspaceContext?.context.office.name ?? "",
+              })}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!loading && offices.length === 0) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6">
@@ -425,7 +460,7 @@ export default function TeamGoogleReviewsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {offices.length > 1 && (
+          {!inOfficeWorkspace && offices.length > 1 && (
             <Select value={officeId ?? undefined} onValueChange={setOfficeId}>
               <SelectTrigger className="w-[190px]">
                 <Building2 className="size-4" />

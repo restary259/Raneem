@@ -365,7 +365,7 @@ export const startPublicBooking = createServerFn({ method: "POST" })
     const result = await supabaseAdmin.rpc("create_public_booking_session", {
       p_full_name: data.fullName,
       p_phone: data.phone,
-      p_office_id: officeId,
+      p_office_id: officeId ?? undefined,
     });
 
     if (result.error) {

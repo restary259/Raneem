@@ -98,6 +98,7 @@ interface OfficeSummary {
   name_en: string;
   name_he: string;
   city: string;
+  timezone: string | null;
 }
 interface Case {
   id: string;
@@ -154,6 +155,75 @@ function officeHourRange(
   return { start: safeStart, end: Math.max(safeStart + 1, Math.min(24, end)) };
 }
 
+/* ── Timezone-aware slot helpers ────────────────────────────────────────
+   Appointments are stored as UTC instants but belong to an office's local
+   wall clock. Computing a slot's calendar day/hour with browser-local `Date`
+   shifts every appointment when staff sit in a different timezone than the
+   office they manage (e.g. a manager in Germany editing an Israel calendar).
+   These helpers translate through the office's IANA zone instead. */
+
+/**
+ * Which calendar day/hour a UTC instant falls on in the given IANA timezone.
+ * The returned `date` is a *local-constructed* carrier (`new Date(y, m, d)`)
+ * so date-fns local getters (`isSameDay`, `format`) read the office-local
+ * civil date regardless of the browser zone.
+ */
+function zonedParts(
+  instant: Date,
+  timeZone: string,
+): { date: Date; hour: number; minute: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(instant);
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value ?? "0");
+  return {
+    date: new Date(get("year"), get("month") - 1, get("day")),
+    // `hour` can report 24 at midnight in some locales; normalise to 0.
+    hour: get("hour") % 24,
+    minute: get("minute"),
+  };
+}
+
+/**
+ * Convert an office-local wall clock (a `Date` whose Y/M/D and the H/M below
+ * are meant literally in `timeZone`) into the true UTC instant. Uses the
+ * two-pass offset correction so DST boundaries resolve correctly.
+ */
+function zonedWallTimeToUtc(
+  day: Date,
+  hour: number,
+  minute: number,
+  timeZone: string,
+): Date {
+  const wall = Date.UTC(
+    day.getFullYear(),
+    day.getMonth(),
+    day.getDate(),
+    hour,
+    minute,
+  );
+  let guess = wall;
+  for (let i = 0; i < 2; i += 1) {
+    const { date, hour: h, minute: m } = zonedParts(new Date(guess), timeZone);
+    const observed = Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      h,
+      m,
+    );
+    guess += wall - observed;
+  }
+  return new Date(guess);
+}
+
 /* ── Status helpers ─────────────────────────────────────────────────── */
 // Returns a labelKey (i18n key) rather than a raw string so callers can use t(s.labelKey)
 const apptStyle = (outcome: string | null) => {
@@ -198,10 +268,11 @@ const apptStyle = (outcome: string | null) => {
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════════════ */
 export default function TeamAppointmentsPage() {
+  const workspaceContext = useOfficeWorkspaceContext();
   // Inside an office workspace the layout resolved the slug to a uuid and
   // authorized the caller; scope the calendar to that office. The cross-office
   // `/team/appointments` route has no provider, so `officeId` stays undefined.
-  const officeId = useOfficeWorkspaceContext()?.officeId;
+  const officeId = workspaceContext?.officeId;
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -231,6 +302,45 @@ export default function TeamAppointmentsPage() {
         (_, i) => i + WORK_START,
       ),
     [WORK_START, WORK_END],
+  );
+
+  // The office whose wall clock the calendar speaks. The workspace context is
+  // authoritative when present; otherwise fall back to the focused office's row
+  // or the browser zone (cross-office view with no office selected).
+  const activeTimezone = useMemo(() => {
+    const fromContext = workspaceContext?.context.office.timezone;
+    if (fromContext) return fromContext;
+    const row = myOffices.find((o) => o.id === officeId);
+    return row?.timezone || undefined;
+  }, [workspaceContext, myOffices, officeId]);
+
+  // Day/hour of a UTC instant in the active office zone (falls back to browser).
+  const zonedDay = useCallback(
+    (instant: Date) =>
+      activeTimezone ? zonedParts(instant, activeTimezone).date : instant,
+    [activeTimezone],
+  );
+  const zonedHour = useCallback(
+    (instant: Date) =>
+      activeTimezone
+        ? zonedParts(instant, activeTimezone).hour
+        : getHours(instant),
+    [activeTimezone],
+  );
+  // Office-local wall clock → UTC instant. Without a resolved zone this is the
+  // previous browser-local behaviour.
+  const wallTimeToUtc = useCallback(
+    (day: Date, hour: number, minute: number) =>
+      activeTimezone
+        ? zonedWallTimeToUtc(day, hour, minute, activeTimezone)
+        : new Date(
+            day.getFullYear(),
+            day.getMonth(),
+            day.getDate(),
+            hour,
+            minute,
+          ),
+    [activeTimezone],
   );
 
   /* ── Calendar ── */
@@ -434,7 +544,7 @@ export default function TeamAppointmentsPage() {
       const [officeRes, hoursRes] = await Promise.all([
         ids.length
           ? (supabase.from as any)("offices")
-              .select("id,name_ar,name_en,name_he,city")
+              .select("id,name_ar,name_en,name_he,city,timezone")
               .in("id", ids)
               .eq("is_active", true)
               .is("deleted_at", null)
@@ -513,14 +623,15 @@ export default function TeamAppointmentsPage() {
     const appt = appts.find((a) => a.id === draggingId);
     if (!appt) return;
 
-    const newDt = new Date(day);
-    newDt.setHours(hour, 0, 0, 0);
     const orig = parseISO(appt.scheduled_at);
-    if (isSameDay(newDt, orig) && getHours(orig) === hour) {
+    // Compare in office-local terms, then carry the *wall clock* through the
+    // UTC conversion so the drop lands on the hour the user sees.
+    if (isSameDay(zonedDay(orig), day) && zonedHour(orig) === hour) {
       setDraggingId(null);
       setDragOverSlot(null);
       return;
     }
+    const newDt = wallTimeToUtc(day, hour, 0);
 
     // Show confirmation before saving
     setPendingMove({ appt, newDate: newDt });
@@ -544,7 +655,10 @@ export default function TeamAppointmentsPage() {
       if (error) throw error;
       toast({
         title: t("team.appointments.toastRescheduled"),
-        description: format(pendingMove.newDate, "EEE, MMM d 'at' h:mm a"),
+        description: format(
+          zonedCarrier(pendingMove.newDate),
+          "EEE, MMM d 'at' h:mm a",
+        ),
       });
       setPendingMove(null);
       fetchAppts();
@@ -559,8 +673,10 @@ export default function TeamAppointmentsPage() {
   /* ══ MODAL HELPERS ═══════════════════════════════════════════════════ */
   const openNew = (date?: Date, hour?: number) => {
     setEditingAppt(null);
-    const d = date ? new Date(date) : new Date();
-    if (hour !== undefined) d.setHours(hour, 0, 0, 0);
+    // Keep only the Y/M/D (the clicked grid day is already in office-local
+    // terms); the wall clock comes from `newTime` and is converted on save.
+    const base = date ?? new Date();
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
     setNewDate(d);
     setNewTime(
       hour !== undefined ? `${String(hour).padStart(2, "0")}:00` : "10:00",
@@ -577,8 +693,18 @@ export default function TeamAppointmentsPage() {
   const openEdit = (appt: Appointment) => {
     setEditingAppt(appt);
     const dt = parseISO(appt.scheduled_at);
-    setNewDate(dt);
-    setNewTime(format(dt, "HH:mm"));
+    // Prefill the modal with the office-local date/time, not the browser's.
+    const parts = activeTimezone
+      ? zonedParts(dt, activeTimezone)
+      : {
+          date: new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()),
+          hour: dt.getHours(),
+          minute: dt.getMinutes(),
+        };
+    setNewDate(parts.date);
+    setNewTime(
+      `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`,
+    );
     setNewDuration(String(appt.duration_minutes));
     setNewNotes(appt.notes ?? "");
     setNewCaseId(appt.case_id ?? "");
@@ -637,8 +763,10 @@ export default function TeamAppointmentsPage() {
     setSaving(true);
     try {
       const [h, m] = newTime.split(":").map(Number);
-      const dt = new Date(newDate);
-      dt.setHours(h, m, 0, 0);
+      // `newDate` carries the office-local Y/M/D; `newTime` the office-local
+      // wall clock. Convert that pair to the true UTC instant so the stored
+      // value matches the office calendar, not the browser's zone.
+      const dt = wallTimeToUtc(newDate, h, m);
 
       if (editingAppt) {
         const { error } = await (supabase.from as any)("appointments")
@@ -762,14 +890,53 @@ export default function TeamAppointmentsPage() {
     { weekStartsOn: 0 },
   );
   const getSlot = (day: Date, hour: number) =>
-    appts.filter((a) => {
-      const d = parseISO(a.scheduled_at);
-      return isSameDay(d, day) && getHours(d) === hour;
-    });
+    appts.filter(
+      (a) =>
+        isSameDay(zonedDay(parseISO(a.scheduled_at)), day) &&
+        zonedHour(parseISO(a.scheduled_at)) === hour,
+    );
   const getDay = (day: Date) =>
-    appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
+    appts.filter((a) => isSameDay(zonedDay(parseISO(a.scheduled_at)), day));
   // Gregorian calendar + ASCII digits in both languages
   const calLocale = isAr ? "ar-u-nu-latn-ca-gregory" : "en-US";
+  // 12-hour clock label for a UTC instant, read in the office zone.
+  const zonedClock = useCallback(
+    (instant: Date) => {
+      const { hour, minute } = activeTimezone
+        ? zonedParts(instant, activeTimezone)
+        : { hour: instant.getHours(), minute: instant.getMinutes() };
+      return new Date(Date.UTC(2000, 0, 1, hour, minute)).toLocaleTimeString(
+        calLocale,
+        { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC" },
+      );
+    },
+    [activeTimezone, calLocale],
+  );
+  // Hour-axis label for a wall-clock hour (zone-independent; rendered in UTC).
+  const hourLabel = useCallback(
+    (hour: number) =>
+      new Date(Date.UTC(2000, 0, 1, hour, 0)).toLocaleTimeString(calLocale, {
+        hour: "numeric",
+        hour12: true,
+        timeZone: "UTC",
+      }),
+    [calLocale],
+  );
+  // A UTC instant as an office-local date/time carrier for date-fns `format`.
+  const zonedCarrier = useCallback(
+    (instant: Date) => {
+      if (!activeTimezone) return instant;
+      const { date, hour, minute } = zonedParts(instant, activeTimezone);
+      return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        hour,
+        minute,
+      );
+    },
+    [activeTimezone],
+  );
   const headerLabel =
     view === "day"
       ? currentDate.toLocaleDateString(calLocale, {
@@ -846,7 +1013,7 @@ export default function TeamAppointmentsPage() {
           <div className="flex items-center gap-1 mt-0.5 opacity-65 ps-2.5 min-w-0 w-full">
             <Clock className="h-2.5 w-2.5 shrink-0" />
             <span className="truncate">
-              {format(parseISO(appt.scheduled_at), "h:mm a")}
+              {zonedClock(parseISO(appt.scheduled_at))}
             </span>
             <span className="opacity-70 shrink-0">
               · {appt.duration_minutes}m
@@ -1031,13 +1198,7 @@ export default function TeamAppointmentsPage() {
                   onClick={() => openNew(currentDate, hour)}
                 >
                   <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-e border-border/40 select-none">
-                    {new Date().setHours(hour, 0, 0, 0) &&
-                      new Date(
-                        new Date().setHours(hour, 0, 0, 0),
-                      ).toLocaleTimeString(calLocale, {
-                        hour: "numeric",
-                        hour12: true,
-                      })}
+                    {hourLabel(hour)}
                   </div>
                   <div className="min-w-0 p-1.5 cursor-pointer">
                     {isOver && (
@@ -1103,12 +1264,7 @@ export default function TeamAppointmentsPage() {
                 style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
               >
                 <div className="py-1 px-3 text-xs text-muted-foreground border-e border-border/40 flex items-start pt-2 shrink-0 select-none">
-                  {new Date(
-                    new Date().setHours(hour, 0, 0, 0),
-                  ).toLocaleTimeString(calLocale, {
-                    hour: "numeric",
-                    hour12: true,
-                  })}
+                  {hourLabel(hour)}
                 </div>
                 {weekDays.map((day) => {
                   const slotAppts = getSlot(day, hour);
@@ -1549,8 +1705,8 @@ export default function TeamAppointmentsPage() {
                     <div className="flex items-center gap-2.5 text-muted-foreground">
                       <Clock className="h-4 w-4 shrink-0 text-primary/70" />
                       <span>
-                        {format(parseISO(selectedAppt.scheduled_at), "h:mm a")}{" "}
-                        · {selectedAppt.duration_minutes} min
+                        {zonedClock(parseISO(selectedAppt.scheduled_at))} ·{" "}
+                        {selectedAppt.duration_minutes} min
                       </span>
                     </div>
                     {selectedAppt.notes && (
@@ -1645,12 +1801,15 @@ export default function TeamAppointmentsPage() {
                 })}
               </p>
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 font-semibold text-center text-base">
-                {format(pendingMove.newDate, "EEEE, MMMM d 'at' h:mm a")}
+                {format(
+                  zonedCarrier(pendingMove.newDate),
+                  "EEEE, MMMM d 'at' h:mm a",
+                )}
               </div>
               <p className="text-xs text-muted-foreground text-center">
                 {t("team.appointments.rescheduleOldDate", {
                   date: format(
-                    parseISO(pendingMove.appt.scheduled_at),
+                    zonedCarrier(parseISO(pendingMove.appt.scheduled_at)),
                     "EEE, MMM d 'at' h:mm a",
                   ),
                 })}

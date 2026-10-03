@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
+import { resolveGooglePageOffice } from "@/lib/googleOfficeSelection";
+import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import type { TFunction } from "i18next";
 import {
   AlertTriangle,
@@ -149,8 +151,14 @@ export default function TeamGooglePhotosPage() {
   const { toast } = useToast();
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
+  const [officesLoading, setOfficesLoading] = useState(true);
   // Office context from the canonical office route (or legacy ?office=slug).
   const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
+  // On the canonical office route the layout already resolved/authorized the
+  // office; inherit it and hide the redundant selector there.
+  const workspaceContext = useOfficeWorkspaceContext();
+  const inOfficeWorkspace = workspaceContext !== null;
+  const effectiveOfficeId = workspaceContext?.officeId ?? workspaceOfficeId;
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [summary, setSummary] = useState<OfficeGoogleMediaSummaryRow | null>(
     null,
@@ -179,18 +187,21 @@ export default function TeamGooglePhotosPage() {
     const { data, error } = await listMyGoogleOffices();
     if (error) {
       toast({ variant: "destructive", description: error.message });
+      setOfficesLoading(false);
       return;
     }
     const list = data || [];
     setOffices(list);
-    setOfficeId(
-      (current) =>
-        current ??
-        (workspaceOfficeId && list.some((o) => o.office_id === workspaceOfficeId)
-          ? workspaceOfficeId
-          : (list[0]?.office_id ?? null)),
+    setOfficeId((current) =>
+      resolveGooglePageOffice({
+        inOfficeWorkspace,
+        effectiveOfficeId,
+        officeIds: list.map((o) => o.office_id),
+        current,
+      }),
     );
-  }, [toast, workspaceOfficeId]);
+    setOfficesLoading(false);
+  }, [toast, effectiveOfficeId, inOfficeWorkspace]);
 
   useEffect(() => {
     loadOffices();
@@ -199,12 +210,12 @@ export default function TeamGooglePhotosPage() {
   // Follow the URL's office when it changes (e.g. navigating between offices).
   useEffect(() => {
     if (
-      workspaceOfficeId &&
-      offices.some((o) => o.office_id === workspaceOfficeId)
+      effectiveOfficeId &&
+      offices.some((o) => o.office_id === effectiveOfficeId)
     ) {
-      setOfficeId(workspaceOfficeId);
+      setOfficeId(effectiveOfficeId);
     }
-  }, [workspaceOfficeId, offices]);
+  }, [effectiveOfficeId, offices]);
 
   const load = useCallback(async () => {
     if (!officeId) return;
@@ -424,11 +435,34 @@ export default function TeamGooglePhotosPage() {
   const failedCount = uploads.filter((u) => u.state === "failed").length;
   const uploadingCount = uploads.filter((u) => u.state === "uploading").length;
 
+  // On a canonical office route where the signed-in operator has no Google
+  // access for this office, say so explicitly instead of silently operating a
+  // different office.
+  if (inOfficeWorkspace && !officesLoading && !officeId) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6">
+        <Card className="rounded-2xl border-border shadow-sm">
+          <CardContent className="space-y-2 py-10 text-center">
+            <ShieldAlert className="mx-auto size-8 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              {t("googleMedia.noOfficeTitle")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("googleMedia.workspaceNoAccessDesc", {
+                office: workspaceContext?.context.office.name ?? "",
+              })}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-4 px-4 pt-4 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
-          {offices.length > 1 ? (
+          {!inOfficeWorkspace && offices.length > 1 ? (
             <Select
               value={officeId ?? ""}
               onValueChange={(v) => setOfficeId(v)}
@@ -446,7 +480,9 @@ export default function TeamGooglePhotosPage() {
             </Select>
           ) : (
             <h1 className="truncate text-2xl font-semibold">
-              {offices[0]?.office_name ?? t("googleMedia.title")}
+              {workspaceContext?.context.office.name ??
+                offices[0]?.office_name ??
+                t("googleMedia.title")}
             </h1>
           )}
         </div>
