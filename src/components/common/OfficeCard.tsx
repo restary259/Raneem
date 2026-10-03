@@ -1,26 +1,17 @@
 import { useTranslation } from "react-i18next";
 import { MapPin, Navigation, Phone } from "lucide-react";
+import { formatPhoneDisplay, telHref } from "@/lib/phone";
 
 export type OfficeCardData = {
   name_ar: string;
   name_en: string;
   name_he?: string | null;
   city?: string | null;
+  country?: string | null;
   address_line_1?: string | null;
   phone?: string | null;
   map_url?: string | null;
 };
-
-export function formatIsraeliPhone(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length === 10) return digits.slice(0, 3) + "-" + digits.slice(3, 6) + "-" + digits.slice(6);
-  return phone;
-}
-
-export function telHref(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  return "tel:" + (digits.startsWith("0") ? "+972" + digits.slice(1) : "+" + digits);
-}
 
 /** Shared office card: name, address, call + Google Maps actions. */
 export default function OfficeCard({ office, compact = false }: { office: OfficeCardData; compact?: boolean }) {
@@ -28,6 +19,8 @@ export default function OfficeCard({ office, compact = false }: { office: Office
   const lang = i18n.language || "ar";
   const name = lang.startsWith("ar") ? office.name_ar : lang.startsWith("he") ? office.name_he || office.name_en : office.name_en;
   const address = [office.address_line_1, office.city].filter(Boolean).join("، ");
+  const phoneDisplay = office.phone ? formatPhoneDisplay(office.phone, office.country) : "";
+  const phoneHref = office.phone ? telHref(office.phone, office.country) : "";
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -44,9 +37,9 @@ export default function OfficeCard({ office, compact = false }: { office: Office
       {(office.phone || office.map_url) && (
         <div className="grid grid-cols-2 gap-2 p-3">
           {office.phone && (
-            <a href={telHref(office.phone)} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-primary/5">
+            <a href={phoneHref} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-primary/5">
               <Phone className="size-4 text-primary" aria-hidden="true" />
-              <span dir="ltr" className="tabular-nums">{formatIsraeliPhone(office.phone)}</span>
+              <span dir="ltr" className="tabular-nums">{phoneDisplay}</span>
             </a>
           )}
           {office.map_url && (

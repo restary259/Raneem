@@ -101,10 +101,13 @@ import { Route as TeamBagrutRouteImport } from './routes/team.bagrut'
 import { Route as TeamCatalogRouteImport } from './routes/team.catalog'
 import { Route as TeamMajorsRouteImport } from './routes/team.majors'
 import { Route as TeamMessagesRouteImport } from './routes/team.messages'
+import { Route as TeamOfficesRouteImport } from './routes/team.offices'
 import { Route as TeamSpreadsheetRouteImport } from './routes/team.spreadsheet'
 import { Route as TeamSubmitRouteImport } from './routes/team.submit'
 import { Route as TeamWhatsappRouteImport } from './routes/team.whatsapp'
 import { Route as AdminCasesIdRouteImport } from './routes/admin.cases.$id'
+import { Route as AdminOfficesIndexRouteImport } from './routes/admin.offices.index'
+import { Route as AdminOfficesOfficeIdRouteImport } from './routes/admin.offices.$officeId'
 import { Route as ApiCronGoogleBusinessWorkerRouteImport } from './routes/api/cron/google-business-worker'
 import { Route as StudentToolsBagrutRouteImport } from './routes/student.tools.bagrut'
 import { Route as StudentToolsCvRouteImport } from './routes/student.tools.cv'
@@ -118,18 +121,40 @@ import { Route as TeamGooglePhotosRouteImport } from './routes/team.google.photo
 import { Route as TeamGooglePostsRouteImport } from './routes/team.google.posts'
 import { Route as TeamGoogleProfileRouteImport } from './routes/team.google.profile'
 import { Route as TeamGoogleReviewsRouteImport } from './routes/team.google.reviews'
+import { Route as TeamOfficesIndexRouteImport } from './routes/team.offices.index'
+import { Route as TeamOfficesOfficeIdRouteImport } from './routes/team.offices.$officeId'
 import { Route as TeamPartnerSchoolsIndexRouteImport } from './routes/team.partner-schools.index'
 import { Route as TeamStudentsIndexRouteImport } from './routes/team.students.index'
 import { Route as TeamStudentsIdRouteImport } from './routes/team.students.$id'
 import { Route as TeamToolsCurrencyRouteImport } from './routes/team.tools.currency'
 import { Route as TeamToolsCvRouteImport } from './routes/team.tools.cv'
+import { Route as AdminOfficesOfficeIdIndexRouteImport } from './routes/admin.offices.$officeId.index'
+import { Route as AdminOfficesOfficeIdAppointmentsRouteImport } from './routes/admin.offices.$officeId.appointments'
+import { Route as AdminOfficesOfficeIdGoogleRouteImport } from './routes/admin.offices.$officeId.google'
+import { Route as AdminOfficesOfficeIdTeamRouteImport } from './routes/admin.offices.$officeId.team'
 import { Route as ApiPublicGoogleBusinessWebhookRouteImport } from './routes/api/public/google-business/webhook'
 import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as TeamOfficesOfficeIdIndexRouteImport } from './routes/team.offices.$officeId.index'
+import { Route as TeamOfficesOfficeIdAppointmentsRouteImport } from './routes/team.offices.$officeId.appointments'
+import { Route as TeamOfficesOfficeIdGoogleRouteImport } from './routes/team.offices.$officeId.google'
+import { Route as TeamOfficesOfficeIdTeamRouteImport } from './routes/team.offices.$officeId.team'
 import { Route as TeamPartnerSchoolsCountryIndexRouteImport } from './routes/team.partner-schools.$country.index'
 import { Route as TeamPartnerSchoolsCountrySchoolRouteImport } from './routes/team.partner-schools.$country.$school'
+import { Route as AdminOfficesOfficeIdGoogleIndexRouteImport } from './routes/admin.offices.$officeId.google.index'
+import { Route as AdminOfficesOfficeIdGoogleInsightsRouteImport } from './routes/admin.offices.$officeId.google.insights'
+import { Route as AdminOfficesOfficeIdGooglePhotosRouteImport } from './routes/admin.offices.$officeId.google.photos'
+import { Route as AdminOfficesOfficeIdGooglePostsRouteImport } from './routes/admin.offices.$officeId.google.posts'
+import { Route as AdminOfficesOfficeIdGoogleProfileRouteImport } from './routes/admin.offices.$officeId.google.profile'
+import { Route as AdminOfficesOfficeIdGoogleReviewsRouteImport } from './routes/admin.offices.$officeId.google.reviews'
+import { Route as TeamOfficesOfficeIdGoogleIndexRouteImport } from './routes/team.offices.$officeId.google.index'
+import { Route as TeamOfficesOfficeIdGoogleInsightsRouteImport } from './routes/team.offices.$officeId.google.insights'
+import { Route as TeamOfficesOfficeIdGooglePhotosRouteImport } from './routes/team.offices.$officeId.google.photos'
+import { Route as TeamOfficesOfficeIdGooglePostsRouteImport } from './routes/team.offices.$officeId.google.posts'
+import { Route as TeamOfficesOfficeIdGoogleProfileRouteImport } from './routes/team.offices.$officeId.google.profile'
+import { Route as TeamOfficesOfficeIdGoogleReviewsRouteImport } from './routes/team.offices.$officeId.google.reviews'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -594,6 +619,11 @@ const TeamMessagesRoute = TeamMessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => TeamRoute,
 } as any)
+const TeamOfficesRoute = TeamOfficesRouteImport.update({
+  id: '/offices',
+  path: '/offices',
+  getParentRoute: () => TeamRoute,
+} as any)
 const TeamSpreadsheetRoute = TeamSpreadsheetRouteImport.update({
   id: '/spreadsheet',
   path: '/spreadsheet',
@@ -613,6 +643,16 @@ const AdminCasesIdRoute = AdminCasesIdRouteImport.update({
   id: '/cases/$id',
   path: '/cases/$id',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminOfficesIndexRoute = AdminOfficesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminOfficesRoute,
+} as any)
+const AdminOfficesOfficeIdRoute = AdminOfficesOfficeIdRouteImport.update({
+  id: '/$officeId',
+  path: '/$officeId',
+  getParentRoute: () => AdminOfficesRoute,
 } as any)
 const ApiCronGoogleBusinessWorkerRoute =
   ApiCronGoogleBusinessWorkerRouteImport.update({
@@ -680,6 +720,16 @@ const TeamGoogleReviewsRoute = TeamGoogleReviewsRouteImport.update({
   path: '/google/reviews',
   getParentRoute: () => TeamRoute,
 } as any)
+const TeamOfficesIndexRoute = TeamOfficesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeamOfficesRoute,
+} as any)
+const TeamOfficesOfficeIdRoute = TeamOfficesOfficeIdRouteImport.update({
+  id: '/$officeId',
+  path: '/$officeId',
+  getParentRoute: () => TeamOfficesRoute,
+} as any)
 const TeamPartnerSchoolsIndexRoute = TeamPartnerSchoolsIndexRouteImport.update({
   id: '/partner-schools/',
   path: '/partner-schools/',
@@ -705,6 +755,30 @@ const TeamToolsCvRoute = TeamToolsCvRouteImport.update({
   path: '/tools/cv',
   getParentRoute: () => TeamRoute,
 } as any)
+const AdminOfficesOfficeIdIndexRoute =
+  AdminOfficesOfficeIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminOfficesOfficeIdRoute,
+  } as any)
+const AdminOfficesOfficeIdAppointmentsRoute =
+  AdminOfficesOfficeIdAppointmentsRouteImport.update({
+    id: '/appointments',
+    path: '/appointments',
+    getParentRoute: () => AdminOfficesOfficeIdRoute,
+  } as any)
+const AdminOfficesOfficeIdGoogleRoute =
+  AdminOfficesOfficeIdGoogleRouteImport.update({
+    id: '/google',
+    path: '/google',
+    getParentRoute: () => AdminOfficesOfficeIdRoute,
+  } as any)
+const AdminOfficesOfficeIdTeamRoute =
+  AdminOfficesOfficeIdTeamRouteImport.update({
+    id: '/team',
+    path: '/team',
+    getParentRoute: () => AdminOfficesOfficeIdRoute,
+  } as any)
 const ApiPublicGoogleBusinessWebhookRoute =
   ApiPublicGoogleBusinessWebhookRouteImport.update({
     id: '/api/public/google-business/webhook',
@@ -733,6 +807,29 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const TeamOfficesOfficeIdIndexRoute =
+  TeamOfficesOfficeIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => TeamOfficesOfficeIdRoute,
+  } as any)
+const TeamOfficesOfficeIdAppointmentsRoute =
+  TeamOfficesOfficeIdAppointmentsRouteImport.update({
+    id: '/appointments',
+    path: '/appointments',
+    getParentRoute: () => TeamOfficesOfficeIdRoute,
+  } as any)
+const TeamOfficesOfficeIdGoogleRoute =
+  TeamOfficesOfficeIdGoogleRouteImport.update({
+    id: '/google',
+    path: '/google',
+    getParentRoute: () => TeamOfficesOfficeIdRoute,
+  } as any)
+const TeamOfficesOfficeIdTeamRoute = TeamOfficesOfficeIdTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => TeamOfficesOfficeIdRoute,
+} as any)
 const TeamPartnerSchoolsCountryIndexRoute =
   TeamPartnerSchoolsCountryIndexRouteImport.update({
     id: '/partner-schools/$country/',
@@ -744,6 +841,78 @@ const TeamPartnerSchoolsCountrySchoolRoute =
     id: '/partner-schools/$country/$school',
     path: '/partner-schools/$country/$school',
     getParentRoute: () => TeamRoute,
+  } as any)
+const AdminOfficesOfficeIdGoogleIndexRoute =
+  AdminOfficesOfficeIdGoogleIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminOfficesOfficeIdGoogleRoute,
+  } as any)
+const AdminOfficesOfficeIdGoogleInsightsRoute =
+  AdminOfficesOfficeIdGoogleInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AdminOfficesOfficeIdGoogleRoute,
+  } as any)
+const AdminOfficesOfficeIdGooglePhotosRoute =
+  AdminOfficesOfficeIdGooglePhotosRouteImport.update({
+    id: '/photos',
+    path: '/photos',
+    getParentRoute: () => AdminOfficesOfficeIdGoogleRoute,
+  } as any)
+const AdminOfficesOfficeIdGooglePostsRoute =
+  AdminOfficesOfficeIdGooglePostsRouteImport.update({
+    id: '/posts',
+    path: '/posts',
+    getParentRoute: () => AdminOfficesOfficeIdGoogleRoute,
+  } as any)
+const AdminOfficesOfficeIdGoogleProfileRoute =
+  AdminOfficesOfficeIdGoogleProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AdminOfficesOfficeIdGoogleRoute,
+  } as any)
+const AdminOfficesOfficeIdGoogleReviewsRoute =
+  AdminOfficesOfficeIdGoogleReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AdminOfficesOfficeIdGoogleRoute,
+  } as any)
+const TeamOfficesOfficeIdGoogleIndexRoute =
+  TeamOfficesOfficeIdGoogleIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => TeamOfficesOfficeIdGoogleRoute,
+  } as any)
+const TeamOfficesOfficeIdGoogleInsightsRoute =
+  TeamOfficesOfficeIdGoogleInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => TeamOfficesOfficeIdGoogleRoute,
+  } as any)
+const TeamOfficesOfficeIdGooglePhotosRoute =
+  TeamOfficesOfficeIdGooglePhotosRouteImport.update({
+    id: '/photos',
+    path: '/photos',
+    getParentRoute: () => TeamOfficesOfficeIdGoogleRoute,
+  } as any)
+const TeamOfficesOfficeIdGooglePostsRoute =
+  TeamOfficesOfficeIdGooglePostsRouteImport.update({
+    id: '/posts',
+    path: '/posts',
+    getParentRoute: () => TeamOfficesOfficeIdGoogleRoute,
+  } as any)
+const TeamOfficesOfficeIdGoogleProfileRoute =
+  TeamOfficesOfficeIdGoogleProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => TeamOfficesOfficeIdGoogleRoute,
+  } as any)
+const TeamOfficesOfficeIdGoogleReviewsRoute =
+  TeamOfficesOfficeIdGoogleReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => TeamOfficesOfficeIdGoogleRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -783,7 +952,7 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
-  '/admin/offices': typeof AdminOfficesRoute
+  '/admin/offices': typeof AdminOfficesRouteWithChildren
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
@@ -832,6 +1001,7 @@ export interface FileRoutesByFullPath {
   '/team/catalog': typeof TeamCatalogRoute
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
+  '/team/offices': typeof TeamOfficesRouteWithChildren
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
   '/team/submit': typeof TeamSubmitRoute
   '/team/whatsapp': typeof TeamWhatsappRoute
@@ -843,6 +1013,7 @@ export interface FileRoutesByFullPath {
   '/student/': typeof StudentIndexRoute
   '/team/': typeof TeamIndexRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/admin/offices/$officeId': typeof AdminOfficesOfficeIdRouteWithChildren
   '/api/cron/google-business-worker': typeof ApiCronGoogleBusinessWorkerRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
@@ -853,21 +1024,44 @@ export interface FileRoutesByFullPath {
   '/team/google/posts': typeof TeamGooglePostsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
+  '/team/offices/$officeId': typeof TeamOfficesOfficeIdRouteWithChildren
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
   '/team/tools/cv': typeof TeamToolsCvRoute
+  '/admin/offices/': typeof AdminOfficesIndexRoute
   '/team/appointments/': typeof TeamAppointmentsIndexRoute
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/google/': typeof TeamGoogleIndexRoute
+  '/team/offices/': typeof TeamOfficesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/admin/offices/$officeId/appointments': typeof AdminOfficesOfficeIdAppointmentsRoute
+  '/admin/offices/$officeId/google': typeof AdminOfficesOfficeIdGoogleRouteWithChildren
+  '/admin/offices/$officeId/team': typeof AdminOfficesOfficeIdTeamRoute
   '/api/public/google-business/webhook': typeof ApiPublicGoogleBusinessWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/team/offices/$officeId/appointments': typeof TeamOfficesOfficeIdAppointmentsRoute
+  '/team/offices/$officeId/google': typeof TeamOfficesOfficeIdGoogleRouteWithChildren
+  '/team/offices/$officeId/team': typeof TeamOfficesOfficeIdTeamRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
+  '/admin/offices/$officeId/': typeof AdminOfficesOfficeIdIndexRoute
+  '/team/offices/$officeId/': typeof TeamOfficesOfficeIdIndexRoute
   '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
+  '/admin/offices/$officeId/google/insights': typeof AdminOfficesOfficeIdGoogleInsightsRoute
+  '/admin/offices/$officeId/google/photos': typeof AdminOfficesOfficeIdGooglePhotosRoute
+  '/admin/offices/$officeId/google/posts': typeof AdminOfficesOfficeIdGooglePostsRoute
+  '/admin/offices/$officeId/google/profile': typeof AdminOfficesOfficeIdGoogleProfileRoute
+  '/admin/offices/$officeId/google/reviews': typeof AdminOfficesOfficeIdGoogleReviewsRoute
+  '/team/offices/$officeId/google/insights': typeof TeamOfficesOfficeIdGoogleInsightsRoute
+  '/team/offices/$officeId/google/photos': typeof TeamOfficesOfficeIdGooglePhotosRoute
+  '/team/offices/$officeId/google/posts': typeof TeamOfficesOfficeIdGooglePostsRoute
+  '/team/offices/$officeId/google/profile': typeof TeamOfficesOfficeIdGoogleProfileRoute
+  '/team/offices/$officeId/google/reviews': typeof TeamOfficesOfficeIdGoogleReviewsRoute
+  '/admin/offices/$officeId/google/': typeof AdminOfficesOfficeIdGoogleIndexRoute
+  '/team/offices/$officeId/google/': typeof TeamOfficesOfficeIdGoogleIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -901,7 +1095,6 @@ export interface FileRoutesByTo {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
-  '/admin/offices': typeof AdminOfficesRoute
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
@@ -974,18 +1167,38 @@ export interface FileRoutesByTo {
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
   '/team/tools/cv': typeof TeamToolsCvRoute
+  '/admin/offices': typeof AdminOfficesIndexRoute
   '/team/appointments': typeof TeamAppointmentsIndexRoute
   '/team/cases': typeof TeamCasesIndexRoute
   '/team/google': typeof TeamGoogleIndexRoute
+  '/team/offices': typeof TeamOfficesIndexRoute
   '/team/partner-schools': typeof TeamPartnerSchoolsIndexRoute
   '/team/students': typeof TeamStudentsIndexRoute
+  '/admin/offices/$officeId/appointments': typeof AdminOfficesOfficeIdAppointmentsRoute
+  '/admin/offices/$officeId/team': typeof AdminOfficesOfficeIdTeamRoute
   '/api/public/google-business/webhook': typeof ApiPublicGoogleBusinessWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/team/offices/$officeId/appointments': typeof TeamOfficesOfficeIdAppointmentsRoute
+  '/team/offices/$officeId/team': typeof TeamOfficesOfficeIdTeamRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
+  '/admin/offices/$officeId': typeof AdminOfficesOfficeIdIndexRoute
+  '/team/offices/$officeId': typeof TeamOfficesOfficeIdIndexRoute
   '/team/partner-schools/$country': typeof TeamPartnerSchoolsCountryIndexRoute
+  '/admin/offices/$officeId/google/insights': typeof AdminOfficesOfficeIdGoogleInsightsRoute
+  '/admin/offices/$officeId/google/photos': typeof AdminOfficesOfficeIdGooglePhotosRoute
+  '/admin/offices/$officeId/google/posts': typeof AdminOfficesOfficeIdGooglePostsRoute
+  '/admin/offices/$officeId/google/profile': typeof AdminOfficesOfficeIdGoogleProfileRoute
+  '/admin/offices/$officeId/google/reviews': typeof AdminOfficesOfficeIdGoogleReviewsRoute
+  '/team/offices/$officeId/google/insights': typeof TeamOfficesOfficeIdGoogleInsightsRoute
+  '/team/offices/$officeId/google/photos': typeof TeamOfficesOfficeIdGooglePhotosRoute
+  '/team/offices/$officeId/google/posts': typeof TeamOfficesOfficeIdGooglePostsRoute
+  '/team/offices/$officeId/google/profile': typeof TeamOfficesOfficeIdGoogleProfileRoute
+  '/team/offices/$officeId/google/reviews': typeof TeamOfficesOfficeIdGoogleReviewsRoute
+  '/admin/offices/$officeId/google': typeof AdminOfficesOfficeIdGoogleIndexRoute
+  '/team/offices/$officeId/google': typeof TeamOfficesOfficeIdGoogleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1025,7 +1238,7 @@ export interface FileRoutesById {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/messages': typeof AdminMessagesRoute
-  '/admin/offices': typeof AdminOfficesRoute
+  '/admin/offices': typeof AdminOfficesRouteWithChildren
   '/admin/pipeline': typeof AdminPipelineRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/referrals': typeof AdminReferralsRoute
@@ -1074,6 +1287,7 @@ export interface FileRoutesById {
   '/team/catalog': typeof TeamCatalogRoute
   '/team/majors': typeof TeamMajorsRoute
   '/team/messages': typeof TeamMessagesRoute
+  '/team/offices': typeof TeamOfficesRouteWithChildren
   '/team/spreadsheet': typeof TeamSpreadsheetRoute
   '/team/submit': typeof TeamSubmitRoute
   '/team/whatsapp': typeof TeamWhatsappRoute
@@ -1085,6 +1299,7 @@ export interface FileRoutesById {
   '/student/': typeof StudentIndexRoute
   '/team/': typeof TeamIndexRoute
   '/admin/cases/$id': typeof AdminCasesIdRoute
+  '/admin/offices/$officeId': typeof AdminOfficesOfficeIdRouteWithChildren
   '/api/cron/google-business-worker': typeof ApiCronGoogleBusinessWorkerRoute
   '/student/tools/bagrut': typeof StudentToolsBagrutRoute
   '/student/tools/cv': typeof StudentToolsCvRoute
@@ -1095,21 +1310,44 @@ export interface FileRoutesById {
   '/team/google/posts': typeof TeamGooglePostsRoute
   '/team/google/profile': typeof TeamGoogleProfileRoute
   '/team/google/reviews': typeof TeamGoogleReviewsRoute
+  '/team/offices/$officeId': typeof TeamOfficesOfficeIdRouteWithChildren
   '/team/students/$id': typeof TeamStudentsIdRoute
   '/team/tools/currency': typeof TeamToolsCurrencyRoute
   '/team/tools/cv': typeof TeamToolsCvRoute
+  '/admin/offices/': typeof AdminOfficesIndexRoute
   '/team/appointments/': typeof TeamAppointmentsIndexRoute
   '/team/cases/': typeof TeamCasesIndexRoute
   '/team/google/': typeof TeamGoogleIndexRoute
+  '/team/offices/': typeof TeamOfficesIndexRoute
   '/team/partner-schools/': typeof TeamPartnerSchoolsIndexRoute
   '/team/students/': typeof TeamStudentsIndexRoute
+  '/admin/offices/$officeId/appointments': typeof AdminOfficesOfficeIdAppointmentsRoute
+  '/admin/offices/$officeId/google': typeof AdminOfficesOfficeIdGoogleRouteWithChildren
+  '/admin/offices/$officeId/team': typeof AdminOfficesOfficeIdTeamRoute
   '/api/public/google-business/webhook': typeof ApiPublicGoogleBusinessWebhookRoute
   '/api/public/whatsapp/webhook': typeof ApiPublicWhatsappWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/team/offices/$officeId/appointments': typeof TeamOfficesOfficeIdAppointmentsRoute
+  '/team/offices/$officeId/google': typeof TeamOfficesOfficeIdGoogleRouteWithChildren
+  '/team/offices/$officeId/team': typeof TeamOfficesOfficeIdTeamRoute
   '/team/partner-schools/$country/$school': typeof TeamPartnerSchoolsCountrySchoolRoute
+  '/admin/offices/$officeId/': typeof AdminOfficesOfficeIdIndexRoute
+  '/team/offices/$officeId/': typeof TeamOfficesOfficeIdIndexRoute
   '/team/partner-schools/$country/': typeof TeamPartnerSchoolsCountryIndexRoute
+  '/admin/offices/$officeId/google/insights': typeof AdminOfficesOfficeIdGoogleInsightsRoute
+  '/admin/offices/$officeId/google/photos': typeof AdminOfficesOfficeIdGooglePhotosRoute
+  '/admin/offices/$officeId/google/posts': typeof AdminOfficesOfficeIdGooglePostsRoute
+  '/admin/offices/$officeId/google/profile': typeof AdminOfficesOfficeIdGoogleProfileRoute
+  '/admin/offices/$officeId/google/reviews': typeof AdminOfficesOfficeIdGoogleReviewsRoute
+  '/team/offices/$officeId/google/insights': typeof TeamOfficesOfficeIdGoogleInsightsRoute
+  '/team/offices/$officeId/google/photos': typeof TeamOfficesOfficeIdGooglePhotosRoute
+  '/team/offices/$officeId/google/posts': typeof TeamOfficesOfficeIdGooglePostsRoute
+  '/team/offices/$officeId/google/profile': typeof TeamOfficesOfficeIdGoogleProfileRoute
+  '/team/offices/$officeId/google/reviews': typeof TeamOfficesOfficeIdGoogleReviewsRoute
+  '/admin/offices/$officeId/google/': typeof AdminOfficesOfficeIdGoogleIndexRoute
+  '/team/offices/$officeId/google/': typeof TeamOfficesOfficeIdGoogleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1199,6 +1437,7 @@ export interface FileRouteTypes {
     | '/team/catalog'
     | '/team/majors'
     | '/team/messages'
+    | '/team/offices'
     | '/team/spreadsheet'
     | '/team/submit'
     | '/team/whatsapp'
@@ -1210,6 +1449,7 @@ export interface FileRouteTypes {
     | '/student/'
     | '/team/'
     | '/admin/cases/$id'
+    | '/admin/offices/$officeId'
     | '/api/cron/google-business-worker'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
@@ -1220,21 +1460,44 @@ export interface FileRouteTypes {
     | '/team/google/posts'
     | '/team/google/profile'
     | '/team/google/reviews'
+    | '/team/offices/$officeId'
     | '/team/students/$id'
     | '/team/tools/currency'
     | '/team/tools/cv'
+    | '/admin/offices/'
     | '/team/appointments/'
     | '/team/cases/'
     | '/team/google/'
+    | '/team/offices/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/admin/offices/$officeId/appointments'
+    | '/admin/offices/$officeId/google'
+    | '/admin/offices/$officeId/team'
     | '/api/public/google-business/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/team/offices/$officeId/appointments'
+    | '/team/offices/$officeId/google'
+    | '/team/offices/$officeId/team'
     | '/team/partner-schools/$country/$school'
+    | '/admin/offices/$officeId/'
+    | '/team/offices/$officeId/'
     | '/team/partner-schools/$country/'
+    | '/admin/offices/$officeId/google/insights'
+    | '/admin/offices/$officeId/google/photos'
+    | '/admin/offices/$officeId/google/posts'
+    | '/admin/offices/$officeId/google/profile'
+    | '/admin/offices/$officeId/google/reviews'
+    | '/team/offices/$officeId/google/insights'
+    | '/team/offices/$officeId/google/photos'
+    | '/team/offices/$officeId/google/posts'
+    | '/team/offices/$officeId/google/profile'
+    | '/team/offices/$officeId/google/reviews'
+    | '/admin/offices/$officeId/google/'
+    | '/team/offices/$officeId/google/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1268,7 +1531,6 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/members'
     | '/admin/messages'
-    | '/admin/offices'
     | '/admin/pipeline'
     | '/admin/programs'
     | '/admin/referrals'
@@ -1341,18 +1603,38 @@ export interface FileRouteTypes {
     | '/team/students/$id'
     | '/team/tools/currency'
     | '/team/tools/cv'
+    | '/admin/offices'
     | '/team/appointments'
     | '/team/cases'
     | '/team/google'
+    | '/team/offices'
     | '/team/partner-schools'
     | '/team/students'
+    | '/admin/offices/$officeId/appointments'
+    | '/admin/offices/$officeId/team'
     | '/api/public/google-business/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/team/offices/$officeId/appointments'
+    | '/team/offices/$officeId/team'
     | '/team/partner-schools/$country/$school'
+    | '/admin/offices/$officeId'
+    | '/team/offices/$officeId'
     | '/team/partner-schools/$country'
+    | '/admin/offices/$officeId/google/insights'
+    | '/admin/offices/$officeId/google/photos'
+    | '/admin/offices/$officeId/google/posts'
+    | '/admin/offices/$officeId/google/profile'
+    | '/admin/offices/$officeId/google/reviews'
+    | '/team/offices/$officeId/google/insights'
+    | '/team/offices/$officeId/google/photos'
+    | '/team/offices/$officeId/google/posts'
+    | '/team/offices/$officeId/google/profile'
+    | '/team/offices/$officeId/google/reviews'
+    | '/admin/offices/$officeId/google'
+    | '/team/offices/$officeId/google'
   id:
     | '__root__'
     | '/'
@@ -1440,6 +1722,7 @@ export interface FileRouteTypes {
     | '/team/catalog'
     | '/team/majors'
     | '/team/messages'
+    | '/team/offices'
     | '/team/spreadsheet'
     | '/team/submit'
     | '/team/whatsapp'
@@ -1451,6 +1734,7 @@ export interface FileRouteTypes {
     | '/student/'
     | '/team/'
     | '/admin/cases/$id'
+    | '/admin/offices/$officeId'
     | '/api/cron/google-business-worker'
     | '/student/tools/bagrut'
     | '/student/tools/cv'
@@ -1461,21 +1745,44 @@ export interface FileRouteTypes {
     | '/team/google/posts'
     | '/team/google/profile'
     | '/team/google/reviews'
+    | '/team/offices/$officeId'
     | '/team/students/$id'
     | '/team/tools/currency'
     | '/team/tools/cv'
+    | '/admin/offices/'
     | '/team/appointments/'
     | '/team/cases/'
     | '/team/google/'
+    | '/team/offices/'
     | '/team/partner-schools/'
     | '/team/students/'
+    | '/admin/offices/$officeId/appointments'
+    | '/admin/offices/$officeId/google'
+    | '/admin/offices/$officeId/team'
     | '/api/public/google-business/webhook'
     | '/api/public/whatsapp/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/team/offices/$officeId/appointments'
+    | '/team/offices/$officeId/google'
+    | '/team/offices/$officeId/team'
     | '/team/partner-schools/$country/$school'
+    | '/admin/offices/$officeId/'
+    | '/team/offices/$officeId/'
     | '/team/partner-schools/$country/'
+    | '/admin/offices/$officeId/google/insights'
+    | '/admin/offices/$officeId/google/photos'
+    | '/admin/offices/$officeId/google/posts'
+    | '/admin/offices/$officeId/google/profile'
+    | '/admin/offices/$officeId/google/reviews'
+    | '/team/offices/$officeId/google/insights'
+    | '/team/offices/$officeId/google/photos'
+    | '/team/offices/$officeId/google/posts'
+    | '/team/offices/$officeId/google/profile'
+    | '/team/offices/$officeId/google/reviews'
+    | '/admin/offices/$officeId/google/'
+    | '/team/offices/$officeId/google/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2171,6 +2478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamMessagesRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/team/offices': {
+      id: '/team/offices'
+      path: '/offices'
+      fullPath: '/team/offices'
+      preLoaderRoute: typeof TeamOfficesRouteImport
+      parentRoute: typeof TeamRoute
+    }
     '/team/spreadsheet': {
       id: '/team/spreadsheet'
       path: '/spreadsheet'
@@ -2198,6 +2512,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/cases/$id'
       preLoaderRoute: typeof AdminCasesIdRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/offices/': {
+      id: '/admin/offices/'
+      path: '/'
+      fullPath: '/admin/offices/'
+      preLoaderRoute: typeof AdminOfficesIndexRouteImport
+      parentRoute: typeof AdminOfficesRoute
+    }
+    '/admin/offices/$officeId': {
+      id: '/admin/offices/$officeId'
+      path: '/$officeId'
+      fullPath: '/admin/offices/$officeId'
+      preLoaderRoute: typeof AdminOfficesOfficeIdRouteImport
+      parentRoute: typeof AdminOfficesRoute
     }
     '/api/cron/google-business-worker': {
       id: '/api/cron/google-business-worker'
@@ -2290,6 +2618,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamGoogleReviewsRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/team/offices/': {
+      id: '/team/offices/'
+      path: '/'
+      fullPath: '/team/offices/'
+      preLoaderRoute: typeof TeamOfficesIndexRouteImport
+      parentRoute: typeof TeamOfficesRoute
+    }
+    '/team/offices/$officeId': {
+      id: '/team/offices/$officeId'
+      path: '/$officeId'
+      fullPath: '/team/offices/$officeId'
+      preLoaderRoute: typeof TeamOfficesOfficeIdRouteImport
+      parentRoute: typeof TeamOfficesRoute
+    }
     '/team/partner-schools/': {
       id: '/team/partner-schools/'
       path: '/partner-schools'
@@ -2324,6 +2666,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/team/tools/cv'
       preLoaderRoute: typeof TeamToolsCvRouteImport
       parentRoute: typeof TeamRoute
+    }
+    '/admin/offices/$officeId/': {
+      id: '/admin/offices/$officeId/'
+      path: '/'
+      fullPath: '/admin/offices/$officeId/'
+      preLoaderRoute: typeof AdminOfficesOfficeIdIndexRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdRoute
+    }
+    '/admin/offices/$officeId/appointments': {
+      id: '/admin/offices/$officeId/appointments'
+      path: '/appointments'
+      fullPath: '/admin/offices/$officeId/appointments'
+      preLoaderRoute: typeof AdminOfficesOfficeIdAppointmentsRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdRoute
+    }
+    '/admin/offices/$officeId/google': {
+      id: '/admin/offices/$officeId/google'
+      path: '/google'
+      fullPath: '/admin/offices/$officeId/google'
+      preLoaderRoute: typeof AdminOfficesOfficeIdGoogleRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdRoute
+    }
+    '/admin/offices/$officeId/team': {
+      id: '/admin/offices/$officeId/team'
+      path: '/team'
+      fullPath: '/admin/offices/$officeId/team'
+      preLoaderRoute: typeof AdminOfficesOfficeIdTeamRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdRoute
     }
     '/api/public/google-business/webhook': {
       id: '/api/public/google-business/webhook'
@@ -2360,6 +2730,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/team/offices/$officeId/': {
+      id: '/team/offices/$officeId/'
+      path: '/'
+      fullPath: '/team/offices/$officeId/'
+      preLoaderRoute: typeof TeamOfficesOfficeIdIndexRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdRoute
+    }
+    '/team/offices/$officeId/appointments': {
+      id: '/team/offices/$officeId/appointments'
+      path: '/appointments'
+      fullPath: '/team/offices/$officeId/appointments'
+      preLoaderRoute: typeof TeamOfficesOfficeIdAppointmentsRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdRoute
+    }
+    '/team/offices/$officeId/google': {
+      id: '/team/offices/$officeId/google'
+      path: '/google'
+      fullPath: '/team/offices/$officeId/google'
+      preLoaderRoute: typeof TeamOfficesOfficeIdGoogleRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdRoute
+    }
+    '/team/offices/$officeId/team': {
+      id: '/team/offices/$officeId/team'
+      path: '/team'
+      fullPath: '/team/offices/$officeId/team'
+      preLoaderRoute: typeof TeamOfficesOfficeIdTeamRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdRoute
+    }
     '/team/partner-schools/$country/': {
       id: '/team/partner-schools/$country/'
       path: '/partner-schools/$country'
@@ -2374,8 +2772,151 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamPartnerSchoolsCountrySchoolRouteImport
       parentRoute: typeof TeamRoute
     }
+    '/admin/offices/$officeId/google/': {
+      id: '/admin/offices/$officeId/google/'
+      path: '/'
+      fullPath: '/admin/offices/$officeId/google/'
+      preLoaderRoute: typeof AdminOfficesOfficeIdGoogleIndexRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdGoogleRoute
+    }
+    '/admin/offices/$officeId/google/insights': {
+      id: '/admin/offices/$officeId/google/insights'
+      path: '/insights'
+      fullPath: '/admin/offices/$officeId/google/insights'
+      preLoaderRoute: typeof AdminOfficesOfficeIdGoogleInsightsRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdGoogleRoute
+    }
+    '/admin/offices/$officeId/google/photos': {
+      id: '/admin/offices/$officeId/google/photos'
+      path: '/photos'
+      fullPath: '/admin/offices/$officeId/google/photos'
+      preLoaderRoute: typeof AdminOfficesOfficeIdGooglePhotosRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdGoogleRoute
+    }
+    '/admin/offices/$officeId/google/posts': {
+      id: '/admin/offices/$officeId/google/posts'
+      path: '/posts'
+      fullPath: '/admin/offices/$officeId/google/posts'
+      preLoaderRoute: typeof AdminOfficesOfficeIdGooglePostsRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdGoogleRoute
+    }
+    '/admin/offices/$officeId/google/profile': {
+      id: '/admin/offices/$officeId/google/profile'
+      path: '/profile'
+      fullPath: '/admin/offices/$officeId/google/profile'
+      preLoaderRoute: typeof AdminOfficesOfficeIdGoogleProfileRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdGoogleRoute
+    }
+    '/admin/offices/$officeId/google/reviews': {
+      id: '/admin/offices/$officeId/google/reviews'
+      path: '/reviews'
+      fullPath: '/admin/offices/$officeId/google/reviews'
+      preLoaderRoute: typeof AdminOfficesOfficeIdGoogleReviewsRouteImport
+      parentRoute: typeof AdminOfficesOfficeIdGoogleRoute
+    }
+    '/team/offices/$officeId/google/': {
+      id: '/team/offices/$officeId/google/'
+      path: '/'
+      fullPath: '/team/offices/$officeId/google/'
+      preLoaderRoute: typeof TeamOfficesOfficeIdGoogleIndexRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdGoogleRoute
+    }
+    '/team/offices/$officeId/google/insights': {
+      id: '/team/offices/$officeId/google/insights'
+      path: '/insights'
+      fullPath: '/team/offices/$officeId/google/insights'
+      preLoaderRoute: typeof TeamOfficesOfficeIdGoogleInsightsRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdGoogleRoute
+    }
+    '/team/offices/$officeId/google/photos': {
+      id: '/team/offices/$officeId/google/photos'
+      path: '/photos'
+      fullPath: '/team/offices/$officeId/google/photos'
+      preLoaderRoute: typeof TeamOfficesOfficeIdGooglePhotosRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdGoogleRoute
+    }
+    '/team/offices/$officeId/google/posts': {
+      id: '/team/offices/$officeId/google/posts'
+      path: '/posts'
+      fullPath: '/team/offices/$officeId/google/posts'
+      preLoaderRoute: typeof TeamOfficesOfficeIdGooglePostsRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdGoogleRoute
+    }
+    '/team/offices/$officeId/google/profile': {
+      id: '/team/offices/$officeId/google/profile'
+      path: '/profile'
+      fullPath: '/team/offices/$officeId/google/profile'
+      preLoaderRoute: typeof TeamOfficesOfficeIdGoogleProfileRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdGoogleRoute
+    }
+    '/team/offices/$officeId/google/reviews': {
+      id: '/team/offices/$officeId/google/reviews'
+      path: '/reviews'
+      fullPath: '/team/offices/$officeId/google/reviews'
+      preLoaderRoute: typeof TeamOfficesOfficeIdGoogleReviewsRouteImport
+      parentRoute: typeof TeamOfficesOfficeIdGoogleRoute
+    }
   }
 }
+
+interface AdminOfficesOfficeIdGoogleRouteChildren {
+  AdminOfficesOfficeIdGoogleInsightsRoute: typeof AdminOfficesOfficeIdGoogleInsightsRoute
+  AdminOfficesOfficeIdGooglePhotosRoute: typeof AdminOfficesOfficeIdGooglePhotosRoute
+  AdminOfficesOfficeIdGooglePostsRoute: typeof AdminOfficesOfficeIdGooglePostsRoute
+  AdminOfficesOfficeIdGoogleProfileRoute: typeof AdminOfficesOfficeIdGoogleProfileRoute
+  AdminOfficesOfficeIdGoogleReviewsRoute: typeof AdminOfficesOfficeIdGoogleReviewsRoute
+  AdminOfficesOfficeIdGoogleIndexRoute: typeof AdminOfficesOfficeIdGoogleIndexRoute
+}
+
+const AdminOfficesOfficeIdGoogleRouteChildren: AdminOfficesOfficeIdGoogleRouteChildren =
+  {
+    AdminOfficesOfficeIdGoogleInsightsRoute:
+      AdminOfficesOfficeIdGoogleInsightsRoute,
+    AdminOfficesOfficeIdGooglePhotosRoute:
+      AdminOfficesOfficeIdGooglePhotosRoute,
+    AdminOfficesOfficeIdGooglePostsRoute: AdminOfficesOfficeIdGooglePostsRoute,
+    AdminOfficesOfficeIdGoogleProfileRoute:
+      AdminOfficesOfficeIdGoogleProfileRoute,
+    AdminOfficesOfficeIdGoogleReviewsRoute:
+      AdminOfficesOfficeIdGoogleReviewsRoute,
+    AdminOfficesOfficeIdGoogleIndexRoute: AdminOfficesOfficeIdGoogleIndexRoute,
+  }
+
+const AdminOfficesOfficeIdGoogleRouteWithChildren =
+  AdminOfficesOfficeIdGoogleRoute._addFileChildren(
+    AdminOfficesOfficeIdGoogleRouteChildren,
+  )
+
+interface AdminOfficesOfficeIdRouteChildren {
+  AdminOfficesOfficeIdAppointmentsRoute: typeof AdminOfficesOfficeIdAppointmentsRoute
+  AdminOfficesOfficeIdGoogleRoute: typeof AdminOfficesOfficeIdGoogleRouteWithChildren
+  AdminOfficesOfficeIdTeamRoute: typeof AdminOfficesOfficeIdTeamRoute
+  AdminOfficesOfficeIdIndexRoute: typeof AdminOfficesOfficeIdIndexRoute
+}
+
+const AdminOfficesOfficeIdRouteChildren: AdminOfficesOfficeIdRouteChildren = {
+  AdminOfficesOfficeIdAppointmentsRoute: AdminOfficesOfficeIdAppointmentsRoute,
+  AdminOfficesOfficeIdGoogleRoute: AdminOfficesOfficeIdGoogleRouteWithChildren,
+  AdminOfficesOfficeIdTeamRoute: AdminOfficesOfficeIdTeamRoute,
+  AdminOfficesOfficeIdIndexRoute: AdminOfficesOfficeIdIndexRoute,
+}
+
+const AdminOfficesOfficeIdRouteWithChildren =
+  AdminOfficesOfficeIdRoute._addFileChildren(AdminOfficesOfficeIdRouteChildren)
+
+interface AdminOfficesRouteChildren {
+  AdminOfficesOfficeIdRoute: typeof AdminOfficesOfficeIdRouteWithChildren
+  AdminOfficesIndexRoute: typeof AdminOfficesIndexRoute
+}
+
+const AdminOfficesRouteChildren: AdminOfficesRouteChildren = {
+  AdminOfficesOfficeIdRoute: AdminOfficesOfficeIdRouteWithChildren,
+  AdminOfficesIndexRoute: AdminOfficesIndexRoute,
+}
+
+const AdminOfficesRouteWithChildren = AdminOfficesRoute._addFileChildren(
+  AdminOfficesRouteChildren,
+)
 
 interface AdminRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
@@ -2386,7 +2927,7 @@ interface AdminRouteChildren {
   AdminInboxRoute: typeof AdminInboxRoute
   AdminMembersRoute: typeof AdminMembersRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
-  AdminOfficesRoute: typeof AdminOfficesRoute
+  AdminOfficesRoute: typeof AdminOfficesRouteWithChildren
   AdminPipelineRoute: typeof AdminPipelineRoute
   AdminProgramsRoute: typeof AdminProgramsRoute
   AdminReferralsRoute: typeof AdminReferralsRoute
@@ -2411,7 +2952,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInboxRoute: AdminInboxRoute,
   AdminMembersRoute: AdminMembersRoute,
   AdminMessagesRoute: AdminMessagesRoute,
-  AdminOfficesRoute: AdminOfficesRoute,
+  AdminOfficesRoute: AdminOfficesRouteWithChildren,
   AdminPipelineRoute: AdminPipelineRoute,
   AdminProgramsRoute: AdminProgramsRoute,
   AdminReferralsRoute: AdminReferralsRoute,
@@ -2513,12 +3054,71 @@ const StudentRouteChildren: StudentRouteChildren = {
 const StudentRouteWithChildren =
   StudentRoute._addFileChildren(StudentRouteChildren)
 
+interface TeamOfficesOfficeIdGoogleRouteChildren {
+  TeamOfficesOfficeIdGoogleInsightsRoute: typeof TeamOfficesOfficeIdGoogleInsightsRoute
+  TeamOfficesOfficeIdGooglePhotosRoute: typeof TeamOfficesOfficeIdGooglePhotosRoute
+  TeamOfficesOfficeIdGooglePostsRoute: typeof TeamOfficesOfficeIdGooglePostsRoute
+  TeamOfficesOfficeIdGoogleProfileRoute: typeof TeamOfficesOfficeIdGoogleProfileRoute
+  TeamOfficesOfficeIdGoogleReviewsRoute: typeof TeamOfficesOfficeIdGoogleReviewsRoute
+  TeamOfficesOfficeIdGoogleIndexRoute: typeof TeamOfficesOfficeIdGoogleIndexRoute
+}
+
+const TeamOfficesOfficeIdGoogleRouteChildren: TeamOfficesOfficeIdGoogleRouteChildren =
+  {
+    TeamOfficesOfficeIdGoogleInsightsRoute:
+      TeamOfficesOfficeIdGoogleInsightsRoute,
+    TeamOfficesOfficeIdGooglePhotosRoute: TeamOfficesOfficeIdGooglePhotosRoute,
+    TeamOfficesOfficeIdGooglePostsRoute: TeamOfficesOfficeIdGooglePostsRoute,
+    TeamOfficesOfficeIdGoogleProfileRoute:
+      TeamOfficesOfficeIdGoogleProfileRoute,
+    TeamOfficesOfficeIdGoogleReviewsRoute:
+      TeamOfficesOfficeIdGoogleReviewsRoute,
+    TeamOfficesOfficeIdGoogleIndexRoute: TeamOfficesOfficeIdGoogleIndexRoute,
+  }
+
+const TeamOfficesOfficeIdGoogleRouteWithChildren =
+  TeamOfficesOfficeIdGoogleRoute._addFileChildren(
+    TeamOfficesOfficeIdGoogleRouteChildren,
+  )
+
+interface TeamOfficesOfficeIdRouteChildren {
+  TeamOfficesOfficeIdAppointmentsRoute: typeof TeamOfficesOfficeIdAppointmentsRoute
+  TeamOfficesOfficeIdGoogleRoute: typeof TeamOfficesOfficeIdGoogleRouteWithChildren
+  TeamOfficesOfficeIdTeamRoute: typeof TeamOfficesOfficeIdTeamRoute
+  TeamOfficesOfficeIdIndexRoute: typeof TeamOfficesOfficeIdIndexRoute
+}
+
+const TeamOfficesOfficeIdRouteChildren: TeamOfficesOfficeIdRouteChildren = {
+  TeamOfficesOfficeIdAppointmentsRoute: TeamOfficesOfficeIdAppointmentsRoute,
+  TeamOfficesOfficeIdGoogleRoute: TeamOfficesOfficeIdGoogleRouteWithChildren,
+  TeamOfficesOfficeIdTeamRoute: TeamOfficesOfficeIdTeamRoute,
+  TeamOfficesOfficeIdIndexRoute: TeamOfficesOfficeIdIndexRoute,
+}
+
+const TeamOfficesOfficeIdRouteWithChildren =
+  TeamOfficesOfficeIdRoute._addFileChildren(TeamOfficesOfficeIdRouteChildren)
+
+interface TeamOfficesRouteChildren {
+  TeamOfficesOfficeIdRoute: typeof TeamOfficesOfficeIdRouteWithChildren
+  TeamOfficesIndexRoute: typeof TeamOfficesIndexRoute
+}
+
+const TeamOfficesRouteChildren: TeamOfficesRouteChildren = {
+  TeamOfficesOfficeIdRoute: TeamOfficesOfficeIdRouteWithChildren,
+  TeamOfficesIndexRoute: TeamOfficesIndexRoute,
+}
+
+const TeamOfficesRouteWithChildren = TeamOfficesRoute._addFileChildren(
+  TeamOfficesRouteChildren,
+)
+
 interface TeamRouteChildren {
   TeamAnalyticsRoute: typeof TeamAnalyticsRoute
   TeamBagrutRoute: typeof TeamBagrutRoute
   TeamCatalogRoute: typeof TeamCatalogRoute
   TeamMajorsRoute: typeof TeamMajorsRoute
   TeamMessagesRoute: typeof TeamMessagesRoute
+  TeamOfficesRoute: typeof TeamOfficesRouteWithChildren
   TeamSpreadsheetRoute: typeof TeamSpreadsheetRoute
   TeamSubmitRoute: typeof TeamSubmitRoute
   TeamWhatsappRoute: typeof TeamWhatsappRoute
@@ -2548,6 +3148,7 @@ const TeamRouteChildren: TeamRouteChildren = {
   TeamCatalogRoute: TeamCatalogRoute,
   TeamMajorsRoute: TeamMajorsRoute,
   TeamMessagesRoute: TeamMessagesRoute,
+  TeamOfficesRoute: TeamOfficesRouteWithChildren,
   TeamSpreadsheetRoute: TeamSpreadsheetRoute,
   TeamSubmitRoute: TeamSubmitRoute,
   TeamWhatsappRoute: TeamWhatsappRoute,

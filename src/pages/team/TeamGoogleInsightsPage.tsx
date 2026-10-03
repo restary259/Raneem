@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
 import type { TFunction } from "i18next";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -148,6 +149,9 @@ export default function TeamGoogleInsightsPage() {
   const runExport = useServerFn(getGooglePerformanceExport);
   const runAudit = useServerFn(recordGooglePerformanceAudit);
 
+  // Office context from the canonical office route (or legacy ?office=slug).
+  const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
+
   const [offices, setOffices] = useState<GooglePerformanceOfficeRow[]>([]);
   const [loadingOffices, setLoadingOffices] = useState(true);
   const [selected, setSelected] = useState<string>("");
@@ -191,8 +195,17 @@ export default function TeamGoogleInsightsPage() {
       const rows = await runListOffices({ data: {} });
       setOffices(rows);
       const admin = rows.some((o) => o.operator_role === "ADMIN");
+      const inList =
+        workspaceOfficeId &&
+        rows.some((o) => o.office_id === workspaceOfficeId);
       setSelected(
-        (current) => current || (admin ? "ALL" : (rows[0]?.office_id ?? "")),
+        (current) =>
+          current ||
+          (inList
+            ? (workspaceOfficeId as string)
+            : admin
+              ? "ALL"
+              : (rows[0]?.office_id ?? "")),
       );
     } catch (error) {
       toast({
@@ -202,11 +215,21 @@ export default function TeamGoogleInsightsPage() {
     } finally {
       setLoadingOffices(false);
     }
-  }, [runListOffices, t, toast]);
+  }, [runListOffices, t, toast, workspaceOfficeId]);
 
   useEffect(() => {
     loadOffices();
   }, [loadOffices]);
+
+  // Follow the URL's office when it changes (e.g. navigating between offices).
+  useEffect(() => {
+    if (
+      workspaceOfficeId &&
+      offices.some((o) => o.office_id === workspaceOfficeId)
+    ) {
+      setSelected(workspaceOfficeId);
+    }
+  }, [workspaceOfficeId, offices]);
 
   // Debounce the keyword search so we never query on every keystroke.
   useEffect(() => {

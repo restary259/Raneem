@@ -39,6 +39,13 @@ import {
   type OfficeGoogleSyncJob,
 } from "@/lib/googleBusinessRealtime.functions";
 import { subscribeTables } from "@/lib/realtimeRegistry";
+import { useLocation } from "@/lib/router-compat";
+import {
+  useOfficeWorkspaceSelection,
+  type OfficeSurface,
+} from "@/lib/officeWorkspace";
+import { GoogleOfficeSubnav } from "@/components/google/GoogleOfficeSubnav";
+import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import type {
   MyGoogleOfficeRow,
   OfficeGoogleOperatorCandidate,
@@ -59,6 +66,18 @@ function errorMessage(error: unknown): string | undefined {
 export default function TeamGoogleBusinessPage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
+
+  // Office context from the canonical office route (or legacy ?office=slug).
+  const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
+  // Surface is inferred from the URL so the Google sub-navigation links back to
+  // the correct office workspace (`/team/...` vs `/admin/...`).
+  const location = useLocation();
+  const surface: OfficeSurface = location.pathname.startsWith("/admin")
+    ? "admin"
+    : "team";
+  // Inside an office workspace the layout already renders the Google
+  // sub-navigation, so this page must not render it a second time.
+  const inOfficeWorkspace = useOfficeWorkspaceContext() !== null;
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,6 +103,13 @@ export default function TeamGoogleBusinessPage() {
     load();
   }, [load]);
 
+  // When a single office is in context (office workspace route), focus only
+  // that office and expose the Google sub-navigation.
+  const focused = workspaceOfficeId
+    ? (offices.find((o) => o.office_id === workspaceOfficeId) ?? null)
+    : null;
+  const visibleOffices = focused ? [focused] : offices;
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4 px-4 pt-4 sm:px-6">
       <header className="space-y-1">
@@ -96,6 +122,15 @@ export default function TeamGoogleBusinessPage() {
         </p>
       </header>
 
+      {!inOfficeWorkspace && focused?.office_slug ? (
+        <GoogleOfficeSubnav
+          surface={surface}
+          slug={focused.office_slug}
+          officeName={focused.office_name}
+          active=""
+        />
+      ) : null}
+
       {loading ? (
         <Card className="rounded-2xl border-border shadow-sm">
           <CardContent className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
@@ -103,7 +138,7 @@ export default function TeamGoogleBusinessPage() {
             {t("team.googleBusiness.loading")}
           </CardContent>
         </Card>
-      ) : offices.length === 0 ? (
+      ) : visibleOffices.length === 0 ? (
         <Card className="rounded-2xl border-border shadow-sm">
           <CardContent className="space-y-2 py-8 text-center">
             <ShieldCheck className="mx-auto size-8 text-muted-foreground" />
@@ -116,7 +151,7 @@ export default function TeamGoogleBusinessPage() {
           </CardContent>
         </Card>
       ) : (
-        offices.map((office) => (
+        visibleOffices.map((office) => (
           <TeamGoogleOfficeCard
             key={office.office_id}
             office={office}

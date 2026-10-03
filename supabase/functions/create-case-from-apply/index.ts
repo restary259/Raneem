@@ -77,6 +77,29 @@ async function resolveCaller(
   };
 }
 
+/**
+ * Resolves a public office slug to a live, bookable office id. The slug comes
+ * from the request body (`/apply?office=…`), so it is never trusted as
+ * authorization — only the resolved id is used, and it degrades to null when
+ * the office is unknown/unavailable rather than blocking the application.
+ */
+async function resolveOfficeId(
+  admin: ReturnType<typeof createClient>,
+  slug: unknown,
+): Promise<string | null> {
+  if (typeof slug !== "string") return null;
+  const clean = slug.trim().toLowerCase();
+  if (!/^[a-z0-9-]{2,80}$/.test(clean)) return null;
+  const { data } = await admin
+    .from("offices")
+    .select("id")
+    .eq("slug", clean)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -130,6 +153,7 @@ Deno.serve(async (req) => {
       intake_notes,
       email,
       preferred_major_id,
+      office_slug,
     } = body;
 
     // Required field validation
@@ -197,6 +221,10 @@ Deno.serve(async (req) => {
     // public visitor could otherwise name an arbitrary account and have it paid
     // a commission later.
     const caller = await resolveCaller(req, supabaseAdmin);
+
+    // Office context from `/apply?office=<slug>`. Resolved server-side; a bad
+    // slug yields null and the application stays office-less (generic funnel).
+    const officeId = await resolveOfficeId(supabaseAdmin, office_slug);
 
     // A student referral is only credited to the signed-in referrer themselves
     // (or to whoever staff names), never to an id chosen by an anonymous caller.
@@ -301,12 +329,22 @@ Deno.serve(async (req) => {
     // who happens to share the same phone number, so we let the new submission through.
     const { data: existingCase } = await supabaseAdmin
       .from("cases")
-      .select("id, source, referral_discount, city, education_level, english_units, math_units, english_level, passport_type, degree_interest, bagrut_score")
+      .select("id, source, referral_discount, city, education_level, english_units, math_units, english_level, passport_type, degree_interest, bagrut_score, office_id")
       .eq("phone_number", cleanPhone)
       .in("source", ["contact_form", "apply_page"])
       .maybeSingle();
 
     if (existingCase) {
+      // An office-scoped entry that lands on an office-less case adopts the
+      // entry office once — it never moves a case that already belongs to an
+      // office, so two offices can't fight over the same applicant.
+      if (officeId && !existingCase.office_id) {
+        await supabaseAdmin
+          .from("cases")
+          .update({ office_id: officeId })
+          .eq("id", existingCase.id)
+          .is("office_id", null);
+      }
       // A phone number is not proof of ownership. Staff may update the case;
       // anyone else may only FILL fields that are still empty — never
       // overwrite what is already on another applicant's case.
@@ -413,6 +451,8 @@ Deno.serve(async (req) => {
         passport_type: passport_type ? String(passport_type) : null,
         degree_interest: degree_interest ? String(degree_interest) : null,
         intake_notes: intake_notes ? stripHtml(String(intake_notes)).slice(0, 2000) : null,
+        // Office context (null for the generic, office-less apply funnel).
+        office_id: officeId,
         // cases has no email column; the apply form no longer collects email.
       })
       .select("id")
@@ -462,6 +502,7 @@ Deno.serve(async (req) => {
         p_german_level: null,
         p_preferred_major: degree_interest ? String(degree_interest) : null,
         p_ref_code: ref_code ?? null,
+        p_office_id: officeId,
       });
       if (leadError) console.error("lead mirror failed:", leadError.message);
     }

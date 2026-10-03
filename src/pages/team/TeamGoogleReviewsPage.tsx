@@ -61,6 +61,7 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { subscribeTables } from "@/lib/realtimeRegistry";
 import { useSearchParams } from "@/lib/router-compat";
+import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
 import {
   GBP_REPLY_MAX_BYTES,
   replyByteLength,
@@ -115,6 +116,9 @@ export default function TeamGoogleReviewsPage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  // Office context from `/team/offices/<slug>/google/reviews` (route param) or
+  // the legacy `?office=<slug>` search param.
+  const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
   const [officeId, setOfficeId] = useState<string | null>(null);
@@ -156,12 +160,28 @@ export default function TeamGoogleReviewsPage() {
     }
     const list = data || [];
     setOffices(list);
-    setOfficeId((current) => current ?? list[0]?.office_id ?? null);
-  }, [toast]);
+    setOfficeId(
+      (current) =>
+        current ??
+        (workspaceOfficeId && list.some((o) => o.office_id === workspaceOfficeId)
+          ? workspaceOfficeId
+          : (list[0]?.office_id ?? null)),
+    );
+  }, [toast, workspaceOfficeId]);
 
   useEffect(() => {
     loadOffices();
   }, [loadOffices]);
+
+  // Follow the URL's office when it changes (e.g. navigating between offices).
+  useEffect(() => {
+    if (
+      workspaceOfficeId &&
+      offices.some((o) => o.office_id === workspaceOfficeId)
+    ) {
+      setOfficeId(workspaceOfficeId);
+    }
+  }, [workspaceOfficeId, offices]);
 
   const activeFilter =
     RATING_FILTERS.find((f) => f.key === filter) ?? RATING_FILTERS[0];

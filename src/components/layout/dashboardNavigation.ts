@@ -164,6 +164,7 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
       { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
       { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
       { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
+      { key: "nav.offices", icon: Building2, href: "/team/offices", group: "nav.group.work" },
       { key: "nav.catalog", icon: Hotel, href: "/team/catalog", group: "nav.group.work" },
       { key: "nav.partnerSchools", icon: School, href: "/team/partner-schools", group: "nav.group.work" },
       { key: "nav.majorIntel", icon: GraduationCap, href: "/team/majors", group: "nav.group.work" },
