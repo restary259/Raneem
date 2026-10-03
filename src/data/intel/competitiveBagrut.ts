@@ -52,9 +52,82 @@ export const COMPETITIVE_BGRUT_BY_MAJOR = {
   'international-law': 90,
   'business-administration': 75,
   economics: 75,
+
+  // Additional university-route majors — DARB category-average heuristic.
+  // These are operational screening indicators, not official admission cutoffs.
+  physiotherapy: 93,
+  nursing: 93,
+
+  // Engineering & Technology — average of the existing engineering benchmarks.
+  'computer-engineering': 79,
+  'environmental-engineering': 79,
+
+  // Computer Science & IT — existing computing benchmark.
+  'artificial-intelligence': 75,
+  cybersecurity: 75,
+  'data-science': 75,
+  'cloud-computing': 75,
+  'game-development': 75,
+  'information-management': 75,
+
+  // Categories without an existing subject-specific benchmark in the register
+  // use the rounded overall DARB benchmark average (82.23 → 83).
+  'environmental-science': 83,
+  mathematics: 83,
+  physics: 83,
+  chemistry: 83,
+  biology: 83,
+
+  psychology: 83,
+  sociology: 83,
+  'political-science': 83,
+  philosophy: 83,
+  'social-work': 83,
+  linguistics: 83,
+  'media-communication': 83,
+  history: 83,
+
+  'international-business': 75,
+  marketing: 75,
+  'finance-accounting': 75,
+  entrepreneurship: 75,
+  'supply-chain': 75,
+  'human-resources': 75,
+
+  'criminal-law': 90,
+  'business-law': 90,
+
+  // Arts & Design — uses the existing Architecture benchmark as the
+  // category proxy because no other arts benchmark exists in the register.
+  'fine-arts': 70,
+  'graphic-design': 70,
+  music: 70,
+  theater: 70,
+  'film-media': 70,
+
+  'elementary-education': 83,
+  'special-education': 83,
+  'educational-psychology': 83,
+  'curriculum-instruction': 83,
+  'educational-administration': 83,
+
+  'agricultural-science': 83,
+  'environmental-management': 83,
+  forestry: 83,
+  'marine-science': 83,
+  'sustainable-development': 83,
+
+  'tourism-management': 83,
+  'hotel-management': 83,
+  event-management: 83,
+  'travel-tourism': 83,
+
+  // Culinary Arts is treated as an Ausbildung route, not a university major.
+  // It intentionally has no competitive Bagrut planning benchmark.
 } as const;
 
-/** Exact source-page references exist only for the original supplied figures. */
+/** Evidence/provenance for each registered DARB planning indicator. */
+
 export const COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR = {
   architecture: 'DARB supplied reference — Report.pdf 2, page 1',
   'mechanical-engineering': 'DARB group planning benchmark — hard/core engineering',
@@ -78,6 +151,57 @@ export const COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR = {
   'renewable-energy': 'DARB group planning benchmark — standard engineering/computing',
   'software-engineering': 'DARB group planning benchmark — standard engineering/computing',
   'industrial-engineering': 'DARB group planning benchmark — standard engineering/computing',
+
+  'physiotherapy': 'DARB health-category average heuristic (existing health benchmarks: 94/89)',
+  'nursing': 'DARB health-category average heuristic (existing health benchmarks: 94/89)',
+  'computer-engineering': 'DARB engineering-category average heuristic (existing engineering benchmarks)',
+  'environmental-engineering': 'DARB engineering-category average heuristic (existing engineering benchmarks)',
+  'artificial-intelligence': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
+  'cybersecurity': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
+  'data-science': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
+  'cloud-computing': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
+  'game-development': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
+  'information-management': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
+  'environmental-science': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  mathematics: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  physics: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  chemistry: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  biology: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  psychology: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  sociology: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'political-science': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  philosophy: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'social-work': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  linguistics: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'media-communication': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  history: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'international-business': 'DARB business-category average heuristic (Business Administration/Economics: 75)',
+  marketing: 'DARB business-category average heuristic (Business Administration/Economics: 75)',
+  'finance-accounting': 'DARB business-category average heuristic (Business Administration/Economics: 75)',
+  entrepreneurship: 'DARB business-category average heuristic (Business Administration/Economics: 75)',
+  'supply-chain': 'DARB business-category average heuristic (Business Administration/Economics: 75)',
+  'human-resources': 'DARB business-category average heuristic (Business Administration/Economics: 75)',
+  'criminal-law': 'DARB law-category proxy heuristic (International Law: 90)',
+  'business-law': 'DARB law-category proxy heuristic (International Law: 90)',
+  'fine-arts': 'DARB arts-category proxy heuristic (Architecture: 70)',
+  'graphic-design': 'DARB arts-category proxy heuristic (Architecture: 70)',
+  music: 'DARB arts-category proxy heuristic (Architecture: 70)',
+  theater: 'DARB arts-category proxy heuristic (Architecture: 70)',
+  'film-media': 'DARB arts-category proxy heuristic (Architecture: 70)',
+  'elementary-education': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'special-education': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'educational-psychology': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'curriculum-instruction': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'educational-administration': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'agricultural-science': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'environmental-management': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  forestry: 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'marine-science': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'sustainable-development': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'tourism-management': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'hotel-management': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'event-management': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
+  'travel-tourism': 'DARB overall-average fallback heuristic (22 known benchmarks average: 82.23)',
 } as const;
 
 const NOTE_EN =
