@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "asset_id": "2be429ee-d71e-45f0-82a1-653a03199dfe",
+  "asset_id": "ee9e23b8-48e6-4455-932a-f8da3fa4bbdb",
   "project_id": "6ca0fcbe-667c-43cb-9cbf-11c55b0c4933",
-  "url": "/__l5e/assets-v1/2be429ee-d71e-45f0-82a1-653a03199dfe/heidelberg-inf-campus.webp",
-  "r2_key": "a/v1/6ca0fcbe-667c-43cb-9cbf-11c55b0c4933/2be429ee-d71e-45f0-82a1-653a03199dfe/heidelberg-inf-campus.webp",
-  "original_filename": "heidelberg-inf-campus.webp",
-  "size": 446378,
+  "url": "/__l5e/assets-v1/ee9e23b8-48e6-4455-932a-f8da3fa4bbdb/heidelberg-inf-campus-v2.webp",
+  "r2_key": "a/v1/6ca0fcbe-667c-43cb-9cbf-11c55b0c4933/ee9e23b8-48e6-4455-932a-f8da3fa4bbdb/heidelberg-inf-campus-v2.webp",
+  "original_filename": "heidelberg-inf-campus-v2.webp",
+  "size": 222508,
   "content_type": "image/webp",
-  "created_at": "2026-10-03T14:40:55Z"
+  "created_at": "2026-10-03T15:03:39Z"
 }
