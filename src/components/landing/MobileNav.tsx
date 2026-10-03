@@ -41,7 +41,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
               <Link onClick={close} to="/heidelberg" className={itemClass}>{t('nav.heidelberg')}</Link>
-              <Link onClick={close} to="/educational-destinations" className={itemClass}>{t('nav.educationalDestinations')}</Link>
               <Link onClick={close} to="/educational-programs" className={itemClass}>{t('nav.majors')}</Link>
               <Link onClick={close} to="/quiz" className={itemClass}>{t('nav.majorQuizNav')}</Link>
               <Link onClick={close} to="/ai-advisor" className={itemClass}>{t('nav.aiAdvisor')}</Link>
