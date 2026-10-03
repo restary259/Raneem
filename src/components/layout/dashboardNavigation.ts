@@ -161,13 +161,6 @@ const TEAM_DESKTOP_NAV: DashboardNavItem[] = [
     group: "nav.group.work",
   },
   {
-    key: "nav.offices",
-    icon: Building2,
-    href: "/team/offices",
-    group: "nav.group.work",
-    officeAssignmentNavKey: true,
-  },
-  {
     key: "nav.catalog",
     icon: Hotel,
     href: "/team/catalog",

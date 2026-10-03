@@ -11,11 +11,6 @@ export interface KpiItem {
   /** Optional tone classes from `statusTokens` (text colour for the value). */
   tone?: string;
   onClick?: () => void;
-  /**
-   * Marks a clickable tile as the current selection. Purely presentational
-   * plus `aria-pressed`; the caller owns the selected state.
-   */
-  active?: boolean;
 }
 
 interface KpiRowProps {
@@ -46,12 +41,10 @@ export default function KpiRow({ items, columns = 4, className }: KpiRowProps) {
             key={item.key}
             type={item.onClick ? "button" : undefined}
             onClick={item.onClick}
-            aria-pressed={item.onClick ? !!item.active : undefined}
             className={cn(
               "rounded-lg border border-border/70 bg-card p-3 text-start transition-colors",
               item.onClick &&
                 "hover:border-border hover:bg-accent/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              item.active && "border-primary bg-accent/50",
             )}
           >
             <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">

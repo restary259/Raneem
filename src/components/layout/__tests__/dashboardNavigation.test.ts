@@ -117,8 +117,8 @@ describe("dashboard navigation configuration", () => {
     const officeFlagged = DASHBOARD_NAV_CONFIG.team_member.desktop.filter(
       (item) => item.officeAssignmentNavKey,
     );
-    expect(officeFlagged.map((item) => item.key)).toEqual(["nav.offices"]);
-    expect(officeFlagged[0].href).toBe("/team/offices");
+    // Team members reach offices only through Google Business.
+    expect(officeFlagged).toEqual([]);
   });
 
   it("hides the Google Business and Offices entries from an unassigned team member only", () => {
@@ -127,8 +127,8 @@ describe("dashboard navigation configuration", () => {
     const hidden = filterOfficeGatedNavItems("team_member", teamNav, false);
     expect(hidden.some((item) => item.googleBusinessNavKey)).toBe(false);
     expect(hidden.some((item) => item.officeAssignmentNavKey)).toBe(false);
-    // Two entries are removed: Google Business and Offices.
-    expect(hidden).toHaveLength(teamNav.length - 2);
+    // Only the Google Business entry is gated now.
+    expect(hidden).toHaveLength(teamNav.length - 1);
 
     const shown = filterOfficeGatedNavItems("team_member", teamNav, true);
     expect(shown).toBe(teamNav);
