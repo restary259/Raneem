@@ -327,11 +327,11 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
 ];
 
 export const HEIDELBERG_COPY = {
-  heroTitle: { ar: "الدراسة في هايدلبرغ", en: "Study in Heidelberg", he: "ללמוד בהיידלברג" },
+  heroTitle: { ar: "تعرّف على هايدلبرغ", en: "Get to know Heidelberg", he: "הכירו את היידלברג" },
   heroSubtitle: {
-    ar: "دليل عملي للطالب وأهله: الجامعات، السكن، المواصلات والحياة اليومية في مدينة درب الوحيدة حاليًا.",
-    en: "A practical guide for students and parents: universities, housing, transport and everyday life in Darb's current city.",
-    he: "מדריך מעשי לסטודנטים ולהורים: אוניברסיטאות, מגורים, תחבורה וחיי היום-יום.",
+    ar: "دليلك كطالب: أين ستدرس، أين ستسكن، كيف تتنقل وكيف تعيش حياتك الطلابية في هايدلبرغ.",
+    en: "Your student guide: where you'll study, live, get around and enjoy student life in Heidelberg.",
+    he: "המדריך שלך כסטודנט: איפה תלמד, תגור, תתנייד ותחיה בהיידלברג.",
   },
   ctaTitle: { ar: "ابدأ تقييم ملفك للدراسة في هايدلبرغ", en: "Start your Heidelberg study assessment", he: "התחילו הערכת תיק ללימודים בהיידלברג" },
   ctaBody: {
