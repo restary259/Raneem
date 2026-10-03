@@ -186,7 +186,16 @@ function MemberDetailPanel({
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="mt-0 min-h-0 flex-1">
+        {/* Both panels stay mounted and are hidden with CSS (same pattern as
+            SubmissionCaseTabs): the permissions panel reports its active count
+            up through onActiveCountChange, so unmounting it while the Overview
+            tab is selected would leave the tab badge stale/absent until the
+            admin happens to open it. */}
+        <TabsContent
+          value="overview"
+          forceMount
+          className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden"
+        >
           <div className={bodyClassName}>
         {/* Primary KPIs */}
         <Card>
@@ -319,7 +328,11 @@ function MemberDetailPanel({
           </div>
         </TabsContent>
 
-        <TabsContent value="permissions" className="mt-0 min-h-0 flex-1">
+        <TabsContent
+          value="permissions"
+          forceMount
+          className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden"
+        >
           <div className={bodyClassName}>
             <AccountPermissionsTab
               member={member}

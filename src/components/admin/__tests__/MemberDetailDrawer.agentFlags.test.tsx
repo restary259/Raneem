@@ -105,9 +105,10 @@ const renderDrawer = () =>
     />,
   );
 
-// The permission switches now live on the "Permissions & Access" tab of the
-// drawer; the Overview tab is the default. Radix unmounts the inactive panel,
-// so the tab must be opened before the agent toggles mount.
+// The permission switches live on the "Permissions & Access" tab; Overview is
+// the default. Both panels are forceMount'ed and hidden with CSS, so the
+// switches are already in the DOM when the drawer opens. Clicking the tab only
+// reveals the panel — it does not gate mounting.
 const openPermissionsTab = async () => {
   await userEvent.click(screen.getByRole('tab', { name: /permissions/i }));
 };
@@ -183,6 +184,27 @@ describe('MemberDetailDrawer agent permission toggles', () => {
     expect(updateCalls).toEqual([
       { table: 'profiles', payload: { agent_can_invite_directly: false } },
     ]);
+  });
+
+  it('badges the Permissions tab with the active count without opening it', async () => {
+    // Regression guard: the permissions panel reports its count through
+    // onActiveCountChange. If Radix unmounted the inactive panel, the badge
+    // would stay empty until the admin opened the tab. forceMount keeps it
+    // reporting from the start.
+    flagsResult = {
+      data: { agent_can_invite_directly: true, agent_can_create_accounts: false },
+      error: null,
+    };
+    renderDrawer();
+
+    const tab = screen.getByRole('tab', { name: /permissions/i });
+    await waitFor(() => expect(tab).toHaveTextContent('1'));
+
+    // No click on the permissions tab happened.
+    expect(screen.getByRole('tab', { name: /overview/i })).toHaveAttribute(
+      'data-state',
+      'active',
+    );
   });
 
   it('load error shows a retryable error row, and retry recovers', async () => {
