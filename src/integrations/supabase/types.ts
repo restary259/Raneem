@@ -9409,6 +9409,51 @@ export type Database = {
           sync_job_id: string
         }[]
       }
+      admin_save_office_configuration: {
+        Args: {
+          p_blackouts?: Json
+          p_breaks?: Json
+          p_hours: Json
+          p_members?: Json
+          p_office: Json
+          p_office_id: string
+          p_routing_rules?: Json
+          p_settings: Json
+        }
+        Returns: {
+          address_line_1: string | null
+          address_line_2: string | null
+          booking_enabled: boolean
+          city: string
+          country: string
+          created_at: string
+          deleted_at: string | null
+          display_order: number
+          email: string | null
+          id: string
+          is_active: boolean
+          map_url: string | null
+          name_ar: string
+          name_en: string
+          name_he: string
+          office_code: string | null
+          office_type: string
+          phone: string | null
+          postal_code: string | null
+          public_description_ar: string | null
+          public_description_en: string | null
+          public_description_he: string | null
+          slug: string
+          timezone: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "offices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_commission: {
         Args: {
           p_amount: number
