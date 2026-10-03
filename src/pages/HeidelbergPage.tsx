@@ -103,26 +103,32 @@ export default function HeidelbergPage() {
               </button>
             ))}
           </div>
-          <div className="h-0.5 w-full bg-border">
-            <div
-              className="h-full bg-highlight transition-[width] duration-150"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
         </nav>
 
-        <div className="container space-y-16 py-12 sm:space-y-24 sm:py-16">
+        <div className="container relative py-12 sm:py-16">
+          {/* Vertical journey line: track + gold fill driven by scroll progress. */}
+          <div aria-hidden className="pointer-events-none absolute inset-y-12 start-2 w-0.5 bg-border sm:start-4 lg:start-6">
+            <div className="w-full bg-highlight transition-[height] duration-150" style={{ height: `${progress * 100}%` }} />
+          </div>
+          <div className="space-y-16 ps-6 sm:space-y-24 sm:ps-10 lg:ps-14">
           {HEIDELBERG_SECTIONS.map((s, i) => (
             <section
               key={s.id}
               id={`hd-${s.id}`}
-              className="grid min-w-0 scroll-mt-36 grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12"
+              className="relative grid min-w-0 scroll-mt-36 grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12"
             >
               <div className={cn("min-w-0 lg:col-span-5", i % 2 === 1 && "lg:order-2")}>
-                <p className="text-xs font-bold tracking-[0.18em] text-brand-strong">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute top-2 -start-[1.95rem] size-3.5 rounded-full border-2 border-background ring-2 transition-colors sm:-start-[2.95rem] lg:-start-[3.95rem]",
+                    active === s.id ? "bg-highlight ring-highlight" : "bg-muted ring-border",
+                  )}
+                />
+                <p className="font-editorial text-2xl text-brand-strong">
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <h2 className="mt-2 text-balance text-3xl font-bold text-primary sm:text-4xl">
+                <h2 className="mt-1 text-balance font-editorial text-3xl text-primary sm:text-5xl">
                   {tr(s.title)}
                 </h2>
                 <p className="mt-4 leading-8 text-muted-foreground">{tr(s.body)}</p>
@@ -131,8 +137,8 @@ export default function HeidelbergPage() {
                   <ul className="mt-6 space-y-3">
                     {s.items.map((it) => (
                       <li key={it.name} className="border-s-2 border-highlight ps-4">
-                        <p className="font-semibold text-primary" dir="ltr" style={{ textAlign: isRtl ? "right" : "left" }}>
-                          {it.name}
+                        <p className="font-semibold text-primary">
+                          <bdi>{it.name}</bdi>
                         </p>
                         <p className="text-sm leading-6 text-muted-foreground">{tr(it.text)}</p>
                       </li>
@@ -144,8 +150,8 @@ export default function HeidelbergPage() {
                   <dl className="mt-6 grid grid-cols-2 gap-3">
                     {s.facts.map((f) => (
                       <div key={f.value + f.label.en} className="min-w-0 rounded-xl border border-border bg-muted/40 p-3">
-                        <dt className="text-lg font-bold text-primary" dir="ltr" style={{ textAlign: isRtl ? "right" : "left" }}>
-                          {f.value}
+                        <dt className="font-editorial text-2xl text-primary">
+                          <bdi>{f.value}</bdi>
                         </dt>
                         <dd className="mt-1 text-xs leading-5 text-muted-foreground">{tr(f.label)}</dd>
                       </div>
@@ -184,7 +190,7 @@ export default function HeidelbergPage() {
           ))}
 
           <section id="hd-cta" className="rounded-3xl bg-primary px-6 py-12 text-center text-primary-foreground sm:px-12">
-            <h2 className="text-balance text-2xl font-bold sm:text-3xl">{tr(HEIDELBERG_COPY.ctaTitle)}</h2>
+            <h2 className="text-balance font-editorial text-3xl sm:text-4xl">{tr(HEIDELBERG_COPY.ctaTitle)}</h2>
             <p className="mx-auto mt-3 max-w-xl text-primary-foreground/80">{tr(HEIDELBERG_COPY.ctaBody)}</p>
             <Button asChild size="lg" variant="cta" className="mt-6">
               <Link to="/apply">
@@ -193,6 +199,7 @@ export default function HeidelbergPage() {
               </Link>
             </Button>
           </section>
+          </div>
         </div>
       </main>
       <Footer />
