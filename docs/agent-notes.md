@@ -3887,3 +3887,36 @@ items below are the P1/P2 follow-ups.
   route-named tenant as non-negotiable; a fallback to "some tenant" is a
   cross-tenant correctness bug even when RLS still enforces authorization.
 
+
+## Typography — script-aware font stack (enforced)
+
+- **Rule.** English/Latin UI is always Inter; Arabic is IBM Plex Sans Arabic;
+  Hebrew is Noto Sans Hebrew. There is exactly ONE font-family authority in the
+  app: `html` in `src/styles.css`.
+  - `@theme`/root tokens: `--font-latin`, `--font-arabic`, `--font-hebrew`
+    (plus `--font-sans: var(--font-latin)` and `--font-editorial`).
+  - `html { font-family: var(--font-latin) }`,
+    `html[lang="ar"] { var(--font-arabic) }`,
+    `html[lang="he"] { var(--font-hebrew) }`, plus a
+    `html[dir="rtl"]:not([lang="ar"]):not([lang="he"])` safety net.
+  - `body { font-family: inherit }` — body/root deliberately do NOT set a stack,
+    so a language switch swaps the family with no per-component overrides.
+  - `lang`/`dir` are set on `documentElement` by `src/i18n.ts` (languageChanged)
+    and `AppShell`. `__root.tsx` hardcodes `lang="ar"` on the SSR shell so the
+    first paint is Arabic-correct; hydration then applies the saved language.
+- **Do not** set `font-family` on individual components to change the UI face.
+  Intentional exceptions: `font-mono`/`var(--font-mono)` for IBAN/BIC, case
+  references, formulas and code, and `font-editorial` (Instrument Serif) for
+  landing/page hero accents. The CV templates own their own `--cv-*` fonts.
+- **Font loading.** `FONTS_HREF` in `src/routes/__root.tsx` requests only the
+  families `styles.css` references (Inter, IBM Plex Sans Arabic, Noto Sans
+  Hebrew, Instrument Serif, Noto Naskh Arabic). Removed as unused: Work Sans,
+  Tajawal, Noto Sans Arabic, Noto Sans. `public/offline.html` uses IBM Plex
+  Sans Arabic (it hardcodes Arabic). If you add/remove a family in `styles.css`,
+  update `FONTS_HREF` and the `public/_headers` CSP in the same change.
+- **Dead CSS.** `src/styles/base.css` was orphaned (never imported — `styles.css`
+  is the Tailwind v4 entry) and its `body { font-family: 'IBM Plex Sans Arabic'… }`
+  contradicted this rule; deleted. `src/styles/layouts.css`, `navigation.css`,
+  `accessibility.css`, `animations.css`, `pwa.css` are likewise unimported; left
+  untouched, do not resurrect without wiring them in.
+

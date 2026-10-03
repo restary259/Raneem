@@ -13,7 +13,14 @@
  */
 
 @theme inline {
-  --font-sans: "Inter", "IBM Plex Sans Arabic", "Tajawal", "Noto Sans Arabic", "Noto Sans", sans-serif;
+  /* Script-aware stack, enforced at <html> by the html[lang] rules below.
+     Latin/UI is always Inter; Arabic and Hebrew swap the family at the head
+     of the same stack so mixed content still resolves correct glyphs.
+     Do NOT set font-family on individual components — see the rules below. */
+  --font-latin: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Tajawal", sans-serif;
+  --font-hebrew: "Noto Sans Hebrew", "Noto Sans", sans-serif;
+  --font-sans: var(--font-latin);
   --font-editorial: "Instrument Serif", "Noto Naskh Arabic", serif;
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -355,6 +362,26 @@
   direction: ltr;
 }
 
+/* Language → script font. `lang` is the primary signal (every route sets
+   documentElement.lang via i18n.ts/AppShell); the RTL rule is a safety net so
+   an Arabic/Hebrew page can never fall back to the Latin stack. Body inherits
+   from <html> (see the base layer below), making this the single source. */
+html {
+  font-family: var(--font-latin);
+}
+
+html[lang="ar"] {
+  font-family: var(--font-arabic);
+}
+
+html[lang="he"] {
+  font-family: var(--font-hebrew);
+}
+
+html[dir="rtl"]:not([lang="ar"]):not([lang="he"]) {
+  font-family: var(--font-arabic);
+}
+
 @layer base {
   * {
     border-color: hsl(var(--border));
@@ -362,7 +389,9 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: var(--font-sans);
+    /* Inherit the script stack chosen on <html> so there is exactly one
+       font-family authority in the app. */
+    font-family: inherit;
   }
 }
 
