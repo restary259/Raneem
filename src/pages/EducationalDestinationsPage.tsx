@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router-compat";
 import { useDirection } from "@/hooks/useDirection";
 import {
-  languageYearCities,
+  activeLanguageYearCities,
   tu9Universities,
 } from "@/data/educationalDestinations";
 import germanyHero from "@/assets/germany-home-hero.jpg";
@@ -154,7 +154,7 @@ const EducationalDestinationsPage = () => {
             </div>
 
             <div className="mt-12 space-y-14 sm:space-y-20">
-              {languageYearCities.map((city, index) => {
+              {activeLanguageYearCities.map((city, index) => {
                 const reversed = index % 2 === 1;
                 return (
                   <article
