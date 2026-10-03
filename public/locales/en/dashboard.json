@@ -2748,6 +2748,8 @@
       "returnedTitle": "Returned by admin — changes requested",
       "overdueTitle": "Appointments needing an outcome",
       "scheduleTitle": "Today's schedule",
+      "bookingRequestsTitle": "New booking requests",
+      "bookingRequestsSubtitle": "Bookings from the apply form awaiting your confirm or reschedule",
       "staleTitle": "Cases with no activity",
       "noAppointments": "No appointments today",
       "noStale": "Every case has recent activity",
