@@ -389,6 +389,17 @@ serve(async (req) => {
         .maybeSingle();
       if (msgError) throw msgError;
       if (!msg) return json({ error: "Message not found" }, 404, corsHeaders);
+      if (!isAdmin) {
+        const { data: conv, error: convError } = await admin
+          .from("whatsapp_conversations")
+          .select("assigned_to")
+          .eq("id", msg.conversation_id)
+          .maybeSingle();
+        if (convError) throw convError;
+        if (!conv || conv.assigned_to !== auth.userId) {
+          return json({ error: "This conversation is not assigned to you" }, 403, corsHeaders);
+        }
+      }
       if (msg.media_url) return json({ path: msg.media_url, mime: msg.media_mime_type, filename: msg.media_filename }, 200, corsHeaders);
       if (!msg.media_provider_id) return json({ error: "This message has no attachment" }, 404, corsHeaders);
 
