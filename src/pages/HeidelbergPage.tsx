@@ -56,9 +56,12 @@ export default function HeidelbergPage() {
 
   // Keep the active chip visible inside the horizontal mini-nav.
   useEffect(() => {
-    document
-      .getElementById(`hd-nav-${active}`)
-      ?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const chip = document.getElementById(`hd-nav-${active}`);
+    const row = chip?.parentElement;
+    if (!chip || !row) return;
+    // Scroll only the chip row horizontally; never move the page.
+    const target = chip.offsetLeft - (row.clientWidth - chip.clientWidth) / 2;
+    row.scrollTo({ left: target, behavior: "smooth" });
   }, [active]);
 
   const go = (id: string) => {
