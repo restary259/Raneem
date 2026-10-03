@@ -11,9 +11,13 @@ import { subscribeTables } from "@/lib/realtimeRegistry";
  * The decision is the server's (`has_google_business_access`), never inferred
  * from client state. It returns `null` while unresolved so the route gate can
  * wait instead of bouncing a legitimate operator, and `false` on any failure
- * (a failed read hides the surface rather than leaking it). It re-reads on
- * `office_google_operators` realtime changes so an assignment or removal takes
- * effect immediately.
+ * (a failed read hides the surface rather than leaking it).
+ *
+ * Access is revoked by more than an operator-row change: a team member can be
+ * deactivated (`profiles`) or dropped from the office (`office_members`) while
+ * the Google page is open. The hook therefore re-reads on all three realtime
+ * tables and again whenever the tab regains focus, so a long-open page cannot
+ * keep showing data the server would now refuse.
  */
 export function useGoogleBusinessAccess(active = true): boolean | null {
   const { user, initialized } = useAuth();
@@ -42,9 +46,22 @@ export function useGoogleBusinessAccess(active = true): boolean | null {
     if (!active || !initialized || !userId) return;
     return subscribeTables(
       "google-business-access",
-      ["office_google_operators"],
+      ["office_google_operators", "office_members", "profiles"],
       () => void load(),
     );
+  }, [active, initialized, userId, load]);
+
+  useEffect(() => {
+    if (!active || !initialized || !userId) return;
+    const revalidate = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    window.addEventListener("focus", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    return () => {
+      window.removeEventListener("focus", revalidate);
+      document.removeEventListener("visibilitychange", revalidate);
+    };
   }, [active, initialized, userId, load]);
 
   return hasAccess;

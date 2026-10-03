@@ -16,13 +16,11 @@ vi.mock("@/lib/googleBusinessApi", () => ({
 }));
 
 let realtimeListener: (() => void) | null = null;
+let realtimeTables: string[] = [];
 const unsubscribe = vi.fn();
 vi.mock("@/lib/realtimeRegistry", () => ({
-  subscribeTables: (
-    _topic: string,
-    _tables: string[],
-    listener: () => void,
-  ) => {
+  subscribeTables: (_topic: string, tables: string[], listener: () => void) => {
+    realtimeTables = tables;
     realtimeListener = listener;
     return unsubscribe;
   },
@@ -32,6 +30,7 @@ describe("useGoogleBusinessAccess", () => {
   beforeEach(() => {
     rpcCalls.length = 0;
     realtimeListener = null;
+    realtimeTables = [];
     unsubscribe.mockClear();
     rpcResult = { data: true, error: null };
   });
@@ -68,6 +67,26 @@ describe("useGoogleBusinessAccess", () => {
 
     rpcResult = { data: false, error: null };
     realtimeListener?.();
+    await waitFor(() => expect(result.current).toBe(false));
+    expect(rpcCalls).toHaveLength(2);
+  });
+
+  it("subscribes to operator, office-membership and profile changes", async () => {
+    renderHook(() => useGoogleBusinessAccess());
+    await waitFor(() => expect(realtimeListener).not.toBeNull());
+    expect(realtimeTables).toEqual([
+      "office_google_operators",
+      "office_members",
+      "profiles",
+    ]);
+  });
+
+  it("revalidates when the tab regains focus", async () => {
+    const { result } = renderHook(() => useGoogleBusinessAccess());
+    await waitFor(() => expect(result.current).toBe(true));
+
+    rpcResult = { data: false, error: null };
+    window.dispatchEvent(new Event("focus"));
     await waitFor(() => expect(result.current).toBe(false));
     expect(rpcCalls).toHaveLength(2);
   });

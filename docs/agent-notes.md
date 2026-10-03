@@ -3643,8 +3643,11 @@ verified non-vacuous by reintroducing the defect).
 - `useGoogleBusinessAccess(active)` (`src/hooks/useGoogleBusinessAccess.ts`)
   returns `boolean | null`: `null` while unresolved so the route gate can wait
   instead of bouncing a cold operator, `false` on any failure (a failed read
-  hides the surface rather than leaking it), and re-reads on
-  `office_google_operators` realtime changes. Only `DashboardLayout` and
+  hides the surface rather than leaking it). Access is revoked by more than an
+  operator-row change -- a member can be deactivated (`profiles`) or dropped
+  from the office (`office_members`) while the page is open -- so the hook
+  re-reads on all three realtime tables (all published in the same migration)
+  and again on window focus / `visibilitychange`. Only `DashboardLayout` and
   `DashboardHeader` call it with `active = role === "team_member"`, so other
   roles never make the RPC call.
 - Hiding nav is cosmetic only: `GoogleBusinessAccessGate`

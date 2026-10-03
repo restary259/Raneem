@@ -44,7 +44,11 @@ $fn$;
 REVOKE ALL ON FUNCTION public.has_google_business_access() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.has_google_business_access() TO authenticated, service_role;
 
--- Realtime: the dashboard gate subscribes to this table.
+-- Realtime: the dashboard gate subscribes to these tables so an assignment,
+-- removal, office-membership change or profile deactivation re-runs the gate
+-- on an already-open dashboard (RLS still limits delivery to the caller's own
+-- rows). `profiles`/`office_members` are normally already published; the guard
+-- keeps this migration self-contained and idempotent.
 DO $pub$
 BEGIN
   IF NOT EXISTS (
@@ -53,5 +57,21 @@ BEGIN
       AND tablename = 'office_google_operators'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.office_google_operators;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public'
+      AND tablename = 'office_members'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.office_members;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND schemaname = 'public'
+      AND tablename = 'profiles'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
   END IF;
 END $pub$;
