@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
+import { resolveGooglePageOffice } from "@/lib/googleOfficeSelection";
 import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import type { TFunction } from "i18next";
 import {
@@ -14,6 +15,7 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  ShieldAlert,
   Tag,
   Trash2,
   X,
@@ -154,6 +156,7 @@ export default function TeamGooglePostsPage() {
   const { toast } = useToast();
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
+  const [officesLoading, setOfficesLoading] = useState(true);
   // Office context from the canonical office route (or legacy ?office=slug).
   const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
   // On the canonical office route the layout already resolved/authorized the
@@ -185,19 +188,21 @@ export default function TeamGooglePostsPage() {
     const { data, error } = await listMyGoogleOffices();
     if (error) {
       toast({ variant: "destructive", description: error.message });
+      setOfficesLoading(false);
       return;
     }
     const list = data || [];
     setOffices(list);
-    setOfficeId(
-      (current) =>
-        current ??
-        (effectiveOfficeId &&
-        list.some((o) => o.office_id === effectiveOfficeId)
-          ? effectiveOfficeId
-          : (list[0]?.office_id ?? null)),
+    setOfficeId((current) =>
+      resolveGooglePageOffice({
+        inOfficeWorkspace,
+        effectiveOfficeId,
+        officeIds: list.map((o) => o.office_id),
+        current,
+      }),
     );
-  }, [toast, effectiveOfficeId]);
+    setOfficesLoading(false);
+  }, [toast, effectiveOfficeId, inOfficeWorkspace]);
 
   useEffect(() => {
     loadOffices();
@@ -279,6 +284,29 @@ export default function TeamGooglePostsPage() {
       setBusy(false);
     }
   }, [officeId, confirmDelete, runDelete, load, t, toast]);
+
+  // On a canonical office route where the signed-in operator has no Google
+  // access for this office, say so explicitly instead of silently operating a
+  // different office.
+  if (inOfficeWorkspace && !officesLoading && !officeId) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6">
+        <Card className="rounded-2xl border-border shadow-sm">
+          <CardContent className="space-y-2 py-10 text-center">
+            <ShieldAlert className="mx-auto size-8 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              {t("googlePosts.noOfficeTitle")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t("googlePosts.workspaceNoAccessDesc", {
+                office: workspaceContext?.context.office.name ?? "",
+              })}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pt-4 sm:px-6">

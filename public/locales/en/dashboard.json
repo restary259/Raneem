@@ -3622,6 +3622,7 @@
     }
   },
   "googleReviews": {
+    "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Google Reviews",
     "subtitle": "Read and respond to your office's Google reviews.",
     "officeFallback": "Office",
@@ -6230,6 +6231,7 @@
     }
   },
   "googleProfile": {
+    "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Google Business Profile",
     "subtitle": "Manage the Google profile for this office. Google is the source of truth.",
     "officeFallback": "Office",
@@ -6434,6 +6436,8 @@
     "keywordsLagging": "Search keyword data did not sync and will retry on the next sync."
   },
   "googleMedia": {
+    "noOfficeTitle": "No Google Business access",
+    "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Photos",
     "upload": "Upload photos",
     "refresh": "Refresh",
@@ -6491,6 +6495,8 @@
     }
   },
   "googlePosts": {
+    "noOfficeTitle": "No Google Business access",
+    "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Google Posts",
     "create": "Create post",
     "edit": "Edit",

@@ -3640,6 +3640,7 @@
     }
   },
   "googleReviews": {
+    "workspaceNoAccessDesc": "أنت لست مشغّل Google لمكتب {{office}}. بيانات Google Business لهذا المكتب غير متاحة لك.",
     "title": "تقييمات جوجل",
     "subtitle": "اقرأ تقييمات جوجل لمكتبك وردّ عليها.",
     "officeFallback": "مكتب",
@@ -6248,6 +6249,7 @@
     }
   },
   "googleProfile": {
+    "workspaceNoAccessDesc": "أنت لست مشغّل Google لمكتب {{office}}. بيانات Google Business لهذا المكتب غير متاحة لك.",
     "title": "ملف Google للأعمال",
     "subtitle": "إدارة ملف Google لهذا المكتب. Google هو المصدر الرسمي.",
     "officeFallback": "المكتب",
@@ -6452,6 +6454,8 @@
     "keywordsLagging": "لم تتم مزامنة بيانات الكلمات المفتاحية وستُعاد المحاولة في المزامنة التالية."
   },
   "googleMedia": {
+    "noOfficeTitle": "لا يوجد وصول إلى Google Business",
+    "workspaceNoAccessDesc": "أنت لست مشغّل Google لمكتب {{office}}. بيانات Google Business لهذا المكتب غير متاحة لك.",
     "title": "الصور",
     "upload": "رفع صور",
     "refresh": "تحديث",
@@ -6509,6 +6513,8 @@
     }
   },
   "googlePosts": {
+    "noOfficeTitle": "لا يوجد وصول إلى Google Business",
+    "workspaceNoAccessDesc": "أنت لست مشغّل Google لمكتب {{office}}. بيانات Google Business لهذا المكتب غير متاحة لك.",
     "title": "منشورات Google",
     "create": "إنشاء منشور",
     "edit": "تعديل",

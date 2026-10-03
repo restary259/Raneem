@@ -3865,3 +3865,25 @@ items below are the P1/P2 follow-ups.
   points in the same change. Regression test added in
   `PublicOfficeBooking.test.tsx`.
 
+- **Follow-on (code review): canonical Google pages could silently operate a
+  different office.** `TeamGoogle{Reviews,Profile,Photos,Posts}Page` resolved
+  the active office as `effectiveOfficeId` if it appeared in
+  `list_my_google_offices()`, otherwise `list[0]`. An operator who belongs to
+  office A but is a Google operator only for office B, opening the canonical A
+  page, therefore read/wrote B while the workspace header and URL said A — with
+  the selector hidden on canonical routes, `inOfficeWorkspace=true`, there was
+  no visible way to notice or correct it. Server authz still bound every write
+  to the office actually passed, so this was confusion, not a bypass, but it
+  broke the "page name = office acted on" invariant. Resolution is now a single
+  pure helper, `resolveGooglePageOffice` (`src/lib/googleOfficeSelection.ts`):
+  on a canonical office route, use the workspace office or `null` — never fall
+  back to another office — and render an explicit "no Google access for this
+  office" state. The legacy `?office=` cross-office view keeps the first-office
+  fallback. Keys `googleMedia/googlePosts.noOfficeTitle` +
+  `workspaceNoAccessDesc` (en/ar/he) were added. Tests:
+  `googleOfficeSelection.test.ts` (matrix) and
+  `__tests__/TeamGoogleReviewsPage.test.tsx` (page refuses to query another
+  office's reviews). Lesson: any "pick the active tenant" helper must treat the
+  route-named tenant as non-negotiable; a fallback to "some tenant" is a
+  cross-tenant correctness bug even when RLS still enforces authorization.
+
