@@ -4,9 +4,11 @@ import { hasGoogleBusinessAccess } from "@/lib/googleBusinessApi";
 import { subscribeTables } from "@/lib/realtimeRegistry";
 
 /**
- * Whether the signed-in team member is assigned to at least one Google
- * Business office (PRIMARY or SIDE_MANAGER). The Google Business nav entry and
- * its tabs stay hidden until this returns true.
+ * Whether the signed-in team member is assigned to at least one office (as an
+ * active `office_members` row that also holds a Google Business operator role,
+ * PRIMARY or SIDE_MANAGER). This is the app's "has an office" fact: the Offices
+ * nav entry, the Google Business nav entry and the office workspace Team tab
+ * all stay hidden until it returns true.
  *
  * The decision is the server's (`has_google_business_access`), never inferred
  * from client state. It returns `null` while unresolved so the route gate can

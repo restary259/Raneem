@@ -103,3 +103,39 @@ describe("OfficeWorkspaceLayout Google gating", () => {
     expect(lastActive).toBe(false);
   });
 });
+
+describe("OfficeWorkspaceLayout Team tab gating", () => {
+  beforeEach(() => {
+    access = null;
+    lastActive = undefined;
+  });
+
+  it("hides the Team tab for a team member while unresolved", async () => {
+    renderLayout("team");
+    await waitFor(() =>
+      expect(screen.getByText("office body")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Team")).not.toBeInTheDocument();
+  });
+
+  it("shows the Team tab once the server confirms an office assignment", async () => {
+    access = true;
+    renderLayout("team");
+    await waitFor(() => expect(screen.getByText("Team")).toBeInTheDocument());
+  });
+
+  it("keeps the Team tab hidden for an unassigned team member", async () => {
+    access = false;
+    renderLayout("team");
+    await waitFor(() =>
+      expect(screen.getByText("office body")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Team")).not.toBeInTheDocument();
+  });
+
+  it("always shows the Team tab on the admin surface", async () => {
+    access = false;
+    renderLayout("admin");
+    await waitFor(() => expect(screen.getByText("Team")).toBeInTheDocument());
+  });
+});
