@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "asset_id": "8a074cb6-1937-4cf9-bc70-9b58cc091aa5",
+  "asset_id": "90cbc69d-6471-4389-a5af-dd7bb90e594d",
   "project_id": "6ca0fcbe-667c-43cb-9cbf-11c55b0c4933",
-  "url": "/__l5e/assets-v1/8a074cb6-1937-4cf9-bc70-9b58cc091aa5/heidelberg-hero.webp",
-  "r2_key": "a/v1/6ca0fcbe-667c-43cb-9cbf-11c55b0c4933/8a074cb6-1937-4cf9-bc70-9b58cc091aa5/heidelberg-hero.webp",
-  "original_filename": "heidelberg-hero.webp",
-  "size": 209784,
+  "url": "/__l5e/assets-v1/90cbc69d-6471-4389-a5af-dd7bb90e594d/heidelberg-hero-v2.webp",
+  "r2_key": "a/v1/6ca0fcbe-667c-43cb-9cbf-11c55b0c4933/90cbc69d-6471-4389-a5af-dd7bb90e594d/heidelberg-hero-v2.webp",
+  "original_filename": "heidelberg-hero-v2.webp",
+  "size": 826152,
   "content_type": "image/webp",
-  "created_at": "2026-10-03T14:40:51Z"
+  "created_at": "2026-10-03T15:03:24Z"
 }

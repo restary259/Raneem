@@ -37,6 +37,7 @@ import bismarckplatz from "@/assets/heidelberg/bismarckplatz.webp.asset.json";
 import neckarwiese from "@/assets/heidelberg/neckarwiese.webp.asset.json";
 import philosophenweg from "@/assets/heidelberg/philosophenweg.webp.asset.json";
 import koenigstuhl from "@/assets/heidelberg/koenigstuhl.webp.asset.json";
+import sunset from "@/assets/heidelberg/sunset.webp.asset.json";
 
 export type Lang = "ar" | "en" | "he";
 export type L10n = Record<Lang, string>;
@@ -66,8 +67,8 @@ const photo = (url: string, file: string, author: string, license: string, alt: 
 
 export const HEIDELBERG_HERO = photo(
   hero.url,
-  "View of Heidelberg Castle, Alte Brücke, and Altstadt from the northwest.jpg",
-  "Eugene Alvin Villar (seav)",
+  "Heidelberg Old Bridge with the Castle in background.jpg",
+  "DRAI92",
   "CC BY-SA 4.0",
   {
     ar: "قلعة هايدلبرغ والجسر القديم والبلدة القديمة على نهر النيكار",
@@ -112,12 +113,12 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
       { value: "196", label: { ar: "برنامج دراسي (صيف 2026)", en: "Degree programmes (summer 2026)", he: "תוכניות לימוד (קיץ 2026)" } },
     ],
     photos: [
-      photo(uniplatz.url, "Heidelberg - Hauptstraße - Universitätsplatz.jpg", "Txllxt TxllxT", "CC BY-SA 4.0", {
+      photo(uniplatz.url, "Heidelberg Altstadt Campus Universität Heidelberg Universitätsplatz mit Blick auf die Turmspitze der Heiliggeistkirche.JPG", "Ribax", "CC BY-SA 4.0", {
         ar: "ساحة الجامعة Universitätsplatz في البلدة القديمة",
         en: "Universitätsplatz in the Old Town",
         he: "כיכר האוניברסיטה בעיר העתיקה",
       }),
-      photo(altebruecke.url, "20230315 Alte Brücke Heidelberg 01.jpg", "Flocci Nivis", "CC BY 4.0", {
+      photo(altebruecke.url, "Old Bridge across the Neckar river at sunset, Heidelberg.jpg", "Hartmut Schmidt, Heidelberg", "CC BY-SA 4.0", {
         ar: "الجسر القديم Alte Brücke فوق نهر النيكار",
         en: "The Alte Brücke over the Neckar",
         he: "הגשר הישן מעל הנקר",
@@ -173,10 +174,10 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
       { value: "1,500 €", label: { ar: "رسوم دراسية لكثير من الطلاب من خارج الاتحاد الأوروبي لكل فصل", en: "Tuition per semester for many non-EU students", he: "שכר לימוד לסמסטר לרבים מחוץ לאיחוד" } },
     ],
     photos: [
-      photo(infPanorama.url, "Neuenheimer Feld from Schloss-Wolfsbrunnenweg.jpg", "R. J. Mathar", "CC0", {
-        ar: "الحرم العلمي Neuenheimer Feld من بعيد", en: "The Neuenheimer Feld science campus from afar", he: "קמפוס Neuenheimer Feld ממרחק",
+      photo(infPanorama.url, "Blick vom Königstuhl nach Heidelberg.jpg", "David Ress", "CC BY-SA 4.0", {
+        ar: "هايدلبرغ وسهل الراين من جبل Königstuhl", en: "Heidelberg and the Rhine plain from the Königstuhl", he: "היידלברג ומישור הריין מהר Königstuhl",
       }),
-      photo(infCampus.url, "GER Heidelberg, Im Neuenheimer Feld 001.jpg", "-wuppertaler", "CC BY-SA 4.0", {
+      photo(infCampus.url, "Neuenheimer Feld.JPG", "BishkekRocks", "CC BY-SA 3.0", {
         ar: "مبانٍ في حرم Neuenheimer Feld", en: "Buildings on the Neuenheimer Feld campus", he: "בניינים בקמפוס Neuenheimer Feld",
       }),
     ],
@@ -271,8 +272,8 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
       { value: "44.42 €", label: { ar: "D-Ticket JugendBW شهريًا من 1/2026 (تحت 27)", en: "D-Ticket JugendBW per month from Jan 2026 (under 27)", he: "D-Ticket JugendBW לחודש מינואר 2026 (מתחת ל-27)" } },
     ],
     photos: [
-      photo(bismarckplatz.url, "Bismarckplatz looking towards Hauptstraße (Heidelberg), Sep 2019 - 1.jpg", "Eugene Alvin Villar (seav)", "CC BY-SA 4.0", {
-        ar: "ساحة Bismarckplatz، محطة الترام الرئيسية", en: "Bismarckplatz, the main tram hub", he: "Bismarckplatz, צומת החשמליות המרכזי",
+      photo(bismarckplatz.url, "Heidelberg - Bombardier RNV8, RNV 3288.JPG", "Radosław Drożdżewski (Zwiadowca21)", "CC BY-SA 4.0", {
+        ar: "ترام هايدلبرغ في وسط المدينة", en: "A Heidelberg tram in the city centre", he: "חשמלית בהיידלברג במרכז העיר",
       }),
     ],
     sources: [
@@ -318,22 +319,71 @@ export const HEIDELBERG_SECTIONS: HeidelbergSection[] = [
       photo(philosophenweg.url, "Heidelberg Philosophenweg Luftbild (cropped).JPG", "Schlurcher", "CC BY 4.0", {
         ar: "منظر جوي لدرب الفلاسفة Philosophenweg", en: "Aerial view of the Philosophenweg", he: "מבט אווירי על שביל הפילוסופים",
       }),
-      photo(koenigstuhl.url, "20230315 Königstuhl Odenwald.jpg", "Flocci Nivis", "CC BY 4.0", {
-        ar: "جبل Königstuhl فوق هايدلبرغ", en: "The Königstuhl above Heidelberg", he: "הר Königstuhl מעל היידלברג",
+      photo(koenigstuhl.url, "Königstuhl, Heidelberg, U-17.jpg", "Jörg Braukmann", "CC BY-SA 4.0", {
+        ar: "البلدة القديمة والجسر من منحدرات Königstuhl", en: "The Old Town and bridge from the Königstuhl slopes", he: "העיר העתיקה והגשר ממדרונות Königstuhl",
       }),
     ],
     sources: [{ url: "https://www.uni-heidelberg.de/de/studium/studienorganisation/beitraege-gebuehren/studienbeitraege", verifiedAt: V }],
   },
 ];
 
+/* ---------- Travel-style presentation blocks ---------- */
+
+export const HEIDELBERG_SUNSET = photo(sunset.url, "Heidelberg - panoramio (80).jpg", "Nikolai Karaneschev", "CC BY 3.0", {
+  ar: "غروب الشمس فوق نهر النيكار والجسر القديم",
+  en: "Sunset over the Neckar and the Old Bridge",
+  he: "שקיעה מעל הנקר והגשר הישן",
+});
+
+/** Quick highlight chips shown on the opening photo. */
+export const HEIDELBERG_HERO_CHIPS: L10n[] = [
+  { ar: "أقدم جامعة في ألمانيا", en: "Germany's oldest university", he: "האוניברסיטה הוותיקה בגרמניה" },
+  { ar: "مدينة طلاب حقيقية", en: "A true student city", he: "עיר סטודנטים אמיתית" },
+  { ar: "نهر وجبال خضراء", en: "River and green hills", he: "נהר וגבעות ירוקות" },
+  { ar: "كل شيء قريب مشيًا", en: "Walkable and compact", he: "הכול במרחק הליכה" },
+];
+
+export type HighlightIcon = "castle" | "river" | "university" | "walk" | "oldtown";
+
+export const HEIDELBERG_HIGHLIGHTS: Array<{ icon: HighlightIcon; title: L10n; text: L10n }> = [
+  { icon: "oldtown", title: { ar: "البلدة القديمة", en: "Old Town", he: "העיר העתיקה" }, text: { ar: "أزقة حجرية ومقاهٍ وساحات", en: "Cobbled lanes, cafés and squares", he: "סמטאות, בתי קפה וכיכרות" } },
+  { icon: "river", title: { ar: "نهر النيكار", en: "The Neckar", he: "נהר הנקר" }, text: { ar: "نزهات ورياضة على الضفة", en: "Picnics and sport by the river", he: "פיקניקים וספורט על הגדה" } },
+  { icon: "castle", title: { ar: "القلعة", en: "The Castle", he: "הטירה" }, text: { ar: "إطلالة على المدينة كلها", en: "Views over the whole city", he: "תצפית על כל העיר" } },
+  { icon: "university", title: { ar: "الجامعة", en: "University", he: "האוניברסיטה" }, text: { ar: "منذ 1386 في قلب المدينة", en: "In the city's heart since 1386", he: "בלב העיר מאז 1386" } },
+  { icon: "walk", title: { ar: "درب الفلاسفة", en: "Philosophers' Walk", he: "שביל הפילוסופים" }, text: { ar: "أجمل نزهة فوق النهر", en: "The best walk above the river", he: "הטיול היפה מעל הנהר" } },
+];
+
+export const HEIDELBERG_TOP_PLACES: Array<{ name: string; text: L10n; photo: HeidelbergPhoto }> = [
+  { name: "Heidelberger Schloss", text: { ar: "اصعد بالقطار الجبلي وشاهد المدينة من فوق", en: "Ride the funicular up and see the city from above", he: "עלו ברכבל וצפו בעיר מלמעלה" }, photo: HEIDELBERG_SECTIONS[1].photos[0] },
+  { name: "Alte Brücke", text: { ar: "أجمل غروب في المدينة على الجسر الحجري", en: "The city's best sunset, on the stone bridge", he: "השקיעה היפה בעיר, על גשר האבן" }, photo: HEIDELBERG_SECTIONS[0].photos[1] },
+  { name: "Universitätsplatz", text: { ar: "قلب الحياة الجامعية في البلدة القديمة", en: "The heart of university life in the Old Town", he: "לב חיי האוניברסיטה בעיר העתיקה" }, photo: HEIDELBERG_SECTIONS[0].photos[0] },
+  { name: "Marktplatz", text: { ar: "قهوة الصباح بجانب كنيسة الروح القدس", en: "Morning coffee beside the Church of the Holy Spirit", he: "קפה של בוקר ליד כנסיית רוח הקודש" }, photo: HEIDELBERG_SECTIONS[1].photos[2] },
+  { name: "Neckarwiese", text: { ar: "مكان الطلاب المفضل في أيام الصيف", en: "Students' favourite spot on summer days", he: "המקום האהוב על סטודנטים בקיץ" }, photo: HEIDELBERG_SECTIONS[7].photos[0] },
+  { name: "Königstuhl", text: { ar: "إطلالة بانورامية على سهل الراين", en: "A panoramic view over the Rhine plain", he: "נוף פנורמי על מישור הריין" }, photo: HEIDELBERG_SECTIONS[2].photos[0] },
+];
+
+export const HEIDELBERG_GALLERY: HeidelbergPhoto[] = [
+  HEIDELBERG_HERO,
+  HEIDELBERG_SECTIONS[8].photos[1],
+  HEIDELBERG_SECTIONS[1].photos[3],
+  HEIDELBERG_SECTIONS[5].photos[0],
+  HEIDELBERG_SECTIONS[8].photos[0],
+];
+
 export const HEIDELBERG_COPY = {
   heroTitle: { ar: "تعرّف على هايدلبرغ", en: "Get to know Heidelberg", he: "הכירו את היידלברג" },
   heroSubtitle: {
-    ar: "دليلك كطالب: أين ستدرس، أين ستسكن، كيف تتنقل وكيف تعيش حياتك الطلابية في هايدلبرغ.",
-    en: "Your student guide: where you'll study, live, get around and enjoy student life in Heidelberg.",
-    he: "המדריך שלך כסטודנט: איפה תלמד, תגור, תתנייד ותחיה בהיידלברג.",
+    ar: "مدينة القلاع والنهر وأقدم جامعة في ألمانيا. اكتشف أين ستدرس وتسكن وتعيش أجمل سنواتك.",
+    en: "A city of castles, river views and Germany's oldest university. Discover where you'll study, live and spend your best years.",
+    he: "עיר של טירה, נהר והאוניברסיטה הוותיקה בגרמניה. גלו איפה תלמדו, תגורו ותחיו את השנים היפות.",
   },
-  ctaTitle: { ar: "ابدأ تقييم ملفك للدراسة في هايدلبرغ", en: "Start your Heidelberg study assessment", he: "התחילו הערכת תיק ללימודים בהיידלברג" },
+  ctaTitle: { ar: "ابدأ رحلتك إلى هايدلبرغ", en: "Start your journey to Heidelberg", he: "התחילו את המסע להיידלברג" },
+  explore: { ar: "ابدأ الاستكشاف", en: "Start exploring", he: "התחילו לגלות" },
+  glanceTitle: { ar: "هايدلبرغ في لمحة", en: "Heidelberg at a glance", he: "היידלברג במבט אחד" },
+  placesTitle: { ar: "أماكن لا تفوّتها", en: "Top places to see", he: "מקומות שאסור לפספס" },
+  placesBody: { ar: "تخيّل صباحك على ضفة النيكار ومساءك على الجسر القديم.", en: "Imagine your mornings by the Neckar and your evenings on the Old Bridge.", he: "דמיינו בקרים על גדת הנקר וערבים על הגשר הישן." },
+  guideTitle: { ar: "دليل الطالب", en: "The student guide", he: "המדריך לסטודנט" },
+  galleryTitle: { ar: "لقطات من هايدلبرغ", en: "Moments in Heidelberg", he: "רגעים בהיידלברג" },
   ctaBody: {
     ar: "فريق درب يراجع ملفك ويتواصل معك خلال 24 ساعة.",
     en: "The Darb team reviews your profile and contacts you within 24 hours.",
