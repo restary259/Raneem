@@ -87,6 +87,41 @@ describe("PublicOfficeBooking", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("does not offer an office change when rescheduling an existing booking", async () => {
+    const OFFICE_ID_2 = "22222222-2222-2222-2222-222222222222";
+    const officesTwo = [
+      ...offices,
+      { ...offices[0], id: OFFICE_ID_2, name_en: "DARB Office · Haifa", city: "Haifa" },
+    ];
+    call.mockImplementation(async ({ data }: { data: { action: string; slot?: string } }) => {
+      if (data.action === "read") return { scheduled_at: slots[0], status: "scheduled", office_id: OFFICE_ID };
+      if (data.action === "offices") return { offices: officesTwo, current_office_id: OFFICE_ID };
+      if (data.action === "availability") return { office: offices[0], slots, unavailable: [] };
+      return { scheduled_at: data.slot, status: "scheduled", office_id: OFFICE_ID };
+    });
+
+    const user = userEvent.setup();
+    render(<PublicOfficeBooking token={"a".repeat(64)} autoOpen />);
+
+    // An existing booking renders its summary first; open the change flow.
+    expect(await screen.findByText("apply.visitRequestedTitle")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "apply.changeVisit" }));
+
+    // No chooser is offered for an existing booking...
+    await screen.findByRole("button", { name: "10:00" });
+    expect(screen.queryByText("Choose an office")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "10:00" }));
+    await user.click(screen.getByRole("button", { name: "Confirm appointment" }));
+
+    // ...and the reschedule never sends a (discarded) office override.
+    await waitFor(() => {
+      const reschedule = call.mock.calls.find(([arg]) => arg.data.action === "reschedule");
+      expect(reschedule).toBeTruthy();
+      expect(reschedule![0].data.officeId).toBeUndefined();
+    });
+  });
+
   it("does not allow changing the time while a request is in flight", async () => {
     let resolveRequest: (value: unknown) => void = () => {};
     call.mockImplementation(async ({ data }: { data: { action: string; slot?: string } }) => {

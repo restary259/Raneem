@@ -3853,3 +3853,15 @@ items below are the P1/P2 follow-ups.
   `publicBooking.functions.ts` (`p_office_id: officeId ?? undefined`) so the
   typecheck gate is green.
 
+- **Follow-on (code review): reconcile the public booking UI with the office
+  lock.** The P1 RPC fix made existing bookings office-immutable, but
+  `PublicOfficeBooking.tsx` still showed the multi-office chooser to rescheduling
+  applicants (`multiOffice = offices.length > 1`) and still sent `officeId` on
+  `reschedule`, so an applicant could pick office B, see B's availability, and
+  have the server keep office A — a wrong "Time unavailable" or a silently
+  discarded choice. The chooser is now hidden for a live booking
+  (`multiOffice = offices.length > 1 && !current`) and `officeId` is sent only
+  for `book`. Contract changes that live at the RPC must update their entry
+  points in the same change. Regression test added in
+  `PublicOfficeBooking.test.tsx`.
+

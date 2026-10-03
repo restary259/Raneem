@@ -260,7 +260,9 @@ export default function PublicOfficeBooking({
           token,
           action,
           slot: action === "cancel" ? undefined : selected,
-          officeId: action === "cancel" ? undefined : selectedOfficeId,
+          // An existing booking is office-immutable server-side: only a new
+          // booking may choose its office, so don't advertise a change.
+          officeId: action === "book" ? selectedOfficeId : undefined,
           serviceType: "consultation",
         },
       });
@@ -335,7 +337,11 @@ export default function PublicOfficeBooking({
   return BookingFlow();
 
   function BookingFlow() {
-    const multiOffice = offices.length > 1;
+    // An existing booking is locked to its originating office (the RPC ignores
+    // a changed office on reschedule), so only offer the chooser to new
+    // bookings; otherwise the UI would let the applicant pick an office whose
+    // availability is then discarded.
+    const multiOffice = offices.length > 1 && !current;
     const basePhase = selected ? 3 : selectedDay ? 2 : selectedOfficeId ? 1 : 0;
     const phase = multiOffice ? basePhase : Math.max(0, basePhase - 1);
     const stepLabels = [
