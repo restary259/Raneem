@@ -88,8 +88,12 @@ const SheetExportMenu: React.FC<Props> = ({ columns, visibleColumns, rowCount, b
           <ChevronDown className="h-4 w-4 ms-1" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[min(340px,calc(100vw-2rem))] p-4" align="end" collisionPadding={16}>
-        <div className="space-y-4">
+      <PopoverContent
+        className="flex max-h-[min(var(--radix-popover-content-available-height,calc(100dvh-2rem)),calc(100dvh-2rem))] w-[min(340px,calc(100vw-2rem))] flex-col p-0"
+        align="end"
+        collisionPadding={16}
+      >
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
           <div>
             <p className="font-semibold text-sm">{t('sheets.export', 'Export')}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -176,7 +180,8 @@ const SheetExportMenu: React.FC<Props> = ({ columns, visibleColumns, rowCount, b
               )}
             </fieldset>
           )}
-
+        </div>
+        <div className="border-t border-border p-4">
           <Button className="w-full" onClick={() => void submit()} disabled={disabled}>
             <Download className="h-4 w-4 me-2" />
             {busy ? t('sheets.preparing') : t('sheets.export', 'Export')}

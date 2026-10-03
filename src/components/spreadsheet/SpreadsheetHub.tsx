@@ -5,7 +5,6 @@ import SegmentedTabs from '@/components/shell/SegmentedTabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { Download, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import SheetTable, { SheetColumn, formatCell } from './SheetTable';
@@ -404,8 +403,8 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
     }
   };
 
-  /** Workspace-level exports offered inside the Admin export menu. */
-  const adminScopes = (sheetKey: string): ExtraExportScope[] => [
+  /** Workspace-level exports offered inside the unified export menu. */
+  const workspaceScopes = (sheetKey: string): ExtraExportScope[] => [
     {
       value: 'full',
       label: t('sheets.exportFullReport', 'Full report'),
@@ -428,32 +427,8 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
       {/* The page's single h1. Admin hides it visually: the sidebar already names the page. */}
       {scope === 'admin' && <h1 className="sr-only">{t('sheets.title')}</h1>}
       {scope === 'team' && (
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <h1 className="text-xl font-bold text-foreground">{t('sheets.title')}</h1>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {active === 'students' && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('xlsx')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
-                  <Download className="h-4 w-4 me-1" />
-                  {t('sheets.schoolPacketExcel', 'School packet (Excel)')}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => exportSchoolPacket('pdf')} disabled={exporting} title={t('sheets.schoolPacketHint', 'Student details and costs for schools')}>
-                  <FileText className="h-4 w-4 me-1" />
-                  {t('sheets.schoolPacketPdf', 'School packet (PDF)')}
-                </Button>
-              </>
-            )}
-            <Button variant="outline" size="sm" onClick={() => exportAll('xlsx')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
-              <Download className="h-4 w-4 me-1" />
-              {exporting ? t('sheets.preparing') : t('sheets.exportWorkbook')}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => exportAll('pdf')} disabled={exporting} title={t('sheets.fullReportHint', 'All tables: students, payments, payouts, commissions, taxes')}>
-              <FileText className="h-4 w-4 me-1" />
-              {exporting ? t('sheets.preparing') : t('sheets.exportPdfWorkbook')}
-            </Button>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">{t('sheets.title')}</h1>
         </div>
       )}
 
@@ -513,8 +488,7 @@ const SpreadsheetHub: React.FC<Props> = ({ scope, userId }) => {
               loading={!!loading[s.key]}
               onRefresh={() => loadSheet(s)}
               fileName={`DARB-${s.key}-${new Date().toISOString().slice(0, 10)}`}
-              variant={scope === 'admin' ? 'menu' : 'legacy'}
-              extraExportScopes={scope === 'admin' ? adminScopes(s.key) : undefined}
+              extraExportScopes={workspaceScopes(s.key)}
               busy={exporting}
               externalFiltersActive={filtersActive}
               onClearExternalFilters={() => {

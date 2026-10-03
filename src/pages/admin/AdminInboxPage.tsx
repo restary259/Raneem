@@ -4,16 +4,16 @@ import ContactsManager from "@/components/admin/ContactsManager";
 import RecruitApplicationsPanel from "@/components/admin/RecruitApplicationsPanel";
 import DataRequestsPanel from "@/components/admin/DataRequestsPanel";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SegmentedTabs from "@/components/shell/SegmentedTabs";
-import { Inbox, Search, Download, FileText } from "lucide-react";
+import { Inbox, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "@/lib/router-compat";
 import { useToast } from "@/hooks/use-toast";
 import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from "@/utils/export";
 import { useExportContext } from "@/utils/export/useExportContext";
+import SimpleExportMenu from "@/components/common/SimpleExportMenu";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { LoadingState, EmptyState } from "@/components/shell";
 
@@ -200,14 +200,7 @@ const AdminInboxPage = () => {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="sm" onClick={() => exportRows("xlsx")}>
-              <Download className="h-4 w-4 me-2" />
-              {t("sheets.exportExcel")}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => exportRows("pdf")}>
-              <FileText className="h-4 w-4 me-2" />
-              {t("sheets.exportPdf")}
-            </Button>
+            <SimpleExportMenu onSelect={exportRows} />
           </div>}
 
           <SegmentedTabs

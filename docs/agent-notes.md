@@ -3920,3 +3920,26 @@ items below are the P1/P2 follow-ups.
   `accessibility.css`, `animations.css`, `pwa.css` are likewise unimported; left
   untouched, do not resurrect without wiring them in.
 
+
+## Unified export buttons (2026-10-03)
+
+- **One Export control everywhere.** The platform no longer ships side-by-side
+  "Excel" and "PDF" buttons. Spreadsheet-style views use `SheetExportMenu`
+  (single `Download Export ▾` button → format / scope / columns). Single-table
+  admin views (`PayoutsManagement`, `AdminInboxPage`) use the lighter
+  `src/components/common/SimpleExportMenu.tsx` (single `Export ▾` → Excel / PDF).
+- `SheetTable` no longer has a `variant` prop; it always renders `SheetExportMenu`
+  and never its own heading. `SpreadsheetHub` owns the Team `<h1>` and passes
+  `extraExportScopes` (Full report + School packet) for BOTH scopes, so Team and
+  Admin see the identical menu. The old top-bar Team buttons are gone.
+- **`SheetExportMenu` popover is viewport-clamped.** `PopoverContent` is
+  `flex flex-col` with
+  `max-h-[min(var(--radix-popover-content-available-height,calc(100dvh-2rem)),calc(100dvh-2rem))]`;
+  the fields scroll (`overflow-y-auto`) and the submit button is docked in a
+  non-scrolling `border-t` footer so it stays clickable on short viewports. A
+  regression test asserts the submit is outside `.overflow-y-auto`.
+- **Export scope is unchanged**: SpreadsheetHub exports the filtered+searched
+  rows, `AdminInboxPage` the `visible` set, `PayoutsManagement` ALL payout
+  requests (intentional complete report). See "Dashboard / spreadsheet audit
+  conventions" above.
+
