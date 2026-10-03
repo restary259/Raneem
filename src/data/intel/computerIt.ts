@@ -8,6 +8,7 @@ import type { IntelSource } from './factTypes';
 import { fact, unverified, guidance } from './factTypes';
 import type { MajorIntel, ProgramIntel } from './types';
 import { ISRAELI_BGRUT_SUBJECT_REQUIREMENTS } from './bagrutRequirements';
+import { COMPETITIVE_BGRUT_SOURCE, competitiveBagrutForMajor } from './competitiveBagrut';
 
 const CHECKED = '2026-09-19';
 export const COMPUTER_IT_LAST_VERIFIED = '2026-09';
@@ -81,6 +82,7 @@ function commonMajor(
     aliases,
     status: 'verified',
     lastVerified: COMPUTER_IT_LAST_VERIFIED,
+    competitiveBagrutThreshold: competitiveBagrutForMajor(id),
     bagrutAccess: fact(
       { mathUnits: 3, englishUnits: 4, furtherUnits: 4 },
       'OFFICIAL_REQUIREMENT',
@@ -97,7 +99,7 @@ function commonMajor(
       'لا يوجد شرط ألماني موحّد لكل برامج الحاسوب وتقنية المعلومات؛ سجل البرنامج أدناه هو المرجع لمتطلب لغته.',
     ),
     programs,
-    sources: [SRC_ANABIN, SRC_KMK, ...extraSources],
+    sources: [SRC_ANABIN, SRC_KMK, COMPETITIVE_BGRUT_SOURCE, ...extraSources],
   };
 }
 

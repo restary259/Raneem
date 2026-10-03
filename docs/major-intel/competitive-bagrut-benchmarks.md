@@ -63,6 +63,7 @@ The registry now assigns a DARB planning benchmark to the remaining **university
 |---|---:|---|
 | Physiotherapy, Nursing | 93+ | Average of existing health benchmarks (94 and 89), rounded |
 | Computer Engineering, Environmental Engineering | 79+ | Average of existing engineering benchmarks, rounded |
+| Electrical Engineering & Information Technology, Environmental Protection Technology, Materials Science | 79+ | Engineering-category average (same basis as the engineering group) |
 | Artificial Intelligence, Cybersecurity, Data Science, Cloud Computing, Game Development, IT Management | 75+ | Existing Computer Science / computing benchmark |
 | Business & Economics additions | 75+ | Existing Business Administration + Economics benchmarks |
 | Law additions | 90+ | Existing International Law benchmark as the law-category proxy |

@@ -61,6 +61,11 @@ export const COMPETITIVE_BGRUT_BY_MAJOR = {
   // Engineering & Technology — average of the existing engineering benchmarks.
   'computer-engineering': 79,
   'environmental-engineering': 79,
+  // Verified engineering majors whose registry ids differ from the legacy
+  // engineering group ids above; same engineering-category average (79).
+  'electrical-engineering-information-technology': 79,
+  'environmental-protection-engineering': 79,
+  'materials-science': 79,
 
   // Computer Science & IT — existing computing benchmark.
   'artificial-intelligence': 75,
@@ -119,7 +124,7 @@ export const COMPETITIVE_BGRUT_BY_MAJOR = {
 
   'tourism-management': 83,
   'hotel-management': 83,
-  event-management: 83,
+  'event-management': 83,
   'travel-tourism': 83,
 
   // Culinary Arts is treated as an Ausbildung route, not a university major.
@@ -156,6 +161,9 @@ export const COMPETITIVE_BGRUT_EVIDENCE_BY_MAJOR = {
   'nursing': 'DARB health-category average heuristic (existing health benchmarks: 94/89)',
   'computer-engineering': 'DARB engineering-category average heuristic (existing engineering benchmarks)',
   'environmental-engineering': 'DARB engineering-category average heuristic (existing engineering benchmarks)',
+  'electrical-engineering-information-technology': 'DARB engineering-category average heuristic (existing engineering benchmarks)',
+  'environmental-protection-engineering': 'DARB engineering-category average heuristic (existing engineering benchmarks)',
+  'materials-science': 'DARB engineering-category average heuristic (existing engineering benchmarks)',
   'artificial-intelligence': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
   'cybersecurity': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
   'data-science': 'DARB computing-category benchmark heuristic (computer science baseline: 75)',
