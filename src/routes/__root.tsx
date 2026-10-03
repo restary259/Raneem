@@ -20,8 +20,12 @@ import { DARB_OFFICE } from "@/config/localBusiness";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
 
+// One request per script actually used: Inter (Latin/UI), IBM Plex Sans
+// Arabic (ar), Noto Sans Hebrew (he). Instrument Serif + Noto Naskh Arabic
+// back the optional `font-editorial` accent used on landing/page heroes.
+// Every family here is referenced by src/styles.css — keep them in sync.
 const FONTS_HREF =
-  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif&family=Work+Sans:wght@400;500;600;700&family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans:wght@400;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Hebrew:wght@400;500;600;700&family=Instrument+Serif&family=Noto+Naskh+Arabic:wght@600;700&display=swap";
 
 const APP_LOGO = darbLogoAsset.url;
 const OG_IMAGE = `https://darb.agency${darbLogoShareAsset.url}`;
@@ -265,7 +269,7 @@ function RootErrorComponent({ error }: { error: unknown }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "'Tajawal', sans-serif",
+        fontFamily: "var(--font-arabic)",
         padding: "2rem",
         textAlign: "center",
       }}
