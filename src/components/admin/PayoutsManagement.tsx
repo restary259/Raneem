@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { exportCorporateWorkbook, exportCorporatePdf, type CorporateReport } from '@/utils/export';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Download, FileText, HandCoins, UserCheck, GraduationCap } from 'lucide-react';
+import { Users, HandCoins, UserCheck, GraduationCap } from 'lucide-react';
+import SimpleExportMenu from '@/components/common/SimpleExportMenu';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import SegmentedTabs, { type SegmentItem } from '@/components/shell/SegmentedTabs';
 import { useTranslation } from 'react-i18next';
@@ -91,17 +91,14 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
     }],
   });
 
-  const exportExcel = async () => {
+  const exportPayouts = async (format: 'xlsx' | 'pdf') => {
     try {
-      await exportCorporateWorkbook(buildReport());
-    } catch {
-      toast({ variant: 'destructive', description: t('sheets.exportFailed') });
-    }
-  };
-
-  const exportPdf = async () => {
-    try {
-      const { empty, rtlFontMissing } = await exportCorporatePdf(buildReport());
+      const report = buildReport();
+      if (format === 'xlsx') {
+        await exportCorporateWorkbook(report);
+        return;
+      }
+      const { empty, rtlFontMissing } = await exportCorporatePdf(report);
       if (empty) toast({ description: t('admin.payouts.empty', 'No requests yet.') });
       else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
     } catch {
@@ -136,12 +133,7 @@ const PayoutsManagement: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) 
       <div className="space-y-2">
         <SegmentedTabs items={items} />
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="outline" className="gap-2" onClick={exportExcel}>
-            <Download className="h-4 w-4" />{t('sheets.exportExcel')}
-          </Button>
-          <Button size="sm" variant="outline" className="gap-2" onClick={exportPdf}>
-            <FileText className="h-4 w-4" />{t('sheets.exportPdf')}
-          </Button>
+          <SimpleExportMenu onSelect={exportPayouts} />
         </div>
       </div>
 

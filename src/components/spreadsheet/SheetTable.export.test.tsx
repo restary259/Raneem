@@ -37,37 +37,51 @@ const lastReport = (fn: ReturnType<typeof vi.fn>) => fn.mock.calls.at(-1)![0];
 
 beforeEach(() => { workbook.mockClear(); pdf.mockClear(); });
 
-describe('SheetTable legacy (Team) exports', () => {
-  it('shows a visible h2 and exports visible columns to Excel and PDF', async () => {
+describe('SheetTable unified export menu', () => {
+  it('renders a single Export control and no separate Excel/PDF buttons', () => {
     render(<SheetTable title="Students" columns={columns} rows={rows} fileName="f" />);
-    expect(screen.getByRole('heading', { level: 2, name: 'Students' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'sheets.exportExcel' }));
+    expect(screen.queryByRole('button', { name: 'sheets.exportExcel' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'sheets.exportPdf' })).toBeNull();
+    expect(screen.queryByRole('heading')).toBeNull();
+    expect(screen.getByRole('button', { name: /Export/ })).toBeInTheDocument();
+  });
+
+  it('exports visible columns to Excel by default', async () => {
+    render(<SheetTable title="Students" columns={columns} rows={rows} fileName="f" />);
+    const dlg = await openMenu();
+    await userEvent.click(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!);
     await waitFor(() => expect(workbook).toHaveBeenCalled());
     const r = lastReport(workbook);
     expect(r.rtl).toBe(true);
     expect(r.sheets[0].columns.map((c: any) => c.header)).toEqual(['الاسم', 'City']);
     expect(r.sheets[0].rows).toEqual([['سليم', 'Haifa'], ['Lina', 'Tamra']]);
-    fireEvent.click(screen.getByRole('button', { name: 'sheets.exportPdf' }));
+  });
+
+  it('exports PDF when chosen', async () => {
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" />);
+    const dlg = await openMenu();
+    await userEvent.click(within(dlg).getByRole('radio', { name: 'PDF (.pdf)' }));
+    await userEvent.click(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!);
     await waitFor(() => expect(pdf).toHaveBeenCalled());
   });
 
-  it('disables both Excel and PDF when there are zero rows', () => {
+  it('disables export when there are zero rows', async () => {
     render(<SheetTable title="S" columns={columns} rows={[]} fileName="f" />);
-    expect(screen.getByRole('button', { name: 'sheets.exportExcel' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'sheets.exportPdf' })).toBeDisabled();
+    const dlg = await openMenu();
+    expect(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)).toBeDisabled();
   });
 
   it('exports only rows matching search (parent filters arrive pre-filtered)', async () => {
     render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" externalFiltersActive />);
     fireEvent.change(screen.getByPlaceholderText('sheets.searchPlaceholder'), { target: { value: 'tamra' } });
-    fireEvent.click(screen.getByRole('button', { name: 'sheets.exportExcel' }));
+    const dlg = await openMenu();
+    await userEvent.click(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!);
     await waitFor(() => expect(workbook).toHaveBeenCalled());
     expect(lastReport(workbook).sheets[0].rows).toEqual([['Lina', 'Tamra']]);
   });
 });
 
-describe('SheetTable menu (Admin) exports', () => {
+describe('SheetTable menu scopes', () => {
   const full = vi.fn().mockResolvedValue(undefined);
   const packet = vi.fn().mockResolvedValue(undefined);
   const scopes = [
@@ -76,9 +90,8 @@ describe('SheetTable menu (Admin) exports', () => {
   ];
   beforeEach(() => { full.mockClear(); packet.mockClear(); });
 
-  it('renders no headings of its own and uses radio groups', async () => {
-    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" variant="menu" extraExportScopes={scopes} />);
-    expect(screen.queryByRole('heading')).toBeNull();
+  it('renders radio groups and offers the extra scopes', async () => {
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" extraExportScopes={scopes} />);
     const dlg = await openMenu();
     expect(within(dlg).getAllByRole('radiogroup').length).toBe(3);
     expect(within(dlg).getByRole('radio', { name: 'Excel (.xlsx)' })).toHaveAttribute('aria-checked', 'true');
@@ -86,7 +99,7 @@ describe('SheetTable menu (Admin) exports', () => {
   });
 
   it('current view PDF with custom columns including a hidden one', async () => {
-    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" variant="menu" extraExportScopes={scopes} />);
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" extraExportScopes={scopes} />);
     const dlg = await openMenu();
     await userEvent.click(within(dlg).getByRole('radio', { name: 'PDF (.pdf)' }));
     await userEvent.click(within(dlg).getByRole('radio', { name: 'Choose columns' }));
@@ -98,7 +111,7 @@ describe('SheetTable menu (Admin) exports', () => {
   });
 
   it('zero selected columns disables export', async () => {
-    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" variant="menu" />);
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" />);
     const dlg = await openMenu();
     await userEvent.click(within(dlg).getByRole('radio', { name: 'Choose columns' }));
     await userEvent.click(within(dlg).getByRole('checkbox', { name: 'الاسم' }));
@@ -108,7 +121,7 @@ describe('SheetTable menu (Admin) exports', () => {
   });
 
   it('full report and school packet delegate to the workspace; selection resets on reopen', async () => {
-    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" variant="menu" extraExportScopes={scopes} />);
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" extraExportScopes={scopes} />);
     let dlg = await openMenu();
     await userEvent.click(within(dlg).getByRole('radio', { name: /Full report/ }));
     await userEvent.click(within(dlg).getByRole('radio', { name: 'PDF (.pdf)' }));
@@ -123,7 +136,7 @@ describe('SheetTable menu (Admin) exports', () => {
   });
 
   it('zero rows: current view and school packet disabled, full report allowed', async () => {
-    render(<SheetTable title="S" columns={columns} rows={[]} fileName="f" variant="menu" extraExportScopes={scopes} />);
+    render(<SheetTable title="S" columns={columns} rows={[]} fileName="f" extraExportScopes={scopes} />);
     const dlg = await openMenu();
     const submit = () => within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!;
     expect(submit()).toBeDisabled();
@@ -133,23 +146,17 @@ describe('SheetTable menu (Admin) exports', () => {
     expect(submit()).not.toBeDisabled();
   });
 
-  it('uses a viewport-bounded popover width', async () => {
-    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" variant="menu" />);
+  it('clamps the popover to the viewport height and keeps the submit docked', async () => {
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" />);
     const dlg = await openMenu();
     expect(dlg.className).toContain('w-[min(340px,calc(100vw-2rem))]');
-  });
-
-  it('clamps height, scrolls the options and docks the export button', async () => {
-    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" variant="menu" extraExportScopes={scopes} />);
-    const dlg = await openMenu();
-    // Height is capped to Radix's available height / the viewport.
     expect(dlg.className).toContain('--radix-popover-content-available-height');
     expect(dlg.className).toContain('max-h-[min(');
-    // The options live in a scroll container…
+    expect(dlg.className).toContain('flex-col');
     const scroll = dlg.querySelector('.overflow-y-auto');
     expect(scroll).not.toBeNull();
-    // …and the primary Export action sits outside it so it is always reachable.
     const submit = within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!;
+    expect(submit.closest('.overflow-y-auto')).toBeNull();
     expect(scroll!.contains(submit)).toBe(false);
   });
 });

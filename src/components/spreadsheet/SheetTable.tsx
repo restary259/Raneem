@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { RefreshCw, Settings2, Download, Search, FileText } from 'lucide-react';
+import { RefreshCw, Settings2, Search, FileText } from 'lucide-react';
 import { useExportContext } from '@/utils/export/useExportContext';
 import { buildCurrentViewReport, deliverReport, type ExportFormat } from './spreadsheetExport';
 import SheetExportMenu, { type ExtraExportScope } from './SheetExportMenu';
@@ -38,12 +38,7 @@ export interface SheetTableProps {
   fileName: string;
   /** Extra toolbar controls (filters) */
   toolbar?: React.ReactNode;
-  /**
-   * 'legacy' (default): visible sheet title with Download Excel / Download PDF.
-   * 'menu': no visible title; a single Export menu. The page owns its headings.
-   */
-  variant?: 'legacy' | 'menu';
-  /** Additional export scopes offered by the parent workspace in 'menu' mode. */
+  /** Additional export scopes offered by the parent workspace. */
   extraExportScopes?: ExtraExportScope[];
   /** The parent workspace is preparing an export. */
   busy?: boolean;
@@ -142,7 +137,6 @@ const SheetTable: React.FC<SheetTableProps> = ({
   onRefresh,
   fileName,
   toolbar,
-  variant = 'legacy',
   extraExportScopes,
   busy = false,
   externalFiltersActive = false,
@@ -224,54 +218,29 @@ const SheetTable: React.FC<SheetTableProps> = ({
   };
 
   const working = exporting || busy;
-  const noRows = filteredRows.length === 0;
 
   const toolbarControls = (
     <SheetToolbarControls
       onRefresh={onRefresh}
-      refreshing={variant === 'menu' ? !!loading : false}
+      refreshing={!!loading}
       columns={columns}
       visible={visible}
       onToggle={toggle}
     >
-      {variant === 'menu' ? (
-        <SheetExportMenu
-          columns={columns}
-          visibleColumns={activeColumns}
-          rowCount={filteredRows.length}
-          busy={working}
-          extraScopes={extraExportScopes}
-          onExportCurrent={exportCurrent}
-        />
-      ) : (
-        <>
-          {/* Legacy behaviour: both downloads are disabled when no rows are shown. */}
-          <Button size="sm" onClick={() => void exportCurrent('xlsx')} disabled={noRows || working}>
-            <Download className="h-4 w-4 me-1" />
-            {t('sheets.exportExcel')}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => void exportCurrent('pdf')} disabled={noRows || working}>
-            <FileText className="h-4 w-4 me-1" />
-            {t('sheets.exportPdf')}
-          </Button>
-        </>
-      )}
+      <SheetExportMenu
+        columns={columns}
+        visibleColumns={activeColumns}
+        rowCount={filteredRows.length}
+        busy={working}
+        extraScopes={extraExportScopes}
+        onExportCurrent={exportCurrent}
+      />
     </SheetToolbarControls>
   );
 
   return (
-    <section className="space-y-3" aria-label={variant === 'menu' ? title : undefined}>
-      {variant === 'legacy' ? (
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">{title}</h2>
-            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
-          </div>
-          {toolbarControls}
-        </div>
-      ) : (
-        <div className="flex items-center justify-end">{toolbarControls}</div>
-      )}
+    <section className="space-y-3" aria-label={title}>
+      <div className="flex items-center justify-end">{toolbarControls}</div>
       <div className="flex items-center gap-3 flex-wrap p-3 rounded-lg bg-muted/40 border border-border">
         <div className="relative flex-1 min-w-[180px]">
           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
