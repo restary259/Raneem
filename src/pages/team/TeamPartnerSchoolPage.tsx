@@ -193,41 +193,43 @@ export default function TeamPartnerSchoolPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-3 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
-      <PageHeader
-        title={<span className="flex items-center gap-3"><SchoolLogo name={school.name} slug={school.slug} className="size-12" /><span className="min-w-0 truncate">{school.name}</span></span>}
-        subtitle={
-          <span className="flex flex-wrap items-center gap-2">
-            <MapPin className="h-3.5 w-3.5" />
-            {school.city}
-            <span className="text-muted-foreground">·</span>
-            {t("partnerSchools.pricesShown", "Prices shown")}: {version?.year ?? "—"}
-            {school.last_verified_at && (
-              <>
-                <span className="text-muted-foreground">·</span>
-                {t("partnerSchools.lastVerified", "Last verified")}: {school.last_verified_at}
-              </>
-            )}
-          </span>
-        }
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to={`/team/partner-schools/${country}`}>
-                <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
-                {t("partnerSchools.back", "Back")}
-              </Link>
-            </Button>
-            {school.website_url && (
-              <Button asChild variant="outline" size="sm">
-                <a href={school.website_url} target="_blank" rel="noreferrer">
-                  {t("partnerSchools.website", "School website")}
-                  <ExternalLink className="ms-2 h-3.5 w-3.5" />
-                </a>
+      <div className="pt-2 sm:pt-3">
+        <PageHeader
+          title={<span className="flex items-center gap-4 py-0.5"><SchoolLogo name={school.name} slug={school.slug} className="size-12" /><span className="min-w-0 truncate">{school.name}</span></span>}
+          subtitle={
+            <span className="mt-1 flex flex-wrap items-center gap-2">
+              <MapPin className="h-3.5 w-3.5" />
+              {school.city}
+              <span className="text-muted-foreground">·</span>
+              {t("partnerSchools.pricesShown", "Prices shown")}: {version?.year ?? "—"}
+              {school.last_verified_at && (
+                <>
+                  <span className="text-muted-foreground">·</span>
+                  {t("partnerSchools.lastVerified", "Last verified")}: {school.last_verified_at}
+                </>
+              )}
+            </span>
+          }
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="ghost" size="sm">
+                <Link to={`/team/partner-schools/${country}`}>
+                  <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+                  {t("partnerSchools.back", "Back")}
+                </Link>
               </Button>
-            )}
-          </div>
-        }
-      />
+              {school.website_url && (
+                <Button asChild variant="outline" size="sm">
+                  <a href={school.website_url} target="_blank" rel="noreferrer">
+                    {t("partnerSchools.website", "School website")}
+                    <ExternalLink className="ms-2 h-3.5 w-3.5" />
+                  </a>
+                </Button>
+              )}
+            </div>
+          }
+        />
+      </div>
 
       {/* Search */}
       <Card className="border-border/70 p-3 shadow-none">
