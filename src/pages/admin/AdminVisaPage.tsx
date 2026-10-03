@@ -44,6 +44,8 @@ export default function AdminVisaPage() {
 
   const counts = visaQueueCounts(rows);
 
+  // The KPI tiles are the single section control — there is no second button
+  // row. `active` mirrors the selected section so the tile reads as selected.
   const kpis: KpiItem[] = [
     {
       key: "pending",
@@ -51,6 +53,7 @@ export default function AdminVisaPage() {
       value: counts.pending,
       icon: Clock,
       onClick: () => setSection("pending"),
+      active: section === "pending",
     },
     {
       key: "applied",
@@ -58,6 +61,7 @@ export default function AdminVisaPage() {
       value: counts.applied,
       icon: FileCheck2,
       onClick: () => setSection("applied"),
+      active: section === "applied",
     },
   ];
 
@@ -125,7 +129,6 @@ export default function AdminVisaPage() {
             <VisaQueue
               rows={rows}
               activeSection={section}
-              onSectionChange={setSection}
               onOpen={openRow}
               onMarkArrived={markArrived}
               markingCaseId={markingCaseId}
