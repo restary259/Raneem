@@ -1,15 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import GoogleBusinessAccessGate from "@/components/auth/GoogleBusinessAccessGate";
 import LegacyGoogleRedirect from "@/pages/team/LegacyGoogleRedirect";
 import TeamGoogleProfilePage from "@/pages/team/TeamGoogleProfilePage";
 
 export const Route = createFileRoute("/team/google/profile")({
-  component: LegacyGoogleRoute,
+  component: TeamGoogleRoute,
 });
 
-function LegacyGoogleRoute() {
+function TeamGoogleRoute() {
   return (
-    <LegacyGoogleRedirect tab="profile">
-      <TeamGoogleProfilePage />
-    </LegacyGoogleRedirect>
+    <GoogleBusinessAccessGate>
+      <LegacyGoogleRedirect tab="profile">
+        <TeamGoogleProfilePage />
+      </LegacyGoogleRedirect>
+    </GoogleBusinessAccessGate>
   );
 }

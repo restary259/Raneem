@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { GoogleOfficeSubnav } from "@/components/google/GoogleOfficeSubnav";
+import { useGoogleBusinessAccess } from "@/hooks/useGoogleBusinessAccess";
 import {
   getOfficeWorkspace,
   resolveOfficeSlug,
@@ -82,6 +83,12 @@ export function OfficeWorkspaceLayout({
   const [context, setContext] = useState<OfficeWorkspaceContext | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Google Business is only a tab for a team member assigned as an office
+  // operator. The admin surface keeps it unconditionally; team members wait for
+  // the server flag (`false` while unresolved) so it is hidden by default.
+  const hasGoogleBusiness = useGoogleBusinessAccess(surface === "team");
+  const showGoogle = surface === "admin" || hasGoogleBusiness === true;
 
   const load = useCallback(async () => {
     if (!officeId) {
@@ -187,13 +194,17 @@ export function OfficeWorkspaceLayout({
       label: t("officeWorkspace.team", "Team"),
       active: false,
     },
-    {
-      key: "google",
-      to: officeGooglePath(surface, slug),
-      icon: <Star className="size-4" />,
-      label: t("officeWorkspace.googleBusiness", "Google Business"),
-      active: googleTab !== undefined,
-    },
+    ...(showGoogle
+      ? [
+          {
+            key: "google",
+            to: officeGooglePath(surface, slug),
+            icon: <Star className="size-4" />,
+            label: t("officeWorkspace.googleBusiness", "Google Business"),
+            active: googleTab !== undefined,
+          },
+        ]
+      : []),
   ];
 
   return (

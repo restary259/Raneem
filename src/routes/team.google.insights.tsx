@@ -1,15 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import GoogleBusinessAccessGate from "@/components/auth/GoogleBusinessAccessGate";
 import LegacyGoogleRedirect from "@/pages/team/LegacyGoogleRedirect";
 import TeamGoogleInsightsPage from "@/pages/team/TeamGoogleInsightsPage";
 
 export const Route = createFileRoute("/team/google/insights")({
-  component: LegacyGoogleRoute,
+  component: TeamGoogleRoute,
 });
 
-function LegacyGoogleRoute() {
+function TeamGoogleRoute() {
   return (
-    <LegacyGoogleRedirect tab="insights">
-      <TeamGoogleInsightsPage />
-    </LegacyGoogleRedirect>
+    <GoogleBusinessAccessGate>
+      <LegacyGoogleRedirect tab="insights">
+        <TeamGoogleInsightsPage />
+      </LegacyGoogleRedirect>
+    </GoogleBusinessAccessGate>
   );
 }

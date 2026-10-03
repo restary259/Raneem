@@ -38,6 +38,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { AppRole } from "@/contexts/AuthContext";
+import { filterApplyNavItem } from "@/lib/partnerNav";
 
 export interface DashboardNavItem {
   key: string;
@@ -47,6 +48,12 @@ export interface DashboardNavItem {
   children?: DashboardNavItem[];
   mobileLabelKey?: string;
   activePrefixes?: string[];
+  /**
+   * Marks the Google Business nav entry. It is hidden for team members until
+   * they are assigned as an office Google operator (see
+   * `filterGoogleBusinessNavItems`).
+   */
+  googleBusinessNavKey?: boolean;
 }
 
 export interface DashboardQuickAction extends DashboardNavItem {}
@@ -119,18 +126,172 @@ const STUDENT_QUICK_ACTIONS: DashboardQuickAction[] = [
   { key: "nav.refer", icon: Heart, href: "/student/refer" },
 ];
 
+// The team member's Google Business surface is hidden until they are assigned
+// as an office operator. The parent group carries the `googleBusinessNavKey`
+// flag so both the sidebar and the header title resolver can hide it.
+const TEAM_DESKTOP_NAV: DashboardNavItem[] = [
+  {
+    key: "nav.staffInbox",
+    icon: MessageSquare,
+    href: "/team/messages",
+    group: "nav.group.comms",
+  },
+  {
+    key: "nav.myWork",
+    icon: LayoutDashboard,
+    href: "/team",
+    group: "nav.group.work",
+  },
+  {
+    key: "nav.cases",
+    icon: ClipboardList,
+    href: "/team/cases",
+    group: "nav.group.work",
+  },
+  {
+    key: "nav.appointments",
+    icon: CalendarDays,
+    href: "/team/appointments",
+    group: "nav.group.work",
+  },
+  {
+    key: "nav.offices",
+    icon: Building2,
+    href: "/team/offices",
+    group: "nav.group.work",
+  },
+  {
+    key: "nav.catalog",
+    icon: Hotel,
+    href: "/team/catalog",
+    group: "nav.group.work",
+  },
+  {
+    key: "nav.partnerSchools",
+    icon: School,
+    href: "/team/partner-schools",
+    group: "nav.group.work",
+  },
+  {
+    key: "nav.majorIntel",
+    icon: GraduationCap,
+    href: "/team/majors",
+    group: "nav.group.work",
+  },
+  {
+    key: "nav.reports",
+    icon: BarChart2,
+    href: "/team/analytics",
+    group: "nav.group.setup",
+  },
+  {
+    key: "nav.googleBusiness",
+    icon: Link2,
+    href: "",
+    group: "nav.group.setup",
+    googleBusinessNavKey: true,
+    children: [
+      {
+        key: "nav.googleBusinessOverview",
+        icon: Link2,
+        href: "/team/google",
+      },
+      {
+        key: "nav.googleReviews",
+        icon: Star,
+        href: "/team/google/reviews",
+      },
+      {
+        key: "nav.googleProfile",
+        icon: Store,
+        href: "/team/google/profile",
+      },
+      {
+        key: "nav.googlePosts",
+        icon: Megaphone,
+        href: "/team/google/posts",
+      },
+      {
+        key: "nav.googlePhotos",
+        icon: Image,
+        href: "/team/google/photos",
+      },
+      {
+        key: "nav.googleInsights",
+        icon: BarChart3,
+        href: "/team/google/insights",
+      },
+    ],
+  },
+  {
+    key: "nav.group.tools",
+    icon: Wrench,
+    href: "",
+    children: [
+      { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
+      { key: "nav.cvBuilder", icon: FileText, href: "/team/tools/cv" },
+      { key: "nav.currency", icon: DollarSign, href: "/team/tools/currency" },
+    ],
+  },
+];
+
 export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
   admin: {
     desktop: [
-      { key: "nav.messages", icon: MessageSquare, href: "/admin/messages", group: "nav.group.comms" },
-      { key: "nav.whatsappCampaigns", icon: Megaphone, href: "/admin/whatsapp-campaigns", group: "nav.group.comms" },
-      { key: "nav.overview", icon: LayoutDashboard, href: "/admin", group: "nav.group.work" },
-      { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline", group: "nav.group.work" },
-      { key: "nav.inbox", icon: Inbox, href: "/admin/inbox", group: "nav.group.work" },
-      { key: "nav.financials", icon: DollarSign, href: "/admin/financials", group: "nav.group.money" },
-      { key: "nav.commission", icon: DollarSign, href: "/admin/commission", group: "nav.group.money" },
-      { key: "nav.team", icon: Users, href: "/admin/members", group: "nav.group.people" },
-      { key: "nav.students", icon: GraduationCap, href: "/admin/students", group: "nav.group.people" },
+      {
+        key: "nav.messages",
+        icon: MessageSquare,
+        href: "/admin/messages",
+        group: "nav.group.comms",
+      },
+      {
+        key: "nav.whatsappCampaigns",
+        icon: Megaphone,
+        href: "/admin/whatsapp-campaigns",
+        group: "nav.group.comms",
+      },
+      {
+        key: "nav.overview",
+        icon: LayoutDashboard,
+        href: "/admin",
+        group: "nav.group.work",
+      },
+      {
+        key: "nav.pipeline",
+        icon: GitBranch,
+        href: "/admin/pipeline",
+        group: "nav.group.work",
+      },
+      {
+        key: "nav.inbox",
+        icon: Inbox,
+        href: "/admin/inbox",
+        group: "nav.group.work",
+      },
+      {
+        key: "nav.financials",
+        icon: DollarSign,
+        href: "/admin/financials",
+        group: "nav.group.money",
+      },
+      {
+        key: "nav.commission",
+        icon: DollarSign,
+        href: "/admin/commission",
+        group: "nav.group.money",
+      },
+      {
+        key: "nav.team",
+        icon: Users,
+        href: "/admin/members",
+        group: "nav.group.people",
+      },
+      {
+        key: "nav.students",
+        icon: GraduationCap,
+        href: "/admin/students",
+        group: "nav.group.people",
+      },
       {
         key: "nav.group.setup",
         icon: Settings,
@@ -149,7 +310,12 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
       { key: "nav.pipeline", icon: GitBranch, href: "/admin/pipeline" },
       { key: "nav.messages", icon: MessageSquare, href: "/admin/messages" },
       { key: "nav.students", icon: GraduationCap, href: "/admin/students" },
-      { key: "nav.financials", icon: DollarSign, href: "/admin/financials", mobileLabelKey: "nav.mobile.finance" },
+      {
+        key: "nav.financials",
+        icon: DollarSign,
+        href: "/admin/financials",
+        mobileLabelKey: "nav.mobile.finance",
+      },
     ],
     accountItems: [
       { key: "nav.settings", icon: Settings, href: "/admin/settings" },
@@ -157,72 +323,23 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
     homeTitleKey: "nav.overview",
     messagesHref: "/admin/messages",
   },
-
   team_member: {
-    desktop: [
-      { key: "nav.staffInbox", icon: MessageSquare, href: "/team/messages", group: "nav.group.comms" },
-      { key: "nav.myWork", icon: LayoutDashboard, href: "/team", group: "nav.group.work" },
-      { key: "nav.cases", icon: ClipboardList, href: "/team/cases", group: "nav.group.work" },
-      { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", group: "nav.group.work" },
-      { key: "nav.offices", icon: Building2, href: "/team/offices", group: "nav.group.work" },
-      { key: "nav.catalog", icon: Hotel, href: "/team/catalog", group: "nav.group.work" },
-      { key: "nav.partnerSchools", icon: School, href: "/team/partner-schools", group: "nav.group.work" },
-      { key: "nav.majorIntel", icon: GraduationCap, href: "/team/majors", group: "nav.group.work" },
-      { key: "nav.reports", icon: BarChart2, href: "/team/analytics", group: "nav.group.setup" },
-      {
-        key: "nav.googleBusiness",
-        icon: Link2,
-        href: "",
-        group: "nav.group.setup",
-        children: [
-          {
-            key: "nav.googleBusinessOverview",
-            icon: Link2,
-            href: "/team/google",
-          },
-          {
-            key: "nav.googleReviews",
-            icon: Star,
-            href: "/team/google/reviews",
-          },
-          {
-            key: "nav.googleProfile",
-            icon: Store,
-            href: "/team/google/profile",
-          },
-          {
-            key: "nav.googlePosts",
-            icon: Megaphone,
-            href: "/team/google/posts",
-          },
-          {
-            key: "nav.googlePhotos",
-            icon: Image,
-            href: "/team/google/photos",
-          },
-          {
-            key: "nav.googleInsights",
-            icon: BarChart3,
-            href: "/team/google/insights",
-          },
-        ],
-      },
-      {
-        key: "nav.group.tools",
-        icon: Wrench,
-        href: "",
-        children: [
-          { key: "nav.bagrut", icon: Calculator, href: "/team/bagrut" },
-          { key: "nav.cvBuilder", icon: FileText, href: "/team/tools/cv" },
-          { key: "nav.currency", icon: DollarSign, href: "/team/tools/currency" },
-        ],
-      },
-    ],
+    desktop: TEAM_DESKTOP_NAV,
     mobilePrimary: [
       { key: "nav.myWork", icon: LayoutDashboard, href: "/team" },
       { key: "nav.cases", icon: ClipboardList, href: "/team/cases" },
-      { key: "nav.staffInbox", icon: MessageSquare, href: "/team/messages", mobileLabelKey: "nav.mobile.inbox" },
-      { key: "nav.appointments", icon: CalendarDays, href: "/team/appointments", mobileLabelKey: "nav.mobile.appointments" },
+      {
+        key: "nav.staffInbox",
+        icon: MessageSquare,
+        href: "/team/messages",
+        mobileLabelKey: "nav.mobile.inbox",
+      },
+      {
+        key: "nav.appointments",
+        icon: CalendarDays,
+        href: "/team/appointments",
+        mobileLabelKey: "nav.mobile.appointments",
+      },
       { key: "nav.students", icon: GraduationCap, href: "/team/students" },
     ],
     accountItems: [],
@@ -236,8 +353,18 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
       { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
       { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
       { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
-      { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings", mobileLabelKey: "nav.mobile.earnings" },
-      { key: "nav.apply", icon: ClipboardEdit, href: "/partner/apply", mobileLabelKey: "nav.mobile.apply" },
+      {
+        key: "nav.earnings",
+        icon: TrendingUp,
+        href: "/partner/earnings",
+        mobileLabelKey: "nav.mobile.earnings",
+      },
+      {
+        key: "nav.apply",
+        icon: ClipboardEdit,
+        href: "/partner/apply",
+        mobileLabelKey: "nav.mobile.apply",
+      },
     ],
     accountItems: [
       { key: "nav.account", icon: User, href: "/partner/profile" },
@@ -252,8 +379,18 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
       { key: "nav.overview", icon: LayoutDashboard, href: "/partner" },
       { key: "nav.messages", icon: MessageSquare, href: "/partner/messages" },
       { key: "nav.students", icon: GraduationCap, href: "/partner/students" },
-      { key: "nav.earnings", icon: TrendingUp, href: "/partner/earnings", mobileLabelKey: "nav.mobile.earnings" },
-      { key: "nav.apply", icon: ClipboardEdit, href: "/partner/apply", mobileLabelKey: "nav.mobile.apply" },
+      {
+        key: "nav.earnings",
+        icon: TrendingUp,
+        href: "/partner/earnings",
+        mobileLabelKey: "nav.mobile.earnings",
+      },
+      {
+        key: "nav.apply",
+        icon: ClipboardEdit,
+        href: "/partner/apply",
+        mobileLabelKey: "nav.mobile.apply",
+      },
     ],
     accountItems: [
       { key: "nav.account", icon: User, href: "/partner/profile" },
@@ -264,24 +401,67 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
 
   agent: {
     desktop: [
-      { key: "nav.overview", icon: LayoutDashboard, href: "/agent", group: "nav.group.work" },
-      { key: "nav.network", icon: Users, href: "/agent/network", group: "nav.group.work" },
-      { key: "nav.students", icon: GraduationCap, href: "/agent/students", group: "nav.group.work" },
-      { key: "nav.apply", icon: ClipboardEdit, href: "/agent/apply", group: "nav.group.work" },
-      { key: "nav.earnings", icon: TrendingUp, href: "/agent/earnings", group: "nav.group.money" },
-      { key: "nav.messages", icon: MessageSquare, href: "/agent/messages", group: "nav.group.comms" },
-      { key: "nav.account", icon: User, href: "/agent/profile", group: "nav.group.account" },
+      {
+        key: "nav.overview",
+        icon: LayoutDashboard,
+        href: "/agent",
+        group: "nav.group.work",
+      },
+      {
+        key: "nav.network",
+        icon: Users,
+        href: "/agent/network",
+        group: "nav.group.work",
+      },
+      {
+        key: "nav.students",
+        icon: GraduationCap,
+        href: "/agent/students",
+        group: "nav.group.work",
+      },
+      {
+        key: "nav.apply",
+        icon: ClipboardEdit,
+        href: "/agent/apply",
+        group: "nav.group.work",
+      },
+      {
+        key: "nav.earnings",
+        icon: TrendingUp,
+        href: "/agent/earnings",
+        group: "nav.group.money",
+      },
+      {
+        key: "nav.messages",
+        icon: MessageSquare,
+        href: "/agent/messages",
+        group: "nav.group.comms",
+      },
+      {
+        key: "nav.account",
+        icon: User,
+        href: "/agent/profile",
+        group: "nav.group.account",
+      },
     ],
     mobilePrimary: [
       { key: "nav.overview", icon: LayoutDashboard, href: "/agent" },
-      { key: "nav.network", icon: Users, href: "/agent/network", mobileLabelKey: "nav.mobile.network" },
+      {
+        key: "nav.network",
+        icon: Users,
+        href: "/agent/network",
+        mobileLabelKey: "nav.mobile.network",
+      },
       { key: "nav.students", icon: GraduationCap, href: "/agent/students" },
       { key: "nav.messages", icon: MessageSquare, href: "/agent/messages" },
-      { key: "nav.earnings", icon: TrendingUp, href: "/agent/earnings", mobileLabelKey: "nav.mobile.earnings" },
+      {
+        key: "nav.earnings",
+        icon: TrendingUp,
+        href: "/agent/earnings",
+        mobileLabelKey: "nav.mobile.earnings",
+      },
     ],
-    accountItems: [
-      { key: "nav.account", icon: User, href: "/agent/profile" },
-    ],
+    accountItems: [{ key: "nav.account", icon: User, href: "/agent/profile" }],
     homeTitleKey: "nav.overview",
     messagesHref: "/agent/messages",
   },
@@ -290,9 +470,19 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
     desktop: STUDENT_DESKTOP_NAV,
     mobilePrimary: [
       { key: "nav.home", icon: Home, href: "/student" },
-      { key: "nav.cityGuide", icon: MapPinned, href: "/student/city-guide", mobileLabelKey: "nav.cityGuideMobile" },
+      {
+        key: "nav.cityGuide",
+        icon: MapPinned,
+        href: "/student/city-guide",
+        mobileLabelKey: "nav.cityGuideMobile",
+      },
       { key: "nav.messages", icon: MessageSquare, href: "/student/messages" },
-      { key: "nav.account", icon: User, href: "/student/profile", activePrefixes: ["/student/profile", "/student/my-data"] },
+      {
+        key: "nav.account",
+        icon: User,
+        href: "/student/profile",
+        activePrefixes: ["/student/profile", "/student/my-data"],
+      },
       { key: "nav.darb", icon: Sparkles, href: "/" },
     ],
     quickActions: STUDENT_QUICK_ACTIONS,
@@ -316,8 +506,61 @@ export function getDashboardNav(role: AppRole): DashboardRoleConfig {
   return DASHBOARD_NAV_CONFIG[role];
 }
 
-export function matchesDashboardNavPath(pathname: string, item: DashboardNavItem): boolean {
-  if (item.activePrefixes?.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"))) {
+/**
+ * Removes the Google Business nav entry (and its tab children) unless the
+ * caller is allowed to see it. Only the team member role is gated; every other
+ * role keeps its nav untouched. Pure so the sidebar, the header title resolver
+ * and tests share one predicate.
+ */
+export function filterGoogleBusinessNavItems(
+  role: AppRole,
+  items: DashboardNavItem[],
+  hasAccess: boolean | null,
+): DashboardNavItem[] {
+  if (role !== "team_member" || hasAccess) return items;
+  return items.filter((item) => !item.googleBusinessNavKey);
+}
+
+export interface DashboardNavFilters {
+  applyFormEnabled?: boolean;
+  googleBusinessAccess?: boolean | null;
+}
+
+const APPLY_GATED_ROLES: ReadonlySet<AppRole> = new Set([
+  "social_media_partner",
+  "ambassador",
+  "agent",
+]);
+
+/**
+ * The one place a role's desktop nav is composed from its config and the live
+ * per-user flags. Keeping it pure means the sidebar, the header title resolver
+ * and tests all apply the same gates in the same order.
+ */
+export function resolveDashboardNavItems(
+  role: AppRole,
+  items: DashboardNavItem[],
+  filters: DashboardNavFilters = {},
+): DashboardNavItem[] {
+  const applyFormEnabled = filters.applyFormEnabled ?? true;
+  const googleBusinessAccess = filters.googleBusinessAccess ?? true;
+
+  return filterGoogleBusinessNavItems(
+    role,
+    filterApplyNavItem(items, APPLY_GATED_ROLES.has(role), applyFormEnabled),
+    googleBusinessAccess,
+  );
+}
+
+export function matchesDashboardNavPath(
+  pathname: string,
+  item: DashboardNavItem,
+): boolean {
+  if (
+    item.activePrefixes?.some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
+    )
+  ) {
     return true;
   }
 

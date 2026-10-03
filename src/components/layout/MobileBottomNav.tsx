@@ -3,10 +3,10 @@ import { Link, useLocation } from "@/lib/router-compat";
 import { cn } from "@/lib/utils";
 import type { AppRole } from "@/contexts/AuthContext";
 import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
-import { filterApplyNavItem } from "@/lib/partnerNav";
 import {
   getDashboardNav,
   matchesDashboardNavPath,
+  resolveDashboardNavItems,
   type DashboardNavItem,
 } from "@/components/layout/dashboardNavigation";
 
@@ -18,10 +18,10 @@ export default function MobileBottomNav({ role }: MobileBottomNavProps) {
   const location = useLocation();
   const { t } = useTranslation("dashboard");
   const baseItems = getDashboardNav(role).mobilePrimary;
-  const applyGatedRole =
-    role === "social_media_partner" || role === "ambassador" || role === "agent";
-  const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
-  const items = filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled);
+  const applyFormEnabled = useApplyFormEnabled(
+    role === "social_media_partner" || role === "ambassador" || role === "agent",
+  );
+  const items = resolveDashboardNavItems(role, baseItems, { applyFormEnabled });
 
   const label = (item: DashboardNavItem) =>
     t(item.mobileLabelKey ?? item.key);

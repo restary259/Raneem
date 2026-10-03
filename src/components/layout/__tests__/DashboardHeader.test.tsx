@@ -46,6 +46,10 @@ vi.mock("@/components/common/NotificationBell", () => ({
   default: () => <button type="button" aria-label="Notifications">Notifications</button>,
 }));
 
+vi.mock("@/hooks/useGoogleBusinessAccess", () => ({
+  useGoogleBusinessAccess: () => true,
+}));
+
 vi.mock("@/components/ui/sidebar", () => ({
   SidebarTrigger: ({ className }: { className?: string }) => (
     <button type="button" aria-label="Toggle Sidebar" className={className}>Menu</button>

@@ -22,10 +22,11 @@ import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnreadCaseMessages } from "@/hooks/useUnreadCaseMessages";
 import { useAppBadge } from "@/hooks/useAppBadge";
 import { useApplyFormEnabled } from "@/hooks/useApplyFormEnabled";
-import { filterApplyNavItem } from "@/lib/partnerNav";
+import { useGoogleBusinessAccess } from "@/hooks/useGoogleBusinessAccess";
 import {
   getDashboardNav,
   matchesDashboardNavPath,
+  resolveDashboardNavItems,
   type DashboardNavItem,
 } from "@/components/layout/dashboardNavigation";
 import DashboardHeader from "@/components/layout/DashboardHeader";
@@ -39,11 +40,17 @@ function SidebarNav({ role }: { role: AppRole }) {
   const location = useLocation();
   const { t, i18n } = useTranslation("dashboard");
   const baseItems = getDashboardNav(role).desktop;
-  const applyGatedRole = role === "social_media_partner" || role === "ambassador" || role === "agent";
-  const applyFormEnabled = useApplyFormEnabled(applyGatedRole);
+  const applyFormEnabled = useApplyFormEnabled(
+    role === "social_media_partner" || role === "ambassador" || role === "agent",
+  );
+  const googleBusinessAccess = useGoogleBusinessAccess(role === "team_member");
   const items = useMemo(
-    () => filterApplyNavItem(baseItems, applyGatedRole, applyFormEnabled),
-    [baseItems, applyGatedRole, applyFormEnabled],
+    () =>
+      resolveDashboardNavItems(role, baseItems, {
+        applyFormEnabled,
+        googleBusinessAccess,
+      }),
+    [baseItems, role, applyFormEnabled, googleBusinessAccess],
   );
   const unreadMessages = useUnreadCaseMessages(true);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
