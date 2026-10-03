@@ -3623,3 +3623,60 @@ verified non-vacuous by reintroducing the defect).
   `channel()` (and `removeChannel`) surface, or `supabase.channel is not a
   function` fails the whole file.
 
+
+## Phase 10 — Security, E2E verification, production hardening (Google Business)
+
+- **Audit finding: DARB never talks to Google directly.** Every Google request
+  goes through `src/lib/googleBusinessGateway.ts` → the Lovable connector
+  gateway. No Google OAuth token is stored in the repo. CORS is therefore the
+  connector's concern; do not add direct `googleapis.com` fetches or a second
+  gateway. `googleBusinessGateway.ts` must stay free of `process.env` reads so
+  it never pulls a secret into the client bundle.
+- **Emergency kill switches.** `google_business_settings` (one global row, see
+  `20261002180000_office_google_production_hardening.sql`) and
+  `office_google_settings` feed `public.google_business_operation_allowed`.
+  The authorizer, the event router and the worker's `claim` all consult it.
+  `global_enabled = false` stops live reads/writes/events but **keeps cached
+  reads working** (`VIEW` is always allowed). Pause/resume is Admin-only via
+  `admin_set_google_business_settings` (its RETURN columns are prefixed `out_*`
+  to avoid ambiguity with the table columns in `ON CONFLICT`).
+- **Stale-job recovery.** `recover_stale_google_sync_jobs(interval)` re-queues
+  `RUNNING` jobs whose lock is older than the window (attempts remaining) and
+  fails those with attempts exhausted (`STALE_LOCK_EXHAUSTED`). It is called
+  every 5 minutes by `cron_recover_stale_google_sync_jobs` and is
+  service-role only.
+- **Integrity audit.** `audit_google_business_integrity()` (Admin) checks
+  duplicate mappings, cross-office reviews/media/posts, invalid operators,
+  invalid connection refs, orphaned events and stuck jobs;
+  `audit_office_google_integrity(office)` is the per-office readiness report.
+  DB triggers already reject invalid operators and cross-office reviews at
+  write time (`validate_google_operator`, `validate_google_review`) — the audit
+  is the backstop for rows that bypass them.
+- **Client/server action set reconciled.** `GOOGLE_ACTIONS` in
+  `src/lib/googlePermissions.ts` now includes the Phase 6–9 server actions
+  (`GOOGLE_SYNC_MEDIA/POSTS/OFFICE`, `GOOGLE_VIEW_HEALTH/SYNC_STATUS`) and the
+  Admin-only ones (`GOOGLE_MANAGE_NOTIFICATIONS`, `GOOGLE_MANAGE_CUSTOMER_MEDIA`,
+  `GOOGLE_VIEW_EVENTS`, `GOOGLE_RETRY_EVENT`). Keep it in step with
+  `authorize_google_office_action`; `googlePermissions.test.ts` exercises the
+  same matrix.
+- **Verification.** `supabase/diagnostics/office_google_phase10_deploy_verify.sql`
+  (read-only, 49 checks) and
+  `office_google_phase10_behavior_verify.sql` (offline, 52 checks). Ops docs in
+  `docs/google-business/`.
+- **Write pre-flight gate (Aikido High, fixed).** The lifecycle RPCs enforce
+  `authorize_google_office_action`, but a write locates its resource through an
+  internal resolver gated only on `GOOGLE_VIEW` (which must survive a pause).
+  Calling Google first and rejecting at the persistence RPC let a paused
+  integration still mutate Google. Every write path now calls
+  `assertGoogleWriteAllowed` (`src/lib/googleBusinessWriteGate.ts`) with its
+  operation-specific WRITE action *before* any gateway call: replies
+  (`GOOGLE_REPLY_REVIEW`), profile edits (`GOOGLE_UPDATE_PROFILE`), change
+  requests (`GOOGLE_APPROVE_CHANGE_REQUEST`), media upload/delete
+  (`GOOGLE_MANAGE_MEDIA`), post publish/delete (`GOOGLE_MANAGE_POSTS`). The
+  action is classified server-side (`google_business_action_kind`), so it
+  always maps to the WRITE switch; `googleBusinessWriteGate.test.ts` fails the
+  gate closed on false/null/error, and the behaviour harness asserts every
+  mutation action classifies as `WRITE` and is refused under a write freeze.
+- **CI:** lint is non-blocking and carries pre-existing debt; typecheck and
+  tests are the blocking gates. `npm run build` is `vite build` only.
+
