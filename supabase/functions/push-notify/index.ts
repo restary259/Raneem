@@ -56,6 +56,25 @@ serve(async (req) => {
         });
       }
 
+      // Never let a caller re-home another account's subscription: if the
+      // endpoint already belongs to someone else, the caller must prove they
+      // hold the same device by presenting identical encryption keys.
+      const { data: existing, error: existingError } = await supabaseAdmin
+        .from("push_subscriptions")
+        .select("user_id, p256dh, auth_key")
+        .eq("endpoint", subscription.endpoint)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (
+        existing && existing.user_id !== authenticatedUserId &&
+        (existing.p256dh !== subscription?.keys?.p256dh || existing.auth_key !== subscription?.keys?.auth)
+      ) {
+        return new Response(JSON.stringify({ error: "Push endpoint already registered" }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // The endpoint is globally unique: re-subscribing on a device that was
       // previously revoked (or handed to another account) revives that row.
       const { error } = await supabaseAdmin.from("push_subscriptions").upsert({

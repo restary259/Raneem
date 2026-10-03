@@ -42,12 +42,15 @@ serve(async (req) => {
 
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
-    // Check rate limit: 5 failed attempts per email in 15 minutes
+    // Check rate limit: 5 failed attempts per email *from this network* in 15
+    // minutes. Keying on email+IP stops a stranger elsewhere from locking the
+    // real owner out of their account by spamming wrong passwords.
     const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     const { count: emailCount } = await supabaseAdmin
       .from("login_attempts")
       .select("*", { count: "exact", head: true })
       .eq("email", email.toLowerCase())
+      .eq("ip_address", ip)
       .eq("success", false)
       .gte("created_at", fifteenMinAgo);
 
