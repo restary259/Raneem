@@ -150,9 +150,13 @@ describe('SheetTable menu scopes', () => {
     render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" />);
     const dlg = await openMenu();
     expect(dlg.className).toContain('w-[min(340px,calc(100vw-2rem))]');
-    expect(dlg.className).toContain('max-h-[min(var(--radix-popover-content-available-height,calc(100dvh-2rem)),calc(100dvh-2rem))]');
+    expect(dlg.className).toContain('--radix-popover-content-available-height');
+    expect(dlg.className).toContain('max-h-[min(');
     expect(dlg.className).toContain('flex-col');
+    const scroll = dlg.querySelector('.overflow-y-auto');
+    expect(scroll).not.toBeNull();
     const submit = within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!;
     expect(submit.closest('.overflow-y-auto')).toBeNull();
+    expect(scroll!.contains(submit)).toBe(false);
   });
 });

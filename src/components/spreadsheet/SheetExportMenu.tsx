@@ -89,11 +89,13 @@ const SheetExportMenu: React.FC<Props> = ({ columns, visibleColumns, rowCount, b
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="flex max-h-[min(var(--radix-popover-content-available-height,calc(100dvh-2rem)),calc(100dvh-2rem))] w-[min(340px,calc(100vw-2rem))] flex-col p-0"
+        className="flex max-h-[min(var(--radix-popover-content-available-height,calc(100dvh-2rem)),calc(100dvh-2rem))] w-[min(340px,calc(100vw-2rem))] flex-col p-3.5"
         align="end"
-        collisionPadding={16}
+        side="bottom"
+        collisionPadding={12}
+        avoidCollisions
       >
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
           <div>
             <p className="font-semibold text-sm">{t('sheets.export', 'Export')}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -181,7 +183,8 @@ const SheetExportMenu: React.FC<Props> = ({ columns, visibleColumns, rowCount, b
             </fieldset>
           )}
         </div>
-        <div className="border-t border-border p-4">
+
+        <div className="mt-3 shrink-0 border-t border-border pt-3">
           <Button className="w-full" onClick={() => void submit()} disabled={disabled}>
             <Download className="h-4 w-4 me-2" />
             {busy ? t('sheets.preparing') : t('sheets.export', 'Export')}

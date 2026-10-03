@@ -345,6 +345,13 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   visible table). `AdminInboxPage` CSV exports the `visible` (filtered) set.
   `PayoutsManagement` XLSX/PDF exports ALL payout requests (a complete report,
   not the filtered "Other requests" tab) ŌĆö this is intentional.
+- **Export popover is viewport-bounded** (`SheetExportMenu.tsx`): `PopoverContent`
+  clamps to `--radix-popover-content-available-height` / `100dvh`, the options
+  scroll (`overflow-y-auto`), and the primary Export button is docked outside the
+  scroll area. On short viewports the popover is portaled to `document.body`, so
+  the old uncapped card pushed the Columns toggle and Export button below the
+  screen edge where page scrolling could not reach them. Keep the button out of
+  the scroll container so the action stays reachable.
 
 ## pg_cron ŌåÆ Edge Function dispatch auth pattern
 
