@@ -121,7 +121,11 @@ export default function TeamPartnerSchoolPage() {
       }
       if (has("schedule", "time", "monday", "دوام", "وقت")) {
         push(
-          `${name} — ${loc(c.schedule_text_en, c.schedule_text_ar)} · ${t("partnerSchools.maxStudents", "Maximum {{count}} students", { count: c.max_students })} · ${loc(c.start_rule_en, c.start_rule_ar)}`,
+          `${name} — ${loc(c.schedule_text_en, c.schedule_text_ar)} · ${
+            c.min_students && c.max_students
+              ? `${c.min_students}–${c.max_students} ${t("partnerSchools.students", "students")}`
+              : t("partnerSchools.maxStudents", "Maximum {{count}} students", { count: c.max_students })
+          } · ${loc(c.start_rule_en, c.start_rule_ar)}`,
           c.source_name,
           c.last_verified_at,
         );
