@@ -7,19 +7,17 @@ import { Separator } from '@/components/ui/separator';
 import {
   ArrowLeft, ArrowRight, Mail, Phone, MapPin, Link2, Users,
   CheckCircle, XCircle, DollarSign, Clock, Wallet, Crown,
-  FolderCheck, UserPlus,
+  FolderCheck, UserPlus, ShieldCheck, ExternalLink,
 } from 'lucide-react';
 import { ApproveModal, RejectModal, MarkPaidModal } from './PayoutActionModals';
 import { toneClasses } from '@/lib/statusTokens';
 import LinkedStudentsModal from './LinkedStudentsModal';
-import AgentParentToggle from './AgentParentToggle';
-import ReferralLinkToggle from './ReferralLinkToggle';
-import ApplyFormToggle from './ApplyFormToggle';
 import TeamEarlyReleaseCard from './TeamEarlyReleaseCard';
 
 
 import { usePayoutActions } from '@/hooks/usePayoutActions';
 import { useDirection } from '@/hooks/useDirection';
+import { useNavigate } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
 
 export type PayoutRole = 'team_member' | 'agent' | 'social_media_partner' | 'ambassador' | 'student';
@@ -71,6 +69,7 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
   const { t, i18n } = useTranslation('dashboard');
   const { isRtl } = useDirection();
   const { respond } = usePayoutActions();
+  const navigate = useNavigate();
   const locale = i18n.language === 'ar' ? 'ar' : 'en-US';
 
   const [approveTarget, setApproveTarget] = useState<any>(null);
@@ -267,52 +266,47 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
 
           {hasFeatureToggles && (
             <div className="space-y-3 rounded-lg border border-border p-3">
-              <p className="text-sm font-medium">{t('admin.features.sectionTitle', 'Features')}</p>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium">{t('admin.features.referralLink', 'Referral link')}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('admin.features.referralLinkHint', 'Shows a shareable referral link on the member’s dashboard.')}
-                  </p>
-                </div>
-                <ReferralLinkToggle
-                  userId={row.requester_id}
-                  userName={row.full_name}
-                  value={referralEnabled}
-                  onChanged={setReferralEnabled}
-                />
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-medium">{t('admin.features.sectionTitle', 'Features')}</p>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium">{t('admin.features.applyForm', 'Built-in apply form')}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('admin.features.applyFormHint', 'Adds the Apply page to the member’s dashboard.')}
-                  </p>
-                </div>
-                <ApplyFormToggle
-                  userId={row.requester_id}
-                  userName={row.full_name}
-                  value={applyFormEnabled}
-                  onChanged={setApplyFormEnabled}
-                />
+              <p className="text-xs text-muted-foreground">
+                {t('admin.features.manageInMembersHint', 'Permissions are edited from the Members Directory so there is one control surface.')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={referralEnabled ? 'default' : 'secondary'}>
+                  {t('admin.features.referralLink', 'Referral link')}
+                  {': '}
+                  {referralEnabled
+                    ? t('admin.features.enabled', 'Enabled')
+                    : t('admin.features.disabled', 'Disabled')}
+                </Badge>
+                <Badge variant={applyFormEnabled ? 'default' : 'secondary'}>
+                  {t('admin.features.applyForm', 'Built-in apply form')}
+                  {': '}
+                  {applyFormEnabled
+                    ? t('admin.features.enabled', 'Enabled')
+                    : t('admin.features.disabled', 'Disabled')}
+                </Badge>
+                {hasMemberFeatures && (
+                  <Badge variant={agentId ? 'default' : 'secondary'}>
+                    {t('agent.parentSection', 'Agent (recruiter)')}
+                    {': '}
+                    {agentId
+                      ? <span className="font-mono">{agentId.slice(0, 8)}…</span>
+                      : t('agent.noParent', 'No agent')}
+                  </Badge>
+                )}
               </div>
-            </div>
-          )}
-
-          {hasMemberFeatures && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
-              <div>
-                <p className="text-sm font-medium">{t('agent.parentSection', 'Agent (recruiter)')}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t('agent.parentHint', 'Assigning an agent only routes a flat override from the partner pool on paid cases. Nothing else changes.')}
-                </p>
-              </div>
-              <AgentParentToggle
-                recruitId={row.requester_id}
-                recruitName={row.full_name}
-                currentAgentId={agentId}
-                onChanged={(next) => { setAgentId(next); onRefresh(); }}
-              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => navigate('/admin/members')}
+              >
+                <ExternalLink className="h-4 w-4" />
+                {t('admin.features.manageInMembers', 'Manage permissions in Members Directory')}
+              </Button>
             </div>
           )}
 
