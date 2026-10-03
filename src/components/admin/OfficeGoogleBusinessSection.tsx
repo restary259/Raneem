@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
   Clock3,
   ExternalLink,
   Link2,
@@ -704,10 +705,15 @@ export default function OfficeGoogleBusinessSection({
             </section>
 
             {/* ---- Audit ---- */}
-            <section className="space-y-2">
-              <div className="text-sm font-semibold">
-                {t("admin.googleBusiness.audit.title")}
-              </div>
+            <details className="group rounded-lg border border-border">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-2 text-sm font-semibold">
+                <span>{t("admin.googleBusiness.audit.title")}</span>
+                <span className="flex items-center gap-2">
+                  <Badge variant="secondary">{activity.length}</Badge>
+                  <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                </span>
+              </summary>
+              <div className="max-h-64 overflow-y-auto p-2 pt-0">
               {activity.length ? (
                 <ul className="space-y-1">
                   {activity.map((entry) => (
@@ -723,7 +729,7 @@ export default function OfficeGoogleBusinessSection({
                       </span>
                       <span className="text-muted-foreground">
                         {new Date(entry.created_at).toLocaleString(
-                          i18n.language,
+                          "en-US",
                         )}
                       </span>
                     </li>
@@ -734,7 +740,8 @@ export default function OfficeGoogleBusinessSection({
                   {t("admin.googleBusiness.audit.empty")}
                 </p>
               )}
-            </section>
+              </div>
+            </details>
           </>
         )}
       </CardContent>
