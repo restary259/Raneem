@@ -138,4 +138,18 @@ describe('SheetTable menu (Admin) exports', () => {
     const dlg = await openMenu();
     expect(dlg.className).toContain('w-[min(340px,calc(100vw-2rem))]');
   });
+
+  it('clamps height, scrolls the options and docks the export button', async () => {
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" variant="menu" extraExportScopes={scopes} />);
+    const dlg = await openMenu();
+    // Height is capped to Radix's available height / the viewport.
+    expect(dlg.className).toContain('--radix-popover-content-available-height');
+    expect(dlg.className).toContain('max-h-[min(');
+    // The options live in a scroll container…
+    const scroll = dlg.querySelector('.overflow-y-auto');
+    expect(scroll).not.toBeNull();
+    // …and the primary Export action sits outside it so it is always reachable.
+    const submit = within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!;
+    expect(scroll!.contains(submit)).toBe(false);
+  });
 });
