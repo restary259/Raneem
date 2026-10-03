@@ -51,9 +51,15 @@ export interface DashboardNavItem {
   /**
    * Marks the Google Business nav entry. It is hidden for team members until
    * they are assigned as an office Google operator (see
-   * `filterGoogleBusinessNavItems`).
+   * `filterOfficeGatedNavItems`).
    */
   googleBusinessNavKey?: boolean;
+  /**
+   * Marks the Offices nav entry. Like the Google Business entry, it is hidden
+   * for team members until an admin assigns them to an office — an unassigned
+   * member has no office workspace to open (see `filterOfficeGatedNavItems`).
+   */
+  officeAssignmentNavKey?: boolean;
 }
 
 export interface DashboardQuickAction extends DashboardNavItem {}
@@ -159,6 +165,7 @@ const TEAM_DESKTOP_NAV: DashboardNavItem[] = [
     icon: Building2,
     href: "/team/offices",
     group: "nav.group.work",
+    officeAssignmentNavKey: true,
   },
   {
     key: "nav.catalog",
@@ -507,23 +514,35 @@ export function getDashboardNav(role: AppRole): DashboardRoleConfig {
 }
 
 /**
- * Removes the Google Business nav entry (and its tab children) unless the
- * caller is allowed to see it. Only the team member role is gated; every other
- * role keeps its nav untouched. Pure so the sidebar, the header title resolver
- * and tests share one predicate.
+ * Removes the office-gated nav entries (Google Business and Offices) unless the
+ * caller is allowed to see them. Only the team member role is gated; every
+ * other role keeps its nav untouched. Pure so the sidebar, the header title
+ * resolver and tests share one predicate.
+ *
+ * Both entries hinge on the same server fact — the member is assigned to an
+ * office — so `hasOfficeAccess` is `has_google_business_access()`: an active
+ * team member with an office assignment. An unresolved read (`null`) is treated
+ * as no access, so the entry never flashes before the server answers.
  */
-export function filterGoogleBusinessNavItems(
+export function filterOfficeGatedNavItems(
   role: AppRole,
   items: DashboardNavItem[],
-  hasAccess: boolean | null,
+  hasOfficeAccess: boolean | null,
 ): DashboardNavItem[] {
-  if (role !== "team_member" || hasAccess) return items;
-  return items.filter((item) => !item.googleBusinessNavKey);
+  if (role !== "team_member" || hasOfficeAccess) return items;
+  return items.filter(
+    (item) => !item.googleBusinessNavKey && !item.officeAssignmentNavKey,
+  );
 }
 
 export interface DashboardNavFilters {
   applyFormEnabled?: boolean;
-  googleBusinessAccess?: boolean | null;
+  /**
+   * Whether the team member is assigned to an office (the server's
+   * `has_google_business_access()`). Gates both the Google Business and the
+   * Offices nav entries.
+   */
+  officeAccess?: boolean | null;
 }
 
 const APPLY_GATED_ROLES: ReadonlySet<AppRole> = new Set([
@@ -543,12 +562,12 @@ export function resolveDashboardNavItems(
   filters: DashboardNavFilters = {},
 ): DashboardNavItem[] {
   const applyFormEnabled = filters.applyFormEnabled ?? true;
-  const googleBusinessAccess = filters.googleBusinessAccess ?? true;
+  const officeAccess = filters.officeAccess ?? true;
 
-  return filterGoogleBusinessNavItems(
+  return filterOfficeGatedNavItems(
     role,
     filterApplyNavItem(items, APPLY_GATED_ROLES.has(role), applyFormEnabled),
-    googleBusinessAccess,
+    officeAccess,
   );
 }
 

@@ -207,13 +207,17 @@ export default function DashboardHeader({ role, user, onSignOut }: DashboardHead
   const googleBusinessAccess = useGoogleBusinessAccess(role === "team_member");
   const currentItem = useMemo(() => {
     const item = findDashboardNavItem(role, location.pathname);
-    // A team member without a Google assignment must not see the Google page
-    // title (or a stale tab title) in the header.
+    // A team member without an office assignment must not see the Google
+    // Business or Offices page title (or a stale tab title) in the header —
+    // both nav entries are hidden for them by `resolveDashboardNavItems`.
+    const gatedHrefs = ["/team/google", "/team/offices"];
     if (
       role === "team_member" &&
       !googleBusinessAccess &&
       item &&
-      item.href.startsWith("/team/google")
+      gatedHrefs.some(
+        (prefix) => item.href === prefix || item.href.startsWith(`${prefix}/`),
+      )
     ) {
       return undefined;
     }

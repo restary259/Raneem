@@ -48,7 +48,7 @@ function SidebarNav({ role }: { role: AppRole }) {
     () =>
       resolveDashboardNavItems(role, baseItems, {
         applyFormEnabled,
-        googleBusinessAccess,
+        officeAccess: googleBusinessAccess,
       }),
     [baseItems, role, applyFormEnabled, googleBusinessAccess],
   );

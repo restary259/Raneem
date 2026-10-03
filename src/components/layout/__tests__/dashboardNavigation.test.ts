@@ -4,7 +4,7 @@ import path from "node:path";
 
 import {
   DASHBOARD_NAV_CONFIG,
-  filterGoogleBusinessNavItems,
+  filterOfficeGatedNavItems,
   matchesDashboardNavPath,
   resolveDashboardNavItems,
   type DashboardNavItem,
@@ -97,13 +97,15 @@ describe("dashboard navigation configuration", () => {
     ).toBe(true);
   });
 
-  it("flags the team Google Business entry for gating", () => {
-    const flagged = DASHBOARD_NAV_CONFIG.team_member.desktop.filter(
+  it("flags the team Google Business and Offices entries for gating", () => {
+    const googleFlagged = DASHBOARD_NAV_CONFIG.team_member.desktop.filter(
       (item) => item.googleBusinessNavKey,
     );
-    expect(flagged.map((item) => item.key)).toEqual(["nav.googleBusiness"]);
+    expect(googleFlagged.map((item) => item.key)).toEqual([
+      "nav.googleBusiness",
+    ]);
     // The flag lives only on the parent group, so removing it removes every tab.
-    expect(flagged[0].children?.map((child) => child.href)).toEqual([
+    expect(googleFlagged[0].children?.map((child) => child.href)).toEqual([
       "/team/google",
       "/team/google/reviews",
       "/team/google/profile",
@@ -111,40 +113,49 @@ describe("dashboard navigation configuration", () => {
       "/team/google/photos",
       "/team/google/insights",
     ]);
+
+    const officeFlagged = DASHBOARD_NAV_CONFIG.team_member.desktop.filter(
+      (item) => item.officeAssignmentNavKey,
+    );
+    expect(officeFlagged.map((item) => item.key)).toEqual(["nav.offices"]);
+    expect(officeFlagged[0].href).toBe("/team/offices");
   });
 
-  it("hides the Google Business entry from an unassigned team member only", () => {
+  it("hides the Google Business and Offices entries from an unassigned team member only", () => {
     const teamNav = DASHBOARD_NAV_CONFIG.team_member.desktop;
 
-    const hidden = filterGoogleBusinessNavItems("team_member", teamNav, false);
+    const hidden = filterOfficeGatedNavItems("team_member", teamNav, false);
     expect(hidden.some((item) => item.googleBusinessNavKey)).toBe(false);
-    expect(hidden).toHaveLength(teamNav.length - 1);
+    expect(hidden.some((item) => item.officeAssignmentNavKey)).toBe(false);
+    // Two entries are removed: Google Business and Offices.
+    expect(hidden).toHaveLength(teamNav.length - 2);
 
-    const shown = filterGoogleBusinessNavItems("team_member", teamNav, true);
+    const shown = filterOfficeGatedNavItems("team_member", teamNav, true);
     expect(shown).toBe(teamNav);
 
     // An unresolved read is treated as no access.
     expect(
-      filterGoogleBusinessNavItems("team_member", teamNav, null).map((i) => i.key),
+      filterOfficeGatedNavItems("team_member", teamNav, null).map((i) => i.key),
     ).toEqual(hidden.map((i) => i.key));
 
-    // Admin keeps the entry regardless of the flag.
+    // Admin keeps both entries regardless of the flag.
     const adminNav = DASHBOARD_NAV_CONFIG.admin.desktop;
-    expect(filterGoogleBusinessNavItems("admin", adminNav, false)).toBe(adminNav);
+    expect(filterOfficeGatedNavItems("admin", adminNav, false)).toBe(adminNav);
   });
 
-  it("composes the apply and Google gates for the sidebar", () => {
+  it("composes the apply and office gates for the sidebar", () => {
     const teamNav = DASHBOARD_NAV_CONFIG.team_member.desktop;
     const hidden = resolveDashboardNavItems("team_member", teamNav, {
-      googleBusinessAccess: false,
+      officeAccess: false,
     });
     expect(hidden.some((item) => item.googleBusinessNavKey)).toBe(false);
-    // Non-team roles are unaffected by the Google flag.
+    expect(hidden.some((item) => item.officeAssignmentNavKey)).toBe(false);
+    // Non-team roles are unaffected by the office flag.
     const partnerNav = DASHBOARD_NAV_CONFIG.social_media_partner.desktop;
     const partnerHiddenApply = resolveDashboardNavItems(
       "social_media_partner",
       partnerNav,
-      { applyFormEnabled: false, googleBusinessAccess: false },
+      { applyFormEnabled: false, officeAccess: false },
     );
     expect(partnerHiddenApply.some((item) => item.key === "nav.apply")).toBe(false);
   });

@@ -86,7 +86,8 @@ export function OfficeWorkspaceLayout({
 
   // Google Business is only a tab for a team member assigned as an office
   // operator. The admin surface keeps it unconditionally; team members wait for
-  // the server flag (`false` while unresolved) so it is hidden by default.
+  // the server flag (`false` while unresolved) so it is hidden by default. The
+  // Team tab shares this gate (see `showTeam`).
   const hasGoogleBusiness = useGoogleBusinessAccess(surface === "team");
   const showGoogle = surface === "admin" || hasGoogleBusiness === true;
 
@@ -160,6 +161,12 @@ export function OfficeWorkspaceLayout({
 
   const { office, team, google, membership } = context;
   const slug = office.slug;
+  // The Team tab lists who is assigned to this office. Like the Google Business
+  // tab it is a team-member surface: it shows only once the member is assigned
+  // here (the server's office-assignment flag), never to an unassigned member.
+  // Admins — who do the assigning — always see it.
+  const showTeam =
+    surface === "admin" || membership.is_admin || hasGoogleBusiness === true;
   const googleConnected =
     google.connected &&
     google.mapping_status !== "MAPPING_ERROR" &&
@@ -187,13 +194,17 @@ export function OfficeWorkspaceLayout({
       label: t("officeWorkspace.appointments", "Appointments"),
       active: false,
     },
-    {
-      key: "team",
-      to: `${officeWorkspacePath(surface, slug)}/team`,
-      icon: <Users className="size-4" />,
-      label: t("officeWorkspace.team", "Team"),
-      active: false,
-    },
+    ...(showTeam
+      ? [
+          {
+            key: "team",
+            to: `${officeWorkspacePath(surface, slug)}/team`,
+            icon: <Users className="size-4" />,
+            label: t("officeWorkspace.team", "Team"),
+            active: false,
+          },
+        ]
+      : []),
     ...(showGoogle
       ? [
           {
