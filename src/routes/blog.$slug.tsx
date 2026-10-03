@@ -52,10 +52,10 @@ export const Route = createFileRoute("/blog/$slug")({
           dateModified: article.updatedAt,
           inLanguage: lang.startsWith("en") ? "en" : "ar",
           mainEntityOfPage: `${SITE}/blog/${article.slug}`,
-          author: { "@type": "Organization", name: "Darb Agency" },
+          author: { "@type": "Organization", name: "Darb Study International" },
           publisher: {
             "@type": "Organization",
-            name: "Darb Agency",
+            name: "Darb Study International",
             url: SITE,
           },
           citation: article.sources.map((source) => source.url),

@@ -60,7 +60,7 @@ export const Route = createFileRoute("/services")({
           ],
           provider: {
             "@type": "EducationalOrganization",
-            name: "Darb Study Pathways",
+            name: "Darb Study International",
             url: SITE,
           },
           hasOfferCatalog: {

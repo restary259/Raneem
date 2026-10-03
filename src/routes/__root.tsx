@@ -33,15 +33,15 @@ const SITE_JSONLD = {
     {
       "@type": "Organization",
       "@id": "https://darb.agency/#organization",
-      name: "درب التعليمية",
-      alternateName: "Darb Agency",
+      name: "درب للتعليم الدولي",
+      alternateName: "Darb Study International",
       url: "https://darb.agency/",
       logo: BRAND_LOGO,
     },
     {
       "@type": "WebSite",
       "@id": "https://darb.agency/#website",
-      name: "درب التعليمية",
+      name: "درب للتعليم الدولي",
       url: "https://darb.agency/",
       inLanguage: "ar",
       publisher: { "@id": "https://darb.agency/#organization" },
@@ -53,8 +53,8 @@ const ORG_JSONLD = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
   "@id": "https://darb.agency/#educational-organization",
-  name: "درب للدراسة في الخارج",
-  alternateName: "Darb Study Pathways",
+  name: "درب للتعليم الدولي",
+  alternateName: "Darb Study International",
   url: "https://darb.agency",
   logo: BRAND_LOGO,
   description:
@@ -142,7 +142,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           content:
             "درب ترافق الطلاب العرب إلى الدراسة في ألمانيا: تقييم الملف، التقديم، تجهيز التأشيرة، السكن، والمتابعة حتى الوصول.",
         },
-        { name: "author", content: "Darb Study Pathways" },
+        { name: "author", content: "Darb Study International" },
         {
           name: "keywords",
           content:
@@ -161,7 +161,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "apple-mobile-web-app-status-bar-style", content: "default" },
         { name: "apple-mobile-web-app-title", content: "درب" },
         { name: "mobile-web-app-capable", content: "yes" },
-        { name: "application-name", content: "درب" },
+        { name: "application-name", content: "درب للتعليم الدولي" },
         // Open Graph
         { property: "og:title", content: "درب | الدراسة في ألمانيا بدعم عربي" },
         {
@@ -172,7 +172,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { property: "og:type", content: "website" },
         { property: "og:image", content: OG_IMAGE },
         { property: "og:url", content: "https://darb.agency/" },
-        { property: "og:site_name", content: "درب التعليمية" },
+        { property: "og:site_name", content: "درب للتعليم الدولي" },
         { property: "og:locale", content: "ar_AR" },
         // Twitter
         { name: "twitter:card", content: "summary_large_image" },

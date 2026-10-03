@@ -23,7 +23,7 @@ const DEFAULT_TITLE = 'درب | الدراسة في ألمانيا للطلاب 
  * as canonical, which is what caused the wrong domain to be indexed.
  */
 const CANONICAL_ORIGIN = 'https://darb.agency';
-const SITE_NAME = 'درب التعليمية';
+const SITE_NAME = 'درب للتعليم الدولي';
 const TWITTER_SITE = '@darb_education';
 
 /** Force any incoming URL onto the brand domain, keeping only the path. */

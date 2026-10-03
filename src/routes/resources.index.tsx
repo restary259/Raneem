@@ -30,12 +30,12 @@ export const Route = createFileRoute("/resources/")({
           datePublished: "2026-02-18",
           author: {
             "@type": "Organization",
-            name: "Darb Study Pathways",
+            name: "Darb Study International",
             url: SITE,
           },
           publisher: {
             "@type": "EducationalOrganization",
-            name: "Darb Study Pathways",
+            name: "Darb Study International",
             logo: {
               "@type": "ImageObject",
               url: `${SITE}/icons/icon-512-v2.png`,
