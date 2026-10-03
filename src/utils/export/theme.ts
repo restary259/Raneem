@@ -14,7 +14,7 @@ export const BRAND = {
 export const COLORS = {
   navy: 'FF1E3A5F',
   navyDark: 'FF152C48',
-  gold: 'FFC9A227',
+  gold: 'FFF9B115',
   white: 'FFFFFFFF',
   text: 'FF1F2933',
   muted: 'FF6B7280',

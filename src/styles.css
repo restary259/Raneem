@@ -165,7 +165,7 @@
   --darb-blue: 213.2 100% 52.2%;    /* #0B78FF */
   --darb-teal: 188.6 100% 39%;      /* #00AFC7 */
   --darb-green: 142.1 70.6% 45.3%;  /* #22C55E */
-  --darb-yellow: 45.4 100% 51.4%;   /* #FFC107 */
+  --darb-yellow: 41.1 95% 52.9%;    /* #F9B115 — Darb gold */
   --darb-orange: 32.5 100% 50%;     /* #FF8A00 */
   --darb-red: 0 90.6% 58.6%;        /* #F53838 */
   --darb-pink: 334.5 100% 65.1%;    /* #FF4DA6 */
@@ -183,12 +183,12 @@
   /* DARB quiet brand (public site): 75% white, navy authority, blue energy,
      muted yellow only for "look here", muted spectrum as a small signature. */
   --canvas: 216 45% 98%;              /* #F7F9FC */
-  --highlight: 44 89% 62%;            /* #F4C84A */
+  --highlight: 41.1 95% 52.9%;        /* #F9B115 — Darb gold */
   --highlight-foreground: 217.7 85.5% 21.6%;
   --highlight-surface: 47 100% 94%;   /* #FFF8DE */
   --info-surface: 214 100% 97%;       /* #EFF6FF */
   --tint-green: 142 25% 54%;          /* #68A982 */
-  --tint-yellow: 44 89% 62%;          /* #F4C84A */
+  --tint-yellow: 41.1 95% 52.9%;      /* #F9B115 — Darb gold */
   --tint-orange: 28 77% 62%;          /* #E99A52 */
   --tint-red: 0 56% 66%;              /* #D97979 */
   --tint-pink: 330 37% 66%;           /* #C987A8 */

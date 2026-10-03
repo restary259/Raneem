@@ -18,6 +18,9 @@ Full history and per-feature rationale: `docs/agent-notes.md` (read the relevant
 - Prefer scoped SECURITY DEFINER RPCs over widening RLS; never expose views/tables revoked from `authenticated`.
 - Never launder query errors into `[]`; failed reads must stay distinguishable from empty.
 
+## Brand
+- Darb gold is `#F9B115` (= `41.1 95% 52.9%`). It is the ONLY yellow accent: the `--highlight` CTA/booking pill, `--darb-yellow` (spectrum strip / arch), `--tint-yellow` category tint, and the gold rule in emails, invoices and corporate exports. Do not reintroduce `#FFC107` or `#F4C84A`.
+
 ## i18n
 - Keys in en + ar + he, both `public/locales` and bundled `src/locales` (must be identical). Hebrew values must be translated (brand = דארב).
 - A `t()` key must never resolve to an object; `nav.*` lives in `dashboard`.
