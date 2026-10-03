@@ -2,10 +2,10 @@
 
 ## What visitors will see
 1. **New page "/heidelberg"**: a scrolling story for a student and their parents. Arabic is the default, with English and Hebrew too. It has 10 sections in this order: Why Heidelberg, Landmarks, Universities, Hospital and health insurance, Library, Housing and cost of living, Getting around, Sports and football, Student life, and a final button: "ابدأ تقييم ملفك للدراسة في هايدلبرغ". The button opens the existing /apply evaluation form.
-2. Each section has a short heading, 2–4 practical sentences, 2–4 real photos with credit lines, a small "facts" strip and a "المصدر" (source) link.
+2. Each section has a short heading, 2–4 practical sentences, 2–4 real photos and a small "facts" strip. For a cleaner look, the page shows no source links or photo credits. Sources and photo authors are kept in the app's data only.
 3. A sticky section menu with smooth scrolling and a gold reading-progress bar. Animations stay subtle and phones come first.
 4. "Distance from the Old Town" chips for Neuenheimer Feld, the hospital and the main station. These appear only if I can verify the distances.
-5. A full "Photo credits" section at the bottom of the page.
+5. No credits section on the page. Some free photo licences (CC BY / CC BY-SA) require the author to be named, so I'll prefer CC0 and public-domain photos.
 6. **Heidelberg becomes the only featured city.** The Educational Destinations page and the home page show only Heidelberg. Berlin, Dortmund, Düsseldorf and Münster are hidden behind a switch, not deleted, so they can come back later.
 7. Heidelberg gets a link in the main menu (desktop and phone) and a button on the home page.
 
