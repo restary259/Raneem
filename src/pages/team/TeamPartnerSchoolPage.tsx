@@ -123,7 +123,7 @@ export default function TeamPartnerSchoolPage() {
         push(
           `${name} — ${loc(c.schedule_text_en, c.schedule_text_ar)} · ${
             c.min_students && c.max_students
-              ? `${c.min_students}–${c.max_students} ${t("partnerSchools.students", "students")}`
+              ? `${c.min_students}–${c.max_students}`
               : t("partnerSchools.maxStudents", "Maximum {{count}} students", { count: c.max_students })
           } · ${loc(c.start_rule_en, c.start_rule_ar)}`,
           c.source_name,
