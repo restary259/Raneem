@@ -16,6 +16,7 @@ import {
   type GbpReviewsListResponse,
   type NormalizedGbpReview,
 } from "@/lib/googleBusinessGateway";
+import { assertGoogleWriteAllowed } from "@/lib/googleBusinessWriteGate";
 
 /**
  * Phase 5 server functions: synchronize Google reviews into the DARB cache and
@@ -371,6 +372,9 @@ export const publishGoogleReviewReply = createServerFn({ method: "POST" })
 
     let review: ResolvedReview;
     try {
+      // Pre-flight WRITE gate: refuse before touching Google when the write
+      // kill switch is off, so no mutation can happen behind a VIEW-only read.
+      await assertGoogleWriteAllowed(ctx, data.officeId, "GOOGLE_REPLY_REVIEW");
       // The ownership RPC raises for a cross-office or unauthorized review, so
       // Google is never contacted for a review the caller may not touch.
       review = await loadReview(ctx, data.officeId, data.reviewId);
@@ -480,6 +484,7 @@ export const deleteGoogleReviewReply = createServerFn({ method: "POST" })
 
     let review: ResolvedReview;
     try {
+      await assertGoogleWriteAllowed(ctx, data.officeId, "GOOGLE_REPLY_REVIEW");
       review = await loadReview(ctx, data.officeId, data.reviewId);
     } catch (e) {
       return {

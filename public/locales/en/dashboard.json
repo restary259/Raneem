@@ -6649,7 +6649,24 @@
     "loadError": "Could not load the integration status.",
     "actionFailed": "The action failed. Try again.",
     "syncOffice": "Sync office",
-    "save": "Save"
+    "save": "Save",
+    "controls": {
+      "title": "Production controls",
+      "hint": "Emergency switches. Pausing stops all live Google work; cached data stays readable.",
+      "pausedBanner": "Google Business is paused",
+      "live": "Live integration",
+      "reads": "Google reads",
+      "writes": "Google writes",
+      "pause": "Pause",
+      "resume": "Resume",
+      "enable": "Enable",
+      "disable": "Disable",
+      "officesDisabled": "{{count}} offices paused"
+    },
+    "audit": {
+      "title": "Data integrity audit",
+      "loading": "Running audit…"
+    }
   },
   "googleEvents": {
     "newReview": "New Google review",

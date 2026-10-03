@@ -37,6 +37,16 @@ export const GOOGLE_ACTIONS = [
   "GOOGLE_UNMAP_LOCATION",
   // Phase 8 — performance + insights
   "GOOGLE_SYNC_PERFORMANCE",
+  // Phase 9 — operational syncs and office reads; account-level admin controls
+  "GOOGLE_SYNC_MEDIA",
+  "GOOGLE_SYNC_POSTS",
+  "GOOGLE_MANAGE_CUSTOMER_MEDIA",
+  "GOOGLE_SYNC_OFFICE",
+  "GOOGLE_VIEW_HEALTH",
+  "GOOGLE_VIEW_SYNC_STATUS",
+  "GOOGLE_VIEW_EVENTS",
+  "GOOGLE_RETRY_EVENT",
+  "GOOGLE_MANAGE_NOTIFICATIONS",
 ] as const;
 
 export type GoogleAction = (typeof GOOGLE_ACTIONS)[number];
@@ -58,6 +68,11 @@ const PRIMARY_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_REQUEST_HIGH_RISK",
   "GOOGLE_ASSIGN_SIDE_MANAGER",
   "GOOGLE_REMOVE_SIDE_MANAGER",
+  "GOOGLE_SYNC_MEDIA",
+  "GOOGLE_SYNC_POSTS",
+  "GOOGLE_SYNC_OFFICE",
+  "GOOGLE_VIEW_HEALTH",
+  "GOOGLE_VIEW_SYNC_STATUS",
 ]);
 
 const SIDE_MANAGER_ACTIONS: ReadonlySet<GoogleAction> = new Set([
@@ -73,6 +88,11 @@ const SIDE_MANAGER_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_UPDATE_ATTRIBUTES",
   "GOOGLE_SYNC_PROFILE",
   "GOOGLE_REQUEST_HIGH_RISK",
+  "GOOGLE_SYNC_MEDIA",
+  "GOOGLE_SYNC_POSTS",
+  "GOOGLE_SYNC_OFFICE",
+  "GOOGLE_VIEW_HEALTH",
+  "GOOGLE_VIEW_SYNC_STATUS",
 ]);
 
 /**
@@ -94,6 +114,12 @@ const ADMIN_ONLY_ACTIONS: ReadonlySet<GoogleAction> = new Set([
   "GOOGLE_UPDATE_CATEGORY",
   "GOOGLE_UPDATE_ADDRESS",
   "GOOGLE_APPROVE_CHANGE_REQUEST",
+  // Phase 9 — account-level Pub/Sub config, customer-media moderation, raw
+  // events and retries are Admin-only, mirroring `google_actor_can`.
+  "GOOGLE_MANAGE_NOTIFICATIONS",
+  "GOOGLE_MANAGE_CUSTOMER_MEDIA",
+  "GOOGLE_VIEW_EVENTS",
+  "GOOGLE_RETRY_EVENT",
 ]);
 
 export type GoogleActorContext = {

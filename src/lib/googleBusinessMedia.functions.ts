@@ -2,6 +2,7 @@ import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase } from "@/integrations/supabase/client";
+import { assertGoogleWriteAllowed } from "@/lib/googleBusinessWriteGate";
 import {
   buildGbpMediaCreateBody,
   collectAllPages,
@@ -361,6 +362,14 @@ export const uploadGoogleMedia = createServerFn({ method: "POST" })
       );
     }
 
+    // Pre-flight WRITE gate before reserving the operation, so a paused
+    // integration never leaves an in-flight upload receipt behind.
+    try {
+      await assertGoogleWriteAllowed(ctx, data.officeId, "GOOGLE_MANAGE_MEDIA");
+    } catch (e) {
+      return fail("error", "forbidden", (e as Error).message);
+    }
+
     // 2. Reserve the operation BEFORE talking to Google (double-tap guard).
     const begin = await rpcOrThrow<{ status: string; media: unknown }[]>(
       ctx,
@@ -565,6 +574,9 @@ export const deleteGoogleMedia = createServerFn({ method: "POST" })
       media_origin: string;
     };
     try {
+      // Pre-flight WRITE gate before the VIEW-allowed resolver, so a paused
+      // integration never reaches Google.
+      await assertGoogleWriteAllowed(ctx, data.officeId, "GOOGLE_MANAGE_MEDIA");
       const rows = await rpcOrThrow<(typeof media)[]>(
         ctx,
         "resolve_google_media_office",

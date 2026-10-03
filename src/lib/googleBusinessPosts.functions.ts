@@ -2,6 +2,7 @@ import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabase } from "@/integrations/supabase/client";
+import { assertGoogleWriteAllowed } from "@/lib/googleBusinessWriteGate";
 import {
   buildGbpPostBody,
   collectAllPages,
@@ -515,6 +516,9 @@ export const publishGooglePost = createServerFn({ method: "POST" })
 
     let post: ResolvedPost;
     try {
+      // Pre-flight WRITE gate before the VIEW-allowed resolver, so a paused
+      // integration never reaches Google.
+      await assertGoogleWriteAllowed(ctx, data.officeId, "GOOGLE_MANAGE_POSTS");
       post = await loadPost(ctx, data.officeId, data.postId);
     } catch (e) {
       return fail("error", "forbidden", (e as Error).message);
@@ -733,6 +737,7 @@ export const deleteGooglePost = createServerFn({ method: "POST" })
 
     let post: ResolvedPost;
     try {
+      await assertGoogleWriteAllowed(ctx, data.officeId, "GOOGLE_MANAGE_POSTS");
       post = await loadPost(ctx, data.officeId, data.postId);
     } catch (e) {
       return fail("forbidden", "forbidden", (e as Error).message);

@@ -1104,6 +1104,149 @@ export const drainOfficeGoogleSyncJobs = createServerFn({ method: "POST" })
     return processGoogleBusinessSyncJobs({ officeId: data.officeId, max: 10 });
   });
 
+// ---------------------------------------------------------------------------
+// Phase 10 — production controls, audits and emergency switches (Admin only)
+// ---------------------------------------------------------------------------
+
+export interface GoogleBusinessControls {
+  connectionId: string | null;
+  googleEmail: string | null;
+  globalEnabled: boolean;
+  readEnabled: boolean;
+  writeEnabled: boolean;
+  updatedAt: string | null;
+  reason: string | null;
+  officesDisabled: number;
+}
+
+export interface AdminIntegrityCheck {
+  checkKey: string;
+  severity: string;
+  violationCount: number;
+  detail: string;
+}
+
+/** Admin: the effective Google Business kill switches (global row). */
+export const adminGetGoogleBusinessControls = createServerFn({
+  method: "POST",
+})
+  .middleware([attachBearer, requireSupabaseAuth])
+  .handler(async ({ context }): Promise<GoogleBusinessControls | null> => {
+    const ctx = context as unknown as SupabaseCtx;
+    await requireAdmin(ctx);
+    const rows = await rpcOrThrow<
+      {
+        connection_id: string | null;
+        google_email: string | null;
+        global_enabled: boolean;
+        read_enabled: boolean;
+        write_enabled: boolean;
+        updated_at: string | null;
+        reason: string | null;
+        offices_disabled: number;
+      }[]
+    >(ctx, "admin_get_google_business_settings", {});
+    const r = rows?.[0];
+    if (!r) return null;
+    return {
+      connectionId: r.connection_id,
+      googleEmail: r.google_email,
+      globalEnabled: r.global_enabled,
+      readEnabled: r.read_enabled,
+      writeEnabled: r.write_enabled,
+      updatedAt: r.updated_at,
+      reason: r.reason,
+      officesDisabled: r.offices_disabled,
+    };
+  });
+
+/**
+ * Admin: flip the global or a per-office kill switch. Enforced at the DB
+ * authorizer and the worker, so pausing stops live Google work everywhere
+ * while cached DARB data stays readable.
+ */
+export const adminSetGoogleBusinessControls = createServerFn({
+  method: "POST",
+})
+  .middleware([attachBearer, requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        globalEnabled: z.boolean().nullable().optional(),
+        readEnabled: z.boolean().nullable().optional(),
+        writeEnabled: z.boolean().nullable().optional(),
+        officeId: z.string().uuid().nullable().optional(),
+        officeEnabled: z.boolean().nullable().optional(),
+        officeReadEnabled: z.boolean().nullable().optional(),
+        officeWriteEnabled: z.boolean().nullable().optional(),
+        reason: z.string().max(500).nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const ctx = context as unknown as SupabaseCtx;
+    await requireAdmin(ctx);
+    const rows = await rpcOrThrow<
+      {
+        out_scope: string;
+        out_global_enabled: boolean;
+        out_read_enabled: boolean;
+        out_write_enabled: boolean;
+        out_office_id: string | null;
+        out_office_enabled: boolean | null;
+      }[]
+    >(ctx, "admin_set_google_business_settings", {
+      p_global_enabled: data.globalEnabled ?? null,
+      p_read_enabled: data.readEnabled ?? null,
+      p_write_enabled: data.writeEnabled ?? null,
+      p_office_id: data.officeId ?? null,
+      p_office_enabled: data.officeEnabled ?? null,
+      p_office_read_enabled: data.officeReadEnabled ?? null,
+      p_office_write_enabled: data.officeWriteEnabled ?? null,
+      p_reason: data.reason ?? null,
+    });
+    return rows?.[0] ?? null;
+  });
+
+/** Admin: the full data-integrity audit across every Google table. */
+export const adminGoogleIntegrityAudit = createServerFn({ method: "POST" })
+  .middleware([attachBearer, requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const ctx = context as unknown as SupabaseCtx;
+    await requireAdmin(ctx);
+    const rows = await rpcOrThrow<
+      {
+        check_key: string;
+        severity: string;
+        violation_count: number;
+        detail: string;
+      }[]
+    >(ctx, "audit_google_business_integrity", {});
+    return (rows ?? []).map((r): AdminIntegrityCheck => ({
+      checkKey: r.check_key,
+      severity: r.severity,
+      violationCount: r.violation_count,
+      detail: r.detail,
+    }));
+  });
+
+/** Admin: the per-office readiness report for the System Audit surface. */
+export const adminOfficeGoogleIntegrity = createServerFn({ method: "POST" })
+  .middleware([attachBearer, requireSupabaseAuth])
+  .inputValidator((input: unknown) => officeInput.parse(input))
+  .handler(async ({ context, data }) => {
+    const ctx = context as unknown as SupabaseCtx;
+    await requireAdmin(ctx);
+    const rows = await rpcOrThrow<
+      { item: string; ok: boolean; detail: string }[]
+    >(ctx, "audit_office_google_integrity", { p_office_id: data.officeId });
+    return (rows ?? []).map((r) => ({
+      item: r.item,
+      ok: r.ok,
+      detail: r.detail,
+    }));
+  });
+
 export {
   classifyGoogleBusinessEvent,
   decodePubSubEnvelope,
