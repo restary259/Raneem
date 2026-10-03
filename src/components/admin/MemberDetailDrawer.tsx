@@ -163,7 +163,11 @@ function MemberDetailPanel({
         </Badge>
       </Header>
 
-      <Tabs defaultValue="overview" className="flex flex-col gap-4">
+      {/* min-h-0 flex-1 lets the mobile Drawer (fixed height, flex column)
+          hand the remaining height to the active panel so its own
+          overflow-y-auto body stays the scroll region. Without this the extra
+          Tabs/TabsContent flex layer grows past the drawer and clips content. */}
+      <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col gap-4">
         <div className={bodyClassName}>
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="overview" className="gap-2">
@@ -182,7 +186,7 @@ function MemberDetailPanel({
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="mt-0">
+        <TabsContent value="overview" className="mt-0 min-h-0 flex-1">
           <div className={bodyClassName}>
         {/* Primary KPIs */}
         <Card>
@@ -315,7 +319,7 @@ function MemberDetailPanel({
           </div>
         </TabsContent>
 
-        <TabsContent value="permissions" className="mt-0">
+        <TabsContent value="permissions" className="mt-0 min-h-0 flex-1">
           <div className={bodyClassName}>
             <AccountPermissionsTab
               member={member}
