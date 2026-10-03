@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTranslation } from "react-i18next";
-import { MapPin, RefreshCw } from "lucide-react";
+import { CheckCircle2, ChevronDown, MapPin, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,12 +19,26 @@ export default function GoogleBusinessConnectionPanel() {
   });
   const data = query.data;
   const status = query.isError ? "error" : data?.status;
+  // Only the personal account (Tsukuyomi) owns the listing; empty Google
+  // location groups (e.g. the unverified "DARB offices" group) are hidden.
+  const accounts = (data?.accounts ?? []).filter(
+    (account) => account.type !== "LOCATION_GROUP" || account.locations.length > 0,
+  );
 
   return (
     <Card>
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+      <details className="group">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4">
+        <span className="flex min-w-0 items-center gap-2">
+          {status === "connected" ? <CheckCircle2 className="size-4 shrink-0 text-primary" /> : null}
+          <span className="truncate text-base font-semibold">{t("admin.googleConnection.title")}</span>
+          {accounts[0] ? <span className="truncate text-xs text-muted-foreground">· {accounts[0].accountName || accounts[0].name}</span> : null}
+        </span>
+        <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+      </summary>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pt-0">
         <div className="min-w-0 space-y-1">
-          <CardTitle className="text-base">{t("admin.googleConnection.title")}</CardTitle>
+          <CardTitle className="sr-only">{t("admin.googleConnection.title")}</CardTitle>
           {data?.checkedAt ? (
             <p className="text-xs text-muted-foreground">
               {t("admin.googleConnection.checkedAt", {
@@ -59,10 +73,10 @@ export default function GoogleBusinessConnectionPanel() {
             {data.errorMessage ? ` (${data.errorMessage})` : ""}
           </p>
         ) : null}
-        {data?.status === "connected" && data.accounts.length === 0 ? (
+        {data?.status === "connected" && accounts.length === 0 ? (
           <p className="text-muted-foreground">{t("admin.googleConnection.noAccounts")}</p>
         ) : null}
-        {data?.accounts.map((account) => (
+        {accounts.map((account) => (
           <div key={account.name} className="min-w-0 rounded-xl border border-border p-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="truncate font-medium">{account.accountName || account.name}</span>
@@ -89,6 +103,7 @@ export default function GoogleBusinessConnectionPanel() {
           </div>
         ))}
       </CardContent>
+      </details>
     </Card>
   );
 }
