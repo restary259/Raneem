@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
 import type { TFunction } from "i18next";
 import {
   AlertTriangle,
@@ -148,6 +149,8 @@ export default function TeamGooglePhotosPage() {
   const { toast } = useToast();
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
+  // Office context from the canonical office route (or legacy ?office=slug).
+  const { officeId: workspaceOfficeId } = useOfficeWorkspaceSelection();
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [summary, setSummary] = useState<OfficeGoogleMediaSummaryRow | null>(
     null,
@@ -180,12 +183,28 @@ export default function TeamGooglePhotosPage() {
     }
     const list = data || [];
     setOffices(list);
-    setOfficeId((current) => current ?? list[0]?.office_id ?? null);
-  }, [toast]);
+    setOfficeId(
+      (current) =>
+        current ??
+        (workspaceOfficeId && list.some((o) => o.office_id === workspaceOfficeId)
+          ? workspaceOfficeId
+          : (list[0]?.office_id ?? null)),
+    );
+  }, [toast, workspaceOfficeId]);
 
   useEffect(() => {
     loadOffices();
   }, [loadOffices]);
+
+  // Follow the URL's office when it changes (e.g. navigating between offices).
+  useEffect(() => {
+    if (
+      workspaceOfficeId &&
+      offices.some((o) => o.office_id === workspaceOfficeId)
+    ) {
+      setOfficeId(workspaceOfficeId);
+    }
+  }, [workspaceOfficeId, offices]);
 
   const load = useCallback(async () => {
     if (!officeId) return;

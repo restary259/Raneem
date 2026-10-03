@@ -10,10 +10,12 @@ import OfficeCard from "@/components/common/OfficeCard";
 
 type Office = {
   id: string;
+  slug?: string;
   name_ar: string;
   name_en: string;
   name_he: string;
   city: string;
+  country?: string | null;
   address_line_1: string | null;
   phone: string | null;
   map_url: string | null;
@@ -51,10 +53,12 @@ export default function PublicOfficeBooking({
   token,
   autoOpen = false,
   onBooked,
+  officeSlug,
 }: {
   token: string;
   autoOpen?: boolean;
   onBooked?: () => void;
+  officeSlug?: string;
 }) {
   const { t, i18n } = useTranslation("landing");
   const booking = useServerFn(managePublicBooking);
@@ -189,7 +193,7 @@ export default function PublicOfficeBooking({
           }
         }
 
-        const officeResult = await booking({ data: { token, action: "offices" } });
+        const officeResult = await booking({ data: { token, action: "offices", officeSlug } });
         if (!live) return;
         const nextOffices = officeResult && typeof officeResult === "object" && "offices" in officeResult
           ? ((officeResult as { offices?: Office[] }).offices || [])
@@ -197,12 +201,19 @@ export default function PublicOfficeBooking({
         const returnedCurrentOffice = officeResult && typeof officeResult === "object" && "current_office_id" in officeResult
           ? ((officeResult as { current_office_id?: string | null }).current_office_id || "")
           : "";
+        // An entry office from the URL (?office=slug) preselects the choice but
+        // does not lock it — the applicant can still switch to another location.
+        const preferredOffice = officeResult && typeof officeResult === "object" && "preferred_office_id" in officeResult
+          ? ((officeResult as { preferred_office_id?: string | null }).preferred_office_id || "")
+          : "";
         setOffices(nextOffices);
 
         const nextSelectedOffice =
           returnedCurrentOffice && nextOffices.some((office) => office.id === returnedCurrentOffice)
             ? returnedCurrentOffice
-            : nextOffices[0]?.id || "";
+            : preferredOffice && nextOffices.some((office) => office.id === preferredOffice)
+              ? preferredOffice
+              : nextOffices[0]?.id || "";
 
         setSelectedOfficeId(nextSelectedOffice);
 

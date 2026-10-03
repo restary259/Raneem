@@ -9,6 +9,7 @@ import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
 import PublicOfficeBooking from "@/components/apply/PublicOfficeBooking";
 import { startPublicBooking } from "@/lib/publicBooking.functions";
+import { useSearchParams } from "@/lib/router-compat";
 
 export const Route = createFileRoute("/book-appointment")({
   head: () => ({
@@ -28,6 +29,8 @@ function BookAppointmentPage() {
   const { dir } = useDirection();
   const { t, i18n } = useTranslation("landing");
   const isAr = i18n.language.startsWith("ar");
+  const [searchParams] = useSearchParams();
+  const officeSlug = (searchParams.get("office") || "").trim().toLowerCase() || undefined;
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [token, setToken] = useState("");
@@ -85,7 +88,7 @@ function BookAppointmentPage() {
 
     setWorking(true);
     try {
-      const result = await startPublicBooking({ data: { fullName, phone } });
+      const result = await startPublicBooking({ data: { fullName, phone, officeSlug } });
       if (!result.token || !/^[0-9a-f]{64}$/.test(result.token)) {
         throw new Error("Invalid booking session");
       }
@@ -185,7 +188,7 @@ function BookAppointmentPage() {
               <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{ui.title}</h1>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">{ui.body}</p>
             </div>
-            <PublicOfficeBooking token={token} autoOpen />
+            <PublicOfficeBooking token={token} autoOpen officeSlug={officeSlug} />
           </div>
         )}
       </section>

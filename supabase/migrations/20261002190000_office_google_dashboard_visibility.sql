@@ -75,3 +75,10 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
   END IF;
 END $pub$;
+
+-- RLS-filtered DELETE events only carry the primary key under the default
+-- replica identity, which is not enough for the client-side policy to decide
+-- whether the row was the caller's. FULL identity lets a removal reach the
+-- dashboard; updates are unaffected. Small tables, so the WAL cost is minor.
+ALTER TABLE public.office_google_operators REPLICA IDENTITY FULL;
+ALTER TABLE public.office_members REPLICA IDENTITY FULL;

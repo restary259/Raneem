@@ -3,8 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import GoogleBusinessAccessGate from "../GoogleBusinessAccessGate";
 
 let access: boolean | null = null;
+let lastActive: boolean | undefined;
 vi.mock("@/hooks/useGoogleBusinessAccess", () => ({
-  useGoogleBusinessAccess: () => access,
+  useGoogleBusinessAccess: (active?: boolean) => {
+    lastActive = active;
+    return access;
+  },
 }));
 
 vi.mock("@/lib/router-compat", () => ({
@@ -50,5 +54,26 @@ describe("GoogleBusinessAccessGate", () => {
     );
     expect(screen.getByTestId("redirect")).toHaveTextContent("/team");
     expect(screen.queryByText("secret page")).not.toBeInTheDocument();
+  });
+
+  it("honours a custom redirect target for the office surface", () => {
+    access = false;
+    render(
+      <GoogleBusinessAccessGate redirectTo="/team/offices">
+        <div>secret page</div>
+      </GoogleBusinessAccessGate>,
+    );
+    expect(screen.getByTestId("redirect")).toHaveTextContent("/team/offices");
+  });
+
+  it("passes the active flag through to the hook", () => {
+    access = true;
+    render(
+      <GoogleBusinessAccessGate active={false}>
+        <div>secret page</div>
+      </GoogleBusinessAccessGate>,
+    );
+    expect(lastActive).toBe(false);
+    expect(screen.getByText("secret page")).toBeInTheDocument();
   });
 });

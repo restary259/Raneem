@@ -15,7 +15,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   while react-i18next runs in suspense mode (`react.useSuspense: true` in
   `src/i18n.ts`), so a failed/late `/locales/*.json` load suspends ŌåÆ fallback,
   not an unhandled throw. Never remove this top-level Suspense boundary; the
-  inner Suspense boundaries in `App.tsx` sit *below* the `useTranslation` call
+  inner Suspense boundaries in `App.tsx` sit _below_ the `useTranslation` call
   and cannot cover it.
 - `vercel.json` rewrites `/((?!locales/).*)` ŌåÆ `/` so the i18next HttpBackend
   `/locales/{{lng}}/{{ns}}.json` requests are served as static JSON
@@ -39,8 +39,9 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   live once, consolidated in `CaseFinance` (`finance.notes.*`).
 
 ### Single-action rule (do not reintroduce duplicates)
+
 - ONE service-selection mechanism (the package dropdown), not Full Service checkbox
-  + individual checkboxes competing.
+  - individual checkboxes competing.
 - ONE confirmation button (**Confirm & Save**) at the bottom of the Finance tab.
   Removed surfaces: the standalone "Save" button, the inline "Confirm DARB Payment"
   button, and the `PaymentConfirmationForm` modal (deleted). The attention-panel and
@@ -50,6 +51,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   confirmed, it disappears and the payment appears exactly once, in Payment History.
 
 ### Finance ŌåÆ Submit-to-Admin flow (single place)
+
 - **Confirm & Save** (bottom of Finance tab) saves services and, when the team
   ticks the confirmation checkbox, confirms the DARB agency fee via
   `confirm_agency_service_payment`. It does NOT submit the case or send invites.
@@ -74,6 +76,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   `set_case_services` RPC.
 
 ## Referral discount in the commission split (2026-08-13)
+
 - The referral discount must be absorbed by DARB's margin, not ignored.
   `get_case_financials` / `get_case_darb_service_total` subtract
   `cases.referral_discount` from the service total (Step 2), so the invoice and
@@ -108,6 +111,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   source of truth = the snapshotted case column that finance actually subtracts.
 
 ## Surface referral discount in the UI (2026-08-13)
+
 - The backend `get_case_financials` returns `referral_discount` as its own field,
   but the frontend previously consumed only the netted `service_total` and dropped
   `referral_discount`, so the discount was invisible to users. It is now surfaced
@@ -141,12 +145,13 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   new `invoiceTotals.test.ts` cases (parse + reconcile) + i18n parity guard.
 
 ## Form draft autosave ŌĆö 30-min inactivity expiry (2026-08-13)
+
 - `src/hooks/useFormDraft.ts` is the single reusable localStorage draft hook
   (prefix `darb:draft:`). Drafts are stored as `{ v, savedAt, data }` where
   `savedAt` is rewritten with `Date.now()` on every debounced write (600ms
   default), so expiry is measured from the LAST save (inactivity), not creation.
 - **Expiry was a hardcoded 7 days; now 30 min** (`DEFAULT_EXPIRES_MS =
-  30*60*1000`). Configurable via the `expiresMs` option (default 30 min). On
+30*60*1000`). Configurable via the `expiresMs` option (default 30 min). On
   mount, an expired/`savedAt`-past-TTL draft is removed from localStorage and
   the hook sets `expired: true` once (instead of restoring it) so the form can
   show the "expired after 30 min of inactivity" notice. `version`-mismatched
@@ -240,7 +245,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   accounts. The page refetches both lists on window `focus` (post-activation
   navigation) and after `submitCreate` (already did `Promise.all`).
 - `check-email-availability` (edge function, admin/team_member only): returns
-  `{ available, existing_role, deactivated }` for an email. A *pending*
+  `{ available, existing_role, deactivated }` for an email. A _pending_
   invitation with no account is NOT "taken" (so resends to never-activated
   invitees still work). The frontend debounces this via
   `src/lib/checkEmailAvailability.ts` in three forms:
@@ -251,6 +256,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   (`ownEmail`) so re-saving a profile doesn't flag itself.
 
 ## Authoritative data flow (never trust the client for money)
+
 - Totals come from the `get_case_financials` RPC (server-side). The frontend never
   re-adds prices.
 - Service prices are frozen into `case_services` by `set_case_services` at selection
@@ -259,6 +265,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   via `review_case_payment_proof`.
 
 ## Clearing profiles.must_change_password (security invariant)
+
 - To clear `profiles.must_change_password` from ANY client flow (student, agent,
   partner, or admin), always call the RPC `clear_must_change_password()`. Never
   issue a direct `.from('profiles').update({ must_change_password: ... })` — the
@@ -272,6 +279,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   the RPC dropped while the trigger stays strict.
 
 ## Build / test
+
 - `npm run build` → `vite build` ONLY. **It does not typecheck.** `vite` type-strips,
   so a file may declare a symbol and fail to export it and still produce a bundle.
   Earlier revisions of these notes claimed `npm run build` was `tsc && vite build`
@@ -286,6 +294,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   so a lint-only failure (e.g. `no-self-assign`) ships.
 
 ## i18n
+
 - Namespaced under `dashboard` in `public/locales/{en,ar}/dashboard.json`. The Finance
   keys live under `finance.*`. Components pass inline English fallbacks via
   `t("key", "fallback")`, so missing keys still render. When adding keys, update both
@@ -297,6 +306,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   `student.status.*` (not `partner.status.*`, which leaks partner wording).
 
 ## Student dashboard emergency-contact single source of truth
+
 - Canonical fields: `emergency_contacts` (jsonb array of `{name,relationship,phone}`)
   plus mirror columns `emergency_contact_name` / `emergency_contact_phone` (legacy
   single column `emergency_contact` is kept in sync for older readers).
@@ -308,6 +318,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   read/write the same mirror columns, so keep them populated.
 
 ## Dashboard / spreadsheet audit conventions
+
 - **Service fee is authoritative from `case_services`** (sum of
   `unit_price * quantity - discount`), never the `case_submissions.service_fee`
   column (frequently 0). Both the Students and Payments spreadsheet sheets use
@@ -336,6 +347,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   not the filtered "Other requests" tab) ŌĆö this is intentional.
 
 ## pg_cron ŌåÆ Edge Function dispatch auth pattern
+
 - Edge Functions that mutate state for other users gate on `requireAuth(req, ["admin"])`
   (`supabase/functions/_shared/auth.ts`), which rejects the anon JWT (it's public)
   and only accepts the service-role key or an admin JWT. A pg_cron job that
@@ -358,8 +370,8 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   (appointments become due as time advances); the push/email queue dispatchers
   ARE self-disarming (they unschedule when the pgmq queue is empty).
 
-
 ## Student onboarding wizard + passport_number removal (2026-08-13)
+
 - `src/components/student/StudentOnboardingGate.tsx` is a 4-step forced post-login wizard (Personal, Study & arrival, Legal & identity, Emergency contacts) collecting EVERY field the admin sidebar shows in AdminStudentsPage (PROFILE_SELECT), EXCEPT `passport_number`. Each step persists its own slice to `profiles` on Next, so a student can leave/resume; `load()` resumes at the first incomplete step via module-level `stepComplete`.
 - `isProfileComplete()` now requires: full_name, phone_number, date_of_birth, gender, nationality, city, country, university_name, intake_month, arrival_date, passport_expiry, eye_color + 2 emergency contacts. Optional legal switches (changed_legal_name/criminal_record/dual_citizenship) are NOT required; when a switch is off its detail field is nulled on save (same pattern as `StudentVisaPage.saveLegal`).
 - `passport_number` removed from ALL app read/write/display paths: StudentOnboardingGate(+test), StudentNextStepsPage, StudentProfile, AdminStudentsPage (PROFILE_SELECT/StudentRecord/editForm/handleSave/edit-form array/read-view rows), ProfileCompletionModal (cases table), sheetQueries + SpreadsheetHub (submission extra_data export column), AdminSettingsPage placeholder, src/types/profile.ts, src/types/database.ts (StudentCase). DB columns on `profiles` and `student_cases`/`cases` were LEFT IN PLACE (no drop migration) ŌĆö only app usage stopped.
@@ -368,6 +380,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 278/278 pass incl. i18nKeys parity guard + onboarding test.
 
 ## Student sidebar regrouped into collapsible sections (2026-08-13)
+
 - The student sidebar (and mobile bottom nav) was restructured from 10 flat top-level
   items into 5 intentional destinations: **Next Steps** (top-level), **Study File**
   (collapsible: Checklist/Documents/Visa/Fees), **Communication** (collapsible:
@@ -390,6 +403,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   i18nKeys parity guard.
 
 ## Context-aware Important Contacts (2026-08-13)
+
 - Students no longer see ALL `important_contacts` rows. Each contact has a
   `scope` ('universal' | 'school_city' | 'school_only' | 'city_only'), a
   nullable `language_school_id` FK ŌåÆ `schools(id)`, and `is_universal`.
@@ -434,6 +448,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   new 10 contact-matching tests + i18nKeys parity guard.
 
 ## Onboarding school picker + live contacts preview (2026-08-13)
+
 - The wizard's "Language school" step is now a **dropdown of active `schools`**
   (not free text). The student's choice persists as an authoritative FK
   `profiles.language_school_id` (added by migration
@@ -465,6 +480,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
 - Build/test: `npm run build` clean; `npx vitest run` 296/296 pass.
 
 ## Onboarding wizard UI/UX redesign (2026-08-13)
+
 - **UI-only redesign** of `StudentOnboardingGate`. The task model (16 TASKS, 4
   steps), `ProfileShape`, `SELECT_COLUMNS`, `isProfileComplete`,
   `stepComplete`, `taskErrorFor`, `load()`, `persist()`, `stepPatch()`, `next()`
@@ -503,6 +519,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   i18n parity guard + onboarding `isProfileComplete` tests).
 
 ## Onboarding wizard: arrival-date picker, nationality default, structured address (2026-08-13)
+
 - **Arrival date now uses the same segmented Year/Month/Day picker as the
   birthday field.** `BirthdayPicker` gained an optional `years?: string[]`
   prop (defaults to `DOB_YEARS`); the wizard passes `ARRIVAL_YEARS` (current
@@ -533,6 +550,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   legacy country backward compat).
 
 ## Lebenslauf/CV Builder overhaul (2026-08-13)
+
 - The public CV Builder (`/resources/lebenslauf-builder`, `LebenslaufBuilder.tsx`)
   was overhauled into a full-featured, design-customizable, auto-saving tool with
   4 templates, 12 sections, WCAG-AA-safe colors, and clean print/PDF output.
@@ -580,8 +598,8 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   `createEmptyCVData()`. A `lastSaved` timestamp + dirty flag drive the
   "Saved / Unsaved changes" status indicator. `clearDraft()` wipes the key.
   The hook exposes `{ data, setData, updatePersonal, updateData, updateDesign,
-  updateSignature, errors, validate, saveDraft, loadDraft, clearDraft,
-  draftStatus }`.
+updateSignature, errors, validate, saveDraft, loadDraft, clearDraft,
+draftStatus }`.
 - **Validation** (`LebenslaufBuilder.tsx`): a `validate(data, t)` function
   (called outside of hooks to avoid rules-of-hooks violations) checks
   required fields (first name, last name, email format) and date ranges
@@ -607,6 +625,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   warnings in `templateHelpers.tsx` are pre-existing pattern, not build-gated).
 
 ## Student Overview command-center + visa/documents permissions (2026-08-14)
+
 - `StudentOverview.tsx` is a SHARED component (variant `"page"` for team,
   `"sheet"`-like for admin via the `tabs` prop). Layout is fixed topŌåÆbottom:
   **Student information** (identity header with a compact key-facts grid:
@@ -616,7 +635,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   Documents). Recent activity was REMOVED from the overview (it lives on the
   case-detail timeline; `useCaseEvents`/`CaseTimeline` imports dropped). The
   header resolves `assigned_to ŌåÆ profiles.full_name`, `submission.program_id
-  ŌåÆ programs.name_en/ar`, and `profiles.language_school_id ŌåÆ schools` (only
+ŌåÆ programs.name_en/ar`, and `profiles.language_school_id ŌåÆ schools` (only
   when `university_name` isn't already the synced display name) in ONE effect.
 - **Next action only surfaces UNFINISHED work**: terminal states
   (`enrollment_paid`, `cancelled`) return `null` ŌåÆ no next-action card. The
@@ -635,7 +654,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   longer opens edit mode directly. New i18n key `admin.students.visaConfirmReason`.
 - **Team can now upload documents**: `TeamStudentProfilePage` passes
   `renderDocumentsTab={() => <DocumentsPanel studentId caseId actorUserId
-  canDelete={false} />}` (it previously had NO documents tab at all).
+canDelete={false} />}` (it previously had NO documents tab at all).
   `actorUserId` is resolved from `supabase.auth.getSession()`. The shared
   `DocumentsPanel` stamps `uploaded_by = actorUserId`, `case_id = caseId`,
   `is_visible_to_student = true` on insert, reuses `validateUploadFile` +
@@ -659,7 +678,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   `bg-emerald-500/10` line with `ŌłÆ Referral discount` / `ŌłÆ ž«žĄ┘ģ ž¦┘äžźžŁž¦┘äž®`, shown
   only when `referral_discount > 0`; the net total is labeled "Final total"
   (`studentOverview.finalTotal`). Math reconciles: `service_total +
-  referral_discount` (original) ŌłÆ `referral_discount` = `service_total`.
+referral_discount` (original) ŌłÆ `referral_discount` = `service_total`.
 - **i18n**: new `studentOverview.*` keys (`details`, `languageSchool`,
   `program`, `assignedTeamMember`, `caseStatus`, `finalTotal`,
   `documentsHint`) + `admin.students.visaConfirmReason` added to en + ar
@@ -670,6 +689,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   `StudentOverview.tsx` keeps its pre-existing `no-explicit-any` notes.
 
 ## Case/direct chat scroll-to-newest on open (2026-08-14)
+
 - `src/components/messages/MessageList.tsx` is the dashboard case/direct chat
   list (NOT the AI advisor `ChatMessageList`/`useAIChat` popup, which is a
   separate stack that scrolls on every message change).
@@ -695,16 +715,17 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   CaseMessageService, RLS, realtime, or the composer.
 - Build/test: `npm run build` (tsc+vite) clean; `npx vitest run` 343/343 pass.
 
-
 ## Route / role consolidation ŌĆö partner apply, manager tier, master-ambassador (2026-08-14)
 
 - **Roles** (unchanged enum): admin, team_member, social_media_partner, ambassador, student. "Manager" and "master partner" are NOT enum values ŌĆö they are flags on profiles (is_manager on a team_member; is_master_partner on a partner/ambassador), admin-only settable (the restrict_profiles_write trigger blocks non-admins from changing either).
 
 ### De-duplicated partner/ambassador nav
+
 - DashboardLayout.tsx: a single PARTNER_BASE_NAV const holds the shared partner/ambassador sidebar entries. social_media_partner (lawyers) appends an Apply item (/partner/apply); ambassador (influencers) keeps the referral-link-only set (no Apply). MobileBottomNav.tsx mirrors this via PARTNER_MOBILE_NAV (4 tabs ŌĆö Apply is a full-page flow, not a daily tab). The two roles no longer duplicate an identical nav block.
 - Master-partner nav injection (useIsMasterPartner) now fires for BOTH social_media_partner and ambassador (was partner-only), adding /partner/network + /partner/performance. The master toggle in AdminTeamPage (MasterPartnerToggle) also now renders for ambassadors.
 
 ### Manager tier (team_member + is_manager)
+
 - useIsManager() hook reads profiles.is_manager (team_member only).
 - DashboardLayout injects a Pipeline item (/team/pipeline) into the team sidebar ONLY for managers. Non-managers keep the assigned-only view.
 - TeamPipelinePage (/team/pipeline): lists cases that arrived via a partner/ambassador referral (cases.partner_id IS NOT NULL, active non-terminal) and lets the manager assign each to a team member via a Select. It is a focused assignment surface ŌĆö NO catalog/settings/delete. Non-managers are bounced to /team. Team members are listed via the SECURITY DEFINER RPC list_team_directory() (id + full_name only ŌĆö team members cannot SELECT arbitrary user_roles/profiles rows by RLS).
@@ -715,12 +736,14 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   - Manager tier enforcement is in RLS, not client trust.
 
 ### In-dashboard partner apply form (single source of truth)
+
 - The 941-line public ApplyPage was split: the multi-step form now lives in src/components/apply/ApplyForm.tsx (shared component), with constants in src/components/apply/applyConstants.ts. ApplyPage is now a 14-line wrapper that renders <ApplyForm /> (public chrome, anon-key submission, its own success screen). No duplicated form code.
 - PartnerApplyPage (/partner/apply, social_media_partner only) renders <ApplyForm embedded useSessionAuth onSubmitted={...} />. embedded omits the full-screen chrome/hero/trust badges (renders inside the dashboard shell); useSessionAuth sends the partner session access token in Authorization: Bearer instead of the anon apikey, so the edge function attributes the case to the logged-in partner server-side. Ambassadors are redirected away (no Apply route/nav for them).
 - create-case-from-apply edge function: resolveCaller now detects isPartner (social_media_partner/ambassador) from the JWT. After the staff-only partner_id branch and the referral-code resolution, a partner self-attribution branch fills validatedPartnerId from caller.userId (server-derived ŌĆö the client-supplied partner_id is still ignored for non-staff callers, so a partner can never credit a different account) with attributionMethod = "partner_self". A referral code on the request still wins (the partner may be sharing a student ref link).
 - Build/test: npm run build (tsc+vite) clean; npx vitest run 343/343 pass.
 
 ## Agent backend fixes (2026-08-14)
+
 - **Bulk network split (no more N+1)**: `get_my_agent_network()` now returns an
   `agent_amount` column (the effective per-recruit override, resolved by the
   SAME `get_effective_agent_split` the page used per-row) ŌĆö one RPC replaces the
@@ -777,6 +800,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   (+2 identityConflict `invitation_conflict` cases; i18n parity guard green).
 
 ## Agent cases RLS — agents could not read their own self-referral cases (2026-08-14)
+
 - The `agent` role (added `20260814140000`/`20260814140100`) originally had NO
   SELECT policy on `cases`. The only non-staff SELECT policy was
   "Partners can view their own cases" (`has_role(..., 'social_media_partner')`),
@@ -785,7 +809,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   the agent's `/apply?ref=<code>` link or the dashboard apply form) and cases
   attributed to the partners/ambassadors in their network.
 - Symptom: `AgentStudentsPage` does `.from('cases').in('partner_id',
-  [...recruits, ownUid])` directly (subject to RLS), so RLS silently returned
+[...recruits, ownUid])` directly (subject to RLS), so RLS silently returned
   an empty set and EVERY students tab (All / Via partners / Via ambassadors /
   Your own referrals) showed (0) even right after a successful self-referral
   application. The agent overview KPIs (recruited partners/ambassadors, network
@@ -796,7 +820,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   SELECT policy "Agents can view network and self-referral cases" scoped via
   `has_role(auth.uid(), 'agent')` to: `partner_id = auth.uid()` (self),
   `referred_by = auth.uid()`, or `partner_id IN (SELECT id FROM profiles WHERE
-  agent_id = auth.uid())` (network recruits). Agent-only; no existing policy
+agent_id = auth.uid())` (network recruits). Agent-only; no existing policy
   touched. `AgentStudentsPage.classifySource` already maps `partner_id === uid`
   → "self" (Your own referrals tab), so no frontend change is needed once RLS
   is applied.
@@ -816,7 +840,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   self-referral case → confirms RLS (not attribution) is the blocker.
   After the base migration was applied without the recursion fix, the same
   query returned `42P17 infinite recursion detected in policy for relation
-  "cases"` → confirmed the cycle; after the recursion-fix migration is
+"cases"` → confirmed the cycle; after the recursion-fix migration is
   applied it returns the rows.
 - **NOTE**: applying these migrations requires Supabase admin/service-role
   access (DDL). It is NOT applied by the Vercel frontend build or the
@@ -832,6 +856,7 @@ Repository-specific context for the DARB case-management app (TanStack Start + R
   `yourLinksHint`, `applyLink`, `applyLinkHint`, `applyLinkMissing` (en+ar).
 
 ## Agent recruit wizard + manual-account-creation toggle + ₪500 commission (2026-08-14)
+
 - `AgentRecruitPage.tsx`: the three separate cards (role selection, delivery
   mode + per-recruit commission, recruit details) are merged into ONE wizard
   `Card` titled "Recruit a partner or ambassador" with numbered step headers
@@ -880,6 +905,7 @@ causes found and fixed; none of them were a missing relationship — the hierarc
 correct. The data was right; the READ paths were broken.
 
 ### BUG 1 (CRITICAL): ambassadors were invisible to their own dashboard
+
 - `get_partner_pool_cases` (the SECURITY DEFINER RPC that backs
   `PartnerOverviewPage` / `PartnerStudentsPage` / `PartnerEarningsPage`) gated
   ONLY on `has_role(auth.uid(), 'social_media_partner')`. Ambassadors use the
@@ -891,13 +917,14 @@ correct. The data was right; the READ paths were broken.
   This is the exact reported symptom for ambassadors.
 - FIX (migration `20260814210000_partner_ambassador_case_visibility.sql`):
   the RPC now accepts BOTH `has_role('social_media_partner') OR
-  has_role('ambassador')`. Ownership scoping (`partner_id = auth.uid() OR
-  referred_by = auth.uid() OR pool-mode global`) is UNCHANGED — an ambassador
+has_role('ambassador')`. Ownership scoping (`partner_id = auth.uid() OR
+referred_by = auth.uid() OR pool-mode global`) is UNCHANGED — an ambassador
   still only sees their own attributed cases (or the agency pool when enabled),
   never another ambassador's. SECURITY DEFINER + search_path public unchanged;
   no RLS weakened; grant unchanged (`authenticated` only).
 
 ### BUG 2 (CRITICAL): referral code dropped on transient verifyReferralCode error
+
 - `src/components/apply/ApplyForm.tsx` called `verifyReferralCode(code)` and, in
   the `.then`, set `refCode(null)` whenever `health.valid === false` — but
   `verifyReferralCode` returns `{valid:false}` BOTH for a genuinely invalid
@@ -918,6 +945,7 @@ correct. The data was right; the READ paths were broken.
   drops, shouldKeepReferralCode valid/unverified/rejected/null).
 
 ### BUG 3 (CRITICAL): duplicate-phone path dropped partner attribution
+
 - `supabase/functions/create-case-from-apply/index.ts` duplicate-phone branch
   (when an existing contact_form/apply_page case matches the phone) updated only
   the education fields and SILENTLY DROPPED the newly-resolved partner/referrer
@@ -926,7 +954,7 @@ correct. The data was right; the READ paths were broken.
   partner_id stays NULL → partner never credited, student never appears in
   partner dashboard. Admin sees the case (unattributed).
 - FIX: new SECURITY DEFINER RPC `backfill_case_attribution(p_case_id,
-  p_partner_id, p_referred_by, p_attribution_method)` (in the same migration)
+p_partner_id, p_referred_by, p_attribution_method)` (in the same migration)
   is ADDITIVE ONLY (sets a column only when it is currently NULL — never
   overwrites, so a later submission can't steal/re-attribute another partner's
   case). The edge function calls it in the duplicate-phone branch. All values
@@ -949,6 +977,7 @@ correct. The data was right; the READ paths were broken.
   discount commission fix; a one-time correction is an operator decision).
 
 ### BUG 4: PartnerEarningsPage paid-case names blank (RLS dead-end)
+
 - `src/pages/partner/PartnerEarningsPage.tsx` did a direct
   `.from('cases').select('id,full_name').in('id', caseIds)` to resolve names
   for paid rewards — but after migration `20260806020018` dropped the only
@@ -963,8 +992,9 @@ correct. The data was right; the READ paths were broken.
   which has its own `user_id = auth.uid()` SELECT policy.)
 
 ### BUG 5: agent KPI/list basis inconsistency (consistency, not a visibility gap)
+
 - `get_my_agent_network.students_count` used `COALESCE(c.partner_id, c.referred_by)
-  = r.id` while `paid_cases` used only `c.partner_id = r.id`. A recruit's id can
+= r.id` while `paid_cases` used only `c.partner_id = r.id`. A recruit's id can
   only ever appear in `cases.partner_id` (a partner/ambassador referral resolves
   to partner_id, never referred_by — referred_by is reserved for student-to-
   student referrals), so the COALESCE was a no-op for real recruits but could in
@@ -974,6 +1004,7 @@ correct. The data was right; the READ paths were broken.
   Behaviour unchanged for every real recruit.
 
 ### What was NOT changed (confirmed correct, not the bug)
+
 - The attribution data flow itself: referral link `?ref=` → `referral.ts`
   (capture + 90-day localStorage) → `ApplyForm` sends `ref_code` in the body →
   `create-case-from-apply` resolves it server-side via `resolve_referral_code`
@@ -992,6 +1023,7 @@ correct. The data was right; the READ paths were broken.
   role enums, and unrelated RLS are all untouched.
 
 ### Build/test
+
 - `npm run build` (tsc+vite) clean; `npx vitest run` 350/350 pass
   (+5 referral attribution-preservation tests; i18n parity guard green).
 - NOTE: applying `20260814210000` requires Supabase admin/service-role access
@@ -1002,6 +1034,7 @@ correct. The data was right; the READ paths were broken.
 ## Migration-to-Code Reconciliation (2026-08-15)
 
 ### DashboardService KPI classification (FIN-01)
+
 - `src/services/DashboardService.ts` classified rewards by free-text
   `admin_notes` prefix ("Partner commission from case…" / "Team commission
   from case…"). Agent self-referral rewards (note "Agent self-referral from
@@ -1017,6 +1050,7 @@ correct. The data was right; the READ paths were broken.
   KPI-level totals and the per-case reconstruction use the same helpers.
 
 ### case_payment_proofs.payment_id NOT NULL bug (live fix)
+
 - `submit_german_payment_proof` / `submit_case_payment_proof` insert without
   `payment_id` (a Germany-side proof can arrive before any payment row exists),
   but the live column was `NOT NULL` because the align_darb migration's
@@ -1032,6 +1066,7 @@ correct. The data was right; the READ paths were broken.
   `string | null`, Insert → `payment_id?: string | null`.
 
 ### Dead code removal (Option B — full pipeline + dead modules)
+
 - Deleted the entire dead dashboard pipeline: `dataService.ts`,
   `useDashboardData.ts`, and the handwritten/stale `src/types/database.ts`
   (sole importer was `dataService.ts`). The authoritative generated types live
@@ -1095,10 +1130,10 @@ All three are idempotent and use unique timestamps (`20260816*`):
    `get_effective_agent_split` are superseded by `CREATE OR REPLACE`.
 3. `20260816020000_commission_hub_rpcs.sql` — `admin_set_commission`
    centralized write RPC (single chokepoint, writes `commission_rate_history`)
-   + Hub read RPCs (`get_commission_hub_overview`,
-   `get_agent_network_detail`, `get_independent_accounts`,
-   `get_account_commission_history`, `get_student_referral_config`,
-   `get_student_referral_reward`).
+   - Hub read RPCs (`get_commission_hub_overview`,
+     `get_agent_network_detail`, `get_independent_accounts`,
+     `get_account_commission_history`, `get_student_referral_config`,
+     `get_student_referral_reward`).
 
 ### Frontend
 
@@ -1187,7 +1222,7 @@ Plan: `.agents_tmp/PLAN.md`.
   at enrollment so future rate/discount changes can't rewrite history. One row
   per case (UNIQUE `case_id`, `ON DELETE RESTRICT`), written ONCE by the
   engine. RLS: admin SELECT only; `REVOKE ALL FROM anon, authenticated;
-  GRANT SELECT`. No client INSERT/UPDATE/DELETE (only the SECURITY DEFINER
+GRANT SELECT`. No client INSERT/UPDATE/DELETE (only the SECURITY DEFINER
   engine writes, as owner, bypassing RLS).
 - `20260817040000_snapshot_in_engine.sql` (G3 cont.): full `CREATE OR REPLACE`
   of `record_case_commission` (carrying G2/G6 from `20260817010000`) + the
@@ -1207,7 +1242,7 @@ Plan: `.agents_tmp/PLAN.md`.
 - **Phase 4 — Commission Hub Simulator**: pure-frontend "what-if" calculator.
   `src/lib/commissionSimulator.ts` (pure `simulateCommission()` mirroring the
   ADDITIVE engine: `net = max(0, gross−discount); margin = max(0, net − team −
-  pool − agent − student)`) + `src/components/admin/CommissionSimulator.tsx`
+pool − agent − student)`) + `src/components/admin/CommissionSimulator.tsx`
   (a new "Simulator" tab in `AdminCommissionHubPage`). Inputs: acquisition
   type (partner/agent_self/student/direct), gross, discount, pool, master carve,
   agent override, team rate, student reward. Output: NET, per-component payouts,
@@ -1227,6 +1262,7 @@ other audit tables like `commission_rate_history`).
 ### Diagnostics
 
 `supabase/diagnostics/commission_engine_invariants.sql` extended with:
+
 - **TEST 5** (snapshot created + immutable): after enrollment, exactly one
   `case_financial_snapshots` row with correct gross/net/payouts; re-running the
   engine adds no second row (`ON CONFLICT DO NOTHING`).
@@ -1320,18 +1356,17 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
 - Build/test: `npm run build` clean; `npx vitest run` green (i18n parity guard
   included).
 
-
 ## Team Catalog / TV Presentation page (2026-08-16)
 
 - **Read-only presentation layer over the existing Admin Catalog.** The Admin
   Catalog (AdminProgramsPage -> `schools` / `accommodations` / `programs` tables)
-  remains the single source of truth. The Team page only *consumes* catalog data;
+  remains the single source of truth. The Team page only _consumes_ catalog data;
   it never writes it (RLS gives `team_member` SELECT-only on all three tables;
   no INSERT/UPDATE/DELETE policies exist for team, so it is read-only by
   construction, not just by UI convention).
 - Route: `/team/catalog` (`TeamCatalogPage`), lazy-loaded, behind the existing
   `ProtectedRoute allowedRoles={["team_member"]}` + `DashboardLayout
-  role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
+role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
   mobile "More" sheet (`MobileBottomNav` `MOBILE_MORE_CONFIG.team_member`).
 - **Data**: `useTeamCatalog` does ONE `Promise.all` fetch on mount
   (`schools` + `accommodations`, both `.eq('is_active', true)`, ordered by
@@ -1388,6 +1423,7 @@ build or `ci.yml`; run via `supabase db push` or the dashboard SQL editor.
   fee, distance note, school website, description, and the full tier ladder.
 
 ## CaseOverviewPanel "Referred By" — show whoever directly sent the student (2026-08-16)
+
 - `src/components/cases/CaseOverviewPanel.tsx` shows ONE name in "Referred By":
   `referrerName ?? partnerName` — student referrer takes priority, otherwise the
   partner_id holder (agent self-referral via form/link, partner/ambassador link,
@@ -1418,6 +1454,7 @@ execution (NOT applied by the Vercel build or `ci.yml` — run via
 `supabase db push` or the dashboard SQL editor).
 
 ### SQL migration (manual)
+
 - `supabase/migrations/20260818000000_commission_simplification.sql`:
   1. `partner_base_pool(p_partner_id)` is now **role-aware**: ambassadors
      resolve `platform_settings.ambassador_commission_rate`, partners resolve
@@ -1440,16 +1477,17 @@ execution (NOT applied by the Vercel build or `ci.yml` — run via
      student-readable RPC returning the friend/family discount (replaces the
      generic `get_referral_discount_amount`). Granted to `authenticated` only.
   6. OPTIONAL CLEANUP section drops `platform_settings.master_partner_override_rate`
-     + `referral_discount_amount` columns, the `get_referral_discount_amount()`
-     function, `profiles.is_master_partner` + `profiles.master_partner_id`
-     columns, `partner_recruit_applications.master_partner_id` + FK, and the
-     `rate_offers` table + the three rate-offer RPCs
-     (`master_send_rate_offer`, `partner_respond_rate_offer`, `get_my_rate_offers`).
+     - `referral_discount_amount` columns, the `get_referral_discount_amount()`
+       function, `profiles.is_master_partner` + `profiles.master_partner_id`
+       columns, `partner_recruit_applications.master_partner_id` + FK, and the
+       `rate_offers` table + the three rate-offer RPCs
+       (`master_send_rate_offer`, `partner_respond_rate_offer`, `get_my_rate_offers`).
 - The `get_effective_partner_split` function is NO LONGER CALLED by the engine;
   its generated `types.ts` entry is left in place (harmless — mirrors retained
   DB columns; removing is non-durable).
 
 ### Frontend — Master Partner fully removed from active UI
+
 - DELETED: `src/hooks/useIsMasterPartner.ts`, `src/components/admin/MasterPartnerToggle.tsx`
   (+ test), `src/pages/partner/PartnerPerformancePage.tsx`,
   `src/pages/partner/PartnerNetworkPage.tsx`, `src/pages/partner/PartnerNetworkHubPage.tsx`,
@@ -1464,7 +1502,7 @@ execution (NOT applied by the Vercel build or `ci.yml` — run via
   `independentHint` + `kpiIndependentSub` fallbacks updated to drop "no master partner".
 - `useCommissionHub.ts`: removed `master_partners` from `CommissionHubOverview`,
   `master_share` + `referral_discount` from `global_rates`, `master_partner_id`
-  + `is_master_partner` from `AccountCommissionHistory.account`.
+  - `is_master_partner` from `AccountCommissionHistory.account`.
 - `commissionSimulator.ts` + `CommissionSimulator.tsx`: removed `masterShare`
   from input/result interfaces, the "Master carve" field, and the masterShare
   result rows. `partnerShare = partnerPool` (full pool, no carve). The pure
@@ -1490,16 +1528,18 @@ execution (NOT applied by the Vercel build or `ci.yml` — run via
   JSDoc comments de-"master partner"-ed.
 
 ### Historical reward classification (backward compat — DO NOT re-remove)
+
 - `commissionClassifier.ts` KEEPS `master_partner`, `master_override`,
   `network_split`, `agent_override` in `PARTNER_POOL_REWARD_TYPES` so
   already-paid historical rewards still bucket into the partner pool for
   dashboard financials. They are mapped to `"other"` in `classifyReward`
   (legacy display only — the engine no longer creates them). `DashboardService`
-  + `sheetQueries` classifiers are unchanged (they already use the set).
+  - `sheetQueries` classifiers are unchanged (they already use the set).
 - `RewardKind` gained `"ambassador"` + `"agent_recruitment"`; `"master_override"`
   was removed from the union (legacy types map to `"other"`).
 
 ### i18n
+
 - Orphaned locale keys (`commissionHub.rateMaster`, `rateReferralDiscount`,
   `kpiMasters`, `simMaster`, `simMasterOut`, `partner.profile.masterBadge`)
   are LEFT in en/ar — the `i18nKeys.test.ts` parity guard only flags MISSING
@@ -1509,10 +1549,10 @@ execution (NOT applied by the Vercel build or `ci.yml` — run via
   (the spreadsheet value-kind column).
 
 ### Build/test
+
 - `npm run build` (tsc+vite) clean; `npx vitest run` 395/395 pass (44 files),
   incl. i18n parity guard. `commissionSimulator.test.ts` lost the two master-carve
   cases (replaced by a "partner keeps full pool" case, net −1).
-
 
 ## Code-review patterns (skill)
 
@@ -1535,8 +1575,8 @@ with a state-changing feature. The three patterns that keep surfacing:
 
 The skill includes a pre-review checklist and before/after code snippets.
 
-
 ## Returned-by-Admin flow — chat echo of the return/resubmit (2026-08-18)
+
 - The "Return for changes" (admin -> team) and "Resubmit to admin" (team -> admin) loop was already wired (commits 325d4e1/0dd80ae). This adds the **chat echo**: the same note is auto-posted to the case chat thread so it surfaces in the conversation the team/admin already watch, not only in the amber banner + Work-page card.
 - **RLS gotcha (do NOT raw-insert)**: `case_messages` has NO INSERT policy for `authenticated` — only `service_role` has INSERT. The conversation thread's suggested `supabase.from('case_messages').insert(...)` snippet would be rejected by RLS. The ONLY client path is the SECURITY DEFINER RPC `send_case_message` (wrapped by `sendCaseMessage` in `src/services/CaseMessageService.ts`), which stamps the real author/role server-side, marks the thread read, fires notifications, and logs a `message_sent` case event.
 - Both echoes use **`visibility: "internal"`** (staff-only) — the return note and the resubmit notice are internal workflow, not student-facing.
@@ -1545,6 +1585,7 @@ The skill includes a pre-review checklist and before/after code snippets.
 - Build clean; `npx vitest run` 414/414 pass (i18n parity guard green).
 
 ## v_cash_debts KPI regression — RPC-first fix (2026-08-21)
+
 - `v_cash_debts` (and the `settle_cash_collection` RPC) were created on the live DB out-of-band. Migration `20260818012648` captured the security hardening in VCS: `ALTER VIEW ... SET (security_invoker = true)` (view now runs as the viewer, enforces RLS on cases/case_payments/rewards — was a real leak) + `REVOKE ALL FROM anon, authenticated` + `GRANT SELECT TO service_role`. Generated `types.ts` gained the `v_cash_debts` Row + `settle_cash_collection` signature.
 - The revocation broke the "Cash Collection Debt" KPI: both frontend readers (`src/components/admin/MemberDetailDrawer.tsx`, `src/pages/team/TeamAnalyticsPage.tsx`) did a direct `.from('v_cash_debts').select()` as the authenticated user → silently empty (swallowed by try/catch).
 - Fix (migration `20260821120000_cash_debts_rpc.sql`): keep the view revoked from authenticated (security posture preserved) and expose two SECURITY DEFINER RPCs that scope server-side — `get_my_cash_debts()` (team member, `WHERE team_member_id = auth.uid()`) and `get_member_cash_debts(p_member_id)` (admin only via `has_role('admin')`, any member). The functions run as owner (bypass the view's security_invoker + table RLS), but the WHERE clause / role check IS the trust boundary. Matches the repo's RPC-first pattern (`get_partner_pool_cases`, `get_my_agent_network`, `get_student_important_contacts`).
@@ -1561,6 +1602,7 @@ content, nav entries, `admin.documents.*` + `nav.docCenter` i18n keys) was
 REMOVED. Do not reference those files — they no longer exist.
 
 What REMAINS (intentional, out of removal scope):
+
 - DB tables `documents_library` + `document_versions` (migrations
   `20260818143621` / `20260818143644`), the private `darb-documents` storage
   bucket, and the `seed_starter_documents` RPC (`20260822000000`), plus the
@@ -1571,6 +1613,7 @@ What REMAINS (intentional, out of removal scope):
   manual (apply via `supabase db push` or the dashboard SQL editor).
 
 ## Invitation reconciliation generalized to staff roles (2026-08-18)
+
 - **Bug**: `accept-invitation` had a non-atomic sequence — role upsert → concurrent-role
   check → profile upsert (fatal) → case link → close invitation. Any throw after the
   role upsert left `user_invitations.status='pending'` while the account was already
@@ -1595,7 +1638,7 @@ What REMAINS (intentional, out of removal scope):
   editor. Until then stuck invitations stay stuck; the frontend filter mitigates the
   display only):
   1. `reconcile_staff_invitations()` SECURITY DEFINER trigger `AFTER INSERT ON
-     user_roles` maps role→invitation_type (social_media_partner→'partner',
+user_roles` maps role→invitation_type (social_media_partner→'partner',
      ambassador→'ambassador', agent→'agent', team_member→'team') and closes pending
      invites of that type for the profile email. Student stays owned by
      `trg_reconcile_student_invitations` (untouched). Idempotent, no recursion
@@ -1620,9 +1663,8 @@ What REMAINS (intentional, out of removal scope):
   hide matched, case-insensitive, show unmatched, mixed list, deactivated-member
   emails not passed). Build clean; `npx vitest run` 438/438 pass.
 
-
-
 ## Unified partner/ambassador features — per-profile admin toggles (2026-08-19)
+
 - `social_media_partner` and `ambassador` are now functionally identical: BOTH
   get the referral link AND the built-in apply form, each independently gated
   by an admin-only per-profile toggle. The role enum is unchanged.
@@ -1660,8 +1702,8 @@ What REMAINS (intentional, out of removal scope):
 - i18n: `admin.features.*` (18 keys) in en + ar (parity-guarded). MANUAL DEPLOY:
   migration via `supabase db push` / dashboard SQL editor.
 
-
 ## Commission Hub rebuild — single production resolution path (2026-08-19)
+
 - Migration `20260828000000_commission_hub_rebuild.sql`: every Hub surface +
   the simulator reads effective rates server-side from the SAME resolver
   functions the commission engine calls (override-if-exists-else-global;
@@ -1699,6 +1741,7 @@ What REMAINS (intentional, out of removal scope):
   applied; the new Partners/Ambassadors tabs supersede it in the UI.
 
 ## Master-partner residual purge (2026-08-19)
+
 - The simplification's OPTIONAL CLEANUP was never applied live; standalone
   migration `20260830000000_master_partner_cleanup.sql` runs those DROPs
   verbatim + IF EXISTS (profiles master columns, platform_settings obsolete
@@ -1739,6 +1782,7 @@ Tables: `partner_countries`, `partner_schools`, `school_price_versions`,
   calculator; every school plugs into it. No second calculator.
 
 **Schools seeded (all 2026, `sort_order` = card order):**
+
 1. `kapito` - KAPITO Sprachschule, Munster (migration
    `20260918102914_*.sql`)
 2. `goacademy-dusseldorf` - GoAcademy! Dusseldorf (migration
@@ -1930,12 +1974,14 @@ catalog school `alpha-aktiv`.
   standalone (also bun-installed); that job is meant to go red on a real 404/410/5xx.
 
 ## Public office visit requests (2026-09-26)
+
 - Public `/office-visit` uses a hashed 14-day opaque token and service-role-only booking RPC, because a case ID or phone number is not proof of ownership.
 - A visitor's 10:00–18:00 Sunday–Thursday slot is a pending request until their assigned team member explicitly confirms it, because assignment must not silently promise availability or send confirmed-appointment automation.
 - Public booking excludes overlapping one-hour office slots with a database exclusion constraint, because simultaneous applicants must not claim the same time.
 - Landing translations exist in bundled `src/locales` and public `public/locales`; update both, because visitors render the bundled copy while other namespace loads may use HTTP.
 
 ## Bank details: one shared editor + server-authoritative chat share (2026-09-27)
+
 - **One editor for every payout-earning role.** `src/components/common/BankDetailsEditor.tsx`
   is the single implementation (country selector IL/DE, dynamic field sets, validation,
   full column payload incl. `bank_country`/`bic`, and the confirmed lock). It replaces the
@@ -1965,6 +2011,7 @@ catalog school `alpha-aktiv`.
   (session-injected, skipped in CI). Build + `npx vitest run` 1484 pass.
 
 ## Role-aware notification settings (2026-09-27)
+
 - `src/lib/notificationCategories.ts` is the single source of truth for which
   notification categories exist and which dashboard roles see them. Each entry
   is `{ key, column, roles }` where `column` is the `notification_preferences`
@@ -2041,12 +2088,12 @@ catalog school `alpha-aktiv`.
   `sm:rounded-3xl`). Backdrop is `bg-black/50 backdrop-blur-sm`. Entrance is
   `tw-animate-css` `data-[state=open]:fade-in-0` / `zoom-in-95` /
   `slide-in-from-bottom` (~200ms) with `data-[state=open]:motion-reduce:animate-none`
-  + `data-[state=closed]:motion-reduce:animate-none` (the variant prefix is
-  REQUIRED — a bare `motion-reduce:animate-none` is specificity 0,1,0 and loses
-  to `data-[state=open]:animate-in` at 0,2,0, so the opt-out would silently do
-  nothing). In RTL the
-  physical `left-1/2 -translate-x-1/2` centering is direction-agnostic (a
-  logical `start-1/2` would be wrong), so no `rtl:` override is needed.
+  - `data-[state=closed]:motion-reduce:animate-none` (the variant prefix is
+    REQUIRED — a bare `motion-reduce:animate-none` is specificity 0,1,0 and loses
+    to `data-[state=open]:animate-in` at 0,2,0, so the opt-out would silently do
+    nothing). In RTL the
+    physical `left-1/2 -translate-x-1/2` centering is direction-agnostic (a
+    logical `start-1/2` would be wrong), so no `rtl:` override is needed.
 - **Header owns the close affordance**: a sticky header with the name (h2) +
   German name and a `DialogPrimitive.Close` (×, `aria-label` `common.close`).
   `DialogTitle` is `sr-only` to keep the accessible name without duplicating
@@ -2070,7 +2117,9 @@ catalog school `alpha-aktiv`.
   `~/.local/bin` via the GitHub release zip (no `unzip` binary; use Python
   `zipfile`) and run `bun install --frozen-lockfile`.
 - Build clean; `npx vitest run` 1498 passed | 1 skipped (+5 new).
+
 ## Hebrew localization complete (all pages/namespaces) — 2026-09-27
+
 - Hebrew (`he`) now has **full key coverage across all 14 public namespaces**:
   `about`, `blog`, `broadcast`, `common`, `contact`, `dashboard`, `faq`,
   `landing`, `legal`, `partners`, `partnership`, `resources`, `services`,
@@ -2104,6 +2153,7 @@ catalog school `alpha-aktiv`.
 - Build clean; `npx vitest run` 1528 passed | 1 skipped.
 
 ### Key presence is not translation — the value guard (2026-09-27)
+
 - The coverage checks above only compare **leaf-key paths**. A Hebrew value
   copied verbatim from English satisfies them while still rendering English
   (and because `fallbackLng: { he: ['en'] }`, a missing value is
@@ -2141,6 +2191,7 @@ catalog school `alpha-aktiv`.
   EN/AR.
 
 ### Native-review gate for legal / FAQ Hebrew (OPEN — do not treat as reviewed)
+
 - `public/locales/he/legal.json` (privacy policy, terms of use, accessibility
   statement) and `public/locales/he/faq.json` (Bagrut recognition,
   Studienkolleg, uni-assist, the blocked account, the Israeli-passport visa
@@ -2155,9 +2206,10 @@ catalog school `alpha-aktiv`.
   in the repo enforces it.
 - The earlier `PENDING_NATIVE_REVIEW` exemption in the coverage test was
   **removed** (its lists are now empty) because key coverage is complete. That
-  removes the *mechanical* reminder, not the review obligation above.
+  removes the _mechanical_ reminder, not the review obligation above.
 
 ### Repo hygiene
+
 - `scripts/mirror-he-bundled-locales.py` mirrors `public/locales/he/*` into the
   eagerly-bundled `src/locales/he/*` (the two must stay byte-identical; the
   coverage test enforces it). It was originally committed at the repo root as
@@ -2165,6 +2217,7 @@ catalog school `alpha-aktiv`.
   and every sibling is documented under `scripts/`.
 
 ## Major Card modal — in-card section navigation (2026-09-27)
+
 - `src/components/educational/MajorModal.tsx` is the public expanded Major Card
   (clicking a card on `/educational-programs`). It has a persistent pill rail in
   the **sticky header** so a reader jumps to a section instead of scrolling to it.
@@ -2184,7 +2237,7 @@ catalog school `alpha-aktiv`.
   section on open. The listener is attached to the dialog body, not `window`,
   because `document` is not the scroller inside a Radix dialog.
 - **Radix portal gotcha (this was the bug that broke the first implementation)**:
-  `DialogPrimitive.Content` renders through a portal mounted in a *later commit*
+  `DialogPrimitive.Content` renders through a portal mounted in a _later commit_
   than the component that declares the effect, so `scrollRef.current` was still
   `null` when the effect first ran and the effect never re-ran → nothing was ever
   highlighted. Fixed by holding the node in **state** via a callback ref
@@ -2208,9 +2261,10 @@ catalog school `alpha-aktiv`.
   built bundle, not the browser.
 
 ## Bank account holder (beneficiary) name — added (2026-09-27)
+
 - **Gap found**: the shared bank editor collected only the BANK's name
   (`profiles.bank_name`), branch, account number, IBAN and BIC — there was no
-  field for the *account holder* (the person/entity owning the account), which
+  field for the _account holder_ (the person/entity owning the account), which
   payouts need. `bank_name` is the institution ("Bank Hapoalim"), NOT the
   beneficiary, so the two must not be conflated.
 - **New column** `profiles.bank_account_holder text` (migration
@@ -2256,8 +2310,8 @@ catalog school `alpha-aktiv`.
   that mocks `@/integrations/supabase/client` must expose every client surface
   the imported module touches at module scope**, or the file fails to load.
 
-
 ## WhatsApp workspace split (2026-09-28)
+
 - `src/pages/messages/WhatsAppInboxPage.tsx` was a 1,349-line monolith. It is
   now 1,225 lines with the reusable pieces under
   `src/components/messages/whatsapp/`: `constants.ts` (filter/taxonomy
@@ -2289,6 +2343,7 @@ catalog school `alpha-aktiv`.
   localize them too.
 
 ## WhatsApp: Admin/Team view switch removed (2026-09-28)
+
 - The WhatsApp workspace had an in-page segmented **Admin / Team view** toggle
   (`adminTeamPreview`), rendered only for admins, that let an admin preview the
   simplified team inbox. It was removed: the control was dead on the pinned team
@@ -2410,13 +2465,13 @@ indexability is explicitly deferred (plan: `.agents_tmp/PLAN.md`, phases 1-4).
   appearing exactly once — no double emission), self-referential
   canonical/`og:url` on every public route, and a matching ItemList count.
 
-
-
 ## DARB payment proof + wire memo (2026-09-29, updated 2026-09-29)
+
 - DARB fee stays one full payment. `confirm_agency_service_payment(case, method, p_reference, p_receipt_path)`: the server no longer requires proof — when no bank reference is supplied it stamps the auto-generated `cases.case_reference` as the payment reference. Wire memo reference = `cases.case_reference`, shown on Finance tab, student Fees, invoice page/PDF/email. Germany block is a collapsible "Step 2".
 - **The Finance tab (pipeline) collects NO proof.** The optional "Transfer reference" input and the "Receipt (file)" input were REMOVED from `CaseFinance.tsx`; staff pick the payment method and confirm — the reference is auto-generated server-side. The call passes only `p_case_id` / `p_payment_method`. `src/lib/agencyPaymentProof.ts` (+ its test) was deleted; the `finance.receipt.{optional,upload,hintAuto,required,tooLong,hint}` locale keys were pruned from en/ar/he (kept: `reference`, `view`, `openFailed`, still used by `CasePayments` history). Guarded by `src/lib/agencyPaymentNoProofGuard.test.ts`.
 
 ## Post-arrival Visa workflow — Admin Pipeline third tab (2026-09-29)
+
 - **Visa is NOT a `cases.status`.** `enrollment_paid` stays the terminal
   success state; `caseStatus.ts` / `caseTransitions` / `TERMINAL_STATUSES` /
   `CaseStageService` / `caseTasks.ts` / commission logic are all UNCHANGED.
@@ -2539,6 +2594,7 @@ only the frontend reachability was broken.
   pre-existing `npm run lint` debt is unchanged and `continue-on-error: true`.
 
 ## Tabbed submission case card — Admin Submissions queue (2026-09-29)
+
 - The Admin Submissions dialog used to render Basic Info → Payment Details →
   Program/Accommodation → Student Profile Data → `CaseFinance` →
   `CaseInvoiceBlock` → Documents as ONE long vertical scroll. It is now a
@@ -2567,7 +2623,7 @@ only the frontend reachability was broken.
 - Status / payment-method / enrolled badges moved ABOVE the strip so they are
   visible from every tab (previously only at the bottom of the scroll).
 - Removed the hardcoded, untranslated `"DARB service total: Calculated in the
-  Finance section above."` row — with tabs there is no "above", and the Total row
+Finance section above."` row — with tabs there is no "above", and the Total row
   below it already renders the authoritative `totalFee()`. No new key was added
   for it.
 - Dialog widened `sm:max-w-2xl` → `sm:max-w-4xl` for the Finance KPI grid.
@@ -2588,6 +2644,7 @@ only the frontend reachability was broken.
   reasoned from `TabsList` styles, not observed.
 
 ## Dialog primitive: mobile width + export-completeness guards (2026-09-29)
+
 - **`DialogContent` must stay in `dialog.tsx`'s export block.** Commit `f03c73d`
   (#128) removed it while leaving the component defined above, so the file read
   correctly but every importer got `undefined`. Measured on `origin/main`:
@@ -2597,13 +2654,13 @@ only the frontend reachability was broken.
 - **Correction to a claim this note previously made:** `tsc` DOES catch it.
   `npx tsc --noEmit` (the root `tsconfig.json`, which actually covers `src/**`)
   reports `TS2459: Module '…/dialog' declares 'DialogContent' locally, but it is
-  not exported` across ~34 files. The earlier "tsc does not catch it" was wrong;
+not exported` across ~34 files. The earlier "tsc does not catch it" was wrong;
   the real reason CI missed it is that **`package.json`'s `build` script is only
   `vite build` — there is no `tsc` in the build or in the `quality` job**, so
   typechecking never runs. Do not rely on `--noEmit` being wired up; it is a gate
   you have to run by hand.
 - **`f03c73d` also introduced `DialogDescription.displayName =
-  DialogDescription.displayName`** — a self-assignment. As a live binding the
+DialogDescription.displayName`** — a self-assignment. As a live binding the
   read precedes the write, so it throws `TypeError` at module evaluation. It
   survives `tsc` (the binding's type is non-`undefined`) and the whole vitest
   suite, because every dialog-consuming test file mocks the dialog module.
@@ -2663,6 +2720,7 @@ only the frontend reachability was broken.
   non-vacuous by reintroducing each defect.
 
 ## Admin Overview: no Recent Activity (2026-09-29)
+
 - The Admin Overview is the **Command Center** (`/admin` →
   `src/pages/admin/AdminCommandCenter.tsx`). Its "Recent Activity" card was
   removed there only (commit `a54badca`): the card, its `ActivityEntry`
@@ -2680,7 +2738,7 @@ only the frontend reachability was broken.
   (PAGE_SIZE 50, load-more), search filter and entity colour map — unchanged.
 - **There is no shared Overview/Settings activity component** and Admin Settings
   never had a Recent Activity section. The Settings page only touches
-  `activity_log` as a *data-reset category* (`RESET_CATEGORIES`, id
+  `activity_log` as a _data-reset category_ (`RESET_CATEGORIES`, id
   `activity`, tables `["activity_log"]`) — that is deliberate and must stay.
   The orphaned `admin.commandCenter.{recentActivity,noActivity,activityLoadError}`
   locale keys remain in en/ar/he (the `i18nKeys.test.ts` parity guard only
@@ -2700,10 +2758,10 @@ only the frontend reachability was broken.
   wrong table or dropping its `activity_log` subscription fails the render /
   source checks respectively.
 - Verification (this repo, with `bun install --frozen-lockfile`): `npx tsc
-  --noEmit` clean; `npx vitest run` 1685 passed | 1 skipped (107 files);
+--noEmit` clean; `npx vitest run` 1685 passed | 1 skipped (107 files);
   `npm run build` clean. `npx eslint .` remains red with ~35k **pre-existing**
   repo-wide errors (`continue-on-error: true` in CI); the removal actually
-  *reduced* `AdminCommandCenter.tsx` from 184 → 167 errors (the remaining ones
+  _reduced_ `AdminCommandCenter.tsx` from 184 → 167 errors (the remaining ones
   are pre-existing prettier formatting + `no-explicit-any`). Never run
   `eslint --fix` on that file in an unrelated PR.
 
@@ -2712,14 +2770,14 @@ only the frontend reachability was broken.
 - **Symptom**: after any case action (confirm payment, mark as enrolled, update a
   case) the realtime `cases` subscription fires `fetchAll()`. If that refetch's
   `cases` read failed, the dashboard showed `Active Cases: 0 / Submitted: 0 /
-  Enrolled: 0 / SLA Breaches: 0` while Forgotten Cases (an RLS-bypassing RPC)
+Enrolled: 0 / SLA Breaches: 0` while Forgotten Cases (an RLS-bypassing RPC)
   still showed the correct value — and only a full app relaunch restored the
   numbers.
 - **Root cause (frontend)**: `fetchAll()` used a `val()` helper that mapped a
   failed query to `[]`:
   `r.status === 'fulfilled' && !r.value.error ? (r.value.data ?? []) : []`.
   A PostgREST failure resolves (it does not reject) with `{ data: null, error }`,
-  so the failure was converted into a *successful read of an empty table*.
+  so the failure was converted into a _successful read of an empty table_.
   `fetchAll()` therefore returned `counts: { total: 0, ... }`, and React Query
   **replaced its last known-good cache** with those fabricated zeros — the query
   itself never entered an error state, so nothing signalled a problem.
@@ -2753,7 +2811,7 @@ only the frontend reachability was broken.
   retried) already covers transient Supabase failures.
 - **Root cause of the underlying transient `cases` failure: NOT conclusively
   proven, and deliberately not guessed at.** What was checked and ruled out as
-  *not* the laundering mechanism: the query is a single-table `SELECT` with no
+  _not_ the laundering mechanism: the query is a single-table `SELECT` with no
   joins/subqueries, so RLS evaluation does not recurse; the migration files are
   all committed and the live DB must already match HEAD (Forgotten Cases works
   through an RPC that queries `cases`, and a missing column would break every
@@ -2816,6 +2874,7 @@ only the frontend reachability was broken.
   eslint-clean.
 
 ## Student Dashboard mobile card width / overflow (2026-09-30)
+
 - The Student Overview quick actions live in `src/components/student/StudentOverviewSection.tsx`, rendered by `StudentNextStepsPage` at the `/student/` route (`src/routes/student.index.tsx`). `/student-dashboard` is a SEPARATE route that only redirects to `/student/checklist` (`ChecklistTracker`), so it is not this surface.
 - The Quick Actions grid was `grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-3`, so below `sm` (< 640px) three narrow cards were forced across the phone. Fixed to `grid grid-cols-1 gap-2 sm:grid-cols-5 lg:grid-cols-3`: 1 column on phones, 5 at `sm`, 3 at `lg` (unchanged desktop). Each action button gained `w-full min-w-0` and each label `min-w-0 max-w-full break-words` so a translated label cannot establish an intrinsic width wider than its grid track.
 - The overview's `lg:grid-cols-2` two-column desktop split was correct and was NOT changed. **Update (see the follow-up section below):** the overview later gained an explicit `grid-cols-1` base plus `min-w-0` on its columns, because a base-less grid creates an implicit `auto` track that a `truncate` label can inflate past the viewport. Do not remove that base `grid-cols-1`. The WhatsApp `flex flex-wrap gap-2` row already wraps safely inside the card and was left unchanged (no `overflow-x-auto`, no fixed widths, no global CSS hacks).
@@ -2824,6 +2883,7 @@ only the frontend reachability was broken.
 - Build/test: `npx tsc --noEmit` clean; `npx vitest run` 1703 passed | 1 skipped; `npm run build` clean.
 
 ## Student Dashboard language-dependent overflow — implicit `auto` grid track (2026-09-30)
+
 - Follow-up report after the quick-actions fix: switching to **English or Hebrew**
   also overflowed the Student Dashboard, while Arabic did not. Reproduced on the
   real page (built stylesheet + mocked Supabase REST/auth in headless Chromium).
@@ -2839,7 +2899,7 @@ only the frontend reachability was broken.
   cannot shrink below that min-content, so `overflow-x-hidden` on the shell
   silently CLIPPED the cards instead of scrolling.
 - Fix (both in `StudentOverviewSection.tsx`): explicit `grid grid-cols-1 gap-4
-  lg:grid-cols-2` so the mobile track is `1fr` (not `auto`), plus `min-w-0` on
+lg:grid-cols-2` so the mobile track is `1fr` (not `auto`), plus `min-w-0` on
   each overview column and on the truncating contact row so they shrink to the
   track instead of contributing their min-content. `min-w-0` alone also fixes it;
   both are applied for defense-in-depth.
@@ -2874,6 +2934,7 @@ only the frontend reachability was broken.
 Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
 
 ### Emergency numbers are `tel:` links, never chat buttons
+
 - `src/components/student/EmergencyCallCard.tsx` is the ONE source of the three
   fixed numbers (`EMERGENCY_NUMBERS`: police **110**, ambulance **112**, fire
   **112**) — deliberately NOT sourced from `important_contacts` or
@@ -2894,6 +2955,7 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   never renders a raw key like `fire`.
 
 ### Student messages: conversation list ↔ chat box with a back arrow
+
 - `src/pages/messages/StudentMessagesPage.tsx` is a list-first inbox: the
   conversation list (`ThreadList`) is the default view, and opening a thread
   swaps in the chat box. The chat-box header owns the back arrow
@@ -2913,6 +2975,7 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   `CaseMessageService` / `DirectMessageService` RPCs. No backend change.
 
 ### Guards + verification
+
 - `src/lib/studentEmergencyAndChatNavGuard.test.ts` (source scan): emergency
   numbers use `tel:` and are NOT chat handlers, the emergency card renders
   full-width in the overview, the chat box has a working back arrow, the icon
@@ -2925,6 +2988,7 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   back, emergency links present in-chat, RTL back arrow).
 
 ### Student inbox: real activity, existing team thread, resolved header name
+
 - The conversation list is built from `listMyDirectThreads()` (the same service
   the staff inbox uses), not from hardcoded placeholders. `loadDirectThreads()`
   resolves, in one call: the **existing** team thread (matched by
@@ -2961,6 +3025,7 @@ Two student-facing fixes on top of PR #136 (the mobile/language overflow fix).
   238–308px.
 
 ### Pre-existing main-branch breakage (fixed here so CI can pass)
+
 - `origin/main` failed `npx tsc --noEmit` in `src/components/student/StudentCityGuide.tsx`
   (4 errors) and `src/routes/student.city-guide.tsx` (1 error), and the i18n
   guard was red because `student.cityGuide.schoolCityDescription` was used in
@@ -2992,6 +3057,7 @@ fast-forward pushes to `main` (no force-push), because the PRs were already
 merged and the fixes were small and isolated.
 
 ### `npm run typecheck` exit code — capture it correctly
+
 - `npx tsc --noEmit 2>&1 | head -5; echo $?` reports the exit status of `head`,
   **not** `tsc`. That silently produced a "typecheck=0" on a tree that was
   actually failing. Write to a file and check separately:
@@ -2999,6 +3065,7 @@ merged and the fixes were small and isolated.
   `vitest` passing and a misread `$?` are both non-gates.
 
 ### Vitest `toHaveBeenCalledWith` compares arity strictly
+
 - A mock declared `vi.fn((name: string, args?: unknown) => …)` **records two
   arguments** when the integration wrapper forwards `mockRpc(name, args)` and
   the caller passes only one. The recorded call is `(name, undefined)`, so
@@ -3009,6 +3076,7 @@ merged and the fixes were small and isolated.
   team-thread test in #143, which could never pass and was merged red.
 
 ### Duplicate object keys are a real failure (TS1117), and CI step order hides them
+
 - `MobileBottomNav.tsx` `shortLabel` had `'nav.account'` twice → `TS1117`.
 - `.github/workflows/ci.yml` `quality` runs **Lint → Unit tests → Typecheck →
   Build**. A failing unit-test step aborts the job, so the typecheck never ran
@@ -3019,15 +3087,17 @@ merged and the fixes were small and isolated.
   `sed -n '/const shortLabel/,/^  };/p' FILE | grep -oE "'[^']+':" | sort | uniq -d`
 
 ### `nav.*` is pinned to the `dashboard` namespace
+
 - Components read nav labels via `useTranslation("dashboard")` with **no
   `fallbackNS`**, so a key that exists only in `common` resolves to the inline
   English fallback. `nav.home` was missing from the `dashboard` dictionaries for
   exactly this reason (added to en/ar/he).
 - `i18nKeys.test.ts` accepts a key found in ANY namespace the file touches, so
   it stayed green. It now has a `has every nav.* key in the dashboard
-  dictionaries` case pinning `nav.*` to `dashboard` (verified non-vacuous).
+dictionaries` case pinning `nav.*` to `dashboard` (verified non-vacuous).
 
 ### Guard irreversible actions at the RPC, not just the UI
+
 - `start_student_team_member_thread` does check-then-insert on
   `direct_threads`/`direct_thread_participants` with **no lock and no unique
   constraint**, so concurrent callers each create their own thread.
@@ -3041,6 +3111,7 @@ merged and the fixes were small and isolated.
 - Regression test added; with the guard removed it observes 3 calls from 3 taps.
 
 ### Merged-red PRs leave unresolved review threads
+
 - Both #142 and #143 merged with `resolved=false` review threads (Greptile P1/P2,
   Aikido Medium). After repairing `main`, reply to each thread with the fixing
   SHA and resolve it — a merged PR keeps its threads open forever otherwise.
@@ -3049,10 +3120,10 @@ merged and the fixes were small and isolated.
   was pre-existing rather than introduced by your push.
 
 ### Verification
+
 - `npx tsc --noEmit` clean; `npx vitest run` 1748 passed | 1 skipped;
   `npm run build` clean; main CI `quality` success at `65f23091`.
 - PRs #142/#143: MERGED, 0 unresolved threads. No open PRs.
-
 
 ## PR #148 CI repair — Refer & Register (`feat/student-refer-register-master-flow`, 2026-09-30)
 
@@ -3062,6 +3133,7 @@ typechecked locally, so these defects were invisible until CI ran. Fixed at
 `b54aa07`.
 
 ### Module-level parse errors masquerade as many type errors
+
 - `ReferralRegistrationFlow.tsx:555` had a concise arrow body containing TWO
   statements: `onClick={() => update(...); update(...)}`. The `;` after the
   first call makes the arrow body end, so `update(...)` became a second
@@ -3082,14 +3154,16 @@ typechecked locally, so these defects were invisible until CI ran. Fixed at
   a signature change before widening a shared hook.**
 
 ### Missing imports are three distinct symptoms
+
 - `AdminCommandCenter.tsx` used `useEffect` without importing it → CI `Unit
-  tests` failed with a `ReferenceError` at render (vitest), not a type error.
+tests` failed with a `ReferenceError` at render (vitest), not a type error.
 - `StudentReferPage.tsx` never imported `useTranslation` → `tsc` TS2304.
 - `AdminReferralOperationsPage.tsx` referenced `lang`, which was never declared
   → TS2304. Replaced with `i18n.language.startsWith("ar")`, matching the pattern
   used elsewhere on that page.
 
 ### i18n guards: key existence AND value translation AND correct nesting
+
 - `i18nKeys.test.ts` failed on `referralRegistration.insurance.none` (4 entries:
   ar+en x 2 call sites). Adding it initially nested it under
   `referralRegistration.history.insurance.none` — **the guard resolves the
@@ -3105,6 +3179,7 @@ typechecked locally, so these defects were invisible until CI ran. Fixed at
   of the surrounding block.
 
 ### Verification (this repo)
+
 - `npx tsc --noEmit` clean; `npx vitest run` 1767 passed | 1 skipped (119 files);
   `npm run build` clean (nitro `.output/` build, 3.80s).
 - CI `quality` on `b54aa07`: Lint / Unit tests / Typecheck / Build / Lovable
@@ -3116,7 +3191,7 @@ typechecked locally, so these defects were invisible until CI ran. Fixed at
   "not actionable — do not chase it". **That was wrong and it cost a round
   trip**: the credits refreshed on the next push and Greptile then delivered 13
   substantive findings, all of which were real (see the section below). A credit
-  notice is a *deferral*, not a clean review — re-poll the threads after the next
+  notice is a _deferral_, not a clean review — re-poll the threads after the next
   push instead of recording the PR as review-complete.
 - Aikido's three inline findings (High: repeated card checkout; Medium x2:
   public bank-transfer reopen / submitted-mark blocks card) were already
@@ -3133,7 +3208,7 @@ typechecked locally, so these defects were invisible until CI ran. Fixed at
 ## Direct student registration — Greptile re-run on PR #148 (2026-09-30)
 
 Greptile's credits refreshed after the docs push and it re-reviewed the PR with
-13 findings. All 13 were **real**; every one failed *silently* — which is why the
+13 findings. All 13 were **real**; every one failed _silently_ — which is why the
 original pass shipped them. Verified against the code, fixed in `9a079ef`, and
 each now has a guard in `src/lib/referralRegistrationGuards.test.ts` (10 cases,
 verified non-vacuous by reintroducing the defect).
@@ -3150,7 +3225,7 @@ verified non-vacuous by reintroducing the defect).
   payment RPCs selected `v_invoice.case_reference`, so starting a card payment or
   marking a bank transfer raised immediately. Now
   `SELECT i.*, c.case_reference ... JOIN public.cases c ON c.id = i.case_id
-  ... FOR UPDATE OF i` (row lock must name `i` once a join is present).
+... FOR UPDATE OF i` (row lock must name `i` once a join is present).
 - **The same column mistake in a JS select** (`AdminCommandCenter` referral
   queue). PostgREST errors, the catch empties the queue, and an empty queue looks
   exactly like "nothing to do". Join as `cases(case_reference)`.
@@ -3166,7 +3241,7 @@ verified non-vacuous by reintroducing the defect).
   confirmation back. The trigger is redefined in this migration with that one
   added edge — and, per the follow-up review, gated on the case actually being a
   `student_referral_registration` **with a paid invoice**, plus admin-or-assigned
-  staff. Without that second condition any staff member could push *any* case
+  staff. Without that second condition any staff member could push _any_ case
   past `contacted`/`appointment_scheduled` and skip its appointment outcomes.
   The timestamp must stay newer than 20260818090000, or an out-of-order re-run of
   the older file drops the exception again.
@@ -3187,7 +3262,7 @@ verified non-vacuous by reintroducing the defect).
   alone, so the mail service deduplicated every resend while reporting success.
   Include a per-send value.
 - **One-time insurance rendered as "1 month · €X/month"** even after the total was
-  fixed — the *amount* was right but the label read as recurring. The item now
+  fixed — the _amount_ was right but the label read as recurring. The item now
   carries `billing_period`, and one shared `formatInvoiceItemBilling`
   (`src/utils/invoicePresentation.ts`) renders it for the invoice page; the Deno
   email template mirrors it in `billingLine()` (it cannot import from `src/`) and
@@ -3195,6 +3270,7 @@ verified non-vacuous by reintroducing the defect).
   per locale, so the duplication cannot drift silently.
 
 ### Recurring lessons
+
 - **A PostgREST/JS select naming a column that does not exist is a silent
   failure**, because the surrounding `catch` usually degrades to an empty state
   that is indistinguishable from a legitimate empty result. Check the column
@@ -3215,14 +3291,14 @@ verified non-vacuous by reintroducing the defect).
 - Verification: `npx tsc --noEmit` clean; `npx vitest run` 1790 passed | 1 skipped
   (122 files); `npm run build` clean.
 
-
-
 ## i18next runtime smoke test (2026-10-01)
+
 - i18next was upgraded 23 -> 26 (PR #149). `src/lib/i18nRuntime.test.ts` initializes the REAL `src/i18n.ts` (fetch stubbed to serve `public/locales`) and checks bundled `common` in ar/en/he, interpolation, `t(key, "default")`, he -> en fallback, the HTTP `dashboard` namespace, and `dir`/`lang` on language change, because the key-coverage tests only read JSON and cannot catch a library loading regression.
 
 ## Office Google Business permission foundation (Phase 1, 2026-10-01)
+
 - Migration `20261001160000_office_google_permission_foundation.sql` adds the
-  DARB-side ownership layer *before* any Google API work: `office_google_profiles`
+  DARB-side ownership layer _before_ any Google API work: `office_google_profiles`
   (one per office, placeholder location), `office_google_operators`
   (PRIMARY/SIDE_MANAGER), `google_business_connections` (DARB-level, no tokens),
   and the append-only `google_business_activity` audit. No OAuth, no Google
@@ -3253,24 +3329,25 @@ verified non-vacuous by reintroducing the defect).
   operator selector is fed only same-office active members.
 
 ## Office Google Business location mapping (Phase 3, 2026-10-01)
+
 - Migration `20261001170000_office_google_location_mapping.sql` (newer timestamp
   than Phase 1, so its redefined `authorize_google_office_action` wins on a fresh
   deploy). Adds the admin-only `google_business_locations` cache, richer
   `office_google_profiles` columns, a `mapping_status` lifecycle
   (`UNMAPPED/PENDING_CONFIRMATION/MAPPED/DISCONNECTED/MAPPING_ERROR`), and the
   Phase 3 actions (`GOOGLE_DISCOVER_LOCATIONS/VIEW_LOCATION/MAP_LOCATION/
-  REMAP_LOCATION/UNMAP_LOCATION`) — all admin-only in the authorizer.
+REMAP_LOCATION/UNMAP_LOCATION`) — all admin-only in the authorizer.
 - **A mapping rejection rolls back its own audit insert.** The failure-path
   `INSERT INTO google_business_activity` inside `admin_map_office_google_location`
   would roll back with the raised exception (dead code). The rejection audit
   therefore lives in its own RPC, `admin_record_google_mapping_attempt`, called
-  by the server function *after* the authoritative RPC fails. It is constrained
+  by the server function _after_ the authoritative RPC fails. It is constrained
   to the known rejection actions so it can never fabricate an arbitrary entry.
 - Mapping is never automatic. `admin_map_office_google_location` locks the office
   row, then re-validates that the location exists in the cache, belongs to the
   named account, and is not already mapped to a different office; a forged
   `google_account_id` or `office_id` is rejected server-side. `UNIQUE
-  (google_location_id)` from Phase 1 is the concurrency backstop.
+(google_location_id)` from Phase 1 is the concurrency backstop.
 - Discovery runs in admin-gated server code (`googleBusinessLocation.functions.ts`),
   files each location under the account it was verified from (never a
   client-supplied id), and upserts through `admin_sync_google_locations`. The
@@ -3278,7 +3355,7 @@ verified non-vacuous by reintroducing the defect).
   go through `admin_list_google_locations` / `get_office_google_mapping`, so
   `raw_location_json` is never reachable from the client. `get_office_google_mapping`
   is office-scoped for active members and admin-wide.
-- `googleLocationMatch.ts` produces a *suggestion* only (labeled heuristic, never
+- `googleLocationMatch.ts` produces a _suggestion_ only (labeled heuristic, never
   "verified"); the admin always confirms before the RPC runs.
 - Verification: `/tmp/phase3_verify.sql` (45/45) covers idempotent re-sync,
   malformed-payload rejection, cross-office isolation on the read RPC, duplicate
@@ -3288,6 +3365,7 @@ verified non-vacuous by reintroducing the defect).
   a Phase 2 `googleConnection.notLinked` leak).
 
 ## Office Google Business delegation (Phase 4, 2026-10-01)
+
 - Migration `20261001180000_office_google_delegation.sql` adds the delegation
   surface on top of Phase 1/3: `list_my_google_offices()` (offices the caller
   operates), `list_office_google_operator_candidates(uuid)` (active same-office
@@ -3300,7 +3378,7 @@ verified non-vacuous by reintroducing the defect).
   never assembles the eligible set itself. `get_office_google_mapping` now also
   returns `primary_is_active` / `side_manager_is_active` for the "⚠ Inactive"
   warning.
-- The `notify_google_operator_event` trigger notifies the *affected member* (never
+- The `notify_google_operator_event` trigger notifies the _affected member_ (never
   the actor) on assignment/removal, pointing at `/team/google`. Its
   `google_business` source buckets to the `system` notification category; the
   Phase 4 migration redefines `notification_category_for_source` and is newer
@@ -3323,10 +3401,10 @@ verified non-vacuous by reintroducing the defect).
   `OfficeGoogleBusinessSection` now pulls candidates from the server RPC instead
   of receiving a client-filtered `eligibleMembers` prop.
 
-
 ## Office Google Business reviews (Phase 5, 2026-10-01)
+
 - Migration `20261001190000_office_google_reviews.sql` adds the review cache and
-  the first Google *write* path (reply/delete). `google_business_reviews` is
+  the first Google _write_ path (reply/delete). `google_business_reviews` is
   unique on `(google_location_id, google_review_id)`, RLS inherits the office's
   rules, and no browser role holds INSERT/UPDATE/DELETE — writes are RPC-only.
 - **Server-side filtering is the contract.** `list_office_google_reviews`
@@ -3357,6 +3435,7 @@ verified non-vacuous by reintroducing the defect).
   `nav.googleBusiness` group. UI lives at `/team/google/reviews`.
 
 ## Office Google Business profile management (Phase 6, 2026-10-01)
+
 - Migration `20261001200000_office_google_profile_management.sql` turns
   `office_google_profiles` from a mapping row into the editable mirror of the
   Google location: identity, contact, categories, address and regular/special
@@ -3391,6 +3470,7 @@ verified non-vacuous by reintroducing the defect).
   group. UI lives at `/team/google/profile`.
 
 ## Office Google Business performance + insights (Phase 8, 2026-10-02)
+
 - Migration `20261002140000_office_google_performance.sql` adds three tables:
   `google_business_performance_daily` (one row per location/date/metric/scope/
   entity, `metric_value BIGINT`, `data_state` VALUE|ZERO|NO_DATA),
@@ -3453,7 +3533,7 @@ verified non-vacuous by reintroducing the defect).
   The finalizer does NOT clear the lock — the caller owns the lock lifecycle,
   which keeps multi-chunk backfill working (chunk 2 must still hold the token).
   `admin_fail_google_performance_sync_job` validates job status and token
-  *before* any write, so an operator cannot abort another sync's job.
+  _before_ any write, so an operator cannot abort another sync's job.
 - **`data_through` is the newest datapoint Google actually returned**, not the
   requested end date, and the previous value is preserved when a response has
   none — so a lagging or empty sync cannot be shown as Healthy. Keyword
@@ -3528,7 +3608,6 @@ verified non-vacuous by reintroducing the defect).
   `nav.googlePosts` / `nav.googlePhotos` under the `nav.googleBusiness` group.
   UI at `/team/google/photos` and `/team/google/posts`.
 
-
 ## Real-time Google notifications + background sync (Phase 9, 2026-10-02)
 
 - Migration `20261002160000_office_google_realtime_notifications.sql`. Four new
@@ -3562,7 +3641,7 @@ verified non-vacuous by reintroducing the defect).
   same event must not re-alert. The worker must thread the triggering event
   through: `claim_google_business_sync_job` returns `trigger_event_id` and
   `trigger_event_type`, and the HEALTH branch passes both into
-  `runGoogleHealthRefresh`, so the transition alert uses the *actual* Google
+  `runGoogleHealthRefresh`, so the transition alert uses the _actual_ Google
   event (a `DUPLICATE_LOCATION` stays Admin-only) and is deduped per event +
   recipient by `notify_google_business_event`.
 - **Redelivery is route-safe.** `record_google_business_event` is idempotent,
@@ -3571,7 +3650,7 @@ verified non-vacuous by reintroducing the defect).
   early-return on `is_duplicate` and strand the event UNROUTED.
 - **The event lifecycle is terminalized by the worker.**
   `finish_google_business_sync_job` returns `(finalized, job_status,
-  will_retry)`; the worker marks the triggering event `PROCESSED` on success,
+will_retry)`; the worker marks the triggering event `PROCESSED` on success,
   `FAILED` while a retry is pending, and `DEAD_LETTERED` once attempts are
   exhausted -- which is what feeds the connection failure/dead-letter counters
   and the Admin retry path. `FULL` is a bookkeeping row the worker completes
@@ -3621,21 +3700,26 @@ verified non-vacuous by reintroducing the defect).
 - Test-mock rule reminder: a page test that renders a component using
   `subscribeTables` must give its `@/integrations/supabase/client` mock a
   `channel()` (and `removeChannel`) surface, or `supabase.channel is not a
-  function` fails the whole file.
+function` fails the whole file.
 
 ## Google Business dashboard visibility gate (Phase 10b, 2026-10-03)
+
 - Migration `20261002190000_office_google_dashboard_visibility.sql` (newest
   timestamp, deploys last) adds `has_google_business_access()`: a boolean-only,
   `SECURITY DEFINER`, `STABLE` RPC the Team dashboard asks. It mirrors
   `authorize_google_office_action` -- an office assignment only counts while the
   caller is an active team member AND an active member of that office, so a
   deactivated member loses the page immediately. It reveals nothing about which
-  office or role, so it is not an enumeration oracle. `office_google_operators`
-  is added to `supabase_realtime` via the same `pg_publication_tables` guard the
-  Phase 9 migration uses.
-- The gate is a nav-level flag, not a per-role nav list: the team
-  `nav.googleBusiness` parent carries `googleBusinessNavKey: true` and owns all
-  six `/team/google*` children, so filtering the parent hides the whole tab set.
+  office or role, so it is not an enumeration oracle.
+- **Offices are the parent context (PR #186).** Google Business now lives at
+  `/team/offices/<slug>/google/*`; the old `/team/google*` URLs are kept as
+  `LegacyGoogleRedirect` shims. The sidebar still carries one
+  `nav.googleBusiness` parent (flagged `googleBusinessNavKey`) that is filtered
+  out for a non-operator, and the office workspace's Google tab is hidden the
+  same way. Both the legacy routes (`GoogleBusinessAccessGate` wrapping the
+  redirect) and the six office-scoped routes (gate with
+  `redirectTo="/team/offices"`) are guarded, so an unassigned member cannot
+  reach the surface by URL on either path.
   `resolveDashboardNavItems(role, items, { applyFormEnabled, googleBusinessAccess })`
   in `dashboardNavigation.ts` is the one pure composer the sidebar, the header
   title resolver and tests share (apply-form gate first, then Google). Non-team
@@ -3647,20 +3731,25 @@ verified non-vacuous by reintroducing the defect).
   operator-row change -- a member can be deactivated (`profiles`) or dropped
   from the office (`office_members`) while the page is open -- so the hook
   re-reads on all three realtime tables (all published in the same migration)
-  and again on window focus / `visibilitychange`. Only `DashboardLayout` and
-  `DashboardHeader` call it with `active = role === "team_member"`, so other
-  roles never make the RPC call.
+  and again on window focus / `visibilitychange`. `office_google_operators` and
+  `office_members` use `REPLICA IDENTITY FULL` so a _deletion_ is delivered to
+  the RLS client (default identity would hide the row in the policy and drop
+  the event). Only `DashboardLayout`, `DashboardHeader` and
+  `OfficeWorkspaceLayout` call it, and only with `active` true for a team
+  member, so other roles never make the RPC call.
 - Hiding nav is cosmetic only: `GoogleBusinessAccessGate`
-  (`src/components/auth/`) wraps every `team.google.*` route component and
-  redirects to `/team` when access is not confirmed. The office-scoped data RPCs
-  reject an unassigned caller regardless, so the gate closes the URL, not the
-  security boundary.
+  (`src/components/auth/`) wraps every `team.google.*` and
+  `team.offices.$officeId.google.*` route component and redirects when access
+  is not confirmed. The office-scoped data RPCs reject an unassigned caller
+  regardless, so the gate closes the URL, not the security boundary.
 - Tests: the pure composer and flag are covered in
   `dashboardNavigation.test.ts`; the hook (resolve true/false/error, inactive
-  skip, realtime re-read, unsubscribe) in `useGoogleBusinessAccess.test.tsx`;
-  the gate (loading / render / redirect) in `GoogleBusinessAccessGate.test.tsx`.
-  `DashboardHeader.test.tsx` mocks `useGoogleBusinessAccess` because the header
-  now depends on `AuthProvider`.
+  skip, subscription set, focus revalidation, unsubscribe) in
+  `useGoogleBusinessAccess.test.tsx`; the gate (loading / render / custom
+  redirect / active flag) in `GoogleBusinessAccessGate.test.tsx`; the office
+  tab visibility in `OfficeWorkspaceLayout.test.tsx`. `DashboardHeader.test.tsx`
+  mocks `useGoogleBusinessAccess` because the header now depends on
+  `AuthProvider`.
 
 ## Phase 10 — Security, E2E verification, production hardening (Google Business)
 
@@ -3707,7 +3796,7 @@ verified non-vacuous by reintroducing the defect).
   Calling Google first and rejecting at the persistence RPC let a paused
   integration still mutate Google. Every write path now calls
   `assertGoogleWriteAllowed` (`src/lib/googleBusinessWriteGate.ts`) with its
-  operation-specific WRITE action *before* any gateway call: replies
+  operation-specific WRITE action _before_ any gateway call: replies
   (`GOOGLE_REPLY_REVIEW`), profile edits (`GOOGLE_UPDATE_PROFILE`), change
   requests (`GOOGLE_APPROVE_CHANGE_REQUEST`), media upload/delete
   (`GOOGLE_MANAGE_MEDIA`), post publish/delete (`GOOGLE_MANAGE_POSTS`). The
@@ -3717,4 +3806,3 @@ verified non-vacuous by reintroducing the defect).
   mutation action classifies as `WRITE` and is refused under a write freeze.
 - **CI:** lint is non-blocking and carries pre-existing debt; typecheck and
   tests are the blocking gates. `npm run build` is `vite build` only.
-

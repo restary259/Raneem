@@ -148,6 +148,7 @@ export type OfficeGoogleMappingRow = {
 /** Phase 4: one office a Primary / Side Manager may operate (from list_my_google_offices). */
 export type MyGoogleOfficeRow = {
   office_id: string;
+  office_slug: string | null;
   office_name: string | null;
   operator_role: GoogleOperatorRole;
   mapping_status: GoogleMappingStatus;
@@ -537,6 +538,7 @@ export type GooglePerformanceSyncJob = {
 /** Phase 8: one office the caller may view Insights for (selector source). */
 export type GooglePerformanceOfficeRow = {
   office_id: string;
+  office_slug: string | null;
   office_name: string | null;
   operator_role: "PRIMARY" | "SIDE_MANAGER" | "ADMIN";
   mapping_status: string | null;

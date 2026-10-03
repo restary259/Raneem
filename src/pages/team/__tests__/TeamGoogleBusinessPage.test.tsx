@@ -24,6 +24,35 @@ vi.mock("react-i18next", () => {
   return { useTranslation: () => ({ t, i18n: { language: "en" } }) };
 });
 
+// The page resolves its office context through the router hooks. Without a
+// RouterProvider these must be stubbed; the legacy `/team/google` route is the
+// no-office case, so the selection stays empty.
+vi.mock("@/lib/router-compat", () => ({
+  Link: ({
+    to,
+    children,
+    ...props
+  }: {
+    to: string;
+    children?: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
+  useParams: () => ({}),
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
+  useLocation: () => ({
+    pathname: "/team/google",
+    search: "",
+    hash: "",
+    state: null,
+    key: "/team/google",
+  }),
+  useNavigate: () => vi.fn(),
+}));
+
 type RpcArgs = Record<string, unknown> | undefined;
 type RpcResult = { data?: unknown; error?: unknown };
 let rpcImpl: (fn: string, args?: RpcArgs) => RpcResult;

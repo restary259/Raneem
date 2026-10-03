@@ -1,16 +1,39 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import AppointmentActionMenu from "@/components/team/AppointmentActionMenu";
+import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toneClasses, type StatusTone } from "@/lib/statusTokens";
@@ -83,10 +106,53 @@ interface Case {
 }
 
 /* ── Constants ──────────────────────────────────────────────────────── */
-const WORK_START = 8; // 8 am
-const WORK_END = 20; // 8 pm (last bookable slot = 19:xx)
-const HOURS = Array.from({ length: WORK_END - WORK_START }, (_, i) => i + WORK_START);
+// Fallback only. The calendar window is derived from the member's office
+// opening hours so it cannot contradict the public booking engine, which uses
+// office_hours as the source of truth.
+const DEFAULT_WORK_START = 8;
+const DEFAULT_WORK_END = 20;
 type CalendarView = "day" | "week" | "month";
+
+type OfficeHoursRow = {
+  office_id: string;
+  weekday: number;
+  is_open: boolean;
+  open_time: string | null;
+  close_time: string | null;
+};
+
+function hourFromTime(value: string | null): number | null {
+  if (!value) return null;
+  const hour = Number(String(value).split(":")[0]);
+  return Number.isFinite(hour) ? hour : null;
+}
+
+/**
+ * Earliest open hour and latest close hour across the given office hours. When
+ * an office is in context, only that office's hours count so the calendar
+ * window matches the slots the public booking engine offers for it.
+ */
+function officeHourRange(
+  rows: OfficeHoursRow[],
+  officeId?: string,
+): { start: number; end: number } {
+  let start = 24;
+  let end = 0;
+  let any = false;
+  for (const row of rows) {
+    if (officeId && row.office_id !== officeId) continue;
+    if (!row.is_open) continue;
+    const open = hourFromTime(row.open_time);
+    const close = hourFromTime(row.close_time);
+    if (open === null || close === null) continue;
+    any = true;
+    start = Math.min(start, open);
+    end = Math.max(end, close);
+  }
+  if (!any) return { start: DEFAULT_WORK_START, end: DEFAULT_WORK_END };
+  const safeStart = Math.max(0, Math.min(start, 23));
+  return { start: safeStart, end: Math.max(safeStart + 1, Math.min(24, end)) };
+}
 
 /* ── Status helpers ─────────────────────────────────────────────────── */
 // Returns a labelKey (i18n key) rather than a raw string so callers can use t(s.labelKey)
@@ -99,16 +165,15 @@ const apptStyle = (outcome: string | null) => {
     return "neutral";
   })();
   const tc = toneClasses(tone);
-  const labelKey =
-    !outcome
-      ? "team.appointments.statusUpcoming"
-      : outcome === "completed"
-        ? "team.appointments.statusCompleted"
-        : outcome === "no_show"
-          ? "team.appointments.statusNoShow"
-          : outcome === "rescheduled" || outcome === "delayed"
-            ? "team.appointments.statusRescheduled"
-            : outcome;
+  const labelKey = !outcome
+    ? "team.appointments.statusUpcoming"
+    : outcome === "completed"
+      ? "team.appointments.statusCompleted"
+      : outcome === "no_show"
+        ? "team.appointments.statusNoShow"
+        : outcome === "rescheduled" || outcome === "delayed"
+          ? "team.appointments.statusRescheduled"
+          : outcome;
   const icon = !outcome ? (
     <Clock className="h-2.5 w-2.5" />
   ) : outcome === "completed" ? (
@@ -133,6 +198,10 @@ const apptStyle = (outcome: string | null) => {
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════════════ */
 export default function TeamAppointmentsPage() {
+  // Inside an office workspace the layout resolved the slug to a uuid and
+  // authorized the caller; scope the calendar to that office. The cross-office
+  // `/team/appointments` route has no provider, so `officeId` stays undefined.
+  const officeId = useOfficeWorkspaceContext()?.officeId;
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -145,8 +214,24 @@ export default function TeamAppointmentsPage() {
   const [confirmingVisit, setConfirmingVisit] = useState<string | null>(null);
   const [myCases, setMyCases] = useState<Case[]>([]);
   const [myOffices, setMyOffices] = useState<OfficeSummary[]>([]);
+  const [officeHours, setOfficeHours] = useState<OfficeHoursRow[]>([]);
   const [officeNames, setOfficeNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+
+  // The calendar window follows office opening hours instead of a fixed 8–20,
+  // so it always agrees with the slots the public booking engine offers.
+  const { start: WORK_START, end: WORK_END } = useMemo(
+    () => officeHourRange(officeHours, officeId),
+    [officeHours, officeId],
+  );
+  const HOURS = useMemo(
+    () =>
+      Array.from(
+        { length: Math.max(1, WORK_END - WORK_START) },
+        (_, i) => i + WORK_START,
+      ),
+    [WORK_START, WORK_END],
+  );
 
   /* ── Calendar ── */
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -175,7 +260,8 @@ export default function TeamAppointmentsPage() {
   // Push reminders deep-link to /team/appointments?appointment=<id>; open it once loaded.
   const deepLinkHandled = useRef(false);
   useEffect(() => {
-    if (deepLinkHandled.current || loading || typeof window === "undefined") return;
+    if (deepLinkHandled.current || loading || typeof window === "undefined")
+      return;
     const params = new URLSearchParams(window.location.search);
     const id = params.get("appointment");
     if (!id) return;
@@ -186,9 +272,16 @@ export default function TeamAppointmentsPage() {
     };
     params.delete("appointment");
     const qs = params.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${qs ? `?${qs}` : ""}`,
+    );
     const local = appts.find((a) => a.id === id);
-    if (local) { open(local); return; }
+    if (local) {
+      open(local);
+      return;
+    }
     // Not in the loaded list (e.g. older) — fetch that single row (RLS applies).
     supabase
       .from("appointments")
@@ -196,7 +289,10 @@ export default function TeamAppointmentsPage() {
       .eq("id", id)
       .maybeSingle()
       .then(({ data, error }) => {
-        if (error) { console.warn("[appointments] deep link fetch failed", error.message); return; }
+        if (error) {
+          console.warn("[appointments] deep link fetch failed", error.message);
+          return;
+        }
         if (data) open(data as unknown as Appointment);
       });
   }, [appts, loading]);
@@ -208,8 +304,14 @@ export default function TeamAppointmentsPage() {
 
   /* ── Drag & Drop ── */
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverSlot, setDragOverSlot] = useState<{ day: Date; hour: number } | null>(null);
-  const [pendingMove, setPendingMove] = useState<{ appt: Appointment; newDate: Date } | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<{
+    day: Date;
+    hour: number;
+  } | null>(null);
+  const [pendingMove, setPendingMove] = useState<{
+    appt: Appointment;
+    newDate: Date;
+  } | null>(null);
   const [confirmingMove, setConfirmingMove] = useState(false);
 
   /* ══ DATA FETCHING ═══════════════════════════════════════════════════ */
@@ -218,36 +320,53 @@ export default function TeamAppointmentsPage() {
     setLoading(true);
     try {
       const cutoff = subDays(new Date(), 1).toISOString(); // keep yesterday visible, hide older
-      const { data, error } = await supabase
+      let query = supabase
         .from("appointments")
         .select("*, case:cases(full_name, phone_number, status)")
         .eq("team_member_id", user.id)
         // future/recent OR still pending an outcome (safety net so a missed
         // outcome never disappears just because the slot has passed)
-        .or(`scheduled_at.gte.${cutoff},outcome.is.null`)
-        .order("scheduled_at");
+        .or(`scheduled_at.gte.${cutoff},outcome.is.null`);
+      // Inside an office workspace the calendar shows only that office's
+      // appointments; outside it, the member's full book across offices.
+      if (officeId) query = query.eq("office_id", officeId);
+      const { data, error } = await query.order("scheduled_at");
       if (error) throw error;
-      const appointmentRows = (data as any[]) ?? [];
+      const appointmentRows = ((data as any[]) ?? []).filter(
+        (row) => !officeId || row.office_id === officeId,
+      );
       setAppts(appointmentRows);
-      const appointmentOfficeIds = [...new Set(appointmentRows.map((row) => row.office_id).filter(Boolean))] as string[];
+      const appointmentOfficeIds = [
+        ...new Set(appointmentRows.map((row) => row.office_id).filter(Boolean)),
+      ] as string[];
       const officeLookupResult = appointmentOfficeIds.length
-        ? await (supabase.from as any)("offices").select("id,name_ar,name_en,name_he,city").in("id", appointmentOfficeIds)
+        ? await (supabase.from as any)("offices")
+            .select("id,name_ar,name_en,name_he,city")
+            .in("id", appointmentOfficeIds)
         : { data: [], error: null };
       if (officeLookupResult.error) throw officeLookupResult.error;
       const officeMap: Record<string, string> = {};
       (officeLookupResult.data ?? []).forEach((office: OfficeSummary) => {
-        officeMap[office.id] = isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en;
+        officeMap[office.id] = isAr
+          ? office.name_ar
+          : i18n.language.startsWith("he")
+            ? office.name_he || office.name_en
+            : office.name_en;
       });
       setOfficeNames(officeMap);
-      const { data: requested, error: requestError } = await supabase
+      let requestQuery = supabase
         .from("appointments")
-        .select("*, case:cases!inner(full_name, phone_number, status, assigned_to)")
+        .select(
+          "*, case:cases!inner(full_name, phone_number, status, assigned_to)",
+        )
         .eq("case.assigned_to", user.id)
         .eq("public_booking", true)
         .eq("confirmation_status", "pending")
         .is("outcome", null)
-        .gte("scheduled_at", new Date().toISOString())
-        .order("scheduled_at");
+        .gte("scheduled_at", new Date().toISOString());
+      if (officeId) requestQuery = requestQuery.eq("office_id", officeId);
+      const { data: requested, error: requestError } =
+        await requestQuery.order("scheduled_at");
       if (requestError) throw requestError;
       setVisitRequests((requested as Appointment[]) ?? []);
     } catch (err: any) {
@@ -256,18 +375,22 @@ export default function TeamAppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, toast, i18n.language]);
+  }, [user, toast, i18n.language, officeId]);
 
   const confirmVisit = async (id: string) => {
     setConfirmingVisit(id);
     try {
-      const { error } = await supabase.rpc("confirm_public_appointment", { p_appointment_id: id });
+      const { error } = await supabase.rpc("confirm_public_appointment", {
+        p_appointment_id: id,
+      });
       if (error) throw error;
       toast({ title: t("team.appointments.visitConfirmed") });
       await fetchAppts();
     } catch (err) {
       toast({ variant: "destructive", description: apptErrorMessage(err) });
-    } finally { setConfirmingVisit(null); }
+    } finally {
+      setConfirmingVisit(null);
+    }
   };
 
   /*
@@ -285,27 +408,51 @@ export default function TeamAppointmentsPage() {
   const fetchMyOffices = useCallback(async () => {
     if (!user) return;
     try {
-      const { data: membershipRows, error: membershipError } = await (supabase.from as any)("office_members")
+      const { data: membershipRows, error: membershipError } = await (
+        supabase.from as any
+      )("office_members")
         .select("office_id")
         .eq("user_id", user.id)
         .eq("is_active", true);
       if (membershipError) throw membershipError;
-      const ids = [...new Set((membershipRows ?? []).map((row: any) => row.office_id).filter(Boolean))] as string[];
-      if (!ids.length) {
+      const ids = [
+        ...new Set(
+          (membershipRows ?? [])
+            .map((row: any) => row.office_id)
+            .filter(Boolean),
+        ),
+      ] as string[];
+      // In an office workspace an admin may not be a member of the office, so
+      // ensure the focused office's own hours are queried too.
+      const hourIds =
+        officeId && !ids.includes(officeId) ? [...ids, officeId] : ids;
+      if (!ids.length && !officeId) {
         setMyOffices([]);
+        setOfficeHours([]);
         return;
       }
-      const { data, error } = await (supabase.from as any)("offices")
-        .select("id,name_ar,name_en,name_he,city")
-        .in("id", ids)
-        .eq("is_active", true)
-        .is("deleted_at", null);
-      if (error) throw error;
-      setMyOffices((data ?? []) as OfficeSummary[]);
+      const [officeRes, hoursRes] = await Promise.all([
+        ids.length
+          ? (supabase.from as any)("offices")
+              .select("id,name_ar,name_en,name_he,city")
+              .in("id", ids)
+              .eq("is_active", true)
+              .is("deleted_at", null)
+          : Promise.resolve({ data: [], error: null }),
+        hourIds.length
+          ? (supabase.from as any)("office_hours")
+              .select("office_id,weekday,is_open,open_time,close_time")
+              .in("office_id", hourIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (officeRes.error) throw officeRes.error;
+      if (hoursRes.error) throw hoursRes.error;
+      setMyOffices((officeRes.data ?? []) as OfficeSummary[]);
+      setOfficeHours((hoursRes.data ?? []) as OfficeHoursRow[]);
     } catch (err) {
       console.error("fetchMyOffices error:", err);
     }
-  }, [user]);
+  }, [user, officeId]);
 
   const fetchMyCases = useCallback(async () => {
     if (!user) return;
@@ -354,7 +501,10 @@ export default function TeamAppointmentsPage() {
 
     // Working hours safeguard
     if (hour < WORK_START || hour >= WORK_END) {
-      toast({ variant: "destructive", description: t("team.appointments.errDropWorkHours") });
+      toast({
+        variant: "destructive",
+        description: t("team.appointments.errDropWorkHours"),
+      });
       setDraggingId(null);
       setDragOverSlot(null);
       return;
@@ -412,7 +562,9 @@ export default function TeamAppointmentsPage() {
     const d = date ? new Date(date) : new Date();
     if (hour !== undefined) d.setHours(hour, 0, 0, 0);
     setNewDate(d);
-    setNewTime(hour !== undefined ? `${String(hour).padStart(2, "0")}:00` : "10:00");
+    setNewTime(
+      hour !== undefined ? `${String(hour).padStart(2, "0")}:00` : "10:00",
+    );
     setNewDuration("60");
     setNewNotes("");
     setNewCaseId("");
@@ -440,26 +592,45 @@ export default function TeamAppointmentsPage() {
   /* ══ SAVE ════════════════════════════════════════════════════════════ */
   const handleSave = async () => {
     if (!newDate) {
-      toast({ variant: "destructive", description: t("team.appointments.errNoDate") });
+      toast({
+        variant: "destructive",
+        description: t("team.appointments.errNoDate"),
+      });
       return;
     }
     if (!useManualName && !newCaseId) {
-      toast({ variant: "destructive", description: t("team.appointments.errNoCase") });
+      toast({
+        variant: "destructive",
+        description: t("team.appointments.errNoCase"),
+      });
       return;
     }
     if (useManualName && !manualName.trim()) {
-      toast({ variant: "destructive", description: t("team.appointments.errNoName") });
+      toast({
+        variant: "destructive",
+        description: t("team.appointments.errNoName"),
+      });
       return;
     }
     if (!newOfficeId) {
-      toast({ variant: "destructive", description: isAr ? "اختار المكتب" : i18n.language.startsWith("he") ? "יש לבחור משרד" : "Select an office" });
+      toast({
+        variant: "destructive",
+        description: isAr
+          ? "اختار المكتب"
+          : i18n.language.startsWith("he")
+            ? "יש לבחור משרד"
+            : "Select an office",
+      });
       return;
     }
 
     // Working hours validation
     const [hh] = newTime.split(":").map(Number);
     if (hh < WORK_START || hh >= WORK_END) {
-      toast({ variant: "destructive", description: t("team.appointments.errWorkHours") });
+      toast({
+        variant: "destructive",
+        description: t("team.appointments.errWorkHours"),
+      });
       return;
     }
 
@@ -532,7 +703,10 @@ export default function TeamAppointmentsPage() {
     setConfirmingDelete(true);
     try {
       const caseId = deletingAppt.case_id;
-      const { error } = await supabase.from("appointments").delete().eq("id", deletingAppt.id);
+      const { error } = await supabase
+        .from("appointments")
+        .delete()
+        .eq("id", deletingAppt.id);
       if (error) throw error;
 
       /*
@@ -592,21 +766,36 @@ export default function TeamAppointmentsPage() {
       const d = parseISO(a.scheduled_at);
       return isSameDay(d, day) && getHours(d) === hour;
     });
-  const getDay = (day: Date) => appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
+  const getDay = (day: Date) =>
+    appts.filter((a) => isSameDay(parseISO(a.scheduled_at), day));
   // Gregorian calendar + ASCII digits in both languages
   const calLocale = isAr ? "ar-u-nu-latn-ca-gregory" : "en-US";
   const headerLabel =
     view === "day"
-      ? currentDate.toLocaleDateString(calLocale, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+      ? currentDate.toLocaleDateString(calLocale, {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
       : view === "week"
         ? `${weekDays[0].toLocaleDateString(calLocale, { month: "short", day: "numeric" })} – ${weekDays[6].toLocaleDateString(calLocale, { month: "short", day: "numeric", year: "numeric" })}`
-        : currentDate.toLocaleDateString(calLocale, { month: "long", year: "numeric" });
+        : currentDate.toLocaleDateString(calLocale, {
+            month: "long",
+            year: "numeric",
+          });
 
   /* ══ APPOINTMENT BLOCK ═══════════════════════════════════════════════
      draggable={true} always. Browser guarantees: real drag → no click fires.
      So onClick safely opens detail with zero extra logic needed.
   ═══════════════════════════════════════════════════════════════════════ */
-  const ApptBlock = ({ appt, compact = false }: { appt: Appointment; compact?: boolean }) => {
+  const ApptBlock = ({
+    appt,
+    compact = false,
+  }: {
+    appt: Appointment;
+    compact?: boolean;
+  }) => {
     const s = apptStyle(appt.outcome);
     return (
       <div
@@ -629,14 +818,20 @@ export default function TeamAppointmentsPage() {
           draggingId === appt.id
             ? "opacity-40 scale-95 cursor-grabbing"
             : "cursor-grab hover:shadow-xs hover:scale-[1.01] active:cursor-grabbing",
-          compact ? "text-[9px] px-1.5 py-0.5 mb-0.5" : "text-[11px] p-1.5 mb-1",
+          compact
+            ? "text-[9px] px-1.5 py-0.5 mb-0.5"
+            : "text-[11px] p-1.5 mb-1",
         )}
       >
         <div className="flex items-center gap-1 min-w-0 w-full">
           <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", s.dot)} />
           <span
             className="font-semibold truncate min-w-0 flex-1"
-            title={(appt.case as any)?.full_name ?? (appt as any)?.guest_name ?? undefined}
+            title={
+              (appt.case as any)?.full_name ??
+              (appt as any)?.guest_name ??
+              undefined
+            }
           >
             {(appt.case as any)?.full_name ?? (appt as any)?.guest_name ?? "—"}
           </span>
@@ -650,8 +845,12 @@ export default function TeamAppointmentsPage() {
         {!compact && (
           <div className="flex items-center gap-1 mt-0.5 opacity-65 ps-2.5 min-w-0 w-full">
             <Clock className="h-2.5 w-2.5 shrink-0" />
-            <span className="truncate">{format(parseISO(appt.scheduled_at), "h:mm a")}</span>
-            <span className="opacity-70 shrink-0">· {appt.duration_minutes}m</span>
+            <span className="truncate">
+              {format(parseISO(appt.scheduled_at), "h:mm a")}
+            </span>
+            <span className="opacity-70 shrink-0">
+              · {appt.duration_minutes}m
+            </span>
           </div>
         )}
       </div>
@@ -659,7 +858,11 @@ export default function TeamAppointmentsPage() {
   };
 
   const officeLabel = (office: OfficeSummary) =>
-    isAr ? office.name_ar : i18n.language.startsWith("he") ? (office.name_he || office.name_en) : office.name_en;
+    isAr
+      ? office.name_ar
+      : i18n.language.startsWith("he")
+        ? office.name_he || office.name_en
+        : office.name_en;
 
   /* ══ RENDER ══════════════════════════════════════════════════════════ */
   return (
@@ -727,7 +930,9 @@ export default function TeamAppointmentsPage() {
             onClick={() => openNew()}
           >
             <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t("team.appointments.newAppointment")}</span>
+            <span className="hidden sm:inline">
+              {t("team.appointments.newAppointment")}
+            </span>
           </Button>
         </div>
       </div>
@@ -738,19 +943,47 @@ export default function TeamAppointmentsPage() {
         </div>
       )}
 
-      {!loading && visitRequests.length > 0 && <section className="border-b border-border bg-muted/20 p-4" aria-label={t("team.appointments.visitRequests")}>
-        <h2 className="mb-3 font-semibold text-foreground">{t("team.appointments.visitRequests")}</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {visitRequests.map((request) => <div key={request.id} className="flex items-center justify-between gap-3 border border-border bg-background p-3 text-sm">
-            <div className="min-w-0">
-  <p className="truncate font-semibold">{request.case?.full_name}</p>
-  <p className="text-muted-foreground">{format(parseISO(request.scheduled_at), "EEE, MMM d · h:mm a")}</p>
-  {request.office_id && officeNames[request.office_id] ? <p className="text-xs font-medium text-primary">{officeNames[request.office_id]}</p> : null}
-</div>
-            <AppointmentActionMenu appointmentId={request.id} onDone={() => { void fetchAppts(); }} />
-          </div>)}
-        </div>
-      </section>}
+      {!loading && visitRequests.length > 0 && (
+        <section
+          className="border-b border-border bg-muted/20 p-4"
+          aria-label={t("team.appointments.visitRequests")}
+        >
+          <h2 className="mb-3 font-semibold text-foreground">
+            {t("team.appointments.visitRequests")}
+          </h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {visitRequests.map((request) => (
+              <div
+                key={request.id}
+                className="flex items-center justify-between gap-3 border border-border bg-background p-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">
+                    {request.case?.full_name}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {format(
+                      parseISO(request.scheduled_at),
+                      "EEE, MMM d · h:mm a",
+                    )}
+                  </p>
+                  {request.office_id && officeNames[request.office_id] ? (
+                    <p className="text-xs font-medium text-primary">
+                      {officeNames[request.office_id]}
+                    </p>
+                  ) : null}
+                </div>
+                <AppointmentActionMenu
+                  appointmentId={request.id}
+                  onDone={() => {
+                    void fetchAppts();
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ══ DAY VIEW ══ */}
       {!loading && view === "day" && (
@@ -760,17 +993,30 @@ export default function TeamAppointmentsPage() {
               <div
                 className={cn(
                   "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium",
-                  isToday(currentDate) ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
+                  isToday(currentDate)
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground",
                 )}
               >
                 <CalendarIcon className="h-3.5 w-3.5" />
-                {currentDate.toLocaleDateString(calLocale, { weekday: "long", month: "long", day: "numeric" })}
-                {isToday(currentDate) && <span className="text-xs opacity-80">{t("team.appointments.todayPill")}</span>}
+                {currentDate.toLocaleDateString(calLocale, {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+                {isToday(currentDate) && (
+                  <span className="text-xs opacity-80">
+                    {t("team.appointments.todayPill")}
+                  </span>
+                )}
               </div>
             </div>
             {HOURS.map((hour) => {
               const slotAppts = getSlot(currentDate, hour);
-              const isOver = dragOverSlot && isSameDay(dragOverSlot.day, currentDate) && dragOverSlot.hour === hour;
+              const isOver =
+                dragOverSlot &&
+                isSameDay(dragOverSlot.day, currentDate) &&
+                dragOverSlot.hour === hour;
               return (
                 <div
                   key={hour}
@@ -786,7 +1032,9 @@ export default function TeamAppointmentsPage() {
                 >
                   <div className="py-2 px-3 text-xs text-muted-foreground shrink-0 flex items-start pt-2.5 border-e border-border/40 select-none">
                     {new Date().setHours(hour, 0, 0, 0) &&
-                      new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
+                      new Date(
+                        new Date().setHours(hour, 0, 0, 0),
+                      ).toLocaleTimeString(calLocale, {
                         hour: "numeric",
                         hour12: true,
                       })}
@@ -833,7 +1081,9 @@ export default function TeamAppointmentsPage() {
                   <div
                     className={cn(
                       "text-sm font-semibold mx-auto w-7 h-7 flex items-center justify-center rounded-full mt-0.5 cursor-pointer transition-colors",
-                      isToday(day) ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                      isToday(day)
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted",
                     )}
                     onClick={() => {
                       setCurrentDate(day);
@@ -853,14 +1103,19 @@ export default function TeamAppointmentsPage() {
                 style={{ gridTemplateColumns: "64px repeat(7, 1fr)" }}
               >
                 <div className="py-1 px-3 text-xs text-muted-foreground border-e border-border/40 flex items-start pt-2 shrink-0 select-none">
-                  {new Date(new Date().setHours(hour, 0, 0, 0)).toLocaleTimeString(calLocale, {
+                  {new Date(
+                    new Date().setHours(hour, 0, 0, 0),
+                  ).toLocaleTimeString(calLocale, {
                     hour: "numeric",
                     hour12: true,
                   })}
                 </div>
                 {weekDays.map((day) => {
                   const slotAppts = getSlot(day, hour);
-                  const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day) && dragOverSlot.hour === hour;
+                  const isOver =
+                    dragOverSlot &&
+                    isSameDay(dragOverSlot.day, day) &&
+                    dragOverSlot.hour === hour;
                   return (
                     <div
                       key={day.toISOString()}
@@ -936,14 +1191,16 @@ export default function TeamAppointmentsPage() {
                   >
                     {wDays.map((day) => {
                       const dayAppts = getDay(day);
-                      const isOver = dragOverSlot && isSameDay(dragOverSlot.day, day);
+                      const isOver =
+                        dragOverSlot && isSameDay(dragOverSlot.day, day);
 
                       return (
                         <div
                           key={day.toISOString()}
                           className={cn(
                             "flex min-h-0 min-w-0 flex-col overflow-hidden border-e border-border/30 p-1.5 transition-colors last:border-e-0",
-                            !isSameMonth(day, currentDate) && "bg-muted/10 text-muted-foreground opacity-35",
+                            !isSameMonth(day, currentDate) &&
+                              "bg-muted/10 text-muted-foreground opacity-35",
                             isToday(day) && "bg-violet-50/40",
                             isOver ? "bg-violet-100/50" : "hover:bg-muted/15",
                           )}
@@ -958,7 +1215,9 @@ export default function TeamAppointmentsPage() {
                           <div
                             className={cn(
                               "mx-auto mb-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors",
-                              isToday(day) ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+                              isToday(day)
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted",
                             )}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -975,7 +1234,9 @@ export default function TeamAppointmentsPage() {
                             ))}
                             {dayAppts.length > 3 && (
                               <p className="truncate text-center text-[9px] font-medium text-muted-foreground">
-                                {t("team.appointments.moreCount", { count: dayAppts.length - 3 })}
+                                {t("team.appointments.moreCount", {
+                                  count: dayAppts.length - 3,
+                                })}
                               </p>
                             )}
                           </div>
@@ -1006,7 +1267,9 @@ export default function TeamAppointmentsPage() {
               <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                 <CalendarIcon className="h-3.5 w-3.5 text-primary" />
               </span>
-              {editingAppt ? t("team.appointments.editTitle") : t("team.appointments.newTitle")}
+              {editingAppt
+                ? t("team.appointments.editTitle")
+                : t("team.appointments.newTitle")}
             </DialogTitle>
           </DialogHeader>
 
@@ -1020,14 +1283,18 @@ export default function TeamAppointmentsPage() {
                 <div className="flex gap-2">
                   <Select value={newCaseId} onValueChange={setNewCaseId}>
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder={t("team.appointments.placeholderCase")} />
+                      <SelectValue
+                        placeholder={t("team.appointments.placeholderCase")}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {myCases.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           <span className="font-medium">{c.full_name}</span>
                           {c.phone_number && (
-                            <span className="text-muted-foreground ml-2 text-xs">{c.phone_number}</span>
+                            <span className="text-muted-foreground ml-2 text-xs">
+                              {c.phone_number}
+                            </span>
                           )}
                         </SelectItem>
                       ))}
@@ -1043,7 +1310,8 @@ export default function TeamAppointmentsPage() {
                       setNewCaseId("");
                     }}
                   >
-                    <User className="h-3 w-3" /> {t("team.appointments.manualBtn")}
+                    <User className="h-3 w-3" />{" "}
+                    {t("team.appointments.manualBtn")}
                   </Button>
                 </div>
               ) : (
@@ -1072,7 +1340,9 @@ export default function TeamAppointmentsPage() {
             {myOffices.length === 1 && (
               <p className="text-xs text-muted-foreground">
                 {t("team.appointments.officeLabel", "Office")}:{" "}
-                <span className="font-medium text-foreground">{officeLabel(myOffices[0])}</span>
+                <span className="font-medium text-foreground">
+                  {officeLabel(myOffices[0])}
+                </span>
               </p>
             )}
             {myOffices.length > 1 && (
@@ -1080,11 +1350,29 @@ export default function TeamAppointmentsPage() {
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   {t("team.appointments.officeLabel", "Office")}
                 </Label>
-                <Select value={newOfficeId || "none"} onValueChange={function (value) { setNewOfficeId(value === "none" ? "" : value); }}>
-                  <SelectTrigger><SelectValue placeholder={t("team.appointments.officeSelect", "Select office")} /></SelectTrigger>
+                <Select
+                  value={newOfficeId || "none"}
+                  onValueChange={function (value) {
+                    setNewOfficeId(value === "none" ? "" : value);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t(
+                        "team.appointments.officeSelect",
+                        "Select office",
+                      )}
+                    />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">{t("team.appointments.officeNone", "Not assigned")}</SelectItem>
-                    {myOffices.map((office) => <SelectItem key={office.id} value={office.id}>{officeLabel(office)}</SelectItem>)}
+                    <SelectItem value="none">
+                      {t("team.appointments.officeNone", "Not assigned")}
+                    </SelectItem>
+                    {myOffices.map((office) => (
+                      <SelectItem key={office.id} value={office.id}>
+                        {officeLabel(office)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1100,10 +1388,15 @@ export default function TeamAppointmentsPage() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("h-10 w-full justify-start rounded-full px-4 text-sm font-normal", !newDate && "text-muted-foreground")}
+                      className={cn(
+                        "h-10 w-full justify-start rounded-full px-4 text-sm font-normal",
+                        !newDate && "text-muted-foreground",
+                      )}
                     >
                       <CalendarIcon className="me-2 h-4 w-4" />
-                      {newDate ? format(newDate, "MMM d, yyyy") : t("team.appointments.placeholderDate")}
+                      {newDate
+                        ? format(newDate, "MMM d, yyyy")
+                        : t("team.appointments.placeholderDate")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -1125,11 +1418,16 @@ export default function TeamAppointmentsPage() {
                   type="time"
                   className="h-10 w-full min-w-0 max-w-full rounded-full px-4 text-sm [appearance:none]"
                   value={newTime}
-                  min="08:00"
-                  max="19:59"
+                  min={`${String(WORK_START).padStart(2, "0")}:00`}
+                  max={`${String(WORK_END - 1).padStart(2, "0")}:59`}
                   onChange={(e) => setNewTime(e.target.value)}
                 />
-                <p className="text-[11px] text-muted-foreground">{t("team.appointments.labelTimeRange")}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {t("team.appointments.labelTimeRange", {
+                    start: `${String(WORK_START).padStart(2, "0")}:00`,
+                    end: `${String(WORK_END).padStart(2, "0")}:00`,
+                  })}
+                </p>
               </div>
             </div>
 
@@ -1166,7 +1464,8 @@ export default function TeamAppointmentsPage() {
             {/* Notes */}
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-                <FileText className="h-3 w-3" /> {t("team.appointments.labelNotes")}
+                <FileText className="h-3 w-3" />{" "}
+                {t("team.appointments.labelNotes")}
               </Label>
               <Textarea
                 value={newNotes}
@@ -1190,8 +1489,12 @@ export default function TeamAppointmentsPage() {
               {t("team.appointments.btnCancel")}
             </Button>
             <Button onClick={handleSave} disabled={saving} type="button">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
-              {editingAppt ? t("team.appointments.btnSaveChanges") : t("team.appointments.btnCreate")}
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+              ) : null}
+              {editingAppt
+                ? t("team.appointments.btnSaveChanges")
+                : t("team.appointments.btnCreate")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1212,9 +1515,16 @@ export default function TeamAppointmentsPage() {
                 <>
                   <DialogHeader>
                     <div className="flex items-start gap-3">
-                      <span className={cn("w-2 h-10 rounded-full shrink-0 mt-0.5", s.dot)} />
+                      <span
+                        className={cn(
+                          "w-2 h-10 rounded-full shrink-0 mt-0.5",
+                          s.dot,
+                        )}
+                      />
                       <div className="flex-1 min-w-0">
-                        <DialogTitle className="truncate">{(selectedAppt.case as any)?.full_name ?? "—"}</DialogTitle>
+                        <DialogTitle className="truncate">
+                          {(selectedAppt.case as any)?.full_name ?? "—"}
+                        </DialogTitle>
                         <span
                           className={cn(
                             "inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mt-1",
@@ -1229,27 +1539,39 @@ export default function TeamAppointmentsPage() {
                   <div className="space-y-2.5 text-sm">
                     <div className="flex items-center gap-2.5 text-muted-foreground">
                       <CalendarIcon className="h-4 w-4 shrink-0 text-primary/70" />
-                      <span>{format(parseISO(selectedAppt.scheduled_at), "EEEE, MMMM d, yyyy")}</span>
+                      <span>
+                        {format(
+                          parseISO(selectedAppt.scheduled_at),
+                          "EEEE, MMMM d, yyyy",
+                        )}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2.5 text-muted-foreground">
                       <Clock className="h-4 w-4 shrink-0 text-primary/70" />
                       <span>
-                        {format(parseISO(selectedAppt.scheduled_at), "h:mm a")} · {selectedAppt.duration_minutes} min
+                        {format(parseISO(selectedAppt.scheduled_at), "h:mm a")}{" "}
+                        · {selectedAppt.duration_minutes} min
                       </span>
                     </div>
                     {selectedAppt.notes && (
                       <div className="bg-muted/40 rounded-lg p-3 border border-border/40">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
-                          <FileText className="h-3 w-3" /> {t("team.appointments.labelNotes")}
+                          <FileText className="h-3 w-3" />{" "}
+                          {t("team.appointments.labelNotes")}
                         </p>
-                        <p className="text-sm text-foreground/80 leading-relaxed">{selectedAppt.notes}</p>
+                        <p className="text-sm text-foreground/80 leading-relaxed">
+                          {selectedAppt.notes}
+                        </p>
                       </div>
                     )}
                     <ReassignAppointment
                       appointmentId={selectedAppt.id}
                       officeId={selectedAppt.office_id}
                       currentMemberId={(selectedAppt as any).team_member_id}
-                      onReassigned={() => { setSelectedAppt(null); fetchAppts(); }}
+                      onReassigned={() => {
+                        setSelectedAppt(null);
+                        fetchAppts();
+                      }}
                     />
                   </div>
                   <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -1260,7 +1582,8 @@ export default function TeamAppointmentsPage() {
                         className="flex-1 gap-1.5"
                         onClick={() => openEdit(selectedAppt)}
                       >
-                        <Pencil className="h-3.5 w-3.5" /> {t("team.appointments.btnEdit")}
+                        <Pencil className="h-3.5 w-3.5" />{" "}
+                        {t("team.appointments.btnEdit")}
                       </Button>
                       <Button
                         variant="outline"
@@ -1271,23 +1594,31 @@ export default function TeamAppointmentsPage() {
                           setSelectedAppt(null);
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5" /> {t("team.appointments.btnDelete")}
+                        <Trash2 className="h-3.5 w-3.5" />{" "}
+                        {t("team.appointments.btnDelete")}
                       </Button>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => navigate(`/team/cases/${selectedAppt.case_id}`)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        navigate(`/team/cases/${selectedAppt.case_id}`)
+                      }
+                    >
                       {t("team.appointments.btnViewCase")}
                     </Button>
-                    {!selectedAppt.outcome && new Date(selectedAppt.scheduled_at) < new Date() && (
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setOutcomeApptId(selectedAppt.id);
-                          setSelectedAppt(null);
-                        }}
-                      >
-                        {t("team.appointments.btnRecordOutcome")}
-                      </Button>
-                    )}
+                    {!selectedAppt.outcome &&
+                      new Date(selectedAppt.scheduled_at) < new Date() && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setOutcomeApptId(selectedAppt.id);
+                            setSelectedAppt(null);
+                          }}
+                        >
+                          {t("team.appointments.btnRecordOutcome")}
+                        </Button>
+                      )}
                   </DialogFooter>
                 </>
               );
@@ -1309,14 +1640,19 @@ export default function TeamAppointmentsPage() {
           {pendingMove && (
             <div className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                {t("team.appointments.rescheduleMoveText", { name: (pendingMove.appt.case as any)?.full_name })}
+                {t("team.appointments.rescheduleMoveText", {
+                  name: (pendingMove.appt.case as any)?.full_name,
+                })}
               </p>
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 font-semibold text-center text-base">
                 {format(pendingMove.newDate, "EEEE, MMMM d 'at' h:mm a")}
               </div>
               <p className="text-xs text-muted-foreground text-center">
                 {t("team.appointments.rescheduleOldDate", {
-                  date: format(parseISO(pendingMove.appt.scheduled_at), "EEE, MMM d 'at' h:mm a"),
+                  date: format(
+                    parseISO(pendingMove.appt.scheduled_at),
+                    "EEE, MMM d 'at' h:mm a",
+                  ),
                 })}
               </p>
             </div>
@@ -1326,7 +1662,9 @@ export default function TeamAppointmentsPage() {
               {t("team.appointments.btnCancel")}
             </Button>
             <Button onClick={confirmMove} disabled={confirmingMove}>
-              {confirmingMove ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
+              {confirmingMove ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+              ) : null}
               {t("team.appointments.btnConfirmReschedule")}
             </Button>
           </DialogFooter>
@@ -1348,7 +1686,10 @@ export default function TeamAppointmentsPage() {
             <p className="text-sm text-muted-foreground">
               {t("team.appointments.deleteBody", {
                 name: (deletingAppt.case as any)?.full_name,
-                date: format(parseISO(deletingAppt.scheduled_at), "MMM d 'at' h:mm a"),
+                date: format(
+                  parseISO(deletingAppt.scheduled_at),
+                  "MMM d 'at' h:mm a",
+                ),
               })}
             </p>
           )}
@@ -1356,8 +1697,14 @@ export default function TeamAppointmentsPage() {
             <Button variant="outline" onClick={() => setDeletingAppt(null)}>
               {t("team.appointments.btnCancel")}
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={confirmingDelete}>
-              {confirmingDelete ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={confirmingDelete}
+            >
+              {confirmingDelete ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : null}
               {t("team.appointments.btnConfirmDelete")}
             </Button>
           </DialogFooter>
