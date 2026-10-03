@@ -731,6 +731,8 @@
       "returnedTitle": "הוחזר על ידי המנהל — נדרשו שינויים",
       "overdueTitle": "פגישות שדורשות תוצאה",
       "scheduleTitle": "לוח הזמנים של היום",
+      "bookingRequestsTitle": "בקשות תיאום חדשות",
+      "bookingRequestsSubtitle": "תיאומים שהגיעו מטופס ההרשמה וממתינים לאישור או לתיאום מחדש",
       "staleTitle": "תיקים ללא פעילות",
       "noAppointments": "אין פגישות היום",
       "noStale": "לכל תיק יש פעילות אחרונה",

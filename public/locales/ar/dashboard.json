@@ -2766,6 +2766,8 @@
       "returnedTitle": "مُعادة من الإدارة — مطلوب تعديلات",
       "overdueTitle": "مواعيد تحتاج تسجيل نتيجة",
       "scheduleTitle": "جدول اليوم",
+      "bookingRequestsTitle": "طلبات حجز جديدة",
+      "bookingRequestsSubtitle": "حجوزات وصلت من نموذج التقديم بانتظار التأكيد أو إعادة الجدولة",
       "staleTitle": "ملفات بلا نشاط",
       "noAppointments": "لا توجد مواعيد اليوم",
       "noStale": "جميع الملفات عليها نشاط حديث",

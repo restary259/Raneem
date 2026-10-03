@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Banknote, CalendarDays, Clock, GraduationCap, RotateCcw, Users } from "lucide-react";
 import AppointmentOutcomeModal from "@/components/team/AppointmentOutcomeModal";
+import AppointmentActionMenu from "@/components/team/AppointmentActionMenu";
 import { LoadingState, EmptyState } from "@/components/shell";
 
 const STALE_DAYS = 7;
@@ -19,6 +20,7 @@ const DAY_MS = 86_400_000;
 const EMPTY_APPTS: ApptRow[] = [];
 const EMPTY_CASES: CaseRow[] = [];
 const EMPTY_RETURNED: ReturnedRow[] = [];
+const EMPTY_BOOKING_REQUESTS: BookingRequestRow[] = [];
 
 interface ApptRow {
   id: string;
@@ -27,6 +29,14 @@ interface ApptRow {
   duration_minutes: number;
   outcome: string | null;
   notes: string | null;
+  case?: { full_name: string } | null;
+}
+
+interface BookingRequestRow {
+  id: string;
+  case_id: string | null;
+  scheduled_at: string;
+  duration_minutes: number;
   case?: { full_name: string } | null;
 }
 
@@ -87,6 +97,7 @@ export default function TeamWorkPage() {
         staleRes,
         returnedRes,
         returnedCountRes,
+        bookingReqRes,
       ] = await Promise.all([
         supabase
           .from("appointments")
@@ -144,6 +155,21 @@ export default function TeamWorkPage() {
           .select("id", { count: "exact", head: true })
           .eq("review_status", "changes_requested")
           .is("deleted_at", null),
+        // Public booking requests that the apply form created for a case
+        // assigned to this member, still awaiting a decision. They are pinned
+        // above Today's schedule so the team can confirm or reschedule before
+        // the slot passes. RLS scopes the read to the member's own cases.
+        supabase
+          .from("appointments")
+          .select(
+            "id, case_id, scheduled_at, duration_minutes, case:cases!inner(full_name, assigned_to)",
+          )
+          .eq("case.assigned_to", uid)
+          .eq("public_booking", true)
+          .eq("confirmation_status", "pending")
+          .is("outcome", null)
+          .gte("scheduled_at", nowIso)
+          .order("scheduled_at"),
       ]);
 
       if (todayRes.error) throw todayRes.error;
@@ -153,6 +179,7 @@ export default function TeamWorkPage() {
       if (staleRes.error) throw staleRes.error;
       if (returnedRes.error) throw returnedRes.error;
       if (returnedCountRes.error) throw returnedCountRes.error;
+      if (bookingReqRes.error) throw bookingReqRes.error;
 
       // Cash owed to admin = sum of confirmed cash payments still unsettled.
       // Scoped server-side to auth.uid(); settles drop it automatically.
@@ -174,6 +201,8 @@ export default function TeamWorkPage() {
         staleCases: (staleRes.data as CaseRow[]) ?? [],
         returned: (returnedRes.data as unknown as ReturnedRow[]) ?? [],
         returnedCount: returnedCountRes.count ?? 0,
+        bookingRequests:
+          (bookingReqRes.data as unknown as BookingRequestRow[]) ?? [],
         cashOwed,
       };
     },
@@ -186,6 +215,7 @@ export default function TeamWorkPage() {
   const returned = data?.returned ?? EMPTY_RETURNED;
   const returnedCount = data?.returnedCount ?? 0;
   const staleCases = data?.staleCases ?? EMPTY_CASES;
+  const bookingRequests = data?.bookingRequests ?? EMPTY_BOOKING_REQUESTS;
   const totalCases = data?.totalCases ?? 0;
   const cashOwed = data?.cashOwed ?? null;
 
@@ -316,6 +346,60 @@ export default function TeamWorkPage() {
                 <Button size="sm" variant="destructive" onClick={() => setOutcomeApptId(a.id)}>
                   {t("team.work.recordOutcome", "Record outcome")}
                 </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {bookingRequests.length > 0 && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              {t("team.work.bookingRequestsTitle", "New booking requests")}
+              <Badge className="bg-primary/15 text-primary border-primary/20">
+                {bookingRequests.length}
+              </Badge>
+            </CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t(
+                "team.work.bookingRequestsSubtitle",
+                "Bookings from the apply form awaiting your confirm or reschedule",
+              )}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {bookingRequests.map((r) => (
+              <div
+                key={r.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0 rounded-lg border border-primary/30 bg-background p-3"
+              >
+                <div className="min-w-0">
+                  <div className="font-medium truncate">
+                    {r.case?.full_name ?? "—"}
+                  </div>
+                  <div className="text-xs text-muted-foreground" dir="ltr">
+                    {dateTimeFmt(r.scheduled_at)} · {r.duration_minutes}m
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+                  <AppointmentActionMenu
+                    appointmentId={r.id}
+                    onDone={() => {
+                      void refetch();
+                    }}
+                  />
+                  {r.case_id && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate(`/team/cases/${r.case_id}`)}
+                    >
+                      {t("team.work.openCase", "Open case")}
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>

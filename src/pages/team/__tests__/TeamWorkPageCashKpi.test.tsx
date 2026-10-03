@@ -35,12 +35,21 @@ const chainResult = (result: unknown) => {
 };
 
 const mockRpc = vi.fn();
+const mockFrom = vi.fn((..._args: unknown[]) =>
+  chainResult({ data: [], error: null, count: 0 }),
+);
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: (...args: unknown[]) => mockRpc(...args),
-    from: () => chainResult({ data: [], error: null, count: 0 }),
+    from: (...args: unknown[]) => mockFrom(...args),
   },
+}));
+
+// AppointmentActionMenu reaches the router/toast/edge functions; stub the
+// surface so the page test stays focused on rendering the request rows.
+vi.mock("@/components/team/AppointmentActionMenu", () => ({
+  default: () => <div data-testid="appointment-action-menu" />,
 }));
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -60,6 +69,9 @@ const renderPage = () =>
 describe("TeamWorkPage — Cash owed to Admin KPI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFrom.mockImplementation(() =>
+      chainResult({ data: [], error: null, count: 0 }),
+    );
   });
 
   it("sums only unsettled cash payments", async () => {
@@ -105,5 +117,46 @@ describe("TeamWorkPage — Cash owed to Admin KPI", () => {
       expect(screen.getByText("Cash owed to Admin")).toBeInTheDocument();
       expect(screen.getByText("₪0")).toBeInTheDocument();
     });
+  });
+});
+
+describe("TeamWorkPage — public booking requests", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders apply-form booking requests above Today's schedule", async () => {
+    const request = {
+      id: "req-1",
+      case_id: "case-9",
+      scheduled_at: "2030-05-05T09:00:00.000Z",
+      duration_minutes: 60,
+      case: { full_name: "Raneem Student" },
+    };
+    mockFrom.mockImplementation((...args: unknown[]) => {
+      const table = args[0] as string;
+      return table === "appointments"
+        ? chainResult({ data: [request], error: null, count: 1 })
+        : chainResult({ data: [], error: null, count: 0 });
+    });
+    mockRpc.mockResolvedValue({ data: [], error: null });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("New booking requests")).toBeInTheDocument();
+    });
+    expect(screen.getAllByText("Raneem Student").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByTestId("appointment-action-menu").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("hides the requests card when there is nothing pending", async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText("Today's schedule")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("New booking requests")).not.toBeInTheDocument();
   });
 });
