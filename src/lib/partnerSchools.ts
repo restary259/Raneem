@@ -325,3 +325,70 @@ export function partnerSchoolCatalogUrl(input: CatalogAccommodationLinkInput): s
   return `/team/catalog?${params.toString()}`;
 }
 
+/**
+ * F+U Academy publishes a standard-course class size of 12–15 students, but the
+ * `min_students` row is only populated once the class-size migration is
+ * deployed. Until then the sheet would fall back to "Not recorded"; this
+ * returns the published range for that school's DARB standard course.
+ */
+const FU_ACADEMY_CLASS_SIZE = { min: 12, max: 15 } as const;
+
+export function resolveClassSize(
+  course:
+    | {
+        is_darb_standard?: boolean | null;
+        min_students?: number | null;
+        max_students?: number | null;
+      }
+    | null
+    | undefined,
+  schoolSlug: string | null | undefined,
+): { min: number | null; max: number | null } {
+  const min = course?.min_students ?? null;
+  const max = course?.max_students ?? null;
+  if (
+    schoolSlug === "fu-academy" &&
+    course?.is_darb_standard &&
+    (min == null || max == null)
+  ) {
+    return { min: FU_ACADEMY_CLASS_SIZE.min, max: FU_ACADEMY_CLASS_SIZE.max };
+  }
+  return { min, max };
+}
+
+/**
+ * A published start date is closed once its day has passed. `YYYY-MM-DD` values
+ * are compared in UTC so the result does not depend on the viewer's timezone.
+ */
+export function isPastSchoolDate(value: string, now: Date = new Date()): boolean {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return false;
+  return (
+    Date.UTC(year, month - 1, day) <
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
+}
+
+/** True when an entire `YYYY-MM` month lies before the current month. */
+export function isPastSchoolMonth(month: string, now: Date = new Date()): boolean {
+  const [year, m] = month.split("-").map(Number);
+  if (!year || !m) return false;
+  return year < now.getUTCFullYear() || (year === now.getUTCFullYear() && m < now.getUTCMonth() + 1);
+}
+
+/**
+ * The obsolete F+U "two kinds of accommodation" note is suppressed in the UI so
+ * it disappears immediately, before the matching row is deleted in the database.
+ */
+export function isObsoleteHousingNote(note: {
+  title_en?: string | null;
+  title_ar?: string | null;
+  body_en?: string | null;
+  body_ar?: string | null;
+}): boolean {
+  const haystack = [note.title_en, note.title_ar, note.body_en, note.body_ar]
+    .filter(Boolean)
+    .join(" ");
+  return haystack.includes("نوعان من السكن") || /two (types|kinds) of accommodation/i.test(haystack);
+}
+

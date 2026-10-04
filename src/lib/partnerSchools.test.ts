@@ -12,6 +12,10 @@ import {
   formatSchoolDate,
   localizeIncludedItem,
   partnerSchoolCatalogUrl,
+  resolveClassSize,
+  isPastSchoolDate,
+  isPastSchoolMonth,
+  isObsoleteHousingNote,
   type CoursePriceTier,
   type AccommodationPriceTier,
 } from "./partnerSchools";
@@ -195,6 +199,57 @@ describe("partnerSchools", () => {
   it("does not link options with no catalog record", () => {
     expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: [] })).toBeNull();
     expect(partnerSchoolCatalogUrl({ schoolId: "school-1", catalogIds: null })).toBeNull();
+  });
+
+  describe("resolveClassSize (F+U Academy fallback)", () => {
+    it("falls back to the published 12–15 range before the migration lands", () => {
+      expect(resolveClassSize({ is_darb_standard: true, min_students: null, max_students: null }, "fu-academy"))
+        .toEqual({ min: 12, max: 15 });
+    });
+
+    it("keeps stored values once the migration has populated them", () => {
+      expect(resolveClassSize({ is_darb_standard: true, min_students: 12, max_students: 15 }, "fu-academy"))
+        .toEqual({ min: 12, max: 15 });
+      expect(resolveClassSize({ is_darb_standard: true, min_students: 10, max_students: 14 }, "fu-academy"))
+        .toEqual({ min: 10, max: 14 });
+    });
+
+    it("does not invent a class size for other schools or non-standard courses", () => {
+      expect(resolveClassSize({ is_darb_standard: true, max_students: 16 }, "kapito-heidelberg"))
+        .toEqual({ min: null, max: 16 });
+      expect(resolveClassSize({ is_darb_standard: false, max_students: null }, "fu-academy"))
+        .toEqual({ min: null, max: null });
+      expect(resolveClassSize(null, "fu-academy")).toEqual({ min: null, max: null });
+    });
+  });
+
+  describe("start-date status", () => {
+    const now = new Date(Date.UTC(2026, 9, 4)); // 4 October 2026
+
+    it("treats dates before today as past and today or later as open", () => {
+      expect(isPastSchoolDate("2026-09-30", now)).toBe(true);
+      expect(isPastSchoolDate("2026-10-04", now)).toBe(false);
+      expect(isPastSchoolDate("2026-12-07", now)).toBe(false);
+    });
+
+    it("marks whole months that lie before the current month as closed", () => {
+      expect(isPastSchoolMonth("2026-01", now)).toBe(true);
+      expect(isPastSchoolMonth("2026-09", now)).toBe(true);
+      expect(isPastSchoolMonth("2026-10", now)).toBe(false);
+      expect(isPastSchoolMonth("2026-12", now)).toBe(false);
+      expect(isPastSchoolMonth("2025-12", now)).toBe(true);
+    });
+  });
+
+  describe("isObsoleteHousingNote", () => {
+    it("suppresses the F+U two-kinds-of-accommodation note by title", () => {
+      expect(isObsoleteHousingNote({ title_ar: "نوعان من السكن", title_en: "Two types of accommodation" })).toBe(true);
+      expect(isObsoleteHousingNote({ body_en: "Two kinds of accommodation are available." })).toBe(true);
+    });
+
+    it("keeps unrelated housing notes", () => {
+      expect(isObsoleteHousingNote({ title_en: "Single room", title_ar: "غرفة مفردة" })).toBe(false);
+    });
   });
 });
 

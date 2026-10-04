@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "@/lib/router-compat";
 import {
   ArrowLeft,
+  Ban,
   BedDouble,
   CalendarDays,
   Check,
@@ -10,6 +11,7 @@ import {
   Euro,
   ExternalLink,
   FileText,
+  Lightbulb,
   MapPin,
   Search,
   ShieldCheck,
@@ -27,9 +29,13 @@ import {
   formatBandLabel,
   formatEur,
   formatSchoolDate,
+  isObsoleteHousingNote,
+  isPastSchoolDate,
+  isPastSchoolMonth,
   localizeIncludedItem,
   partnerSchoolCatalogUrl,
   quoteCourse,
+  resolveClassSize,
 } from "@/lib/partnerSchools";
 import { mealsLabel, roomTypeLabel } from "@/lib/catalogDisplay";
 import SchoolCalculator from "@/components/team/partnerSchools/SchoolCalculator";
@@ -68,7 +74,7 @@ export default function TeamPartnerSchoolPage() {
   }, [data, standard]);
 
   const notesOf = (kind: string) => (data?.notes ?? []).filter((n) => n.kind === kind);
-  const accommodationNotes = notesOf("accommodation");
+  const accommodationNotes = notesOf("accommodation").filter((n) => !isObsoleteHousingNote(n));
   const officialNotes = notesOf("registration_official");
   const darbNotes = notesOf("darb_recommendation");
 
@@ -194,6 +200,7 @@ export default function TeamPartnerSchoolPage() {
   if (!data) return <EmptyState title={t("partnerSchools.notFound", "School not found")} />;
 
   const { school, version } = data;
+  const classSize = resolveClassSize(standard, school.slug);
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-3 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -278,16 +285,16 @@ export default function TeamPartnerSchoolPage() {
                 </Badge>
                 <h2 className="text-base font-semibold text-foreground">{loc(standard.name_en, standard.name_ar)}</h2>
               </div>
-              <div className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid items-start gap-x-6 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <Fact label={t("partnerSchools.lessons", "Lessons")} value={`${standard.lessons_per_week} / ${t("partnerSchools.week", "week")}`} />
                 <Fact label={t("partnerSchools.schedule", "Schedule")} value={loc(standard.schedule_text_en, standard.schedule_text_ar)} />
                 <Fact
                   label={t("partnerSchools.classSize", "Class size")}
                   value={
-                    standard.min_students && standard.max_students
-                      ? `${standard.min_students}–${standard.max_students}`
-                      : standard.max_students
-                        ? `${t("partnerSchools.max", "Max")} ${standard.max_students}`
+                    classSize.min != null && classSize.max != null
+                      ? `${classSize.min}–${classSize.max}`
+                      : classSize.max != null
+                        ? `${t("partnerSchools.max", "Max")} ${classSize.max}`
                         : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
                   }
                 />
@@ -337,8 +344,8 @@ export default function TeamPartnerSchoolPage() {
         </div>
 
         {/* Overview */}
-        <TabsContent value="overview" className="mt-3 grid gap-3 lg:grid-cols-2">
-          <Card className="space-y-2 p-4">
+        <TabsContent value="overview" className="mt-3 grid items-stretch gap-3 lg:grid-cols-2">
+          <Card className="h-full space-y-2 p-4">
             <h3 className="text-sm font-semibold text-foreground">{t("partnerSchools.levels", "Levels")}</h3>
             {data.levels.length === 0 ? (
               <NotRecorded />
@@ -361,7 +368,7 @@ export default function TeamPartnerSchoolPage() {
               </ul>
             )}
           </Card>
-          <Card className="space-y-2 p-4">
+          <Card className="h-full space-y-2 p-4">
             <h3 className="text-sm font-semibold text-foreground">
               {t("partnerSchools.included", "Included in the course price")}
             </h3>
@@ -382,9 +389,6 @@ export default function TeamPartnerSchoolPage() {
 
         {/* Courses */}
         <TabsContent value="courses" className="mt-3 space-y-3">
-          <p className="text-xs text-muted-foreground">
-            {t("partnerSchools.schoolPricesNote", "These are school prices. DARB service fees are not included.")}
-          </p>
           {data.courses.map((c) => {
             const booking = data.courseTiers.filter((x) => x.course_id === c.id && x.kind === "booking");
             const extension = data.courseTiers.filter((x) => x.course_id === c.id && x.kind === "extension");
@@ -398,8 +402,14 @@ export default function TeamPartnerSchoolPage() {
                     </Badge>
                   )}
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                <PriceTable title={t("partnerSchools.bookingPrice", "Booking price")} rows={booking} lang={lang} />
+                {/* One table spans the full card; two sit side by side. */}
+                <div className={`grid gap-4 ${extension.length > 0 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                  <PriceTable
+                    title={t("partnerSchools.bookingPrice", "Booking price")}
+                    rows={booking}
+                    lang={lang}
+                    fullWidth={extension.length === 0}
+                  />
                   {extension.length > 0 && (
                     <PriceTable title={t("partnerSchools.extensionPrice", "Extension price")} rows={extension} lang={lang} />
                   )}
@@ -409,7 +419,6 @@ export default function TeamPartnerSchoolPage() {
                     {t("partnerSchools.registrationFee", "Registration fee")}: {formatEur(c.registration_fee)}
                   </p>
                 )}
-                <SourceLine name={c.source_name} doc={c.source_document} verified={c.last_verified_at} t={(k, d) => t(k, d ?? k)} />
               </Card>
             );
           })}
@@ -528,8 +537,7 @@ export default function TeamPartnerSchoolPage() {
                       {loc(a.availability_note_en, a.availability_note_ar)}
                     </p>
                   )}
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3">
-                    <SourceLine name={a.source_name} doc={a.source_document} verified={a.last_verified_at} t={(k, d) => t(k, d ?? k)} />
+                  <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/70 pt-3">
                     {catalogUrl ? (
                       <Button asChild variant="outline" size="sm">
                         <Link to={catalogUrl}>
@@ -570,34 +578,86 @@ export default function TeamPartnerSchoolPage() {
               <NotRecorded />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {datesByMonth.map(([month, dates]) => (
-                  <div key={month} className="rounded-md border border-border/70 p-3">
-                    <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                      {new Intl.DateTimeFormat(lang === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`))}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {dates.map((date) => (
-                        <Badge key={date.id} variant="secondary" className="font-normal">{formatSchoolDate(date.start_date, lang)}</Badge>
-                      ))}
+                {datesByMonth.map(([month, dates]) => {
+                  const monthClosed = isPastSchoolMonth(month);
+                  return (
+                    <div key={month} className="rounded-md border border-border/70 p-3">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                          {new Intl.DateTimeFormat(lang === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`))}
+                        </p>
+                        {monthClosed ? (
+                          <Badge variant="outline" className="border-destructive/20 bg-destructive/10 text-xs font-normal text-destructive">
+                            {t("partnerSchools.monthClosed", "Closed")}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-xs font-normal text-emerald-700 dark:text-emerald-400">
+                            {t("partnerSchools.openForBooking", "Open for booking")}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {dates.map((date) => {
+                          const past = isPastSchoolDate(date.start_date);
+                          return past ? (
+                            <Badge
+                              key={date.id}
+                              variant="outline"
+                              className="border-destructive/20 bg-destructive/10 font-normal text-destructive line-through opacity-60"
+                            >
+                              {formatSchoolDate(date.start_date, lang)}
+                            </Badge>
+                          ) : (
+                            <Badge key={date.id} variant="secondary" className="font-normal">
+                              {formatSchoolDate(date.start_date, lang)}
+                            </Badge>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
             <p className="text-sm leading-6 text-muted-foreground">
               {t("partnerSchools.beginnerDatesExplained", "Students beginning A1 with no previous German must choose one of these published start dates.")}
             </p>
-            <SourceLine
-              name={data.startDates[0]?.source_name}
-              doc={data.startDates[0]?.source_document}
-              verified={data.startDates[0]?.last_verified_at}
-              t={(k, d) => t(k, d ?? k)}
-            />
           </Card>
         </TabsContent>
 
         {/* Application guidance */}
         <TabsContent value="application" className="mt-3 space-y-3">
+          {/* DARB operational guidance leads the tab: it is internal advice the
+              team applies before the school's own procedure. */}
+          {darbNotes.length > 0 ? (
+            darbNotes.map((n) => (
+              <Card key={n.id} className="border-brand/40 bg-brand/5 p-4 shadow-none">
+                <Badge className="bg-brand text-brand-foreground hover:bg-brand">
+                  <Lightbulb className="me-1 h-3 w-3" />
+                  {t("partnerSchools.darbRecommendation", "DARB office recommendation")}
+                </Badge>
+                <h3 className="mt-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Lightbulb className="h-4 w-4 text-brand" />
+                  {loc(n.title_en, n.title_ar)}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="border-brand/40 bg-brand/5 p-4 shadow-none">
+              <Badge className="bg-brand text-brand-foreground hover:bg-brand">
+                <Lightbulb className="me-1 h-3 w-3" />
+                {t("partnerSchools.darbRecommendation", "DARB office recommendation")}
+              </Badge>
+              <h3 className="mt-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Lightbulb className="h-4 w-4 text-brand" />
+                {t("partnerSchools.darbTimingTitle", "Timing of Application & Housing Booking")}
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {t("partnerSchools.darbApplicationTiming", "Submit the application at least 1–2 months before the preferred start date to maximize the chance of securing preferred accommodation. This is internal DARB operational guidance, not a mandatory school restriction.")}
+              </p>
+            </Card>
+          )}
           {officialNotes.length > 0 ? (
             officialNotes.map((n) => (
               <Card key={n.id} className="border-brand/35 p-4 shadow-none">
@@ -617,32 +677,12 @@ export default function TeamPartnerSchoolPage() {
               </p>
             </Card>
           )}
-          {darbNotes.length > 0 ? (
-            darbNotes.map((n) => (
-              <Card key={n.id} className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
-                <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
-                <h3 className="mt-3 text-sm font-semibold text-foreground">{loc(n.title_en, n.title_ar)}</h3>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
-              </Card>
-            ))
-          ) : (
-            <Card className="border-amber-500/35 bg-amber-500/10 p-4 shadow-none">
-              <Badge variant="secondary">{t("partnerSchools.darbRecommendation", "DARB office recommendation")}</Badge>
-              <h3 className="mt-3 text-sm font-semibold text-foreground">
-                {t("partnerSchools.whenToApply", "When should we apply?")}
-              </h3>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                {t("partnerSchools.darbApplicationTiming", "Submit 1–2 months before the preferred start date to improve the chance of securing the preferred accommodation. This is DARB office guidance, not a KAPITO minimum registration period.")}
-              </p>
-            </Card>
-          )}
           {data.policies
             .filter((p) => p.category === "registration" || p.category === "arrival")
             .map((p) => (
               <Card key={p.id} className="space-y-1 p-4">
                 <h3 className="text-sm font-semibold text-foreground">{loc(p.title_en, p.title_ar)}</h3>
                 <p className="text-sm text-muted-foreground">{loc(p.body_en, p.body_ar)}</p>
-                <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={(k, d) => t(k, d ?? k)} />
               </Card>
             ))}
         </TabsContent>
@@ -657,7 +697,6 @@ export default function TeamPartnerSchoolPage() {
                 {loc(p.title_en, p.title_ar)}
               </h3>
               <p className="text-sm text-muted-foreground">{loc(p.body_en, p.body_ar)}</p>
-              <SourceLine name={p.source_name} doc={p.source_document} verified={p.last_verified_at} t={(k, d) => t(k, d ?? k)} />
             </Card>
           ))}
         </TabsContent>
@@ -704,15 +743,30 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PriceTable({ title, rows, lang }: { title: string; rows: any[]; lang: "en" | "ar" }) {
+function PriceTable({
+  title,
+  rows,
+  lang,
+  fullWidth = false,
+}: {
+  title: string;
+  rows: any[];
+  lang: "en" | "ar";
+  fullWidth?: boolean;
+}) {
   return (
     <div>
       <div className={`mb-1 ${microLabel}`}>{title}</div>
-      <ul className="space-y-1 text-sm">
+      <ul className="text-sm">
         {rows.map((r) => (
-          <li key={r.id} className="flex justify-between border-b border-border/60 py-1 last:border-0">
+          <li
+            key={r.id}
+            className={`grid grid-cols-[1fr_auto] items-center gap-4 border-b border-border/60 last:border-0 ${
+              fullWidth ? "py-2.5" : "py-1"
+            }`}
+          >
             <span className="text-muted-foreground">{formatBandLabel(r, lang)}</span>
-            <span className="font-medium text-foreground">{formatEur(r.price_per_week)}</span>
+            <span className="text-end font-medium text-foreground">{formatEur(r.price_per_week)}</span>
           </li>
         ))}
       </ul>
@@ -725,26 +779,6 @@ function NotRecorded() {
   return (
     <p className="text-sm text-muted-foreground">
       {t("partnerSchools.notRecorded", "Not recorded — verify with the school")}
-    </p>
-  );
-}
-
-function SourceLine({
-  name,
-  doc,
-  verified,
-  t,
-}: {
-  name?: string | null;
-  doc?: string | null;
-  verified?: string | null;
-  t: (k: string, d?: string) => string;
-}) {
-  if (!name && !doc) return null;
-  return (
-    <p className="pt-2 text-xs text-muted-foreground">
-      {t("partnerSchools.source", "Source")}: {name ?? doc}
-      {verified ? ` · ${t("partnerSchools.lastVerified", "Last verified")}: ${verified}` : ""}
     </p>
   );
 }
