@@ -118,52 +118,43 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     setProfileLoading(true);
     setLoadError(false);
 
-    const { data: profile, error: profileError } = await (supabase as any)
-      .from("profiles")
-      .select("residential_city, language_school_id")
-      .eq("id", uid)
-      .maybeSingle();
-
-    if (profileError) {
+    const fail = () => {
       setLoadError(true);
       setProfileLoading(false);
-      return;
-    }
+    };
+    const clean = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
-    const directCity =
-      typeof profile?.residential_city === "string" && profile.residential_city.trim()
-        ? profile.residential_city.trim()
-        : null;
+    // Priority: school on the student's case (team-chosen) → school picked at
+    // onboarding → home city. The school decides the guide city.
+    const [{ data: subs, error: subsError }, { data: profile, error: profileError }] =
+      await Promise.all([
+        (supabase as any)
+          .from("case_submissions")
+          .select("school_id, updated_at, cases!inner(student_user_id)")
+          .eq("cases.student_user_id", uid)
+          .not("school_id", "is", null)
+          .order("updated_at", { ascending: false })
+          .limit(1),
+        (supabase as any)
+          .from("profiles")
+          .select("residential_city, language_school_id")
+          .eq("id", uid)
+          .maybeSingle(),
+      ]);
 
-    if (directCity) {
-      setStoredCity(directCity);
-      setCitySource("residential");
-      setProfileLoading(false);
-      return;
-    }
+    if (subsError || profileError) return fail();
 
-    // Backward compatibility for already-onboarded students whose structured
-    // residential_city field is still empty: resolve the selected school city
-    // from the student's own language_school_id. This is one scoped lookup, not
-    // a city-wide database scan.
-    if (profile?.language_school_id) {
+    const schoolIds = [subs?.[0]?.school_id, profile?.language_school_id].filter(
+      (id): id is string => typeof id === "string" && id.length > 0,
+    );
+    for (const schoolId of schoolIds) {
       const { data: school, error: schoolError } = await (supabase as any)
         .from("schools")
         .select("city")
-        .eq("id", profile.language_school_id)
+        .eq("id", schoolId)
         .maybeSingle();
-
-      if (schoolError) {
-        setLoadError(true);
-        setProfileLoading(false);
-        return;
-      }
-
-      const schoolCity =
-        typeof school?.city === "string" && school.city.trim()
-          ? school.city.trim()
-          : null;
-
+      if (schoolError) return fail();
+      const schoolCity = clean(school?.city);
       if (schoolCity) {
         setStoredCity(schoolCity);
         setCitySource("school");
@@ -172,8 +163,9 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
       }
     }
 
-    setStoredCity(null);
-    setCitySource(null);
+    const directCity = clean(profile?.residential_city);
+    setStoredCity(directCity);
+    setCitySource(directCity ? "residential" : null);
     setProfileLoading(false);
   }, []);
 
