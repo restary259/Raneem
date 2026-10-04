@@ -301,11 +301,16 @@ const RequesterProfilePanel: React.FC<Props> = ({ role, row, requests, onBack, o
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="w-full max-w-full gap-2 whitespace-normal text-left"
                 onClick={() => navigate('/admin/members')}
               >
-                <ExternalLink className="h-4 w-4" />
-                {t('admin.features.manageInMembers', 'Manage permissions in Members Directory')}
+                <ExternalLink className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 break-words">
+                  {t(
+                    'admin.features.manageInMembers',
+                    'Manage permissions in Members Directory',
+                  )}
+                </span>
               </Button>
             </div>
           )}
