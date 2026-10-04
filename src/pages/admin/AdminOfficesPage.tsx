@@ -472,10 +472,16 @@ export default function AdminOfficesPage() {
               <div className="grid gap-2">
                 {form.hours.map(function (day) {
                   const dayName = DAYS[day.weekday][1];
-                  return <div key={day.weekday} className="grid grid-cols-[1fr_auto] items-center gap-2 rounded-xl border border-border p-3 sm:grid-cols-[7rem_auto_1fr]">
+                  // `min-w-0` on the time inputs is load-bearing: a native
+                  // `input[type=time]` is a grid item whose default
+                  // `min-width: auto` is its browser-dependent intrinsic width,
+                  // so without an explicit shrink allowance the two controls
+                  // overflow their `grid-cols-2` tracks and overlap on browsers
+                  // with a wider native time control.
+                  return <div key={day.weekday} className="grid grid-cols-[1fr_auto] items-center gap-2 rounded-xl border border-border p-3 sm:grid-cols-[7rem_auto_minmax(0,1fr)]">
                     <div className="min-w-0 text-sm font-medium">{dayName}</div>
                     <button type="button" className={day.is_open ? "rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs text-primary" : "rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"} onClick={function () { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { is_open: !h.is_open }) : h; })); }}>{day.is_open ? labels.open : labels.closed}</button>
-                    <div className="col-span-2 grid grid-cols-2 gap-2 sm:col-span-1"><Input type="time" value={day.open_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { open_time: e.target.value }) : h; })); }} /><Input type="time" value={day.close_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { close_time: e.target.value }) : h; })); }} /></div>
+                    <div className="col-span-2 grid min-w-0 grid-cols-2 gap-2 sm:col-span-1"><Input className="min-w-0" type="time" value={day.open_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { open_time: e.target.value }) : h; })); }} /><Input className="min-w-0" type="time" value={day.close_time} disabled={!day.is_open} onChange={function (e) { setField("hours", form.hours.map(function (h) { return h.weekday === day.weekday ? Object.assign({}, h, { close_time: e.target.value }) : h; })); }} /></div>
                   </div>;
                 })}
               </div>

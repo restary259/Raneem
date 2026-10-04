@@ -3950,3 +3950,32 @@ items below are the P1/P2 follow-ups.
   requests (intentional complete report). See "Dashboard / spreadsheet audit
   conventions" above.
 
+## Admin Offices working-hours row overflow / overlap (2026-10-04)
+
+- Reported: Admin dashboard -> Offices -> edit an office -> "Working hours"
+  (ساعات العمل) box, the two `input[type=time]` controls overflow and overlap.
+- Root cause: a native `input[type=time]` is a grid item whose default
+  `min-width: auto` resolves to its **browser-dependent intrinsic width** (Chrome
+  ~112px, other engines/versions much wider). The day row put the two controls in
+  `grid grid-cols-2`, whose tracks are `minmax(0,1fr)`, but nothing gave the ITEMS
+  a shrink allowance, so each control refused to shrink below its intrinsic
+  width, overflowed its track, and overlapped the sibling. The desktop track also
+  used a bare `1fr` for the times cell (`sm:grid-cols-[7rem_auto_1fr]`), letting
+  a wide control force the row wider instead of shrinking.
+- Fix (`src/pages/admin/AdminOfficesPage.tsx`): `min-w-0` on each time input and
+  on their wrapping grid, plus the desktop times track `minmax(0,1fr)` instead of
+  `1fr`. The row keeps its explicit base `grid-cols-[1fr_auto]` so it never falls
+  back to an implicit `auto` track.
+- Verified in real Chromium against the emitted stylesheet with the native
+  control's intrinsic width simulated at 230px (a low-priority `@layer ua-sim`
+  `.sim { min-width: 230px }`, so Tailwind's `utilities` layer still wins where
+  `min-w-0` is present — mirroring how a UA rule loses to an author rule). BEFORE
+  overlapped and overflowed at 360/400/480px and only fit from ~560px up; AFTER is
+  clean at every width 360–1000px.
+- Guarded by `src/lib/adminOfficesHoursResponsiveGuard.test.ts` (4 source-scan
+  cases; non-vacuous — reverting the classes fails 3 of them).
+- Note: `AdminOfficesPage.tsx` has ~217 pre-existing `prettier/prettier` errors
+  from its compact one-line JSX and is NOT prettier-formatted; the fix preserves
+  that style. `npm run lint` is `continue-on-error: true` in CI, so this is not a
+  gate.
+
