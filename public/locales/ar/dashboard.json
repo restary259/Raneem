@@ -2792,7 +2792,7 @@
     },
     "googleBusiness": {
       "title": "جوجل للأعمال",
-        "loading": "جارٍ تحميل مكاتبك…",
+      "loading": "جارٍ تحميل مكاتبك…",
       "loadError": "تعذّر تحميل مكاتب جوجل للأعمال الخاصة بك",
       "actionFailed": "فشلت العملية",
       "emptyTitle": "لا توجد مكاتب جوجل للأعمال مُعيّنة",
@@ -4061,7 +4061,8 @@
       "unsupportedCityDescription": "لسا دليل المدينة لهاي المدينة مش متوفر.",
       "darbTip": "نصيحة درب",
       "openNow": "مفتوح الآن",
-      "closed": "مغلق"
+      "closed": "مغلق",
+      "openGuide": "افتح الدليل"
     }
   },
   "settings": {

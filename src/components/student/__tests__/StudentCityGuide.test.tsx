@@ -22,20 +22,40 @@ const state = vi.hoisted(() => ({
   profileError: null as { message: string } | null,
   school: { city: null as string | null },
   schoolError: null as { message: string } | null,
+  caseSchoolId: null as string | null,
+  schoolsById: {} as Record<string, string>,
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: (table: string) => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () =>
-            table === "profiles"
-              ? { data: state.profile, error: state.profileError }
-              : { data: state.school, error: state.schoolError },
+    from: (table: string) => {
+      if (table === "case_submissions") {
+        const chain: any = {
+          select: () => chain,
+          eq: () => chain,
+          not: () => chain,
+          order: () => chain,
+          limit: async () => ({
+            data: state.caseSchoolId ? [{ school_id: state.caseSchoolId }] : [],
+            error: null,
+          }),
+        };
+        return chain;
+      }
+      return {
+        select: () => ({
+          eq: (_col: string, id: string) => ({
+            maybeSingle: async () =>
+              table === "profiles"
+                ? { data: state.profile, error: state.profileError }
+                : {
+                    data: id in state.schoolsById ? { city: state.schoolsById[id] } : state.school,
+                    error: state.schoolError,
+                  },
+          }),
         }),
-      }),
-    }),
+      };
+    },
   },
 }));
 
@@ -122,5 +142,15 @@ describe("StudentCityGuide", () => {
 
     expect(screen.queryByText("0 km")).toBeNull();
     expect(screen.queryByText("500 m")).toBeNull();
+  });
+
+  it("uses the case school's city over the student's home city", async () => {
+    state.profile = { residential_city: "Berlin", language_school_id: null };
+    state.caseSchoolId = "fu";
+    state.schoolsById = { fu: "Heidelberg" };
+    render(<StudentCityGuide variant="full" />);
+
+    expect(await screen.findByText("Popular near you")).toBeTruthy();
+    expect(screen.queryByText(/not available yet/i)).toBeNull();
   });
 });

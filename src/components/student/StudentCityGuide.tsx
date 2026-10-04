@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
-import { supabase } from "@/integrations/supabase/client";
+import { resolveStudentGuideCity } from "@/lib/studentGuideCity";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import {
   HEIDELBERG_CITY_GUIDE,
@@ -118,62 +118,13 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     setProfileLoading(true);
     setLoadError(false);
 
-    const { data: profile, error: profileError } = await (supabase as any)
-      .from("profiles")
-      .select("residential_city, language_school_id")
-      .eq("id", uid)
-      .maybeSingle();
-
-    if (profileError) {
+    try {
+      const result = await resolveStudentGuideCity(uid);
+      setStoredCity(result.city);
+      setCitySource(result.source);
+    } catch {
       setLoadError(true);
-      setProfileLoading(false);
-      return;
     }
-
-    const directCity =
-      typeof profile?.residential_city === "string" && profile.residential_city.trim()
-        ? profile.residential_city.trim()
-        : null;
-
-    if (directCity) {
-      setStoredCity(directCity);
-      setCitySource("residential");
-      setProfileLoading(false);
-      return;
-    }
-
-    // Backward compatibility for already-onboarded students whose structured
-    // residential_city field is still empty: resolve the selected school city
-    // from the student's own language_school_id. This is one scoped lookup, not
-    // a city-wide database scan.
-    if (profile?.language_school_id) {
-      const { data: school, error: schoolError } = await (supabase as any)
-        .from("schools")
-        .select("city")
-        .eq("id", profile.language_school_id)
-        .maybeSingle();
-
-      if (schoolError) {
-        setLoadError(true);
-        setProfileLoading(false);
-        return;
-      }
-
-      const schoolCity =
-        typeof school?.city === "string" && school.city.trim()
-          ? school.city.trim()
-          : null;
-
-      if (schoolCity) {
-        setStoredCity(schoolCity);
-        setCitySource("school");
-        setProfileLoading(false);
-        return;
-      }
-    }
-
-    setStoredCity(null);
-    setCitySource(null);
     setProfileLoading(false);
   }, []);
 
