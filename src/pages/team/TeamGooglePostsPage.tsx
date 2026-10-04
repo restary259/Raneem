@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "@/lib/router-compat";
 import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
 import { resolveGooglePageOffice } from "@/lib/googleOfficeSelection";
 import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
@@ -154,6 +155,7 @@ function emptyDraft(): GbpPostDraft {
 export default function TeamGooglePostsPage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
+  const location = useLocation();
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
   const [officesLoading, setOfficesLoading] = useState(true);
@@ -163,6 +165,8 @@ export default function TeamGooglePostsPage() {
   // office; inherit it and hide the redundant selector there.
   const workspaceContext = useOfficeWorkspaceContext();
   const inOfficeWorkspace = workspaceContext !== null;
+  const hideOfficeHeading =
+    inOfficeWorkspace && location.pathname.startsWith("/team/");
   const effectiveOfficeId = workspaceContext?.officeId ?? workspaceOfficeId;
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [summary, setSummary] = useState<OfficeGooglePostsSummaryRow | null>(
@@ -312,7 +316,7 @@ export default function TeamGooglePostsPage() {
     <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pt-4 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
-          {!inOfficeWorkspace ? (
+          {!hideOfficeHeading ? (
             offices.length > 1 ? (
               <Select value={officeId ?? ""} onValueChange={(v) => setOfficeId(v)}>
                 <SelectTrigger className="w-[200px]">
