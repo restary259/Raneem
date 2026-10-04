@@ -2166,6 +2166,7 @@
     "exportVisibleColumns": "העמודות המוצגות כרגע",
     "exportChooseColumns": "בחירת עמודות",
     "exportNoColumns": "בחרו לפחות עמודה אחת.",
+    "exportEmptyTemplate": "ייצוא תבנית ריקה עם העמודות שנבחרו.",
     "noMatches": "אין שורות שתואמות למסננים או לחיפוש",
     "noMatchesHelp": "נסו לשנות את המסננים או את החיפוש.",
     "clearSearch": "ניקוי החיפוש",

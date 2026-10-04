@@ -4095,6 +4095,7 @@
     "exportVisibleColumns": "الأعمدة الظاهرة حالياً",
     "exportChooseColumns": "اختيار الأعمدة",
     "exportNoColumns": "اختر عموداً واحداً على الأقل.",
+    "exportEmptyTemplate": "تصدير قالب فارغ بالأعمدة المحددة.",
     "noMatches": "لا توجد صفوف مطابقة للفلاتر أو البحث",
     "noMatchesHelp": "جرّب تغيير الفلاتر أو البحث.",
     "clearSearch": "مسح البحث",
