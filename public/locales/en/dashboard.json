@@ -2774,7 +2774,7 @@
     },
     "googleBusiness": {
       "title": "Google Business",
-        "loading": "Loading your offices…",
+      "loading": "Loading your offices…",
       "loadError": "Could not load your Google Business offices",
       "actionFailed": "The action failed",
       "emptyTitle": "No Google Business offices assigned",
@@ -4043,7 +4043,8 @@
       "unsupportedCityDescription": "A city guide for this city is not available yet.",
       "darbTip": "DARB tip",
       "openNow": "Open now",
-      "closed": "Closed"
+      "closed": "Closed",
+      "openGuide": "Open guide"
     }
   },
   "settings": {

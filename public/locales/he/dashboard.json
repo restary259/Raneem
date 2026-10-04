@@ -1466,7 +1466,8 @@
       "unsupportedCityDescription": "מדריך עיר עבור העיר הזו עדיין לא זמין.",
       "darbTip": "טיפ מדארב",
       "openNow": "פתוח עכשיו",
-      "closed": "סגור"
+      "closed": "סגור",
+      "openGuide": "פתח מדריך"
     }
   },
   "studentFees": {
