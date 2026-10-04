@@ -9878,6 +9878,14 @@ export type Database = {
         Args: { p_office_id: string }
         Returns: boolean
       }
+      cancel_google_profile_change_request: {
+        Args: { p_office_id: string; p_request_id: string }
+        Returns: {
+          field: string
+          id: string
+          status: string
+        }[]
+      }
       cancel_payout_request: {
         Args: { p_request_id: string }
         Returns: undefined
