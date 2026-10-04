@@ -743,7 +743,6 @@
     },
     "googleBusiness": {
       "title": "ניהול פרופיל Google Business",
-      "subtitle": "המשרדים שאתה מנהל ב-Google. מפעיל ראשי יכול למנות מנהל משנה.",
       "loading": "טוען את המשרדים שלך…",
       "loadError": "לא ניתן לטעון את משרדי Google Business שלך",
       "actionFailed": "הפעולה נכשלה",
