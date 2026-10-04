@@ -1,4 +1,4 @@
-# Refer & Register: registration goes straight to payment
+# Refer & Register: student submits, pays and uploads the receipt; admin handles everything after (in /admin/referrals); the case goes straight to payment
 
 ## What I checked first
 - **New registrations start at "New".** That puts them in the normal pipeline next to ordinary leads, with "contacted" and "appointment" steps that don't apply to them.
