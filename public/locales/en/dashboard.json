@@ -3640,7 +3640,6 @@
   "googleReviews": {
     "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Google Reviews",
-    "subtitle": "Read and respond to your office's Google reviews.",
     "officeFallback": "Office",
     "all": "All",
     "unanswered": "Unanswered",
