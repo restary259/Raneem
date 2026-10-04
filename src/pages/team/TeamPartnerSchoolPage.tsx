@@ -78,6 +78,13 @@ export default function TeamPartnerSchoolPage() {
   const officialNotes = notesOf("registration_official");
   const darbNotes = notesOf("darb_recommendation");
 
+  // The level calculator's official A1→C1 pathway length, summed from the
+  // school's own level durations — never a hardcoded 44.
+  const levelPathWeeks = useMemo(
+    () => (data?.levels ?? []).reduce((sum, l) => sum + (Number(l.weeks) || 0), 0),
+    [data?.levels],
+  );
+
   const datesByMonth = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof data>["startDates"]>();
     for (const date of data?.startDates ?? []) {
@@ -201,6 +208,11 @@ export default function TeamPartnerSchoolPage() {
 
   const { school, version } = data;
   const classSize = resolveClassSize(standard, school.slug);
+  // KAPITO's single-room placement rule and registration steps are not seeded
+  // in school_notes (they live in its policies), so the page carries fallback
+  // copy for them. It renders only for KAPITO itself and never leaks onto
+  // another school's page.
+  const isKapito = school.slug === "kapito";
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-3 px-4 pb-8 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -285,7 +297,7 @@ export default function TeamPartnerSchoolPage() {
                 </Badge>
                 <h2 className="text-base font-semibold text-foreground">{loc(standard.name_en, standard.name_ar)}</h2>
               </div>
-              <div className="grid items-start gap-x-6 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid items-start gap-x-6 gap-y-4 text-sm sm:grid-cols-3">
                 <Fact label={t("partnerSchools.lessons", "Lessons")} value={`${standard.lessons_per_week} / ${t("partnerSchools.week", "week")}`} />
                 <Fact label={t("partnerSchools.schedule", "Schedule")} value={loc(standard.schedule_text_en, standard.schedule_text_ar)} />
                 <Fact
@@ -298,14 +310,18 @@ export default function TeamPartnerSchoolPage() {
                         : t("partnerSchools.notRecorded", "Not recorded — verify with the school")
                   }
                 />
-                <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
+                {/* The start rule is a full sentence; it gets its own row so it
+                    never wraps one word per line next to the short facts. */}
+                <div className="col-span-full">
+                  <Fact label={t("partnerSchools.courseStartRule", "Course start rule")} value={loc(standard.start_rule_en, standard.start_rule_ar)} />
+                </div>
               </div>
             </div>
             {featuredQuote && (
               <div className="border-t border-brand/20 bg-brand/5 p-4 lg:border-s lg:border-t-0">
                 <p className="text-xs font-medium text-muted-foreground">{t("partnerSchools.quickAnswer", "Quick answer")}</p>
                 <p className="mt-1 text-sm font-semibold text-foreground">
-                  {t("partnerSchools.featured42Title", "42-week Intensive Course")}
+                  {t("partnerSchools.featuredTitle", "{{weeks}}-week Intensive Course", { weeks: featuredQuote.weeks })}
                 </p>
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <div>
@@ -317,7 +333,9 @@ export default function TeamPartnerSchoolPage() {
                   <Euro className="h-5 w-5 text-brand" />
                 </div>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                  {t("partnerSchools.featured42Note", "A 42-week tuition quote. The official A1→C1 pathway is listed separately as 44 weeks in the level calculator.")}
+                  {levelPathWeeks > 0
+                    ? t("partnerSchools.featuredNoteWithPath", "A {{weeks}}-week tuition quote. The official A1→C1 pathway is listed separately as {{path}} weeks in the level calculator.", { weeks: featuredQuote.weeks, path: levelPathWeeks })
+                    : t("partnerSchools.featuredNote", "A {{weeks}}-week tuition quote. See the level calculator for the official A1→C1 pathway.", { weeks: featuredQuote.weeks })}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {t("partnerSchools.a1C1Exclusions", "School tuition only. Accommodation, supplements, deposits and DARB office fees are separate.")}
@@ -452,7 +470,9 @@ export default function TeamPartnerSchoolPage() {
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
               </Card>
             ))
-          ) : (
+          ) : isKapito ? (
+            // KAPITO's single-room placement rule is the school's own record; it
+            // must never render on a school that does not have it.
             <Card className="border-brand/30 bg-brand/5 p-4 shadow-none">
               <h3 className="text-sm font-semibold text-foreground">
                 {t("partnerSchools.singleRoomSettingTitle", "Where is the single room?")}
@@ -461,6 +481,8 @@ export default function TeamPartnerSchoolPage() {
                 {t("partnerSchools.singleRoomSetting", "KAPITO single rooms may be with a host family, an individual host, or in a shared flat. The exact placement is confirmed by the school and is not guaranteed in advance.")}
               </p>
             </Card>
+          ) : (
+            <NotRecorded />
           )}
           <div className="flex justify-end">
             <Button asChild variant="outline" size="sm">
@@ -666,9 +688,11 @@ export default function TeamPartnerSchoolPage() {
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">{loc(n.body_en, n.body_ar)}</p>
               </Card>
             ))
-          ) : (
+          ) : isKapito ? (
+            // KAPITO's registration and payment steps are the school's own
+            // record; other schools must not inherit them.
             <Card className="border-brand/35 p-4 shadow-none">
-              <Badge variant="outline">{t("partnerSchools.officialSchoolRule", "Official KAPITO procedure")}</Badge>
+              <Badge variant="outline">{t("partnerSchools.officialSchoolRuleGeneric", "Official school procedure")}</Badge>
               <h3 className="mt-3 text-sm font-semibold text-foreground">
                 {t("partnerSchools.officialApplicationTitle", "Registration and payment timing")}
               </h3>
@@ -676,7 +700,7 @@ export default function TeamPartnerSchoolPage() {
                 {t("partnerSchools.officialApplicationBody", "Send the registration form, then pay the €200 deposit or the full course fee. KAPITO reserves the course place after receiving the deposit. The remaining amount is due one week before the course starts.")}
               </p>
             </Card>
-          )}
+          ) : null}
           {data.policies
             .filter((p) => p.category === "registration" || p.category === "arrival")
             .map((p) => (
