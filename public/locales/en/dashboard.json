@@ -6248,7 +6248,6 @@
   "googleProfile": {
     "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Google Business Profile",
-    "subtitle": "Manage the Google profile for this office. Google is the source of truth.",
     "officeFallback": "Office",
     "noOfficeTitle": "No Google Business access",
     "noOfficeDesc": "You are not an operator of any office with Google Business access.",
