@@ -6266,7 +6266,6 @@
   "googleProfile": {
     "workspaceNoAccessDesc": "أنت لست مشغّل Google لمكتب {{office}}. بيانات Google Business لهذا المكتب غير متاحة لك.",
     "title": "ملف Google للأعمال",
-    "subtitle": "إدارة ملف Google لهذا المكتب. Google هو المصدر الرسمي.",
     "officeFallback": "المكتب",
     "noOfficeTitle": "لا يوجد وصول إلى Google Business",
     "noOfficeDesc": "أنت لست مشغّلًا لأي مكتب لديه وصول إلى Google Business.",
