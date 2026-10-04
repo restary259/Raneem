@@ -820,6 +820,7 @@ export default function TeamGoogleProfilePage() {
                   </Button>
                 </div>
               </div>
+              </div>
             )}
           </TabsContent>
 
