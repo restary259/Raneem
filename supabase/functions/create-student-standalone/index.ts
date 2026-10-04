@@ -142,7 +142,9 @@ serve(async (req) => {
       email: cleanEmail,
       full_name: full_name?.trim() || "",
       must_change_password: true,
-      created_by: created_by ?? callerId,
+      // Only admins may file a student under another staff member
+      // (mirrors resolveCreatedBy in src/services/teamStudentsScope.ts).
+      created_by: isAdmin && created_by ? created_by : callerId,
       city: caseCity,
       phone_number: casePhone,
     });
