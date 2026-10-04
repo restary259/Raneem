@@ -898,6 +898,7 @@ export type Database = {
           created_at: string
           file_path: string
           id: string
+          note: string | null
           payment_id: string | null
           payment_type: string
           rejection_reason: string | null
@@ -912,6 +913,7 @@ export type Database = {
           created_at?: string
           file_path: string
           id?: string
+          note?: string | null
           payment_id?: string | null
           payment_type: string
           rejection_reason?: string | null
@@ -926,6 +928,7 @@ export type Database = {
           created_at?: string
           file_path?: string
           id?: string
+          note?: string | null
           payment_id?: string | null
           payment_type?: string
           rejection_reason?: string | null
