@@ -1840,11 +1840,14 @@ the catalog was missing.
   `last_verified_at`. Anything the source does not print stays empty and
   reads "Not recorded - verify with the school" - never invent a value.
   Do not write a `last_verified_at` you did not actually verify.
-- `school_notes` kinds drive the page and have KAPITO-specific fallbacks:
-  `accommodation` (else a KAPITO single-room paragraph shows),
-  `registration_official` (else "Official KAPITO procedure"),
-  `darb_recommendation`. A new school MUST seed its own notes or KAPITO text
-  leaks onto its page.
+- `school_notes` kinds drive the page. `accommodation` and
+  `registration_official` fall back to KAPITO-specific copy, so those two
+  fallbacks are gated behind `school.slug === "kapito"` in
+  `TeamPartnerSchoolPage.tsx` (any other school shows "Not recorded" / nothing
+  instead). The `registration_official` badge reads the neutral
+  `officialSchoolRuleGeneric` ("Official school procedure"). A new school MUST
+  still seed its own notes; the gate only stops KAPITO text leaking, it does not
+  invent another school's copy.
 - Course inclusions used in a seed must have an `INCLUDED_ITEM_AR` entry,
   otherwise Arabic silently falls back to English.
 
