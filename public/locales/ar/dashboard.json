@@ -3658,7 +3658,6 @@
   "googleReviews": {
     "workspaceNoAccessDesc": "أنت لست مشغّل Google لمكتب {{office}}. بيانات Google Business لهذا المكتب غير متاحة لك.",
     "title": "تقييمات جوجل",
-    "subtitle": "اقرأ تقييمات جوجل لمكتبك وردّ عليها.",
     "officeFallback": "مكتب",
     "all": "الكل",
     "unanswered": "بدون رد",
