@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Link2,
   MapPin,
-  RefreshCw,
   ShieldCheck,
   UserMinus,
   UserPlus,
@@ -31,14 +30,6 @@ import {
   listOfficeGoogleOperatorCandidates,
   removeGoogleOperator,
 } from "@/lib/googleBusinessApi";
-import {
-  getOfficeGoogleHealth,
-  listOfficeGoogleSyncJobs,
-  requestOfficeGoogleSync,
-  type OfficeGoogleHealth,
-  type OfficeGoogleSyncJob,
-} from "@/lib/googleBusinessRealtime.functions";
-import { subscribeTables } from "@/lib/realtimeRegistry";
 import { useLocation } from "@/lib/router-compat";
 import {
   useOfficeWorkspaceSelection,
@@ -54,16 +45,6 @@ import type {
 function errorMessage(error: unknown): string | undefined {
   return (error as { message?: string } | null)?.message;
 }
-
-/** Colour-codes a background sync job's status in the Overview job list. */
-const SYNC_JOB_STATUS_CLASS: Record<string, string> = {
-  PENDING: "border-muted-foreground/40 text-muted-foreground",
-  RUNNING: "border-sky-500/40 text-sky-600",
-  SUCCESS: "border-emerald-500/40 text-emerald-600",
-  PARTIAL: "border-amber-500/40 text-amber-600",
-  FAILED: "border-destructive/40 text-destructive",
-  CANCELLED: "border-muted-foreground/40 text-muted-foreground",
-};
 
 /**
  * The team-facing Google Business surface (Phase 4).
@@ -188,55 +169,6 @@ function TeamGoogleOfficeCard({ office, busy, setBusy, onChanged }: CardProps) {
     [],
   );
   const [choice, setChoice] = useState("");
-  const [health, setHealth] = useState<OfficeGoogleHealth | null>(null);
-  const [jobs, setJobs] = useState<OfficeGoogleSyncJob[]>([]);
-  const [syncing, setSyncing] = useState(false);
-
-  const loadHealth = useCallback(async () => {
-    try {
-      const [h, j] = await Promise.all([
-        getOfficeGoogleHealth({ data: { officeId: office.office_id } }),
-        listOfficeGoogleSyncJobs({
-          data: { officeId: office.office_id, limit: 5 },
-        }),
-      ]);
-      setHealth(h);
-      setJobs(j);
-    } catch {
-      /* health is advisory; the office card still renders */
-    }
-  }, [office.office_id]);
-
-  useEffect(() => {
-    void loadHealth();
-  }, [loadHealth]);
-
-  useEffect(
-    () =>
-      subscribeTables(
-        "google-business-office-status",
-        ["google_business_location_health", "google_business_sync_jobs"],
-        () => void loadHealth(),
-      ),
-    [loadHealth],
-  );
-
-  async function handleSync() {
-    setSyncing(true);
-    try {
-      await requestOfficeGoogleSync({ data: { officeId: office.office_id } });
-      toast({ description: t("googleIntegration.syncQueued") });
-      await loadHealth();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        description: errorMessage(error) || t("googleIntegration.actionFailed"),
-      });
-    } finally {
-      setSyncing(false);
-    }
-  }
-
   const loadCandidates = useCallback(async () => {
     if (!isPrimary) return;
     const { data, error } = await listOfficeGoogleOperatorCandidates(
