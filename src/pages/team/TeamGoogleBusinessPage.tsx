@@ -117,9 +117,6 @@ export default function TeamGoogleBusinessPage() {
           <Link2 className="size-5 text-primary" />
           {t("team.googleBusiness.title")}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("team.googleBusiness.subtitle")}
-        </p>
       </header>
 
       {!inOfficeWorkspace && focused?.office_slug ? (
