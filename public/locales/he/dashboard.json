@@ -6250,7 +6250,6 @@
   "googleProfile": {
     "workspaceNoAccessDesc": "אינך מפעיל Google עבור {{office}}. נתוני Google Business של משרד זה אינם זמינים לך.",
     "title": "פרופיל Google לעסק",
-    "subtitle": "ניהול פרופיל Google של המשרד. Google הוא מקור האמת.",
     "officeFallback": "משרד",
     "noOfficeTitle": "אין גישה ל-Google Business",
     "noOfficeDesc": "אינך מפעיל של משרד עם גישה ל-Google Business.",
