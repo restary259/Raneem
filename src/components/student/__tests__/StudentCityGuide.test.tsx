@@ -143,4 +143,14 @@ describe("StudentCityGuide", () => {
     expect(screen.queryByText("0 km")).toBeNull();
     expect(screen.queryByText("500 m")).toBeNull();
   });
+
+  it("uses the case school's city over the student's home city", async () => {
+    state.profile = { residential_city: "Berlin", language_school_id: null };
+    state.caseSchoolId = "fu";
+    state.schoolsById = { fu: "Heidelberg" };
+    render(<StudentCityGuide variant="full" />);
+
+    expect(await screen.findByText("Popular near you")).toBeTruthy();
+    expect(screen.queryByText(/not available yet/i)).toBeNull();
+  });
 });
