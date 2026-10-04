@@ -3523,7 +3523,6 @@
   "googleReviews": {
     "workspaceNoAccessDesc": "אינך מפעיל Google עבור {{office}}. נתוני Google Business של משרד זה אינם זמינים לך.",
     "title": "ביקורות Google",
-    "subtitle": "קרא והשב לביקורות Google של המשרד שלך.",
     "officeFallback": "משרד",
     "all": "הכול",
     "unanswered": "ללא מענה",
