@@ -5542,7 +5542,21 @@
     "netTotal": "الإجمالي الصافي",
     "memoTitle": "ملاحظة التحويل البنكي",
     "memoHint": "اكتب هذا الرقم في خانة الملاحظات عند التحويل البنكي حتى نتمكن من مطابقة دفعتك.",
-    "invoiceLoadError": "ما قدرنا نحمّل فاتورتك."
+    "invoiceLoadError": "ما قدرنا نحمّل فاتورتك.",
+    "proofUploaded": "تم الرفع — بانتظار المراجعة",
+    "viewFile": "عرض الملف",
+    "viewFileError": "تعذّر فتح الملف.",
+    "fileTooLarge": "حجم الملف أكبر من 10 ميغابايت.",
+    "fileTypeNotAllowed": "يُسمح فقط بملفات JPG أو PNG أو WEBP أو PDF.",
+    "uploadFailed": "تعذّر رفع إثبات الدفع.",
+    "paymentProofsTitle": "إثباتات الدفع",
+    "proofsLoadError": "تعذّر تحميل إثباتات الدفع.",
+    "proofType": {
+      "course": "دورة اللغة",
+      "accommodation": "السكن",
+      "insurance": "التأمين",
+      "other": "دفعة"
+    }
   },
   "studentOverview": {
     "nextAction": "الإجراء التالي",
