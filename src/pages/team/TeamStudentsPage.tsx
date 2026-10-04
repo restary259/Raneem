@@ -168,7 +168,37 @@ export default function TeamStudentsPage() {
         console.error("profiles fetch error:", error.message);
         throw error;
       }
-      setStudents(data ?? []);
+
+      // Students whose case is assigned to the signed-in team member must
+      // also appear (e.g. invited students whose created_by was never set).
+      const { data: authData } = await supabase.auth.getUser();
+      const me = authData.user?.id ?? null;
+      let assigned: any[] = [];
+      if (me !== null) {
+        const { data: caseRows, error: caseErr } = await supabase
+          .from("cases")
+          .select("student_user_id")
+          .eq("assigned_to", me)
+          .is("deleted_at", null)
+          .not("student_user_id", "is", null);
+        if (caseErr) throw caseErr;
+        const known = new Set((data ?? []).map((p: any) => p.id));
+        const extraIds = [...new Set((caseRows ?? []).map((c: any) => c.student_user_id as string))].filter(
+          (id) => ids.includes(id) && !known.has(id),
+        );
+        if (extraIds.length > 0) {
+          const { data: extra, error: extraErr } = await (supabase as any)
+            .from("profiles")
+            .select("id, full_name, email, created_at")
+            .in("id", extraIds);
+          if (extraErr) throw extraErr;
+          assigned = extra ?? [];
+        }
+      }
+      const merged = [...(data ?? []), ...assigned].sort((a: any, b: any) =>
+        String(b.created_at).localeCompare(String(a.created_at)),
+      );
+      setStudents(merged);
     } catch (err: any) {
       console.error("fetchStudents error:", err);
       toast({ variant: "destructive", description: t("common.error") });
