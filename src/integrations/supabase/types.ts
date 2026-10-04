@@ -9874,6 +9874,7 @@ export type Database = {
         Args: { p_a: string; p_b: string }
         Returns: boolean
       }
+      can_read_case_invoice: { Args: { _case_id: string }; Returns: boolean }
       can_reassign_in_office: {
         Args: { p_office_id: string }
         Returns: boolean
