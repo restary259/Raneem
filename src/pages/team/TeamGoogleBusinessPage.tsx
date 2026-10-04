@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Link2,
   MapPin,
-  RefreshCw,
   ShieldCheck,
   UserMinus,
   UserPlus,
@@ -31,14 +30,6 @@ import {
   listOfficeGoogleOperatorCandidates,
   removeGoogleOperator,
 } from "@/lib/googleBusinessApi";
-import {
-  getOfficeGoogleHealth,
-  listOfficeGoogleSyncJobs,
-  requestOfficeGoogleSync,
-  type OfficeGoogleHealth,
-  type OfficeGoogleSyncJob,
-} from "@/lib/googleBusinessRealtime.functions";
-import { subscribeTables } from "@/lib/realtimeRegistry";
 import { useLocation } from "@/lib/router-compat";
 import {
   useOfficeWorkspaceSelection,
@@ -54,16 +45,6 @@ import type {
 function errorMessage(error: unknown): string | undefined {
   return (error as { message?: string } | null)?.message;
 }
-
-/** Colour-codes a background sync job's status in the Overview job list. */
-const SYNC_JOB_STATUS_CLASS: Record<string, string> = {
-  PENDING: "border-muted-foreground/40 text-muted-foreground",
-  RUNNING: "border-sky-500/40 text-sky-600",
-  SUCCESS: "border-emerald-500/40 text-emerald-600",
-  PARTIAL: "border-amber-500/40 text-amber-600",
-  FAILED: "border-destructive/40 text-destructive",
-  CANCELLED: "border-muted-foreground/40 text-muted-foreground",
-};
 
 /**
  * The team-facing Google Business surface (Phase 4).
@@ -188,55 +169,6 @@ function TeamGoogleOfficeCard({ office, busy, setBusy, onChanged }: CardProps) {
     [],
   );
   const [choice, setChoice] = useState("");
-  const [health, setHealth] = useState<OfficeGoogleHealth | null>(null);
-  const [jobs, setJobs] = useState<OfficeGoogleSyncJob[]>([]);
-  const [syncing, setSyncing] = useState(false);
-
-  const loadHealth = useCallback(async () => {
-    try {
-      const [h, j] = await Promise.all([
-        getOfficeGoogleHealth({ data: { officeId: office.office_id } }),
-        listOfficeGoogleSyncJobs({
-          data: { officeId: office.office_id, limit: 5 },
-        }),
-      ]);
-      setHealth(h);
-      setJobs(j);
-    } catch {
-      /* health is advisory; the office card still renders */
-    }
-  }, [office.office_id]);
-
-  useEffect(() => {
-    void loadHealth();
-  }, [loadHealth]);
-
-  useEffect(
-    () =>
-      subscribeTables(
-        "google-business-office-status",
-        ["google_business_location_health", "google_business_sync_jobs"],
-        () => void loadHealth(),
-      ),
-    [loadHealth],
-  );
-
-  async function handleSync() {
-    setSyncing(true);
-    try {
-      await requestOfficeGoogleSync({ data: { officeId: office.office_id } });
-      toast({ description: t("googleIntegration.syncQueued") });
-      await loadHealth();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        description: errorMessage(error) || t("googleIntegration.actionFailed"),
-      });
-    } finally {
-      setSyncing(false);
-    }
-  }
-
   const loadCandidates = useCallback(async () => {
     if (!isPrimary) return;
     const { data, error } = await listOfficeGoogleOperatorCandidates(
@@ -356,84 +288,6 @@ function TeamGoogleOfficeCard({ office, busy, setBusy, onChanged }: CardProps) {
           </div>
         </div>
 
-        <section className="space-y-3 rounded-xl border border-border bg-muted/30 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <span
-                className={`inline-block size-2 rounded-full ${
-                  health?.healthStatus === "HEALTHY"
-                    ? "bg-emerald-500"
-                    : health?.healthStatus === "ATTENTION" ||
-                        health?.healthStatus === "ACTION_REQUIRED"
-                      ? "bg-amber-500"
-                      : health?.healthStatus === "UNAVAILABLE"
-                        ? "bg-destructive"
-                        : "bg-muted-foreground/50"
-                }`}
-              />
-              {t("googleIntegration.officeHealth")}
-              <span className="text-muted-foreground">
-                {health
-                  ? t(`googleIntegration.status.${health.healthStatus}`, {
-                      defaultValue: health.healthStatus,
-                    })
-                  : t("googleIntegration.loading")}
-              </span>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={syncing || busy}
-              onClick={() => void handleSync()}
-            >
-              <RefreshCw
-                className={`me-2 size-3.5 ${syncing ? "animate-spin" : ""}`}
-              />
-              {t("googleIntegration.syncOffice")}
-            </Button>
-          </div>
-          {health?.lastGoogleEventAt ? (
-            <p className="text-xs text-muted-foreground">
-              {t("googleIntegration.lastEvent")}:{" "}
-              {new Date(health.lastGoogleEventAt).toLocaleString()}
-            </p>
-          ) : null}
-          {health?.lastErrorMessage ? (
-            <p className="text-xs text-destructive">
-              {health.lastErrorMessage}
-            </p>
-          ) : null}
-          {jobs.length > 0 ? (
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">
-                {t("googleIntegration.recentSyncs")}
-              </p>
-              <ul className="space-y-1 text-xs text-muted-foreground">
-                {jobs.map((job) => (
-                  <li key={job.jobId} className="flex items-center gap-2">
-                    <span className="font-medium">
-                      {t(`googleIntegration.syncType.${job.syncType}`, {
-                        defaultValue: job.syncType,
-                      })}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={SYNC_JOB_STATUS_CLASS[job.status] ?? ""}
-                    >
-                      {t(`googleIntegration.syncStatus.${job.status}`, {
-                        defaultValue: job.status,
-                      })}
-                    </Badge>
-                    {job.recordsProcessed > 0 ? (
-                      <span>· {job.recordsProcessed}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </section>
 
         {isPrimary ? (
           <section className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
