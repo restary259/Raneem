@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
-import { supabase } from "@/integrations/supabase/client";
+import { resolveStudentGuideCity } from "@/lib/studentGuideCity";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import {
   HEIDELBERG_CITY_GUIDE,
@@ -118,54 +118,13 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     setProfileLoading(true);
     setLoadError(false);
 
-    const fail = () => {
+    try {
+      const result = await resolveStudentGuideCity(uid);
+      setStoredCity(result.city);
+      setCitySource(result.source);
+    } catch {
       setLoadError(true);
-      setProfileLoading(false);
-    };
-    const clean = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
-
-    // Priority: school on the student's case (team-chosen) → school picked at
-    // onboarding → home city. The school decides the guide city.
-    const [{ data: subs, error: subsError }, { data: profile, error: profileError }] =
-      await Promise.all([
-        (supabase as any)
-          .from("case_submissions")
-          .select("school_id, updated_at, cases!inner(student_user_id)")
-          .eq("cases.student_user_id", uid)
-          .not("school_id", "is", null)
-          .order("updated_at", { ascending: false })
-          .limit(1),
-        (supabase as any)
-          .from("profiles")
-          .select("residential_city, language_school_id")
-          .eq("id", uid)
-          .maybeSingle(),
-      ]);
-
-    if (subsError || profileError) return fail();
-
-    const schoolIds = [subs?.[0]?.school_id, profile?.language_school_id].filter(
-      (id): id is string => typeof id === "string" && id.length > 0,
-    );
-    for (const schoolId of schoolIds) {
-      const { data: school, error: schoolError } = await (supabase as any)
-        .from("schools")
-        .select("city")
-        .eq("id", schoolId)
-        .maybeSingle();
-      if (schoolError) return fail();
-      const schoolCity = clean(school?.city);
-      if (schoolCity) {
-        setStoredCity(schoolCity);
-        setCitySource("school");
-        setProfileLoading(false);
-        return;
-      }
     }
-
-    const directCity = clean(profile?.residential_city);
-    setStoredCity(directCity);
-    setCitySource(directCity ? "residential" : null);
     setProfileLoading(false);
   }, []);
 
