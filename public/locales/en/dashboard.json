@@ -2774,8 +2774,7 @@
     },
     "googleBusiness": {
       "title": "Google Business",
-      "subtitle": "Offices you operate on Google. Primary operators can appoint a side manager.",
-      "loading": "Loading your offices…",
+        "loading": "Loading your offices…",
       "loadError": "Could not load your Google Business offices",
       "actionFailed": "The action failed",
       "emptyTitle": "No Google Business offices assigned",
@@ -3640,7 +3639,6 @@
   "googleReviews": {
     "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Google Reviews",
-    "subtitle": "Read and respond to your office's Google reviews.",
     "officeFallback": "Office",
     "all": "All",
     "unanswered": "Unanswered",
@@ -6249,7 +6247,6 @@
   "googleProfile": {
     "workspaceNoAccessDesc": "You are not a Google operator for {{office}}. Google Business data for this office is not available to you.",
     "title": "Google Business Profile",
-    "subtitle": "Manage the Google profile for this office. Google is the source of truth.",
     "officeFallback": "Office",
     "noOfficeTitle": "No Google Business access",
     "noOfficeDesc": "You are not an operator of any office with Google Business access.",

@@ -587,9 +587,6 @@ export default function TeamGoogleProfilePage() {
             <Store className="size-5 text-emerald-600" />
             {t("googleProfile.title")}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("googleProfile.subtitle")}
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <HealthBadge row={profile} t={t} />

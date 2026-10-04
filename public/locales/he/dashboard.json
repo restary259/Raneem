@@ -743,7 +743,6 @@
     },
     "googleBusiness": {
       "title": "ניהול פרופיל Google Business",
-      "subtitle": "המשרדים שאתה מנהל ב-Google. מפעיל ראשי יכול למנות מנהל משנה.",
       "loading": "טוען את המשרדים שלך…",
       "loadError": "לא ניתן לטעון את משרדי Google Business שלך",
       "actionFailed": "הפעולה נכשלה",
@@ -3523,7 +3522,6 @@
   "googleReviews": {
     "workspaceNoAccessDesc": "אינך מפעיל Google עבור {{office}}. נתוני Google Business של משרד זה אינם זמינים לך.",
     "title": "ביקורות Google",
-    "subtitle": "קרא והשב לביקורות Google של המשרד שלך.",
     "officeFallback": "משרד",
     "all": "הכול",
     "unanswered": "ללא מענה",
@@ -6251,7 +6249,6 @@
   "googleProfile": {
     "workspaceNoAccessDesc": "אינך מפעיל Google עבור {{office}}. נתוני Google Business של משרד זה אינם זמינים לך.",
     "title": "פרופיל Google לעסק",
-    "subtitle": "ניהול פרופיל Google של המשרד. Google הוא מקור האמת.",
     "officeFallback": "משרד",
     "noOfficeTitle": "אין גישה ל-Google Business",
     "noOfficeDesc": "אינך מפעיל של משרד עם גישה ל-Google Business.",

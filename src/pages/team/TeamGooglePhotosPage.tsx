@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "@/lib/router-compat";
 import { useOfficeWorkspaceSelection } from "@/lib/officeWorkspace";
 import { resolveGooglePageOffice } from "@/lib/googleOfficeSelection";
 import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
@@ -149,6 +150,7 @@ function readDimensions(
 export default function TeamGooglePhotosPage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
+  const location = useLocation();
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
   const [officesLoading, setOfficesLoading] = useState(true);
@@ -158,6 +160,8 @@ export default function TeamGooglePhotosPage() {
   // office; inherit it and hide the redundant selector there.
   const workspaceContext = useOfficeWorkspaceContext();
   const inOfficeWorkspace = workspaceContext !== null;
+  const hideOfficeHeading =
+    inOfficeWorkspace && location.pathname.startsWith("/team/");
   const effectiveOfficeId = workspaceContext?.officeId ?? workspaceOfficeId;
   const [officeId, setOfficeId] = useState<string | null>(null);
   const [summary, setSummary] = useState<OfficeGoogleMediaSummaryRow | null>(
@@ -462,29 +466,29 @@ export default function TeamGooglePhotosPage() {
     <div className="mx-auto w-full max-w-6xl space-y-4 px-4 pt-4 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
-          {!inOfficeWorkspace && offices.length > 1 ? (
-            <Select
-              value={officeId ?? ""}
-              onValueChange={(v) => setOfficeId(v)}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {offices.map((o) => (
-                  <SelectItem key={o.office_id} value={o.office_id}>
-                    {o.office_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <h1 className="truncate text-2xl font-semibold">
-              {workspaceContext?.context.office.name ??
-                offices[0]?.office_name ??
-                t("googleMedia.title")}
-            </h1>
-          )}
+          {!hideOfficeHeading ? (
+            offices.length > 1 ? (
+              <Select
+                value={officeId ?? ""}
+                onValueChange={(v) => setOfficeId(v)}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {offices.map((o) => (
+                    <SelectItem key={o.office_id} value={o.office_id}>
+                      {o.office_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <h1 className="truncate text-2xl font-semibold">
+                {offices[0]?.office_name ?? t("googleMedia.title")}
+              </h1>
+            )
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <Button
