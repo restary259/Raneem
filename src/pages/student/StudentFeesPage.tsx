@@ -161,6 +161,15 @@ const StudentFeesPage = () => {
     }
   };
 
+  const openProofFile = async (path: string) => {
+    const { data, error } = await supabase.storage.from("student-documents").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) {
+      setUploadError(t("studentFees.viewFileError", "Unable to open the file."));
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
   if (loading) return <DashboardLoading />;
 
   if (!fin) {
@@ -303,8 +312,15 @@ const StudentFeesPage = () => {
                       </label>
                     </div>
                   ) : proof?.status === "pending" || payment?.status === "submitted" ? (
-                    <div className={`flex items-center gap-2 text-sm ${toneClasses("payment").text}`}>
-                      <Clock3 className="h-4 w-4" /> {t("studentFees.proofSubmitted", "Proof submitted — awaiting Admin verification")}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className={`flex items-center gap-2 text-sm ${toneClasses("enrolled").text}`}>
+                        <CheckCircle2 className="h-4 w-4" /> {t("studentFees.proofUploaded", "Uploaded — waiting for review")}
+                      </div>
+                      {proof?.file_path ? (
+                        <Button size="sm" variant="outline" onClick={() => void openProofFile(proof.file_path)}>
+                          <FileText className="me-2 h-4 w-4" /> {t("studentFees.viewFile", "View file")}
+                        </Button>
+                      ) : null}
                     </div>
                   ) : (
                     <label className="inline-flex">
