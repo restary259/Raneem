@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Store,
   Tags,
+  Trash2,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  cancelGoogleProfileChangeRequest,
   decideGoogleProfileChangeRequest,
   getOfficeGoogleProfile,
   listGoogleProfileChangeRequests,
@@ -158,10 +160,59 @@ function validateDraft(draft: Draft, t: TFunction<"dashboard">): string[] {
   return errors;
 }
 
+const ADDRESS_KEYS = [
+  "address_line_1",
+  "address_line_2",
+  "postal_code",
+  "city",
+  "region",
+  "country",
+] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+const asText = (value: unknown): string =>
+  value == null ? "" : String(value).trim();
+
+/** Renders an address object the same readable way the Address card does. */
+function formatAddressRecord(value: Record<string, unknown>): string {
+  return [
+    asText(value.address_line_1),
+    asText(value.address_line_2),
+    [asText(value.postal_code), asText(value.city)].filter(Boolean).join(" "),
+    asText(value.region),
+    asText(value.country),
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+/**
+ * Human-readable rendering of a change value. Address and category requests
+ * arrive as JSON objects; without this they would surface as raw JSON in the
+ * request preview and the confirm dialog.
+ */
 function formatValue(value: unknown): string {
   if (value == null || value === "") return "—";
-  if (Array.isArray(value)) return value.join(", ") || "—";
-  if (typeof value === "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    const parts = value.map(formatValue).filter((v) => v !== "—");
+    return parts.join(", ") || "—";
+  }
+  if (isRecord(value)) {
+    if (ADDRESS_KEYS.some((key) => key in value)) {
+      return formatAddressRecord(value) || "—";
+    }
+    if ("primary_category" in value) return formatValue(value.primary_category);
+    if ("additional_categories" in value)
+      return formatValue(value.additional_categories);
+    // Fallback: render readable "key: value" pairs, never raw JSON.
+    const pairs = Object.entries(value)
+      .filter(([, v]) => v != null && v !== "")
+      .map(([k, v]) => `${k.replace(/_/g, " ")}: ${formatValue(v)}`);
+    return pairs.join(", ") || "—";
+  }
   return String(value);
 }
 
@@ -259,7 +310,7 @@ function HealthBadge({
 export default function TeamGoogleProfilePage() {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const isAdmin = role === "admin";
 
   const [offices, setOffices] = useState<MyGoogleOfficeRow[]>([]);
@@ -288,6 +339,8 @@ export default function TeamGoogleProfilePage() {
     {},
   );
   const [decideTarget, setDecideTarget] =
+    useState<GoogleProfileChangeRequestRow | null>(null);
+  const [cancelTarget, setCancelTarget] =
     useState<GoogleProfileChangeRequestRow | null>(null);
 
   const runSync = useServerFn(syncGoogleProfile);
@@ -531,6 +584,30 @@ export default function TeamGoogleProfilePage() {
     }
   }
 
+  async function handleCancel(request: GoogleProfileChangeRequestRow) {
+    if (!officeId || busy) return;
+    setBusy(true);
+    try {
+      const { error } = await cancelGoogleProfileChangeRequest(
+        officeId,
+        request.id,
+      );
+      if (error) throw error;
+      toast({ description: t("googleProfile.requestCancelled") });
+      setCancelTarget(null);
+      await load();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description:
+          (error as { message?: string })?.message ||
+          t("googleProfile.requestFailed"),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // On a canonical office route where the signed-in operator has no Google
   // access for this office, say so explicitly instead of silently operating a
   // different office.
@@ -651,7 +728,7 @@ export default function TeamGoogleProfilePage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-4">
+          <TabsContent value="profile" className="space-y-4 pb-32 sm:pb-20">
             <IdentityCard
               profile={profile}
               draft={draft}
@@ -700,13 +777,13 @@ export default function TeamGoogleProfilePage() {
             />
 
             {canEdit && (
-              <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl border bg-background/95 p-3 shadow-sm backdrop-blur">
+              <div className="sticky bottom-[4.5rem] z-20 flex items-center justify-between gap-3 rounded-xl border bg-background/95 p-3 shadow-sm backdrop-blur sm:bottom-4">
                 <p className="text-sm text-muted-foreground">
                   {changedFields.length
                     ? t("googleProfile.unsaved", {
                         count: changedFields.length,
                       })
-                    : t("googleProfile.noChanges")}
+                    : t("googleProfile.inSync")}
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -740,8 +817,11 @@ export default function TeamGoogleProfilePage() {
             <RequestList
               requests={requests}
               isAdmin={isAdmin}
+              canEdit={canEdit}
+              currentUserId={user?.id ?? null}
               busy={busy}
               onDecide={(r) => setDecideTarget(r)}
+              onCancel={(r) => setCancelTarget(r)}
               t={t}
             />
           </TabsContent>
@@ -913,6 +993,49 @@ export default function TeamGoogleProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Cancel a pending change request — frees the field for a new request. */}
+      <AlertDialog
+        open={cancelTarget !== null}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("googleProfile.cancelRequestTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("googleProfile.cancelRequestDesc")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {cancelTarget && (
+            <div className="rounded-lg border bg-muted/40 p-3 text-sm">
+              <p className="text-muted-foreground">
+                {t(
+                  `googleProfile.requestField.${cancelTarget.field}`,
+                  cancelTarget.field,
+                )}
+              </p>
+              <p className="mt-1 font-medium">
+                {formatValue(cancelTarget.requested_value)}
+              </p>
+            </div>
+          )}
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel>{t("googleProfile.keepRequest")}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={busy}
+              onClick={(e) => {
+                e.preventDefault();
+                if (cancelTarget) handleCancel(cancelTarget);
+              }}
+            >
+              {busy && <Loader2 className="size-4 animate-spin" />}
+              {t("googleProfile.cancelRequest")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -1079,17 +1202,22 @@ function ContactCard({
           </div>
         ))}
         {!disabled && draft.phone_additional.length < 3 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setDraft((d) =>
-                d ? { ...d, phone_additional: [...d.phone_additional, ""] } : d,
-              )
-            }
-          >
-            {t("googleProfile.addPhone")}
-          </Button>
+          <div className="pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="min-h-10"
+              onClick={() =>
+                setDraft((d) =>
+                  d
+                    ? { ...d, phone_additional: [...d.phone_additional, ""] }
+                    : d,
+                )
+              }
+            >
+              {t("googleProfile.addPhone")}
+            </Button>
+          </div>
         )}
       </div>
     </SectionCard>
@@ -1176,22 +1304,28 @@ function CategoryCard({
         {!disabled &&
           draft.additional_categories.length <
             GBP_MAX_ADDITIONAL_CATEGORIES && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setDraft((d) =>
-                  d
-                    ? {
-                        ...d,
-                        additional_categories: [...d.additional_categories, ""],
-                      }
-                    : d,
-                )
-              }
-            >
-              {t("googleProfile.addCategory")}
-            </Button>
+            <div className="pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="min-h-10"
+                onClick={() =>
+                  setDraft((d) =>
+                    d
+                      ? {
+                          ...d,
+                          additional_categories: [
+                            ...d.additional_categories,
+                            "",
+                          ],
+                        }
+                      : d,
+                  )
+                }
+              >
+                {t("googleProfile.addCategory")}
+              </Button>
+            </div>
           )}
       </div>
     </SectionCard>
@@ -1335,14 +1469,20 @@ function HoursCard({
 function RequestList({
   requests,
   isAdmin,
+  canEdit,
+  currentUserId,
   busy,
   onDecide,
+  onCancel,
   t,
 }: {
   requests: GoogleProfileChangeRequestRow[];
   isAdmin: boolean;
+  canEdit: boolean;
+  currentUserId: string | null;
   busy: boolean;
   onDecide: (r: GoogleProfileChangeRequestRow) => void;
+  onCancel: (r: GoogleProfileChangeRequestRow) => void;
   t: TFunction<"dashboard">;
 }) {
   if (!requests.length) {
@@ -1396,16 +1536,31 @@ function RequestList({
                 </p>
               )}
             </div>
-            {isAdmin && request.status === "PENDING" && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={() => onDecide(request)}
-              >
-                {t("googleProfile.review")}
-              </Button>
-            )}
+            <div className="flex flex-col items-end gap-2">
+              {isAdmin && request.status === "PENDING" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => onDecide(request)}
+                >
+                  {t("googleProfile.review")}
+                </Button>
+              )}
+              {request.status === "PENDING" &&
+                (isAdmin || canEdit || request.requested_by === currentUserId) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    disabled={busy}
+                    onClick={() => onCancel(request)}
+                  >
+                    <Trash2 className="size-4" />
+                    {t("googleProfile.cancelRequest")}
+                  </Button>
+                )}
+            </div>
           </CardContent>
         </Card>
       ))}

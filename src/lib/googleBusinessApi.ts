@@ -217,6 +217,21 @@ export function submitGoogleProfileChangeRequest(
   );
 }
 
+/**
+ * Cancel a still-pending change request. Allowed for its requester, an office
+ * operator, or an Admin; the server RPC is the security boundary. Cancelling
+ * frees the one-pending-per-field lock so a new request can be submitted.
+ */
+export function cancelGoogleProfileChangeRequest(
+  officeId: string,
+  requestId: string,
+) {
+  return rpc<{ id: string; status: string; field: string }[]>(
+    "cancel_google_profile_change_request",
+    { p_office_id: officeId, p_request_id: requestId },
+  );
+}
+
 /** Admin: approve or reject a pending change request. */
 export function decideGoogleProfileChangeRequest(
   officeId: string,

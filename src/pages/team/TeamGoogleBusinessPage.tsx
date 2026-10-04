@@ -55,6 +55,16 @@ function errorMessage(error: unknown): string | undefined {
   return (error as { message?: string } | null)?.message;
 }
 
+/** Colour-codes a background sync job's status in the Overview job list. */
+const SYNC_JOB_STATUS_CLASS: Record<string, string> = {
+  PENDING: "border-muted-foreground/40 text-muted-foreground",
+  RUNNING: "border-sky-500/40 text-sky-600",
+  SUCCESS: "border-emerald-500/40 text-emerald-600",
+  PARTIAL: "border-amber-500/40 text-amber-600",
+  FAILED: "border-destructive/40 text-destructive",
+  CANCELLED: "border-muted-foreground/40 text-muted-foreground",
+};
+
 /**
  * The team-facing Google Business surface (Phase 4).
  *
@@ -353,11 +363,12 @@ function TeamGoogleOfficeCard({ office, busy, setBusy, onChanged }: CardProps) {
                 className={`inline-block size-2 rounded-full ${
                   health?.healthStatus === "HEALTHY"
                     ? "bg-emerald-500"
-                    : health?.healthStatus === "ATTENTION"
+                    : health?.healthStatus === "ATTENTION" ||
+                        health?.healthStatus === "ACTION_REQUIRED"
                       ? "bg-amber-500"
-                      : health?.healthStatus
+                      : health?.healthStatus === "UNAVAILABLE"
                         ? "bg-destructive"
-                        : "bg-muted-foreground"
+                        : "bg-muted-foreground/50"
                 }`}
               />
               {t("googleIntegration.officeHealth")}
@@ -394,17 +405,33 @@ function TeamGoogleOfficeCard({ office, busy, setBusy, onChanged }: CardProps) {
             </p>
           ) : null}
           {jobs.length > 0 ? (
-            <ul className="space-y-1 text-xs text-muted-foreground">
-              {jobs.map((job) => (
-                <li key={job.jobId} className="flex items-center gap-2">
-                  <span className="font-medium">{job.syncType}</span>
-                  <span>{job.status}</span>
-                  {job.recordsProcessed > 0 ? (
-                    <span>· {job.recordsProcessed}</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t("googleIntegration.recentSyncs")}
+              </p>
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                {jobs.map((job) => (
+                  <li key={job.jobId} className="flex items-center gap-2">
+                    <span className="font-medium">
+                      {t(`googleIntegration.syncType.${job.syncType}`, {
+                        defaultValue: job.syncType,
+                      })}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className={SYNC_JOB_STATUS_CLASS[job.status] ?? ""}
+                    >
+                      {t(`googleIntegration.syncStatus.${job.status}`, {
+                        defaultValue: job.status,
+                      })}
+                    </Badge>
+                    {job.recordsProcessed > 0 ? (
+                      <span>· {job.recordsProcessed}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
         </section>
 
