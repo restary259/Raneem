@@ -776,30 +776,40 @@ export default function TeamGoogleProfilePage() {
               t={t}
             />
 
-            {canEdit && (
-              <div className="sticky bottom-[4.5rem] z-20 flex items-center justify-between gap-3 rounded-xl border bg-background/95 p-3 shadow-sm backdrop-blur sm:bottom-4">
+            {canEdit && changedFields.length > 0 && (
+              <div className="sticky bottom-[4.5rem] z-20 space-y-2 rounded-xl border bg-background/95 p-3 shadow-sm backdrop-blur sm:bottom-4">
+                {errors.length > 0 && (
+                  <ul className="space-y-0.5 text-xs text-destructive">
+                    {Array.from(new Set(errors)).map((e) => (
+                      <li key={e}>• {e}</li>
+                    ))}
+                  </ul>
+                )}
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-sm text-muted-foreground">
-                  {changedFields.length
-                    ? t("googleProfile.unsaved", {
-                        count: changedFields.length,
-                      })
-                    : t("googleProfile.inSync")}
+                  {t("googleProfile.unsaved", {
+                    count: changedFields.length,
+                  })}
                 </p>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    disabled={!changedFields.length || busy}
+                    disabled={busy}
                     onClick={() => profile && setDraft(toDraft(profile))}
                   >
                     {t("googleProfile.discard")}
                   </Button>
                   <Button
                     size="sm"
-                    disabled={
-                      !changedFields.length || busy || errors.length > 0
-                    }
-                    onClick={() => setConfirmSave(true)}
+                    disabled={busy}
+                    onClick={() => {
+                      if (errors.length) {
+                        toast({ variant: "destructive", description: errors[0] });
+                        return;
+                      }
+                      setConfirmSave(true);
+                    }}
                   >
                     {busy ? (
                       <Loader2 className="size-4 animate-spin" />
