@@ -67,6 +67,7 @@ const StudentFeesPage = () => {
   const [invoiceError, setInvoiceError] = useState(false);
   const [proofs, setProofs] = useState<ProofRow[]>([]);
   const [uploadingType, setUploadingType] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -108,6 +109,7 @@ const StudentFeesPage = () => {
     if (!fin) return;
     const paymentType = typeForKind(kind);
     setUploadingType(paymentType);
+    setUploadError(null);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user.id;
@@ -116,23 +118,23 @@ const StudentFeesPage = () => {
       // Shared upload rules (size + extension + MIME), narrowed to proof formats.
       const baseError = validateUploadFile(file);
       if (baseError) {
-        window.alert(baseError);
+        setUploadError(baseError);
         return;
       }
       const MAX_PROOF_SIZE = 10 * 1024 * 1024;
       const ALLOWED_PROOF_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
       const ALLOWED_PROOF_EXTS = ["jpg", "jpeg", "png", "webp", "pdf"];
       if (file.size > MAX_PROOF_SIZE) {
-        window.alert("Payment proof exceeds 10 MB limit");
+        setUploadError(t("studentFees.fileTooLarge", "The file is larger than 10 MB."));
         return;
       }
       const ext = file.name.split(".").pop()?.toLowerCase();
       if (!ext || !ALLOWED_PROOF_EXTS.includes(ext)) {
-        window.alert("Only JPG, PNG, WEBP, PDF files allowed for payment proof");
+        setUploadError(t("studentFees.fileTypeNotAllowed", "Only JPG, PNG, WEBP or PDF files are allowed."));
         return;
       }
       if (file.type && !ALLOWED_PROOF_TYPES.includes(file.type)) {
-        window.alert("Unsupported file type for payment proof");
+        setUploadError(t("studentFees.fileTypeNotAllowed", "Only JPG, PNG, WEBP or PDF files are allowed."));
         return;
       }
 
@@ -155,7 +157,7 @@ const StudentFeesPage = () => {
       await load();
     } catch (error: any) {
       console.error("Payment proof upload failed", error);
-      window.alert(error?.message || "Unable to upload payment proof.");
+      setUploadError(error?.message || t("studentFees.uploadFailed", "Unable to upload payment proof."));
     } finally {
       setUploadingType(null);
     }
@@ -271,6 +273,9 @@ const StudentFeesPage = () => {
                 "These are estimated school costs. Final school invoices may differ.",
               )}
             </p>
+            {uploadError ? (
+              <p role="alert" className="text-sm text-destructive">{uploadError}</p>
+            ) : null}
             {fin.school_costs.map((c) => {
               const type = typeForKind(c.kind);
               const proof = latestProof(type);
