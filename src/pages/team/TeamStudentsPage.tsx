@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { User, RefreshCw, UserPlus, Loader2, Mail, Search, Copy, CheckCheck, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { listScopedStudents } from "@/services/teamStudentsScope";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@/lib/router-compat";
