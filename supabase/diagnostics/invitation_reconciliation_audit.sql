@@ -87,3 +87,11 @@ ORDER BY i.created_at DESC;
 --   AND i.invitation_type IN ('student', 'partner', 'ambassador', 'agent', 'team')
 --   AND p.deleted_at IS NOT NULL
 -- ORDER BY i.created_at DESC;
+
+-- Accepted student invitations whose student has no created_by (should be 0
+-- after trg_set_created_by_from_invitation + backfill are deployed).
+SELECT i.id, i.invited_email, i.inviter_id, p.id AS student_id
+FROM public.user_invitations i
+JOIN public.profiles p ON p.id = i.accepted_user_id
+WHERE i.status = 'accepted' AND i.invitation_type = 'student'
+  AND i.inviter_id IS NOT NULL AND p.created_by IS NULL;

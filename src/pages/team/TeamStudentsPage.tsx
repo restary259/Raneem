@@ -135,70 +135,18 @@ export default function TeamStudentsPage() {
   const fetchStudents = useCallback(async () => {
     setListLoading(true);
     try {
-      const { data: roleData, error: roleErr } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "student");
-
-      if (roleErr) {
-        console.error("user_roles RLS error:", roleErr.message, roleErr.details);
-        toast({ variant: "destructive", description: t("common.error") });
-        return;
-      }
-
-      const ids = (roleData ?? []).map((r: any) => r.user_id);
-      if (ids.length === 0) {
+      // Scoping lives in teamStudentsScope (admin: all; team: created by me
+      // or assigned to me). Do not inline queries here — see AGENTS.md.
+      const { data: authData } = await supabase.auth.getUser();
+      const me = authData.user?.id ?? null;
+      if (me === null) {
         setStudents([]);
         return;
       }
-
-      // Staff-created student accounts (created_by IS NOT NULL). The case_id
-      // filter was removed: a manually-created student linked to a case must
-      // still appear under active accounts, otherwise it vanishes from both
-      // this list and the pending-invitations list. Self-registered students
-      // (created_by IS NULL) are excluded — they are not team-managed here.
-      const { data, error } = await (supabase as any)
-        .from("profiles")
-        .select("id, full_name, email, created_at")
-        .in("id", ids)
-        .not("created_by", "is", null)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("profiles fetch error:", error.message);
-        throw error;
-      }
-
-      // Students whose case is assigned to the signed-in team member must
-      // also appear (e.g. invited students whose created_by was never set).
-      const { data: authData } = await supabase.auth.getUser();
-      const me = authData.user?.id ?? null;
-      let assigned: any[] = [];
-      if (me !== null) {
-        const { data: caseRows, error: caseErr } = await supabase
-          .from("cases")
-          .select("student_user_id")
-          .eq("assigned_to", me)
-          .is("deleted_at", null)
-          .not("student_user_id", "is", null);
-        if (caseErr) throw caseErr;
-        const known = new Set((data ?? []).map((p: any) => p.id));
-        const extraIds = [...new Set((caseRows ?? []).map((c: any) => c.student_user_id as string))].filter(
-          (id) => ids.includes(id) && !known.has(id),
-        );
-        if (extraIds.length > 0) {
-          const { data: extra, error: extraErr } = await (supabase as any)
-            .from("profiles")
-            .select("id, full_name, email, created_at")
-            .in("id", extraIds);
-          if (extraErr) throw extraErr;
-          assigned = extra ?? [];
-        }
-      }
-      const merged = [...(data ?? []), ...assigned].sort((a: any, b: any) =>
-        String(b.created_at).localeCompare(String(a.created_at)),
-      );
-      setStudents(merged);
+      const { data: role, error: roleErr } = await (supabase as any).rpc("get_my_role");
+      if (roleErr) throw roleErr;
+      const merged = await listScopedStudents({ userId: me, isAdmin: role === "admin" });
+      setStudents(merged as any);
     } catch (err: any) {
       console.error("fetchStudents error:", err);
       toast({ variant: "destructive", description: t("common.error") });
