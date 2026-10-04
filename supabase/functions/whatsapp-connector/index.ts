@@ -175,7 +175,7 @@ serve(async (req) => {
       if (requestedCaseId || requestedLeadId || requestedProfileId) {
         const [caseResult, leadResult, profileResult] = await Promise.all([
           requestedCaseId
-            ? admin.from("cases").select("id,full_name,phone_number,student_user_id").eq("id", requestedCaseId).maybeSingle()
+            ? admin.from("cases").select("id,full_name,phone_number,student_user_id,assigned_to").eq("id", requestedCaseId).maybeSingle()
             : Promise.resolve({ data: null, error: null }),
           requestedLeadId
             ? admin.from("leads").select("id,full_name,phone").eq("id", requestedLeadId).maybeSingle()
@@ -190,6 +190,10 @@ serve(async (req) => {
 
         if (requestedCaseId && (!caseResult.data || normalizeWhatsAppNumber(caseResult.data.phone_number) !== whatsappNumber)) {
           return json({ error: "The selected case does not match the WhatsApp number" }, 409, corsHeaders);
+        }
+        // Team members may only link a conversation to a case assigned to them.
+        if (requestedCaseId && !isAdmin && caseResult.data?.assigned_to !== auth.userId) {
+          return json({ error: "This case is not assigned to you" }, 403, corsHeaders);
         }
         if (requestedLeadId && (!leadResult.data || normalizeWhatsAppNumber(leadResult.data.phone) !== whatsappNumber)) {
           return json({ error: "The selected lead does not match the WhatsApp number" }, 409, corsHeaders);
