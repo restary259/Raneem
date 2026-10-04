@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ComponentType } from "r
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Lightbulb, Star, MapPinned, Search, SlidersHorizontal, ShoppingCart, Dumbbell, GraduationCap, Home, TrainFront, HeartPulse, Clapperboard, CircleDot, Landmark, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
+import { Lightbulb, MapPinned, Search, SlidersHorizontal, ShoppingCart, Dumbbell, GraduationCap, Home, TrainFront, HeartPulse, Clapperboard, CircleDot, Landmark, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

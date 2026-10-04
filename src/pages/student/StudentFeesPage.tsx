@@ -64,6 +64,7 @@ const StudentFeesPage = () => {
   const [loading, setLoading] = useState(true);
   const [fin, setFin] = useState<Financials | null>(null);
   const [invoiceToken, setInvoiceToken] = useState<string | null>(null);
+  const [invoiceError, setInvoiceError] = useState(false);
   const [proofs, setProofs] = useState<ProofRow[]>([]);
   const [uploadingType, setUploadingType] = useState<string | null>(null);
 
@@ -76,7 +77,7 @@ const StudentFeesPage = () => {
       return;
     }
 
-    const [{ data: financials }, { data: invoice }, { data: proofRows }] = await Promise.all([
+    const [{ data: financials }, { data: invoice, error: invoiceReadError }, { data: proofRows }] = await Promise.all([
       supabase.rpc("get_case_financials", { p_case_id: myCase.id }),
       supabase
         .from("case_invoices")
@@ -93,7 +94,8 @@ const StudentFeesPage = () => {
     ]);
 
     if (financials) setFin(financials as unknown as Financials);
-    if (invoice?.public_token) setInvoiceToken(invoice.public_token);
+    setInvoiceError(Boolean(invoiceReadError));
+    setInvoiceToken(invoice?.public_token ?? null);
     setProofs((proofRows ?? []) as ProofRow[]);
     setLoading(false);
   }, []);
@@ -365,7 +367,16 @@ const StudentFeesPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {invoiceToken ? (
+          {invoiceError ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm text-destructive">
+                {t("studentFees.invoiceLoadError", "We couldn't load your invoice.")}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => void load()}>
+                {t("common.retry", "Retry")}
+              </Button>
+            </div>
+          ) : invoiceToken ? (
             <Button asChild variant="outline">
               <a href={`/invoice/${invoiceToken}`} target="_blank" rel="noreferrer">
                 {t("studentFees.viewInvoice", "View invoice")}

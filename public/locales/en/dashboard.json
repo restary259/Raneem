@@ -5523,7 +5523,8 @@
     "referralDiscount": "Referral discount",
     "netTotal": "Net total",
     "memoTitle": "Bank transfer memo",
-    "memoHint": "Write this reference in the memo of your bank transfer so we can match your payment."
+    "memoHint": "Write this reference in the memo of your bank transfer so we can match your payment.",
+    "invoiceLoadError": "We couldn't load your invoice."
   },
   "studentOverview": {
     "nextAction": "Next action",
