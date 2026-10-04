@@ -65,10 +65,11 @@ describe('SheetTable unified export menu', () => {
     await waitFor(() => expect(pdf).toHaveBeenCalled());
   });
 
-  it('disables export when there are zero rows', async () => {
+  it('allows exporting an empty template when there are zero rows', async () => {
     render(<SheetTable title="S" columns={columns} rows={[]} fileName="f" />);
     const dlg = await openMenu();
-    expect(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)).toBeDisabled();
+    expect(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)).not.toBeDisabled();
+    expect(within(dlg).getByText(/empty template/i)).toBeInTheDocument();
   });
 
   it('exports only rows matching search (parent filters arrive pre-filtered)', async () => {
@@ -135,11 +136,11 @@ describe('SheetTable menu scopes', () => {
     await waitFor(() => expect(packet).toHaveBeenCalledWith('xlsx'));
   });
 
-  it('zero rows: current view and school packet disabled, full report allowed', async () => {
+  it('zero rows: current view exports a template, only row-dependent scopes are disabled', async () => {
     render(<SheetTable title="S" columns={columns} rows={[]} fileName="f" extraExportScopes={scopes} />);
     const dlg = await openMenu();
     const submit = () => within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!;
-    expect(submit()).toBeDisabled();
+    expect(submit()).not.toBeDisabled();
     await userEvent.click(within(dlg).getByRole('radio', { name: /School packet/ }));
     expect(submit()).toBeDisabled();
     await userEvent.click(within(dlg).getByRole('radio', { name: /Full report/ }));
