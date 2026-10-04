@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ComponentType } from "r
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Lightbulb, Star, MapPinned, Search, SlidersHorizontal, ShoppingCart, Dumbbell, GraduationCap, Home, TrainFront, HeartPulse, Clapperboard, CircleDot, Landmark, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
+import { Lightbulb, MapPinned, Search, SlidersHorizontal, ShoppingCart, Dumbbell, GraduationCap, Home, TrainFront, HeartPulse, Clapperboard, CircleDot, Landmark, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,9 +16,6 @@ import {
   type StudentCityGuideCategory,
   type StudentCityGuideLocation,
 } from "@/data/studentCityGuides";
-import { useServerFn } from "@tanstack/react-start";
-import { getCityGuidePlaces, type CityGuidePlace } from "@/lib/cityGuidePlaces.functions";
-import CityGuideMap, { type CityGuideMapPin } from "@/components/student/CityGuideMap";
 
 interface StudentCityGuideProps {
   residentialCity?: string | null;
@@ -141,28 +138,6 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   }, [residentialCity, userId, loadProfileCity]);
 
   const city = getCityGuide(storedCity);
-  const fetchPlaces = useServerFn(getCityGuidePlaces);
-  const [places, setPlaces] = useState<Record<string, CityGuidePlace>>({});
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!city || !userId) return;
-    let cancelled = false;
-    fetchPlaces({ data: { cityId: city.id } })
-      .then((rows) => {
-        if (!cancelled) setPlaces(Object.fromEntries(rows.map((r) => [r.location_id, r])));
-      })
-      .catch((e) => console.warn("City guide places unavailable", e));
-    return () => {
-      cancelled = true;
-    };
-  }, [city, userId, fetchPlaces]);
-
-  const handleSelectPin = useCallback((id: string) => {
-    setSelectedId(id);
-    document.getElementById(`city-place-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, []);
-
   const filteredLocations = useMemo(() => {
     if (!city) return [];
     const categoryFiltered = selectedCategory === "all"
@@ -272,20 +247,6 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
             </div>
           </div>
         </div>
-        {variant === "full" && (
-          <div className="border-t border-border">
-          <CityGuideMap
-            className="rounded-none border-0"
-            center={{ lat: 49.4093, lng: 8.6937 }}
-            selectedId={selectedId}
-            onSelect={handleSelectPin}
-            pins={filteredLocations.flatMap((l): CityGuideMapPin[] => {
-              const p = places[l.id];
-              return p?.lat != null && p?.lng != null ? [{ id: l.id, name: displayName(l, language), lat: p.lat, lng: p.lng }] : [];
-            })}
-          />
-          </div>
-        )}
       </Card>
 
 
@@ -366,7 +327,6 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
           {filteredLocations.map((location) => {
             const Icon = CATEGORY_ICONS[location.category];
             const name = displayName(location, language);
-            const place = places[location.id];
             const tip = displayTip(location, language);
             return (
               <div
@@ -374,21 +334,19 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                 id={`city-place-${location.id}`}
                 className={[
                   "group flex min-w-0 flex-col overflow-hidden rounded-lg border bg-background transition-colors",
-                  selectedId === location.id ? "border-primary ring-2 ring-primary/30" : "border-border",
+                  "border-border",
                 ].join(" ")}
               >
               <a
                 href={mapsSearchUrl(location.mapQuery)}
                 target="_blank"
                 rel="noopener noreferrer"
-                onFocus={() => setSelectedId(location.id)}
-                onMouseEnter={() => variant === "full" && setSelectedId(location.id)}
                 className="block min-w-0 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={`${name} — ${t("student.cityGuide.openMap", "Open in Google Maps")}`}
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-muted">
                   <img
-                    src={location.imageUrl ?? place?.photo_uri ?? FALLBACK_IMAGE}
+                    src={location.imageUrl ?? FALLBACK_IMAGE}
                     alt=""
                     className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
                     loading="lazy"
@@ -414,24 +372,6 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                   </div>
                   <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                 </div>
-                {(place?.rating != null || place?.open_now != null) && (
-                  <div className="flex flex-wrap items-center gap-2 px-3 pb-2 text-xs">
-                    {place?.rating != null && (
-                      <span className="inline-flex items-center gap-1 text-foreground">
-                        <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                        {place.rating.toLocaleString("en-US", { maximumFractionDigits: 1 })}
-                        {place.rating_count != null && (
-                          <span className="text-muted-foreground">({place.rating_count.toLocaleString("en-US")})</span>
-                        )}
-                      </span>
-                    )}
-                    {place?.open_now != null && (
-                      <span className={place.open_now ? "text-primary font-medium" : "text-muted-foreground"}>
-                        {place.open_now ? t("student.cityGuide.openNow", "Open now") : t("student.cityGuide.closed", "Closed")}
-                      </span>
-                    )}
-                  </div>
-                )}
               </a>
               {tip && (
                 <div className="mt-auto border-t border-border bg-muted/40 px-3 py-2">
