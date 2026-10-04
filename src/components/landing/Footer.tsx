@@ -3,7 +3,7 @@ import { Instagram, Facebook, Mail, MessageCircle } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import TikTokIcon from "../icons/TikTokIcon";
-import darbLogoAsset from '@/assets/darb-logo-dark.png.asset.json';
+import darbMarkAsset from '@/assets/darb-mark-2026.png.asset.json';
 import { SUPPORT_EMAIL, whatsappBusinessUrl } from '@/lib/contactConfig';
 
 // TikTokIcon component definition removed from here
@@ -18,7 +18,9 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12 sm:py-14">
         <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
           <div className="max-w-md">
-            <img src={darbLogoAsset.url} alt={t('loader.brand')} width={182} height={64} className="h-auto w-44" loading="lazy" />
+            <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+              <img src={darbMarkAsset.url} alt={t('loader.brand')} width={56} height={56} className="h-14 w-14 object-contain" loading="lazy" />
+            </span>
             <p className="mt-5 text-base leading-7 text-primary-foreground/75">{t('footer.quote')}</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <a href={whatsappBusinessUrl("مرحبا، بدي أتواصل مع فريق درب بخصوص الدراسة بألمانيا.")} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary-foreground/25 px-4 text-sm font-semibold transition-colors hover:bg-primary-foreground hover:text-primary"><MessageCircle className="h-4 w-4" /> WhatsApp</a>

@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
 import { fontForText, hasRtl, registerPdfFonts, shapeForPdf } from "@/utils/pdfFonts";
 import {
   createInvoicePresentation,
@@ -57,7 +57,7 @@ export async function downloadInvoicePdf(
   };
 
   const logo = await imageData(darbLogoAsset.url);
-  if (logo) doc.addImage(logo, "PNG", pageWidth / 2 - 17, 11, 34, 15, undefined, "FAST");
+  if (logo) doc.addImage(logo, "PNG", pageWidth / 2 - 17, 11, 34, 12.9, undefined, "FAST");
   doc.text(setText(L.brandLine, 8, false, MUTED), pageWidth / 2, 31, { align: "center" });
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.9);

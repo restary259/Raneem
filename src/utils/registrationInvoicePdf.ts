@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
 import { fontForText, registerPdfFonts, shapeForPdf } from "@/utils/pdfFonts";
 
 interface RegistrationInvoiceMeta {
@@ -51,7 +51,7 @@ export async function downloadRegistrationInvoicePdf(meta: RegistrationInvoiceMe
   };
 
   const logo = await imageData(darbLogoAsset.url);
-  if (logo) doc.addImage(logo, "PNG", pageWidth / 2 - 17, 11, 34, 15, undefined, "FAST");
+  if (logo) doc.addImage(logo, "PNG", pageWidth / 2 - 17, 11, 34, 12.9, undefined, "FAST");
 
   doc.text(setText(isArabic ? "فاتورة تسجيل درب" : "DARB Registration Invoice", 18, true, [15,27,45]), edge, 43, { align });
   doc.text(setText(meta.invoiceNumber, 9, true, [91,100,114]), isArabic ? margin : pageWidth - margin, 43, { align: isArabic ? "left" : "right" });
