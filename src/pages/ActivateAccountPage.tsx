@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
 import { Loader2, Eye, EyeOff, MailCheck, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -151,7 +151,7 @@ const ActivateAccountPage = () => {
           <img
             src={darbLogoAsset.url}
             alt={t("loader.brand", "Darb")}
-            className="mx-auto mb-4 h-20 w-auto object-contain"
+            className="mx-auto mb-4 h-12 w-auto object-contain md:h-16"
           />
           <h1 className="text-2xl font-bold text-card-foreground">{t("activate.title")}</h1>
         </div>

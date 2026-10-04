@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide
 import PasswordResetModal from "@/components/auth/PasswordResetModal";
 import PasswordStrength, { validatePassword } from "@/components/auth/PasswordStrength";
 import { useTranslation } from "react-i18next";
-import darbLogoAsset from "@/assets/darb-logo.png.asset.json";
+import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth, ROLE_TO_PATH } from "@/contexts/AuthContext";
 import { changeOwnPassword } from "@/lib/changeOwnPassword";
@@ -186,7 +186,7 @@ const StudentAuthPage = () => {
             <img
               src={darbLogoAsset.url}
               alt={t("loader.brand", "Darb")}
-              className="mx-auto mb-3 h-16 w-auto object-contain md:mb-4 md:h-20"
+              className="mx-auto mb-3 h-12 w-auto object-contain md:mb-4 md:h-16"
             />
             <h1 className="text-xl md:text-2xl font-bold text-card-foreground">{t("auth.loginTitle")}</h1>
             <p className="mt-1 md:mt-1.5 text-sm text-muted-foreground">
