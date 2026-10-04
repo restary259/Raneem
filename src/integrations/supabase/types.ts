@@ -6625,6 +6625,7 @@ export type Database = {
           lesson_minutes: number | null
           lessons_per_week: number | null
           max_students: number | null
+          min_students: number | null
           name_ar: string | null
           name_en: string
           notes: string | null
@@ -6654,6 +6655,7 @@ export type Database = {
           lesson_minutes?: number | null
           lessons_per_week?: number | null
           max_students?: number | null
+          min_students?: number | null
           name_ar?: string | null
           name_en: string
           notes?: string | null
@@ -6683,6 +6685,7 @@ export type Database = {
           lesson_minutes?: number | null
           lessons_per_week?: number | null
           max_students?: number | null
+          min_students?: number | null
           name_ar?: string | null
           name_en?: string
           notes?: string | null
