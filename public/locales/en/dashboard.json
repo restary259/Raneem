@@ -4077,6 +4077,7 @@
     "exportVisibleColumns": "Current visible columns",
     "exportChooseColumns": "Choose columns",
     "exportNoColumns": "Choose at least one column.",
+    "exportEmptyTemplate": "Export an empty template with the selected columns.",
     "noMatches": "No rows match your filters or search",
     "noMatchesHelp": "Try changing your filters or search.",
     "clearSearch": "Clear search",
