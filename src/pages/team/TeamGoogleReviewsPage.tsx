@@ -455,9 +455,6 @@ export default function TeamGoogleReviewsPage() {
             <Star className="size-5 text-amber-400" />
             {t("googleReviews.title")}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("googleReviews.subtitle")}
-          </p>
         </div>
         <div className="flex items-center gap-2">
           {!inOfficeWorkspace && offices.length > 1 && (
