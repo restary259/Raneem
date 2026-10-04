@@ -462,29 +462,29 @@ export default function TeamGooglePhotosPage() {
     <div className="mx-auto w-full max-w-6xl space-y-4 px-4 pt-4 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
-          {!inOfficeWorkspace && offices.length > 1 ? (
-            <Select
-              value={officeId ?? ""}
-              onValueChange={(v) => setOfficeId(v)}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {offices.map((o) => (
-                  <SelectItem key={o.office_id} value={o.office_id}>
-                    {o.office_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <h1 className="truncate text-2xl font-semibold">
-              {workspaceContext?.context.office.name ??
-                offices[0]?.office_name ??
-                t("googleMedia.title")}
-            </h1>
-          )}
+          {!inOfficeWorkspace ? (
+            offices.length > 1 ? (
+              <Select
+                value={officeId ?? ""}
+                onValueChange={(v) => setOfficeId(v)}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {offices.map((o) => (
+                    <SelectItem key={o.office_id} value={o.office_id}>
+                      {o.office_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <h1 className="truncate text-2xl font-semibold">
+                {offices[0]?.office_name ?? t("googleMedia.title")}
+              </h1>
+            )
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <Button
