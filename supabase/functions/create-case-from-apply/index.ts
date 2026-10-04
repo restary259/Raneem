@@ -338,7 +338,9 @@ Deno.serve(async (req) => {
       // An office-scoped entry that lands on an office-less case adopts the
       // entry office once — it never moves a case that already belongs to an
       // office, so two offices can't fight over the same applicant.
-      if (officeId && !existingCase.office_id) {
+      // Only staff may set an existing case's office: a phone number is not
+      // proof of ownership, so anonymous resubmissions never move a case.
+      if (caller.isStaff && officeId && !existingCase.office_id) {
         await supabaseAdmin
           .from("cases")
           .update({ office_id: officeId })
