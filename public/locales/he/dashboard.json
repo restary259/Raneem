@@ -1507,7 +1507,21 @@
     "netTotal": "סך נטו",
     "memoTitle": "הערה להעברה בנקאית",
     "memoHint": "כתבו את המספר הזה בהערת ההעברה הבנקאית כדי שנוכל לזהות את התשלום.",
-    "invoiceLoadError": "לא הצלחנו לטעון את החשבונית שלך."
+    "invoiceLoadError": "לא הצלחנו לטעון את החשבונית שלך.",
+    "proofUploaded": "הועלה — ממתין לבדיקה",
+    "viewFile": "הצג קובץ",
+    "viewFileError": "לא ניתן לפתוח את הקובץ.",
+    "fileTooLarge": "הקובץ גדול מ-10 MB.",
+    "fileTypeNotAllowed": "מותרים רק קבצי JPG, PNG, WEBP או PDF.",
+    "uploadFailed": "לא ניתן להעלות את אישור התשלום.",
+    "paymentProofsTitle": "אישורי תשלום",
+    "proofsLoadError": "לא הצלחנו לטעון את אישורי התשלום.",
+    "proofType": {
+      "course": "קורס שפה",
+      "accommodation": "מגורים",
+      "insurance": "ביטוח",
+      "other": "תשלום"
+    }
   },
   "studentOverview": {
     "nextAction": "הפעולה הבאה",

@@ -5524,7 +5524,21 @@
     "netTotal": "Net total",
     "memoTitle": "Bank transfer memo",
     "memoHint": "Write this reference in the memo of your bank transfer so we can match your payment.",
-    "invoiceLoadError": "We couldn't load your invoice."
+    "invoiceLoadError": "We couldn't load your invoice.",
+    "proofUploaded": "Uploaded — waiting for review",
+    "viewFile": "View file",
+    "viewFileError": "Unable to open the file.",
+    "fileTooLarge": "The file is larger than 10 MB.",
+    "fileTypeNotAllowed": "Only JPG, PNG, WEBP or PDF files are allowed.",
+    "uploadFailed": "Unable to upload payment proof.",
+    "paymentProofsTitle": "Payment proofs",
+    "proofsLoadError": "We couldn't load your payment proofs.",
+    "proofType": {
+      "course": "Language course",
+      "accommodation": "Accommodation",
+      "insurance": "Insurance",
+      "other": "Payment"
+    }
   },
   "studentOverview": {
     "nextAction": "Next action",
