@@ -6266,6 +6266,7 @@
     "uncertain": "מצב השליחה אינו ודאי. רענן את פרופיל Google לפני ניסיון חוזר.",
     "unsaved": "{{count}} שינויים שלא נשמרו",
     "noChanges": "אין שינויים",
+    "inSync": "מסונכרן עם Google",
     "discard": "בטל",
     "save": "פרסם ל-Google",
     "cancel": "ביטול",
@@ -6325,6 +6326,7 @@
     "requestPublished": "השינוי אושר ופורסם ל-Google.",
     "requestPublishFailed": "אושר, אך הפרסום ל-Google נכשל.",
     "requestRejected": "בקשת השינוי נדחתה.",
+    "requestCancelled": "בקשת השינוי בוטלה.",
     "requestField": {
       "ADDRESS": "כתובת",
       "PRIMARY_CATEGORY": "קטגוריה ראשית",
@@ -6339,6 +6341,10 @@
     },
     "requestedBy": "בוקש על ידי {{name}}",
     "review": "סקור",
+    "cancelRequest": "בטל בקשה",
+    "cancelRequestTitle": "לבטל את בקשת השינוי?",
+    "cancelRequestDesc": "הבקשה תבוטל והשדה ייפתח להגשת שינוי חדש. אין בכך שינוי ב-Google.",
+    "keepRequest": "השאר בקשה",
     "decideTitle": "החלט בבקשת שינוי",
     "decideDesc": "סקור את שינוי ה-{{field}} המבוקש.",
     "approve": "אשר ופרסם",
@@ -6662,6 +6668,24 @@
     "syncing": "מסנכרן...",
     "syncFailed": "הסנכרון נכשל",
     "syncQueued": "הסנכרון הוגדר בתור",
+    "recentSyncs": "סנכרונים אחרונים",
+    "syncType": {
+      "FULL": "מלא",
+      "PROFILE": "פרופיל",
+      "REVIEWS": "ביקורות",
+      "MEDIA": "מדיה",
+      "POSTS": "פוסטים",
+      "PERFORMANCE": "ביצועים",
+      "HEALTH": "תקינות"
+    },
+    "syncStatus": {
+      "PENDING": "ממתין",
+      "RUNNING": "פועל",
+      "SUCCESS": "הצליח",
+      "PARTIAL": "חלקי",
+      "FAILED": "נכשל",
+      "CANCELLED": "בוטל"
+    },
     "synchronized": "עודכן כעת",
     "officeHealth": "Google Business",
     "status": {

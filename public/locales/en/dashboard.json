@@ -6264,6 +6264,7 @@
     "uncertain": "Submission status uncertain. Refresh the Google profile before retrying.",
     "unsaved": "{{count}} unsaved change(s)",
     "noChanges": "No changes",
+    "inSync": "In sync with Google",
     "discard": "Discard",
     "save": "Publish to Google",
     "cancel": "Cancel",
@@ -6323,6 +6324,7 @@
     "requestPublished": "Change approved and published to Google.",
     "requestPublishFailed": "Approved, but publishing to Google failed.",
     "requestRejected": "Change request rejected.",
+    "requestCancelled": "Change request cancelled.",
     "requestField": {
       "ADDRESS": "Address",
       "PRIMARY_CATEGORY": "Primary category",
@@ -6337,6 +6339,10 @@
     },
     "requestedBy": "Requested by {{name}}",
     "review": "Review",
+    "cancelRequest": "Cancel request",
+    "cancelRequestTitle": "Cancel this change request?",
+    "cancelRequestDesc": "The request will be cancelled and the field unlocked so a new change can be submitted. This does not change anything on Google.",
+    "keepRequest": "Keep request",
     "decideTitle": "Decide change request",
     "decideDesc": "Review the requested {{field}} change.",
     "approve": "Approve & publish",
@@ -6660,6 +6666,24 @@
     "syncing": "Syncing...",
     "syncFailed": "Sync failed",
     "syncQueued": "Sync queued",
+    "recentSyncs": "Recent syncs",
+    "syncType": {
+      "FULL": "Full",
+      "PROFILE": "Profile",
+      "REVIEWS": "Reviews",
+      "MEDIA": "Media",
+      "POSTS": "Posts",
+      "PERFORMANCE": "Performance",
+      "HEALTH": "Health"
+    },
+    "syncStatus": {
+      "PENDING": "Pending",
+      "RUNNING": "Running",
+      "SUCCESS": "Success",
+      "PARTIAL": "Partial",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
     "synchronized": "Updated just now",
     "officeHealth": "Google Business",
     "status": {

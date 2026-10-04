@@ -6282,6 +6282,7 @@
     "uncertain": "حالة الإرسال غير مؤكدة. حدّث ملف Google قبل إعادة المحاولة.",
     "unsaved": "{{count}} تغيير غير محفوظ",
     "noChanges": "لا توجد تغييرات",
+    "inSync": "متزامن مع Google",
     "discard": "تجاهل",
     "save": "نشر على Google",
     "cancel": "إلغاء",
@@ -6341,6 +6342,7 @@
     "requestPublished": "تمت الموافقة على التغيير ونشره على Google.",
     "requestPublishFailed": "تمت الموافقة، لكن فشل النشر على Google.",
     "requestRejected": "تم رفض طلب التغيير.",
+    "requestCancelled": "تم إلغاء طلب التغيير.",
     "requestField": {
       "ADDRESS": "العنوان",
       "PRIMARY_CATEGORY": "الفئة الأساسية",
@@ -6355,6 +6357,10 @@
     },
     "requestedBy": "طلبه {{name}}",
     "review": "مراجعة",
+    "cancelRequest": "إلغاء الطلب",
+    "cancelRequestTitle": "إلغاء طلب التغيير هذا؟",
+    "cancelRequestDesc": "سيُلغى الطلب ويُفتح الحقل لإرسال تغيير جديد. لا يغيّر هذا شيئًا على Google.",
+    "keepRequest": "الإبقاء على الطلب",
     "decideTitle": "اتخاذ قرار بشأن طلب التغيير",
     "decideDesc": "راجع تغيير {{field}} المطلوب.",
     "approve": "موافقة ونشر",
@@ -6678,6 +6684,24 @@
     "syncing": "جارٍ المزامنة...",
     "syncFailed": "فشلت المزامنة",
     "syncQueued": "تمت جدولة المزامنة",
+    "recentSyncs": "أحدث عمليات المزامنة",
+    "syncType": {
+      "FULL": "كامل",
+      "PROFILE": "الملف",
+      "REVIEWS": "التقييمات",
+      "MEDIA": "الوسائط",
+      "POSTS": "المنشورات",
+      "PERFORMANCE": "الأداء",
+      "HEALTH": "الحالة"
+    },
+    "syncStatus": {
+      "PENDING": "قيد الانتظار",
+      "RUNNING": "قيد التنفيذ",
+      "SUCCESS": "ناجح",
+      "PARTIAL": "جزئي",
+      "FAILED": "فشل",
+      "CANCELLED": "ملغى"
+    },
     "synchronized": "حُدّث الآن",
     "officeHealth": "Google Business",
     "status": {
