@@ -63,6 +63,30 @@ describe('export reliability', () => {
     expect(sheet.getCell(7, 2).numFmt).toBe(currencyFormat('ILS'));
   });
 
+  it('builds a usable workbook from zero rows (empty template export)', async () => {
+    const workbook = await buildCorporateWorkbook({
+      fileName: 'empty',
+      title: 'تقرير فارغ',
+      locale: 'ar',
+      rtl: true,
+      sheets: [{
+        name: 'Empty',
+        columns: [
+          { header: 'الاسم', type: 'text' },
+          { header: 'المبلغ', type: 'currency', currency: 'ILS' },
+        ],
+        rows: [],
+      }],
+    });
+    const sheet = workbook.worksheets[0];
+    expect(sheet).toBeDefined();
+    // Headers survive so the file is a usable template, not an empty document.
+    expect(sheet.getRow(6).getCell(1).value).toBe('الاسم');
+    expect(sheet.getRow(6).getCell(2).value).toBe('المبلغ');
+    const buffer = await workbook.xlsx.writeBuffer();
+    expect(buffer.byteLength).toBeGreaterThan(0);
+  });
+
   it('serializes ExcelJS exports with the security-patched uuid dependency', async () => {
     const workbook = await buildCorporateWorkbook({
       fileName: 'uuid-compatibility',

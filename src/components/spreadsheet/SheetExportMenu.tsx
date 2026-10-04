@@ -62,10 +62,12 @@ const SheetExportMenu: React.FC<Props> = ({ columns, visibleColumns, rowCount, b
   const extra = extraScopes.find(s => s.value === scope);
   const selectedColumns = columnsMode === 'visible' ? visibleColumns : columns.filter(c => custom.has(c.key));
   const noColumns = scope === CURRENT && selectedColumns.length === 0;
-  // Current-view exports may intentionally produce an empty template. Extra scopes
-  // can still opt into row requirements when their own export contract needs data.
-  const needsRows = scope !== CURRENT && !!extra?.requiresRows;
-  const disabled = busy || noColumns || (needsRows && rowCount === 0);
+  // A workspace scope may need rows (e.g. a packet that merges several tables).
+  // "Current view" is deliberately exportable with zero rows so the team can
+  // hand out the column structure as an empty template.
+  const extraNeedsRows = !!extra?.requiresRows && rowCount === 0;
+  const disabled = busy || noColumns || extraNeedsRows;
+  const emptyTemplate = scope === CURRENT && rowCount === 0 && !noColumns;
 
   const submit = async () => {
     if (extra) await extra.run(format);
@@ -177,17 +179,23 @@ const SheetExportMenu: React.FC<Props> = ({ columns, visibleColumns, rowCount, b
                   ))}
                 </div>
               )}
-              {rowCount === 0 && selectedColumns.length > 0 && (
-                <p role="status" className="rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-2 text-xs text-muted-foreground">
-                  {t('sheets.exportEmptyTemplate', 'Export an empty template with the selected columns.')}
-                </p>
-              )}
               {noColumns && (
                 <p role="alert" className="text-xs text-destructive">
                   {t('sheets.exportNoColumns', 'Choose at least one column.')}
                 </p>
               )}
+              {emptyTemplate && (
+                <p className="rounded-md bg-muted px-2 py-1.5 text-xs text-muted-foreground">
+                  {t('sheets.exportEmptyTemplate', 'No rows match the current view. The file downloads as an empty template with your chosen columns.')}
+                </p>
+              )}
             </fieldset>
+          )}
+
+          {extraNeedsRows && (
+            <p role="alert" className="text-xs text-muted-foreground">
+              {t('sheets.exportNeedsRows', 'This export needs at least one matching row. Adjust the filters or search to include data.')}
+            </p>
           )}
         </div>
 

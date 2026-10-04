@@ -208,8 +208,16 @@ const SheetTable: React.FC<SheetTableProps> = ({
         },
       });
       const { empty, rtlFontMissing } = await deliverReport(format, report);
-      if (empty) toast({ description: t('sheets.empty') });
-      else if (rtlFontMissing) toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
+      if (empty) {
+        toast({
+          description:
+            format === 'xlsx'
+              ? t('sheets.emptyTemplate', 'Downloaded an empty template — no rows matched the current view.')
+              : t('sheets.emptyPdf', 'No rows match the current view, so no PDF was created.'),
+        });
+      } else if (rtlFontMissing) {
+        toast({ variant: 'destructive', description: t('sheets.pdfFontWarning') });
+      }
     } catch {
       toast({ variant: 'destructive', description: t('sheets.exportFailed', 'Could not create the export file') });
     } finally {
