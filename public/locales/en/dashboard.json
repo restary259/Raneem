@@ -2774,8 +2774,7 @@
     },
     "googleBusiness": {
       "title": "Google Business",
-      "subtitle": "Offices you operate on Google. Primary operators can appoint a side manager.",
-      "loading": "Loading your offices…",
+        "loading": "Loading your offices…",
       "loadError": "Could not load your Google Business offices",
       "actionFailed": "The action failed",
       "emptyTitle": "No Google Business offices assigned",
