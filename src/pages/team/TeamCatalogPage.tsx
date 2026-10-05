@@ -77,8 +77,18 @@ export default function TeamCatalogPage() {
       }
     } else {
       setSchoolId(null);
+      // Leaving the school detail resets the tab to its default, so the URL and
+      // the visible tab never disagree (a stale `tab=programs` must not persist).
+      setTab("accommodations");
     }
   }, [searchParams]);
+
+  const handleTabSwitch = (newTab: SchoolTab) => {
+    setTab(newTab);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", newTab);
+    setSearchParams(next, { replace: true });
+  };
 
   const countries = useMemo(() => (data ? groupByCountry(data.schools) : []), [data]);
 
@@ -408,7 +418,7 @@ export default function TeamCatalogPage() {
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setTab(key)}
+                    onClick={() => handleTabSwitch(key)}
                     aria-pressed={tab === key}
                     className={
                       tab === key

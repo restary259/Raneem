@@ -32,7 +32,7 @@ export default function TeamCasesHubPage() {
 
   return (
     <div className="px-4 pt-4 sm:px-6">
-      <TabHub tabs={tabs} />
+      <TabHub tabs={tabs} historyMode="push" />
     </div>
   );
 }

@@ -67,10 +67,18 @@ export default function TeamStudentProfilePage() {
   const studentId = profile.id as string;
   const linkedCaseId = (caseData?.id as string) ?? null;
 
+  // Mirror browser Back so returning lands on the exact student list (page,
+  // filters, scroll) instead of a fresh /team/students visit. Direct links with
+  // no history fall back to the students hub.
+  const handleBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/team/cases?tab=students");
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-4">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" className="shrink-0 gap-1" onClick={() => navigate('/team/students')}>
+        <Button variant="ghost" size="sm" className="shrink-0 gap-1" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
         </Button>
       </div>

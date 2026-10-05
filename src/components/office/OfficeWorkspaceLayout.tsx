@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ArrowLeft,
   Building2,
   CalendarDays,
   Clock3,
@@ -221,6 +222,16 @@ export function OfficeWorkspaceLayout({
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4 px-4 pt-4 sm:px-6">
       <header className="space-y-3">
+        {/* Contextual back link — the office header is the only place that
+            tells a user how to leave a specific office workspace. */}
+        <Link
+          to={surface === "admin" ? "/admin/offices" : "/team/offices"}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          aria-label={t("officeWorkspace.backToOffices", "Back to offices")}
+        >
+          <ArrowLeft className="size-3.5 rtl:rotate-180" />
+          <span>{t("officeWorkspace.allOffices", "All offices")}</span>
+        </Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
             <h1 className="flex items-center gap-2 text-2xl font-semibold">

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate } from "@/lib/router-compat";
+import { useParams, useNavigate, useSearchParams } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -105,10 +105,38 @@ export default function CaseDetailPage() {
   const [openingWhatsApp, setOpeningWhatsApp] = useState(false);
 
   /** Tabbed layout (profile_completion / payment_confirmed) active view. */
-  const [activeView, setActiveView] = useState<WorkflowView>("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeView, setActiveViewState] = useState<WorkflowView>("overview");
   /** Latest readiness snapshot pushed up by the Finance tab. */
   const [financeReadiness, setFinanceReadiness] = useState<CaseFinanceReadiness | null>(null);
   const financeApiRef = useRef<CaseFinanceHandle>(null);
+  /** Case id whose stage default has already been applied (seed once per case). */
+  const seededTabCaseRef = useRef<string | null>(null);
+
+  // The active workflow tab is URL-driven: refreshing or sharing a link keeps
+  // the tab, and browser Back cycles tabs instead of leaving the case.
+  useEffect(() => {
+    const requested = searchParams.get("tab");
+    const next: WorkflowView =
+      requested === "profile" || requested === "finance" ? requested : "overview";
+    setActiveViewState(next);
+  }, [searchParams]);
+
+  const setActiveView = useCallback(
+    (view: WorkflowView, opts?: { replace?: boolean }) => {
+      setActiveViewState(view);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (view === "overview") next.delete("tab");
+          else next.set("tab", view);
+          return next;
+        },
+        { replace: opts?.replace },
+      );
+    },
+    [setSearchParams],
+  );
 
   /** Scrolls the Finance section into view (the single place to confirm the
       DARB payment now that the duplicate confirmation modal is gone). */
@@ -145,9 +173,23 @@ export default function CaseDetailPage() {
 
   /** Default to the view where the actual work happens for each stage. */
   useEffect(() => {
-    if (caseData?.status === "profile_completion") setActiveView("profile");
-    else if (caseData?.status === "payment_confirmed") setActiveView("finance");
-  }, [caseData?.status]);
+    if (!caseData) return;
+    const stageDefault =
+      caseData.status === "profile_completion"
+        ? "profile"
+        : caseData.status === "payment_confirmed"
+          ? "finance"
+          : null;
+    // Seed the stage default at most once per case. Recomputing it on every
+    // `searchParams` change would fight the user: clearing `?tab=` when they
+    // pick Overview re-arms the guard and snaps them back to the default tab.
+    if (seededTabCaseRef.current === caseData.id) return;
+    seededTabCaseRef.current = caseData.id;
+    // Respect an explicit ?tab= link (e.g. refreshed or shared).
+    if (!stageDefault || searchParams.get("tab")) return;
+    setActiveView(stageDefault, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseData?.id, caseData?.status, searchParams]);
 
   const canManage = role === "admin" || role === "team_member";
 
@@ -715,7 +757,7 @@ export default function CaseDetailPage() {
       {canManage && <CaseAttentionPanel tasks={tasks} onAction={handleTask} />}
 
       {showTerminalTabs ? (
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs value={activeView} onValueChange={(v) => setActiveView(v as WorkflowView)} className="w-full">
           <TabsList className="grid h-auto w-full grid-cols-3">
             <TabsTrigger value="overview">{t("case.terminal.overview")}</TabsTrigger>
             <TabsTrigger value="profile">{t("case.terminal.profile")}</TabsTrigger>

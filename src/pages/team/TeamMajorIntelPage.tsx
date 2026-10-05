@@ -3,7 +3,7 @@
  * card per subject. Verified content only — subjects without it show an honest
  * empty card that is filled in manually over time.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from '@/lib/router-compat';
 import { useTranslation } from 'react-i18next';
 import { Search, ShieldCheck } from 'lucide-react';
@@ -16,21 +16,31 @@ import MajorCard from '@/components/team/intel/MajorCard';
 export default function TeamMajorIntelPage() {
   const { t, i18n } = useTranslation('dashboard');
   const isAr = i18n.language === 'ar';
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
-  const [subject, setSubject] = useState<SubjectEntry | null>(null);
+  // The open subject is derived from the URL, so a refresh or a shared link
+  // shows the same major and browser Back returns to the search list.
   const linkedMajorId = searchParams.get('major');
+  const subject = useMemo(
+    () => (linkedMajorId ? getSubject(linkedMajorId) ?? null : null),
+    [linkedMajorId],
+  );
 
-  const open = useCallback((entry: SubjectEntry) => {
-    setSubject(entry);
-    window.scrollTo({ top: 0 });
-  }, []);
+  const open = useCallback(
+    (entry: SubjectEntry) => {
+      const next = new URLSearchParams(searchParams);
+      next.set('major', entry.id);
+      setSearchParams(next);
+      window.scrollTo({ top: 0 });
+    },
+    [searchParams, setSearchParams],
+  );
 
-  useEffect(() => {
-    if (!linkedMajorId) return;
-    const linked = getSubject(linkedMajorId);
-    if (linked) open(linked);
-  }, [linkedMajorId, open]);
+  const handleBack = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('major');
+    setSearchParams(next);
+  }, [searchParams, setSearchParams]);
 
   const results = useMemo(() => (query.trim() ? searchSubjects(query) : []), [query]);
 
@@ -62,7 +72,7 @@ export default function TeamMajorIntelPage() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-4 md:p-6">
       {subject ? (
-        <MajorCard subject={subject} onBack={() => setSubject(null)} />
+        <MajorCard subject={subject} onBack={handleBack} />
       ) : (
         <>
           <div className="relative mx-auto max-w-xl">

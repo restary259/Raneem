@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { parseSearchCompat, stringifySearchCompat } from "./lib/searchParams";
 
 /** Permanent failures (auth/permission/not-found/validation) must never be retried. */
 const isPermanentError = (error: unknown): boolean => {
@@ -40,6 +41,10 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     defaultPreload: "intent",
+    // The compat `useSearchParams` shim expects plain URLSearchParams values;
+    // the default JSON serializer would mangle numeric params.
+    parseSearch: parseSearchCompat as never,
+    stringifySearch: stringifySearchCompat as never,
     // The old app scrolled to top on every pathname change (AppShell effect
     // preserves that); router scroll restoration would fight it.
     scrollRestoration: false,
