@@ -63,8 +63,8 @@ const SheetExportMenu: React.FC<Props> = ({ columns, visibleColumns, rowCount, b
   const selectedColumns = columnsMode === 'visible' ? visibleColumns : columns.filter(c => custom.has(c.key));
   const noColumns = scope === CURRENT && selectedColumns.length === 0;
   // A workspace scope may need rows (e.g. a packet that merges several tables).
-  // "Current view" is deliberately exportable with zero rows so the team can
-  // hand out the column structure as an empty template.
+  // "Current view" is deliberately exportable with zero rows: the workbook engine
+  // still writes the chosen columns as an empty template when no rows match.
   const extraNeedsRows = !!extra?.requiresRows && rowCount === 0;
   const disabled = busy || noColumns || extraNeedsRows;
   const emptyTemplate = scope === CURRENT && rowCount === 0 && !noColumns;
