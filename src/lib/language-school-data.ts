@@ -132,6 +132,32 @@ export const languageSchools: LanguageSchool[] = [
     accommodationDeposit: 200,
     accommodationAdminFee: 80,
   },
+  {
+    id: 'horizonte',
+    nameEn: 'HORIZONTE',
+    nameAr: 'هوريزونتي',
+    cityEn: 'Regensburg',
+    cityAr: 'ريغنسبورغ',
+    registrationFee: 0,
+    coursePricing: {
+      shortTermWeekly: 250,
+      longTermWeekly: 210,
+      shortTermThreshold: 5,
+    },
+    lessonsPerWeek: 24,
+    accommodations: [
+      { id: 'res-single-private', nameAr: 'غرفة فردية بحمام خاص (الطابق الرابع)', nameEn: 'Single Room with Private Bathroom (4th floor)', weeklyRateShort: 300, weeklyRateLong: 150 },
+      { id: 'res-twin-private', nameAr: 'غرفة مزدوجة بحمام خاص (الطابق الرابع)', nameEn: 'Twin Room with Private Bathroom (4th floor)', weeklyRateShort: 200, weeklyRateLong: 100 },
+      { id: 'res-single-shared', nameAr: 'غرفة فردية في شقة مشتركة', nameEn: 'Single Room in Shared Apartment', weeklyRateShort: 280, weeklyRateLong: 140 },
+      { id: 'res-twin-shared', nameAr: 'غرفة مزدوجة في شقة مشتركة', nameEn: 'Twin Room in Shared Apartment', weeklyRateShort: 180, weeklyRateLong: 90 },
+      { id: 'res-studio-one', nameAr: 'استوديو - شخص واحد', nameEn: 'Studio — One Person', weeklyRateShort: 400, weeklyRateLong: 200 },
+      { id: 'res-studio-two', nameAr: 'استوديو - شخصان', nameEn: 'Studio — Two People', weeklyRateShort: 270, weeklyRateLong: 135 },
+      { id: 'host-breakfast', nameAr: 'عائلة مضيفة (فطور)', nameEn: 'Host Family (Breakfast)', weeklyRateShort: 200, weeklyRateLong: 200 },
+      { id: 'host-half-board', nameAr: 'عائلة مضيفة (نصف إقامة)', nameEn: 'Host Family (Half-Board)', weeklyRateShort: 280, weeklyRateLong: 280 },
+    ],
+    accommodationDeposit: 100,
+    accommodationAdminFee: 0,
+  },
 ];
 
 export const HEALTH_INSURANCE_SHORT = 28;  // EUR/month

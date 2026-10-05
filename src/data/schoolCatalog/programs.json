@@ -396,5 +396,31 @@
     "photos": [
       "/lovable-uploads/schools/kapito/programs/intensive-plus.jpg"
     ]
+  },
+  {
+    "slug": "horizonte-intensive-24",
+    "school": "horizonte",
+    "name_ar": "دورة ألمانية مكثفة 24 درسًا",
+    "name_en": "Intensive German Course 24",
+    "type": "language_school",
+    "price": 210,
+    "currency": "EUR",
+    "duration": "1-24+ weeks",
+    "description_ar": "24 درسًا أسبوعيًا (45 دقيقة للحصة): 20 درسًا صباحًا من الاثنين إلى الجمعة 09:00-12:30، إضافة إلى 4 دروس مكثفة بعد الظهر الاثنين والخميس 13:30-15:00. رسوم التسجيل والمواد التعليمية والشهادة وبرنامج الأنشطة مشمولة.",
+    "description_en": "24 lessons/week (45 minutes each): 20 morning lessons Mon-Fri 09:00-12:30 plus 4 intensive afternoon lessons on Monday and Thursday 13:30-15:00. Enrolment fee, teaching materials, certificate and leisure programme included.",
+    "cefr_range": "A1-C2",
+    "hours_per_week": 18,
+    "lessons_per_week": 24,
+    "start_rule": "Any Monday when a place is free; absolute beginners on the starred start dates",
+    "registration_fee": null,
+    "price_tiers": [
+      { "from_weeks": 1, "to_weeks": 1, "price": 250 },
+      { "from_weeks": 2, "to_weeks": 2, "price": 245 },
+      { "from_weeks": 3, "to_weeks": 3, "price": 240 },
+      { "from_weeks": 4, "to_weeks": 4, "price": 235 },
+      { "from_weeks": 5, "to_weeks": null, "price": 210 }
+    ],
+    "is_active": true,
+    "photos": []
   }
 ]

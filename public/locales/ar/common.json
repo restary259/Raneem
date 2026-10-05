@@ -165,6 +165,13 @@
         "highlight1": "مدينة جامعية",
         "highlight2": "المدينة القديمة التاريخية",
         "highlight3": "حياة يومية مناسبة للدراجات"
+      },
+      "regensburg": {
+        "region": "بافاريا",
+        "description": "مدينة جامعية تاريخية على نهر الدانوب، تتميز بمركز تاريخي مسجل في قائمة اليونسكو للتراث العالمي، وجسر حجري من العصور الوسطى، ومجتمع طلابي نابض بالحياة.",
+        "highlight1": "مركز تاريخي تراث عالمي",
+        "highlight2": "الجسر الحجري والدانوب",
+        "highlight3": "مدينة طلابية نابضة"
       }
     },
     "sources": {
@@ -175,7 +182,8 @@
       "schoolHome": "الموقع الرسمي للمعهد",
       "schoolGallery": "معرض Perfekt Deutsch",
       "schoolInfo": "معلومات VICTORIA Academy",
-      "schoolKapitoCourses": "دورات وامتحانات KAPITO"
+      "schoolKapitoCourses": "دورات وامتحانات KAPITO",
+      "schoolCourses": "دورة هوريزونتي المكثفة"
     },
     "schools": {
       "fu": {
@@ -237,6 +245,16 @@
         "serviceHousing": "خيارات مساعدة وترتيب للسكن",
         "serviceGuidance": "مساعدة بموضوع الفيزا والتأمين وأسئلة الدراسة",
         "serviceActivities": "برنامج ثقافي وترفيهي مع دعم للواجبات"
+      },
+      "horizonte": {
+        "description": "مدرسة هوريزونتي هي مدرسة لغة ألمانية في وسط البلدة القديمة في ريغنسبورغ، تعمل منذ عام 1986. تقدم دورات مكثفة من A1 إلى C2، وسكنًا في المبنى نفسه، ومركز امتحانات رسميًا لـ telc وTestDaF، وهي عضو في IALC وFDSV.",
+        "credentialsNote": "العضويات والاعتمادات الرسمية كما تنشرها هوريزونتي.",
+        "focusLevels": "دورات من A1 إلى C2",
+        "focusResidence": "سكن في المبنى نفسه مع المدرسة",
+        "focusExams": "مركز امتحانات رسمي لـ telc وTestDaF",
+        "serviceResidence": "سكن في الموقع",
+        "serviceActivities": "برنامج الأنشطة",
+        "serviceHomestay": "عائلات مضيفة"
       }
     },
     "selectionEyebrow": "ليش هاي المؤسسات؟",

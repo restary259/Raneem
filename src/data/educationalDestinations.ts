@@ -4,6 +4,7 @@ import dusseldorfImage from "@/assets/destinations/dusseldorf.jpg";
 import dortmundImage from "@/assets/destinations/dortmund.jpg";
 import munsterImage from "@/assets/destinations/munster.jpg";
 import berlinImage from "@/assets/destinations/berlin.jpg";
+import regensburgImage from "@/assets/destinations/regensburg.jpg";
 import rwthLogo from "@/assets/universities/rwth.png.asset.json";
 import tuBerlinLogo from "@/assets/universities/tu-berlin.svg.asset.json";
 import tuBraunschweigLogo from "@/assets/universities/tu-braunschweig.svg.asset.json";
@@ -16,7 +17,7 @@ import stuttgartLogo from "@/assets/universities/uni-stuttgart.svg.asset.json";
 
 export interface LanguageSchoolDestination {
   name: string;
-  city: "heidelberg" | "dusseldorf" | "dortmund" | "berlin" | "munster";
+  city: "heidelberg" | "dusseldorf" | "dortmund" | "berlin" | "munster" | "regensburg";
   location: string;
   descriptionKey: string;
   officialUrl: string;
@@ -30,7 +31,7 @@ export interface LanguageSchoolDestination {
 }
 
 export interface LanguageYearCity {
-  id: "heidelberg" | "dusseldorf" | "dortmund" | "berlin" | "munster";
+  id: "heidelberg" | "dusseldorf" | "dortmund" | "berlin" | "munster" | "regensburg";
   name: string;
   region: string;
   imageUrl: string;
@@ -115,6 +116,21 @@ export const languageYearCities: LanguageYearCity[] = [
       { labelKey: "destinations.sources.cityLife", url: "https://www.visitberlin.de/en" },
       { labelKey: "destinations.sources.schoolInfo", url: "https://www.victoria-languages.de/en/about-us/" },
       { labelKey: "destinations.sources.schoolHome", url: "https://www.victoria-languages.de/en/" }
+    ]
+  },
+  {
+    id: "regensburg",
+    name: "Regensburg",
+    region: "Bavaria",
+    imageUrl: regensburgImage,
+    photoCredit: { label: "Photo: Tilman2007 / Wikimedia Commons (CC BY-SA 4.0)", url: "https://commons.wikimedia.org/wiki/File:Steinerne_Br%C3%BCcke_und_Dom,_von_Nordwesten_Regensburg_20190822_028.jpg" },
+    descriptionKey: "destinations.cities.regensburg.description",
+    highlights: ["destinations.cities.regensburg.highlight1", "destinations.cities.regensburg.highlight2", "destinations.cities.regensburg.highlight3"],
+    cityUrl: "https://tourismus.regensburg.de/en/",
+    activityLinks: [
+      { labelKey: "destinations.sources.cityLife", url: "https://tourismus.regensburg.de/en/" },
+      { labelKey: "destinations.sources.schoolCourses", url: "https://www.horizonte.com/en-german-courses/german-language-courses-germany/intensive-german-language-course" },
+      { labelKey: "destinations.sources.schoolHome", url: "https://www.horizonte.com/" }
     ]
   }
 ];
@@ -203,6 +219,19 @@ export const languageYearSchools: LanguageSchoolDestination[] = [
     focusKeys: ["destinations.schools.victoria.focusCampus", "destinations.schools.victoria.focusUniversity", "destinations.schools.victoria.focusModular"],
     examKeys: ["telc", "TestDaF", "TOEFL", "OnSET"],
     serviceKeys: ["destinations.schools.victoria.serviceHousing", "destinations.schools.victoria.serviceActivities", "destinations.schools.victoria.serviceUniversity"]
+  },
+  {
+    name: "HORIZONTE German Language School",
+    city: "regensburg",
+    location: "Regensburg",
+    descriptionKey: "destinations.schools.horizonte.description",
+    officialUrl: "https://www.horizonte.com/en-german-courses/regensburg",
+    activityUrl: "https://www.horizonte.com/en-german-courses/german-language-courses-germany/intensive-german-language-course",
+    credentials: ["IALC", "FDSV", "Official telc examination centre", "Official TestDaF examination centre"],
+    credentialsNoteKey: "destinations.schools.horizonte.credentialsNote",
+    focusKeys: ["destinations.schools.horizonte.focusLevels", "destinations.schools.horizonte.focusResidence", "destinations.schools.horizonte.focusExams"],
+    examKeys: ["telc", "TestDaF"],
+    serviceKeys: ["destinations.schools.horizonte.serviceResidence", "destinations.schools.horizonte.serviceActivities", "destinations.schools.horizonte.serviceHomestay"]
   }
 ];
 
@@ -250,8 +279,8 @@ export const countries = [
 ];
 
 /**
- * Darb currently operates in one German city. Other cities stay in the data
- * so they can be re-enabled by adding their id here.
+ * Darb currently operates in Heidelberg and Regensburg. Other cities stay in
+ * the data so they can be re-enabled by adding their id here.
  */
-export const ACTIVE_DESTINATION_CITIES: ReadonlyArray<LanguageYearCity["id"]> = ["heidelberg"];
+export const ACTIVE_DESTINATION_CITIES: ReadonlyArray<LanguageYearCity["id"]> = ["heidelberg", "regensburg"];
 export const activeLanguageYearCities = languageYearCities.filter((c) => ACTIVE_DESTINATION_CITIES.includes(c.id));

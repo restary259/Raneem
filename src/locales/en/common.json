@@ -165,6 +165,13 @@
         "highlight1": "University city",
         "highlight2": "Historic old town",
         "highlight3": "Bike-friendly everyday life"
+      },
+      "regensburg": {
+        "region": "Bavaria",
+        "description": "A historic university city on the Danube, with a UNESCO World Heritage old town, a medieval stone bridge and a lively student community.",
+        "highlight1": "UNESCO World Heritage old town",
+        "highlight2": "Stone Bridge and the Danube",
+        "highlight3": "Lively student city"
       }
     },
     "sources": {
@@ -175,7 +182,8 @@
       "schoolHome": "Official school site",
       "schoolGallery": "Perfekt Deutsch gallery",
       "schoolInfo": "VICTORIA Academy information",
-      "schoolKapitoCourses": "KAPITO courses & exams"
+      "schoolKapitoCourses": "KAPITO courses & exams",
+      "schoolCourses": "HORIZONTE intensive course"
     },
     "schools": {
       "fu": {
@@ -237,6 +245,16 @@
         "serviceHousing": "Accommodation placement options",
         "serviceGuidance": "Support with visa, insurance and study questions",
         "serviceActivities": "Cultural programme and homework tutoring"
+      },
+      "horizonte": {
+        "description": "HORIZONTE is a German language school in Regensburg's historic old town, teaching since 1986. It offers intensive courses from A1 to C2, an on-site residence in the same building, an official telc and TestDaF examination centre, and is a member of IALC and FDSV.",
+        "credentialsNote": "Memberships and official examination centre status as published by HORIZONTE.",
+        "focusLevels": "Courses from A1 to C2",
+        "focusResidence": "On-site residence in the same building as the school",
+        "focusExams": "Official telc and TestDaF examination centre",
+        "serviceResidence": "On-site residence",
+        "serviceActivities": "Leisure programme",
+        "serviceHomestay": "Host families"
       }
     },
     "selectionEyebrow": "WHY THESE INSTITUTIONS",

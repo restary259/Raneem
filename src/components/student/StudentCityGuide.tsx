@@ -1,8 +1,32 @@
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+} from "react";
 import { useNavigate } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Lightbulb, MapPinned, Search, SlidersHorizontal, ShoppingCart, Dumbbell, GraduationCap, Home, TrainFront, HeartPulse, Clapperboard, CircleDot, Landmark, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
+import {
+  Lightbulb,
+  MapPinned,
+  Search,
+  SlidersHorizontal,
+  ShoppingCart,
+  Dumbbell,
+  GraduationCap,
+  Home,
+  TrainFront,
+  HeartPulse,
+  Clapperboard,
+  CircleDot,
+  Landmark,
+  ChevronRight,
+  ChevronLeft,
+  ArrowUpRight,
+  ExternalLink,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +34,6 @@ import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { resolveStudentGuideCity } from "@/lib/studentGuideCity";
 import { useAuthedUserId } from "@/hooks/useAuthedUserId";
 import {
-  HEIDELBERG_CITY_GUIDE,
   getCityGuide,
   mapsSearchUrl,
   type StudentCityGuideCategory,
@@ -34,7 +57,10 @@ const CATEGORY_ORDER: StudentCityGuideCategory[] = [
   "cinema",
 ];
 
-const CATEGORY_ICONS: Record<StudentCityGuideCategory, ComponentType<{ className?: string }>> = {
+const CATEGORY_ICONS: Record<
+  StudentCityGuideCategory,
+  ComponentType<{ className?: string }>
+> = {
   all: MapPinned,
   supermarkets: ShoppingCart,
   accommodation: Home,
@@ -48,10 +74,9 @@ const CATEGORY_ICONS: Record<StudentCityGuideCategory, ComponentType<{ className
   pharmacy: HeartPulse,
 };
 
-const FALLBACK_IMAGE = HEIDELBERG_CITY_GUIDE.heroImage;
-
 // Mirrors the app-level direction rule in src/i18n.ts (Arabic + Hebrew are RTL).
-const isRtlLanguage = (language: string) => language === "ar" || language === "he";
+const isRtlLanguage = (language: string) =>
+  language === "ar" || language === "he";
 
 function displayName(location: StudentCityGuideLocation, language: string) {
   if (language === "ar") return location.nameAr;
@@ -59,7 +84,10 @@ function displayName(location: StudentCityGuideLocation, language: string) {
   return location.nameEn;
 }
 
-function displayDescription(location: StudentCityGuideLocation, language: string) {
+function displayDescription(
+  location: StudentCityGuideLocation,
+  language: string,
+) {
   if (language === "ar") return location.descriptionAr;
   if (language === "he") return location.descriptionHe;
   return location.descriptionEn;
@@ -71,7 +99,10 @@ function displayTip(location: StudentCityGuideLocation, language: string) {
   return location.tipEn;
 }
 
-function categoryLabel(category: StudentCityGuideCategory, t: TFunction<"dashboard">) {
+function categoryLabel(
+  category: StudentCityGuideCategory,
+  t: TFunction<"dashboard">,
+) {
   const fallback: Record<StudentCityGuideCategory, string> = {
     all: "All",
     supermarkets: "Supermarkets",
@@ -88,26 +119,42 @@ function categoryLabel(category: StudentCityGuideCategory, t: TFunction<"dashboa
   return t(`student.cityGuide.categories.${category}`, fallback[category]);
 }
 
-function matchesSearch(location: StudentCityGuideLocation, search: string, t: TFunction<"dashboard">) {
+function matchesSearch(
+  location: StudentCityGuideLocation,
+  search: string,
+  t: TFunction<"dashboard">,
+) {
   const q = search.trim().toLocaleLowerCase();
   if (!q) return true;
   // Include the localized category label so the suggested queries ("supermarket",
   // "gym") match places listed under their business names.
-  return [location.nameEn, location.nameAr, location.nameHe, location.address, categoryLabel(location.category, t)]
+  return [
+    location.nameEn,
+    location.nameAr,
+    location.nameHe,
+    location.address,
+    categoryLabel(location.category, t),
+  ]
     .filter(Boolean)
     .some((value) => value!.toLocaleLowerCase().includes(q));
 }
 
-export default function StudentCityGuide({ residentialCity, variant = "preview" }: StudentCityGuideProps) {
+export default function StudentCityGuide({
+  residentialCity,
+  variant = "preview",
+}: StudentCityGuideProps) {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation("dashboard");
   const language = i18n.language;
-  const [storedCity, setStoredCity] = useState<string | null>(residentialCity ?? null);
+  const [storedCity, setStoredCity] = useState<string | null>(
+    residentialCity ?? null,
+  );
   const [profileLoading, setProfileLoading] = useState(!residentialCity);
   const [citySource, setCitySource] = useState<"residential" | "school" | null>(
     residentialCity ? "residential" : null,
   );
-  const [selectedCategory, setSelectedCategory] = useState<StudentCityGuideCategory>("all");
+  const [selectedCategory, setSelectedCategory] =
+    useState<StudentCityGuideCategory>("all");
   const [search, setSearch] = useState("");
   const [loadError, setLoadError] = useState(false);
 
@@ -140,28 +187,47 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
   const city = getCityGuide(storedCity);
   const filteredLocations = useMemo(() => {
     if (!city) return [];
-    const categoryFiltered = selectedCategory === "all"
-      ? city.locations
-      : city.locations.filter((location) => location.category === selectedCategory);
-    const searchFiltered = categoryFiltered.filter((location) => matchesSearch(location, search, t));
+    const categoryFiltered =
+      selectedCategory === "all"
+        ? city.locations
+        : city.locations.filter(
+            (location) => location.category === selectedCategory,
+          );
+    const searchFiltered = categoryFiltered.filter((location) =>
+      matchesSearch(location, search, t),
+    );
     return variant === "preview" ? searchFiltered.slice(0, 12) : searchFiltered;
   }, [city, search, selectedCategory, variant, t]);
 
-  if (!residentialCity && (!userId || profileLoading)) return <DashboardLoading />;
+  if (!residentialCity && (!userId || profileLoading))
+    return <DashboardLoading />;
   if (!city) {
     // A failed profile/school read is not an unsupported city: surface a retry
     // instead of the "no guide for this city" empty state.
     if (loadError && userId) {
       return variant === "full" ? (
-        <div className="mx-auto max-w-5xl p-4 sm:p-6" dir={isRtlLanguage(language) ? "rtl" : "ltr"}>
+        <div
+          className="mx-auto max-w-5xl p-4 sm:p-6"
+          dir={isRtlLanguage(language) ? "rtl" : "ltr"}
+        >
           <Card>
             <CardContent className="py-12 text-center">
               <MapPinned className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-              <h1 className="text-xl font-semibold">{t("student.cityGuide.unavailableTitle", "City guide")}</h1>
+              <h1 className="text-xl font-semibold">
+                {t("student.cityGuide.unavailableTitle", "City guide")}
+              </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {t("student.cityGuide.loadFailed", "We couldn't load your city just now.")}
+                {t(
+                  "student.cityGuide.loadFailed",
+                  "We couldn't load your city just now.",
+                )}
               </p>
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => void loadProfileCity(userId)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => void loadProfileCity(userId)}
+              >
                 {t("common.retry", "Retry")}
               </Button>
             </CardContent>
@@ -170,13 +236,21 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
       ) : null;
     }
     return variant === "full" ? (
-      <div className="p-4 sm:p-6 max-w-5xl mx-auto" dir={isRtlLanguage(language) ? "rtl" : "ltr"}>
+      <div
+        className="p-4 sm:p-6 max-w-5xl mx-auto"
+        dir={isRtlLanguage(language) ? "rtl" : "ltr"}
+      >
         <Card>
           <CardContent className="py-12 text-center">
             <MapPinned className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-            <h1 className="text-xl font-semibold">{t("student.cityGuide.unavailableTitle", "City guide")}</h1>
+            <h1 className="text-xl font-semibold">
+              {t("student.cityGuide.unavailableTitle", "City guide")}
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {t("student.cityGuide.unsupportedCityDescription", "A city guide for this city is not available yet.")}
+              {t(
+                "student.cityGuide.unsupportedCityDescription",
+                "A city guide for this city is not available yet.",
+              )}
             </p>
           </CardContent>
         </Card>
@@ -184,9 +258,10 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
     ) : null;
   }
 
-  const visibleCategories: StudentCityGuideCategory[] = variant === "preview"
-    ? CATEGORY_ORDER
-    : [...CATEGORY_ORDER, "pharmacy", "studentLife"];
+  const visibleCategories: StudentCityGuideCategory[] =
+    variant === "preview"
+      ? CATEGORY_ORDER
+      : [...CATEGORY_ORDER, "pharmacy", "studentLife"];
 
   const content = (
     <section id="city-guide" className="space-y-4 min-w-0">
@@ -199,7 +274,18 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
             </h1>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("student.cityGuide.subtitle", "Useful places around your study and home life in {{city}}.", { city: language === "ar" ? city.nameAr : language === "he" ? city.nameHe : city.nameEn })}
+            {t(
+              "student.cityGuide.subtitle",
+              "Useful places around your study and home life in {{city}}.",
+              {
+                city:
+                  language === "ar"
+                    ? city.nameAr
+                    : language === "he"
+                      ? city.nameHe
+                      : city.nameEn,
+              },
+            )}
           </p>
         </div>
       )}
@@ -222,7 +308,12 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                 </span>
               </div>
               <h2 className="mt-1 text-xl font-bold text-foreground sm:text-2xl">
-                {language === "ar" ? city.nameAr : language === "he" ? city.nameHe : city.nameEn}, Germany
+                {language === "ar"
+                  ? city.nameAr
+                  : language === "he"
+                    ? city.nameHe
+                    : city.nameEn}
+                , Germany
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {citySource === "school"
@@ -237,10 +328,38 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
               </p>
               {variant === "preview" && (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button size="sm" className="gap-2" onClick={() => navigate("/student/city-guide")}>
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => navigate("/student/city-guide")}
+                  >
                     <MapPinned className="h-4 w-4" />
                     {t("student.cityGuide.viewAll", "View all")}
-                    {isRtlLanguage(language) ? <ChevronLeft className="ms-1 h-4 w-4" /> : <ChevronRight className="ms-1 h-4 w-4" />}
+                    {isRtlLanguage(language) ? (
+                      <ChevronLeft className="ms-1 h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="ms-1 h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              )}
+              {variant === "full" && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="secondary"
+                    className="gap-2"
+                  >
+                    <a
+                      href={mapsSearchUrl(city.mapQuery)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MapPinned className="h-4 w-4" />
+                      {t("student.cityGuide.viewMap", "View full map")}
+                      <ArrowUpRight className="h-4 w-4" />
+                    </a>
                   </Button>
                 </div>
               )}
@@ -249,16 +368,21 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
         </div>
       </Card>
 
-
       <div className="flex min-w-0 items-center gap-2">
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={t("student.cityGuide.searchPlaceholder", "Search places (e.g. supermarket, gym, hospital…)")}
+            placeholder={t(
+              "student.cityGuide.searchPlaceholder",
+              "Search places (e.g. supermarket, gym, hospital…)",
+            )}
             className="h-10 ps-9 pe-3"
-            aria-label={t("student.cityGuide.searchPlaceholder", "Search places")}
+            aria-label={t(
+              "student.cityGuide.searchPlaceholder",
+              "Search places",
+            )}
           />
         </div>
         <Button
@@ -294,7 +418,9 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
               onClick={() => setSelectedCategory(category)}
               className={[
                 "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
+                active
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground",
               ].join(" ")}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -309,9 +435,18 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
           {t("student.cityGuide.popular", "Popular near you")}
         </h2>
         {variant === "preview" && (
-          <Button variant="ghost" size="sm" className="gap-1 px-2" onClick={() => navigate("/student/city-guide")}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1 px-2"
+            onClick={() => navigate("/student/city-guide")}
+          >
             {t("student.cityGuide.viewAll", "View all")}
-            {isRtlLanguage(language) ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            {isRtlLanguage(language) ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
           </Button>
         )}
       </div>
@@ -319,7 +454,10 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
       {filteredLocations.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            {t("student.cityGuide.noResults", "No matching places. Try another search or category.")}
+            {t(
+              "student.cityGuide.noResults",
+              "No matching places. Try another search or category.",
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -337,62 +475,81 @@ export default function StudentCityGuide({ residentialCity, variant = "preview" 
                   "border-border",
                 ].join(" ")}
               >
-              <a
-                href={mapsSearchUrl(location.mapQuery)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block min-w-0 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={`${name} — ${t("student.cityGuide.openMap", "Open in Google Maps")}`}
-              >
-                <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                  <img
-                    src={location.imageUrl ?? FALLBACK_IMAGE}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
-                    loading="lazy"
-                    onError={(event) => {
-                      const image = event.currentTarget;
-                      // Compare the authored attribute, not `image.src` (the browser
-                      // resolves it to an absolute URL, so the guard would never match
-                      // and the failed fallback would be re-assigned on every error).
-                      if (image.getAttribute("src") !== FALLBACK_IMAGE) image.src = FALLBACK_IMAGE;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-transparent to-transparent" />
-                  <div className="absolute bottom-2 start-2 inline-flex h-7 w-7 items-center justify-center rounded-md bg-background/90 text-primary shadow-sm backdrop-blur-sm">
-                    <Icon className="h-3.5 w-3.5" />
+                <a
+                  href={mapsSearchUrl(location.mapQuery)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block min-w-0 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label={`${name} — ${t("student.cityGuide.openMap", "Open in Google Maps")}`}
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+                    <img
+                      src={location.imageUrl ?? city.heroImage}
+                      alt=""
+                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+                      loading="lazy"
+                      onError={(event) => {
+                        const image = event.currentTarget;
+                        // Compare the authored attribute, not `image.src` (the browser
+                        // resolves it to an absolute URL, so the guard would never match
+                        // and the failed fallback would be re-assigned on every error).
+                        if (image.getAttribute("src") !== city.heroImage)
+                          image.src = city.heroImage;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-transparent to-transparent" />
+                    <div className="absolute bottom-2 start-2 inline-flex h-7 w-7 items-center justify-center rounded-md bg-background/90 text-primary shadow-sm backdrop-blur-sm">
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
                   </div>
-                </div>
-                <div className="flex min-w-0 items-start gap-3 p-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">{name}</p>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                      {displayDescription(location, language) ?? categoryLabel(location.category, t)}
+                  <div className="flex min-w-0 items-start gap-3 p-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
+                        {name}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {displayDescription(location, language) ??
+                          categoryLabel(location.category, t)}
+                      </p>
+                    </div>
+                    <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                  </div>
+                </a>
+                {location.websiteUrl && (
+                  <a
+                    href={location.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 border-t border-border px-3 py-2 text-xs font-medium text-primary hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`${name} — ${t("student.cityGuide.officialSite", "Official website")}`}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    {t("student.cityGuide.officialSite", "Official website")}
+                  </a>
+                )}
+                {tip && (
+                  <div className="mt-auto border-t border-border bg-muted/40 px-3 py-2">
+                    <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                      <Lightbulb className="h-3 w-3 shrink-0" />
+                      {t("student.cityGuide.darbTip", "DARB tip")}
+                    </p>
+                    <p className="mt-0.5 break-words text-xs text-foreground/80">
+                      {tip}
                     </p>
                   </div>
-                  <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
-                </div>
-              </a>
-              {tip && (
-                <div className="mt-auto border-t border-border bg-muted/40 px-3 py-2">
-                  <p className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                    <Lightbulb className="h-3 w-3 shrink-0" />
-                    {t("student.cityGuide.darbTip", "DARB tip")}
-                  </p>
-                  <p className="mt-0.5 break-words text-xs text-foreground/80">{tip}</p>
-                </div>
-              )}
+                )}
               </div>
             );
           })}
         </div>
       )}
-
     </section>
   );
 
   if (variant === "full") {
-    return <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">{content}</div>;
+    return (
+      <div className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">{content}</div>
+    );
   }
 
   return content;

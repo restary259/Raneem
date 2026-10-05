@@ -18,7 +18,10 @@ import en from "../../../../public/locales/en/dashboard.json";
  */
 
 const state = vi.hoisted(() => ({
-  profile: { residential_city: null as string | null, language_school_id: null as string | null },
+  profile: {
+    residential_city: null as string | null,
+    language_school_id: null as string | null,
+  },
   profileError: null as { message: string } | null,
   school: { city: null as string | null },
   schoolError: null as { message: string } | null,
@@ -49,7 +52,10 @@ vi.mock("@/integrations/supabase/client", () => ({
               table === "profiles"
                 ? { data: state.profile, error: state.profileError }
                 : {
-                    data: id in state.schoolsById ? { city: state.schoolsById[id] } : state.school,
+                    data:
+                      id in state.schoolsById
+                        ? { city: state.schoolsById[id] }
+                        : state.school,
                     error: state.schoolError,
                   },
           }),
@@ -68,7 +74,11 @@ vi.mock("react-i18next", () => ({
     t: (key: string, fallback?: string) => {
       let cur: unknown = en;
       for (const part of key.split(".")) {
-        if (cur && typeof cur === "object" && part in (cur as Record<string, unknown>)) {
+        if (
+          cur &&
+          typeof cur === "object" &&
+          part in (cur as Record<string, unknown>)
+        ) {
           cur = (cur as Record<string, unknown>)[part];
         } else {
           return fallback ?? key;
@@ -108,18 +118,26 @@ describe("StudentCityGuide", () => {
   });
 
   it("matches the localized category label in search", async () => {
-    state.profile = { residential_city: "Heidelberg", language_school_id: null };
+    state.profile = {
+      residential_city: "Heidelberg",
+      language_school_id: null,
+    };
     render(<StudentCityGuide variant="full" />);
     await screen.findByText("Popular near you");
 
     await userEvent.type(screen.getByRole("textbox"), "supermarket");
 
-    await waitFor(() => expect(screen.getByText("Kaufland Heidelberg-Weststadt")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText("Kaufland Heidelberg-Weststadt")).toBeTruthy(),
+    );
     expect(screen.queryByText("VeniceBeach Heidelberg Bahnstadt")).toBeNull();
   });
 
   it("clears the search and category filters from the icon button", async () => {
-    state.profile = { residential_city: "Heidelberg", language_school_id: null };
+    state.profile = {
+      residential_city: "Heidelberg",
+      language_school_id: null,
+    };
     render(<StudentCityGuide variant="full" />);
     await screen.findByText("Popular near you");
 
@@ -131,12 +149,17 @@ describe("StudentCityGuide", () => {
     expect(filterButton).toBeEnabled();
 
     await userEvent.click(filterButton);
-    await waitFor(() => expect(screen.getByText("Kaufland Heidelberg-Weststadt")).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByText("Kaufland Heidelberg-Weststadt")).toBeTruthy(),
+    );
     expect(screen.getByRole("textbox")).toHaveValue("");
   });
 
   it("does not present curated fixed distances as nearby distances", async () => {
-    state.profile = { residential_city: "Heidelberg", language_school_id: null };
+    state.profile = {
+      residential_city: "Heidelberg",
+      language_school_id: null,
+    };
     render(<StudentCityGuide variant="full" />);
     await screen.findByText("Popular near you");
 
@@ -152,5 +175,35 @@ describe("StudentCityGuide", () => {
 
     expect(await screen.findByText("Popular near you")).toBeTruthy();
     expect(screen.queryByText(/not available yet/i)).toBeNull();
+  });
+
+  it("shows the Regensburg guide when the school is in Regensburg", async () => {
+    state.profile = { residential_city: null, language_school_id: "horizonte" };
+    state.schoolsById = { horizonte: "Regensburg" };
+    render(<StudentCityGuide variant="full" />);
+
+    expect(await screen.findByText("Popular near you")).toBeTruthy();
+    expect(screen.getByText("Regensburg Arcaden")).toBeTruthy();
+    expect(screen.queryByText("Kaufland Heidelberg-Weststadt")).toBeNull();
+    expect(screen.queryByText(/not available yet/i)).toBeNull();
+  });
+
+  it("links the full map and each official site separately from the map link", async () => {
+    state.profile = { residential_city: null, language_school_id: "horizonte" };
+    state.schoolsById = { horizonte: "Regensburg" };
+    render(<StudentCityGuide variant="full" />);
+    await screen.findByText("Popular near you");
+
+    const mapLink = screen.getByRole("link", { name: /view full map/i });
+    expect(mapLink.getAttribute("href")).toContain("google.com/maps/search");
+
+    const official = screen.getByRole("link", {
+      name: /HORIZONTE German Language School — Official website/i,
+    });
+    expect(official.getAttribute("href")).toBe(
+      "https://www.horizonte.com/en-german-courses/regensburg",
+    );
+    expect(official.getAttribute("target")).toBe("_blank");
+    expect(official.getAttribute("rel")).toContain("noopener");
   });
 });

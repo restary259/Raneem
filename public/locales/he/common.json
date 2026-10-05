@@ -159,6 +159,13 @@
         "highlight1": "עיר אוניברסיטאית",
         "highlight2": "העיר העתיקה ההיסטורית",
         "highlight3": "חיי יום-יום ידידותיים לאופניים"
+      },
+      "regensburg": {
+        "region": "בוואריה",
+        "description": "עיר אוניברסיטאית עתיקה על הדנובה, עם מרכז היסטורי שהוכרז אתר מורשת עולמית של אונסק״ו, גשר אבן מימי הביניים וקהילת סטודנטים תוססת.",
+        "highlight1": "מרכז היסטורי מורשת עולמית",
+        "highlight2": "גשר האבן והדנובה",
+        "highlight3": "עיר סטודנטים תוססת"
       }
     },
     "sources": {
@@ -169,7 +176,8 @@
       "schoolHome": "אתר המוסד",
       "schoolGallery": "גלריית Perfekt Deutsch",
       "schoolInfo": "מידע VICTORIA Academy",
-      "schoolKapitoCourses": "קורסים ובחינות KAPITO"
+      "schoolKapitoCourses": "קורסים ובחינות KAPITO",
+      "schoolCourses": "קורס אינטנסיבי HORIZONTE"
     },
     "schools": {
       "fu": {
@@ -231,6 +239,16 @@
         "serviceHousing": "אפשרויות לסיוע וארגון מגורים",
         "serviceGuidance": "סיוע בנושא ויזה, ביטוח ושאלות לימודים",
         "serviceActivities": "תוכנית תרבות ופנאי ותמיכה בשיעורי בית"
+      },
+      "horizonte": {
+        "description": "HORIZONTE הוא בית ספר לגרמנית במרכז העיר העתיקה של רגנסבורג, הפועל משנת 1986. הוא מציע קורסים אינטנסיביים מ-A1 עד C2, מעונות באותו בניין, מרכז בחינות רשמי ל-telc ול-TestDaF, והוא חבר ב-IALC וב-FDSV.",
+        "credentialsNote": "חברויות ומעמד מרכז בחינות רשמי כפי שמפורסמים באתר HORIZONTE.",
+        "focusLevels": "קורסים מ-A1 עד C2",
+        "focusResidence": "מעונות באותו בניין כמו בית הספר",
+        "focusExams": "מרכז בחינות רשמי ל-telc ול-TestDaF",
+        "serviceResidence": "מעונות בשטח",
+        "serviceActivities": "תוכנית פנאי",
+        "serviceHomestay": "משפחות מארחות"
       }
     },
     "selectionEyebrow": "למה המוסדות האלה?",

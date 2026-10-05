@@ -29,6 +29,7 @@ import dusseldorfImage from "@/assets/destinations/dusseldorf.jpg";
 import dortmundImage from "@/assets/destinations/dortmund.jpg";
 import munsterImage from "@/assets/destinations/munster.jpg";
 import berlinImage from "@/assets/destinations/berlin.jpg";
+import regensburgImage from "@/assets/destinations/regensburg.jpg";
 
 const destinationImages = {
   heidelberg: heidelbergImage,
@@ -36,6 +37,7 @@ const destinationImages = {
   dortmund: dortmundImage,
   munster: munsterImage,
   berlin: berlinImage,
+  regensburg: regensburgImage,
 } as const;
 
 const EducationalDestinationsPage = () => {

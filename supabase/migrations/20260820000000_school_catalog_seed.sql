@@ -50,6 +50,10 @@ INSERT INTO public.schools (slug, name_ar, name_en, city, country, website, desc
 SELECT 'kapito', 'كابيتو', 'KAPITO Sprachschule', 'Münster', 'Germany', 'https://www.kapito.com/en/', 'مدرسة لغات في وسط مونستر تقدم دورات ألمانية مكثفة للبالغين من عمر 16 عامًا، مع عائلات مضيفة وشقق وستوديوهات مفروشة بالكامل.', 'Language school in central Münster offering German intensive courses for adults from age 16, with host families, apartments and fully-furnished studios.', ARRAY['/lovable-uploads/schools/kapito/school/standard-course.jpg', '/lovable-uploads/schools/kapito/programs/intensive-course.jpg'], true
 WHERE NOT EXISTS (SELECT 1 FROM public.schools WHERE slug = 'kapito');
 
+INSERT INTO public.schools (slug, name_ar, name_en, city, country, website, description_ar, description_en, photos, is_active)
+SELECT 'horizonte', 'هوريزونتي - مدرسة اللغة الألمانية', 'HORIZONTE German Language School', 'Regensburg', 'Germany', 'https://www.horizonte.com/en-german-courses/regensburg', 'مدرسة لغة ألمانية في وسط ريجنسبورغ التاريخي منذ عام 1986، تقدم دورات مكثفة من المستوى A1 إلى C2، وسكنًا في المبنى نفسه، ومركز امتحانات معتمدًا لـ telc وTestDaF.', 'German language school in Regensburg''s historic centre since 1986, offering intensive courses from A1 to C2, on-site accommodation in the same building, and an official telc and TestDaF examination centre.', '{}'::text[], true
+WHERE NOT EXISTS (SELECT 1 FROM public.schools WHERE slug = 'horizonte');
+
 -- ── 3. programs ──────────────────────────────────────────────────────
 
 INSERT INTO public.programs (school_id, name_ar, name_en, type, price, currency, duration, description, description_ar, description_en, cefr_range, hours_per_week, lessons_per_week, start_rule, registration_fee, price_tiers, photos, is_active)
@@ -155,6 +159,13 @@ SELECT (SELECT id FROM public.schools WHERE slug = 'kapito'), 'دورة ألما
 WHERE NOT EXISTS (
   SELECT 1 FROM public.programs
   WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'kapito') AND name_en = 'Intensive Plus German Course 24' AND duration = '1-23+ weeks'
+);
+
+INSERT INTO public.programs (school_id, name_ar, name_en, type, price, currency, duration, description, description_ar, description_en, cefr_range, hours_per_week, lessons_per_week, start_rule, registration_fee, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'دورة ألمانية مكثفة 24 درسًا', 'Intensive German Course 24', 'language_school', 210, 'EUR', '1-24+ weeks', '24 lessons/week (45 minutes each): 20 morning lessons Mon-Fri 09:00-12:30 plus 4 intensive afternoon lessons on Monday and Thursday 13:30-15:00. Enrolment fee, teaching materials, certificate and leisure programme included.', '24 درسًا أسبوعيًا (45 دقيقة للحصة): 20 درسًا صباحًا من الاثنين إلى الجمعة 09:00-12:30، إضافة إلى 4 دروس مكثفة بعد الظهر الاثنين والخميس 13:30-15:00. رسوم التسجيل والمواد التعليمية والشهادة وبرنامج الأنشطة مشمولة.', '24 lessons/week (45 minutes each): 20 morning lessons Mon-Fri 09:00-12:30 plus 4 intensive afternoon lessons on Monday and Thursday 13:30-15:00. Enrolment fee, teaching materials, certificate and leisure programme included.', 'A1-C2', 18, 24, 'Any Monday when a place is free; absolute beginners on the starred start dates', NULL, '[{"from_weeks":1,"to_weeks":1,"price":250},{"from_weeks":2,"to_weeks":2,"price":245},{"from_weeks":3,"to_weeks":3,"price":240},{"from_weeks":4,"to_weeks":4,"price":235},{"from_weeks":5,"to_weeks":null,"price":210}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.programs
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Intensive German Course 24' AND duration = '1-24+ weeks'
 );
 
 -- ── 4. accommodations ───────────────────────────────────────────────
@@ -437,6 +448,62 @@ SELECT (SELECT id FROM public.schools WHERE slug = 'kapito'), 'استوديو ك
 WHERE NOT EXISTS (
   SELECT 1 FROM public.accommodations
   WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'kapito') AND name_en = 'KAPITO Studio 4'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'غرفة فردية بحمام خاص - الطابق الرابع (سكن هوريزونتي)', 'Single room with private bathroom — 4th floor (HORIZONTE residence)', 'single', 'self_catering', 150, 'EUR', 'In the same building as the school (on-site residence)', 100, NULL, 'Single room in the HORIZONTE residence on the 4th floor with private shower and toilet and access to a large shared kitchen. Same building as the school. Prices include the furnished room, bed linen, Wi-Fi, water, heating, electricity and final cleaning; towels are not provided.', 'غرفة فردية في سكن هوريزونتي في الطابق الرابع، مع دوش ومرحاض خاصين وإمكانية استخدام مطبخ مشترك كبير. المبنى نفسه الذي يقع فيه المعهد. تشمل الأسعار الغرفة المفروشة والبياضات والواي فاي والماء والتدفئة والكهرباء والتنظيف النهائي؛ المناشف غير مشمولة.', 'Single room in the HORIZONTE residence on the 4th floor with private shower and toilet and access to a large shared kitchen. Same building as the school. Prices include the furnished room, bed linen, Wi-Fi, water, heating, electricity and final cleaning; towels are not provided.', '[{"from_weeks":1,"to_weeks":1,"price":300},{"from_weeks":2,"to_weeks":2,"price":225},{"from_weeks":3,"to_weeks":3,"price":200},{"from_weeks":4,"to_weeks":4,"price":188},{"from_weeks":5,"to_weeks":null,"price":150}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Single room with private bathroom — 4th floor (HORIZONTE residence)'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'غرفة مزدوجة بحمام خاص - الطابق الرابع (سكن هوريزونتي)', 'Twin room with private bathroom — 4th floor (HORIZONTE residence)', 'double', 'self_catering', 100, 'EUR', 'In the same building as the school (on-site residence)', 100, NULL, 'Twin room in the HORIZONTE residence on the 4th floor with private shower and toilet and access to a large shared kitchen. Price per person per week. Same building as the school.', 'غرفة مزدوجة في سكن هوريزونتي في الطابق الرابع، مع دوش ومرحاض خاصين وإمكانية استخدام مطبخ مشترك كبير. السعر للشخص الواحد في الأسبوع. المبنى نفسه الذي يقع فيه المعهد.', 'Twin room in the HORIZONTE residence on the 4th floor with private shower and toilet and access to a large shared kitchen. Price per person per week. Same building as the school.', '[{"from_weeks":1,"to_weeks":1,"price":200},{"from_weeks":2,"to_weeks":2,"price":150},{"from_weeks":3,"to_weeks":3,"price":133},{"from_weeks":4,"to_weeks":4,"price":125},{"from_weeks":5,"to_weeks":null,"price":100}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Twin room with private bathroom — 4th floor (HORIZONTE residence)'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'غرفة فردية في شقة مشتركة (سكن هوريزونتي)', 'Single room in shared apartment (HORIZONTE residence)', 'single', 'self_catering', 140, 'EUR', 'In the same building as the school (on-site residence)', 100, NULL, 'Single room in a shared apartment in the HORIZONTE residence on the 2nd floor, with shared kitchen and bathroom. Same building as the school.', 'غرفة فردية في شقة مشتركة في سكن هوريزونتي بالطابق الثاني، مع مطبخ وحمام مشتركين. المبنى نفسه الذي يقع فيه المعهد.', 'Single room in a shared apartment in the HORIZONTE residence on the 2nd floor, with shared kitchen and bathroom. Same building as the school.', '[{"from_weeks":1,"to_weeks":1,"price":280},{"from_weeks":2,"to_weeks":2,"price":210},{"from_weeks":3,"to_weeks":3,"price":187},{"from_weeks":4,"to_weeks":4,"price":175},{"from_weeks":5,"to_weeks":null,"price":140}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Single room in shared apartment (HORIZONTE residence)'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'غرفة مزدوجة في شقة مشتركة (سكن هوريزونتي)', 'Twin room in shared apartment (HORIZONTE residence)', 'double', 'self_catering', 90, 'EUR', 'In the same building as the school (on-site residence)', 100, NULL, 'Twin room in a shared apartment in the HORIZONTE residence, with shared kitchen and bathroom. Price per person per week. Same building as the school.', 'غرفة مزدوجة في شقة مشتركة في سكن هوريزونتي، مع مطبخ وحمام مشتركين. السعر للشخص الواحد في الأسبوع. المبنى نفسه الذي يقع فيه المعهد.', 'Twin room in a shared apartment in the HORIZONTE residence, with shared kitchen and bathroom. Price per person per week. Same building as the school.', '[{"from_weeks":1,"to_weeks":1,"price":180},{"from_weeks":2,"to_weeks":2,"price":135},{"from_weeks":3,"to_weeks":3,"price":120},{"from_weeks":4,"to_weeks":4,"price":113},{"from_weeks":5,"to_weeks":null,"price":90}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Twin room in shared apartment (HORIZONTE residence)'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'استوديو - شخص واحد (سكن هوريزونتي)', 'Studio — one person (HORIZONTE residence)', 'studio', 'self_catering', 200, 'EUR', 'In the same building as the school (on-site residence)', 100, NULL, 'Studio in the HORIZONTE residence with private bathroom and kitchenette. Same building as the school.', 'استوديو في سكن هوريزونتي مع حمام ومطبخ صغير خاصين. المبنى نفسه الذي يقع فيه المعهد.', 'Studio in the HORIZONTE residence with private bathroom and kitchenette. Same building as the school.', '[{"from_weeks":1,"to_weeks":1,"price":400},{"from_weeks":2,"to_weeks":2,"price":300},{"from_weeks":3,"to_weeks":3,"price":267},{"from_weeks":4,"to_weeks":4,"price":250},{"from_weeks":5,"to_weeks":null,"price":200}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Studio — one person (HORIZONTE residence)'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'استوديو - شخصان (سكن هوريزونتي)', 'Studio — two people (HORIZONTE residence)', 'studio', 'self_catering', 135, 'EUR', 'In the same building as the school (on-site residence)', 100, NULL, 'Studio for two people in the HORIZONTE residence with private bathroom and kitchenette. Price per person per week. Same building as the school.', 'استوديو لشخصين في سكن هوريزونتي مع حمام ومطبخ صغير خاصين. السعر للشخص الواحد في الأسبوع. المبنى نفسه الذي يقع فيه المعهد.', 'Studio for two people in the HORIZONTE residence with private bathroom and kitchenette. Price per person per week. Same building as the school.', '[{"from_weeks":1,"to_weeks":1,"price":270},{"from_weeks":2,"to_weeks":2,"price":203},{"from_weeks":3,"to_weeks":3,"price":180},{"from_weeks":4,"to_weeks":4,"price":169},{"from_weeks":5,"to_weeks":null,"price":135}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Studio — two people (HORIZONTE residence)'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'عائلة مضيفة - غرفة فردية/مزدوجة مع فطور', 'Host family — single/twin room with breakfast', 'single_double', 'breakfast', 200, 'EUR', 'Host families are usually no more than 20 minutes from the school by bus or bicycle; the exact address is given about one week before arrival', 100, NULL, 'Stay with a host family including breakfast. Price per person. The host family address is provided about one week before arrival. Published prices start from 2 weeks.', 'إقامة لدى عائلة مضيفة مع فطور. السعر للشخص الواحد. يصل الطالب عنوان العائلة المضيفة قبل أسبوع تقريبًا من الوصول. الأسعار المنشورة تبدأ من أسبوعين.', 'Stay with a host family including breakfast. Price per person. The host family address is provided about one week before arrival. Published prices start from 2 weeks.', '[{"from_weeks":2,"to_weeks":2,"price":200},{"from_weeks":3,"to_weeks":3,"price":200},{"from_weeks":4,"to_weeks":4,"price":200},{"from_weeks":5,"to_weeks":null,"price":200}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Host family — single/twin room with breakfast'
+);
+
+INSERT INTO public.accommodations (school_id, name_ar, name_en, room_type, meals, price, currency, distance_note, deposit, placement_fee, description, description_ar, description_en, price_tiers, photos, is_active)
+SELECT (SELECT id FROM public.schools WHERE slug = 'horizonte'), 'عائلة مضيفة - غرفة فردية/مزدوجة مع نصف إقامة', 'Host family — single/twin room with half-board', 'single_double', 'half_board', 280, 'EUR', 'Host families are usually no more than 20 minutes from the school by bus or bicycle; the exact address is given about one week before arrival', 100, NULL, 'Stay with a host family including half-board (breakfast and dinner). Price per person. The host family address is provided about one week before arrival. Published prices start from 2 weeks.', 'إقامة لدى عائلة مضيفة مع نصف إقامة (فطور وعشاء). السعر للشخص الواحد. يصل الطالب عنوان العائلة المضيفة قبل أسبوع تقريبًا من الوصول. الأسعار المنشورة تبدأ من أسبوعين.', 'Stay with a host family including half-board (breakfast and dinner). Price per person. The host family address is provided about one week before arrival. Published prices start from 2 weeks.', '[{"from_weeks":2,"to_weeks":2,"price":280},{"from_weeks":3,"to_weeks":3,"price":280},{"from_weeks":4,"to_weeks":4,"price":280},{"from_weeks":5,"to_weeks":null,"price":280}]'::jsonb, '{}'::text[], true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.accommodations
+  WHERE school_id = (SELECT id FROM public.schools WHERE slug = 'horizonte') AND name_en = 'Host family — single/twin room with half-board'
 );
 
 -- ── 5. insurances ──────────────────────────────────────────────────
