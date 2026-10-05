@@ -4011,8 +4011,18 @@ items below are the P1/P2 follow-ups.
 - The partner-school migration now stores the published **5–12** class size
   (`min_students`/`max_students`), the same optional lower bound F+U introduced;
   it is `ADD COLUMN IF NOT EXISTS`-guarded so the migration is safe on a clean
-  reset. Catalog JSON (`schools/programs/accommodations`) is unchanged and
-  `gen-seed.mjs` output stays byte-identical ("SEED REPRODUCIBLE").
+  reset. Catalog JSON (`schools/programs/accommodations`) *was* extended with
+  the HORIZONTE school, course and eight housing rows in the same release; the
+  generated seed `20260820000000_school_catalog_seed.sql` is regenerated from it
+  and `gen-seed.mjs` output stays byte-identical ("SEED REPRODUCIBLE").
+- Follow-up migration `20261005180000_horizonte_catalog_links_and_levels.sql`
+  closes two gaps the original seed left against the "built exactly like
+  KAPITO / Alpha Aktiv / GoAcademy!" rule: it sets
+  `school_accommodations.catalog_accommodation_ids` for all eight HORIZONTE
+  housing options (matched by `name_en`, same as Alpha Aktiv) so the Partner
+  Schools page links to the catalog, and it seeds `school_level_durations`
+  (A1–C2, 10 weeks each) so the level calculator no longer quotes "0 weeks".
+  Both are additive and idempotent.
 - Guarded by `src/lib/studentCityGuide.test.ts` (official URLs, https-only,
   non-empty map queries, parks present) and `StudentCityGuide.test.tsx` (full-map
   href + a separate `Official website` link with `noopener`).
