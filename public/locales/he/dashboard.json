@@ -2456,6 +2456,8 @@
     "registrationFee": "דמי הרשמה",
     "viewAllPhotos": "הצגת כל התמונות",
     "viewPhotos": "צפייה בתמונות",
+    "viewSchoolTour": "צפייה בסיור",
+    "openSchoolTour": "פתיחת סיור בית הספר",
     "weeks": "שבועות"
   },
   "cases": {
@@ -4566,6 +4568,8 @@
       "labelDescAr": "תיאור (ערבית)",
       "labelDescEn": "תיאור (אנגלית)",
       "labelPhotos": "תמונות",
+      "labelPhotoLink": "קישור לתמונה (אופציונלי)",
+      "labelPhotoLinkHint": "כשמוגדר, לחיצה על תמונת בית הספר תפתח קישור זה בכרטיסייה חדשה — למשל סיור 360° ב-Google Maps.",
       "viewTerms": "צפייה בתנאים",
       "termRange": "תקופה: {{min}}–{{max}} חודשים",
       "maxAgeShort": "עד גיל {{age}}",

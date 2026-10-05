@@ -17,6 +17,7 @@ import {
   localizedName,
   localizedDescription,
   primaryPhoto,
+  schoolPhotoLink,
   type CatalogAccommodation,
   type CatalogSchool,
   type CatalogProgram,
@@ -232,6 +233,7 @@ export default function TeamCatalogPage() {
   }, [activeCountry, school, lang, t]);
 
   const schoolPhotoList = allPhotos(school?.photos);
+  const schoolTour = schoolPhotoLink(school);
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-5 px-4 pb-8 pt-4 sm:px-6 lg:px-8" dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -403,6 +405,16 @@ export default function TeamCatalogPage() {
                         className="inline-block text-sm font-medium text-primary hover:underline"
                       >
                         {t("catalog.schoolWebsite", "School website")}
+                      </a>
+                    )}
+                    {schoolTour && (
+                      <a
+                        href={schoolTour}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ms-3 inline-block text-sm font-medium text-primary hover:underline"
+                      >
+                        {t("catalog.openSchoolTour", "Open school walkthrough")}
                       </a>
                     )}
                   </div>

@@ -1,12 +1,18 @@
 import { useTranslation } from "react-i18next";
-import { Building2, MapPin, ArrowRight, GraduationCap, BedDouble } from "lucide-react";
+import { Building2, MapPin, ArrowRight, GraduationCap, BedDouble, Maximize2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/hooks/useLang";
 import CatalogImage from "./CatalogImage";
 import SchoolLogo from "@/components/common/SchoolLogo";
-import { type CatalogSchool, localizedName, localizedDescription, primaryPhoto } from "@/lib/catalogDisplay";
+import {
+  type CatalogSchool,
+  localizedName,
+  localizedDescription,
+  primaryPhoto,
+  schoolPhotoLink,
+} from "@/lib/catalogDisplay";
 
 interface SchoolCardProps {
   school: CatalogSchool;
@@ -19,6 +25,26 @@ export function SchoolCard({ school, programCount, accommodationCount, onSelect 
   const { t } = useTranslation("dashboard");
   const lang = useLang();
   const description = localizedDescription(school, lang);
+  const photoLink = schoolPhotoLink(school);
+  const photo = primaryPhoto(school.photos);
+
+  const image = (
+    <>
+      <CatalogImage
+        src={photo}
+        alt={localizedName(school, lang)}
+        aspect="aspect-[16/10] xl:aspect-[16/9]"
+        icon={Building2}
+        className="[&_img]:group-hover:scale-105"
+      />
+      {photoLink && photo && (
+        <span className="absolute bottom-3 end-3 flex items-center gap-1 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
+          <Maximize2 className="h-3.5 w-3.5" />
+          {t("catalog.viewSchoolTour", "View walkthrough")}
+        </span>
+      )}
+    </>
+  );
 
   return (
     <Card
@@ -38,7 +64,20 @@ export function SchoolCard({ school, programCount, accommodationCount, onSelect 
       )}
     >
       <div className="relative">
-        <CatalogImage src={primaryPhoto(school.photos)} alt={localizedName(school, lang)} aspect="aspect-[16/10] xl:aspect-[16/9]" icon={Building2} className="[&_img]:group-hover:scale-105" />
+        {photoLink && photo ? (
+          <a
+            href={photoLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={t("catalog.openSchoolTour", "Open school walkthrough")}
+            className="block focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {image}
+          </a>
+        ) : (
+          image
+        )}
         <SchoolLogo name={school.name_en} className="absolute bottom-3 start-3 size-16" />
       </div>
 

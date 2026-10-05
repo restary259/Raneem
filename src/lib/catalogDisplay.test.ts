@@ -12,6 +12,7 @@ import {
   weeklyPriceRange,
   displayWeeklyRate,
   primaryPhoto,
+  schoolPhotoLink,
   localizedName,
   localizedDescription,
   type CatalogSchool,
@@ -29,6 +30,7 @@ const school = (overrides: Partial<CatalogSchool> = {}): CatalogSchool => ({
   description_en: "desc en",
   description_ar: "وصف ar",
   photos: [],
+  photo_link: null,
   is_active: true,
   created_at: "",
   updated_at: "",
@@ -232,6 +234,32 @@ describe("catalogDisplay", () => {
       expect(primaryPhoto(["", "/b.jpg"])).toBe("/b.jpg");
       expect(primaryPhoto(null)).toBeNull();
       expect(primaryPhoto([])).toBeNull();
+    });
+  });
+
+  describe("schoolPhotoLink", () => {
+    it("returns an http(s) photo link unchanged", () => {
+      const link = "https://www.google.com/maps/@49.0185595,12.0934451,3a,90y/data";
+      expect(schoolPhotoLink(school({ photo_link: link }))).toBe(link);
+      expect(schoolPhotoLink({ photo_link: "http://example.com/tour" })).toBe("http://example.com/tour");
+    });
+
+    it("trims surrounding whitespace", () => {
+      expect(schoolPhotoLink({ photo_link: "  https://example.com/x  " })).toBe("https://example.com/x");
+    });
+
+    it("rejects non-http protocols and unparseable values", () => {
+      expect(schoolPhotoLink({ photo_link: "javascript:alert(1)" })).toBeNull();
+      expect(schoolPhotoLink({ photo_link: "data:text/html,<h1>x</h1>" })).toBeNull();
+      expect(schoolPhotoLink({ photo_link: "not a url" })).toBeNull();
+    });
+
+    it("returns null when unset or empty", () => {
+      expect(schoolPhotoLink(school())).toBeNull();
+      expect(schoolPhotoLink({ photo_link: "" })).toBeNull();
+      expect(schoolPhotoLink({ photo_link: "   " })).toBeNull();
+      expect(schoolPhotoLink(null)).toBeNull();
+      expect(schoolPhotoLink(undefined)).toBeNull();
     });
   });
 

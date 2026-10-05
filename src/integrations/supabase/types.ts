@@ -7115,6 +7115,7 @@ export type Database = {
           is_active: boolean
           name_ar: string
           name_en: string
+          photo_link: string | null
           photos: string[]
           slug: string | null
           updated_at: string
@@ -7130,6 +7131,7 @@ export type Database = {
           is_active?: boolean
           name_ar: string
           name_en: string
+          photo_link?: string | null
           photos?: string[]
           slug?: string | null
           updated_at?: string
@@ -7145,6 +7147,7 @@ export type Database = {
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          photo_link?: string | null
           photos?: string[]
           slug?: string | null
           updated_at?: string

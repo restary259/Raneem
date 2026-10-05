@@ -126,6 +126,7 @@ export function groupAccommodationsBySchool(
         description_en: null,
         description_ar: null,
         photos: [],
+        photo_link: null,
         is_active: true,
         created_at: "",
         updated_at: "",
@@ -326,6 +327,25 @@ export function formatMoney(rate: number | null, currency: string | null | undef
 export function primaryPhoto(photos: string[] | null | undefined): string | null {
   if (!photos || photos.length === 0) return null;
   return photos.find((p) => p && p.trim()) ?? null;
+}
+
+/**
+ * The external URL a school's photo opens (e.g. a Google Maps 360°
+ * walkthrough). Only http(s) is accepted: a javascript:/data: value stored by
+ * mistake must never become a live href. Returns null when unset or unusable,
+ * in which case the photo stays a plain (non-link) image.
+ */
+export function schoolPhotoLink(
+  school: { photo_link?: string | null } | null | undefined,
+): string | null {
+  const raw = school?.photo_link?.trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    return url.protocol === "http:" || url.protocol === "https:" ? raw : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

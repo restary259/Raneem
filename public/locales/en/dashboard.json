@@ -685,6 +685,8 @@
       "labelDescAr": "Description (Arabic)",
       "labelDescEn": "Description (English)",
       "labelPhotos": "Photos",
+      "labelPhotoLink": "Photo link (optional)",
+      "labelPhotoLinkHint": "When set, clicking the school photo opens this link in a new tab — for example a Google Maps 360° walkthrough.",
       "viewTerms": "View terms",
       "termRange": "Term: {{min}}–{{max}} months",
       "maxAgeShort": "up to age {{age}}",
@@ -2876,6 +2878,8 @@
     "registrationFee": "Registration fee",
     "viewAllPhotos": "View all photos",
     "viewPhotos": "View photos",
+    "viewSchoolTour": "View walkthrough",
+    "openSchoolTour": "Open school walkthrough",
     "weeks": "weeks"
   },
   "application": {

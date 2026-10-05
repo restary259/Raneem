@@ -30,6 +30,7 @@ export interface School {
   is_active: boolean;
   created_at: string;
   photos: string[] | null;
+  photo_link: string | null;
 }
 
 export interface Accommodation {
