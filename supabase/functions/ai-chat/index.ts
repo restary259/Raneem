@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isRateLimited } from "../_shared/rateLimit.ts";
 import { serverErrorResponse } from "../_shared/errors.ts";
 import { buildSystemPrompt, type Lang, type Mode } from "./prompt.ts";
 import { UNIVERSITIES } from "./knowledge.generated.ts";
@@ -11,20 +12,7 @@ const MODEL = "google/gemini-3.7-flash";
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_TOOL_ROUNDS = 3;
 
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const AUTH_LIMIT = 100;
-const WINDOW = 60 * 60 * 1000;
-
-function checkRateLimit(key: string, limit: number): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(key);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + WINDOW });
-    return false;
-  }
-  entry.count++;
-  return entry.count > limit;
-}
 
 function sanitizeInput(text: string): string {
   return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim();
