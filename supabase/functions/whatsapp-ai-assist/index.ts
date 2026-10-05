@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { requireAuth } from "../_shared/auth.ts";
+import { isRateLimited } from "../_shared/rateLimit.ts";
 import { serverErrorResponse } from "../_shared/errors.ts";
 import { createOpenAI } from "npm:@ai-sdk/openai";
 import { Output, streamText } from "npm:ai";
@@ -9,21 +10,9 @@ import { z } from "npm:zod";
 const MODEL = "openai/gpt-6-astra";
 const ESCALATION = /\b(human|person|advisor|price|cost|fee|payment|pay|visa|legal|lawyer|guarantee|acceptance|deadline|timeline|uncertain|not sure)\b|سعر|تكلفة|دفع|فيزا|تأشيرة|قانون|محامي|موظف|إنسان|مستشار|قبول|ضمان|موعد|مش متأكد|غير متأكد/iu;
 const INJECTION = /ignore\s+(previous|above|all)\s+(instructions|prompts)|you\s+are\s+now|system\s*prompt|\bDAN\b|do\s+anything\s+now|reveal\s+(your|the)\s+(system|initial|original)\s+(prompt|instructions)|تجاهل\s+(التعليمات|كل)|اكشف\s+(التعليمات|النظام)/iu;
-const rateLimits = new Map<string, { count: number; resetAt: number }>();
 
 function sanitize(value: unknown, max: number) {
   return String(value ?? "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim().slice(0, max);
-}
-
-function rateLimited(userId: string) {
-  const now = Date.now();
-  const current = rateLimits.get(userId);
-  if (!current || now > current.resetAt) {
-    rateLimits.set(userId, { count: 1, resetAt: now + 60 * 60 * 1000 });
-    return false;
-  }
-  current.count += 1;
-  return current.count > 60;
 }
 
 serve(async (req) => {
@@ -34,7 +23,7 @@ serve(async (req) => {
     const auth = await requireAuth(req, ["admin", "team_member"]);
     if (!auth.ok) return json({ error: auth.error }, auth.status);
     if (!auth.userId) return json({ error: "A staff account is required" }, 403);
-    if (rateLimited(auth.userId)) return json({ error: "Too many AI draft requests. Try again later." }, 429);
+    if (await isRateLimited(`whatsapp-ai-assist:${auth.userId}`, 60, 3600)) return json({ error: "Too many AI draft requests. Try again later." }, 429);
     const input = await req.json();
     const mode = ["welcome", "qualification", "summary"].includes(input?.mode) ? input.mode : "qualification";
     const language = input?.language === "he" ? "he" : input?.language === "en" ? "en" : "ar";

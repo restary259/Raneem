@@ -8,21 +8,7 @@ function stripHtml(str: string): string {
   return str.replace(/<[^>]*>/g, '').trim();
 }
 
-// In-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 3;
-const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_LIMIT;
-}
+import { isRateLimited } from '../_shared/rateLimit.ts'
 
 serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req)
@@ -35,7 +21,7 @@ serve(async (req) => {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 
     // Rate limit
-    if (isRateLimited(ip)) {
+    if (await isRateLimited(`send-email:${ip}`, 3, 3600)) {
       return new Response(JSON.stringify({ error: "تم تجاوز الحد المسموح. يرجى المحاولة بعد ساعة.", success: false }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 429,

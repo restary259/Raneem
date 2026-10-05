@@ -87,7 +87,10 @@ describe("dashboard navigation configuration", () => {
 
   it("keeps dashboard home routes exact so Overview does not steal subroutes", () => {
     expect(
-      matchesDashboardNavPath("/admin/pipeline", DASHBOARD_NAV_CONFIG.admin.desktop[2]),
+      matchesDashboardNavPath(
+        "/admin/pipeline",
+        DASHBOARD_NAV_CONFIG.admin.desktop.find((item) => item.key === "nav.overview")!,
+      ),
     ).toBe(false);
     expect(
       matchesDashboardNavPath("/team/cases/123", DASHBOARD_NAV_CONFIG.team_member.desktop[2]),

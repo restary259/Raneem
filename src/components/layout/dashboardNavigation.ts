@@ -245,12 +245,6 @@ export const DASHBOARD_NAV_CONFIG: Record<AppRole, DashboardRoleConfig> = {
         group: "nav.group.comms",
       },
       {
-        key: "nav.whatsappCampaigns",
-        icon: Megaphone,
-        href: "/admin/whatsapp-campaigns",
-        group: "nav.group.comms",
-      },
-      {
         key: "nav.overview",
         icon: LayoutDashboard,
         href: "/admin",

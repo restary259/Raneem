@@ -173,6 +173,17 @@ async function getBookableOffices(supabaseAdmin: any) {
   return offices.filter(function (office) { return validOfficeIds.has(office.id); });
 }
 
+async function assertOfficeBookable(supabaseAdmin: any, officeId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("offices")
+    .select("id,is_active,booking_enabled")
+    .eq("id", officeId)
+    .maybeSingle();
+  if (error || !data || !data.is_active || !data.booking_enabled) {
+    throw new Error("This office is not currently available for booking.");
+  }
+}
+
 async function calculateAvailability(supabaseAdmin: any, officeId: string, serviceType = "consultation") {
   const officeResult = await supabaseAdmin
     .from("offices")
@@ -406,7 +417,13 @@ export const managePublicBooking = createServerFn({ method: "POST" })
       const current = await getAuthorizedBookingRead(supabaseAdmin, tokenHash);
       const officeId = data.officeId || current.office_id || "";
       if (!officeId) throw new Error("Choose an office");
+      if (officeId !== current.office_id) await assertOfficeBookable(supabaseAdmin, officeId);
       return calculateAvailability(supabaseAdmin, officeId, data.serviceType || "consultation");
+    }
+
+    if (data.officeId) {
+      const current = await getAuthorizedBookingRead(supabaseAdmin, tokenHash);
+      if (data.officeId !== current.office_id) await assertOfficeBookable(supabaseAdmin, data.officeId);
     }
 
     const result = await supabaseAdmin.rpc("manage_public_appointment", {
