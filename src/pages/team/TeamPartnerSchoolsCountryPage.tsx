@@ -26,10 +26,9 @@ export default function TeamPartnerSchoolsCountryPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1500px] space-y-4 px-4 pb-8 pt-4 sm:px-6 lg:px-8">
       <PageHeader
-        className="mb-6 border-b border-border/50 pb-4"
-        title={country ? `${country.flag_emoji ?? ""} ${lang === "ar" ? country.name_ar : country.name_en}`.trim() : t("partnerSchools.title", "Partner Schools")}
+        className="mb-4"
         actions={
           <Button asChild variant="ghost" size="sm">
             <Link to="/team/partner-schools">
