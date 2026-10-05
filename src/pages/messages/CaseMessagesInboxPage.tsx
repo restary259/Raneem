@@ -64,7 +64,7 @@ import {
 const FS_CHAT =
   "max-md:fixed max-md:inset-0 max-md:z-[70] max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none max-md:pt-[env(safe-area-inset-top)] max-md:pb-[env(safe-area-inset-bottom)]";
 
-type Filter = "all" | "direct" | "teams" | "unread";
+type Filter = "direct" | "teams" | "cases" | "unread";
 
 export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
@@ -81,7 +81,7 @@ export default function CaseMessagesInboxPage() {
   const [muted, setMuted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("direct");
   const [selected, setSelected] = useState<{ type: "case" | "direct"; id: string } | null>(null);
 
   const [staffOpen, setStaffOpen] = useState(false);
@@ -205,6 +205,7 @@ export default function CaseMessagesInboxPage() {
       .filter((item) => {
         if (filter === "direct" && item.category !== "direct") return false;
         if (filter === "teams" && item.category !== "teams") return false;
+        if (filter === "cases" && item.category !== "cases") return false;
         if (filter === "unread" && item.unread === 0) return false;
         if (!q) return true;
         return (
@@ -255,7 +256,7 @@ export default function CaseMessagesInboxPage() {
     try {
       const threadId = await startTeamChatThread(staffId);
       setTeamStaffOpen(false);
-      setFilter("all");
+      setFilter("teams");
       setSelected({ type: "direct", id: threadId });
       await load();
     } catch (err: any) {
@@ -272,7 +273,7 @@ export default function CaseMessagesInboxPage() {
     try {
       const threadId = await startDirectThread(staffId);
       setStaffOpen(false);
-      setFilter("all");
+      setFilter("direct");
       setSelected({ type: "direct", id: threadId });
       await load();
     } catch (err: any) {
@@ -285,11 +286,11 @@ export default function CaseMessagesInboxPage() {
   };
 
   const filters: { key: Filter; label: string; count?: number }[] = [
-    { key: "all", label: t("chat.filter.all") },
     { key: "direct", label: t("chat.section.direct"), count: directUnread },
     ...(canStartTeamChat
       ? [{ key: "teams" as const, label: t("chat.filter.teams", "Teams"), count: teamUnread }]
       : []),
+    { key: "cases", label: t("chat.section.cases"), count: caseUnread },
     { key: "unread", label: t("chat.filter.unread"), count: totalUnread },
   ];
 
@@ -442,7 +443,7 @@ export default function CaseMessagesInboxPage() {
                 onSelect={(item) => { if (item.type === "whatsapp") return; setSelected({ type: item.type, id: item.id }); }}
                 emptyLabel={t("messagesInbox.empty")}
                 onlineUserIds={online}
-                grouped={filter === "all"}
+                grouped={false}
               />
             )}
           </div>

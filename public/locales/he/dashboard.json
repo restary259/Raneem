@@ -38,7 +38,7 @@
     "filter": {
       "all": "הכול",
       "direct": "ישיר",
-      "teams": "צוותים",
+      "teams": "חברי צוות",
       "unread": "לא נקרא"
     },
     "attach": {
@@ -186,9 +186,9 @@
       "accountHolder": "בעל החשבון"
     },
     "section": {
-      "direct": "ישיר",
+      "direct": "הנהלה",
       "teams": "צוותים",
-      "cases": "תיקים",
+      "cases": "סטודנטים",
       "partners": "שותפים",
       "whatsapp": "וואטסאפ"
     },
