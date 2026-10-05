@@ -42,4 +42,12 @@ describe("HORIZONTE partner catalog links", () => {
       expect(LINK_MIGRATION).toContain(`('${level}',`);
     }
   });
+
+  it("resolves the catalog school by slug so a late catalog insert still links", () => {
+    // The link must not depend on partner_schools.catalog_school_id, which can
+    // be NULL when the catalog school row was inserted after the partner seed.
+    expect(LINK_MIGRATION).toContain("ps.catalog_school_id IS DISTINCT FROM s.id");
+    expect(LINK_MIGRATION).toContain("s.slug = 'horizonte'");
+    expect(LINK_MIGRATION).toMatch(/RAISE WARNING/);
+  });
 });
