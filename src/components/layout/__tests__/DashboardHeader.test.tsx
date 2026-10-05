@@ -39,7 +39,11 @@ vi.mock("@/components/common/LanguageSwitcher", () => ({
 }));
 
 vi.mock("@/components/common/ThemePicker", () => ({
-  default: () => <button type="button">Theme</button>,
+  default: () => (
+    <button type="button" data-testid="theme-picker">
+      Theme
+    </button>
+  ),
 }));
 
 vi.mock("@/components/common/NotificationBell", () => ({
@@ -68,6 +72,8 @@ describe("DashboardHeader", () => {
 
     expect(screen.getByRole("button", { name: "Account menu" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Notifications" })).toBeInTheDocument();
+    expect(screen.queryByTestId("language-switcher")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("theme-picker")).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Account menu" }));
 
@@ -78,6 +84,7 @@ describe("DashboardHeader", () => {
         .some((el) => el.className.includes("w-full justify-center gap-2")),
     ).toBe(true);
     expect(screen.getByText("Choose theme")).toBeInTheDocument();
+    expect(screen.getByTestId("theme-picker")).toBeInTheDocument();
     expect(screen.getByText("Main Site")).toBeInTheDocument();
     expect(screen.getByText("Sign out")).toBeInTheDocument();
   });
