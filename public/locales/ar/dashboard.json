@@ -685,6 +685,8 @@
       "labelDescAr": "الوصف (عربي)",
       "labelDescEn": "الوصف (إنجليزي)",
       "labelPhotos": "الصور",
+      "labelPhotoLink": "رابط الصورة (اختياري)",
+      "labelPhotoLinkHint": "عند تعيينه، فتح صورة المدرسة هذا الرابط في تبويب جديد — مثلاً جولة 360° على خرائط جوجل.",
       "viewTerms": "عرض الشروط",
       "termRange": "المدة: {{min}}–{{max}} شهرًا",
       "maxAgeShort": "حتى سن {{age}}",
@@ -2894,6 +2896,8 @@
     "registrationFee": "رسوم التسجيل",
     "viewAllPhotos": "عرض كل الصور",
     "viewPhotos": "عرض الصور",
+    "viewSchoolTour": "عرض الجولة",
+    "openSchoolTour": "فتح جولة المدرسة",
     "weeks": "أسابيع"
   },
   "application": {

@@ -1429,6 +1429,27 @@ role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
   admin-catalog fields: name, school, room type, meals, deposit, placement
   fee, distance note, school website, description, and the full tier ladder.
 
+## School catalog photo links (2026-10-05)
+
+- `schools.photo_link` (nullable TEXT) is an optional outbound URL attached to a
+  school's catalog photo. When set, the photo becomes an external link
+  (`target="_blank"`, `rel="noopener noreferrer"`) instead of a dead image.
+  First use: HORIZONTE Regensburg points at its Google Maps 360° walkthrough;
+  the migration also fills HORIZONTE's previously-empty `photos` with the three
+  images already shipped in `public/lovable-uploads/schools/horizonte/accommodations/`.
+- **Only http(s) is honored.** `schoolPhotoLink()` (`src/lib/catalogDisplay.ts`)
+  returns the trimmed URL only when `new URL()` parses it and the protocol is
+  http/https — a `javascript:`/`data:` value stored by mistake can never become
+  a live href. `null` means the photo stays a plain image.
+- `SchoolCard` (`src/components/catalog/SchoolCard.tsx`) wraps the photo in an
+  `<a>` and calls `e.stopPropagation()` on click so opening the tour does NOT
+  also select the school; the card's own click/keyboard still selects it.
+  `TeamCatalogPage` shows an "Open school walkthrough" link beside the school
+  website in the detail header.
+- Admin edits it in `AdminProgramsPage`'s school dialog ("Photo link (optional)");
+  `photo_link` was added to the `School` type and the generated Supabase types.
+- Migration: `20261005190000_school_photo_links.sql` (MANUAL DEPLOY, additive/idempotent).
+
 ## CaseOverviewPanel "Referred By" — show whoever directly sent the student (2026-08-16)
 
 - `src/components/cases/CaseOverviewPanel.tsx` shows ONE name in "Referred By":

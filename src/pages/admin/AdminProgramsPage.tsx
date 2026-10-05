@@ -107,7 +107,7 @@ const AdminProgramsPage = () => {
   };
   const [progForm, setProgForm] = useState(emptyProgForm);
   const [progTiers, setProgTiers] = useState<PriceTier[]>([]);
-  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] as string[] });
+  const [schoolForm, setSchoolForm] = useState({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] as string[], photo_link: "" });
   const [accomForm, setAccomForm] = useState(emptyAccomForm);
   const [accomTiers, setAccomTiers] = useState<PriceTier[]>([]);
   const [insForm, setInsForm] = useState(emptyInsForm);
@@ -203,6 +203,7 @@ const AdminProgramsPage = () => {
         city: schoolForm.city || null,
         country: schoolForm.country,
         photos: schoolForm.photos,
+        photo_link: schoolForm.photo_link.trim() || null,
       };
       const { error } = editSchoolId
         ? await db.from("schools").update(payload).eq("id", editSchoolId)
@@ -210,7 +211,7 @@ const AdminProgramsPage = () => {
       if (error) throw error;
       setSchoolOpen(false);
       setEditSchoolId(null);
-      setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] });
+      setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [], photo_link: "" });
       await fetchAll();
       toast({ description: editSchoolId ? t('admin.programs.schoolUpdated') : t('admin.programs.schoolCreated') });
     } catch (err: any) {
@@ -383,7 +384,7 @@ const AdminProgramsPage = () => {
 
   const openEditSchool = (s: School) => {
     setEditSchoolId(s.id);
-    setSchoolForm({ name_en: s.name_en, name_ar: s.name_ar, city: s.city ?? "", country: s.country, photos: s.photos ?? [] });
+    setSchoolForm({ name_en: s.name_en, name_ar: s.name_ar, city: s.city ?? "", country: s.country, photos: s.photos ?? [], photo_link: s.photo_link ?? "" });
     setSchoolOpen(true);
   };
 
@@ -436,7 +437,7 @@ const AdminProgramsPage = () => {
               setSchoolOpen(v);
               if (!v) {
                 setEditSchoolId(null);
-                setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [] });
+                setSchoolForm({ name_ar: "", name_en: "", city: "", country: "Germany", photos: [], photo_link: "" });
               }
             }}
           >
@@ -491,6 +492,16 @@ const AdminProgramsPage = () => {
                   folder="schools"
                   label={t('admin.programs.labelPhotos')}
                 />
+                <div className="space-y-1">
+                  <Label>{t('admin.programs.labelPhotoLink')}</Label>
+                  <Input
+                    value={schoolForm.photo_link}
+                    onChange={(e) => setSchoolForm((f) => ({ ...f, photo_link: e.target.value }))}
+                    placeholder="https://www.google.com/maps/@..."
+                    inputMode="url"
+                  />
+                  <p className="text-xs text-muted-foreground">{t('admin.programs.labelPhotoLinkHint')}</p>
+                </div>
                 <Button className="w-full" onClick={saveSchool} disabled={saving}>
                   {saving ? t('admin.programs.btnSaving') : t('admin.programs.btnSave')}
                 </Button>
