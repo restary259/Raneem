@@ -32,6 +32,7 @@ import {
 import DashboardHeader from "@/components/layout/DashboardHeader";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { useChatFullscreenActive } from "@/components/messages/chatFullscreen";
+import { useScrollRestoration } from "@/components/layout/useScrollRestoration";
 import { cn } from "@/lib/utils";
 
 function SidebarNav({ role }: { role: AppRole }) {
@@ -234,17 +235,13 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ role }: DashboardLayoutProps) {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const { i18n } = useTranslation("dashboard");
   const isRtl = i18n.language.startsWith("ar") || i18n.language.startsWith("he");
   const chatFullscreen = useChatFullscreenActive();
   const mainRef = React.useRef<HTMLElement>(null);
 
   useAppBadge();
-
-  useEffect(() => {
-    mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [location.pathname]);
+  useScrollRestoration(mainRef);
 
   const handleSignOut = async () => {
     await signOut();

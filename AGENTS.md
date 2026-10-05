@@ -26,6 +26,11 @@ Full history and per-feature rationale: `docs/agent-notes.md` (read the relevant
 - A `t()` key must never resolve to an object; `nav.*` lives in `dashboard`.
 - `src/lib/i18nRuntime.test.ts` initializes the real i18n instance (loading, interpolation, he->en fallback, dir) — keep it green on library upgrades.
 
+## Routing / URL state
+- The router uses `parseSearchCompat`/`stringifySearchCompat` (`src/lib/searchParams.ts`) wired in BOTH `src/router.tsx` and the test `MemoryRouter` (`src/lib/router-compat.tsx`). TanStack's default JSON serializer would turn `page=2` into `page=%222%22`; never remove these or numeric/plain query params silently break.
+- The compat `useLocation().search` already includes the leading `?` (from TanStack `searchStr`) — do not prepend another.
+- List/filter/page state that a user expects to return to lives in the URL (`useSearchParams`), not `useState`. High-level hub tabs (`TabHub historyMode="push"`) are real history entries; lightweight filters/paging/search use `replace: true` so Back returns to the list, not through every keystroke.
+
 ## Tests / UI
 - Supabase client mocks must expose every surface the module touches at import (e.g. `auth.onAuthStateChange`); `rpc()` mocks must be chainable thenables.
 - Grids containing `truncate` text need a base `grid-cols-1` and `min-w-0` items; `DialogContent` must stay exported.

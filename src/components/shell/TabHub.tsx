@@ -15,6 +15,13 @@ interface TabHubProps {
   /** Query-string key used to deep-link a tab. */
   param?: string;
   className?: string;
+  /**
+   * How a tab switch writes to history. `"replace"` (default) keeps lightweight
+   * in-page filters out of the history stack; `"push"` makes a high-level hub tab
+   * (e.g. Cases ↔ Students) a real history entry so browser Back returns to the
+   * previously active tab.
+   */
+  historyMode?: "push" | "replace";
 }
 
 /**
@@ -24,7 +31,7 @@ interface TabHubProps {
  * unchanged, so data hooks, services and permissions behave exactly as before.
  * Only the active panel mounts, so consolidation never adds extra fetches.
  */
-export default function TabHub({ tabs, param = "tab", className }: TabHubProps) {
+export default function TabHub({ tabs, param = "tab", className, historyMode = "replace" }: TabHubProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get(param);
   const active = tabs.some((t) => t.value === requested) ? (requested as string) : tabs[0]?.value;
@@ -34,9 +41,9 @@ export default function TabHub({ tabs, param = "tab", className }: TabHubProps) 
       const next = new URLSearchParams(searchParams);
       if (value === tabs[0]?.value) next.delete(param);
       else next.set(param, value);
-      setSearchParams(next, { replace: true });
+      setSearchParams(next, { replace: historyMode === "replace" });
     },
-    [searchParams, setSearchParams, param, tabs],
+    [searchParams, setSearchParams, param, tabs, historyMode],
   );
 
   if (!tabs.length) return null;

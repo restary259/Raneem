@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useNavigate } from '@/lib/router-compat';
+import { useNavigate, useSearchParams } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -50,11 +50,51 @@ export default function TeamCasesPage() {
   const isAr = i18n.language === 'ar';
 
   const [cases, setCases] = useState<Case[]>([]);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebouncedValue(search, 250);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+
+  // Filter + pagination state lives in the URL so opening a case and pressing
+  // Back returns to the exact same list, page and query.
+  const statusParam = searchParams.get('status');
+  const statusFilter: StatusFilter =
+    statusParam && (STATUS_FILTERS as string[]).includes(statusParam)
+      ? (statusParam as StatusFilter)
+      : 'all';
+  const search = searchParams.get('q') ?? '';
+  const pageParam = Number.parseInt(searchParams.get('page') ?? '1', 10);
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+  const debouncedSearch = useDebouncedValue(search, 250);
+
+  const updateParams = useCallback(
+    (mutate: (next: URLSearchParams) => void, replace = false) => {
+      const next = new URLSearchParams(searchParams);
+      mutate(next);
+      setSearchParams(next, { replace });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const setStatusFilter = useCallback(
+    (value: StatusFilter) =>
+      updateParams((next) => {
+        if (value === 'all') next.delete('status');
+        else next.set('status', value);
+        // A changed filter always returns to the first page.
+        next.delete('page');
+      }, true),
+    [updateParams],
+  );
+
+  const setSearch = useCallback(
+    (value: string) =>
+      updateParams((next) => {
+        if (value) next.set('q', value);
+        else next.delete('q');
+        next.delete('page');
+      }, true),
+    [updateParams],
+  );
 
   // New case modal — only name + phone required (no appointment at creation)
   const [showNew, setShowNew] = useState(false);
@@ -99,7 +139,19 @@ export default function TeamCasesPage() {
     return matchStatus && matchSearch;
   }), [cases, statusFilter, debouncedSearch]);
 
-  const pagination = usePagination(filtered, 25);
+  const pagination = usePagination(filtered, 25, {
+    page,
+    onPageChange: (nextPage) =>
+      updateParams(
+        (next) => {
+          if (nextPage <= 1) next.delete('page');
+          else next.set('page', String(nextPage));
+        },
+        // Paging is a lightweight view change: keep it out of the history stack
+        // so Back returns to the list, not through every page visited.
+        true,
+      ),
+  });
 
   const checkDuplicate = async (phone: string) => {
     if (!phone.trim() || phone.length < 7) return;

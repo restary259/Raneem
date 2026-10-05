@@ -25,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -769,10 +770,25 @@ function ReviewCard({
   const replied = review.darb_reply_status === "ANSWERED";
   return (
     <Card
-      className={`cursor-pointer rounded-2xl border-border shadow-sm transition-colors ${
-        selected ? "border-primary/60 bg-primary/5" : "hover:border-primary/30"
-      }`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={`${name}, ${t(`googleReviews.stars${review.star_rating}`)}`}
+      className={cn(
+        "cursor-pointer rounded-2xl border-border shadow-sm transition-colors",
+        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        selected ? "border-primary/60 bg-primary/5" : "hover:border-primary/30",
+      )}
       onClick={onOpen}
+      onKeyDown={(e) => {
+        // Ignore keys that originate on a nested control (e.g. the Reply
+        // button) so its own activation is not hijacked into opening the card.
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
     >
       <CardContent className="space-y-2 py-4">
         <div className="flex items-start justify-between gap-3">
