@@ -6237,6 +6237,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_hits: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: number
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: never
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: never
+        }
+        Relationships: []
+      }
       referral_milestones: {
         Row: {
           achieved_at: string
@@ -9877,6 +9895,7 @@ export type Database = {
         Args: { p_a: string; p_b: string }
         Returns: boolean
       }
+      can_read_case: { Args: { _case_id: string }; Returns: boolean }
       can_read_case_invoice: { Args: { _case_id: string }; Returns: boolean }
       can_reassign_in_office: {
         Args: { p_office_id: string }
@@ -9915,6 +9934,10 @@ export type Database = {
         }[]
       }
       check_identity_conflict: { Args: { _email: string }; Returns: Json }
+      check_rate_limit: {
+        Args: { p_bucket: string; p_max: number; p_window_seconds: number }
+        Returns: boolean
+      }
       check_referral_code: {
         Args: { p_code: string }
         Returns: {
