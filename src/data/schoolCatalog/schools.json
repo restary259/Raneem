@@ -60,5 +60,17 @@
     ],
     "description_ar": "مدرسة لغات في وسط مونستر تقدم دورات ألمانية مكثفة للبالغين من عمر 16 عامًا، مع عائلات مضيفة وشقق وستوديوهات مفروشة بالكامل.",
     "description_en": "Language school in central Münster offering German intensive courses for adults from age 16, with host families, apartments and fully-furnished studios."
+  },
+  {
+    "slug": "horizonte",
+    "name_ar": "هوريزونتي - مدرسة اللغة الألمانية",
+    "name_en": "HORIZONTE German Language School",
+    "city": "Regensburg",
+    "country": "Germany",
+    "website": "https://www.horizonte.com/en-german-courses/regensburg",
+    "is_active": true,
+    "photos": [],
+    "description_ar": "مدرسة لغة ألمانية في وسط ريجنسبورغ التاريخي منذ عام 1986، تقدم دورات مكثفة من المستوى A1 إلى C2، وسكنًا في المبنى نفسه، ومركز امتحانات معتمدًا لـ telc وTestDaF.",
+    "description_en": "German language school in Regensburg's historic centre since 1986, offering intensive courses from A1 to C2, on-site accommodation in the same building, and an official telc and TestDaF examination centre."
   }
 ]

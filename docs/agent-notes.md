@@ -3982,3 +3982,38 @@ items below are the P1/P2 follow-ups.
   that style. `npm run lint` is `continue-on-error: true` in CI, so this is not a
   gate.
 
+## HORIZONTE / Regensburg city guide — official links + full map (2026-10-05)
+
+- Source: `DARB_Horizonte_Regensburg_City_Guide_Full_Links.pdf` (copy/paste link
+  sheet, verified 5 Oct 2026). Its "Suggested DARB usage" is now the rule:
+  **official provider/tourism pages are the primary website link; Google Maps is
+  a separate navigation action; no hard-coded distances** — route from the exact
+  school address instead.
+- `StudentCityGuideLocation` gained an optional `websiteUrl`. The card body still
+  links to `mapsSearchUrl(location.mapQuery)`; when `websiteUrl` is set a second
+  `Official website` action renders below it (`student.cityGuide.officialSite`,
+  en/ar/he). The full variant's hero gained a `View full map` action using the
+  city-level `mapsSearchUrl(city.mapQuery)` (the `viewMap` key existed but was
+  unused). Neither is an iframe — the CSP `frame-src` would need a Google origin,
+  and links match the PDF's "navigation actions/buttons" wording.
+- Regensburg guide now carries the PDF's official URLs: HORIZONTE school +
+  residence, Regensburg Arcaden, University Hospital (ukr.de), clever fit,
+  Stadtbücherei, cathedral, Stone Bridge, Old Town Hall, World Heritage Visitor
+  Center, and the old-town parks (Stadtpark / Herzogspark / Villapark /
+  Donaupark) under the existing `studentLife` category. All Regensburg landmarks
+  use `tourismus.regensburg.de` pages; parks share the tourism parks-and-gardens
+  page.
+- Two source corrections are recorded, not silently fixed: the PDF's HORIZONTE
+  "Intensive German Course" URL differs from the migration's
+  (`.../intensive-german-language-course` vs `.../deutschkurse/intensivkurs-deutsch`),
+  and the PDF's HORIZONTE pages still use `?utm_source=chatgpt.com` tracking
+  params — those are stripped from every stored link.
+- The partner-school migration now stores the published **5–12** class size
+  (`min_students`/`max_students`), the same optional lower bound F+U introduced;
+  it is `ADD COLUMN IF NOT EXISTS`-guarded so the migration is safe on a clean
+  reset. Catalog JSON (`schools/programs/accommodations`) is unchanged and
+  `gen-seed.mjs` output stays byte-identical ("SEED REPRODUCIBLE").
+- Guarded by `src/lib/studentCityGuide.test.ts` (official URLs, https-only,
+  non-empty map queries, parks present) and `StudentCityGuide.test.tsx` (full-map
+  href + a separate `Official website` link with `noopener`).
+
