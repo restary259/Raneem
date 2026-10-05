@@ -245,8 +245,6 @@ export default function DashboardHeader({ role, user, onSignOut }: DashboardHead
         <QuickActions role={role} />
 
         <div className="hidden items-center gap-1 sm:gap-2 md:flex">
-          <LanguageSwitcher />
-          <ThemePicker />
           {config.messagesHref && (
             <Button
               variant={isMessageActive ? "secondary" : "ghost"}
