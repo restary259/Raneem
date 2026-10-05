@@ -1,4 +1,4 @@
-# Team chat: show "Administration" instead of admin names, and put students in the Students tab
+# Team chat: only real admins in the Administration tab; student accounts like "Raneem test" and Tsukuyomi move to the Students tab
 
 ## What changes
 - **Administration tab:** a chat with an admin shows as "Administration" with the Darb logo, not the admin's personal name (for example "Raneem" or "Raneem test"). Only admin accounts are listed in this tab.
