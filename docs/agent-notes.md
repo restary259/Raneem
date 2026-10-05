@@ -1454,6 +1454,15 @@ role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
   file *after* it and silently replaced the school's dedicated `school/hero.jpg`
   with accommodation shots. Keep photo ownership in the seed / housing migration;
   `schoolCatalogPhotos.test.ts` asserts this file never assigns `photos`.
+- **Repair migration:** `20261005200000_reassert_horizonte_hero_photo.sql`.
+  Supabase keys history on the timestamp alone, so editing
+  `20261005190000_school_photo_links.sql` in place does NOT re-run on a database
+  that already recorded that version — production would keep the clobbered
+  photos. This migration restores `school/hero.jpg`, but **only** when `photos`
+  is exactly the three accommodation shots the old write produced, so a
+  legitimate later edit via the admin dialog is never overwritten. Verified
+  against Postgres: clobbered → repaired, fresh → no-op, admin edit → preserved,
+  missing school → warning only.
 
 ## CaseOverviewPanel "Referred By" — show whoever directly sent the student (2026-08-16)
 
