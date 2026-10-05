@@ -83,7 +83,6 @@ interface PanelProps {
   deactivateTarget: DeactivateTarget | null;
   setDeactivateTarget: React.Dispatch<React.SetStateAction<DeactivateTarget | null>>;
   slots: PanelSlot;
-  bodyClassName: string;
 }
 
 function MemberDetailPanel({
@@ -103,13 +102,12 @@ function MemberDetailPanel({
   deactivateTarget,
   setDeactivateTarget,
   slots,
-  bodyClassName,
 }: PanelProps) {
   const { Header, Title, Description, Close } = slots;
 
   return (
     <>
-      <Header className="sticky top-0 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b bg-background">
+      <Header className="shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b bg-background">
         <div className="flex items-center gap-3 min-w-0">
           <Close className="shrink-0" asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -163,20 +161,20 @@ function MemberDetailPanel({
         </Badge>
       </Header>
 
-      {/* min-h-0 flex-1 lets the mobile Drawer (fixed height, flex column)
-          hand the remaining height to the active panel so its own
-          overflow-y-auto body stays the scroll region. Without this the extra
-          Tabs/TabsContent flex layer grows past the drawer and clips content. */}
-      <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className={bodyClassName}>
+      {/* Fixed header + fixed tab bar + a single scrollable content region.
+          The outer Drawer/Sheet owns the height; TabsContent does NOT take part
+          in flex distribution, so the one wrapper below is the only vertical
+          scroll owner in the panel. */}
+      <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col">
+        <div className="shrink-0 border-b px-4 py-3">
           <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="overview" className="gap-2">
+            <TabsTrigger value="overview" className="gap-2 shrink-0 whitespace-nowrap">
               <BarChart3 className="h-4 w-4 shrink-0" />
-              <span className="truncate">{t("admin.members.tabOverview", "Overview & Financials")}</span>
+              <span>{t("admin.members.tabOverview", "Overview & Financials")}</span>
             </TabsTrigger>
-            <TabsTrigger value="permissions" className="gap-2">
+            <TabsTrigger value="permissions" className="gap-2 shrink-0 whitespace-nowrap">
               <ShieldCheck className="h-4 w-4 shrink-0" />
-              <span className="truncate">{t("admin.members.tabPermissions", "Permissions & Access")}</span>
+              <span>{t("admin.members.tabPermissions", "Permissions & Access")}</span>
               {activePermissions > 0 && (
                 <Badge variant="secondary" className="h-5 min-w-5 justify-center px-1.5 text-[10px] tabular-nums">
                   {activePermissions}
@@ -186,162 +184,161 @@ function MemberDetailPanel({
           </TabsList>
         </div>
 
-        {/* Both panels stay mounted and are hidden with CSS (same pattern as
-            SubmissionCaseTabs): the permissions panel reports its active count
-            up through onActiveCountChange, so unmounting it while the Overview
-            tab is selected would leave the tab badge stale/absent until the
-            admin happens to open it. */}
-        <TabsContent
-          value="overview"
-          forceMount
-          className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden"
-        >
-          <div className={bodyClassName}>
-        {/* Primary KPIs */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-              {t("admin.members.sectionPerformance", "Performance")}
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 [&>*]:min-w-0 [&>*]:break-words">
-              {primaryStats.map((stat, i) => (
-                <div key={i} className="rounded-xl border border-border bg-card p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <stat.icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{t(stat.label)}</span>
-                  </div>
-                  <div className="text-lg font-bold tabular-nums">{stat.value}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-6">
+          {/* Both panels stay mounted and the inactive one is hidden with CSS:
+              AccountPermissionsTab reports its active count through
+              onActiveCountChange, so unmounting it while Overview is selected
+              would leave the tab badge stale/absent until the admin opens it
+              (guarded by MemberDetailDrawer.agentFlags.test.tsx). The hidden
+              panel is display:none, so it contributes no height. */}
+          <TabsContent
+            value="overview"
+            forceMount
+            className="mt-0 space-y-6 data-[state=inactive]:hidden"
+          >
+            {/* Primary KPIs */}
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                  {t("admin.members.sectionPerformance", "Performance")}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 [&>*]:min-w-0 [&>*]:break-words">
+                  {primaryStats.map((stat, i) => (
+                    <div key={i} className="rounded-xl border border-border bg-card p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <stat.icon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">{t(stat.label)}</span>
+                      </div>
+                      <div className="text-lg font-bold tabular-nums">{stat.value}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Commission Breakdown */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-              {t("admin.members.sectionCommission", "Commission")}
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 [&>*]:min-w-0 [&>*]:break-words">
-              {commissionStats.map((stat, i) => (
-                <div key={i} className="rounded-xl border border-border bg-card p-3">
-                  <div className="text-xs text-muted-foreground mb-1">{t(stat.label)}</div>
-                  <div className="text-lg font-bold tabular-nums">{stat.value}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Detailed breakdown from RPC */}
-            {loadingBreakdown ? (
-              <div className="mt-4 space-y-2">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
-                ))}
-              </div>
-            ) : breakdown ? (
-              <div className="mt-4 space-y-3">
-                <Separator />
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {t("admin.members.commissionByType", "By Reward Type")}
-                </h4>
-                <div className="space-y-2">
-                  {Object.entries(breakdown.totals?.by_type || {}).map(([type, amount]) => (
-                    <div key={type} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground capitalize">{type.replace(/_/g, " ")}</span>
-                      <span className="font-mono tabular-nums">{formatILS(amount)}</span>
+            {/* Commission Breakdown */}
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                  {t("admin.members.sectionCommission", "Commission")}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 [&>*]:min-w-0 [&>*]:break-words">
+                  {commissionStats.map((stat, i) => (
+                    <div key={i} className="rounded-xl border border-border bg-card p-3">
+                      <div className="text-xs text-muted-foreground mb-1">{t(stat.label)}</div>
+                      <div className="text-lg font-bold tabular-nums">{stat.value}</div>
                     </div>
                   ))}
                 </div>
 
-                {breakdown.rate_changes && breakdown.rate_changes.length > 0 && (
-                  <>
+                {/* Detailed breakdown from RPC */}
+                {loadingBreakdown ? (
+                  <div className="mt-4 space-y-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-10 w-full" />
+                    ))}
+                  </div>
+                ) : breakdown ? (
+                  <div className="mt-4 space-y-3">
                     <Separator />
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {t("admin.members.recentRateChanges", "Recent Rate Changes")}
+                      {t("admin.members.commissionByType", "By Reward Type")}
                     </h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {breakdown.rate_changes.slice(0, 8).map((change) => (
-                        <div
-                          key={change.changed_at}
-                          className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card text-xs flex-wrap"
-                        >
-                          <Badge variant="outline" className="font-mono text-[10px]">
-                            {change.entity_type}
-                          </Badge>
-                          <span className="text-muted-foreground">{change.rate_kind}</span>
-                          <span className="font-mono">
-                            {formatILS(change.old_value)} →{" "}
-                            <span className="text-primary font-semibold">{formatILS(change.new_value)}</span>
-                          </span>
-                          {change.reason && (
-                            <span className="text-[10px] text-muted-foreground italic">“{change.reason}”</span>
-                          )}
-                          <span className="ms-auto text-[10px] text-muted-foreground">
-                            {new Date(change.changed_at).toLocaleString()}
-                          </span>
+                    <div className="space-y-2">
+                      {Object.entries(breakdown.totals?.by_type || {}).map(([type, amount]) => (
+                        <div key={type} className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground capitalize">{type.replace(/_/g, " ")}</span>
+                          <span className="font-mono tabular-nums">{formatILS(amount)}</span>
                         </div>
                       ))}
                     </div>
-                  </>
+
+                    {breakdown.rate_changes && breakdown.rate_changes.length > 0 && (
+                      <>
+                        <Separator />
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {t("admin.members.recentRateChanges", "Recent Rate Changes")}
+                        </h4>
+                        <div className="space-y-2">
+                          {breakdown.rate_changes.slice(0, 8).map((change) => (
+                            <div
+                              key={change.changed_at}
+                              className="flex items-center gap-2 p-2 rounded-lg border border-border bg-card text-xs flex-wrap"
+                            >
+                              <Badge variant="outline" className="font-mono text-[10px]">
+                                {change.entity_type}
+                              </Badge>
+                              <span className="text-muted-foreground">{change.rate_kind}</span>
+                              <span className="font-mono">
+                                {formatILS(change.old_value)} →{" "}
+                                <span className="text-primary font-semibold">{formatILS(change.new_value)}</span>
+                              </span>
+                              {change.reason && (
+                                <span className="text-[10px] text-muted-foreground italic">“{change.reason}”</span>
+                              )}
+                              <span className="ms-auto text-[10px] text-muted-foreground">
+                                {new Date(change.changed_at).toLocaleString()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-4 text-center text-sm text-muted-foreground py-3">
+                    {t("admin.members.noCommissionData", "No commission data available")}
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className="mt-4 text-center text-sm text-muted-foreground py-3">
-                {t("admin.members.noCommissionData", "No commission data available")}
-              </div>
+              </CardContent>
+            </Card>
+
+            {/* Cash Collection Debts — team members only */}
+            {member.role === "team_member" && (
+              <CashDebtsCard teamMemberId={member.requester_id} t={t} onChanged={onChanged} />
             )}
-          </CardContent>
-        </Card>
 
-        {/* Cash Collection Debts — team members only */}
-        {member.role === "team_member" && (
-          <CashDebtsCard teamMemberId={member.requester_id} t={t} onChanged={onChanged} />
-        )}
-
-        {/* Meta info */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-              {t("admin.members.sectionInfo", "Account Info")}
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
-                <span className="text-muted-foreground">{t("admin.members.joined", "Joined")}</span>
-                <span className="font-mono">{new Date(member.created_at).toLocaleDateString()}</span>
-              </div>
-              {member.referral_code && (
-                <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
-                  <span className="text-muted-foreground">{t("admin.members.referralCode", "Referral Code")}</span>
-                  <span className="font-mono bg-muted px-2 py-0.5 rounded">{member.referral_code}</span>
+            {/* Meta info */}
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                  {t("admin.members.sectionInfo", "Account Info")}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
+                    <span className="text-muted-foreground">{t("admin.members.joined", "Joined")}</span>
+                    <span className="font-mono">{new Date(member.created_at).toLocaleDateString()}</span>
+                  </div>
+                  {member.referral_code && (
+                    <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
+                      <span className="text-muted-foreground">{t("admin.members.referralCode", "Referral Code")}</span>
+                      <span className="font-mono bg-muted px-2 py-0.5 rounded">{member.referral_code}</span>
+                    </div>
+                  )}
+                  {member.agent_id && (
+                    <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
+                      <span className="text-muted-foreground">{t("admin.members.agentId", "Agent ID")}</span>
+                      <span className="font-mono text-xs">{member.agent_id.slice(0, 8)}…</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {member.agent_id && (
-                <div className="flex items-center justify-between gap-3 [&>*:last-child]:min-w-0 [&>*:last-child]:truncate">
-                  <span className="text-muted-foreground">{t("admin.members.agentId", "Agent ID")}</span>
-                  <span className="font-mono text-xs">{member.agent_id.slice(0, 8)}…</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-          </div>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent
-          value="permissions"
-          forceMount
-          className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden"
-        >
-          <div className={bodyClassName}>
+          <TabsContent
+            value="permissions"
+            forceMount
+            className="mt-0 space-y-6 data-[state=inactive]:hidden"
+          >
             <AccountPermissionsTab
               member={member}
               onChanged={onChanged}
               onDeactivate={onDeactivate}
               onActiveCountChange={setActivePermissions}
             />
-          </div>
-        </TabsContent>
+          </TabsContent>
+        </div>
       </Tabs>
 
       <DeactivateAccountDialog
@@ -639,12 +636,13 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-        <DrawerContent className="w-full sm:max-w-2xl lg:max-w-3xl flex flex-col h-full max-h-screen">
+        {/* 100dvh (not 100vh) so the panel matches the visible mobile viewport
+            as Safari/browser chrome shows and hides. The drawer itself never
+            scrolls; the panel's inner content wrapper is the scroll owner. */}
+        <DrawerContent className="flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden p-0">
           <MemberDetailPanel
             {...panelProps}
             slots={{ Header: DrawerHeader, Title: DrawerTitle, Description: DrawerDescription, Close: DrawerClose }}
-            bodyClassName="p-4 space-y-6 flex-1 min-h-0 overflow-y-auto"
-
           />
         </DrawerContent>
       </Drawer>
@@ -655,12 +653,11 @@ export default function MemberDetailDrawer({ member, open, onOpenChange, onChang
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-2xl lg:max-w-3xl overflow-y-auto p-0"
+        className="flex h-full w-full flex-col overflow-hidden p-0 sm:max-w-2xl lg:max-w-3xl"
       >
         <MemberDetailPanel
           {...panelProps}
           slots={{ Header: SheetHeader, Title: SheetTitle, Description: SheetDescription, Close: SheetClose }}
-          bodyClassName="p-4 space-y-6"
         />
       </SheetContent>
     </Sheet>
