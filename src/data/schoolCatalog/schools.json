@@ -69,7 +69,11 @@
     "country": "Germany",
     "website": "https://www.horizonte.com/en-german-courses/regensburg",
     "is_active": true,
-    "photos": [],
+    "photos": [
+      "/lovable-uploads/schools/horizonte/accommodations/building.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/street.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/view-roofs.jpg"
+    ],
     "description_ar": "مدرسة لغة ألمانية في وسط ريجنسبورغ التاريخي منذ عام 1986، تقدم دورات مكثفة من المستوى A1 إلى C2، وسكنًا في المبنى نفسه، ومركز امتحانات معتمدًا لـ telc وTestDaF.",
     "description_en": "German language school in Regensburg's historic centre since 1986, offering intensive courses from A1 to C2, on-site accommodation in the same building, and an official telc and TestDaF examination centre."
   }

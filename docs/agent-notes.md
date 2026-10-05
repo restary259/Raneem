@@ -1449,6 +1449,18 @@ role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
 - Admin edits it in `AdminProgramsPage`'s school dialog ("Photo link (optional)");
   `photo_link` was added to the `School` type and the generated Supabase types.
 - Migration: `20261005190000_school_photo_links.sql` (MANUAL DEPLOY, additive/idempotent).
+- **HORIZONTE photos were missing everywhere.** The catalog JSON
+  (`src/data/schoolCatalog/schools.json`, `accommodations.json`) already listed
+  HORIZONTE's school and eight housing photos, but the committed seed
+  (`20260820000000_school_catalog_seed.sql`) predated them, so the school row and
+  all eight housing rows landed with `photos = '{}'` and rendered the grey
+  placeholder while the other three schools had photos. Fixed at the source:
+  `schools.json` now carries the three school photos, the seed was regenerated
+  with `node gen-seed.mjs` (diff is HORIZONTE-only, output reproducible), and the
+  migration backfills any row that is still empty (guarded, so a re-provision
+  never clobbers later edits). `src/lib/schoolCatalogPhotos.test.ts` now pins
+  "every school and accommodation has ≥1 photo and every file exists under
+  `public/`" — programs/insurances may legitimately have none.
 
 ## CaseOverviewPanel "Referred By" — show whoever directly sent the student (2026-08-16)
 
