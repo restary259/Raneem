@@ -187,11 +187,16 @@ export default function CaseMessagesInboxPage() {
       .map((thread) => ({
         id: thread.threadId,
         type: "direct",
-        category: isTeamRole(thread.otherUserRole) ? ("teams" as const) : ("direct" as const),
-        title: thread.otherUserName,
-        subtitle: thread.otherUserRole
-          ? t(`case.messages.role.${thread.otherUserRole}`, thread.otherUserRole)
-          : null,
+        category: isTeamRole(thread.otherUserRole)
+          ? ("teams" as const)
+          : thread.otherUserRole === "admin"
+            ? ("direct" as const)
+            : ("cases" as const),
+        title: thread.otherUserRole === "admin" ? t("chat.adminLabel") : thread.otherUserName,
+        subtitle:
+          thread.otherUserRole && thread.otherUserRole !== "admin"
+            ? t(`case.messages.role.${thread.otherUserRole}`, thread.otherUserRole)
+            : null,
         preview: thread.lastMessage
           ? previewFor(thread.lastMessage, t("messagesInbox.noMessagesYet"))
           : t("messagesInbox.noMessagesYet"),
@@ -223,9 +228,14 @@ export default function CaseMessagesInboxPage() {
   const teamUnread = canStartTeamChat
     ? teamThreads.reduce((sum, t) => sum + t.unread, 0)
     : 0;
-  const nonTeamDirectThreads = directThreads.filter((t) => t.otherUserRole !== "team_member");
-  const directUnread = nonTeamDirectThreads.reduce((sum, t) => sum + t.unread, 0);
-  const caseUnread = threads.reduce((sum, thread) => sum + thread.unread, 0);
+  const directUnread = directThreads
+    .filter((t) => t.otherUserRole === "admin")
+    .reduce((sum, t) => sum + t.unread, 0);
+  const caseUnread =
+    threads.reduce((sum, thread) => sum + thread.unread, 0) +
+    directThreads
+      .filter((t) => t.otherUserRole !== "admin" && t.otherUserRole !== "team_member")
+      .reduce((sum, t) => sum + t.unread, 0);
   const totalUnread = directUnread + teamUnread + caseUnread;
 
   const activeCase =
