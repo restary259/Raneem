@@ -1434,9 +1434,7 @@ role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
 - `schools.photo_link` (nullable TEXT) is an optional outbound URL attached to a
   school's catalog photo. When set, the photo becomes an external link
   (`target="_blank"`, `rel="noopener noreferrer"`) instead of a dead image.
-  First use: HORIZONTE Regensburg points at its Google Maps 360° walkthrough;
-  the migration also fills HORIZONTE's previously-empty `photos` with the three
-  images already shipped in `public/lovable-uploads/schools/horizonte/accommodations/`.
+  First use: HORIZONTE Regensburg points at its Google Maps 360° walkthrough.
 - **Only http(s) is honored.** `schoolPhotoLink()` (`src/lib/catalogDisplay.ts`)
   returns the trimmed URL only when `new URL()` parses it and the protocol is
   http/https — a `javascript:`/`data:` value stored by mistake can never become
@@ -1449,6 +1447,13 @@ role="team_member"`. Sidebar entry `nav.catalog` (Hotel icon, `nav.group.work`);
 - Admin edits it in `AdminProgramsPage`'s school dialog ("Photo link (optional)");
   `photo_link` was added to the `School` type and the generated Supabase types.
 - Migration: `20261005190000_school_photo_links.sql` (MANUAL DEPLOY, additive/idempotent).
+- **This migration owns `photo_link` only — it must never write `photos`.**
+  It shipped once with an unconditional `SET photos = ARRAY[...]`, and because
+  the HORIZONTE housing-photos migration (`..._horizonte_school_and_housing_photos.sql`)
+  shares the timestamp `20261005190000`, Supabase's alphabetical order put this
+  file *after* it and silently replaced the school's dedicated `school/hero.jpg`
+  with accommodation shots. Keep photo ownership in the seed / housing migration;
+  `schoolCatalogPhotos.test.ts` asserts this file never assigns `photos`.
 
 ## CaseOverviewPanel "Referred By" — show whoever directly sent the student (2026-08-16)
 
