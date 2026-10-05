@@ -23,7 +23,7 @@ serve(async (req) => {
     const auth = await requireAuth(req, ["admin", "team_member"]);
     if (!auth.ok) return json({ error: auth.error }, auth.status);
     if (!auth.userId) return json({ error: "A staff account is required" }, 403);
-    if (rateLimited(auth.userId)) return json({ error: "Too many AI draft requests. Try again later." }, 429);
+    if (await isRateLimited(`whatsapp-ai-assist:${auth.userId}`, 60, 3600)) return json({ error: "Too many AI draft requests. Try again later." }, 429);
     const input = await req.json();
     const mode = ["welcome", "qualification", "summary"].includes(input?.mode) ? input.mode : "qualification";
     const language = input?.language === "he" ? "he" : input?.language === "en" ? "en" : "ar";

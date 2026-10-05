@@ -23,7 +23,7 @@ import {
   LayoutDashboard,
   Link2,
   MapPinned,
-  Megaphone,
+
   MessageSquare,
   Receipt,
   School,

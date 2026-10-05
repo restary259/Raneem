@@ -263,7 +263,7 @@ serve(async (req) => {
       return json({ error: "Sign in to use the AI advisor." }, 401);
     }
 
-    if (checkRateLimit(userId, AUTH_LIMIT)) {
+    if (await isRateLimited(`ai-chat:${userId}`, AUTH_LIMIT, 3600)) {
       return json({ error: "Rate limit exceeded. Please try again later." }, 429);
     }
 

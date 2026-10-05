@@ -21,7 +21,7 @@ serve(async (req) => {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 
     // Rate limit
-    if (isRateLimited(ip)) {
+    if (await isRateLimited(`send-email:${ip}`, 3, 3600)) {
       return new Response(JSON.stringify({ error: "تم تجاوز الحد المسموح. يرجى المحاولة بعد ساعة.", success: false }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 429,
