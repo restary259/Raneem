@@ -4759,7 +4759,7 @@
     "filter": {
       "all": "الكل",
       "direct": "مباشر",
-      "teams": "الفريق",
+      "teams": "أعضاء الفريق",
       "unread": "غير مقروء"
     },
     "attach": {
@@ -4934,9 +4934,9 @@
       "accountHolder": "صاحب الحساب"
     },
     "section": {
-      "direct": "مباشر",
+      "direct": "الإدارة",
       "teams": "الفريق",
-      "cases": "الملفات",
+      "cases": "الطلاب",
       "partners": "الشركاء",
       "whatsapp": "واتساب"
     },

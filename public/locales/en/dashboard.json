@@ -4741,7 +4741,7 @@
     "filter": {
       "all": "All",
       "direct": "Direct",
-      "teams": "Teams",
+      "teams": "Team members",
       "unread": "Unread"
     },
     "attach": {
@@ -4916,9 +4916,9 @@
       "accountHolder": "Account holder"
     },
     "section": {
-      "direct": "Direct",
+      "direct": "Administration",
       "teams": "Teams",
-      "cases": "Cases",
+      "cases": "Students",
       "partners": "Partners",
       "whatsapp": "WhatsApp"
     },
