@@ -7,9 +7,9 @@ export const Route = createFileRoute("/admin")({
   ssr: false,
   // Early sign-in check so admin page code isn't loaded for signed-out visitors.
   // Role/AAL2 checks stay in ProtectedRoute + AdminSecurityGate (and RLS).
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/auth", search: { redirect: location.href } as never });
+    if (!data.session) throw redirect({ to: "/student-auth", replace: true });
   },
   component: AdminLayout,
 });
