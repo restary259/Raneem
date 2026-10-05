@@ -207,8 +207,12 @@ const SheetTable: React.FC<SheetTableProps> = ({
           continued: t('sheets.pdfPart', 'part'),
         },
       });
-      const { empty, rtlFontMissing } = await deliverReport(format, report);
-      if (empty) {
+      const { rtlFontMissing } = await deliverReport(format, report);
+      // The workbook engine always writes a file (headers, branding and a "no
+      // records" placeholder), while the PDF engine writes nothing for an empty
+      // view. Either way the current view had no rows, so say which file the
+      // user actually got.
+      if (filteredRows.length === 0) {
         toast({
           description:
             format === 'xlsx'

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 
 const workbook = vi.fn().mockResolvedValue(undefined);
 const pdf = vi.fn().mockResolvedValue({ empty: false, rtlFontMissing: false });
+const { toast } = vi.hoisted(() => ({ toast: vi.fn() }));
 vi.mock('@/utils/export', async (orig) => ({
   ...(await orig<typeof import('@/utils/export')>()),
   exportCorporateWorkbook: (...a: unknown[]) => workbook(...a),
@@ -12,7 +13,7 @@ vi.mock('@/utils/export', async (orig) => ({
 vi.mock('@/utils/export/useExportContext', () => ({
   useExportContext: () => ({ author: 'Tester', locale: 'ar', rtl: true }),
 }));
-vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast }) }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k: string, d?: unknown) => (typeof d === 'string' ? d : k) }),
 }));
@@ -35,7 +36,7 @@ const openMenu = async () => {
 };
 const lastReport = (fn: ReturnType<typeof vi.fn>) => fn.mock.calls.at(-1)![0];
 
-beforeEach(() => { workbook.mockClear(); pdf.mockClear(); });
+beforeEach(() => { workbook.mockClear(); pdf.mockClear(); toast.mockClear(); });
 
 describe('SheetTable unified export menu', () => {
   it('renders a single Export control and no separate Excel/PDF buttons', () => {
@@ -70,6 +71,35 @@ describe('SheetTable unified export menu', () => {
     const dlg = await openMenu();
     expect(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)).not.toBeDisabled();
     expect(within(dlg).getByText(/empty template/i)).toBeInTheDocument();
+  });
+
+  it('toasts an empty-template message when an empty view is exported to Excel', async () => {
+    render(<SheetTable title="S" columns={columns} rows={[]} fileName="f" />);
+    const dlg = await openMenu();
+    await userEvent.click(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!);
+    await waitFor(() => expect(workbook).toHaveBeenCalled());
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({ description: expect.stringMatching(/empty template/i) }),
+    );
+  });
+
+  it('toasts a distinct message when an empty view is exported to PDF', async () => {
+    render(<SheetTable title="S" columns={columns} rows={[]} fileName="f" />);
+    const dlg = await openMenu();
+    await userEvent.click(within(dlg).getByRole('radio', { name: 'PDF (.pdf)' }));
+    await userEvent.click(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!);
+    await waitFor(() => expect(pdf).toHaveBeenCalled());
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({ description: expect.stringMatching(/no PDF was created/i) }),
+    );
+  });
+
+  it('does not toast an empty-export message when rows are present', async () => {
+    render(<SheetTable title="S" columns={columns} rows={rows} fileName="f" />);
+    const dlg = await openMenu();
+    await userEvent.click(within(dlg).getAllByRole('button', { name: 'Export' }).at(-1)!);
+    await waitFor(() => expect(workbook).toHaveBeenCalled());
+    expect(toast).not.toHaveBeenCalled();
   });
 
   it('exports only rows matching search (parent filters arrive pre-filtered)', async () => {
