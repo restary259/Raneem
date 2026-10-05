@@ -3832,6 +3832,18 @@ items below are the P1/P2 follow-ups.
   repairs creation-time alignment but rejects any later office change for
   `public_booking` rows. Backfills pre-existing divergences first. The RPC is
   no longer the only line of defence.
+- **P1 — Direct public booking rejected every phone number.**
+  `create_public_booking_session` (the RPC behind `/book-appointment`) checked
+  the phone with `'^\\+?[0-9]{8,15}$'`. Under `standard_conforming_strings=on`
+  that literal is a backslash before `+?`, so the regex demanded a literal
+  backslash and every real number (`+972…`, `972…`, `05…`) raised
+  `Invalid phone` — the entry point could never mint a token. The `/apply` flow
+  was unaffected (it mints through `create_public_appointment_access`, which has
+  no phone check). Fixed in
+  `supabase/migrations/20261005195000_fix_public_booking_session_phone_regex.sql`;
+  guarded by `src/lib/publicBookingSessionGuards.test.ts`. Same over-escaping
+  class as the referral migration guard — always write regex literals with a
+  single backslash in SQL.
 - **P1 — Google global kill switch singleton + fail-open.**
   `google_business_settings` guarded the global row with plain
   `UNIQUE (google_connection_id)`, which treats NULLs as distinct and therefore
