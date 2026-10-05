@@ -1045,7 +1045,14 @@
       { "from_weeks": 4, "to_weeks": 4, "price": 188 },
       { "from_weeks": 5, "to_weeks": null, "price": 150 }
     ],
-    "photos": [],
+    "photos": [
+      "/lovable-uploads/schools/horizonte/accommodations/room-single-1.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/room-single-2.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/room-single-3.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/room-single-4.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/room-single-5.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/view-roofs.jpg"
+    ],
     "is_active": true
   },
   {
@@ -1069,7 +1076,13 @@
       { "from_weeks": 4, "to_weeks": 4, "price": 125 },
       { "from_weeks": 5, "to_weeks": null, "price": 100 }
     ],
-    "photos": [],
+    "photos": [
+      "/lovable-uploads/schools/horizonte/accommodations/room-twin-1.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/room-twin-2.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/room-twin-3.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/kitchen-4th.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/balcony.jpg"
+    ],
     "is_active": true
   },
   {
@@ -1093,7 +1106,11 @@
       { "from_weeks": 4, "to_weeks": 4, "price": 175 },
       { "from_weeks": 5, "to_weeks": null, "price": 140 }
     ],
-    "photos": [],
+    "photos": [
+      "/lovable-uploads/schools/horizonte/accommodations/shared-room.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/shared-kitchen.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/street.jpg"
+    ],
     "is_active": true
   },
   {
@@ -1117,7 +1134,11 @@
       { "from_weeks": 4, "to_weeks": 4, "price": 113 },
       { "from_weeks": 5, "to_weeks": null, "price": 90 }
     ],
-    "photos": [],
+    "photos": [
+      "/lovable-uploads/schools/horizonte/accommodations/shared-room.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/shared-kitchen.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/street.jpg"
+    ],
     "is_active": true
   },
   {
@@ -1141,7 +1162,10 @@
       { "from_weeks": 4, "to_weeks": 4, "price": 250 },
       { "from_weeks": 5, "to_weeks": null, "price": 200 }
     ],
-    "photos": [],
+    "photos": [
+      "/lovable-uploads/schools/horizonte/accommodations/studio-1.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/studio-2.jpg"
+    ],
     "is_active": true
   },
   {
@@ -1165,7 +1189,10 @@
       { "from_weeks": 4, "to_weeks": 4, "price": 169 },
       { "from_weeks": 5, "to_weeks": null, "price": 135 }
     ],
-    "photos": [],
+    "photos": [
+      "/lovable-uploads/schools/horizonte/accommodations/studio-2.jpg",
+      "/lovable-uploads/schools/horizonte/accommodations/studio-1.jpg"
+    ],
     "is_active": true
   },
   {
