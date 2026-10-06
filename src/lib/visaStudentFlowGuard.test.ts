@@ -61,3 +61,18 @@ describe("student visa workflow wiring", () => {
     expect(caseStatus).not.toMatch(/"visa"/);
   });
 });
+
+describe("visa information is keyed by student, not case", () => {
+  const read = (...p: string[]) => fs.readFileSync(path.resolve(SRC_ROOT, ...p), "utf8");
+  it("team/admin review panels receive the student id, never a case id", () => {
+    expect(read("components", "students", "StudentOverview.tsx")).toContain("<VisaInfoReviewPanel studentId=");
+    expect(read("components", "admin", "visa", "VisaDetailSheet.tsx")).toContain("<VisaInfoReviewPanel studentId={row?.student_user_id ?? null} />");
+  });
+  it("service uses the student-keyed table and RPCs", () => {
+    const svc = read("services", "VisaInfoService.ts");
+    expect(svc).toContain('from("student_visa_info")');
+    expect(svc).toContain('"save_my_student_visa_info"');
+    expect(svc).toContain('"review_student_visa_info"');
+    expect(svc).not.toContain("p_case_id");
+  });
+});
