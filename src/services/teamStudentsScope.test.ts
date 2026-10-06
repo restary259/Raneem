@@ -66,6 +66,28 @@ describe("listScopedStudents", () => {
     const c = mockClient({ user_roles: [{ user_id: "s1" }] }, "cases#1");
     await expect(listScopedStudents({ userId: "me", isAdmin: false }, c)).rejects.toThrow("boom");
   });
+
+  // Regression: Tsukuyomi (created by Kheir) vanished after an admin unassigned his case.
+  it("team member: a student I created still renders when no case is assigned to me", async () => {
+    const c = mockClient({ "profiles#1": [p("s1")], cases: [], user_roles: [{ user_id: "s1" }] });
+    const out = await listScopedStudents({ userId: "me", isAdmin: false }, c);
+    expect(out.map((s) => s.id)).toEqual(["s1"]);
+    // role check is scoped to my candidates, never an unscoped student list
+    const roles = c.calls.find((x) => x.table === "user_roles")!;
+    expect(roles.ops).toContainEqual(["in", "user_id", ["s1"]]);
+  });
+
+  it("team member: skips the role read entirely when I have no candidates", async () => {
+    const c = mockClient({ "profiles#1": [], cases: [] });
+    const out = await listScopedStudents({ userId: "me", isAdmin: false }, c);
+    expect(out).toEqual([]);
+    expect(c.calls.some((x) => x.table === "user_roles")).toBe(false);
+  });
+
+  it("team member: throws when the role read fails", async () => {
+    const c = mockClient({ "profiles#1": [p("s1")], cases: [] }, "user_roles#1");
+    await expect(listScopedStudents({ userId: "me", isAdmin: false }, c)).rejects.toThrow("boom");
+  });
 });
 
 describe("resolveCreatedBy", () => {

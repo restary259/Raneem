@@ -25,24 +25,27 @@ export async function listScopedStudents(
   { userId, isAdmin }: { userId: string; isAdmin: boolean },
   client: any = supabase,
 ): Promise<ScopedStudent[]> {
-  const { data: roleRows, error: roleErr } = await client
-    .from("user_roles")
-    .select("user_id")
-    .eq("role", "student");
-  if (roleErr) throw roleErr;
-  const studentIds = new Set<string>((roleRows ?? []).map((r: any) => r.user_id));
-  if (studentIds.size === 0) return [];
-
   if (isAdmin) {
+    const { data: roleRows, error: roleErr } = await client
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "student");
+    if (roleErr) throw roleErr;
+    const studentIds = [...new Set<string>((roleRows ?? []).map((r: any) => r.user_id))];
+    if (studentIds.length === 0) return [];
     const { data, error } = await client
       .from("profiles")
       .select(COLS)
-      .in("id", [...studentIds])
+      .in("id", studentIds)
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data ?? [];
   }
 
+  // Team member: collect candidates FIRST (created by me + assigned to me),
+  // then confirm the student role only for those ids. Never start from an
+  // unscoped user_roles read — an empty RLS result there used to hide every
+  // student the member created (e.g. after their case was unassigned).
   const { data: created, error: createdErr } = await client
     .from("profiles")
     .select(COLS)
@@ -68,7 +71,18 @@ export async function listScopedStudents(
     assigned = data ?? [];
   }
 
-  return [...(created ?? []), ...assigned]
+  const candidates = [...(created ?? []), ...assigned];
+  if (candidates.length === 0) return [];
+
+  const { data: roleRows, error: roleErr } = await client
+    .from("user_roles")
+    .select("user_id")
+    .eq("role", "student")
+    .in("user_id", candidates.map((p) => p.id));
+  if (roleErr) throw roleErr;
+  const studentIds = new Set<string>((roleRows ?? []).map((r: any) => r.user_id));
+
+  return candidates
     .filter((p) => studentIds.has(p.id))
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 }
