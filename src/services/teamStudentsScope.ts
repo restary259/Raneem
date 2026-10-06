@@ -9,6 +9,11 @@
  * Filters are explicit here, never left to RLS alone, so a future widening of
  * a profiles policy cannot leak other members' students into this list.
  * Read failures throw — never laundered into an empty list.
+ *
+ * DB parity rule: team visibility of a student must be granted by
+ * `cases.assigned_to = me` OR `profiles.created_by = me` on every related
+ * table (profiles, user_roles via team_can_view_student_role, documents).
+ * Unassigning a case must never hide a student from the member who created them.
  */
 import { supabase } from "@/integrations/supabase/client";
 
