@@ -142,3 +142,29 @@ describe("ApplyForm post-submission flow", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("ApplyForm embedded (in-dashboard) post-submission", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => successResponse()),
+    );
+  });
+
+  // Regression: the appointment CTA is public-only. The embedded partner/agent
+  // forms must not offer it even if the edge function returns a booking token.
+  it("never shows the public appointment CTA, and still shows the received screen", async () => {
+    const user = userEvent.setup();
+    render(<ApplyForm embedded useSessionAuth />);
+    await fillToSubmit(user);
+    await user.click(screen.getByTestId("apply-submit"));
+
+    expect(
+      await screen.findByText("apply.receivedTitle", {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "apply.appointmentCta" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("public-booking")).not.toBeInTheDocument();
+  });
+});

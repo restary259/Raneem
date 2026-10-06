@@ -271,8 +271,9 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
   const stepTitles = [t("apply.personalStep"), t("apply.educationStep"), t("apply.reviewStep"), t("apply.companionStep")];
 
   // ── Optional next step: the student chose to reserve an early office
-  //    appointment. Booking is never forced; the application is already filed. ─
-  if (phase === "booking" && bookingToken) {
+  //    appointment. Booking is never forced; the application is already filed.
+  //    Public flow only — the in-dashboard partner/agent forms never offer it. ─
+  if (phase === "booking" && bookingToken && !useSessionAuth) {
     return (
       <div dir={dir} className="mx-auto w-full max-w-4xl px-5 py-10 sm:py-14">
         <PublicOfficeBooking
@@ -321,7 +322,7 @@ const ApplyForm: React.FC<ApplyFormProps> = ({ embedded = false, useSessionAuth 
                 {t("apply.browsePrograms")}<ArrowUpRight className="size-4 rtl:-scale-x-100" aria-hidden="true" />
               </a>
             </div>
-            {bookingToken && (
+            {bookingToken && !useSessionAuth && (
               <div className="space-y-3 border-t border-border pt-6">
                 <div className="space-y-1">
                   <h3 className="font-semibold text-foreground">{t("apply.appointmentTitle")}</h3>
