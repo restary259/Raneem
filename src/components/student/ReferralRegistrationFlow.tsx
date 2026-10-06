@@ -404,9 +404,6 @@ export default function ReferralRegistrationFlow({ userId }: ReferralRegistratio
           <a href={invoiceUrl} target="_self" className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
             <ReceiptText className="size-4" />{t("referralRegistration.payment.viewInvoice")}
           </a>
-          <a href="/student/refer" className="inline-flex h-10 items-center justify-center gap-2 rounded-md border px-5 text-sm font-medium hover:bg-muted">
-            <ArrowLeft className="size-4 rtl:rotate-180" />{t("referralRegistration.success.newReferral")}
-          </a>
         </div>
       </div>
     );

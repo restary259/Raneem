@@ -120,7 +120,6 @@ const STUDENT_DESKTOP_NAV: DashboardNavItem[] = [
       { key: "nav.cvBuilder", icon: FileText, href: "/student/tools/cv" },
     ],
   },
-  { key: "nav.refer", icon: Heart, href: "/student/refer" },
 ];
 
 const STUDENT_QUICK_ACTIONS: DashboardQuickAction[] = [
@@ -129,7 +128,6 @@ const STUDENT_QUICK_ACTIONS: DashboardQuickAction[] = [
   { key: "nav.messages", icon: MessageSquare, href: "/student/messages" },
   { key: "nav.cityGuide", icon: MapPinned, href: "/student/city-guide" },
   { key: "nav.fees", icon: Receipt, href: "/student/fees" },
-  { key: "nav.refer", icon: Heart, href: "/student/refer" },
 ];
 
 // The team member's Google Business surface is hidden until they are assigned

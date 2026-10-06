@@ -79,7 +79,6 @@ export default function StudentOverviewSection() {
     { icon: CreditCard, label: t("nav.fees", "Fees"), href: "/student/fees" },
     { icon: Globe, label: t("nav.visa", "Visa"), href: "/student/visa" },
     { icon: MessageSquare, label: t("nav.messages", "Messages"), href: "/student/messages" },
-    { icon: Heart, label: t("nav.refer", "Refer a friend"), href: "/student/refer" },
   ];
 
   const tools = [
