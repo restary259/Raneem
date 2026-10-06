@@ -172,57 +172,44 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     }
   });
 
-  it("opens on the conversation list, not a chat", async () => {
+  it("lists only the case thread — no direct Administration/team row", async () => {
     render(<StudentMessagesPage />);
 
-    await waitFor(() => expect(screen.getByText("Case")).toBeInTheDocument());
-    expect(screen.getByText("Payout")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("My DARB Case")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Administration")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Your direct line to DARB Administration"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/case-chat:/)).not.toBeInTheDocument();
   });
 
-  it("opens a conversation into the chat box and returns via the back arrow", async () => {
-    const user = userEvent.setup();
+  it("never opens a direct admin/team thread on load", async () => {
     render(<StudentMessagesPage />);
-
-    await waitFor(() => expect(screen.getByText("Case")).toBeInTheDocument());
-
-    await user.click(screen.getByText("Case"));
-    expect(await screen.findByText("case-chat:case-42")).toBeInTheDocument();
-
-    // Emergency numbers stay reachable inside the chat box, as dial links.
-    const emergency = screen
-      .getAllByRole("link")
-      .filter((a) => (a.getAttribute("href") ?? "").startsWith("tel:"));
-    expect(emergency.length).toBeGreaterThanOrEqual(3);
-
-    // The back arrow leaves the chat box and restores the list.
-    const back = screen.getByRole("button", { name: "Back to conversations" });
-    await user.click(back);
-
     await waitFor(() =>
-      expect(screen.queryByText(/case-chat:/)).not.toBeInTheDocument(),
+      expect(screen.getByText("My DARB Case")).toBeInTheDocument(),
     );
-    expect(screen.getByText("Payout")).toBeInTheDocument();
+    const called = mockRpc.mock.calls.map(([name]) => name);
+    expect(called).not.toContain("start_student_admin_thread");
+    expect(called).not.toContain("start_direct_thread");
   });
 
-  it("opens the payout conversation from the list", async () => {
-    const user = userEvent.setup();
-    render(<StudentMessagesPage />);
-
-    await waitFor(() => expect(screen.getByText("Payout")).toBeInTheDocument());
-
-    await user.click(screen.getByText("Payout"));
-    expect(await screen.findByText("direct-chat:payout-9")).toBeInTheDocument();
-  });
-
-  it("keeps the back arrow working in RTL (Arabic)", async () => {
+  it("opens the case chat and returns via the back arrow (RTL too)", async () => {
     document.documentElement.dir = "rtl";
     const user = userEvent.setup();
     render(<StudentMessagesPage />);
 
-    await waitFor(() => expect(screen.getByText("Case")).toBeInTheDocument());
-    await user.click(screen.getByText("Case"));
+    await waitFor(() =>
+      expect(screen.getByText("My DARB Case")).toBeInTheDocument(),
+    );
+    await user.click(screen.getByText("My DARB Case"));
     expect(await screen.findByText("case-chat:case-42")).toBeInTheDocument();
+
+    const emergency = screen
+      .getAllByRole("link")
+      .filter((a) => (a.getAttribute("href") ?? "").startsWith("tel:"));
+    expect(emergency.length).toBeGreaterThanOrEqual(3);
 
     await user.click(
       screen.getByRole("button", { name: "Back to conversations" }),
@@ -230,182 +217,5 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     await waitFor(() =>
       expect(screen.queryByText(/case-chat:/)).not.toBeInTheDocument(),
     );
-    expect(screen.getByText("Payout")).toBeInTheDocument();
-  });
-
-  it("lists the EXISTING Administration conversation on a fresh visit", async () => {
-    render(<StudentMessagesPage />);
-
-    // The admin thread is discovered from the direct threads, so it must appear
-    // in the list without the student pressing anything first.
-    await waitFor(() =>
-      expect(
-        screen.getByText("Your direct line to DARB Administration"),
-      ).toBeInTheDocument(),
-    );
-    expect(
-      screen.queryByRole("button", { name: /Message my team member/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("renders the Administration row and emergency contacts in order", async () => {
-    render(<StudentMessagesPage />);
-
-    const admin = await waitFor(() =>
-      screen.getByText("Your direct line to DARB Administration").closest("li"),
-    );
-    const police = screen.getByText("Police");
-    const ambulance = screen.getByText("Ambulance");
-    const fire = screen.getByText("Fire Fighter");
-
-    expect(admin).toBeTruthy();
-    expect(
-      admin!.compareDocumentPosition(police) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(
-      police.compareDocumentPosition(ambulance) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(
-      ambulance.compareDocumentPosition(fire) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-
-    const emergencyLinks = screen
-      .getAllByRole("link")
-      .filter((a) => (a.getAttribute("href") ?? "").startsWith("tel:"));
-
-    expect(emergencyLinks.map((a) => a.getAttribute("href"))).toEqual([
-      "tel:110",
-      "tel:112",
-      "tel:112",
-    ]);
-  });
-
-  it("starts the admin thread when the row has no thread yet", async () => {
-    const user = userEvent.setup();
-
-    adminThreadId = null;
-    TABLE_ROWS.direct_thread_participants = [];
-    TABLE_ROWS.direct_messages = [];
-    TABLE_ROWS.direct_threads = [];
-
-    render(<StudentMessagesPage />);
-
-    await waitFor(() =>
-      expect(screen.getByText("Administration")).toBeInTheDocument(),
-    );
-
-    await user.click(screen.getByText("Tap to start your conversation"));
-    // The page calls `.rpc(name)` with one argument, but this suite's
-    // integration mock forwards a second `args` parameter, so the recorded
-    // call is ("start_student_admin_thread", undefined). Vitest compares
-    // arity strictly, so assert on the first argument rather than the call tuple.
-    await waitFor(() =>
-      expect(
-        mockRpc.mock.calls.some(
-          ([name]) => name === "start_student_admin_thread",
-        ),
-      ).toBe(true),
-    );
-  });
-
-  it("calls the admin-thread RPC only once when the row is tapped repeatedly", async () => {
-    adminThreadId = null;
-    TABLE_ROWS.direct_thread_participants = [];
-    TABLE_ROWS.direct_messages = [];
-    TABLE_ROWS.direct_threads = [];
-
-    render(<StudentMessagesPage />);
-
-    await waitFor(() =>
-      expect(screen.getByText("Administration")).toBeInTheDocument(),
-    );
-
-    // Drop the mount-time resolve so only tap-driven calls are counted below.
-    mockRpc.mockClear();
-
-    // Hold the RPC open so the row stays in its pending state between taps —
-    // this is the window in which a second tap used to fire a second call.
-    // `any` keeps the deferred promise assignable to the mock's union return.
-    let release: (value: unknown) => void = () => {};
-    mockRpc.mockImplementationOnce(
-      () =>
-        new Promise<any>((resolve) => {
-          release = resolve;
-        }),
-    );
-
-    const row = screen.getByText("Tap to start your conversation");
-    fireEvent.click(row);
-    fireEvent.click(row);
-    fireEvent.click(row);
-
-    release({ data: "team-77", error: null });
-
-    await waitFor(() =>
-      expect(
-        mockRpc.mock.calls.filter(
-          ([name]) => name === "start_student_admin_thread",
-        ).length,
-      ).toBe(1),
-    );
-  });
-
-  it("shows real activity and unread counts instead of blank rows", async () => {
-    render(<StudentMessagesPage />);
-
-    // Last message preview comes from the thread's message data. Scoped to the
-    // Administration row: the payout row legitimately has no messages yet.
-    await waitFor(() =>
-      expect(
-        screen.getByText("Administration").closest("li"),
-      ).toHaveTextContent("Your appointment is confirmed"),
-    );
-    // The staff-authored, unread message marks the conversation title bold.
-    expect(screen.getByText("Administration")).toHaveClass("font-bold");
-  });
-
-  it("labels an attachment-only message instead of reporting no messages", async () => {
-    // The last message carries no body — only a document attachment.
-    TEAM_LAST_MESSAGE.body = "";
-    (TEAM_LAST_MESSAGE as { attachments: unknown }).attachments = [
-      {
-        kind: "document",
-        mime: "application/pdf",
-        name: "passport.pdf",
-        url: "u",
-      },
-    ];
-    render(<StudentMessagesPage />);
-
-    await waitFor(() =>
-      expect(
-        screen.getByText("Administration").closest("li"),
-      ).toHaveTextContent("Attachment"),
-    );
-
-    TEAM_LAST_MESSAGE.body = "Your appointment is confirmed";
-    (TEAM_LAST_MESSAGE as { attachments: unknown }).attachments = null;
-  });
-
-  it("shows the Administration label in the OPEN chat header, never a named account", async () => {
-    const user = userEvent.setup();
-    render(<StudentMessagesPage />);
-
-    await waitFor(() =>
-      expect(
-        screen.getByText("Your direct line to DARB Administration"),
-      ).toBeInTheDocument(),
-    );
-    await user.click(
-      screen.getByText("Your direct line to DARB Administration"),
-    );
-
-    expect(await screen.findByText("direct-chat:team-77")).toBeInTheDocument();
-    // The header carries the same generic label as the list row — the student
-    // never sees a named internal account.
-    expect(screen.getAllByText("Administration").length).toBeGreaterThan(0);
-    expect(screen.queryByText("Team Member")).not.toBeInTheDocument();
   });
 });

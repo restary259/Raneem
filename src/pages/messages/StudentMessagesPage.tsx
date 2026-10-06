@@ -316,7 +316,7 @@ export default function StudentMessagesPage() {
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <ThreadList
-                    items={secondaryConversations}
+                    items={secondaryConversations.filter((c) => c.type === "case")}
                     selectedId={null}
                     onSelect={openFromItem}
                     emptyLabel={t("messagesInbox.empty")}
