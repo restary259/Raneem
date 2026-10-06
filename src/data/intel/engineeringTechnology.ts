@@ -67,7 +67,7 @@ const SOURCES: IntelSource[] = [
   },
   {
     id: 'stuttgart-mechanical',
-    url: 'https://www.uni-stuttgart.de/studium/bachelor/maschinenbau-b.sc./bewerbung/',
+    url: 'https://www.student.uni-stuttgart.de/en/study-programs/Mechanical-Engineering-B.Sc./',
     title: 'Universität Stuttgart — Maschinenbau B.Sc. Bewerbung',
     titleAR: 'جامعة شتوتغارت — بكالوريوس الهندسة الميكانيكية: التقديم',
     authority: 'university',
@@ -75,7 +75,7 @@ const SOURCES: IntelSource[] = [
   },
   {
     id: 'stuttgart-electrical',
-    url: 'https://www.uni-stuttgart.de/studium/bachelor/elektrotechnik-und-informationstechnik-b.sc./bewerbung/',
+    url: 'https://www.student.uni-stuttgart.de/en/study-programs/Electrical-Engineering-and-Information-Technology-B.Sc./',
     title: 'Universität Stuttgart — Elektrotechnik und Informationstechnik B.Sc. Bewerbung',
     titleAR: 'جامعة شتوتغارت — بكالوريوس الهندسة الكهربائية وتقنية المعلومات: التقديم',
     authority: 'university',
@@ -83,7 +83,7 @@ const SOURCES: IntelSource[] = [
   },
   {
     id: 'stuttgart-civil',
-    url: 'https://www.uni-stuttgart.de/studium/bachelor/bauingenieurwesen-b.sc./bewerbung/',
+    url: 'https://www.student.uni-stuttgart.de/en/study-programs/Civil-Engineering-B.Sc./',
     title: 'Universität Stuttgart — Bauingenieurwesen B.Sc. Bewerbung',
     titleAR: 'جامعة شتوتغارت — بكالوريوس الهندسة المدنية: التقديم',
     authority: 'university',
@@ -91,7 +91,7 @@ const SOURCES: IntelSource[] = [
   },
   {
     id: 'stuttgart-environmental',
-    url: 'https://www.uni-stuttgart.de/studium/bachelor/umweltschutztechnik-b.sc./bewerbung/',
+    url: 'https://www.student.uni-stuttgart.de/en/study-programs/Environmental-Engineering-B.Sc./',
     title: 'Universität Stuttgart — Umweltschutztechnik B.Sc. Bewerbung',
     titleAR: 'جامعة شتوتغارت — بكالوريوس هندسة حماية البيئة: التقديم',
     authority: 'university',
@@ -99,7 +99,7 @@ const SOURCES: IntelSource[] = [
   },
   {
     id: 'stuttgart-materials',
-    url: 'https://www.uni-stuttgart.de/studium/bachelor/materialwissenschaft-b.sc./bewerbung/',
+    url: 'https://www.student.uni-stuttgart.de/en/study-programs/Materials-Science-B.Sc./',
     title: 'Universität Stuttgart — Materialwissenschaft B.Sc. Bewerbung',
     titleAR: 'جامعة شتوتغارت — بكالوريوس علم وهندسة المواد: التقديم',
     authority: 'university',
@@ -285,7 +285,7 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
           noteAR: 'صفحة البرنامج تذكر الفترة من 15 أيار إلى 15 أيلول للتقديم للفصل الشتوي.',
         },
       ),
-      programUrl: 'https://www.uni-stuttgart.de/studium/bachelor/maschinenbau-b.sc./bewerbung/',
+      programUrl: 'https://www.student.uni-stuttgart.de/en/study-programs/Mechanical-Engineering-B.Sc./',
       lastVerified: CHECKED,
     }),
     makeProgram({
@@ -334,7 +334,7 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         },
       ),
       programUrl:
-        'https://www.uni-stuttgart.de/studium/bachelor/elektrotechnik-und-informationstechnik-b.sc./bewerbung/',
+        'https://www.student.uni-stuttgart.de/en/study-programs/Electrical-Engineering-and-Information-Technology-B.Sc./',
       lastVerified: CHECKED,
     }),
     makeProgram({
@@ -384,7 +384,7 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
           noteAR: 'صفحة البرنامج تذكر الفترة من 15 أيار إلى 15 أيلول للتقديم للفصل الشتوي.',
         },
       ),
-      programUrl: 'https://www.uni-stuttgart.de/studium/bachelor/bauingenieurwesen-b.sc./bewerbung/',
+      programUrl: 'https://www.student.uni-stuttgart.de/en/study-programs/Civil-Engineering-B.Sc./',
       lastVerified: CHECKED,
     }),
     makeProgram({
@@ -433,7 +433,7 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         },
       ),
       programUrl:
-        'https://www.uni-stuttgart.de/studium/bachelor/umweltschutztechnik-b.sc./bewerbung/',
+        'https://www.student.uni-stuttgart.de/en/study-programs/Environmental-Engineering-B.Sc./',
       lastVerified: CHECKED,
     }),
     makeProgram({
@@ -482,7 +482,7 @@ export const ENGINEERING_TECHNOLOGY_INTEL: MajorIntel = {
         },
       ),
       programUrl:
-        'https://www.uni-stuttgart.de/studium/bachelor/materialwissenschaft-b.sc./bewerbung/',
+        'https://www.student.uni-stuttgart.de/en/study-programs/Materials-Science-B.Sc./',
       lastVerified: CHECKED,
     }),
   ],
