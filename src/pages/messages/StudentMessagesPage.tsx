@@ -119,14 +119,8 @@ export default function StudentMessagesPage() {
       // Resolve direct threads (activity, unread counts, existing team thread)
       // before revealing the list, so a returning student never sees an empty
       // inbox with no unread indicator.
-      // The student's direct line is Administration (team contact goes
-      // through the case thread only). The RPC is idempotent.
-      const { data: adminThread, error: adminErr } = await (supabase as any).rpc(
-        "start_student_admin_thread",
-      );
-      if (adminErr) toast({ variant: "destructive", description: adminErr.message });
-      else if (adminThread) setTeamThreadId(adminThread as string);
-
+      // Students reach their team ONLY through the case thread — no direct
+      // admin/team thread is opened from the student side.
       await loadDirectThreads();
 
       setLoading(false);
@@ -322,7 +316,7 @@ export default function StudentMessagesPage() {
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <ThreadList
-                    items={[...secondaryConversations.filter((c) => c.type === "case"), teamThread]}
+                    items={secondaryConversations}
                     selectedId={null}
                     onSelect={openFromItem}
                     emptyLabel={t("messagesInbox.empty")}

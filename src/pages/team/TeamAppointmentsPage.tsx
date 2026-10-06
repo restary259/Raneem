@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import AppointmentActionMenu from "@/components/team/AppointmentActionMenu";
 import { useOfficeWorkspaceContext } from "@/components/office/OfficeWorkspaceLayout";
 import { useNavigate } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
@@ -439,9 +440,27 @@ export default function TeamAppointmentsPage() {
       if (officeId) query = query.eq("office_id", officeId);
       const { data, error } = await query.order("scheduled_at");
       if (error) throw error;
-      const appointmentRows = ((data as any[]) ?? []).filter(
-        (row) => !officeId || row.office_id === officeId,
-      );
+      // Public bookings awaiting confirmation may not carry this member as
+      // team_member_id yet; include those on cases assigned to them so they
+      // show on the calendar and can be confirmed from the detail dialog.
+      let pendingQuery = supabase
+        .from("appointments")
+        .select("*, case:cases!inner(full_name, phone_number, status, assigned_to)")
+        .eq("case.assigned_to", user.id)
+        .eq("public_booking", true)
+        .eq("confirmation_status", "pending")
+        .is("outcome", null)
+        .gte("scheduled_at", new Date().toISOString());
+      if (officeId) pendingQuery = pendingQuery.eq("office_id", officeId);
+      const { data: pendingRows, error: pendingError } = await pendingQuery;
+      if (pendingError) throw pendingError;
+      const byId = new Map<string, any>();
+      for (const row of [...((data as any[]) ?? []), ...((pendingRows as any[]) ?? [])]) {
+        if (!byId.has(row.id)) byId.set(row.id, row);
+      }
+      const appointmentRows = [...byId.values()]
+        .filter((row) => !officeId || row.office_id === officeId)
+        .sort((a, b) => String(a.scheduled_at).localeCompare(String(b.scheduled_at)));
       setAppts(appointmentRows);
       const appointmentOfficeIds = [
         ...new Set(appointmentRows.map((row) => row.office_id).filter(Boolean)),
@@ -948,6 +967,8 @@ export default function TeamAppointmentsPage() {
         className={cn(
           "rounded-lg border select-none transition-all duration-150 overflow-hidden",
           s.bg,
+          appt.confirmation_status === "pending" &&
+            "ring-2 ring-amber-500/70",
           draggingId === appt.id
             ? "opacity-40 scale-95 cursor-grabbing"
             : "cursor-grab hover:shadow-xs hover:scale-[1.01] active:cursor-grabbing",
@@ -1648,6 +1669,20 @@ export default function TeamAppointmentsPage() {
                         <p className="text-sm text-foreground/80 leading-relaxed">
                           {selectedAppt.notes}
                         </p>
+                      </div>
+                    )}
+                    {selectedAppt.confirmation_status === "pending" && (
+                      <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+                        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                          {t("team.appointments.pendingConfirmation")}
+                        </p>
+                        <AppointmentActionMenu
+                          appointmentId={selectedAppt.id}
+                          onDone={() => {
+                            setSelectedAppt(null);
+                            void fetchAppts();
+                          }}
+                        />
                       </div>
                     )}
                     <ReassignAppointment
