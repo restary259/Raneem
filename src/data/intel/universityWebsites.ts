@@ -60,6 +60,9 @@ const SITES: Record<string, string> = {
   'University of Veterinary Medicine Hannover (TiHo)': 'www.tiho-hannover.de/en',
   'Universität Hamburg': 'www.uni-hamburg.de/en',
   'Worms University of Applied Sciences': 'www.hs-worms.de/en',
+  'University of Oldenburg': 'uol.de/en/',
+  'Hochschule Ansbach': 'www.hs-ansbach.de/en/',
+  'University of Bamberg': 'www.uni-bamberg.de/en/',
 };
 
 /** Alternate spellings used in programme data → canonical list name. */
@@ -68,6 +71,7 @@ const ALIASES: Record<string, string> = {
   'Technische Universität Darmstadt': 'TU Darmstadt',
   'Technische Universität München (TUM)': 'Technical University of Munich (TUM)',
   'Universität Stuttgart': 'University of Stuttgart',
+  'Ansbach University of Applied Sciences': 'Hochschule Ansbach',
 };
 
 export const UNIVERSITY_WEBSITES: Readonly<Record<string, string>> = Object.fromEntries(

@@ -112,7 +112,7 @@ describe('university website links', () => {
     const { getUniversityWebsite, UNIVERSITY_WEBSITES } = await import('./universityWebsites');
     const { getRecommendedUniversityMeta } = await import('./universityRecommendations');
     const { ALL_MAJOR_INTEL } = await import('./majorIntel');
-    expect(Object.keys(UNIVERSITY_WEBSITES)).toHaveLength(56);
+    expect(Object.keys(UNIVERSITY_WEBSITES)).toHaveLength(59);
     for (const url of Object.values(UNIVERSITY_WEBSITES)) expect(url.startsWith('https://')).toBe(true);
     const missing = new Set<string>();
     for (const m of ALL_MAJOR_INTEL) {
@@ -120,8 +120,12 @@ describe('university website links', () => {
         const name = getRecommendedUniversityMeta(r.universityId)?.name;
         if (name && !getUniversityWebsite(name)) missing.add(name);
       }
+      for (const p of m.programs) {
+        if (!getUniversityWebsite(p.universityName)) missing.add(p.universityName);
+      }
     }
-    expect([...missing]).toEqual(['University of Oldenburg'].filter((n) => missing.has(n)));
+    expect([...missing]).toEqual([]);
+    expect(getUniversityWebsite('Ansbach University of Applied Sciences')).toBe('https://www.hs-ansbach.de/en/');
     expect(getUniversityWebsite('Technische Universität Darmstadt')).toBe('https://www.tu-darmstadt.de');
     expect(getUniversityWebsite('TU Berlin')).toBe('https://www.tu.berlin/en');
   });
