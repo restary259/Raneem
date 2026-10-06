@@ -331,7 +331,18 @@ export default function StudentVisaPage() {
         </CardContent>
       </Card>
 
-      {caseId && userId && <VisaInfoWizard caseId={caseId} userId={userId} />}
+      {caseId && userId ? (
+        <VisaInfoWizard caseId={caseId} userId={userId} />
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">{t("visaInfo.noCaseTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">{t("visaInfo.noCaseBody")}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Submit to Administration (post-enrollment only) ── */}
       {isEnrolled && (
@@ -446,6 +457,7 @@ export default function StudentVisaPage() {
       )}
 
       {/* ── Legal / Personal Information (moved from profile page) ── */}
+      {!caseId && (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div className="flex items-center gap-2">
@@ -599,6 +611,7 @@ export default function StudentVisaPage() {
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
