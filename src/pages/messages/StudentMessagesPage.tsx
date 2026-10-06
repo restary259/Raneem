@@ -96,20 +96,7 @@ export default function StudentMessagesPage() {
       const threads = await listMyDirectThreads(user.id);
       setDirectThreads(threads);
 
-      const existingTeam = threads.find(
-        (thread: DirectThread) => thread.otherUserRole === "team_member",
-      );
-      if (existingTeam) {
-        setTeamThreadId(existingTeam.threadId);
-        setTeamThreadName(
-          chatDisplayName(
-            existingTeam.otherUserName,
-            existingTeam.otherUserRole,
-            "student",
-            adminLabel,
-          ),
-        );
-      }
+      setTeamThreadName(adminLabel);
     } catch {
       /* activity + names are cosmetic — the list still renders the known threads */
     }
@@ -133,6 +120,14 @@ export default function StudentMessagesPage() {
       // Resolve direct threads (activity, unread counts, existing team thread)
       // before revealing the list, so a returning student never sees an empty
       // inbox with no unread indicator.
+      // The student's direct line is Administration (team contact goes
+      // through the case thread only). The RPC is idempotent.
+      const { data: adminThread, error: adminErr } = await (supabase as any).rpc(
+        "start_student_admin_thread",
+      );
+      if (adminErr) toast({ variant: "destructive", description: adminErr.message });
+      else if (adminThread) setTeamThreadId(adminThread as string);
+
       await loadDirectThreads();
 
       setLoading(false);
@@ -149,7 +144,7 @@ export default function StudentMessagesPage() {
       setOpen({
         tab: "team",
         id: teamThreadId,
-        title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
+        title: adminLabel,
       });
       return;
     }
@@ -161,7 +156,7 @@ export default function StudentMessagesPage() {
     setTeamThreadLoading(true);
     try {
       const { data, error } = await (supabase as any).rpc(
-        "start_student_team_member_thread",
+        "start_student_admin_thread",
       );
       if (error) throw error;
       const id = data as string;
@@ -169,21 +164,10 @@ export default function StudentMessagesPage() {
       setOpen({
         tab: "team",
         id,
-        title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
+        title: adminLabel,
       });
     } catch (err: any) {
-      const noMember = /No team member assigned|No completed case/i.test(
-        err.message ?? "",
-      );
-      toast({
-        variant: "destructive",
-        description: noMember
-          ? t(
-              "messagesInbox.teamThreadNoMember",
-              "A team member hasn't been assigned to you yet — you'll be able to message them once one is.",
-            )
-          : err.message,
-      });
+      toast({ variant: "destructive", description: err.message });
     } finally {
       startingTeamThreadRef.current = false;
       setTeamThreadLoading(false);
@@ -199,11 +183,8 @@ export default function StudentMessagesPage() {
   const teamThread: ThreadListItem = {
     id: teamThreadId ? `team:${teamThreadId}` : "team:pending",
     type: "direct",
-    title: teamThreadName ?? t("messagesInbox.teamMemberTab", "Team Member"),
-    subtitle: t(
-      "messagesInbox.teamConversationHint",
-      "Your direct line to your advisor",
-    ),
+    title: adminLabel,
+    subtitle: t("messagesInbox.adminConversationHint"),
     preview: teamThreadId
       ? previewFor(
           directById.get(teamThreadId)?.lastMessage ?? null,
@@ -229,11 +210,8 @@ export default function StudentMessagesPage() {
     secondaryConversations.push({
       id: `case:${caseId}`,
       type: "case",
-      title: t("messagesInbox.caseTab", "Case"),
-      subtitle: t(
-        "messagesInbox.caseConversationHint",
-        "Your case conversation with the Darb team",
-      ),
+      title: t("messagesInbox.myCaseTitle"),
+      subtitle: t("messagesInbox.myCaseHint"),
       preview: t("messagesInbox.openConversation", "Open the conversation"),
       timestamp: null,
       unread: 0,
@@ -345,7 +323,7 @@ export default function StudentMessagesPage() {
             ) : (
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <ThreadList
-                    items={[teamThread]}
+                    items={[...secondaryConversations.filter((c) => c.type === "case"), teamThread]}
                     selectedId={null}
                     onSelect={openFromItem}
                     emptyLabel={t("messagesInbox.empty")}
@@ -395,9 +373,9 @@ export default function StudentMessagesPage() {
                     </div>
                   </section>
 
-                  {secondaryConversations.length > 0 && (
+                  {secondaryConversations.some((c) => c.type !== "case") && (
                     <ThreadList
-                      items={secondaryConversations}
+                      items={secondaryConversations.filter((c) => c.type !== "case")}
                       selectedId={null}
                       onSelect={openFromItem}
                       emptyLabel={t("messagesInbox.empty")}
