@@ -2590,6 +2590,7 @@
       "dayAbbrevThu": "Thu",
       "dayAbbrevFri": "Fri",
       "dayAbbrevSat": "Sat",
+      "pendingConfirmation": "Pending confirmation",
       "visitRequests": "Office visit requests",
       "confirmVisit": "Confirm visit",
       "visitConfirmed": "Visit confirmed",

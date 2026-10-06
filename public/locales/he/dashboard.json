@@ -507,6 +507,7 @@
       "dayAbbrevThu": "ה׳",
       "dayAbbrevFri": "ו׳",
       "dayAbbrevSat": "ש׳",
+      "pendingConfirmation": "ממתין לאישור",
       "visitRequests": "בקשות ביקור במשרד",
       "confirmVisit": "אישור הביקור",
       "visitConfirmed": "הביקור אושר"

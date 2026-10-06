@@ -2608,6 +2608,7 @@
       "dayAbbrevThu": "خمي",
       "dayAbbrevFri": "جمع",
       "dayAbbrevSat": "سبت",
+      "pendingConfirmation": "بانتظار التأكيد",
       "visitRequests": "طلبات زيارة المكتب",
       "confirmVisit": "تأكيد الزيارة",
       "visitConfirmed": "تم تأكيد الزيارة",
