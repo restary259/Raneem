@@ -6961,6 +6961,8 @@
       "expiryBeforeIssue": "Must be after the date of issue",
       "pastArrival": "Arrival date can't be in the past",
       "departureBeforeArrival": "Must be after the arrival date"
-    }
+    },
+    "noCaseTitle": "Visa Information",
+    "noCaseBody": "Your visa form opens once your DARB team has opened your study file."
   }
 }
