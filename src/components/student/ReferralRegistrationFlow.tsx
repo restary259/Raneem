@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, BedDouble, Check, ChevronLeft, ChevronRight, CreditCard, ExternalLink, GraduationCap, Heart, Info, Loader2, Mail, Phone, ReceiptText, Send, Users, WalletCards } from "lucide-react";
+import { BedDouble, Check, ChevronLeft, ChevronRight, CreditCard, ExternalLink, GraduationCap, Heart, Info, Loader2, Mail, Phone, ReceiptText, Send, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { readFunctionError } from "@/lib/functionError";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
