@@ -26,13 +26,15 @@ const STUDENT_VISA = path.resolve(
 describe("student visa workflow wiring", () => {
   const source = fs.readFileSync(STUDENT_VISA, "utf8");
 
-  it("never sends visa_status from the student save path", () => {
-    const saveBody = source.slice(
-      source.indexOf("const saveDynamic"),
-      source.indexOf("const saveLegal"),
-    );
-    expect(saveBody).toContain('f.field_key !== "visa_status"');
-    expect(saveBody).not.toMatch(/fields\.map\(/);
+  it("never writes visa_field_values (visa_status stays admin-controlled)", () => {
+    expect(source).not.toMatch(/from\(["']visa_field_values["']\)[\s\S]{0,80}\.(insert|upsert|update)\(/);
+  });
+
+  it("always renders the student-keyed Visa Information form, with no duplicate legacy boxes", () => {
+    expect(source).toContain("<VisaInfoWizard userId={userId} />");
+    expect(source).not.toMatch(/caseId && userId \?/);
+    expect(source).not.toContain("profile.legalSection");
+    expect(source).not.toContain("const saveDynamic");
   });
 
   it("submits through the security-definer RPC", () => {
@@ -57,5 +59,20 @@ describe("student visa workflow wiring", () => {
     );
     expect(caseStatus).not.toMatch(/^\s*VISA\s*[:=]/m);
     expect(caseStatus).not.toMatch(/"visa"/);
+  });
+});
+
+describe("visa information is keyed by student, not case", () => {
+  const read = (...p: string[]) => fs.readFileSync(path.resolve(SRC_ROOT, ...p), "utf8");
+  it("team/admin review panels receive the student id, never a case id", () => {
+    expect(read("components", "students", "StudentOverview.tsx")).toContain("<VisaInfoReviewPanel studentId=");
+    expect(read("components", "admin", "visa", "VisaDetailSheet.tsx")).toContain("<VisaInfoReviewPanel studentId={row?.student_user_id ?? null} />");
+  });
+  it("service uses the student-keyed table and RPCs", () => {
+    const svc = read("services", "VisaInfoService.ts");
+    expect(svc).toContain('from("student_visa_info")');
+    expect(svc).toContain('"save_my_student_visa_info"');
+    expect(svc).toContain('"review_student_visa_info"');
+    expect(svc).not.toContain("p_case_id");
   });
 });

@@ -468,7 +468,7 @@ export default function StudentOverview({
             {showTab("visa") && (
               <TabsContent value="visa" className="mt-3">
                 <div className="space-y-3">
-                  {caseId && <VisaInfoReviewPanel caseId={caseId} />}
+                  {profile?.id ? <VisaInfoReviewPanel studentId={String(profile.id)} /> : null}
                   {renderVisaTab ? renderVisaTab() : <VisaReadOnly fields={visaFields} values={visaValues} loading={visaLoading} isAr={isAr} t={t} profile={profile} />}
                 </div>
               </TabsContent>

@@ -38,7 +38,7 @@ function prefillFromProfile(p: any, email: string | undefined): VisaInfoData {
   };
 }
 
-export default function VisaInfoWizard({ caseId, userId }: { caseId: string; userId: string }) {
+export default function VisaInfoWizard({ userId }: { userId: string }) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const [rec, setRec] = useState<VisaInfoRecord | null>(null);
@@ -54,7 +54,7 @@ export default function VisaInfoWizard({ caseId, userId }: { caseId: string; use
     setLoadError(null);
     try {
       const [r, prof, auth] = await Promise.all([
-        getVisaInfo(caseId),
+        getVisaInfo(userId),
         (supabase as any).from("profiles")
           .select("full_name, email, phone_number, date_of_birth, nationality, eye_color, passport_expiry, street, house_number, residential_city, city, arrival_date")
           .eq("id", userId).maybeSingle(),
@@ -70,7 +70,7 @@ export default function VisaInfoWizard({ caseId, userId }: { caseId: string; use
     } catch (e: any) {
       setLoadError(e?.message ?? String(e));
     }
-  }, [caseId, userId]);
+  }, [userId]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -93,7 +93,7 @@ export default function VisaInfoWizard({ caseId, userId }: { caseId: string; use
     const payload = Object.fromEntries(s.fields.filter((f) => isFieldVisible(f, sec) && (sec[f.key] ?? "") !== "").map((f) => [f.key, sec[f.key].trim()]));
     setSaving(true);
     try {
-      await saveVisaInfoSection(caseId, s.id, payload, step + 1);
+      await saveVisaInfoSection(s.id, payload, step + 1);
       setRec((r) => (r ? { ...r, status: r.status === "needs_correction" ? r.status : "in_progress" } : r));
       go(step + 1);
     } catch (e: any) {
@@ -107,8 +107,8 @@ export default function VisaInfoWizard({ caseId, userId }: { caseId: string; use
     if (firstBad >= 0) { toast({ variant: "destructive", title: t("visaInfo.incomplete") }); go(firstBad); return; }
     setSaving(true);
     try {
-      await saveVisaInfoSection(caseId, "review", { confirmed: "true" }, REVIEW);
-      await submitVisaInfo(caseId);
+      await saveVisaInfoSection("review", { confirmed: "true" }, REVIEW);
+      await submitVisaInfo();
       toast({ title: t("visaInfo.submitted") });
       await load();
     } catch (e: any) {

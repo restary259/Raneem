@@ -9,7 +9,7 @@ import { getVisaInfo, reviewVisaInfo, type VisaInfoRecord } from "@/services/Vis
 import VisaInfoFieldsView, { VisaInfoStatusBadge } from "./VisaInfoFieldsView";
 
 /** Staff (team/admin) view of the student's Visa Information with review actions. */
-export default function VisaInfoReviewPanel({ caseId }: { caseId: string | null }) {
+export default function VisaInfoReviewPanel({ studentId }: { studentId: string | null }) {
   const { t } = useTranslation("dashboard");
   const { toast } = useToast();
   const [rec, setRec] = useState<VisaInfoRecord | null>(null);
@@ -19,26 +19,26 @@ export default function VisaInfoReviewPanel({ caseId }: { caseId: string | null 
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    if (!caseId) return;
+    if (!studentId) return;
     setError(null);
     try {
-      setRec(await getVisaInfo(caseId));
+      setRec(await getVisaInfo(studentId));
     } catch (e: any) {
       setError(e?.message ?? String(e));
     }
-  }, [caseId]);
+  }, [studentId]);
 
   useEffect(() => { void load(); }, [load]);
 
   const decide = async (decision: "checked" | "needs_correction") => {
-    if (!caseId) return;
+    if (!studentId) return;
     if (decision === "needs_correction" && note.trim() === "") {
       toast({ variant: "destructive", title: t("visaInfo.noteRequired") });
       return;
     }
     setBusy(true);
     try {
-      await reviewVisaInfo(caseId, decision, note.trim());
+      await reviewVisaInfo(studentId, decision, note.trim());
       setAskNote(false);
       setNote("");
       await load();
@@ -50,7 +50,7 @@ export default function VisaInfoReviewPanel({ caseId }: { caseId: string | null 
     }
   };
 
-  if (!caseId) return null;
+  if (!studentId) return null;
 
   return (
     <SectionCard title={t("visaInfo.title")} actions={rec ? <VisaInfoStatusBadge status={rec.status} /> : undefined}>
