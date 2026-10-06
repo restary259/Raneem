@@ -26,13 +26,15 @@ const STUDENT_VISA = path.resolve(
 describe("student visa workflow wiring", () => {
   const source = fs.readFileSync(STUDENT_VISA, "utf8");
 
-  it("never sends visa_status from the student save path", () => {
-    const saveBody = source.slice(
-      source.indexOf("const saveDynamic"),
-      source.indexOf("const saveLegal"),
-    );
-    expect(saveBody).toContain('f.field_key !== "visa_status"');
-    expect(saveBody).not.toMatch(/fields\.map\(/);
+  it("never writes visa_field_values (visa_status stays admin-controlled)", () => {
+    expect(source).not.toMatch(/from\(["']visa_field_values["']\)[\s\S]{0,80}\.(insert|upsert|update)\(/);
+  });
+
+  it("always renders the student-keyed Visa Information form, with no duplicate legacy boxes", () => {
+    expect(source).toContain("<VisaInfoWizard userId={userId} />");
+    expect(source).not.toMatch(/caseId && userId \?/);
+    expect(source).not.toContain("profile.legalSection");
+    expect(source).not.toContain("const saveDynamic");
   });
 
   it("submits through the security-definer RPC", () => {
