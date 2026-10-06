@@ -563,7 +563,7 @@ export default function VisaDetailSheet({
                 selectedDocumentIds={selectedIds}
               />
 
-              <VisaInfoReviewPanel caseId={row?.case_id ?? null} />
+              <VisaInfoReviewPanel studentId={row?.student_user_id ?? null} />
 
               <VisaInformationPanel
                 fields={detail?.fields ?? []}
