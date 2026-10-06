@@ -4749,7 +4749,10 @@
     "payoutConversationHint": "محادثة الدفعة الخاصة بك",
     "teamConversationHint": "خطك المباشر مع مستشارك",
     "startTeamPreview": "اضغط لبدء محادثتك",
-    "startingTeamChat": "جارٍ فتح محادثة الفريق…"
+    "startingTeamChat": "جارٍ فتح محادثة الفريق…",
+    "myCaseTitle": "ملفي في درب",
+    "myCaseHint": "راسل فريق درب",
+    "adminConversationHint": "تواصل مباشر مع إدارة درب"
   },
   "chat": {
     "day": {
@@ -4763,8 +4766,13 @@
     "filter": {
       "all": "الكل",
       "direct": "مباشر",
-      "teams": "أعضاء الفريق",
-      "unread": "غير مقروء"
+      "teams": "الفرق",
+      "unread": "غير مقروء",
+      "students": "الطلاب",
+      "agents": "الوكلاء",
+      "partners": "الشركاء",
+      "ambassadors": "السفراء",
+      "label": "تصفية المحادثات"
     },
     "attach": {
       "button": "إرفاق ملف",

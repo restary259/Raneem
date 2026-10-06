@@ -24,7 +24,6 @@ import ThreadList, {
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChatFullscreen } from "@/components/messages/chatFullscreen";
-import { chatDisplayName } from "@/lib/chatIdentity";
 import { isVoiceAttachment, type ChatAttachment } from "@/lib/chatFormat";
 import {
   listMyDirectThreads,
