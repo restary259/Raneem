@@ -8,6 +8,13 @@
       "when": 1791286685892,
       "tag": "0000_visa_information",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791287764775,
+      "tag": "0001_student_visa_info",
+      "breakpoints": true
     }
   ]
 }
