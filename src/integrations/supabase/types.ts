@@ -7361,6 +7361,48 @@ export type Database = {
           },
         ]
       }
+      student_visa_info: {
+        Row: {
+          created_at: string
+          info: Json
+          info_checked_at: string | null
+          info_checked_by: string | null
+          info_correction_note: string | null
+          info_last_step: number
+          info_status: string
+          info_submitted_at: string | null
+          info_updated_at: string | null
+          student_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          info?: Json
+          info_checked_at?: string | null
+          info_checked_by?: string | null
+          info_correction_note?: string | null
+          info_last_step?: number
+          info_status?: string
+          info_submitted_at?: string | null
+          info_updated_at?: string | null
+          student_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          info?: Json
+          info_checked_at?: string | null
+          info_checked_by?: string | null
+          info_correction_note?: string | null
+          info_last_step?: number
+          info_status?: string
+          info_submitted_at?: string | null
+          info_updated_at?: string | null
+          student_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -11966,6 +12008,10 @@ export type Database = {
             }
             Returns: Json
           }
+      review_student_visa_info: {
+        Args: { p_decision: string; p_note: string; p_student_id: string }
+        Returns: undefined
+      }
       review_visa_info: {
         Args: { p_case_id: string; p_decision: string; p_note: string }
         Returns: undefined
@@ -11990,6 +12036,10 @@ export type Database = {
           intel_intake_updated_by: string
           intel_student_intake: Json
         }[]
+      }
+      save_my_student_visa_info: {
+        Args: { p_last_step: number; p_payload: Json; p_section: string }
+        Returns: undefined
       }
       save_my_visa_info: {
         Args: {
@@ -12092,6 +12142,7 @@ export type Database = {
         Args: { p_callee_id: string; p_thread_id?: string }
         Returns: string
       }
+      student_visa_info_case: { Args: { p_student: string }; Returns: string }
       submit_case_for_review: { Args: { p_case_id: string }; Returns: Json }
       submit_case_payment: {
         Args: {
@@ -12130,6 +12181,7 @@ export type Database = {
           status: string
         }[]
       }
+      submit_my_student_visa_info: { Args: never; Returns: undefined }
       submit_my_visa_info: { Args: { p_case_id: string }; Returns: undefined }
       submit_recruit_application: {
         Args: {
