@@ -14,7 +14,6 @@ import {
   GitBranch,
   Globe,
   GraduationCap,
-  Heart,
   Home,
   Hotel,
   Image,

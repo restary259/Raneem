@@ -11,7 +11,6 @@ import {
   CreditCard,
   Globe,
   Users,
-  Heart,
   Phone,
   Mail,
   MessageCircle,
