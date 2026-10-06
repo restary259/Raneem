@@ -7608,6 +7608,14 @@ export type Database = {
           created_at: string
           health_insurance_url: string | null
           id: string
+          info: Json
+          info_checked_at: string | null
+          info_checked_by: string | null
+          info_correction_note: string | null
+          info_last_step: number
+          info_status: string
+          info_submitted_at: string | null
+          info_updated_at: string | null
           student_user_id: string | null
           submission_snapshot: Json | null
           updated_at: string
@@ -7626,6 +7634,14 @@ export type Database = {
           created_at?: string
           health_insurance_url?: string | null
           id?: string
+          info?: Json
+          info_checked_at?: string | null
+          info_checked_by?: string | null
+          info_correction_note?: string | null
+          info_last_step?: number
+          info_status?: string
+          info_submitted_at?: string | null
+          info_updated_at?: string | null
           student_user_id?: string | null
           submission_snapshot?: Json | null
           updated_at?: string
@@ -7644,6 +7660,14 @@ export type Database = {
           created_at?: string
           health_insurance_url?: string | null
           id?: string
+          info?: Json
+          info_checked_at?: string | null
+          info_checked_by?: string | null
+          info_correction_note?: string | null
+          info_last_step?: number
+          info_status?: string
+          info_submitted_at?: string | null
+          info_updated_at?: string | null
           student_user_id?: string | null
           submission_snapshot?: Json | null
           updated_at?: string
@@ -11942,6 +11966,10 @@ export type Database = {
             }
             Returns: Json
           }
+      review_visa_info: {
+        Args: { p_case_id: string; p_decision: string; p_note: string }
+        Returns: undefined
+      }
       route_google_business_event: {
         Args: { p_event_id: string }
         Returns: {
@@ -11962,6 +11990,15 @@ export type Database = {
           intel_intake_updated_by: string
           intel_student_intake: Json
         }[]
+      }
+      save_my_visa_info: {
+        Args: {
+          p_case_id: string
+          p_last_step: number
+          p_payload: Json
+          p_section: string
+        }
+        Returns: undefined
       }
       save_office_configuration: {
         Args: {
@@ -12093,6 +12130,7 @@ export type Database = {
           status: string
         }[]
       }
+      submit_my_visa_info: { Args: { p_case_id: string }; Returns: undefined }
       submit_recruit_application: {
         Args: {
           p_city?: string
