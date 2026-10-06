@@ -1,3 +1,4 @@
+import VisaInfoReviewPanel from "@/components/visa/VisaInfoReviewPanel";
 import type { TFunction } from "i18next";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@/lib/router-compat";
@@ -466,7 +467,10 @@ export default function StudentOverview({
             )}
             {showTab("visa") && (
               <TabsContent value="visa" className="mt-3">
-                {renderVisaTab ? renderVisaTab() : <VisaReadOnly fields={visaFields} values={visaValues} loading={visaLoading} isAr={isAr} t={t} profile={profile} />}
+                <div className="space-y-3">
+                  {caseId && <VisaInfoReviewPanel caseId={caseId} />}
+                  {renderVisaTab ? renderVisaTab() : <VisaReadOnly fields={visaFields} values={visaValues} loading={visaLoading} isAr={isAr} t={t} profile={profile} />}
+                </div>
               </TabsContent>
             )}
             {showDocsTab && (

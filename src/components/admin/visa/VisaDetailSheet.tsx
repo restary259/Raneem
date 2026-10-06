@@ -1,3 +1,4 @@
+import VisaInfoReviewPanel from "@/components/visa/VisaInfoReviewPanel";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
@@ -561,6 +562,8 @@ export default function VisaDetailSheet({
                 documents={detail?.documents ?? []}
                 selectedDocumentIds={selectedIds}
               />
+
+              <VisaInfoReviewPanel caseId={row?.case_id ?? null} />
 
               <VisaInformationPanel
                 fields={detail?.fields ?? []}
