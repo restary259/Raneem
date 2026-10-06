@@ -34,7 +34,7 @@ import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import CaseMessages from "@/components/cases/CaseMessages";
 import DirectMessages from "@/components/messages/DirectMessages";
 import VoiceCallButton from "@/components/messages/VoiceCallButton";
-import ThreadList, { type ThreadListItem } from "@/components/messages/ThreadList";
+import ThreadList, { type ThreadCategory, type ThreadListItem } from "@/components/messages/ThreadList";
 import StaffPickerDialog from "@/components/messages/StaffPickerDialog";
 import {
   listMutedThreads,
@@ -76,6 +76,16 @@ export function categoryForRole(r?: string | null): Category {
   if (r === "ambassador") return "ambassadors";
   return "students";
 }
+
+type InboxItem = ThreadListItem & { group: Category };
+const DISPLAY: Record<Category, ThreadCategory> = {
+  admins: "direct",
+  teams: "teams",
+  students: "cases",
+  agents: "partners",
+  partners: "partners",
+  ambassadors: "partners",
+};
 
 export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
@@ -169,7 +179,7 @@ export default function CaseMessagesInboxPage() {
     };
   }, [load]);
 
-  const items: ThreadListItem[] = useMemo(() => {
+  const items: InboxItem[] = useMemo(() => {
     const previewFor = (
       message: { body?: string | null; attachments?: ChatAttachment[] | null },
       fallback: string,
@@ -181,10 +191,11 @@ export default function CaseMessagesInboxPage() {
       return fallback;
     };
 
-    const caseItems: ThreadListItem[] = threads.map((thread) => ({
+    const caseItems: InboxItem[] = threads.map((thread) => ({
       id: thread.caseId,
       type: "case",
-      category: "students" as Category,
+      category: "cases" as const,
+      group: "students" as Category,
       title: thread.caseName,
       subtitle: thread.caseReference,
       preview: previewFor(thread.lastMessage, t("chat.attach.only")),
@@ -192,13 +203,14 @@ export default function CaseMessagesInboxPage() {
       unread: thread.unread,
     }));
     const isTeamRole = (r?: string | null) => r === "team_member";
-    const directItems: ThreadListItem[] = directThreads
+    const directItems: InboxItem[] = directThreads
       // If team chat is disabled for this user, do not show peer team members at all
       .filter((thread) => (canStartTeamChat ? true : !isTeamRole(thread.otherUserRole)))
       .map((thread) => ({
         id: thread.threadId,
         type: "direct",
-        category: categoryForRole(thread.otherUserRole),
+        category: DISPLAY[categoryForRole(thread.otherUserRole)],
+        group: categoryForRole(thread.otherUserRole),
         title: thread.otherUserRole === "admin" ? t("chat.adminLabel") : thread.otherUserName,
         subtitle:
           thread.otherUserRole && thread.otherUserRole !== "admin"
@@ -215,7 +227,7 @@ export default function CaseMessagesInboxPage() {
     const q = query.trim().toLowerCase();
     return [...directItems, ...caseItems]
       .filter((item) => {
-        if (filter !== "all" && (item as ThreadListItem & { category?: string }).category !== filter) return false;
+        if (filter !== "all" && item.group !== filter) return false;
         if (!q) return true;
         return (
           item.title.toLowerCase().includes(q) ||
