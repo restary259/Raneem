@@ -11879,6 +11879,16 @@ export type Database = {
           review_id: string
         }[]
       }
+      resolve_office_assignee_for_slot: {
+        Args: {
+          p_duration_minutes: number
+          p_exclude_appointment_id?: string
+          p_office_id: string
+          p_service_type?: string
+          p_slot: string
+        }
+        Returns: string
+      }
       resolve_office_slug: { Args: { p_slug: string }; Returns: string }
       resolve_partner_link: {
         Args: { p_code: string }
