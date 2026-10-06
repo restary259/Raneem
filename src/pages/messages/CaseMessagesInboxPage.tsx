@@ -434,19 +434,21 @@ export default function CaseMessagesInboxPage() {
                 className="ltr:pl-8 rtl:pr-8"
               />
             </div>
-            <Select value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-              <SelectTrigger aria-label={t("chat.filter.label")} className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {filters.map((f) => (
-                  <SelectItem key={f.key} value={f.key}>
-                    {f.label}
-                    {f.count ? ` (${f.count})` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isAdmin && (
+              <Select value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+                <SelectTrigger aria-label={t("chat.filter.label")} className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {filters.map((f) => (
+                    <SelectItem key={f.key} value={f.key}>
+                      {f.label}
+                      {f.count ? ` (${f.count})` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
