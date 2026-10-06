@@ -36,10 +36,15 @@
       "direct": "ישיר"
     },
     "filter": {
-      "all": "הכול",
+      "all": "הכל",
       "direct": "ישיר",
-      "teams": "חברי צוות",
-      "unread": "לא נקרא"
+      "teams": "צוותים",
+      "unread": "לא נקרא",
+      "students": "סטודנטים",
+      "agents": "סוכנים",
+      "partners": "שותפים",
+      "ambassadors": "שגרירים",
+      "label": "סינון שיחות"
     },
     "attach": {
       "button": "צירוף קובץ",
@@ -1886,7 +1891,10 @@
     "payoutConversationHint": "שיחת התשלום שלכם",
     "teamConversationHint": "הקו הישיר שלכם עם היועץ",
     "startTeamPreview": "לחצו כדי להתחיל את השיחה",
-    "startingTeamChat": "פותח את הצ׳אט עם הצוות…"
+    "startingTeamChat": "פותח את הצ׳אט עם הצוות…",
+    "myCaseTitle": "התיק שלי בדארב",
+    "myCaseHint": "שלחו הודעה לצוות דארב",
+    "adminConversationHint": "קו ישיר להנהלת דארב"
   },
   "voiceCall": {
     "call": "שיחה",

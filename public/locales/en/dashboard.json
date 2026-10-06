@@ -4731,7 +4731,10 @@
     "payoutConversationHint": "Your payout conversation",
     "teamConversationHint": "Your direct line to your advisor",
     "startTeamPreview": "Tap to start your conversation",
-    "startingTeamChat": "Opening your team chat…"
+    "startingTeamChat": "Opening your team chat…",
+    "myCaseTitle": "My DARB Case",
+    "myCaseHint": "Message your DARB team",
+    "adminConversationHint": "Your direct line to DARB Administration"
   },
   "chat": {
     "day": {
@@ -4745,8 +4748,13 @@
     "filter": {
       "all": "All",
       "direct": "Direct",
-      "teams": "Team members",
-      "unread": "Unread"
+      "teams": "Teams",
+      "unread": "Unread",
+      "students": "Students",
+      "agents": "Agents",
+      "partners": "Partners",
+      "ambassadors": "Ambassadors",
+      "label": "Filter conversations"
     },
     "attach": {
       "button": "Attach file",

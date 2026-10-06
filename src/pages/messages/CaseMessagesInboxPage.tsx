@@ -34,7 +34,7 @@ import { useChatFullscreen } from "@/components/messages/chatFullscreen";
 import CaseMessages from "@/components/cases/CaseMessages";
 import DirectMessages from "@/components/messages/DirectMessages";
 import VoiceCallButton from "@/components/messages/VoiceCallButton";
-import ThreadList, { type ThreadListItem } from "@/components/messages/ThreadList";
+import ThreadList, { type ThreadCategory, type ThreadListItem } from "@/components/messages/ThreadList";
 import StaffPickerDialog from "@/components/messages/StaffPickerDialog";
 import {
   listMutedThreads,
@@ -43,6 +43,7 @@ import {
   type CaseMessageThread,
 } from "@/services/CaseMessageService";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
@@ -64,7 +65,27 @@ import {
 const FS_CHAT =
   "max-md:fixed max-md:inset-0 max-md:z-[70] max-md:h-[100dvh] max-md:rounded-none max-md:border-0 max-md:shadow-none max-md:pt-[env(safe-area-inset-top)] max-md:pb-[env(safe-area-inset-bottom)]";
 
-type Filter = "direct" | "teams" | "cases" | "unread";
+type Filter = "all" | "teams" | "students" | "agents" | "partners" | "ambassadors";
+type Category = Exclude<Filter, "all"> | "admins";
+
+export function categoryForRole(r?: string | null): Category {
+  if (r === "team_member") return "teams";
+  if (r === "admin") return "admins";
+  if (r === "agent") return "agents";
+  if (r === "social_media_partner") return "partners";
+  if (r === "ambassador") return "ambassadors";
+  return "students";
+}
+
+type InboxItem = ThreadListItem & { group: Category };
+const DISPLAY: Record<Category, ThreadCategory> = {
+  admins: "direct",
+  teams: "teams",
+  students: "cases",
+  agents: "partners",
+  partners: "partners",
+  ambassadors: "partners",
+};
 
 export default function CaseMessagesInboxPage() {
   const { t } = useTranslation("dashboard");
@@ -81,7 +102,7 @@ export default function CaseMessagesInboxPage() {
   const [muted, setMuted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("direct");
+  const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<{ type: "case" | "direct"; id: string } | null>(null);
 
   const [staffOpen, setStaffOpen] = useState(false);
@@ -158,7 +179,7 @@ export default function CaseMessagesInboxPage() {
     };
   }, [load]);
 
-  const items: ThreadListItem[] = useMemo(() => {
+  const items: InboxItem[] = useMemo(() => {
     const previewFor = (
       message: { body?: string | null; attachments?: ChatAttachment[] | null },
       fallback: string,
@@ -170,10 +191,11 @@ export default function CaseMessagesInboxPage() {
       return fallback;
     };
 
-    const caseItems: ThreadListItem[] = threads.map((thread) => ({
+    const caseItems: InboxItem[] = threads.map((thread) => ({
       id: thread.caseId,
       type: "case",
       category: "cases" as const,
+      group: "students" as Category,
       title: thread.caseName,
       subtitle: thread.caseReference,
       preview: previewFor(thread.lastMessage, t("chat.attach.only")),
@@ -181,17 +203,14 @@ export default function CaseMessagesInboxPage() {
       unread: thread.unread,
     }));
     const isTeamRole = (r?: string | null) => r === "team_member";
-    const directItems: ThreadListItem[] = directThreads
+    const directItems: InboxItem[] = directThreads
       // If team chat is disabled for this user, do not show peer team members at all
       .filter((thread) => (canStartTeamChat ? true : !isTeamRole(thread.otherUserRole)))
       .map((thread) => ({
         id: thread.threadId,
         type: "direct",
-        category: isTeamRole(thread.otherUserRole)
-          ? ("teams" as const)
-          : thread.otherUserRole === "admin"
-            ? ("direct" as const)
-            : ("cases" as const),
+        category: DISPLAY[categoryForRole(thread.otherUserRole)],
+        group: categoryForRole(thread.otherUserRole),
         title: thread.otherUserRole === "admin" ? t("chat.adminLabel") : thread.otherUserName,
         subtitle:
           thread.otherUserRole && thread.otherUserRole !== "admin"
@@ -208,10 +227,7 @@ export default function CaseMessagesInboxPage() {
     const q = query.trim().toLowerCase();
     return [...directItems, ...caseItems]
       .filter((item) => {
-        if (filter === "direct" && item.category !== "direct") return false;
-        if (filter === "teams" && item.category !== "teams") return false;
-        if (filter === "cases" && item.category !== "cases") return false;
-        if (filter === "unread" && item.unread === 0) return false;
+        if (filter !== "all" && item.group !== filter) return false;
         if (!q) return true;
         return (
           item.title.toLowerCase().includes(q) ||
@@ -224,19 +240,12 @@ export default function CaseMessagesInboxPage() {
       );
   }, [threads, directThreads, query, filter, t, canStartTeamChat]);
 
-  const teamThreads = directThreads.filter((t) => t.otherUserRole === "team_member");
-  const teamUnread = canStartTeamChat
-    ? teamThreads.reduce((sum, t) => sum + t.unread, 0)
-    : 0;
-  const directUnread = directThreads
-    .filter((t) => t.otherUserRole === "admin")
-    .reduce((sum, t) => sum + t.unread, 0);
-  const caseUnread =
-    threads.reduce((sum, thread) => sum + thread.unread, 0) +
-    directThreads
-      .filter((t) => t.otherUserRole !== "admin" && t.otherUserRole !== "team_member")
-      .reduce((sum, t) => sum + t.unread, 0);
-  const totalUnread = directUnread + teamUnread + caseUnread;
+  const visibleDirect = directThreads.filter((x) => (canStartTeamChat ? true : x.otherUserRole !== "team_member"));
+  const unreadFor = (c: Category) =>
+    visibleDirect.filter((x) => categoryForRole(x.otherUserRole) === c).reduce((sum, x) => sum + x.unread, 0) +
+    (c === "students" ? threads.reduce((sum, x) => sum + x.unread, 0) : 0);
+  const totalUnread =
+    visibleDirect.reduce((sum, x) => sum + x.unread, 0) + threads.reduce((sum, x) => sum + x.unread, 0);
 
   const activeCase =
     selected?.type === "case" ? threads.find((x) => x.caseId === selected.id) ?? null : null;
@@ -266,7 +275,7 @@ export default function CaseMessagesInboxPage() {
     try {
       const threadId = await startTeamChatThread(staffId);
       setTeamStaffOpen(false);
-      setFilter("teams");
+      setFilter("all");
       setSelected({ type: "direct", id: threadId });
       await load();
     } catch (err: any) {
@@ -283,7 +292,7 @@ export default function CaseMessagesInboxPage() {
     try {
       const threadId = await startDirectThread(staffId);
       setStaffOpen(false);
-      setFilter("direct");
+      setFilter("all");
       setSelected({ type: "direct", id: threadId });
       await load();
     } catch (err: any) {
@@ -296,12 +305,16 @@ export default function CaseMessagesInboxPage() {
   };
 
   const filters: { key: Filter; label: string; count?: number }[] = [
-    { key: "direct", label: t("chat.section.direct"), count: directUnread },
-    ...(canStartTeamChat
-      ? [{ key: "teams" as const, label: t("chat.filter.teams", "Teams"), count: teamUnread }]
+    { key: "all", label: t("chat.filter.all"), count: totalUnread },
+    ...(canStartTeamChat ? [{ key: "teams" as const, label: t("chat.filter.teams"), count: unreadFor("teams") }] : []),
+    { key: "students", label: t("chat.filter.students"), count: unreadFor("students") },
+    ...(isAdmin
+      ? [
+          { key: "agents" as const, label: t("chat.filter.agents"), count: unreadFor("agents") },
+          { key: "partners" as const, label: t("chat.filter.partners"), count: unreadFor("partners") },
+          { key: "ambassadors" as const, label: t("chat.filter.ambassadors"), count: unreadFor("ambassadors") },
+        ]
       : []),
-    { key: "cases", label: t("chat.section.cases"), count: caseUnread },
-    { key: "unread", label: t("chat.filter.unread"), count: totalUnread },
   ];
 
   return (
@@ -421,24 +434,19 @@ export default function CaseMessagesInboxPage() {
                 className="ltr:pl-8 rtl:pr-8"
               />
             </div>
-            <div className="flex flex-wrap gap-1">
-              {filters.map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => setFilter(f.key)}
-                  className={cn(
-                    "rounded-full border px-2.5 py-1 text-xs transition-colors",
-                    filter === f.key
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "hover:bg-accent",
-                  )}
-                >
-                  {f.label}
-                  {f.count ? ` (${f.count})` : ""}
-                </button>
-              ))}
-            </div>
+            <Select value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+              <SelectTrigger aria-label={t("chat.filter.label")} className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {filters.map((f) => (
+                  <SelectItem key={f.key} value={f.key}>
+                    {f.label}
+                    {f.count ? ` (${f.count})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
