@@ -449,6 +449,32 @@ export default function CaseMessagesInboxPage() {
                 </SelectContent>
               </Select>
             )}
+            {!isAdmin && (
+              <div role="tablist" aria-label={t("chat.filter.label")} className="flex gap-1">
+                {filters.map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === f.key}
+                    onClick={() => setFilter(f.key)}
+                    className={cn(
+                      "flex min-h-9 flex-1 items-center justify-center gap-1 rounded-md px-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      filter === f.key
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <span className="truncate">{f.label}</span>
+                    {f.count ? (
+                      <Badge variant="destructive" className="h-5 min-w-5 justify-center px-1 text-[10px]">
+                        {f.count}
+                      </Badge>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
