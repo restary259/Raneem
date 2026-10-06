@@ -66,7 +66,7 @@ const SOURCES: IntelSource[] = [
   },
   {
     id: 'rwth-info-bew',
-    url: 'https://www.informatik.rwth-aachen.de/cms/informatik/studium/vor-dem-studium/bewerbungsinfos/~npqh/bachelor-informatik/',
+    url: 'https://sc.informatik.rwth-aachen.de/en/studium/bachelor/informatik/',
     title: 'RWTH Aachen — Bewerbung für den Bachelor Informatik',
     titleAR: 'RWTH آخن — التقديم لبكالوريوس Informatik',
     authority: 'university',
@@ -106,7 +106,7 @@ const SOURCES: IntelSource[] = [
   },
   {
     id: 'stg-int-bew',
-    url: 'https://uni-stuttgart.de/studium/bewerbung/international-degree/bewerbung/',
+    url: 'https://www.student.uni-stuttgart.de/en/study-programs/Computer-Science-B.Sc./',
     title: 'Universität Stuttgart — Bewerbungsinformationen für internationale Studieninteressierte',
     titleAR: 'جامعة شتوتغارت — معلومات التقديم للطلاب الدوليين',
     authority: 'university',
@@ -329,7 +329,7 @@ const PROGRAMS: ProgramIntel[] = [
       'قائمة الوثائق غير مقروءة في الصفحات المفحوصة.',
     ),
     programUrl:
-      'https://www.informatik.rwth-aachen.de/cms/informatik/studium/vor-dem-studium/bewerbungsinfos/~npqh/bachelor-informatik/',
+      'https://sc.informatik.rwth-aachen.de/en/studium/bachelor/informatik/',
     lastVerified: '2026-09-27',
   },
   {
@@ -518,7 +518,7 @@ const PROGRAMS: ProgramIntel[] = [
       CHECKED,
       { noteAR: 'الطلاب الدوليون من غير مواطني دول الاتحاد الأوروبي/المنطقة الاقتصادية يدفعون رسوماً دراسية في بادن-فورتمبيرغ.' },
     ),
-    programUrl: 'https://uni-stuttgart.de/studium/bewerbung/international-degree/bewerbung/',
+    programUrl: 'https://www.student.uni-stuttgart.de/en/study-programs/Computer-Science-B.Sc./',
     lastVerified: '2026-09-27',
   },
 ];
