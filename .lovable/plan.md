@@ -1,28 +1,53 @@
-# Audit and fix: confirming an office appointment fails
+# Internal chat: who can talk to whom
 
-## What I confirmed
-- In your last test the calendar loaded, but every press of "Confirm appointment" (Mon 19 Oct, 15:00 Tamra time) came back with "Booking could not be updated. Please contact DARB."
-- The booking link itself is valid. The application is still at "New", it has no office or appointment yet, and the Tamra office has booking turned on, one team member and normal booking settings.
-- The time you picked passes every check visible in the booking rules: it is within the 14-day window, more than 2 hours away, inside opening hours and on a 30-minute step. A rejected time would show "time taken", not this message, so the cause is something else.
-- The app hides the real database error behind that generic message, so the exact cause is **not confirmed yet**.
+## Rule
+One relationship gets one conversation. A student talks to their team only through their case chat, never through a second direct chat. The database enforces this as well as the screens.
 
-## Likely causes, to check in this order
-1. The automatic step that picks the team member for the slot fails or finds nobody. For example, Tamra's one member may not be marked as taking bookings, or may not cover consultations.
-2. Something that runs automatically when an appointment is saved fails, such as creating reminders or sending WhatsApp or notifications.
-3. Moving the application from "New" to "Appointment scheduled" is blocked by one of the rules that guard application stages.
+## Who may message whom
 
-## Steps
-1. **Show the real reason:** record the actual database error on the server (never shown to the visitor), then repeat the booking once in the preview to capture it.
-2. **Fix only that cause:**
-   - Team-member data problem: tell you exactly what to set in Admin → Offices, or supply SQL for you to run.
-   - Database rule problem: supply a migration file for you to deploy manually. Nothing is applied for you.
-3. **Better message:** if no team member is free, show "No team member is free at this time, please pick another time" instead of "contact DARB".
-4. **Verify:** book a slot end to end on /apply and /office-visit, check that a second booking of the same slot is blocked, and run the booking tests.
+| From | To | How |
+|---|---|---|
+| Student | Admin | Direct chat |
+| Student | Their own team member | Case chat only |
+| Team member | Team member | Direct chat (only with team chat enabled, as today) |
+| Team member | Admin | Direct chat |
+| Team member | Student | Case chat only |
+| Admin | Anyone | Direct chat |
+| Agent | Admin only | Direct chat |
+| Partner / Ambassador | Admin only | Direct chat |
+
+Agents can't message partners, ambassadors or students. Partners and ambassadors can't message students, team members or agents.
+
+## Team dashboard
+- The tab row becomes one compact menu: **Inbox [All ▾]**, with All / Teams / Students. "Administration" chats show under All. The unread count stays on each choice.
+- It opens on All. Every choice lists chats newest first.
+- Student rows only ever open the case chat.
+
+## Admin dashboard
+- The same menu: All / Teams / Students / Agents / Partners / Ambassadors.
+- Each chat is sorted under the other person's role.
+
+## Student dashboard
+- Two entries only: **DARB Administration** (direct) and **My DARB Case — Message your DARB team** (the case chat).
+- No button to start a direct chat with a team member.
+
+## Agent, partner and ambassador
+- The new-chat picker lists admins only. This matches today's behavior, which gets checked again.
+
+## Reset
+- We're still before launch, so every existing chat (direct and case) gets cleared once. Accounts, cases and everything else stay as they are.
 
 ## Technical details
-- `src/lib/publicBooking.functions.ts` (around line 437) maps every non-"Time unavailable" error from `manage_public_appointment` to a generic message. Add a server `console.error` with `result.error.message/code`, and map "Office unavailable" (null assignee) to a clear reason.
-- Suspects, inspected first with read-only queries:
-  - `resolve_office_assignee_for_slot(...)` and the `office_members` flags for Tamra.
-  - Triggers on `appointments` INSERT.
-  - The guard triggers on `cases` UPDATE (`office_id`/`assigned_to` set, `new`→`appointment_scheduled`).
-- No data is changed during the audit. Migrations remain manual-deploy.
+- A new migration file for you to deploy yourself:
+  - `start_direct_thread` gets rewritten around the table above. It keeps the "team member to team member needs `internal_team_chat_enabled`" rule, allows student to admin, and blocks every other student pair. Agent/partner/ambassador to anyone except an admin raises an error. It uses an empty `search_path` and schema-qualified names.
+  - `get_staff_directory` gets the same matrix, so pickers never list someone you aren't allowed to message.
+  - The insert policy on `direct_messages` gets re-checked so it requires a valid pair. This blocks sends in old threads that are no longer allowed.
+- A separate reset SQL file, run once by you: it deletes the rows in `direct_messages`, `direct_thread_participants`, `direct_threads`, `case_messages` and `case_message_reads`. Nothing else is touched.
+- `CaseMessagesInboxPage.tsx`: the filter becomes `all | teams | students` for team members, plus agents/partners/ambassadors for admins. It renders as a Select dropdown (with `'all'` as the sentinel value), and categories come from the other person's role.
+- Student messages page: remove any team direct-chat entry, and give the case thread the "My DARB Case" label.
+- Locales: new keys in en/ar/he, in both `public/locales` and `src/locales`, kept identical.
+- Tests: a role matrix test for the picker filtering, and SQL verification queries for each allowed and blocked pair.
+- Checks: typecheck, the i18n parity test, and Playwright on `/team/messages`, `/admin/messages` and `/student/messages`, at mobile size and in Arabic.
+
+## Out of scope
+WhatsApp tab, voice calls (beyond following the same pairs), and message storage format.
