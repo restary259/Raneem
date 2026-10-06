@@ -325,6 +325,11 @@ Never merge your own PR.
 - Active destination cities are controlled by `ACTIVE_DESTINATION_CITIES` in `src/data/educationalDestinations.ts`; hide cities rather than deleting data.
 - Catalog photo behavior and seed generation are governed by the existing catalog tests/docs; do not casually alter generated seed output.
 - Never put `script-src` in the root document meta CSP; TanStack hydration depends on the existing nonce-compatible behavior.
+- Internal background logs (`net._http_response`, `cron.job_run_details`) keep 7 days via the daily `cleanup-internal-logs` cron job; never slow `voice-call-cleanup`.
+- A school's catalog photo opens `schools.photo_link` when set (e.g. HORIZONTE's Google Maps walkthrough). Only http(s) links are honored (`schoolPhotoLink()` in `src/lib/catalogDisplay.ts`); the SchoolCard photo `<a>` stops propagation so it never also selects the school.
+- `20261005190000_school_photo_links.sql` owns `photo_link` ONLY, never `photos`. It shares timestamp `20261005190000` with the HORIZONTE housing-photos migration, so alphabetical order runs it last; writing `photos` there silently clobbers `school/hero.jpg`. Guarded by `src/lib/schoolCatalogPhotos.test.ts`.
+- The repair for a database that already recorded `20261005190000` (in-place migration edits do not re-run) is `20261005200000_reassert_horizonte_hero_photo.sql`: it restores `school/hero.jpg` only when `photos` is exactly the clobbered accommodation set, so a legitimate admin edit is never overwritten.
+- Catalog photos are authored in `src/data/schoolCatalog/*.json` and compiled into `20260820000000_school_catalog_seed.sql` by `node gen-seed.mjs` (keep its output byte-identical); every school and accommodation needs >=1 photo whose file exists under `public/` (`schoolCatalogPhotos.test.ts`).
 
 ## 23. FINAL MINDSET
 

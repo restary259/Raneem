@@ -87,4 +87,20 @@ describe("HORIZONTE photo ownership", () => {
       ),
     ).toBe(true);
   });
+
+  it("the repair migration re-asserts the hero only for the clobbered set", () => {
+    const repair = fs.readFileSync(
+      path.join(MIGRATIONS, "20261005200000_reassert_horizonte_hero_photo.sql"),
+      "utf8",
+    );
+    // Restores the dedicated hero...
+    expect(repair).toContain(
+      "ARRAY['/lovable-uploads/schools/horizonte/school/hero.jpg']",
+    );
+    // ...but only when photos are exactly the three accommodation shots the
+    // old photo-link migration wrote, so a legitimate admin edit is untouched.
+    expect(repair).toMatch(
+      /AND photos = ARRAY\[[\s\S]*?horizonte\/accommodations\/building\.jpg[\s\S]*?horizonte\/accommodations\/street\.jpg[\s\S]*?horizonte\/accommodations\/view-roofs\.jpg[\s\S]*?\]::text\[\]/,
+    );
+  });
 });
