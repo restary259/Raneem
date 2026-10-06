@@ -19,6 +19,7 @@ import { bagrutToGermanGrade } from '@/utils/gradeConverter';
 import type { SubjectEntry } from '@/lib/intel/subjects';
 import type { AdmissionMode, ApplicationChannel, ProgramIntel } from '@/data/intel/types';
 import { getRecommendedUniversityMeta } from '@/data/intel/universityRecommendations';
+import { getUniversityWebsite } from '@/data/intel/universityWebsites';
 
 /** Static key maps — the i18n parity guard needs literal keys in source. */
 const ADMISSION_MODE_KEYS: Record<AdmissionMode, string> = {
@@ -428,7 +429,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                     return (
                       <a
                         key={recommendation.universityId}
-                        href={recommendation.programUrl}
+                        href={getUniversityWebsite(meta.name) ?? recommendation.programUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
@@ -445,9 +446,11 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                               : t('intel.recommendations.related', 'Related route — official catalogue')}
                           </span>
                           <span className="mt-1 block text-xs">
-                            {recommendation.linkKind === 'programme'
-                              ? t('intel.recommendations.openProgramme', 'Official programme page')
-                              : t('intel.recommendations.openCatalogue', 'Official programme catalogue')}
+                            {getUniversityWebsite(meta.name)
+                              ? t('intel.recommendations.openWebsite', 'Official university website')
+                              : recommendation.linkKind === 'programme'
+                                ? t('intel.recommendations.openProgramme', 'Official programme page')
+                                : t('intel.recommendations.openCatalogue', 'Official programme catalogue')}
                           </span>
                           <span className={recommendation.tuition.kind === 'verify'
                             ? 'mt-1 block text-xs text-muted-foreground'
@@ -476,7 +479,7 @@ export default function MajorCard({ subject, onBack }: { subject: SubjectEntry; 
                 {programs.slice(0, 6).map((program) => (
                   <a
                     key={program.id}
-                    href={program.programUrl}
+                    href={getUniversityWebsite(program.universityName) ?? program.programUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-start justify-between gap-3 rounded-md border border-border p-3 text-sm hover:bg-accent"
