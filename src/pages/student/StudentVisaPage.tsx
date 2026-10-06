@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Globe, Edit, Save, X, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import VisaInfoWizard from "@/components/visa/VisaInfoWizard";
 import DashboardLoading from "@/components/dashboard/DashboardLoading";
 import { toneClasses } from "@/lib/statusTokens";
 import { submitStudentVisaApplication, markOwnVisaArrived } from "@/services/VisaService";
@@ -329,6 +330,8 @@ export default function StudentVisaPage() {
           </p>
         </CardContent>
       </Card>
+
+      {caseId && userId && <VisaInfoWizard caseId={caseId} userId={userId} />}
 
       {/* ── Submit to Administration (post-enrollment only) ── */}
       {isEnrolled && (
