@@ -3,10 +3,55 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+/**
+ * The page reads the `dashboard` namespace, which the vitest runtime never
+ * loads — dashboard.json lives in public/locales and is fetched over HTTP. This
+ * map mirrors the English values the page actually reads, so the mock returns
+ * real strings instead of raw keys and the assertions below test rendered text.
+ */
+const EN: Record<string, string> = {
+  "chat.adminLabel": "Administration",
+  "chat.backToChats": "Back to conversations",
+  "chat.type.case": "Case",
+  "chat.type.direct": "Direct",
+  "chat.attach.only": "Attachment",
+  "chat.voice.message": "Voice message",
+  "messagesInbox.title": "Case messages",
+  "messagesInbox.studentSubtitle": "Talk directly with your advisor.",
+  "messagesInbox.myCaseTitle": "My DARB Case",
+  "messagesInbox.myCaseHint": "Message your DARB team",
+  "messagesInbox.payoutTab": "Payout",
+  "messagesInbox.payoutConversationHint": "Your payout conversation",
+  "messagesInbox.adminConversationHint":
+    "Your direct line to DARB Administration",
+  "messagesInbox.openConversation": "Open the conversation",
+  "messagesInbox.noMessagesYet": "No messages yet",
+  "messagesInbox.startTeamPreview": "Tap to start your conversation",
+  "messagesInbox.empty": "No conversations yet.",
+  "messagesInbox.startingTeamChat": "Opening your team chat…",
+  "messagesInbox.emergency.title": "Emergency services",
+  "messagesInbox.emergency.police": "Police",
+  "messagesInbox.emergency.ambulance": "Ambulance",
+  "messagesInbox.emergency.fire": "Fire Fighter",
+  "messagesInbox.emergency.call": "Call {{number}}",
+  "messagesInbox.emergency.action": "Call",
+};
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: unknown) =>
-      typeof fallback === "string" ? fallback : key,
+    t: (key: string, fallbackOrOptions?: unknown, maybeOptions?: unknown) => {
+      const template =
+        EN[key] ??
+        (typeof fallbackOrOptions === "string" ? fallbackOrOptions : key);
+      const options =
+        typeof fallbackOrOptions === "object" && fallbackOrOptions !== null
+          ? (fallbackOrOptions as Record<string, unknown>)
+          : (maybeOptions as Record<string, unknown> | undefined);
+      if (!options) return template;
+      return template.replace(/\{\{(\w+)\}\}/g, (_match, name: string) =>
+        String(options[name] ?? ""),
+      );
+    },
     i18n: { language: "en" },
   }),
 }));
@@ -15,9 +60,12 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "student-1" }, role: "student" }),
 }));
 
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
+vi.mock("@/hooks/use-toast", () => {
+  // Stable function identity: the page lists `toast` in a useEffect dependency
+  // array, so a fresh mock per render would re-run the mount effect forever.
+  const toast = vi.fn();
+  return { useToast: () => ({ toast }) };
+});
 
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => false }));
 
@@ -35,20 +83,18 @@ vi.mock("@/components/messages/VoiceCallButton", () => ({
   default: () => <div>voice-call</div>,
 }));
 
+// The page resolves the student's admin thread on mount (idempotent RPC). Tests
+// that exercise the "no thread yet" pending row set this to null before render.
+let adminThreadId: string | null = "team-77";
+
 const mockRpc = vi.fn((name: string, _args?: unknown) => {
   if (name === "get_my_case") {
     return Promise.resolve({ data: [{ id: "case-42" }], error: null });
   }
-  if (name === "start_student_team_member_thread") {
-    return Promise.resolve({ data: "team-77", error: null });
-  }
-  // listMyDirectThreads resolves the counterpart's role/name from the staff
-  // directory; without it the team thread cannot be identified.
-  if (name === "get_staff_directory") {
-    return Promise.resolve({
-      data: [{ id: "staff-1", full_name: "Raneem", role: "team_member" }],
-      error: null,
-    });
+  // The student's direct line is Administration, opened via the idempotent
+  // admin thread RPC (the page no longer opens a named team-member thread).
+  if (name === "start_student_admin_thread") {
+    return Promise.resolve({ data: adminThreadId, error: null });
   }
   return Promise.resolve({ data: null, error: null });
 });
@@ -60,8 +106,8 @@ const TEAM_LAST_MESSAGE = {
   id: "m-team",
   thread_id: "team-77",
   author_id: "staff-1",
-  author_name: "Raneem",
-  author_role: "team_member",
+  author_name: "DARB Team",
+  author_role: "admin",
   body: "Your appointment is confirmed",
   created_at: new Date().toISOString(),
   attachments: null,
@@ -70,11 +116,17 @@ const TEAM_LAST_MESSAGE = {
 const TABLE_ROWS: Record<string, unknown[]> = {
   payout_requests: [{ thread_id: "payout-9" }],
   direct_thread_participants: [
-    { thread_id: "team-77", user_id: "student-1", last_read_at: "2020-01-01T00:00:00Z" },
+    {
+      thread_id: "team-77",
+      user_id: "student-1",
+      last_read_at: "2020-01-01T00:00:00Z",
+    },
     { thread_id: "team-77", user_id: "staff-1", last_read_at: null },
   ],
   direct_messages: [TEAM_LAST_MESSAGE],
-  direct_threads: [{ id: "team-77", last_message_at: TEAM_LAST_MESSAGE.created_at }],
+  direct_threads: [
+    { id: "team-77", last_message_at: TEAM_LAST_MESSAGE.created_at },
+  ],
   profiles: [],
 };
 
@@ -113,6 +165,7 @@ import StudentMessagesPage from "../StudentMessagesPage";
 describe("StudentMessagesPage — chat list ↔ chat box", () => {
   beforeEach(() => {
     mockRpc.mockClear();
+    adminThreadId = "team-77";
     document.documentElement.dir = "ltr";
     for (const [key, rows] of Object.entries(BASE_TABLE_ROWS)) {
       TABLE_ROWS[key] = rows.slice();
@@ -180,33 +233,43 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     expect(screen.getByText("Payout")).toBeInTheDocument();
   });
 
-  it("lists an EXISTING team conversation on a fresh visit", async () => {
+  it("lists the EXISTING Administration conversation on a fresh visit", async () => {
     render(<StudentMessagesPage />);
 
-    // The team thread is discovered from the direct threads, so it must appear
-    // in the list without the student pressing "Message my team member" first.
+    // The admin thread is discovered from the direct threads, so it must appear
+    // in the list without the student pressing anything first.
     await waitFor(() =>
-      expect(screen.getByText("Your direct line to your advisor")).toBeInTheDocument(),
+      expect(
+        screen.getByText("Your direct line to DARB Administration"),
+      ).toBeInTheDocument(),
     );
     expect(
       screen.queryByRole("button", { name: /Message my team member/i }),
     ).not.toBeInTheDocument();
   });
 
-  it("renders the requested advisor and emergency contacts in order", async () => {
+  it("renders the Administration row and emergency contacts in order", async () => {
     render(<StudentMessagesPage />);
 
-    const advisor = await waitFor(() =>
-      screen.getByText("Your direct line to your advisor").closest("li"),
+    const admin = await waitFor(() =>
+      screen.getByText("Your direct line to DARB Administration").closest("li"),
     );
     const police = screen.getByText("Police");
     const ambulance = screen.getByText("Ambulance");
     const fire = screen.getByText("Fire Fighter");
 
-    expect(advisor).toBeTruthy();
-    expect(advisor!.compareDocumentPosition(police) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(police.compareDocumentPosition(ambulance) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(ambulance.compareDocumentPosition(fire) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(admin).toBeTruthy();
+    expect(
+      admin!.compareDocumentPosition(police) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      police.compareDocumentPosition(ambulance) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      ambulance.compareDocumentPosition(fire) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     const emergencyLinks = screen
       .getAllByRole("link")
@@ -219,9 +282,10 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     ]);
   });
 
-  it("starts the existing team-member thread when the team row has no thread yet", async () => {
+  it("starts the admin thread when the row has no thread yet", async () => {
     const user = userEvent.setup();
 
+    adminThreadId = null;
     TABLE_ROWS.direct_thread_participants = [];
     TABLE_ROWS.direct_messages = [];
     TABLE_ROWS.direct_threads = [];
@@ -229,24 +293,25 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     render(<StudentMessagesPage />);
 
     await waitFor(() =>
-      expect(screen.getByText("Team Member")).toBeInTheDocument(),
+      expect(screen.getByText("Administration")).toBeInTheDocument(),
     );
 
     await user.click(screen.getByText("Tap to start your conversation"));
     // The page calls `.rpc(name)` with one argument, but this suite's
     // integration mock forwards a second `args` parameter, so the recorded
-    // call is ("start_student_team_member_thread", undefined). Vitest compares
+    // call is ("start_student_admin_thread", undefined). Vitest compares
     // arity strictly, so assert on the first argument rather than the call tuple.
     await waitFor(() =>
       expect(
         mockRpc.mock.calls.some(
-          ([name]) => name === "start_student_team_member_thread",
+          ([name]) => name === "start_student_admin_thread",
         ),
       ).toBe(true),
     );
   });
 
-  it("calls the team-thread RPC only once when the row is tapped repeatedly", async () => {
+  it("calls the admin-thread RPC only once when the row is tapped repeatedly", async () => {
+    adminThreadId = null;
     TABLE_ROWS.direct_thread_participants = [];
     TABLE_ROWS.direct_messages = [];
     TABLE_ROWS.direct_threads = [];
@@ -254,8 +319,11 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     render(<StudentMessagesPage />);
 
     await waitFor(() =>
-      expect(screen.getByText("Team Member")).toBeInTheDocument(),
+      expect(screen.getByText("Administration")).toBeInTheDocument(),
     );
+
+    // Drop the mount-time resolve so only tap-driven calls are counted below.
+    mockRpc.mockClear();
 
     // Hold the RPC open so the row stays in its pending state between taps —
     // this is the window in which a second tap used to fire a second call.
@@ -278,7 +346,7 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     await waitFor(() =>
       expect(
         mockRpc.mock.calls.filter(
-          ([name]) => name === "start_student_team_member_thread",
+          ([name]) => name === "start_student_admin_thread",
         ).length,
       ).toBe(1),
     );
@@ -288,46 +356,56 @@ describe("StudentMessagesPage — chat list ↔ chat box", () => {
     render(<StudentMessagesPage />);
 
     // Last message preview comes from the thread's message data. Scoped to the
-    // team row: the payout row legitimately has no messages yet.
+    // Administration row: the payout row legitimately has no messages yet.
     await waitFor(() =>
-      expect(screen.getByText("Raneem").closest("li")).toHaveTextContent(
-        "Your appointment is confirmed",
-      ),
+      expect(
+        screen.getByText("Administration").closest("li"),
+      ).toHaveTextContent("Your appointment is confirmed"),
     );
     // The staff-authored, unread message marks the conversation title bold.
-    expect(screen.getByText("Raneem")).toHaveClass("font-bold");
+    expect(screen.getByText("Administration")).toHaveClass("font-bold");
   });
 
   it("labels an attachment-only message instead of reporting no messages", async () => {
     // The last message carries no body — only a document attachment.
     TEAM_LAST_MESSAGE.body = "";
     (TEAM_LAST_MESSAGE as { attachments: unknown }).attachments = [
-      { kind: "document", mime: "application/pdf", name: "passport.pdf", url: "u" },
+      {
+        kind: "document",
+        mime: "application/pdf",
+        name: "passport.pdf",
+        url: "u",
+      },
     ];
     render(<StudentMessagesPage />);
 
     await waitFor(() =>
-      expect(screen.getByText("Raneem").closest("li")).toHaveTextContent(
-        "Attachment",
-      ),
+      expect(
+        screen.getByText("Administration").closest("li"),
+      ).toHaveTextContent("Attachment"),
     );
 
     TEAM_LAST_MESSAGE.body = "Your appointment is confirmed";
     (TEAM_LAST_MESSAGE as { attachments: unknown }).attachments = null;
   });
 
-  it("uses the resolved advisor name in the OPEN chat header", async () => {
+  it("shows the Administration label in the OPEN chat header, never a named account", async () => {
     const user = userEvent.setup();
     render(<StudentMessagesPage />);
 
     await waitFor(() =>
-      expect(screen.getByText("Your direct line to your advisor")).toBeInTheDocument(),
+      expect(
+        screen.getByText("Your direct line to DARB Administration"),
+      ).toBeInTheDocument(),
     );
-    await user.click(screen.getByText("Your direct line to your advisor"));
+    await user.click(
+      screen.getByText("Your direct line to DARB Administration"),
+    );
 
     expect(await screen.findByText("direct-chat:team-77")).toBeInTheDocument();
-    // Header and list agree on the resolved name — never the generic fallback.
-    expect(screen.getByText("Raneem")).toBeInTheDocument();
+    // The header carries the same generic label as the list row — the student
+    // never sees a named internal account.
+    expect(screen.getAllByText("Administration").length).toBeGreaterThan(0);
     expect(screen.queryByText("Team Member")).not.toBeInTheDocument();
   });
 });
