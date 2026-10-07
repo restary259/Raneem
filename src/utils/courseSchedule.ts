@@ -22,9 +22,10 @@ function toIsoDate(date: Date): string {
 }
 
 /**
- * Returns the final scheduled class day for a course measured in teaching
- * weeks. School start dates can move to Tuesday after a Monday closure, so
- * each teaching week ends on Friday rather than assuming every start is Monday.
+ * Returns the final scheduled class day for a course measured in booked
+ * calendar weeks. School start dates can move to Tuesday after a Monday
+ * closure, so each booked week ends on Friday. School closures and public
+ * holidays do not extend the booked duration unless a school records otherwise.
  */
 export function calculateCourseEndDate(
   startDate: string | null | undefined,
