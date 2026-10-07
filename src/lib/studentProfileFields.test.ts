@@ -23,6 +23,7 @@ const completeProfile: StudentProfileValues = {
   student_phone: "054-123-4567",
   school_id: "school-1",
   program_id: "program-1",
+  program_start_date: "2026-10-26",
   accommodation_id: "acc-1",
   insurance_id: "ins-1",
 };

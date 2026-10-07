@@ -9,5 +9,5 @@
 - [ ] Run a real application-to-staff confirmation test with a controlled test account and case (blocked: would create a live case, messages, and reminders; no authorized test identity provided)
 - [ ] Fix voice-note tap recording, MIME handling, cancellation safety, and verify direct/case sending end to end
 - [x] Add an admin master switch for all outgoing WhatsApp sending (off by default; blocks manual sends, follow-ups and campaigns)
-- [ ] Replace approximate intake months with official school start dates and calculated final class dates
-- [ ] Show and export the saved course schedule; prepare Jilan's guarded schedule update
+- [x] Replace approximate intake months with official school start dates and calculated final class dates
+- [x] Show and export the saved course schedule; prepare Jilan's guarded schedule update
