@@ -512,7 +512,6 @@ export default function SubmitNewStudentPage() {
     if (s === 3) {
       if (!schoolId) e.school = ss("errorSchool");
       if (programId && (!programWeeks || parseInt(programWeeks) <= 0)) e.programWeeks = ss("errorWeeks");
-      if (programId && !programStartDate) e.programStartDate = t("case.courseSchedule.required");
       if (accommodationId && (!accommodationWeeks || parseInt(accommodationWeeks) <= 0))
         e.accommodationWeeks = ss("errorWeeks");
     }

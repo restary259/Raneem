@@ -365,10 +365,6 @@ export default function ProfileCompletionForm({
       else if (checkingEmail) e.email = t("case.profileForm.errEmail");
       if (!phone.trim()) e.phone = t("case.profileForm.errPhone");
     }
-    if (s === "program") {
-      if (programId && (!programWeeks || Number(programWeeks) <= 0)) e.programWeeks = t("case.profileForm.errWeeks");
-      if (programId && !programStartDate) e.programStartDate = t("case.courseSchedule.required");
-    }
     return e;
   };
 

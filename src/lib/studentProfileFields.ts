@@ -82,7 +82,6 @@ export const REQUIRED_PROFILE_FIELDS: (keyof StudentProfileValues)[] = [
   "student_phone",
   "school_id",
   "program_id",
-  "program_start_date",
   "accommodation_id",
   "insurance_id",
 ];
