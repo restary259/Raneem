@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { readStudentProfile, PROFILE_FIELD_LABEL_KEYS } from "@/lib/studentProfileFields";
+import { formatCourseDate } from "@/utils/courseSchedule";
 
 interface Props {
   caseData: Record<string, unknown>;
@@ -86,11 +87,31 @@ export default function CaseProfileSummary({ caseData, submission }: Props) {
     label: t(PROFILE_FIELD_LABEL_KEYS[key]),
     value: ID_FIELDS.includes(key as IdField) ? names[key as IdField][values[key]] || values[key] : values[key],
   }));
+  const courseRows = [
+    {
+      key: "course-start",
+      label: t("case.courseSchedule.officialStart"),
+      value: formatCourseDate(submission?.program_start_date as string | null),
+    },
+    {
+      key: "course-end",
+      label: t("case.courseSchedule.finalClass"),
+      value: formatCourseDate(submission?.program_end_date as string | null),
+    },
+  ];
 
   return (
     <section className="rounded-md border bg-card p-4 sm:p-5">
       <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map(({ key, label, value }) => (
+          <div key={key} className="min-w-0">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="mt-1 break-words text-sm font-medium text-foreground">
+              {value || t("case.terminal.notProvided")}
+            </p>
+          </div>
+        ))}
+        {courseRows.map(({ key, label, value }) => (
           <div key={key} className="min-w-0">
             <p className="text-xs text-muted-foreground">{label}</p>
             <p className="mt-1 break-words text-sm font-medium text-foreground">

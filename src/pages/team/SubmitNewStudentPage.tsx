@@ -20,7 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 // ✅ FIX: Use the shared intakeMonths utility (fixes hardcoded 2025 start)
-import { generateIntakeMonths, intakeMonthToStartDate } from "@/utils/intakeMonths";
+import { calculateCourseEndDate, formatCourseDate } from "@/utils/courseSchedule";
+import OfficialCourseDateFields from "@/components/cases/OfficialCourseDateFields";
 // ✅ FIX: Use normalizeDate to validate/store DOB (fixes broken Popover calendar)
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth } from "@/utils/dateUtils";
 import { validateUploadFile } from "@/lib/uploadRules";
@@ -270,6 +271,7 @@ export default function SubmitNewStudentPage() {
   const [programId, setProgramId] = useState("");
   const [programWeeks, setProgramWeeks] = useState("");
   const [startMonth, setStartMonth] = useState("");
+  const [programStartDate, setProgramStartDate] = useState("");
   const [accommodationId, setAccommodationId] = useState("");
   const [accommodationWeeks, setAccommodationWeeks] = useState("");
   const [insuranceId, setInsuranceId] = useState("");
@@ -304,6 +306,7 @@ export default function SubmitNewStudentPage() {
     programId,
     schoolId,
     startMonth,
+    programStartDate,
     accommodationId,
     programWeeks,
     accommodationWeeks,
@@ -338,6 +341,7 @@ export default function SubmitNewStudentPage() {
     setSchoolId(d.schoolId ?? "");
     setProgramId(d.programId ?? "");
     setStartMonth(d.startMonth ?? "");
+    setProgramStartDate(d.programStartDate ?? "");
     setAccommodationId(d.accommodationId ?? "");
     setProgramWeeks(d.programWeeks ?? "");
     setAccommodationWeeks(d.accommodationWeeks ?? "");
@@ -385,8 +389,6 @@ export default function SubmitNewStudentPage() {
     return computeInsuranceCost(selectedInsurance ?? null, ageFromDob(dob), null, null, approxMonths);
   }, [selectedInsurance, dob, programWeeks]);
   const eurTotal = programCost.total + accomCost.total + (insuranceCost.total ?? 0);
-  const monthOptions = generateIntakeMonths(24);
-
   // Changing the school invalidates every school-bound selection, including the
   // durations and derived dates that belonged to the previous school's program.
   useEffect(() => {
@@ -395,6 +397,7 @@ export default function SubmitNewStudentPage() {
     setProgramWeeks("");
     setAccommodationWeeks("");
     setStartMonth("");
+    setProgramStartDate("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
 
@@ -509,6 +512,7 @@ export default function SubmitNewStudentPage() {
     if (s === 3) {
       if (!schoolId) e.school = ss("errorSchool");
       if (programId && (!programWeeks || parseInt(programWeeks) <= 0)) e.programWeeks = ss("errorWeeks");
+      if (programId && !programStartDate) e.programStartDate = t("case.courseSchedule.required");
       if (accommodationId && (!accommodationWeeks || parseInt(accommodationWeeks) <= 0))
         e.accommodationWeeks = ss("errorWeeks");
     }
@@ -610,8 +614,8 @@ export default function SubmitNewStudentPage() {
         program_id: programId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
-        program_start_date: intakeMonthToStartDate(startMonth),
-        program_end_date: null,
+        program_start_date: programStartDate || null,
+        program_end_date: calculateCourseEndDate(programStartDate, programCost.weeks),
         profile_completed_at: now,
         // Weekly rate × weeks — `*_price` columns always hold the TOTAL.
         program_weeks: programCost.weeks || null,
@@ -648,7 +652,8 @@ export default function SubmitNewStudentPage() {
           address: [street, houseNo, postcode, city].filter(Boolean).join(", "),
           program_id: programId || null,
           school_id: schoolId || null,
-          start_month: startMonth || null,
+          start_month: programStartDate ? programStartDate.slice(0, 7) : startMonth || null,
+          program_start_date: programStartDate || null,
           accommodation_id: accommodationId || null,
           insurance_id: insuranceId || null,
           documents_skipped: skipDocuments,
@@ -1015,21 +1020,13 @@ export default function SubmitNewStudentPage() {
               </div>
             )}
 
-            <div>
-              <Label>{ss("intakeMonth")}</Label>
-              <Select value={startMonth} onValueChange={setStartMonth}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={ss("selectIntakeMonth")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <OfficialCourseDateFields
+              schoolId={schoolId}
+              value={programStartDate}
+              weeks={programWeeks}
+              onChange={setProgramStartDate}
+              error={errors.programStartDate}
+            />
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -1245,6 +1242,11 @@ export default function SubmitNewStudentPage() {
                       ? `${programCost.weeks} × ${formatMoney(programCost.weeklyRate ?? 0, programCost.currency)}`
                       : "—"
                   }
+                />
+                <ReviewRow label={t("case.courseSchedule.officialStart")} value={formatCourseDate(programStartDate) || "—"} />
+                <ReviewRow
+                  label={t("case.courseSchedule.finalClass")}
+                  value={formatCourseDate(calculateCourseEndDate(programStartDate, programWeeks)) || "—"}
                 />
                 <ReviewRow label={ss("accommodation")} value={selectedAccom ? nameOf(selectedAccom) : ss("noAccom")} />
                 <ReviewRow
