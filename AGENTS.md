@@ -361,3 +361,6 @@ THE ARCHITECTURE REMAINS MAINTAINABLE.
 THE PR IS SAFE TO REVIEW.
 
 The product is the business. Build accordingly.
+
+## Course schedule dates
+- Course schedules use `school_start_dates` through the catalog-to-partner-school link; end dates are derived centrally from the official start and whole teaching weeks so forms, profiles, and exports stay consistent.
