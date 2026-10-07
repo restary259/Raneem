@@ -50,10 +50,10 @@ export default function OfficialCourseDateFields({ schoolId, value, weeks, onCha
         .from("school_start_dates")
         .select("start_date,audience,course_code,note_en,note_ar")
         .eq("school_id", partner.data.id)
-        .gte("start_date", new Date().toISOString().slice(0, 10))
         .order("start_date");
       if (result.error) throw result.error;
-      return (result.data ?? []) as StartDateRow[];
+      const today = new Date().toISOString().slice(0, 10);
+      return ((result.data ?? []) as StartDateRow[]).filter((row) => row.start_date >= today || row.start_date === value);
     })()
       .then((rows) => {
         if (cancelled) return;
@@ -71,6 +71,9 @@ export default function OfficialCourseDateFields({ schoolId, value, weeks, onCha
     return () => {
       cancelled = true;
     };
+    // Reload only when the school changes. `onChange` is intentionally not a
+    // dependency because callers pass an inline setter wrapper.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
 
   const noteFor = (row: StartDateRow) =>

@@ -76,6 +76,7 @@ describe("readStudentProfile", () => {
     expect(values.education_level).toBe("bagrut");
     expect(values.student_email).toBe("canonical@example.com");
     expect(values.program_id).toBe("program-canonical");
+    expect(values.program_start_date).toBe("2026-09-01");
     expect(values.city).toBe("Haifa");
     expect(values.student_phone).toBe("0500000000");
   });

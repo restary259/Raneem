@@ -365,6 +365,10 @@ export default function ProfileCompletionForm({
       else if (checkingEmail) e.email = t("case.profileForm.errEmail");
       if (!phone.trim()) e.phone = t("case.profileForm.errPhone");
     }
+    if (s === "program") {
+      if (programId && (!programWeeks || Number(programWeeks) <= 0)) e.programWeeks = t("case.profileForm.errWeeks");
+      if (programId && !programStartDate) e.programStartDate = t("case.courseSchedule.required");
+    }
     return e;
   };
 
@@ -754,7 +758,13 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
-          <OfficialCourseDateFields schoolId={schoolId} value={programStartDate} weeks={programWeeks} onChange={setProgramStartDate} />
+          <OfficialCourseDateFields
+            schoolId={schoolId}
+            value={programStartDate}
+            weeks={programWeeks}
+            onChange={setProgramStartDate}
+            error={errors.programStartDate}
+          />
         </div>
       )}
 
@@ -874,6 +884,8 @@ export default function ProfileCompletionForm({
                 [t("case.profileForm.address"), [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
                 [t("case.profileForm.languageProgram"), nameOf(selectedProgram) || "—"],
                 [t("case.profileForm.school"), nameOf(schools.find((s) => s.id === schoolId)) || "—"],
+                [t("case.courseSchedule.officialStart"), programStartDate || "—"],
+                [t("case.courseSchedule.finalClass"), calculateCourseEndDate(programStartDate, programWeeks) || "—"],
                 [t("case.profileForm.accommodation"), nameOf(selectedAccom) || "—"],
                 [t("case.profileForm.insurance"), selectedIns?.name || "—"],
               ] as [string, string][]
