@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { generateIntakeMonths, intakeMonthToStartDate } from "@/utils/intakeMonths";
 import { DOB_MONTHS, DOB_YEARS, daysInMonth, normalizeDate } from "@/utils/dateUtils";
+import { calculateCourseEndDate } from "@/utils/courseSchedule";
+import OfficialCourseDateFields from "@/components/cases/OfficialCourseDateFields";
 import { differenceInYears } from "date-fns";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
 import {
@@ -301,8 +302,6 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
 
   const selectedInsurance = insurances.find((i) => i.id === values.insurance_id);
 
-  const monthOptions = useMemo(() => generateIntakeMonths(24), []);
-
   const programCost = useMemo(
     () => computeWeeklyCost(selectedProgram as any, parseInt(values.program_weeks) || 0),
     [selectedProgram, values.program_weeks],
@@ -375,9 +374,9 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
          * The submit gate reads this column, not extra_data.start_month, so
          * the selected intake month must be persisted here as a real date.
          */
-        program_start_date: intakeMonthToStartDate(vals.start_month),
+        program_start_date: vals.program_start_date || null,
 
-        program_end_date: null,
+        program_end_date: calculateCourseEndDate(vals.program_start_date, weeks),
 
         program_weeks: progCost.weeks || null,
 
@@ -1219,6 +1218,8 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
                       accommodation_weeks: "",
 
                       start_month: "",
+
+                      program_start_date: "",
                     }));
                   }}
                 >
@@ -1304,25 +1305,12 @@ export default function CaseProfileForm({ caseData, submission, onSaved }: Props
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
-              <div>
-                <Label>{ss("intakeMonth")}</Label>
-
-                <Select value={values.start_month} onValueChange={(v) => handleChange("start_month", v)}>
-                  <SelectTrigger className="mt-0.5 h-9">
-                    <SelectValue placeholder={ss("selectIntakeMonth")} />
-                  </SelectTrigger>
-
-                  <SelectContent className="max-h-56">
-                    {monthOptions.map((m) => (
-                      <SelectItem key={m.value} value={m.value}>
-                        {m.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <OfficialCourseDateFields
+              schoolId={values.school_id}
+              value={values.program_start_date}
+              weeks={values.program_weeks}
+              onChange={(date) => handleChange("program_start_date", date)}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3">
               <div data-field="accommodation_id">
