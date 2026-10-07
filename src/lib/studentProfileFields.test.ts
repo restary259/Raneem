@@ -23,6 +23,7 @@ const completeProfile: StudentProfileValues = {
   student_phone: "054-123-4567",
   school_id: "school-1",
   program_id: "program-1",
+  program_start_date: "2026-10-26",
   accommodation_id: "acc-1",
   insurance_id: "ins-1",
 };
@@ -76,6 +77,7 @@ describe("readStudentProfile", () => {
     expect(values.education_level).toBe("bagrut");
     expect(values.student_email).toBe("canonical@example.com");
     expect(values.program_id).toBe("program-canonical");
+    expect(values.program_start_date).toBe("2026-09-01");
     expect(values.city).toBe("Haifa");
     expect(values.student_phone).toBe("0500000000");
   });

@@ -4,14 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { format, addMonths } from "date-fns";
 import { Loader2, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { toneClasses } from "@/lib/statusTokens";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { DOB_MONTHS, DOB_YEARS, normalizeDate, daysInMonth, ageFromISO, parseISODate } from "@/utils/dateUtils";
-import { intakeMonthToStartDate } from "@/utils/intakeMonths";
+import { calculateCourseEndDate } from "@/utils/courseSchedule";
+import OfficialCourseDateFields from "@/components/cases/OfficialCourseDateFields";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { DraftStatus } from "@/components/common/DraftStatus";
 import { checkEmailAvailability } from "@/lib/checkEmailAvailability";
@@ -242,6 +242,8 @@ export default function ProfileCompletionForm({
   const [programId, setProgramId] = useState((ex.program_id as string) ?? "");
   const [schoolId, setSchoolId] = useState((ex.school_id as string) ?? "");
   const [startMonth, setStartMonth] = useState((ex.start_month as string) ?? "");
+  const [programStartDate, setProgramStartDate] = useState(((ex.program_start_date as string) ?? "").slice(0, 10));
+  const [programWeeks, setProgramWeeks] = useState(String((ex.program_weeks as number | string | undefined) ?? ""));
 
   // Accommodation
   const [accommodationId, setAccommodationId] = useState((ex.accommodation_id as string) ?? "");
@@ -251,7 +253,7 @@ export default function ProfileCompletionForm({
   const draftValue = {
     firstName, middleName, lastName, dob, gender, cityOfBirth,
     email, phone, emergencyName, emergencyPhone, street, houseNo, postcode, city,
-    programId, schoolId, startMonth,
+    programId, schoolId, startMonth, programStartDate, programWeeks,
     accommodationId, insuranceId,
   };
   const { restoredDraft, savedAt, expiresAt, expired, clearDraft, acknowledgeRestore, acknowledgeExpired } = useFormDraft({
@@ -269,6 +271,7 @@ export default function ProfileCompletionForm({
     setEmergencyName(d.emergencyName ?? ""); setEmergencyPhone(d.emergencyPhone ?? "");
     setStreet(d.street ?? ""); setHouseNo(d.houseNo ?? ""); setPostcode(d.postcode ?? ""); setCity(d.city ?? "");
     setProgramId(d.programId ?? ""); setSchoolId(d.schoolId ?? ""); setStartMonth(d.startMonth ?? "");
+    setProgramStartDate(d.programStartDate ?? ""); setProgramWeeks(d.programWeeks ?? "");
     setAccommodationId(d.accommodationId ?? ""); setInsuranceId(d.insuranceId ?? "");
     acknowledgeRestore();
     toast({ title: t("common.draft.restoredTitle"), description: t("common.draft.restoredBody") });
@@ -424,15 +427,17 @@ export default function ProfileCompletionForm({
         school_id: schoolId || null,
         accommodation_id: accommodationId || null,
         insurance_id: insuranceId || null,
-        start_month: startMonth || null,
+        start_month: programStartDate ? programStartDate.slice(0, 7) : startMonth || null,
+        program_start_date: programStartDate || null,
       };
       const upsertPayload: any = {
         case_id: caseId,
         school_id: schoolId || null,
         program_id: programId || null,
         accommodation_id: accommodationId || null,
-        program_start_date: intakeMonthToStartDate(startMonth),
-        program_end_date: null,
+        program_start_date: programStartDate || null,
+        program_end_date: calculateCourseEndDate(programStartDate, programWeeks),
+        program_weeks: Number(programWeeks) || null,
         service_fee: 0,
         program_price: selectedProgram?.price ?? 0,
         accommodation_price: selectedAccom?.price ?? 0,
@@ -486,17 +491,12 @@ export default function ProfileCompletionForm({
     setEmail(""); setPhone("");
     setEmergencyName(""); setEmergencyPhone("");
     setStreet(""); setHouseNo(""); setPostcode(""); setCity("");
-    setProgramId(""); setSchoolId(""); setStartMonth("");
+    setProgramId(""); setSchoolId(""); setStartMonth(""); setProgramStartDate(""); setProgramWeeks("");
     setAccommodationId(""); setInsuranceId("");
     setErrors({});
   };
 
   /* ── Derived ────────────────────────────────────────────────────────── */
-  const monthOptions = Array.from({ length: 24 }, (_, i) => {
-    const d = addMonths(new Date(), i);
-    return { value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") };
-  });
-
   const stepIdx = STEP_KEYS.indexOf(step);
   const isLastStep = stepIdx === STEP_KEYS.length - 1;
   const isFirstStep = stepIdx === 0;
@@ -735,19 +735,8 @@ export default function ProfileCompletionForm({
             )}
           </div>
           <div>
-            <Label>{t("case.profileForm.intakeMonth")}</Label>
-            <Select value={startMonth} onValueChange={setStartMonth}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder={t("case.profileForm.ph.intake")} />
-              </SelectTrigger>
-              <SelectContent>
-                {monthOptions.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t("case.profile.programWeeks")}</Label>
+            <Input className="mt-1" type="number" min="1" max="104" value={programWeeks} onChange={(e) => setProgramWeeks(e.target.value)} />
           </div>
           <div>
             <Label>{t("case.profileForm.school")}</Label>
@@ -765,6 +754,13 @@ export default function ProfileCompletionForm({
               </SelectContent>
             </Select>
           </div>
+          <OfficialCourseDateFields
+            schoolId={schoolId}
+            value={programStartDate}
+            weeks={programWeeks}
+            onChange={setProgramStartDate}
+            error={errors.programStartDate}
+          />
         </div>
       )}
 
@@ -884,6 +880,8 @@ export default function ProfileCompletionForm({
                 [t("case.profileForm.address"), [street, houseNo, postcode, city].filter(Boolean).join(", ") || "—"],
                 [t("case.profileForm.languageProgram"), nameOf(selectedProgram) || "—"],
                 [t("case.profileForm.school"), nameOf(schools.find((s) => s.id === schoolId)) || "—"],
+                [t("case.courseSchedule.officialStart"), programStartDate || "—"],
+                [t("case.courseSchedule.finalClass"), calculateCourseEndDate(programStartDate, programWeeks) || "—"],
                 [t("case.profileForm.accommodation"), nameOf(selectedAccom) || "—"],
                 [t("case.profileForm.insurance"), selectedIns?.name || "—"],
               ] as [string, string][]

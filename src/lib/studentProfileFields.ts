@@ -37,6 +37,7 @@ export interface StudentProfileValues {
   accommodation_weeks: string;
 
   start_month: string;
+  program_start_date: string;
 }
 
 export const EMPTY_STUDENT_PROFILE: StudentProfileValues = {
@@ -69,6 +70,7 @@ export const EMPTY_STUDENT_PROFILE: StudentProfileValues = {
   accommodation_weeks: "",
 
   start_month: "",
+  program_start_date: "",
 };
 
 /** Fields a profile must carry before the case can move on to payment. */
@@ -115,6 +117,7 @@ export const PROFILE_FIELD_LABEL_KEYS: Record<keyof StudentProfileValues, string
   accommodation_weeks: "case.profile.accommodationWeeks",
 
   start_month: "case.fields.startMonth",
+  program_start_date: "case.courseSchedule.officialStart",
 };
 
 /** Trim + lowercase so the same address is never stored two ways. */
@@ -195,7 +198,7 @@ export function readStudentProfile(
 
     city: str(extra.city) || str(caseRow?.city),
 
-    school_id: str(extra.school_id),
+    school_id: str(submission?.school_id) || str(extra.school_id),
 
     program_id: str(submission?.program_id) || str(extra.program_id),
 
@@ -212,6 +215,8 @@ export function readStudentProfile(
     accommodation_weeks: str(submission?.accommodation_weeks) || str(extra.accommodation_weeks),
 
     start_month: str(extra.start_month),
+
+    program_start_date: str(submission?.program_start_date).slice(0, 10) || str(extra.program_start_date),
   };
 }
 
