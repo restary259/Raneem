@@ -1,6 +1,8 @@
 -- Set the official HORIZONTE schedule for Jilan Bashuti only.
--- Verified official start: 2026-10-26. A 34-calendar-week booking ends
--- Friday 2027-06-18; school closures and public holidays do not extend it.
+-- Verified official start: 2026-10-26. HORIZONTE's published Monday-Friday
+-- schedule makes Friday 2027-06-18 the end of the 34th booked calendar week.
+-- The school does not publish an explicit holiday-extension rule; confirm any
+-- exceptional extension directly with HORIZONTE before deploying this update.
 -- This changes no money, case stage, assignment, or other student data.
 
 UPDATE public.case_submissions AS cs

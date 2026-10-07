@@ -3648,7 +3648,7 @@
       "noDates": "No official future dates are recorded for this school. Confirm the date with the school before saving.",
       "loadFailed": "Official dates could not be loaded. Try again.",
       "chooseDateAndWeeks": "Choose a start date and course duration",
-        "endRule": "Calculated through the Friday of the final booked week. School closures and public holidays do not extend the booked duration.",
+        "endRule": "Calculated through the Friday of the final booked week. Confirm any school-closure exception with the school.",
       "required": "Select an official course start date."
     }
   },
