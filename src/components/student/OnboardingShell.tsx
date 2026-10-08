@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
-import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
+import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";

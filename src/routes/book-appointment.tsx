@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useDirection } from "@/hooks/useDirection";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
-import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
+import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
 import PublicOfficeBooking from "@/components/apply/PublicOfficeBooking";
 import { startPublicBooking } from "@/lib/publicBooking.functions";
 import { useSearchParams } from "@/lib/router-compat";

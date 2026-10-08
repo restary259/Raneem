@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, ArrowLeft } from "lucide
 import PasswordResetModal from "@/components/auth/PasswordResetModal";
 import PasswordStrength, { validatePassword } from "@/components/auth/PasswordStrength";
 import { useTranslation } from "react-i18next";
-import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
+import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth, ROLE_TO_PATH } from "@/contexts/AuthContext";
 import { changeOwnPassword } from "@/lib/changeOwnPassword";

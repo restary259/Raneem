@@ -3,7 +3,7 @@ import { Instagram, Facebook, Mail, MessageCircle } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { useTranslation } from "react-i18next";
 import TikTokIcon from "../icons/TikTokIcon";
-import darbMarkAsset from '@/assets/darb-mark-2026.png.asset.json';
+import darbMarkAsset from '@/assets/darb-circle-icon.png.asset.json';
 import { SUPPORT_EMAIL, whatsappBusinessUrl } from '@/lib/contactConfig';
 
 // TikTokIcon component definition removed from here

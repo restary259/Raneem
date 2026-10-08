@@ -4,7 +4,7 @@ import ApplyForm from "@/components/apply/ApplyForm";
 import DarbPageHero from "@/components/common/DarbPageHero";
 import { DARB_PUBLIC_HERO_IMAGES } from "@/config/publicHeroImages";
 import LanguageSwitcher from "@/components/common/LanguageSwitcher";
-import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
+import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
 import { useDirection } from "@/hooks/useDirection";
 import { useTranslation } from "react-i18next";
 
