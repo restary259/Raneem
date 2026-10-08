@@ -15,8 +15,8 @@ export const SITE_URL = 'https://darb.agency'
  * Email assets must be served from a URL that is already live in production.
  * Managed brand asset: public, stable, and shared with the website.
  */
-export const LOGO_URL = `${SITE_URL}/__l5e/assets-v1/761bc05d-5400-4292-bf78-39f0f5e7fee0/darb-logo-2026.png`
-export const LOGO_WIDTH = 132
+export const LOGO_URL = `${SITE_URL}/__l5e/assets-v1/b0cdf33a-5e28-4106-96d4-18ef458670e1/darb-wordmark-dark-trim.png`
+export const LOGO_WIDTH = 160
 
 /** Contact — mirrors src/lib/contactConfig.ts */
 export const SUPPORT_WHATSAPP_URL = 'https://wa.me/4917623790623'
