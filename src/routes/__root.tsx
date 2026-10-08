@@ -18,7 +18,7 @@ import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { DARB_OFFICE } from "@/config/localBusiness";
 import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
-import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
+
 
 // One request per script actually used: Inter (Latin/UI), IBM Plex Sans
 // Arabic (ar), Noto Sans Hebrew (he). Instrument Serif + Noto Naskh Arabic
@@ -28,7 +28,7 @@ const FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Hebrew:wght@400;500;600;700&family=Instrument+Serif&family=Noto+Naskh+Arabic:wght@600;700&display=swap";
 
 const APP_LOGO = darbLogoAsset.url;
-const OG_IMAGE = `https://darb.agency${darbLogoShareAsset.url}`;
+const OG_IMAGE = "https://darb.agency/__l5e/assets-v1/c2467f3e-3166-478b-bba6-924df8eaed6e/darb-wordmark-dark.png";
 const BRAND_LOGO = `https://darb.agency${APP_LOGO}`;
 
 const SITE_JSONLD = {
