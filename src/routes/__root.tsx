@@ -226,9 +226,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: "dns-prefetch", href: "//fonts.gstatic.com" },
         { rel: "stylesheet", href: appCss },
       ],
-      // Runs immediately after the font <link> is parsed; flips it to an
-      // active stylesheet without ever blocking rendering.
-      fontSwapScript: undefined,
     }),
     shellComponent: RootShell,
     component: RootComponent,
