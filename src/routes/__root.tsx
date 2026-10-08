@@ -250,6 +250,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        {/* Instant branded boot splash: pure HTML/CSS, visible before any
+            JavaScript runs. RootComponent adds `darb-boot-done` to <html>
+            after React's first paint, and CSS hides it — the node itself is
+            never removed, so hydration stays clean. */}
+        <div id="darb-boot-splash" aria-hidden="true">
+          <img src={APP_LOGO} alt="" width="180" height="61" />
+        </div>
         {children}
         <Scripts />
       </body>
@@ -259,6 +266,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Hide the boot splash once React has painted real content.
+  React.useEffect(() => {
+    document.documentElement.classList.add("darb-boot-done");
+  }, []);
   return (
     <ErrorBoundary>
       <ThemeScope>
