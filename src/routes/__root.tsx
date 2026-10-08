@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 // Root route — ports index.html (head metadata, splash, JSON-LD) and
 // main.tsx/App.tsx provider nesting into TanStack Start.
+import { useEffect } from "react";
 import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -267,7 +268,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   // Hide the boot splash once React has painted real content.
-  React.useEffect(() => {
+  useEffect(() => {
     document.documentElement.classList.add("darb-boot-done");
   }, []);
   return (
