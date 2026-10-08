@@ -43,7 +43,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
               <Link onClick={close} to="/heidelberg" className={itemClass}>{t('nav.heidelberg')}</Link>
               <Link onClick={close} to="/educational-programs" className={itemClass}>{t('nav.majors')}</Link>
               <Link onClick={close} to="/quiz" className={itemClass}>{t('nav.majorQuizNav')}</Link>
-              <Link onClick={close} to="/ai-advisor" className={itemClass}>{t('nav.aiAdvisor')}</Link>
             </CollapsibleContent>
           </Collapsible>
 
@@ -55,8 +54,8 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
               <ChevronDown className={'h-4 w-4 text-gray-500 transition-transform duration-200 ' + (resourcesOpen ? 'rotate-180' : '')} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
+              <Link onClick={close} to="/resources" className={itemClass}>{t('nav.resources')}</Link>
               <Link onClick={close} to="/faq" className={itemClass}>{t('nav.faq')}</Link>
-              <Link onClick={close} to="/broadcast" className={itemClass}>{t('nav.broadcast')}</Link>
               <Link onClick={close} to="/blog" className={itemClass}>{t('nav.blog')}</Link>
             </CollapsibleContent>
           </Collapsible>
@@ -68,7 +67,6 @@ const MobileNav = ({ transparent = false }: { transparent?: boolean }) => {
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1 animate-accordion-down">
               <Link onClick={close} to="/about" className={itemClass}>{t('nav.about')}</Link>
-              <Link onClick={close} to="/locations" className={itemClass}>{t('nav.locations')}</Link>
               <Link onClick={close} to="/partnership" className={itemClass}>{t('nav.partnership')}</Link>
             </CollapsibleContent>
           </Collapsible>

@@ -98,10 +98,10 @@ const ORG_JSONLD = {
 const LOCAL_JSONLD = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "@id": "https://darb.agency/locations#tamra",
+  "@id": "https://darb.agency/#tamra",
   name: DARB_OFFICE.nameEn,
   alternateName: DARB_OFFICE.nameAr,
-  url: "https://darb.agency/locations",
+  url: "https://darb.agency/",
   image: OG_IMAGE,
   telephone: DARB_OFFICE.telephone,
   parentOrganization: {

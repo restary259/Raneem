@@ -21,18 +21,16 @@ const DesktopNav = ({ transparent = false }: { transparent?: boolean }) => {
     { title: t('nav.heidelberg'), href: '/heidelberg', description: t('nav.heidelbergDesc') },
     { title: t('nav.majors'), href: '/educational-programs', description: t('seo.edProgDesc', { ns: 'common' }) },
     { title: t('nav.majorQuizNav'), href: '/quiz', description: t('seo.quizDesc', { ns: 'common' }) },
-    { title: t('nav.aiAdvisor'), href: '/ai-advisor', description: t('seo.advisorDesc', { ns: 'common' }) },
   ];
 
   const resources = [
+    { title: t('nav.resources'), href: '/resources', description: t('seo.resourcesDesc', { ns: 'common' }) },
     { title: t('nav.faq'), href: '/faq', description: t('nav.faqDesc') },
-    { title: t('nav.broadcast'), href: '/broadcast', description: t('nav.broadcastDesc') },
     { title: t('nav.blog'), href: '/blog', description: t('footer.blog') },
   ];
 
   const about = [
     { title: t('nav.about'), href: '/about', description: t('desktopNav.about.description') },
-    { title: t('nav.locations'), href: '/locations', description: t('desktopNav.locations.description') },
     { title: t('nav.partnership'), href: '/partnership', description: t('desktopNav.partnership.description') },
   ];
 
