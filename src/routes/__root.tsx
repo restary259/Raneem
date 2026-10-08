@@ -127,18 +127,10 @@ const LOCAL_JSONLD = {
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   {
     head: () => ({
-      scripts: [
-        ...[SITE_JSONLD, ORG_JSONLD, LOCAL_JSONLD].map((value) => ({
-          type: "application/ld+json",
-          children: JSON.stringify(value),
-        })),
-        // Flip the non-blocking font stylesheet to active once parsed. Runs
-        // synchronously in <head>, after the <link media="print"> above it.
-        {
-          children:
-            "document.querySelectorAll('link[media=\"print\"]').forEach(function(l){l.media='all';});",
-        },
-      ],
+      scripts: [SITE_JSONLD, ORG_JSONLD, LOCAL_JSONLD].map((value) => ({
+        type: "application/ld+json",
+        children: JSON.stringify(value),
+      })),
       meta: [
         { charSet: "UTF-8" },
         {
@@ -249,6 +241,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Flip the non-blocking font stylesheet (media="print") to active
+            once parsed. Rendered as a raw tag so it executes from the
+            server HTML without a React script-tag warning. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "document.querySelectorAll('link[media=\"print\"]').forEach(function(l){l.media='all';});",
+          }}
+        />
       </head>
       <body>
         {/* Instant branded boot splash: pure HTML/CSS, visible before any
