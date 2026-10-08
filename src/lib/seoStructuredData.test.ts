@@ -6,10 +6,11 @@ import { jsonLdScript } from "@/lib/routeMeta";
 const ROUTES = path.join(process.cwd(), "src", "routes");
 const read = (file: string) => fs.readFileSync(path.join(ROUTES, file), "utf8");
 
+// Routes hidden from the public site (a beforeLoad redirect to `/`, e.g.
+// locations.tsx and broadcast.tsx) emit no head(); they must not be listed here.
 const PUBLIC_ROUTES = [
   "about.tsx",
   "contact.tsx",
-  "locations.tsx",
   "partnership.tsx",
   "services.tsx",
   "faq.tsx",
@@ -67,7 +68,6 @@ describe("public page structured data is server-rendered", () => {
   it.each([
     "about.tsx",
     "contact.tsx",
-    "locations.tsx",
     "partnership.tsx",
     "services.tsx",
     "faq.tsx",
