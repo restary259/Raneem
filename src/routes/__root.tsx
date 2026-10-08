@@ -241,15 +241,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <HeadContent />
-        {/* Flip the non-blocking font stylesheet (media="print") to active
-            once parsed. Rendered as a raw tag so it executes from the
-            server HTML without a React script-tag warning. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "document.querySelectorAll('link[media=\"print\"]').forEach(function(l){l.media='all';});",
-          }}
-        />
       </head>
       <body>
         {/* Instant branded boot splash: pure HTML/CSS, visible before any
@@ -268,9 +259,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  // Hide the boot splash once React has painted real content.
+  // Hide the boot splash once React has painted real content, and activate
+  // the non-blocking font stylesheet (loaded with media="print" so first
+  // paint never waits on it; font-display: swap covers the fallback text).
   useEffect(() => {
     document.documentElement.classList.add("darb-boot-done");
+    document
+      .querySelectorAll<HTMLLinkElement>('link[media="print"]')
+      .forEach((l) => {
+        l.media = "all";
+      });
   }, []);
   return (
     <ErrorBoundary>
