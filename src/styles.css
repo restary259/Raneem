@@ -7,6 +7,37 @@
 @custom-variant dark (&:is(.dark *, .dark, .aurora *, .aurora));
 
 /*
+ * Instant boot splash — rendered by src/routes/__root.tsx as plain HTML so it
+ * paints before any JavaScript runs (SPA mode ships an empty body otherwise).
+ * RootComponent adds `darb-boot-done` to <html> after React's first paint;
+ * the node is hidden, never removed, so hydration stays clean.
+ */
+#darb-boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+#darb-boot-splash img {
+  width: 180px;
+  height: auto;
+  animation: darb-boot-fade 0.9s ease-in-out infinite alternate;
+}
+@keyframes darb-boot-fade {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #darb-boot-splash img { animation: none; }
+}
+.darb-boot-done #darb-boot-splash {
+  display: none;
+}
+
+/*
  * DARB design system — ported verbatim from the pre-migration src/index.css +
  * tailwind.config.ts. Color values stay HSL triplets consumed via
  * hsl(var(--token)); the @theme inline block maps them to Tailwind utilities.

@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 // Root route — ports index.html (head metadata, splash, JSON-LD) and
 // main.tsx/App.tsx provider nesting into TanStack Start.
+import { useEffect } from "react";
 import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -28,6 +29,7 @@ const FONTS_HREF =
   "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Hebrew:wght@400;500;600;700&family=Instrument+Serif&family=Noto+Naskh+Arabic:wght@600;700&display=swap";
 
 const APP_LOGO = darbLogoAsset.url;
+const SUPABASE_ORIGIN = "https://mzbadxfvxioedzdjxamc.supabase.co";
 const OG_IMAGE = "https://darb.agency/__l5e/assets-v1/c2467f3e-3166-478b-bba6-924df8eaed6e/darb-wordmark-dark.png";
 const BRAND_LOGO = `https://darb.agency${APP_LOGO}`;
 
@@ -215,7 +217,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           href: "https://fonts.gstatic.com",
           crossOrigin: "anonymous",
         },
-        { rel: "stylesheet", href: FONTS_HREF },
+        // Warm the backend connection so the first auth/data request skips
+        // DNS+TLS setup (~100–300 ms on mobile).
+        { rel: "preconnect", href: SUPABASE_ORIGIN, crossOrigin: "anonymous" },
+        // Fonts load non-blocking (media="print" → swapped to "all" by the
+        // inline script below) so first paint never waits on the stylesheet.
+        // font-display: swap in the CSS keeps text visible in a fallback font.
+        { rel: "stylesheet", href: FONTS_HREF, media: "print" },
         { rel: "dns-prefetch", href: "//fonts.googleapis.com" },
         { rel: "dns-prefetch", href: "//fonts.gstatic.com" },
         { rel: "stylesheet", href: appCss },
@@ -235,6 +243,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        {/* Instant branded boot splash: pure HTML/CSS, visible before any
+            JavaScript runs. RootComponent adds `darb-boot-done` to <html>
+            after React's first paint, and CSS hides it — the node itself is
+            never removed, so hydration stays clean. */}
+        <div id="darb-boot-splash" aria-hidden="true">
+          <img src={APP_LOGO} alt="" width="180" height="61" />
+        </div>
         {children}
         <Scripts />
       </body>
@@ -244,6 +259,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Hide the boot splash once React has painted real content, and activate
+  // the non-blocking font stylesheet (loaded with media="print" so first
+  // paint never waits on it; font-display: swap covers the fallback text).
+  useEffect(() => {
+    document.documentElement.classList.add("darb-boot-done");
+    document
+      .querySelectorAll<HTMLLinkElement>('link[media="print"]')
+      .forEach((l) => {
+        l.media = "all";
+      });
+  }, []);
   return (
     <ErrorBoundary>
       <ThemeScope>
