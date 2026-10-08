@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
+import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
 import { fontForText, hasRtl, registerPdfFonts, shapeForPdf } from "@/utils/pdfFonts";
 import {
   createInvoicePresentation,

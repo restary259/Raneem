@@ -17,7 +17,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import NotFound from "@/pages/NotFound";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { DARB_OFFICE } from "@/config/localBusiness";
-import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
+import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
 import darbLogoShareAsset from "@/assets/darb-logo-share.jpg.asset.json";
 
 // One request per script actually used: Inter (Latin/UI), IBM Plex Sans

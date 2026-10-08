@@ -5,7 +5,7 @@ import { CheckCircle2, CreditCard, Download, ExternalLink, Landmark, Loader2, Ph
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import darbLogoAsset from "@/assets/darb-logo-2026.png.asset.json";
+import darbLogoAsset from "@/assets/darb-wordmark-dark.png.asset.json";
 import { downloadInvoicePdf } from "@/utils/invoicePdf";
 import { downloadRegistrationInvoicePdf } from "@/utils/registrationInvoicePdf";
 import { createInvoicePresentation, formatInvoiceItemBilling, formatInvoiceMoney } from "@/utils/invoicePresentation";

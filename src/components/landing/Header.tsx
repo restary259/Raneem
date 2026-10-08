@@ -5,7 +5,7 @@ import DesktopNav from './DesktopNav';
 import MobileNav from './MobileNav';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import { useDirection } from '@/hooks/useDirection';
-import darbLogoAsset from '@/assets/darb-logo-2026.png.asset.json';
+import darbLogoAsset from '@/assets/darb-wordmark-dark.png.asset.json';
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/contactConfig';
 
 const Header = () => {
