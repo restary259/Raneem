@@ -279,8 +279,9 @@ export const countries = [
 ];
 
 /**
- * Darb currently operates in Heidelberg and Regensburg. Other cities stay in
- * the data so they can be re-enabled by adding their id here.
+ * Cities shown on public pages. Other cities (including Regensburg, which
+ * stays active in dashboards/catalog) remain in the data and can be
+ * re-enabled publicly by adding their id here.
  */
-export const ACTIVE_DESTINATION_CITIES: ReadonlyArray<LanguageYearCity["id"]> = ["heidelberg", "regensburg"];
+export const ACTIVE_DESTINATION_CITIES: ReadonlyArray<LanguageYearCity["id"]> = ["heidelberg"];
 export const activeLanguageYearCities = languageYearCities.filter((c) => ACTIVE_DESTINATION_CITIES.includes(c.id));
