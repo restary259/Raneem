@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateCourseEndDate, formatCourseDate, retainOfficialStartDate } from "@/utils/courseSchedule";
@@ -58,6 +59,8 @@ export default function OfficialCourseDateFields({ schoolId, value, weeks, onCha
       .then((rows) => {
         if (cancelled) return;
         setDates(rows);
+        // Without official dates the field falls back to manual entry, so keep the saved value.
+        if (rows.length === 0) return;
         const retained = retainOfficialStartDate(value, rows.map((row) => row.start_date));
         if (retained !== value) onChange(retained);
       })
@@ -83,6 +86,14 @@ export default function OfficialCourseDateFields({ schoolId, value, weeks, onCha
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div data-field="program_start_date">
         <Label className={error ? "text-destructive" : ""}>{t("case.courseSchedule.officialStart")}</Label>
+        {schoolId && !loading && dates.length === 0 ? (
+          <Input
+            type="date"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className={error ? "mt-1 border-destructive" : "mt-1"}
+          />
+        ) : (
         <Select value={value} onValueChange={onChange} disabled={!schoolId || loading || dates.length === 0}>
           <SelectTrigger className={error ? "mt-1 border-destructive" : "mt-1"}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <SelectValue placeholder={t("case.courseSchedule.selectDate")} />}
@@ -98,6 +109,7 @@ export default function OfficialCourseDateFields({ schoolId, value, weeks, onCha
             ))}
           </SelectContent>
         </Select>
+        )}
         {error ? (
           <p className="mt-1 text-xs text-destructive">{error}</p>
         ) : loadError ? (
