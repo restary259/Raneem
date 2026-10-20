@@ -61,7 +61,7 @@ const StudentStory = ({ student, index, t }: { student: GalleryStudent; index: n
         alt={student.name ? t("homepage.students.namedAlt", { name: student.name, destination: student.destination }) : t("homepage.students.alt", { destination: student.destination })}
         loading="lazy"
         decoding="async"
-        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03] motion-reduce:transition-none"
+        className="h-full w-full object-cover transition-transform duration-300 ease-[var(--ease-out)] group-hover:scale-[1.03] motion-reduce:transition-none"
         style={{ objectPosition: student.focus || "50% 40%" }}
         onError={(event) => { event.currentTarget.hidden = true; }}
       />
@@ -146,7 +146,7 @@ const HomepageExperience = () => {
           <div className="mt-8 grid gap-4 pb-2 sm:grid-cols-2 lg:grid-cols-3">
             {nextStepRoutes.map((item, index) => {
               const Icon = nextStepIcons[index] ?? Compass;
-              return <Link key={item.title} to={item.href} className="group flex min-h-40 min-w-0 flex-col rounded-2xl border border-border bg-card p-6 shadow-quiet transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-quiet-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none">
+              return <Link key={item.title} to={item.href} className="group flex min-h-40 min-w-0 flex-col rounded-2xl border border-border bg-card p-6 shadow-quiet transition-[transform,box-shadow] duration-200 ease-[var(--ease-out)] hover:-translate-y-0.5 hover:shadow-quiet-hover focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none motion-reduce:transition-none">
                 <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-info-surface text-brand"><Icon className="size-5" /></span>
                 <span className="mt-4 min-w-0"><span className="block font-bold text-primary">{item.title}</span><span className="mt-1 block text-sm leading-6 text-muted-foreground">{item.description}</span></span>
                 <Arrow className="mt-auto size-4 shrink-0 pt-0 text-brand transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
@@ -227,7 +227,7 @@ const HomepageExperience = () => {
         <div className="container">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.destinations.eyebrow")}</p><h2 id="homepage-destinations-title" className="mt-3 text-3xl font-bold text-primary sm:text-4xl">{t("homepage.destinations.title")}</h2></div><Link to="/educational-destinations" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand-strong">{t("homepage.destinations.cta")}<Arrow className="size-4" /></Link></div>
           <div className="mt-8 grid auto-rows-[190px] gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {activeLanguageYearCities.slice(0, 5).map((city, index) => <Link key={city.id} to={city.id === "heidelberg" ? "/heidelberg" : "/educational-destinations"} className={`group relative overflow-hidden rounded-2xl bg-muted ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2" : ""}`}><img src={city.imageUrl} alt={city.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none" onError={(event) => { if (event.currentTarget.src !== germanyHero) event.currentTarget.src = germanyHero; }} /><div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5 text-primary-foreground"><p className="text-xs text-primary-foreground/65">{city.region}</p><h3 className="mt-1 text-2xl font-bold">{city.name}</h3></div></Link>)}
+            {activeLanguageYearCities.slice(0, 5).map((city, index) => <Link key={city.id} to={city.id === "heidelberg" ? "/heidelberg" : "/educational-destinations"} className={`group relative overflow-hidden rounded-2xl bg-muted ${index === 0 ? "sm:col-span-2 sm:row-span-2" : ""} ${index === 4 ? "sm:col-span-2" : ""}`}><img src={city.imageUrl} alt={city.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 ease-[var(--ease-out)] group-hover:scale-105 motion-reduce:transition-none" onError={(event) => { if (event.currentTarget.src !== germanyHero) event.currentTarget.src = germanyHero; }} /><div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/10 to-transparent" /><div className="absolute inset-x-0 bottom-0 p-5 text-primary-foreground"><p className="text-xs text-primary-foreground/65">{city.region}</p><h3 className="mt-1 text-2xl font-bold">{city.name}</h3></div></Link>)}
           </div>
         </div>
       </section>

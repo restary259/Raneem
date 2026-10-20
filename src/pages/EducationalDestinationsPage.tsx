@@ -174,7 +174,7 @@ const EducationalDestinationsPage = () => {
                         })}
                         city={city.name}
                         className="absolute inset-0 size-full"
-                        imageClassName="transition-transform duration-700 hover:scale-[1.02] motion-reduce:transition-none"
+                        imageClassName="transition-transform duration-300 ease-[var(--ease-out)] hover:scale-[1.02] motion-reduce:transition-none"
                         eager={index === 0}
                       />
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-hero-panel/80 via-transparent to-transparent" />
