@@ -52,7 +52,7 @@ const ToolsSection = ({
               }}
             >
               <CardHeader className="text-center">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-105 group-hover:bg-primary/20 transition-[transform,background-color] duration-200">
                   <tool.icon className="h-7 w-7 text-primary" />
                 </div>
                 <CardTitle className="text-xl">{tool.title}</CardTitle>

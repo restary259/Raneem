@@ -184,7 +184,7 @@ export default function HeidelbergPage() {
                     alt={tr(p.photo.alt)}
                     loading="lazy"
                     decoding="async"
-                    className="size-full object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none"
+                    className="size-full object-cover transition-transform duration-300 ease-[var(--ease-out)] group-hover:scale-105 motion-reduce:transition-none"
                   />
                   <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/90 to-transparent p-5 pt-16 text-primary-foreground">
                     <p className="font-editorial text-2xl"><bdi>{p.name}</bdi></p>
