@@ -1254,14 +1254,10 @@ a[href*="lovable.dev"] {
   background: linear-gradient(
     to right,
     var(--darb-logo-navy) 0 60%,
-    transparent 60% calc(60% + 3px),
-    var(--darb-logo-gold) calc(60% + 3px) 70%,
-    transparent 70% calc(70% + 3px),
-    var(--darb-logo-red) calc(70% + 3px) 80%,
-    transparent 80% calc(80% + 3px),
-    var(--darb-logo-purple) calc(80% + 3px) 90%,
-    transparent 90% calc(90% + 3px),
-    var(--darb-logo-teal) calc(90% + 3px) 100%
+    var(--darb-logo-gold) 60% 70%,
+    var(--darb-logo-red) 70% 80%,
+    var(--darb-logo-purple) 80% 90%,
+    var(--darb-logo-teal) 90% 100%
   );
 }
 
