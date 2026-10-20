@@ -1404,6 +1404,39 @@ html[dir="rtl"] .darb-logo-city:not([dir="ltr"]):not([dir="ltr"] *) {
 .darb-spectrum-sm { height: 4px; }
 .darb-spectrum-lg { height: 8px; }
 
+/* Hero stripes "melt": the brand colours drip and glow up into the photo
+   with an organic wavy edge instead of a hard ruler line. */
+.darb-spectrum-lg {
+  overflow: visible;
+  isolation: isolate;
+}
+.darb-spectrum-lg::before,
+.darb-spectrum-lg::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 100%;
+  background: inherit;
+  pointer-events: none;
+}
+/* Wavy liquid drips rising from the stripe */
+.darb-spectrum-lg::before {
+  height: 14px;
+  margin-bottom: -1px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14V9C8 9 10 3 16 3s7 7 14 7 9-9 17-9 8 8 15 8 6-4 12-4 9 6 16 6 8-8 15-8 7 5 15 5V14Z'/%3E%3C/svg%3E") 0 100% / 240px 100% repeat-x;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14V9C8 9 10 3 16 3s7 7 14 7 9-9 17-9 8 8 15 8 6-4 12-4 9 6 16 6 8-8 15-8 7 5 15 5V14Z'/%3E%3C/svg%3E") 0 100% / 240px 100% repeat-x;
+  opacity: 0.95;
+}
+/* Soft colour haze bleeding into the hero */
+.darb-spectrum-lg::after {
+  height: 56px;
+  filter: blur(14px);
+  opacity: 0.55;
+  -webkit-mask: linear-gradient(to top, #000, transparent);
+          mask: linear-gradient(to top, #000, transparent);
+  z-index: -1;
+}
+
 /* Short accent underline used beneath headlines and logo lockups. */
 .darb-spectrum-accent {
   width: 72px;
