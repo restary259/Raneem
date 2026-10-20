@@ -225,7 +225,7 @@ export default function HeidelbergPage() {
         <div
           aria-hidden
           className={cn(
-            "pointer-events-none fixed bottom-10 start-2 top-36 z-20 w-0.5 rounded-full bg-border transition-opacity duration-500 sm:start-4 lg:start-6",
+            "pointer-events-none fixed bottom-10 start-2 top-36 z-20 w-0.5 rounded-full bg-border transition-opacity duration-300 sm:start-4 lg:start-6",
             railVisible ? "opacity-100" : "opacity-0",
           )}
         >
@@ -258,7 +258,7 @@ export default function HeidelbergPage() {
                     alt={tr(cover.alt)}
                     loading="lazy"
                     decoding="async"
-                    className="size-full object-cover transition-transform duration-700 hover:scale-[1.02] motion-reduce:transition-none"
+                    className="size-full object-cover transition-transform duration-300 ease-[var(--ease-out)] hover:scale-[1.02] motion-reduce:transition-none"
                   />
                   <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary/85 to-transparent p-5 pt-20 text-primary-foreground sm:p-8 sm:pt-24">
                     <p className="font-editorial text-2xl text-highlight">{String(i + 1).padStart(2, "0")}</p>
@@ -319,7 +319,7 @@ export default function HeidelbergPage() {
                   i === 0 ? "col-span-2 aspect-[4/3] sm:row-span-2 sm:aspect-auto" : "aspect-square",
                 )}
               >
-                <img src={p.url} alt={tr(p.alt)} loading="lazy" decoding="async" className="size-full object-cover transition-transform duration-700 hover:scale-105 motion-reduce:transition-none" />
+                <img src={p.url} alt={tr(p.alt)} loading="lazy" decoding="async" className="size-full object-cover transition-transform duration-300 ease-[var(--ease-out)] hover:scale-105 motion-reduce:transition-none" />
               </figure>
             ))}
           </div>
