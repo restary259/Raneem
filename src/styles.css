@@ -177,6 +177,11 @@
 
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --darb-logo-navy: #052462;
+  --darb-logo-gold: #F5B300;
+  --darb-logo-red: #C8262A;
+  --darb-logo-purple: #6A45C2;
+  --darb-logo-teal: #0597B0;
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --background: 0 0% 100%;
@@ -1248,12 +1253,15 @@ a[href*="lovable.dev"] {
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    hsl(var(--darb-blue)) 0% 16.6%,
-    hsl(var(--tint-green)) 16.6% 33.3%,
-    hsl(var(--tint-yellow)) 33.3% 50%,
-    hsl(var(--tint-orange)) 50% 66.6%,
-    hsl(var(--tint-pink)) 66.6% 83.3%,
-    hsl(var(--tint-purple)) 83.3% 100%
+    var(--darb-logo-navy) 0 60%,
+    transparent 60% calc(60% + 3px),
+    var(--darb-logo-gold) calc(60% + 3px) 70%,
+    transparent 70% calc(70% + 3px),
+    var(--darb-logo-red) calc(70% + 3px) 80%,
+    transparent 80% calc(80% + 3px),
+    var(--darb-logo-purple) calc(80% + 3px) 90%,
+    transparent 90% calc(90% + 3px),
+    var(--darb-logo-teal) calc(90% + 3px) 100%
   );
 }
 
