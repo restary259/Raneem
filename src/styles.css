@@ -1301,9 +1301,7 @@ a[href*="lovable.dev"] {
   }
 }
 
-[dir="rtl"] .darb-spectrum {
-  transform: scaleX(-1);
-}
+/* Stripe always mirrors the logo left-to-right, regardless of language direction. */
 
 /* Master public experience: mobile-first editorial rhythm and stable header/hero handoff. */
 .homepage-experience {
