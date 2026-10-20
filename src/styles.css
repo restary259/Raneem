@@ -421,6 +421,120 @@ html[dir="rtl"]:not([lang="ar"]):not([lang="he"]) {
   font-family: var(--font-arabic);
 }
 
+/* ---------------------------------------------------------------------------
+   User preference: less transparency.
+   Translucent chrome (blurred header, sheets, popovers, sidebar, hero panels)
+   is a hierarchy device, not decoration — but it only works while the backdrop
+   stays legible. When the user asks for reduced transparency we make those
+   surfaces opaque and drop the blur instead of leaving text over live content.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-transparency: reduce) {
+  .bg-background\/95,
+  .bg-background\/80,
+  .bg-background\/60,
+  .bg-background\/45,
+  .bg-background\/30,
+  .bg-sidebar,
+  .bg-card,
+  .bg-popover,
+  .bg-hero-panel\/45,
+  .bg-hero-panel\/70,
+  .bg-primary-foreground\/10,
+  .bg-primary-foreground\/20 {
+    background-color: hsl(var(--background));
+  }
+
+  .bg-sidebar {
+    background-color: hsl(var(--sidebar-background));
+  }
+
+  .bg-card {
+    background-color: hsl(var(--card));
+  }
+
+  .bg-popover {
+    background-color: hsl(var(--popover));
+  }
+
+  .bg-hero-panel\/45,
+  .bg-hero-panel\/70 {
+    background-color: hsl(var(--hero-panel));
+  }
+
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* The scrim over hero photography exists to keep copy legible; without the
+     blur it must carry more of that job, not less. `html` is required: the
+     base rule is unlayered too, so equal specificity would let the later
+     base rule win and this override would silently do nothing. */
+  html .darb-hero-scrim {
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.62) 0%,
+      rgb(0 0 0 / 0.42) 45%,
+      rgb(0 0 0 / 0.5) 100%
+    );
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   User preference: more contrast.
+   `prefers-contrast` only accepts no-preference | more | less | custom —
+   the previous `high` value never matched. Harden text/surface pairs rather
+   than restyling brand colour.
+   --------------------------------------------------------------------------- */
+@media (prefers-contrast: more) {
+  :root {
+    --border: 222 47% 11%;
+    --muted-foreground: 222 47% 11%;
+  }
+
+  .dark,
+  .aurora {
+    --border: 0 0% 100%;
+    --muted-foreground: 0 0% 100%;
+  }
+
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+/* Tracking is script-specific, not just size-specific. Arabic is cursive:
+   positive letter-spacing pulls the joined letterforms apart. Latin display
+   rules (uppercase + wide tracking eyebrows) therefore leak into Arabic copy,
+   so neutralise them at the source instead of per component.
+   Hebrew does NOT join its letters, so wide tracking is legitimate there and
+   is deliberately left alone — `uppercase` is still a no-op on both scripts.
+   `html[dir="rtl"]` is a safety net for RTL content rendered before `lang` is
+   applied. Islands are excluded BOTH as the element itself and as an ancestor
+   of descendants, so Latin (`dir="ltr"`) runs keep their tracking/uppercase and
+   a Hebrew (`lang="he"`) run inside an Arabic page keeps its legitimate
+   tracking (Hebrew letters do not join). */
+html[lang="ar"] .tracking-wide:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *),
+html[lang="ar"] .tracking-wider:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *),
+html[lang="ar"] .tracking-widest:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *),
+html[dir="rtl"] .tracking-wide:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *),
+html[dir="rtl"] .tracking-wider:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *),
+html[dir="rtl"] .tracking-widest:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *) {
+  letter-spacing: 0;
+}
+
+html[lang="ar"] [class*="tracking-["]:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *),
+html[dir="rtl"] [class*="tracking-["]:not([dir="ltr"]):not([dir="ltr"] *):not([lang="he"]):not([lang="he"] *) {
+  letter-spacing: 0;
+}
+
+html[lang="ar"] .uppercase:not([dir="ltr"]):not([dir="ltr"] *),
+html[lang="he"] .uppercase:not([dir="ltr"]):not([dir="ltr"] *),
+html[dir="rtl"] .uppercase:not([dir="ltr"]):not([dir="ltr"] *) {
+  text-transform: none;
+}
+
 @layer base {
   * {
     border-color: hsl(var(--border));
@@ -431,6 +545,19 @@ html[dir="rtl"]:not([lang="ar"]):not([lang="he"]) {
     /* Inherit the script stack chosen on <html> so there is exactly one
        font-family authority in the app. */
     font-family: inherit;
+  }
+
+  /* Kill the grey UA tap flash on surfaces that ship their own pressed state
+     (`active:` + focus rings). Deliberately NOT global: bare prose links keep
+     the platform affordance where we have not authored a replacement. */
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  summary,
+  label[for] {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
@@ -969,6 +1096,19 @@ a[href*="lovable.dev"] {
 .darb-home-hero-eyebrow {
   font-size: clamp(0.72rem, 0.72vw, 0.9rem);
   letter-spacing: 0.14em;
+}
+
+/* Latin-only tracking; the RTL override above resets it for ar/he. */
+html[lang="ar"] .darb-home-hero-eyebrow:not([dir="ltr"]):not([dir="ltr"] *),
+html[lang="he"] .darb-home-hero-eyebrow:not([dir="ltr"]):not([dir="ltr"] *),
+html[dir="rtl"] .darb-home-hero-eyebrow:not([dir="ltr"]):not([dir="ltr"] *),
+html[lang="ar"] .darb-page-hero-eyebrow:not([dir="ltr"]):not([dir="ltr"] *),
+html[lang="he"] .darb-page-hero-eyebrow:not([dir="ltr"]):not([dir="ltr"] *),
+html[dir="rtl"] .darb-page-hero-eyebrow:not([dir="ltr"]):not([dir="ltr"] *),
+html[lang="ar"] .darb-logo-city:not([dir="ltr"]):not([dir="ltr"] *),
+html[lang="he"] .darb-logo-city:not([dir="ltr"]):not([dir="ltr"] *),
+html[dir="rtl"] .darb-logo-city:not([dir="ltr"]):not([dir="ltr"] *) {
+  letter-spacing: 0;
 }
 
 .darb-home-hero-intro {
