@@ -162,7 +162,7 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0,
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-11 w-11"
                   disabled={busyInvite === inv.id}
                   onClick={() => resendInvitation(inv)}
                   title={t("admin.team.resendInvite", "Resend invitation")}
@@ -173,7 +173,7 @@ const PendingInvitations: React.FC<PendingInvitationsProps> = ({ refreshKey = 0,
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                  className="h-11 w-11 text-destructive hover:bg-destructive/10"
                   disabled={busyInvite === inv.id}
                   onClick={() => revokeInvitation(inv)}
                   title={t("admin.team.revokeInvite", "Revoke invitation")}

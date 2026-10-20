@@ -14,7 +14,7 @@ const Progress = React.forwardRef<
   >
     {/* Width-based fill so the bar grows from the inline start in both LTR and RTL. */}
     <ProgressPrimitive.Indicator
-      className="h-full bg-primary transition-all"
+      className="h-full bg-primary transition-[width]"
       style={{ width: `${Math.min(100, Math.max(0, value || 0))}%` }}
     />
   </ProgressPrimitive.Root>

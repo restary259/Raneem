@@ -105,7 +105,7 @@ export default function VisaDocumentSelector({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-11 w-11"
                 onClick={() => onPreview(doc)}
                 aria-label={t("admin.visa.preview", "Preview")}
                 title={t("admin.visa.preview", "Preview")}
@@ -115,7 +115,7 @@ export default function VisaDocumentSelector({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-11 w-11"
                 onClick={() => onDownload(doc)}
                 aria-label={t("admin.visa.download", "Download")}
                 title={t("admin.visa.download", "Download")}

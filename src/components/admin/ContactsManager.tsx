@@ -77,7 +77,7 @@ const ContactsManager: React.FC<ContactsManagerProps> = ({ contacts, onRefresh }
                   {statusLabel(c.status)}
                 </Badge>
                 <span className="text-xs text-muted-foreground">{c.created_at?.split('T')[0]}</span>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(c.id)}>
+                <Button variant="ghost" size="sm" className="h-11 w-11 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteId(c.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>

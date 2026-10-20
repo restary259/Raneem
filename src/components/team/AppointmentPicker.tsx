@@ -208,7 +208,7 @@ const AppointmentPicker: React.FC<AppointmentPickerProps> = ({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-11 w-11 shrink-0"
           disabled={addDays(rangeStart, -DAY_WINDOW) < startOfDay(new Date())}
           onClick={() => setRangeStart((date) => {
             const prev = addDays(date, -DAY_WINDOW);
@@ -329,7 +329,7 @@ const AppointmentPicker: React.FC<AppointmentPickerProps> = ({
           type="button"
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-11 w-11 shrink-0"
           onClick={() => setRangeStart((date) => addDays(date, DAY_WINDOW))}
           aria-label={t("lawyer.picker.nextDays", "Next days")}
         >

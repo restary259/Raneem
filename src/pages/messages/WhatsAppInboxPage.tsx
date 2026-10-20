@@ -779,11 +779,11 @@ export default function WhatsAppInboxPage({
                 />
                 <PromptInputFooter>
                   <div className="flex min-w-0 items-center gap-1">
-                    <Button type="button" size="icon" variant={composerActionsOpen ? "secondary" : "ghost"} className="h-8 w-8" onClick={() => setComposerActionsOpen((open) => !open)} aria-label={t("conversation.moreActions", "More actions")} aria-expanded={composerActionsOpen}>
+                    <Button type="button" size="icon" variant={composerActionsOpen ? "secondary" : "ghost"} className="h-11 w-11" onClick={() => setComposerActionsOpen((open) => !open)} aria-label={t("conversation.moreActions", "More actions")} aria-expanded={composerActionsOpen}>
                       <Plus className={cn("h-4 w-4 transition-transform", composerActionsOpen && "rotate-45")} />
                     </Button>
                     <input ref={fileRef} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" onChange={(event) => { setAttachment(event.target.files?.[0] ?? null); event.target.value = ""; }} />
-                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8" disabled={sending} onClick={() => fileRef.current?.click()} aria-label={t("conversation.attach", "Attach a photo or file")}>
+                    <Button type="button" size="icon" variant="ghost" className="h-11 w-11" disabled={sending} onClick={() => fileRef.current?.click()} aria-label={t("conversation.attach", "Attach a photo or file")}>
                       <Paperclip className="h-4 w-4" />
                     </Button>
                     {attachment ? (

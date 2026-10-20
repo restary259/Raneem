@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Streamlined recruit signup for a recruiter's dedicated link (/join/MP-XXXX).
@@ -68,7 +68,7 @@ export default function JoinPartnerPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error(t("join.submitError", "Something went wrong sending your application. Please try again."));
+      toast({ variant: "destructive", description: t("join.submitError", "Something went wrong sending your application. Please try again.") });
       return;
     }
     setDone(true);

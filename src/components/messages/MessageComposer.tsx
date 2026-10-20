@@ -501,7 +501,7 @@ export default function MessageComposer({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-9 w-9 rounded-full border text-muted-foreground"
+                className="h-11 w-11 rounded-full border text-muted-foreground"
                 disabled={disabled}
                 aria-label={t("chat.actions.menu")}
                 onClick={() => setSheetOpen(true)}
@@ -553,7 +553,7 @@ export default function MessageComposer({
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 rounded-full border text-muted-foreground"
+                  className="h-11 w-11 rounded-full border text-muted-foreground"
                   disabled={disabled}
                   aria-label={t("chat.actions.menu")}
                 >
@@ -736,7 +736,7 @@ export default function MessageComposer({
             onClick={handleSend}
             aria-label={t("case.messages.send")}
             disabled={disabled || sending || uploading || (!body.trim() && ready.length === 0)}
-            className="mb-0.5 h-9 w-9 shrink-0 rounded-full sm:h-8 sm:w-8"
+            className="mb-0.5 h-11 w-11 shrink-0 rounded-full "
           >
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>

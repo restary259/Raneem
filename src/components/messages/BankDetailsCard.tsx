@@ -61,7 +61,7 @@ export default function BankDetailsCard({ details }: Props) {
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6 shrink-0"
+                className="h-11 w-11 shrink-0"
                 aria-label={t("chat.bankShare.copyAll", "Copy all")}
                 onClick={() => copy(f.value)}
               >

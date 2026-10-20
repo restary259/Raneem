@@ -391,7 +391,7 @@ export default function DocumentsPanel({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="h-11 w-11"
                   onClick={() => handleDownload(doc)}
                   title={isAr ? "تحميل" : "Download"}
                   aria-label={isAr ? "تحميل" : "Download"}
@@ -402,7 +402,7 @@ export default function DocumentsPanel({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-11 w-11"
                     onClick={() => handleDelete(doc)}
                     title={isAr ? "حذف" : "Delete"}
                     aria-label={isAr ? "حذف" : "Delete"}

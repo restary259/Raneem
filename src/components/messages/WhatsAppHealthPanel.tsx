@@ -108,7 +108,7 @@ export default function WhatsAppHealthPanel({ isAdmin }: { isAdmin: boolean }) {
             <ShieldAlert className="h-4 w-4 text-amber-600" />
             <h3 className="text-sm font-semibold">{t("health.blockedTitle", "Blocked incoming messages")}</h3>
             {failures.length > 0 && <Badge variant="destructive">{failures.length}</Badge>}
-            <Button size="icon" variant="ghost" className="ms-auto h-8 w-8" onClick={() => void load()} aria-label={t("actions.refresh")}>
+            <Button size="icon" variant="ghost" className="ms-auto h-11 w-11" onClick={() => void load()} aria-label={t("actions.refresh")}>
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
