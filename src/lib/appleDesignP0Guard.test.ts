@@ -149,11 +149,14 @@ describe("P0-2 user preference media queries are live and valid", () => {
     );
   });
 
-  it("keeps the orphaned accessibility.css unwired (documented decision)", () => {
-    // docs/agent-notes.md: layouts/navigation/accessibility/animations/pwa are
-    // unimported — do not resurrect without wiring them in. Live rules must
-    // therefore live in the Tailwind entry, not that file.
+  it("keeps the orphaned accessibility.css deleted (documented decision)", () => {
+    // docs/agent-notes.md: layouts/navigation/accessibility/animations/pwa
+    // were unimported; P2-1 deleted them. Live rules must therefore live in
+    // the Tailwind entry, not in a resurrected side file.
     expect(styles).not.toContain('@import "./styles/accessibility.css"');
+    expect(
+      fs.existsSync(path.resolve(SRC_ROOT, "styles", "accessibility.css")),
+    ).toBe(false);
   });
 });
 
