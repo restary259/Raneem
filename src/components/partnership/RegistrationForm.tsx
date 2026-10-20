@@ -2,7 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,11 +108,11 @@ const RegistrationForm = () => {
       return { success: true };
     },
     onSuccess: () => {
-        toast.success(t('registrationForm.toasts.success'));
+        toast({ description: t('registrationForm.toasts.success') });
         form.reset();
     },
     onError: (error) => {
-        toast.error(t('registrationForm.toasts.error', { error: error.message }));
+        toast({ variant: 'destructive', description: t('registrationForm.toasts.error', { error: error.message }) });
     },
   });
 

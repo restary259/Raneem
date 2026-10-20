@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,9 +158,9 @@ export default function BagrutConverter() {
     const summary = `${avgLabel}: ${results.average}/100 — ${germanLbl}: ${germanTxt}`;
     try {
       await navigator.clipboard.writeText(summary);
-      toast.success(t("team.bagrut.copied", "Result copied to clipboard"));
+      toast({ description: t("team.bagrut.copied", "Result copied to clipboard") });
     } catch {
-      toast.error(t("team.bagrut.copyFailed", "Could not copy — please copy manually"));
+      toast({ variant: "destructive", description: t("team.bagrut.copyFailed", "Could not copy — please copy manually") });
     }
   };
 

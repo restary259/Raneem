@@ -182,7 +182,7 @@ const NotificationBell: React.FC<{ role: AppRole }> = ({ role }) => {
           variant="ghost"
           size="sm"
           aria-label={t("notifications.title")}
-          className="relative h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-9"
+          className="relative h-11 w-11 shrink-0 p-0 text-muted-foreground hover:text-foreground "
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
@@ -210,7 +210,7 @@ const NotificationBell: React.FC<{ role: AppRole }> = ({ role }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0"
+              className="h-11 w-11 p-0"
               aria-label={t("pushSettings.title")}
               onClick={() => {
                 setOpen(false);

@@ -120,7 +120,7 @@ export default function PayoutRequestCard({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6"
+            className="h-11 w-11"
             aria-label={t("chat.payout.copyReference", "Copy reference")}
             onClick={() => {
               navigator.clipboard.writeText(detail.payout_reference as string);

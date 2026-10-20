@@ -13,6 +13,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  /** Opt in to an audible cue for deliberate, user-initiated commits. */
+  sound?: boolean
 }
 
 const actionTypes = {

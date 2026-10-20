@@ -110,7 +110,7 @@ function MemberDetailPanel({
       <Header className="shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b bg-background">
         <div className="flex items-center gap-3 min-w-0">
           <Close className="shrink-0" asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-11 w-11">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />

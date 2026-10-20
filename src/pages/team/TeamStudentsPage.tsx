@@ -834,7 +834,7 @@ export default function TeamStudentsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-11 w-11"
                       disabled={busyInvite === inv.id}
                       onClick={() => resendInvitation(inv)}
                       title={t("team.students.resendInvite", "Resend invitation")}

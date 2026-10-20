@@ -1027,7 +1027,7 @@ export default function TeamAppointmentsPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full shrink-0"
+            className="h-11 w-11 rounded-full shrink-0"
             aria-label={isAr ? "السابق" : "Previous"}
             onClick={navigatePrev}
           >
@@ -1042,7 +1042,7 @@ export default function TeamAppointmentsPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full shrink-0"
+            className="h-11 w-11 rounded-full shrink-0"
             aria-label={isAr ? "التالي" : "Next"}
             onClick={navigateNext}
           >

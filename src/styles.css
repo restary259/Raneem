@@ -1239,6 +1239,16 @@ html[dir="rtl"] .darb-logo-city:not([dir="ltr"]):not([dir="ltr"] *) {
   letter-spacing: 0.14em;
 }
 
+/* Display type is set as a set: size + weight + leading + tracking. Large type
+   wants slightly negative tracking (Apple/§15); negative tracking only tightens
+   glyphs, so it is safe for Arabic too — unlike positive tracking, it never
+   pulls joined letterforms apart. */
+.darb-page-hero-title,
+.darb-home-hero-title,
+.darb-home-hero-destination {
+  letter-spacing: -0.02em;
+}
+
 .darb-page-hero-title {
   margin-top: 0.85rem;
   font-size: clamp(2.35rem, 4.1vw, 4.25rem);

@@ -568,7 +568,7 @@ export default function CaseDetailPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-11 w-11"
               onClick={() => navigate(-1)}
               aria-label={t("common.back")}
             >

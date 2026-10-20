@@ -2,7 +2,6 @@
 // component did around <Routes> now lives here around <Outlet />.
 import React, { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Outlet } from "@tanstack/react-router";
 import { useNavigate, useLocation } from "@/lib/router-compat";
@@ -100,7 +99,6 @@ const AppShell = () => {
         dir={dir}
       >
         <Toaster />
-        <Sonner />
         {!isApplyPage && !isDashboardPath && (
           <Suspense fallback={null}>
             <OfflineIndicator />

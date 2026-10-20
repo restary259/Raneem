@@ -25,8 +25,11 @@ function getAudioCtx(): AudioContext | null {
   }
 }
 
-// Tiny inline beep — no external file needed. Plays a short soft chime on every new toast.
-function playNotificationSound(variant?: string) {
+// Tiny inline beep — no external file needed. Kept off the routine path: an
+// audible cue on every toast trains people to ignore all of them.
+type SoundKind = "error" | "commit";
+
+function playNotificationSound(kind: SoundKind) {
   const ctx = getAudioCtx();
   if (!ctx) return;
   try {
@@ -36,8 +39,8 @@ function playNotificationSound(variant?: string) {
     oscillator.connect(gain);
     gain.connect(ctx.destination);
 
-    // Destructive toasts → lower, duller tone. Others → bright chime.
-    oscillator.frequency.value = variant === "destructive" ? 300 : 880;
+    // Failures → lower, duller tone. Deliberate commits → bright chime.
+    oscillator.frequency.value = kind === "error" ? 300 : 880;
     oscillator.type = "sine";
 
     gain.gain.setValueAtTime(0.15, ctx.currentTime);
@@ -60,14 +63,16 @@ export function Toaster() {
     // a length check would miss rapid successive toasts.
     const newest = toasts[0];
     if (newest && newest.id !== prevIdRef.current) {
-      playNotificationSound(newest.variant ?? undefined);
+      // Only failures and explicitly-flagged commits make a sound.
+      if (newest.variant === "destructive") playNotificationSound("error");
+      else if (newest.sound) playNotificationSound("commit");
     }
     prevIdRef.current = newest?.id ?? null;
   }, [toasts]);
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+      {toasts.map(function ({ id, title, description, action, sound: _sound, ...props }) {
         return (
           <Toast key={id} duration={2000} {...props}>
             <div className="grid gap-1">

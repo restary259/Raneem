@@ -30,7 +30,7 @@ export function CopyButton({ value }: { value: string | null | undefined }) {
     <Button
       variant="ghost"
       size="icon"
-      className="h-6 w-6 shrink-0"
+      className="h-11 w-11 shrink-0"
       onClick={(e) => { e.stopPropagation(); handleCopy(); }}
       title="Copy"
       aria-label="Copy"

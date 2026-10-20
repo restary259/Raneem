@@ -553,7 +553,7 @@ export default function VoiceRecorder({
             onClick={function () {
               void sendPreview();
             }}
-            className="h-8 w-8 rounded-full"
+            className="h-11 w-11 rounded-full"
           >
             <Send className="h-4 w-4" />
           </Button>
