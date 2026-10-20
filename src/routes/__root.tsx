@@ -240,6 +240,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
+        {/* Search Console ownership for https://darb.agency/ (rendered raw: head() dedupes meta by name). */}
+        <meta name="google-site-verification" content="NAcgWHHYEZ9RvhEYsf440SjFcWbufY7KwqglflvVlxk" />
         <HeadContent />
       </head>
       <body>
