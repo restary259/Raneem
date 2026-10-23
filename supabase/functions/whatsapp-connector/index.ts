@@ -201,6 +201,34 @@ serve(async (req) => {
         if (requestedProfileId && (!profileResult.data || normalizeWhatsAppNumber(profileResult.data.phone_number) !== whatsappNumber)) {
           return json({ error: "The selected student account does not match the WhatsApp number" }, 409, corsHeaders);
         }
+        // Team members may only link leads/student accounts they manage.
+        if (!isAdmin && (requestedLeadId || requestedProfileId)) {
+          const { data: myCases, error: myCasesError } = await admin
+            .from("cases")
+            .select("id,phone_number,student_user_id")
+            .eq("assigned_to", auth.userId ?? "")
+            .is("deleted_at", null);
+          if (myCasesError) throw myCasesError;
+          const owned = myCases ?? [];
+          if (requestedLeadId && !owned.some((c) => normalizeWhatsAppNumber(c.phone_number) === whatsappNumber)) {
+            return json({ error: "This lead is not assigned to you" }, 403, corsHeaders);
+          }
+          if (requestedProfileId) {
+            const p = profileResult.data!;
+            const ownsProfile = owned.some((c) =>
+              c.student_user_id === p.id || c.id === p.case_id || c.id === p.linked_case_id
+            );
+            let createdByMe = false;
+            if (!ownsProfile) {
+              const { data: createdRow } = await admin.from("profiles").select("id")
+                .eq("id", p.id).eq("created_by", auth.userId ?? "").is("deleted_at", null).maybeSingle();
+              createdByMe = !!createdRow;
+            }
+            if (!ownsProfile && !createdByMe) {
+              return json({ error: "This student is not assigned to you" }, 403, corsHeaders);
+            }
+          }
+        }
       }
 
       const { data: existingLead, error: existingError } = await admin
