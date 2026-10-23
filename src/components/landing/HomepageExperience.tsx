@@ -98,6 +98,7 @@ const HomepageExperience = () => {
               <span aria-hidden="true" className="size-2 rounded-full bg-highlight" />
               <span>{t("homepage.hero.eyebrow")}</span>
             </div>
+            <p className="mb-2 text-sm font-bold tracking-wide text-highlight sm:text-base">{t("homepage.brandSlogan")}</p>
             <h1 id="homepage-hero-title" className="max-w-2xl text-balance text-4xl font-semibold leading-[1.12] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
               {t("homepage.hero.title")}
             </h1>
