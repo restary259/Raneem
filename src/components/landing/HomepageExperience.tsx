@@ -198,8 +198,7 @@ const HomepageExperience = () => {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/80 pt-4">
-                  <span className="text-xs leading-5 text-muted-foreground">{t("apply.progressLabel")}</span>
+                <div className="mt-4 flex justify-end border-t border-border/80 pt-4">
                   <Link to="/apply" className="inline-flex min-h-11 shrink-0 items-center gap-2 text-sm font-bold text-brand-strong hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     {t("homepage.actions.startAssessment")}<Arrow className="size-4" />
                   </Link>
@@ -219,7 +218,7 @@ const HomepageExperience = () => {
                     <div key={label} className="flex min-h-14 items-center gap-3 py-3">
                       <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-background text-brand-strong"><Icon aria-hidden="true" className="size-4.5" /></span>
                       <span className="text-sm font-semibold text-primary">{label}</span>
-                      <Check aria-hidden="true" className="ms-auto size-4 shrink-0 text-brand-strong" />
+                      <span aria-hidden="true" className="ms-auto size-2 shrink-0 rounded-full bg-brand/60" />
                     </div>
                   ))}
                 </div>
@@ -252,14 +251,12 @@ const HomepageExperience = () => {
                   </div>
                   <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-background text-brand-strong"><SearchCheck aria-hidden="true" className="size-5" /></span>
                 </div>
-                <div role="tablist" aria-label={t("homepage.languagePrep.levelSelector")} dir="ltr" className="mt-5 grid grid-cols-5 gap-2">
+                <div role="group" aria-label={t("homepage.languagePrep.levelSelector")} dir="ltr" className="mt-5 grid grid-cols-5 gap-2">
                   {["A1", "A2", "B1", "B2", "C1"].map((level) => (
                     <button
                       key={level}
                       type="button"
-                      role="tab"
-                      aria-selected={selectedLevel === level}
-                      aria-controls="homepage-cefr-detail"
+                      aria-pressed={selectedLevel === level}
                       onClick={() => setSelectedLevel(level)}
                       className={"min-h-11 rounded-xl border text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (selectedLevel === level ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:border-brand/50 hover:text-primary")}
                     >
@@ -268,7 +265,7 @@ const HomepageExperience = () => {
                   ))}
                 </div>
                 {activeLevel ? (
-                  <div id="homepage-cefr-detail" role="tabpanel" className="mt-4 min-h-32 border-t border-border/80 pt-4">
+                  <div id="homepage-cefr-detail" className="mt-4 min-h-32 border-t border-border/80 pt-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <h5 className="font-semibold text-primary">{activeLevel.label}</h5>
                       <span className="rounded-full bg-background px-3 py-1 text-xs text-muted-foreground">{activeLevel.group}</span>
@@ -300,7 +297,7 @@ const HomepageExperience = () => {
                   })}
                 </div>
                 <Link to="/services" className="mt-4 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-bold text-brand-strong hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  {t("nav.services")}<Arrow className="size-4" />
+                  {t("nav.services", { ns: "common" })}<Arrow className="size-4" />
                 </Link>
               </div>
             </RoadmapStation>
