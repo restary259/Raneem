@@ -77,6 +77,23 @@ Deno.serve(async (req) => {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      // Team members may only notify students on cases assigned to them.
+      const visaIsAdmin = auth.isServiceRole || auth.roles.includes("admin");
+      if (!visaIsAdmin) {
+        const { data: ownedCase } = await serviceClient
+          .from("cases")
+          .select("id")
+          .eq("student_user_id", studentProfile.id)
+          .eq("assigned_to", auth.userId ?? "")
+          .is("deleted_at", null)
+          .limit(1)
+          .maybeSingle();
+        if (!ownedCase) {
+          return new Response(JSON.stringify({ error: "Forbidden" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
       const student_email = studentProfile.email;
       const student_name = studentProfile.full_name;
 
