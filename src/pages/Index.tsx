@@ -12,7 +12,7 @@ const Index = () => {
   return (
     <div dir={dir} className="flex flex-col min-h-screen bg-background text-foreground">
       <SEOHead title={t('seo.indexTitle')} description={t('seo.indexDesc')} />
-      <Header />
+      <Header homepageCompact />
       <main className="flex-grow">
         <HomepageExperience />
       </main>
