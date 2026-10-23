@@ -127,7 +127,7 @@ describe("uploadChatAttachmentWithProgress — upload", () => {
       `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/chat-attachments/case/c1/uuid-1-my_report.png`,
     );
     expect(xhr.headers.Authorization).toBe("Bearer tok");
-    expect(xhr.headers.apikey).toBe("test-publishable-key");
+    expect(xhr.headers.apikey).toBe(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
     expect(xhr.headers["x-upsert"]).toBe("false");
     expect(xhr.headers["Content-Type"]).toBe("image/png");
 
