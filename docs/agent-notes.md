@@ -3974,8 +3974,9 @@ items below are the P1/P2 follow-ups.
 - **Dead CSS.** `src/styles/base.css` was orphaned (never imported — `styles.css`
   is the Tailwind v4 entry) and its `body { font-family: 'IBM Plex Sans Arabic'… }`
   contradicted this rule; deleted. `src/styles/layouts.css`, `navigation.css`,
-  `accessibility.css`, `animations.css`, `pwa.css` are likewise unimported; left
-  untouched, do not resurrect without wiring them in.
+  `accessibility.css`, `animations.css`, `pwa.css` were likewise unimported and
+  were **deleted** in the Apple-design P2 pass (their live rules already live in
+  `styles.css`). Do not resurrect them; add live rules to the Tailwind entry.
 
 
 ## Unified export buttons (2026-10-03)
@@ -4073,4 +4074,35 @@ items below are the P1/P2 follow-ups.
 - Guarded by `src/lib/studentCityGuide.test.ts` (official URLs, https-only,
   non-empty map queries, parks present) and `StudentCityGuide.test.tsx` (full-map
   href + a separate `Official website` link with `noopener`).
+
+
+## Apple-design audit — P2 cleanup (2026-10-20)
+
+- **Dead CSS deleted from the live entry.** `src/styles.css` lost the whole
+  `.darb-logo-marquee*` / `.darb-logo-tile` / `.darb-school-logo*` /
+  `.darb-university-logo` / `.darb-logo-city` block, the `--animate-marquee` +
+  `--animate-marquee2` vars, `@keyframes marquee`/`marquee2`, and the unused
+  `.darb-home-hero-intro`, `.darb-home-hero-rule`, `.darb-home-hero-button`,
+  `.darb-spectrum-accent` rules (266 → 251 lines removed). All had **0**
+  references in `src`, `e2e` and the production bundle. `--darb-logo-navy` and
+  friends are the live brand palette and were kept — do not sweep by name.
+- **Deleted files:** `src/styles/{animations,accessibility,layouts,navigation,pwa}.css`
+  (0 importers; their live rules already live in `styles.css`) and the unused
+  components `src/components/landing/PartnersMarquee.tsx`,
+  `src/components/common/PullToRefresh.tsx` (0 importers).
+- **Inert class hooks left alone.** `BottomNav.tsx` (`bottom-nav-item`),
+  `DesktopNav.tsx` (`nav-item`), `MobileNav.tsx` (`contact-glow`),
+  `SearchAndFilter.tsx` (`educational-sticky-section`) and `ConsultationCta.tsx`
+  (`animation-delay-300`) still carry class names that only the deleted files
+  defined; they were already unstyled before this change (verified 0 effect in
+  the built CSS), so removing the strings would be a separate behaviour-neutral
+  edit, not part of the cleanup.
+- **Judged and deliberately not changed:** sheet exit (300ms) is faster than
+  enter (500ms) — the correct asymmetry, not a defect; `min-h-screen` is
+  harmless for `min-height`; the dashboard `overscroll-behavior: none` is
+  intentional (fixed frame, inner scroll only); hero `text-shadow` is paired
+  with the scrim and remains readable.
+- **Guard:** `src/lib/appleDesignP2Guard.test.ts` locks the deletions (dead
+  classes absent, `styles.css` imports only `cv-print.css` + `neon.css`, deleted
+  files/components stay gone) so a name-based cleanup cannot regress.
 
