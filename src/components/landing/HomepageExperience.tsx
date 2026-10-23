@@ -131,15 +131,8 @@ const HomepageExperience = () => {
             <p className="max-w-2xl leading-7 text-muted-foreground lg:justify-self-end">{t("homepage.services.body")}</p>
           </div>
 
-          <div className="mt-9 grid gap-8 lg:grid-cols-[0.68fr_1.32fr] lg:gap-12">
-            <div className="max-w-lg lg:sticky lg:top-32 lg:self-start">
-              <p className="text-sm leading-7 text-muted-foreground">{t("homepage.path.arrivalBody")}</p>
-              <Link to="/services" className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand-strong focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                {t("nav.services")}<Arrow className="size-4" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 gap-y-0 sm:gap-x-5">
+          <div className="mx-auto mt-9 max-w-4xl">
+            <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 gap-y-0 sm:gap-x-5>
               {services.map((service, index) => {
                 const Icon = journeyIcons[index] ?? CircleCheck;
                 return (
@@ -148,7 +141,7 @@ const HomepageExperience = () => {
                       <span className="relative z-10 grid size-10 place-items-center rounded-full border border-border bg-background text-brand-strong shadow-quiet">
                         <Icon className="size-4.5" />
                       </span>
-                      {index < services.length - 1 ? <span className="absolute inset-y-10 w-px bg-border" /> : null}
+                      {index < services.length ? <span className="absolute inset-y-10 w-px bg-border" /> : null}
                     </div>
                     <article className="min-w-0 border-b border-border pb-6 pt-1 last:border-b-0 sm:pb-7">
                       <div className="flex items-start gap-3">
@@ -172,6 +165,11 @@ const HomepageExperience = () => {
                 <h3 className="mt-1 text-lg font-bold text-primary sm:text-xl">{t("homepage.path.arrivalTitle")}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("homepage.path.arrivalBody")}</p>
               </article>
+            </div>
+            <div className="mt-6 flex justify-end border-t border-border pt-4">
+              <Link to="/services" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-brand-strong focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                {t("nav.services")}<Arrow className="size-4" />
+              </Link>
             </div>
           </div>
         </div>
