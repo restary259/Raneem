@@ -28,10 +28,12 @@ const StudentPhoto = ({
   student,
   t,
   className = "",
+  priority = false,
 }: {
   student: GalleryStudent;
   t: (key: string, options?: Record<string, unknown>) => string;
   className?: string;
+  priority?: boolean;
 }) => (
   <figure className={"group relative min-w-0 overflow-hidden rounded-[1.5rem] bg-muted " + className}>
     <img
@@ -39,7 +41,8 @@ const StudentPhoto = ({
       alt={student.name
         ? t("homepage.students.namedAlt", { name: student.name, destination: student.destination })
         : t("homepage.students.alt", { destination: student.destination })}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       decoding="async"
       className="h-full w-full object-cover transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-[1.03] motion-reduce:transition-none"
       style={{ objectPosition: student.focus || "50% 40%" }}
@@ -57,7 +60,7 @@ const StudentPhoto = ({
 
 const HomepageExperience = () => {
   const { t, i18n } = useTranslation("landing");
-  const { isRtl, dir } = useDirection();
+  const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
   const journeySteps = t("homepage.journey.steps", { returnObjects: true }) as TextItem[];
@@ -121,6 +124,7 @@ const HomepageExperience = () => {
               <StudentPhoto
                 student={students[0]}
                 t={t}
+                priority
                 className="relative z-10 ms-0 aspect-[5/4] w-[80%] shadow-2xl shadow-black/20 sm:aspect-[4/3] sm:w-[78%] lg:aspect-[4/4.2]"
               />
             ) : (
