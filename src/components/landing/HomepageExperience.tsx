@@ -77,6 +77,12 @@ const HomepageExperience = () => {
   const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
+  const nextSteps = t("homepage.nextStep.items", { returnObjects: true }) as TextItem[];
+  const resourceLinks = [
+    { title: nextSteps[1]?.title, href: "/educational-programs" },
+    { title: nextSteps[2]?.title, href: "/resources/bagrut-calculator" },
+    { title: nextSteps[4]?.title, href: "/ai-advisor" },
+  ].filter((link): link is { title: string; href: string } => Boolean(link.title));
   const students = t("studentGallery.students", { returnObjects: true }) as GalleryStudent[];
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
@@ -171,6 +177,13 @@ const HomepageExperience = () => {
                 {t("nav.services")}<Arrow className="size-4" />
               </Link>
             </div>
+            <nav aria-label={t("homepage.nextStep.eyebrow")} className="mt-3 flex flex-wrap justify-end gap-x-5 gap-y-2 text-sm">
+              {resourceLinks.map((item) => (
+                <Link key={item.href} to={item.href} className="inline-flex min-h-10 items-center gap-1.5 text-muted-foreground transition-colors hover:text-brand-strong focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  {item.title}<Arrow className="size-3.5" />
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
       </section>
