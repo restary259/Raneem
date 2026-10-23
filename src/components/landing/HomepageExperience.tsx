@@ -132,7 +132,7 @@ const HomepageExperience = () => {
           </div>
 
           <div className="mx-auto mt-9 max-w-4xl">
-            <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 gap-y-0 sm:gap-x-5>
+            <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-x-4 gap-y-0 sm:gap-x-5">
               {services.map((service, index) => {
                 const Icon = journeyIcons[index] ?? CircleCheck;
                 return (
