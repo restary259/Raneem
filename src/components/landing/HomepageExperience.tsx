@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
+import { activeLanguageYearCities } from "@/data/educationalDestinations";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
@@ -77,6 +78,7 @@ const HomepageExperience = () => {
   const [selectedLevel, setSelectedLevel] = useState("A1");
   const [openFaq, setOpenFaq] = useState<string | undefined>();
   const activeLevel = levels[selectedLevel];
+  const featuredCity = activeLanguageYearCities[0];
   const whatsappMessage = i18n.language.startsWith("ar")
     ? "مرحبا، بدي أعرف شو خطوتي الجاية للدراسة بألمانيا."
     : i18n.language.startsWith("he")
@@ -232,6 +234,42 @@ const HomepageExperience = () => {
         </div>
       </section>
 
+      <section aria-labelledby="homepage-destinations-title" className="bg-editorial-paper py-12 sm:py-16">
+        <div className="container mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[0.7fr_1.3fr] lg:items-center lg:gap-12">
+          <div className="max-w-xl">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{t("homepage.destinations.eyebrow")}</p>
+            <h2 id="homepage-destinations-title" className="mt-3 text-balance text-3xl font-semibold leading-tight text-primary sm:text-4xl">{t("homepage.destinations.title")}</h2>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">{t("homepage.services.body")}</p>
+          </div>
+          {featuredCity ? (
+            <Link to={featuredCity.id === "heidelberg" ? "/heidelberg" : "/educational-destinations"} className="group relative block min-h-[250px] overflow-hidden rounded-[1.75rem] bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-[320px]">
+              <img
+                src={featuredCity.imageUrl}
+                alt={featuredCity.name}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none"
+                onError={(event) => { event.currentTarget.style.visibility = "hidden"; }}
+              />
+              <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-primary via-primary/35 to-primary/5" />
+              <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-4 p-5 text-primary-foreground sm:p-7">
+                <div>
+                  <p className="text-xs font-semibold text-primary-foreground/70">{featuredCity.region}</p>
+                  <h3 className="mt-1 text-3xl font-semibold sm:text-4xl">{featuredCity.name}</h3>
+                </div>
+                <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-highlight px-4 text-sm font-bold text-highlight-foreground">
+                  {t("homepage.destinations.cta")}<Arrow aria-hidden="true" className="size-4" />
+                </span>
+              </div>
+            </Link>
+          ) : (
+            <Link to="/educational-destinations" className="inline-flex min-h-14 items-center justify-between rounded-[1.5rem] border border-border bg-background px-5 text-sm font-bold text-brand-strong">
+              {t("homepage.destinations.cta")}<Arrow aria-hidden="true" className="size-4" />
+            </Link>
+          )}
+        </div>
+      </section>
+
       <section aria-labelledby="homepage-language-title" className="bg-primary py-14 text-primary-foreground sm:py-20">
         <div className="container mx-auto grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-14">
           <div className="max-w-xl">
@@ -275,6 +313,12 @@ const HomepageExperience = () => {
               </div>
             ) : null}
             <p className="mt-3 text-xs leading-5 text-primary-foreground/60">{t("homepage.languagePrep.cefrNote")}</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/15 pt-3 text-xs text-primary-foreground/65">
+              <span>{t("homepage.languagePrep.sourceLabel")}</span>
+              <a href="https://www.coe.int/en/web/common-european-framework-reference-languages/table-1-cefr-3.3-common-reference-levels-global-scale" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-1.5 font-semibold text-highlight hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight">
+                {t("homepage.languagePrep.cefrReferenceLink")}<Arrow aria-hidden="true" className="size-3.5" />
+              </a>
+            </div>
           </div>
         </div>
       </section>
