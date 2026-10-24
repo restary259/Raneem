@@ -3,7 +3,7 @@
 Read the relevant sections of `docs/agent-notes.md` and feature documentation before editing. These rules are non-negotiable.
 
 ## Delivery
-- PR only: inspect → diagnose → plan → feature/fix branch → implement → test → review diff → commit → push → PR. Never edit protected branches or merge/approve your own PR; stop if branch/PR tooling is unavailable.
+- Default delivery is PR-only; when the user explicitly requests direct Lovable edits, implement and verify in the preview without publishing. Never merge/approve your own PR.
 - Current code/database are authoritative. Inspect callers, types, services, migrations/RPC/RLS, i18n, tests, docs, and recent commits; never invent objects. Prefer the smallest safe change.
 - Audit/scan requests are read-only. Findings need severity, location, evidence/root cause, user/business/technical impact, fix, priority, and validation.
 - Plan requests do not change code. Implementation separates required work from follow-up.

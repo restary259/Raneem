@@ -11,3 +11,4 @@
 - [x] Add an admin master switch for all outgoing WhatsApp sending (off by default; blocks manual sends, follow-ups and campaigns)
 - [x] Replace approximate intake months with official school start dates and calculated final class dates
 - [x] Show and export the saved course schedule; prepare Jilan's guarded schedule update
+- [ ] Apply homepage fixes directly in Lovable: logo stripe, complete navigation, rotating words, six interactive stations, automatic celebration, photos, final CTA; verify all languages and screen sizes
