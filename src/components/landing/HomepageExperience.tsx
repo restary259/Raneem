@@ -12,13 +12,9 @@ import {
   Compass,
   FileCheck2,
   GraduationCap,
-  Home,
   Languages,
   MapPin,
   MessageCircle,
-  Plane,
-  SearchCheck,
-  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -35,14 +31,14 @@ import IdentityStage from "./home/IdentityStage";
 import CefrGuide from "./home/CefrGuide";
 import ExamFlipCard from "./home/ExamFlipCard";
 import RotatingHeadline from "./home/RotatingHeadline";
+import RoadmapJourney from "./home/RoadmapJourney";
+import JourneyCelebration from "./home/JourneyCelebration";
 
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
 type PathItem = TextItem & { href: string };
 
-const practicalIcons = [GraduationCap, Languages, Building2];
-const journeyIcons = [SearchCheck, Compass, FileCheck2, Languages, ShieldCheck, Home, Plane, GraduationCap];
 const nextStepIcons = [Compass, GraduationCap, BookOpenCheck, Languages, MessageCircle, FileCheck2];
 
 const examBrands = [
@@ -77,9 +73,7 @@ const HomepageExperience = () => {
   const { t } = useTranslation("landing");
   const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
-  const practical = t("homepage.explained.items", { returnObjects: true }) as TextItem[];
   const nextSteps = t("homepage.nextStep.items", { returnObjects: true }) as TextItem[];
-  const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
   const students = t("studentGallery.students", { returnObjects: true }) as GalleryStudent[];
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
@@ -116,26 +110,6 @@ const HomepageExperience = () => {
         <span aria-hidden="true" className="darb-spectrum darb-spectrum-lg absolute inset-x-0 bottom-0 z-20 rounded-none" />
       </section>
 
-      <section aria-labelledby="homepage-explained-title" className="border-b border-border bg-background py-14 sm:py-18">
-        <div className="container">
-          <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.explained.eyebrow")}</p>
-              <h2 id="homepage-explained-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.explained.title")}</h2>
-            </div>
-            <p className="max-w-2xl text-base leading-7 text-muted-foreground lg:justify-self-end">{t("homepage.explained.body")}</p>
-          </div>
-          <div className="mt-9 grid border-y border-border md:grid-cols-3">
-            {practical.map((item, index) => {
-              const Icon = practicalIcons[index] ?? CircleCheck;
-              return <article key={item.title} className="group border-b border-border px-1 py-7 last:border-b-0 md:border-b-0 md:border-e md:px-7 md:first:ps-0 md:last:border-e-0 md:last:pe-0">
-                <div className="flex items-start gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-full bg-editorial-paper text-brand-strong"><Icon className="size-5" /></span><div><h3 className="text-lg font-bold text-primary">{item.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p></div></div>
-              </article>;
-            })}
-          </div>
-        </div>
-      </section>
-
       <section aria-labelledby="homepage-next-step-title" className="bg-editorial-paper py-14 sm:py-20">
         <div className="container">
           <div className="max-w-3xl">
@@ -156,42 +130,7 @@ const HomepageExperience = () => {
         </div>
       </section>
 
-      <section aria-labelledby="homepage-services-title" className="bg-background py-14 sm:py-20">
-        <div className="container">
-          <div className="grid gap-10 lg:grid-cols-[0.68fr_1.32fr]">
-            <div className="lg:sticky lg:top-32 lg:self-start">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.services.eyebrow")}</p>
-              <h2 id="homepage-services-title" className="mt-3 text-balance text-3xl font-bold leading-tight text-primary sm:text-4xl">{t("homepage.services.title")}</h2>
-              <p className="mt-4 max-w-lg leading-7 text-muted-foreground">{t("homepage.services.body")}</p>
-            </div>
-            <div>
-              <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-0">
-                {services.map((service, index) => {
-                  const Icon = journeyIcons[index] ?? Check;
-                  return <div key={service.title} className="contents">
-                    <div className="relative flex justify-center"><span className="relative z-10 grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"><Icon className="size-4.5" /></span>{index < services.length - 1 ? <span className="absolute inset-y-10 w-px bg-border" /> : null}</div>
-                    <article className="min-w-0 border-b border-border pb-7 pt-1 last:border-b-0"><p className="text-xs font-bold text-brand-strong">{String(index + 1).padStart(2, "0")}</p><h3 className="mt-1 text-xl font-bold text-primary">{service.title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{service.description}</p></article>
-                  </div>;
-                })}
-              </div>
-              <div className="mt-8 rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.path.arrivalEyebrow")}</p><h3 className="mt-2 text-2xl font-bold">{t("homepage.path.arrivalTitle")}</h3><p className="mt-3 max-w-2xl text-sm leading-7 text-primary-foreground/75">{t("homepage.path.arrivalBody")}</p></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="homepage-students-title" className="relative overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20">
-        <BrandArch variant="frame" className="opacity-40" />
-        <div className="container relative z-10">
-          <div className="grid gap-5 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
-            <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.students.eyebrow")}</p><h2 id="homepage-students-title" className="mt-3 text-balance text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.students.title")}</h2></div>
-            <p className="max-w-2xl leading-7 text-primary-foreground/70 lg:justify-self-end">{t("homepage.students.body")}</p>
-          </div>
-          <div className="-mx-4 mt-9 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-8 sm:items-start sm:overflow-visible sm:px-0 lg:grid-cols-12">
-            {students.slice(0, 5).map((student, index) => <StudentStory key={`${student.image}-${index}`} student={student} index={index} t={t} />)}
-          </div>
-        </div>
-      </section>
+      <RoadmapJourney />
 
       <section aria-labelledby="homepage-ecosystem-title" className="bg-editorial-paper py-14 sm:py-20">
         <div className="container">
@@ -242,7 +181,21 @@ const HomepageExperience = () => {
 
       <section aria-labelledby="homepage-faq-title" className="bg-background py-14 sm:py-20"><div className="container grid gap-9 lg:grid-cols-[0.7fr_1.3fr]"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-strong">{t("homepage.faq.eyebrow")}</p><h2 id="homepage-faq-title" className="mt-3 text-balance text-3xl font-bold text-primary sm:text-4xl">{t("homepage.faq.title")}</h2><Button asChild variant="outline" className="mt-6"><Link to="/faq">{t("homepage.faq.all")}<Arrow /></Link></Button></div><Accordion type="single" collapsible className="border-t border-border">{faqs.map((item, index) => <AccordionItem key={item.title} value={`faq-${index}`}><AccordionTrigger className="text-start text-base font-bold text-primary hover:no-underline sm:text-lg">{item.title}</AccordionTrigger><AccordionContent className="pe-8 text-sm leading-7 text-muted-foreground">{item.description}</AccordionContent></AccordionItem>)}</Accordion></div></section>
 
+      <section aria-labelledby="homepage-students-title" className="relative overflow-hidden bg-primary py-14 text-primary-foreground sm:py-20">
+        <BrandArch variant="frame" className="opacity-40" />
+        <div className="container relative z-10">
+          <div className="grid gap-5 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+            <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.students.eyebrow")}</p><h2 id="homepage-students-title" className="mt-3 text-balance text-3xl font-bold leading-tight sm:text-4xl">{t("homepage.students.title")}</h2></div>
+            <p className="max-w-2xl leading-7 text-primary-foreground/70 lg:justify-self-end">{t("homepage.students.body")}</p>
+          </div>
+          <div className="-mx-4 mt-9 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-8 sm:items-start sm:overflow-visible sm:px-0 lg:grid-cols-12">
+            {students.slice(0, 5).map((student, index) => <StudentStory key={`${student.image}-${index}`} student={student} index={index} t={t} />)}
+          </div>
+        </div>
+      </section>
+
       <section className="relative overflow-hidden border-t border-border bg-background text-primary"><BrandArch className="opacity-10" /><div className="container relative z-10 grid gap-7 py-14 sm:py-18 lg:grid-cols-[1fr_auto] lg:items-end"><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">{t("homepage.final.eyebrow")}</p><h2 className="mt-3 text-balance font-editorial text-3xl leading-tight sm:text-4xl">{t("homepage.final.title")}</h2><p className="mt-4 max-w-2xl leading-7 text-muted-foreground">{t("homepage.final.body")}</p></div><div className="flex flex-col gap-3 sm:flex-row lg:flex-col"><Button asChild size="lg" variant="cta"><Link to="/apply">{t("homepage.actions.startAssessment")}<Arrow /></Link></Button><Button asChild size="lg" variant="outline" className="rounded-full"><a href={whatsappBusinessUrl("مرحبا، بدي أعرف شو خطوتي الجاية للدراسة بألمانيا.")} target="_blank" rel="noopener noreferrer"><MessageCircle />{t("homepage.actions.whatsapp")}</a></Button></div></div></section>
+      <JourneyCelebration />
     </div>
   );
 };

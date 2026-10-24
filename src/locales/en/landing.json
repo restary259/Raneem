@@ -648,6 +648,67 @@
       "arrivalEyebrow": "After the application",
       "arrivalTitle": "Preparation does not end with an admission application",
       "arrivalBody": "Visa-file organization, insurance and accommodation coordination, travel preparation, and understanding your first steps in Germany are part of a connected journey."
+    },
+    "roadmap": {
+      "eyebrow": "The roadmap with Darb",
+      "title": "Six stations from your first application to your arrival",
+      "body": "From filling in the application to your first morning in your new city. Everything is clear, and the Darb team is with you from the start.",
+      "progressLabel": "Your progress through the stations",
+      "tapHint": "Tap any station to see the details",
+      "detailsLabel": "See details",
+      "stages": [
+        {
+          "title": "Submit your application",
+          "body": "Fill in the application form. It takes about 3 to 4 minutes, and you can complete it from your phone.",
+          "darb": "We receive your application directly and open a file under your name.",
+          "action": "Start now",
+          "href": "/apply"
+        },
+        {
+          "title": "The Darb team reviews your file",
+          "body": "We review your grades and documents, and tell you honestly what is possible and what needs preparing.",
+          "darb": "We review your profile, explain realistic routes, and help you compare suitable study or language options.",
+          "action": "See our services",
+          "href": "/services"
+        },
+        {
+          "title": "We contact you on WhatsApp",
+          "body": "A real person from the team talks with you and your family, and answers every question.",
+          "darb": "We support you in Arabic from the first conversation, and explain every step to you and your family.",
+          "action": "Talk to us",
+          "href": "/contact"
+        },
+        {
+          "title": "The language year",
+          "body": "An intensive German course from A1 to C1. It takes about 8 to 10 months, so starting early makes the difference.",
+          "darb": "We guide exam and course registration, review document readiness, and coordinate translation or certification steps.",
+          "action": "Explore preparation paths",
+          "href": "/educational-destinations"
+        },
+        {
+          "title": "Admission and housing",
+          "body": "We apply to the university for you, and book your housing with our partner school before you arrive.",
+          "darb": "We prepare, review, submit, and follow up on applications with the relevant institutions.",
+          "note": "The university decides admission; the housing provider owns contracts, availability, and deposits.",
+          "action": "See educational programs",
+          "href": "/educational-programs"
+        },
+        {
+          "title": "Arrive in your new city",
+          "body": "We help you understand your first steps and settle in, and we stay with you through the transition.",
+          "darb": "We provide Arabic guidance, file updates, and practical orientation within the agreed service scope.",
+          "action": "Explore Heidelberg",
+          "href": "/heidelberg"
+        }
+      ]
+    },
+    "celebration": {
+      "eyebrow": "Your last station",
+      "title": "Congratulations — you have seen the whole route",
+      "body": "Picture yourself a year from now: walking a German street with your notebook, starting your first lecture. That is not a promise — it is the path you build step by step.",
+      "reassurance": "Final decisions stay with the university and the authorities; Darb prepares with you.",
+      "cta": "Start from here",
+      "close": "Close"
     }
   },
   "office": {
