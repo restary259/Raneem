@@ -37,7 +37,7 @@ const Header = ({ homepageCompact = false }: { homepageCompact?: boolean }) => {
     return (
       <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-xl" dir={dir}>
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex h-14 items-center gap-4 sm:h-16" dir="ltr">
+          <div className="flex h-14 items-center gap-2 sm:h-16 sm:gap-4" dir="ltr">
             <Link to="/" aria-label={t("loader.brand")} className="flex h-10 w-28 shrink-0 items-center sm:h-11 sm:w-32">
               <img
                 src={darbLogoAsset.url}
@@ -50,18 +50,15 @@ const Header = ({ homepageCompact = false }: { homepageCompact?: boolean }) => {
               />
             </Link>
 
-            <nav aria-label={t("nav.studyGermany")} className="hidden min-w-0 flex-1 items-center justify-center gap-4 text-sm text-muted-foreground md:flex lg:gap-7">
-              <Link to="/educational-destinations" className="inline-flex min-h-11 items-center whitespace-nowrap transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("nav.educationalDestinations")}</Link>
-              <Link to="/educational-programs" className="inline-flex min-h-11 items-center whitespace-nowrap transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("nav.majors")}</Link>
-              <Link to="/services" className="inline-flex min-h-11 items-center whitespace-nowrap transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("nav.services")}</Link>
-              <Link to="/faq" className="inline-flex min-h-11 items-center whitespace-nowrap transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t("nav.faq")}</Link>
-            </nav>
+            <div className="hidden min-w-0 flex-1 xl:mx-4 xl:block"><DesktopNav /></div>
 
             <div className="ms-auto flex shrink-0 items-center gap-2 sm:gap-3" dir="ltr">
               <LanguageSwitcher className="shrink-0 [&>button]:min-h-10 [&>button]:px-2 [&>button]:text-xs [&>span]:text-xs" />
-              <Link to="/apply" className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-full bg-highlight px-3 text-xs font-bold text-highlight-foreground transition-colors hover:bg-highlight/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-5 sm:text-sm">
+              <Link to="/apply" className="hidden min-h-10 items-center justify-center whitespace-nowrap rounded-full bg-highlight px-3 text-xs font-bold text-highlight-foreground transition-colors hover:bg-highlight/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 xl:inline-flex sm:px-5 sm:text-sm">
                 {t("nav.apply")}
               </Link>
+              <Link to="/student-auth" className="hidden min-h-10 items-center text-sm font-semibold xl:inline-flex">{t("nav.studentLogin")}</Link>
+              <div className="xl:hidden"><MobileNav /></div>
             </div>
           </div>
         </div>
