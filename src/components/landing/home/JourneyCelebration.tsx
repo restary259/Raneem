@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { shouldCelebrateJourney } from "@/lib/roadmapPreview";
 
 const SEEN_KEY = "darb.journey.celebration.seen";
 
@@ -19,6 +20,9 @@ const SEEN_KEY = "darb.journey.celebration.seen";
 const JourneyCelebration = () => {
   const { t } = useTranslation("landing");
   const [open, setOpen] = useState(false);
+  const [photo, setPhoto] = useState(0);
+  const students = t("studentGallery.students", { returnObjects: true }) as Array<{ image: string; name: string; destination: string }>;
+  const student = students[photo];
 
   useEffect(() => {
     let seen = false;
@@ -31,6 +35,7 @@ const JourneyCelebration = () => {
     if (seen) return;
 
     let armed = false;
+    let shown = false;
     const arm = () => {
       armed = true;
     };
@@ -41,11 +46,10 @@ const JourneyCelebration = () => {
     window.addEventListener("touchmove", arm, { once: true, passive: true });
 
     const onScroll = () => {
-      if (!armed || open) return;
-      const atEnd =
-        window.scrollY + window.innerHeight >=
-        document.documentElement.scrollHeight - 120;
-      if (!atEnd) return;
+      if (shown) return;
+      const last = document.getElementById("journey-arrival");
+      if (!last || !shouldCelebrateJourney(armed, last.getBoundingClientRect().bottom, window.innerHeight)) return;
+      shown = true;
       try {
         window.sessionStorage.setItem(SEEN_KEY, "1");
       } catch {
@@ -61,11 +65,11 @@ const JourneyCelebration = () => {
       window.removeEventListener("touchmove", arm);
       window.removeEventListener("scroll", onScroll);
     };
-  }, [open]);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="darb-celebration max-w-md overflow-hidden text-center">
+      <DialogContent className="darb-celebration max-h-[90dvh] max-w-md overflow-y-auto text-center">
         <div aria-hidden="true" className="darb-celebration-burst">
           {Array.from({ length: 8 }, (_, i) => (
             <span
@@ -83,6 +87,7 @@ const JourneyCelebration = () => {
         <DialogDescription className="mt-3 text-sm leading-7 text-muted-foreground">
           {t("homepage.celebration.body")}
         </DialogDescription>
+        {student && <figure className="mt-5"><img src={student.image} alt={t("homepage.students.alt", { destination: student.destination })} className="aspect-[4/3] w-full rounded-2xl object-cover" /><figcaption className="mt-2 text-sm text-muted-foreground">{student.name || student.destination}</figcaption><div className="mt-3 flex justify-center gap-2">{students.slice(0, 3).map((item, index) => <Button key={item.image} variant="outline" size="icon" aria-label={t("homepage.roadmap.preview.photo", { count: index + 1 })} aria-pressed={photo === index} onClick={() => setPhoto(index)} className={photo === index ? "border-brand" : ""}>{index + 1}</Button>)}</div></figure>}
         <p className="mt-4 rounded-xl bg-muted px-4 py-3 text-xs leading-5 text-muted-foreground">
           {t("homepage.celebration.reassurance")}
         </p>
