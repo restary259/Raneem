@@ -1216,3 +1216,165 @@ body.dashboard-locked {
   background-image: radial-gradient(color-mix(in oklab, var(--foreground) 7%, transparent) 1px, transparent 1px);
   background-size: 18px 18px;
 }
+
+/* Homepage student-journey roadmap. Markers and their connector rail share one
+   grid so the line always meets the dot at any width, including RTL. */
+.darb-journey {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
+}
+
+.darb-journey-rail {
+  position: absolute;
+  top: 1.375rem;
+  bottom: 1.375rem;
+  inset-inline-start: 1.375rem;
+  width: 2px;
+  margin-inline-start: -1px;
+  background: var(--border);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.darb-journey-rail-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: top center;
+  transform: scaleY(0);
+  background: var(--brand);
+  border-radius: inherit;
+}
+
+.darb-journey-stage {
+  display: contents;
+}
+
+.darb-journey-marker {
+  position: relative;
+  z-index: 1;
+  grid-column: 1;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  border: 2px solid var(--border);
+  background: var(--background);
+  color: var(--muted-foreground);
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+.darb-journey-marker.is-reached {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: var(--brand-foreground);
+}
+
+.darb-journey-card {
+  grid-column: 2;
+  padding-bottom: 2rem;
+}
+
+.darb-journey-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 44px;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--brand-strong);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: start;
+}
+
+.darb-journey-toggle:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.darb-journey-detail {
+  margin-top: 0.75rem;
+  border-inline-start: 2px solid var(--brand);
+  padding-inline-start: 0.875rem;
+}
+
+.darb-journey-progress {
+  border-radius: 9999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.darb-journey-progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: var(--brand);
+}
+
+html[dir="rtl"] .darb-journey-progress-fill {
+  transform-origin: right center;
+}
+
+/* The celebration sparks fly from the centre of the dialog. */
+.darb-celebration {
+  position: relative;
+}
+
+/* End-of-journey celebration. Sparks are decorative CSS only: no canvas, no
+   layout work, and they never block the dialog's own interaction. */
+.darb-celebration-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.darb-celebration-spark {
+  position: absolute;
+  top: 42%;
+  inset-inline-start: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  opacity: 0;
+  animation: darb-celebration-spark 1200ms ease-out forwards;
+}
+
+.darb-celebration-spark-1 { background: var(--brand);            animation-delay: 0ms;    --dx: -110px; --dy: -70px; }
+.darb-celebration-spark-2 { background: var(--highlight);        animation-delay: 60ms;   --dx:  110px; --dy: -70px; }
+.darb-celebration-spark-3 { background: var(--brand);            animation-delay: 120ms;  --dx:  -70px; --dy: -110px; }
+.darb-celebration-spark-4 { background: var(--highlight);        animation-delay: 180ms;  --dx:   70px; --dy: -110px; }
+.darb-celebration-spark-5 { background: var(--brand);            animation-delay: 240ms;  --dx: -140px; --dy:  10px; }
+.darb-celebration-spark-6 { background: var(--highlight);        animation-delay: 300ms;  --dx:  140px; --dy:  10px; }
+.darb-celebration-spark-7 { background: var(--brand);            animation-delay: 360ms;  --dx:  -50px; --dy: -140px; }
+.darb-celebration-spark-8 { background: var(--highlight);        animation-delay: 420ms;  --dx:   50px; --dy: -140px; }
+
+@keyframes darb-celebration-spark {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  15%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .darb-journey-marker,
+  .darb-journey-toggle svg {
+    transition: none;
+  }
+
+  .darb-celebration-spark {
+    animation: none;
+    opacity: 0;
+  }
+}
+
