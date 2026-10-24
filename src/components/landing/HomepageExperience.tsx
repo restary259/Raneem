@@ -18,6 +18,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { whatsappBusinessUrl } from "@/lib/contactConfig";
 import { useDirection } from "@/hooks/useDirection";
 import { activeLanguageYearCities } from "@/data/educationalDestinations";
+import RoadmapJourney from "./home/RoadmapJourney";
+import JourneyCelebration from "./home/JourneyCelebration";
 
 type TextItem = { title: string; description: string };
 type GalleryStudent = { name: string; destination: string; image: string; focus?: string };
@@ -64,7 +66,6 @@ const HomepageExperience = () => {
   const { isRtl } = useDirection();
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
   const services = t("homepage.services.items", { returnObjects: true }) as TextItem[];
-  const journeySteps = t("homepage.journey.steps", { returnObjects: true }) as TextItem[];
   const students = t("studentGallery.students", { returnObjects: true }) as GalleryStudent[];
   const included = t("homepage.scope.included", { returnObjects: true }) as string[];
   const decisions = t("homepage.scope.decisions", { returnObjects: true }) as string[];
@@ -154,38 +155,7 @@ const HomepageExperience = () => {
         <span className="bg-[#0B78FF]" /><span className="bg-[#00AFC7]" /><span className="bg-[#22C55E]" /><span className="bg-[#FFC107]" /><span className="bg-[#FF8A00]" /><span className="bg-[#F83838]" /><span className="bg-[#805CFF]" />
       </div>
 
-      <section id="darb-journey" aria-labelledby="homepage-journey-title" className="bg-background py-14 sm:py-20">
-        <div className="container mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-4 border-b border-border pb-7 sm:pb-9 lg:grid-cols-[0.8fr_1.2fr] lg:items-end lg:gap-12">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">{t("homepage.journey.eyebrow")}</p>
-              <h2 id="homepage-journey-title" className="mt-3 max-w-2xl text-balance text-3xl font-semibold leading-tight text-primary sm:text-4xl lg:text-5xl">{t("homepage.journey.title")}</h2>
-            </div>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">{t("homepage.journey.body")}</p>
-          </div>
-
-          <div className="mt-8 grid gap-x-6 gap-y-8 sm:mt-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-8">
-            {journeySteps.map((step, index) => (
-              <article key={step.title} className="relative min-w-0 border-t-2 border-primary/15 pt-5">
-                <span className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-brand-strong">
-                  <span className="grid size-8 place-items-center rounded-full bg-highlight text-highlight-foreground">{String(index + 1).padStart(2, "0")}</span>
-                  <span aria-hidden="true" className="h-px w-7 bg-highlight" />
-                </span>
-                <h3 className="mt-4 text-xl font-semibold leading-snug text-primary">{step.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{step.description}</p>
-              </article>
-            ))}
-          </div>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild variant="outline" className="rounded-full border-primary/20 text-primary hover:bg-primary/5">
-              <Link to="/services">{t("homepage.services.explore")} {t("homepage.services.title")}<Arrow aria-hidden="true" /></Link>
-            </Button>
-            <Button asChild variant="ghost" className="rounded-full text-primary">
-              <Link to="/educational-programs">{t("homepage.actions.checkProfile")}<Arrow aria-hidden="true" /></Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <RoadmapJourney />
 
       <section aria-labelledby="homepage-services-title" className="bg-editorial-paper py-14 sm:py-20">
         <div className="container mx-auto max-w-6xl px-4 sm:px-6">
@@ -409,6 +379,7 @@ const HomepageExperience = () => {
           </div>
         </div>
       </section>
+      <JourneyCelebration />
     </div>
   );
 };
